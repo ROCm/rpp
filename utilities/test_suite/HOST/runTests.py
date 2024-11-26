@@ -192,7 +192,7 @@ def rpp_test_suite_parser_and_validator():
     if args.case_list:
         for case in args.case_list:
             try:
-                case_number = get_case_number(case)
+                case_number = get_case_number(imageAugmentationMap, case)
                 case_list.append(case_number)
             except ValueError as e:
                 print(e)

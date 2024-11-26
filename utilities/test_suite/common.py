@@ -123,17 +123,16 @@ ImageAugmentationGroupMap = {
     "statistical_operations" : [87, 88, 89, 90, 91]
 }
 
-def get_case_number(case):
+def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():
         return str(case)
     
     # Otherwise, treat it as a case name and find the corresponding number
-    for caseNum, info in imageAugmentationMap.items():
+    for caseNum, info in map.items():
         if case.lower() == info[0].lower():
             return str(caseNum)
     raise ValueError(f"Invalid case name or number: {case}")
-
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):

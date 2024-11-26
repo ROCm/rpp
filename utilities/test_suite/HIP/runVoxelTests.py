@@ -161,7 +161,21 @@ def rpp_test_suite_parser_and_validator():
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(voxelAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+        print(f"Processed case numbers: {case_list}")
+    else:
+        print("No cases provided.")
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -235,9 +249,6 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
-
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PKD3")
@@ -246,12 +257,12 @@ if testType == 1 and profilingOption == "YES":
 
 bitDepths = [0, 2]
 if (testType == 0 or (testType == 1 and profilingOption == "NO")):
-    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
     for case in caseList:
-        if case not in supportedCaseList:
+        if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
@@ -266,12 +277,12 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
                 run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
-    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
     for case in caseList:
-        if case not in supportedCaseList:
+        if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
@@ -345,7 +356,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_voxel_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_hip")
+        print_qa_tests_summary(qaFilePath, list(voxelAugmentationMap.keys()), nonQACaseList, "Tensor_voxel_hip")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0): # Unit tests
