@@ -12,6 +12,7 @@ RPP Rain augmentation on HOST and HIP
 
 ### Changes
 
+* AMD Clang is now the default CXX and C compiler
 * RPP Tensor Box Filter support on HOST
 
 ## (Unreleased) RPP 1.9.3
@@ -24,7 +25,7 @@ RPP Rain augmentation on HOST and HIP
 
 ### Changed
 
-RPP Audio Support HIP - Mel Filter Bank
+* RPP Audio Support HIP - Mel Filter Bank
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
