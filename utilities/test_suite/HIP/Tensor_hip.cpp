@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 35 || testCase == 45 || testCase == 86)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    else if(testCase == 82 && batchSize < 2)
+    else if(testCase == RICAP && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -271,7 +271,7 @@ int main(int argc, char **argv)
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
-    if(testCase == 82 && imagesMixed)
+    if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
         exit(0);
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
-    if(testCase == 38)
+    if(testCase == CROP_MIRROR_NORMALIZE)
         conversionFactor = 1.0;
     Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
@@ -305,7 +305,6 @@ int main(int argc, char **argv)
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *inputu8Second = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *outputu8 = static_cast<Rpp8u *>(calloc(oBufferSizeInBytes_u8, 1));
-    if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     Rpp8u *offsettedInput, *offsettedInputSecond;
     offsettedInput = inputu8 + srcDescPtr->offsetInBytes;
@@ -318,7 +317,7 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     Rpp32f *rowRemapTable, *colRemapTable;
-    if(testCase == 79)
+    if(testCase == REMAP)
     {
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
@@ -342,13 +341,13 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
         else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
-            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+            bitDepthByteSize = (testCase == TENSOR_SUM) ? sizeof(Rpp64u) : sizeof(Rpp8u);
 
         CHECK_RETURN_STATUS(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
-        if(testCase == 91)
+        if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostMalloc(&mean, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
@@ -357,7 +356,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
-    if(testCase == 92)
+    if(testCase == SLICE)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
 
     // Allocate hip memory for src/dst
@@ -367,11 +366,11 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
 
     RpptROI *roiPtrInputCropRegion;
-    if(testCase == 82)
+    if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     void *d_rowRemapTable, *d_colRemapTable;
-    if(testCase == 26 || testCase == 79)
+    if(testCase == LENS_CORRECTION || testCase == REMAP)
     {
         CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
         CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
@@ -380,7 +379,7 @@ int main(int argc, char **argv)
     }
 
     Rpp32f *cameraMatrix, *distortionCoeffs;
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
@@ -390,7 +389,7 @@ int main(int argc, char **argv)
     Rpp32f *colorBuffer;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numOfBoxes;
-    if(testCase == 32)
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
@@ -400,7 +399,7 @@ int main(int argc, char **argv)
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
         CHECK_RETURN_STATUS(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
@@ -408,19 +407,19 @@ int main(int argc, char **argv)
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     Rpp32f *intensity;
-    if(testCase == 46)
+    if(testCase == VIGNETTE)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     Rpp32u *kernelSizeTensor;
-    if(testCase == 6)
+    if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
 
     RpptChannelOffsets *rgbOffsets;
-    if(testCase == 35)
+    if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
     void *d_interDstPtr;
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -1494,26 +1493,26 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                     print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::F16)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1526,9 +1525,9 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same*/
                 if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
-                    else if (testCase == 90 || testCase == 91)
+                    else if (testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                         compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
@@ -1553,7 +1552,7 @@ int main(int argc, char **argv)
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
                 // for output display and comparision purposes
-                if (testCase == 92)
+                if (testCase == SLICE)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
                     {
@@ -1638,36 +1637,36 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrSrc));
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrDst));
     CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
-    if(testCase == 46)
+    if(testCase == VIGNETTE)
         CHECK_RETURN_STATUS(hipHostFree(intensity));
-    if(testCase == 82)
+    if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostFree(roiPtrInputCropRegion));
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         CHECK_RETURN_STATUS(hipHostFree(cropRoi));
         CHECK_RETURN_STATUS(hipHostFree(patchRoi));
     }
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         CHECK_RETURN_STATUS(hipHostFree(cameraMatrix));
         CHECK_RETURN_STATUS(hipHostFree(distortionCoeffs));
     }
-    if(testCase == 79)
+    if(testCase == REMAP)
     {
         free(rowRemapTable);
         free(colRemapTable);
         CHECK_RETURN_STATUS(hipFree(d_rowRemapTable));
         CHECK_RETURN_STATUS(hipFree(d_colRemapTable));
     }
-    if(testCase == 35)
+    if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
-        if(testCase == 91)
+        if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostFree(mean));
     }
-    if(testCase == 32)
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
@@ -1679,7 +1678,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
-    if(testCase == 6)
+    if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostFree(kernelSizeTensor));
     free(input);
     free(input_second);
@@ -1691,7 +1690,7 @@ int main(int argc, char **argv)
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipFree(d_input_second));
     CHECK_RETURN_STATUS(hipFree(d_output));
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
     return 0;
 }

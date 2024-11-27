@@ -105,7 +105,21 @@ def rpp_test_suite_parser_and_validator():
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(miscAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+        print(f"Processed case numbers: {case_list}")
+    else:
+        print("No cases provided.")
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -163,13 +177,12 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['0', '1', '2']
-noCaseSupported = all(case not in supportedCaseList for case in caseList)
+noCaseSupported = all(int(case) not in miscAugmentationMap for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
 for case in caseList:
-    if case not in supportedCaseList:
+    if int(case) not in miscAugmentationMap:
         continue
     if case == "0":
         for transposeOrder in range(1, numDims):
@@ -184,7 +197,7 @@ for case in caseList:
 nonQACaseList = []
 supportedCases = 0
 for num in caseList:
-    if num in supportedCaseList:
+    if int(num) in miscAugmentationMap:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if testType == 0:
@@ -192,7 +205,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_misc_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_host")
+        print_qa_tests_summary(qaFilePath, list(miscAugmentationMap.keys()), nonQACaseList, "Tensor_misc_host")
 
 # Performance tests
 if (testType == 1):

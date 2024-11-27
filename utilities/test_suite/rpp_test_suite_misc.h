@@ -37,6 +37,12 @@ std::map<int, string> augmentationMiscMap =
     {2, "log"}
 };
 
+enum Augmentation {
+    TRANSPOSE = 0,
+    NORMALIZE = 1,
+    LOG = 2
+};
+
 // Compute strides given Generic Tensor
 void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
