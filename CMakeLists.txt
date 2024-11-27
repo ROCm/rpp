@@ -22,10 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
-if (NOT DEFINED CMAKE_CXX_COMPILER)
+cmake_minimum_required(VERSION 3.10)
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
@@ -45,14 +59,6 @@ find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
-# ROCm Path
-if(DEFINED ENV{ROCM_PATH})
-    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
-elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
-else()
-    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
-endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
@@ -114,8 +120,7 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     # -O0  -- Don't Optimize output file
     # -g -- generate debugging information
-    # -Og -- Optimize for debugging experience rather than speed or size
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Og")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 else()
     # -O3 -- Optimize output file
     # TBD:Verify Requirement -Ofast - Optimize for speed disregarding exact standards compliance
@@ -255,8 +260,8 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS ${ROCM_PATH}/lib/llvm/bin/clang++)
-		set(COMPILER_FOR_HIP ${ROCM_PATH}/lib/llvm/bin/clang++)
+	if (EXISTS "${ROCM_PATH}/bin/amdclang++")
+		set(COMPILER_FOR_HIP "${ROCM_PATH}/bin/amdclang++")
 	else()
 		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
 	endif()

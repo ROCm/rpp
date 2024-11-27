@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 project(rpp_unittests/HIP_NEW)
@@ -54,7 +54,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 if (hip_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 
     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
