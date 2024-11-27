@@ -30,8 +30,7 @@ SOFTWARE.
 #include "cpu/host_tensor_effects_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-#include <hip/hip_fp16.h>
-#include "hip/hip_tensor_effects_augmentations.hpp"
+    #include "hip/hip_tensor_effects_augmentations.hpp"
 #endif // HIP_COMPILE
 
 /******************** gridmask ********************/
