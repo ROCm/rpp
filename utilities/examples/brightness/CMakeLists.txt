@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(examples/brightness)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -61,7 +61,7 @@ endif()
 
 if (hip_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 
     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(test_suite/HOST)
 
 # ROCM Path
@@ -141,7 +141,12 @@ else()
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
                 # set flags
-                set(CMAKE_CXX_COMPILER clang++)
+                if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+                    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+                    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+                elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+                    set(CMAKE_CXX_COMPILER clang++)
+                endif()
                 set(CMAKE_CXX_STANDARD 17)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 

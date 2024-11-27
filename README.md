@@ -55,15 +55,17 @@ Spectrogram kernel output represented as a image <br><br>
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
-* CMake Version `3.5` and above
+* CMake Version `3.10` and above
   ```shell
   sudo apt install cmake
   ```
 
-* Clang Version `5.0.1` and above
-  ```shell
-  sudo apt install clang
-  ```
+* AMD Clang++ Version 18.0.0 or later - installed with ROCm
+> [!NOTE]
+> * For CPU only backend use Clang Version `5.0.1` and above
+>   ```shell
+>    sudo apt install clang
+>   ```
 
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
   ```shell
@@ -231,6 +233,6 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
   * SLES - `15-SP5`
 * ROCm: rocm-core - `6.3.0.60300`
 * CMake - Version `3.16.3`+
-* Clang - Version `5.0.1`+
+* AMD Clang++ - Version `18.0.0`
 * half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0.60200`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
