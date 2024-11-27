@@ -43,15 +43,6 @@ SOFTWARE.
 #include <map>
 #include <iomanip>
 
-#ifdef GPU_SUPPORT
-    #include <hip/hip_fp16.h>
-#else
-    #include <half/half.hpp>
-    using half_float::half;
-#endif
-
-typedef half Rpp16f;
-
 using namespace cv;
 using namespace std;
 
