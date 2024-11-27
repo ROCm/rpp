@@ -2,16 +2,16 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.9.5 (Unreleased) 
+## (Unreleased) RPP 1.9.10
 
 ### Changes
 
 * RPP Tensor Gaussian Filter support on HOST
 
-## RPP 1.9.1 for ROCm 6.3.0
- 
-### Changes
+## (Unreleased) RPP 1.9.4
 
+### Changes
+* AMD Clang is now the default CXX and C compiler
 * RPP Tensor Box Filter support on HOST
 
 ## (Unreleased) RPP 1.9.3
@@ -24,7 +24,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Changed
 
-RPP Audio Support HIP - Mel Filter Bank
+* RPP Audio Support HIP - Mel Filter Bank
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
