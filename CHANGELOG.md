@@ -4,7 +4,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ## (Unreleased) RPP 1.9.5
 
-### Changes
+### Changed
 
 * RPP Fog augmentation on HOST and HIP
 
