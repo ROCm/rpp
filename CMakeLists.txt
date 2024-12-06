@@ -43,7 +43,11 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
+<<<<<<< HEAD
 set(VERSION "1.9.9")
+=======
+set(VERSION "1.9.5")
+>>>>>>> opensource_develop_branch
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
