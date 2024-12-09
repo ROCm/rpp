@@ -2,17 +2,12 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 1.9.6
-
-### Changes
-
-* RPP Warp Perspective on HOST and HIP
-
 ## (Unreleased) RPP 1.9.10
 
 ### Changed
 
 * RPP Tensor Gaussian Filter support on HOST
+* RPP Warp Perspective on HOST and HIP
 
 ## (Unreleased) RPP 1.9.4
 
