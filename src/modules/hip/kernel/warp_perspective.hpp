@@ -321,8 +321,8 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle)
 {
-    if (roiType == RpptRoiType::XYWH)
-        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->w + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
