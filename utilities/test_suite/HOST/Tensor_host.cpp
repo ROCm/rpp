@@ -60,8 +60,8 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase == 79);
-    bool kernelSizeCase = (testCase == 49);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase ==54 || testCase == 79);
+    bool kernelSizeCase = (testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 67 || testCase == 68);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84);
     bool nonQACase = (testCase == 24);
@@ -1115,6 +1115,24 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 54:
+                {
+                    testCaseName = "gaussian_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    Rpp32f stdDevTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        stdDevTensor[i] = 5.0f;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gaussian_filter_host(input, srcDescPtr, output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
