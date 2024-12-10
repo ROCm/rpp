@@ -9,9 +9,8 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Changed
 
-* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
-* RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
-* TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
+* RPP Tensor Gaussian Filter support on HOST
+* RPP Fog augmentation on HOST and HIP
 
 ### Removed
 

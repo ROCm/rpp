@@ -60,15 +60,15 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (additionalParamCases.find(testCase) != additionalParamCases.end());
-    bool kernelSizeCase = (kernelSizeCases.find(testCase) != kernelSizeCases.end());
-    bool dualInputCase = (dualInputCases.find(testCase) != dualInputCases.end());
-    bool randomOutputCase = (randomOutputCases.find(testCase) != randomOutputCases.end());
-    bool nonQACase = (nonQACases.find(testCase) != nonQACases.end());
-    bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
-    bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
-    bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
-    bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase ==54 || testCase == 79);
+    bool kernelSizeCase = (testCase == 49 || testCase == 54);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
+    bool nonQACase = (testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
+    bool noiseTypeCase = (testCase == 8);
+    bool pln1OutTypeCase = (testCase == 86);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -631,6 +631,48 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
+
+                    break;
+                }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    Rpp32f intensityFactor[batchSize];
+                    Rpp32f grayFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        grayFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_host(input, srcDescPtr, output, dstDescPtr, intensityFactor, grayFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    Rpp32f intensityFactor[batchSize];
+                    Rpp32f grayFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        grayFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_host(input, srcDescPtr, output, dstDescPtr, intensityFactor, grayFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
