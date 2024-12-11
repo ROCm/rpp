@@ -2060,6 +2060,13 @@ inline void rpp_normalize48_avx(__m256 *p)
     p[5] = _mm256_mul_ps(p[5], avx_p1op255);
 }
 
+inline void rpp_normalize24_avx(__m256 *p)
+{
+    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+    p[2] = _mm256_mul_ps(p[2], avx_p1op255);
+}
+
 inline void rpp_multiply48_constant(__m256 *p, __m256 pMultiplier)
 {
     p[0] = _mm256_mul_ps(p[0], pMultiplier);
@@ -2084,6 +2091,13 @@ inline void rpp_multiply48_constant(__m128 *p, __m128 pMultiplier)
     p[9] = _mm_mul_ps(p[9], pMultiplier);
     p[10] = _mm_mul_ps(p[10], pMultiplier);
     p[11] = _mm_mul_ps(p[11], pMultiplier);
+}
+
+inline void rpp_multiply24_constant(__m256 *p, __m256 pMultiplier)
+{
+    p[0] = _mm256_mul_ps(p[0], pMultiplier);
+    p[1] = _mm256_mul_ps(p[1], pMultiplier);
+    p[2] = _mm256_mul_ps(p[2], pMultiplier);
 }
 
 inline void rpp_multiply16_constant(__m256 *p, __m256 pMultiplier)
