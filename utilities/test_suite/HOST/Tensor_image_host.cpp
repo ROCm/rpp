@@ -60,12 +60,12 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase ==54 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79);
     bool kernelSizeCase = (testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
-    bool nonQACase = (testCase == 24);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool nonQACase = (testCase == 24 || testCase == 28);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -875,6 +875,40 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_lens_correction_host(input, srcDescPtr, output, dstDescPtr, rowRemapTable, colRemapTable, tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 28:
+                {
+                    testCaseName = "warp_perspective";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    Rpp32f9 perspectiveTensor_f9[batchSize];
+                    Rpp32f *perspectiveTensor = reinterpret_cast<Rpp32f *>(perspectiveTensor_f9);
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        perspectiveTensor_f9[i].data[0] = 0.93;
+                        perspectiveTensor_f9[i].data[1] = 0.5;
+                        perspectiveTensor_f9[i].data[2] = 0.0;
+                        perspectiveTensor_f9[i].data[3] = -0.5;
+                        perspectiveTensor_f9[i].data[4] = 0.93;
+                        perspectiveTensor_f9[i].data[5] = 0.0;
+                        perspectiveTensor_f9[i].data[6] = 0.005;
+                        perspectiveTensor_f9[i].data[7] = 0.005;
+                        perspectiveTensor_f9[i].data[8] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_perspective_host(input, srcDescPtr, output, dstDescPtr, perspectiveTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
