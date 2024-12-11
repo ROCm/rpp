@@ -2,16 +2,17 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 1.9.6
+## (Unreleased) RPP 1.9.10
 
 ### Changed
 
+* RPP Tensor Gaussian Filter support on HOST
+* RPP Fog augmentation on HOST and HIP
 * RPP Warp Perspective on HOST and HIP
 
 ## (Unreleased) RPP 1.9.4
 
-### Changes
-
+### Changed
 * AMD Clang is now the default CXX and C compiler
 * RPP Tensor Box Filter support on HOST
 

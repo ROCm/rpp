@@ -63,9 +63,9 @@ int main(int argc, char **argv)
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84 || testCase == 49 || testCase == 54);
-    bool nonQACase = (testCase == 24 || testCase == 28);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84 || testCase == 49 || testCase == 54);
+    bool nonQACase = (testCase == 24 || || testCase == 28 || testCase == 54);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -408,6 +408,14 @@ int main(int argc, char **argv)
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *intensityFactor = nullptr;
+    Rpp32f *greyFactor = nullptr;
+    if(testCase == 10)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&intensityFactor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&greyFactor, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32u *kernelSizeTensor;
     if(testCase == 6)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
@@ -674,6 +682,24 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
+
+                    break;
+                }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        greyFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
@@ -1711,6 +1737,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
+    if(intensityFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(intensityFactor));
+    if(greyFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(greyFactor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == 6)
