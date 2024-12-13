@@ -33,6 +33,13 @@ SOFTWARE.
 
 #include <stddef.h>
 #include <cmath>
+#ifdef HIP_COMPILE
+    #include <hip/hip_fp16.h>
+#endif // HIP_COMPILE
+#include <half/half.hpp>
+using halfhpp = half_float::half;
+typedef halfhpp Rpp16f;
+
 #ifdef OCL_COMPILE
 #include <CL/cl.h>
 #endif
@@ -234,6 +241,14 @@ typedef struct
 {
     Rpp32f data[6];
 } Rpp32f6;
+
+/*! \brief RPP 9 float vector
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    Rpp32f data[9];
+} Rpp32f9;
 
 /*! \brief RPP 24 signed int vector
  * \ingroup group_rppdefs

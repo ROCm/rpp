@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-#include <half/half.hpp>
 #include "rpp_hip_host_decls.hpp"
-
-using half_float::half;
 
 #define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
 #define RPPMIN3(a,b,c) ((a < b) && (a < c) ? a : ((b < c) ? b : c))
