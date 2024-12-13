@@ -68,7 +68,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(DEFAULT_BUILD_TYPE "Release")
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -154,7 +153,6 @@ message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -227,10 +225,7 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_GPU_TARGETS ${DEFAULT_GPU_TARGETS} "gfx1200;gfx1201")
-    endif()
+    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
 
     # Set AMD GPU_TARGETS
     if((AMDGPU_TARGETS OR DEFINED ENV{AMDGPU_TARGETS}) AND (NOT GPU_TARGETS))
@@ -427,6 +422,15 @@ set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
 set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
 set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
 set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+
+# Add OS specific dependencies
+if(EXISTS "/etc/os-release")
+    file(READ "/etc/os-release" OS_RELEASE)
+    string(REGEX MATCH "22.04" UBUNTU_22_FOUND ${OS_RELEASE})
+    if(UBUNTU_22_FOUND)
+        set(RPP_DEBIAN_DEV_PACKAGE_LIST "${RPP_DEBIAN_DEV_PACKAGE_LIST}, libstdc++-12-dev")
+    endif()
+endif()
 
 # package release
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
