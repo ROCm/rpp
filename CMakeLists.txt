@@ -420,8 +420,8 @@ endif()
 # Set the dependent packages
 set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
 set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, libomp-dev")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half, libomp-devel")
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")
