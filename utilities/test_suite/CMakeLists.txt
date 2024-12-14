@@ -100,6 +100,7 @@ else()
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
     endif()
+    message("-- ${White}${PROJECT_NAME}: Using RPP Backend: ${BACKEND}${ColourReset}")
 
     # RPP installation - Audio support check
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
