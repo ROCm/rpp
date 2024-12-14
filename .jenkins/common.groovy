@@ -54,8 +54,8 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
-                cd ${project.paths.project_build_prefix}
-                mkdir -p build/${buildTypeDir}/test && cd build/${buildTypeDir}/test
+                cd ${project.paths.project_build_prefix}/build
+                mkdir -p test && cd test
                 cmake /opt/rocm/share/rpp/test
                 ctest -VV
                 """
