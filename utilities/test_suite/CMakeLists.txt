@@ -133,7 +133,7 @@ else()
     if(Python3_FOUND)
         if (PANDAS_FOUND EQUAL 0)
             if(OpenMP_FOUND)
-
+                message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
                 # HOST test set 1 - rpp_qa_tests_tensor_host_all - HOST Tensor-Image QA PASS/FAIL tests
                 if(TurboJpeg_FOUND)
                     if(OpenCV_FOUND)
@@ -187,9 +187,9 @@ else()
                 )
 
                 if( "${BACKEND}" STREQUAL "HIP")
-                    find_package(hip QUIET)
-                    if(hip_FOUND)
-
+                    find_package(HIP QUIET)
+                    if(HIP_FOUND)
+                        message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
                         # HIP test set 1 - rpp_qa_tests_tensor_hip_all - HIP Tensor-Image QA PASS/FAIL tests
                         if(TurboJpeg_FOUND)
                             if(OpenCV_FOUND)
@@ -242,7 +242,7 @@ else()
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
 
-                    endif(hip_FOUND)
+                    endif(HIP_FOUND)
                 elseif( "${BACKEND}" STREQUAL "OCL")
                     # TBD: Add OCL Tests
                     message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
