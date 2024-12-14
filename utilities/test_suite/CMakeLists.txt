@@ -23,20 +23,27 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rpp-test)
-
-# make test with CTest
-enable_testing()
-include(CTest)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+project(rpp-test)
+# make test with CTest
+enable_testing()
+include(CTest)
 
 # Set message options
 if(NOT WIN32)
@@ -66,6 +73,8 @@ List of high level dependency checks - for RPP QA tests in utilities/test_suite/
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
 - TurboJPEG (For IMAGE tests - to decode image inputs)
 ]]
+# add find modules
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
 # find RPP
 find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
