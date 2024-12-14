@@ -149,10 +149,8 @@ else()
         # )
 
         if(HIP_FOUND)
-            message("-- ${Green}HIP found at HIP_INCLUDE_DIRS - ${HIP_INCLUDE_DIRS} and HIP_LIBRARIES - ${HIP_LIBRARIES}${ColourReset}")
-            include_directories(${HIP_INCLUDE_DIRS} ${HIP_INCLUDE_DIRS}/hip)
-            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_LIBRARIES})
-            
+            message("-- ${Green}HIP found at hip_INCLUDE_DIRS - ${hip_INCLUDE_DIRS} and hip_LIBRARIES - ${hip_LIBRARIES}${ColourReset}")
+
             if(Python3_FOUND)
                 message("-- ${Green}Python3 found${ColourReset}")
                 # Check pandas for all RPP rocprof performance test results
