@@ -23,7 +23,6 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(test_suite/HIP)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -33,6 +32,15 @@ elseif(ROCM_PATH)
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+project(test_suite/HIP)
 
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
