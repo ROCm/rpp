@@ -104,6 +104,9 @@ else()
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
 
+        # add find modules
+        list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
         # find required libraries
         set(Python3_FIND_VIRTUALENV FIRST)
         find_package(Python3 QUIET)

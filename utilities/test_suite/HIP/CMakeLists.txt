@@ -105,6 +105,9 @@ else()
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
 
+        # add find modules
+        list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
         # find required libraries
         find_package(HIP QUIET)
         set(Python3_FIND_VIRTUALENV FIRST)
@@ -117,6 +120,7 @@ else()
         find_package(OpenMP QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
+        find_package(StdFilesystem QUIET)
 
         # find required python3-pip imports
         execute_process(
@@ -209,9 +213,6 @@ else()
                                 link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with libsnd${ColourReset}")
                                 add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
-                                if(NOT APPLE)
-                                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
-                                endif(NOT APPLE)
                                 target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                             else()
                                 message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
