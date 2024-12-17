@@ -39,8 +39,6 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HIP)
 
@@ -133,7 +131,6 @@ else()
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
-        
         # find required python3-pip imports
         execute_process(
             COMMAND ${Python3_EXECUTABLE} -m pip show pandas
@@ -223,8 +220,7 @@ else()
                                 link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with libsnd${ColourReset}")
                                 add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
-                                target_link_libraries(Tensor_audio_hip ${LINK_LIBRARY_LIST} ${libsnd_LIBS} -lsndfile)
-                                message("-- ${White}Tensor_audio_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
+                                target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                             else()
                                 message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                             endif(libsnd_LIBS)
