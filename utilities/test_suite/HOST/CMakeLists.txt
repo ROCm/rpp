@@ -23,16 +23,24 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(test_suite/HOST)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+project(test_suite/HOST)
 
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
@@ -104,6 +112,9 @@ else()
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
 
+        # add find modules
+        list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
         # find required libraries
         set(Python3_FIND_VIRTUALENV FIRST)
         find_package(Python3 QUIET)
@@ -115,6 +126,7 @@ else()
         find_package(OpenMP QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
+        find_package(StdFilesystem QUIET)
 
         # find required python3-pip imports
         execute_process(
@@ -208,9 +220,6 @@ else()
                             link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HOST tests set to build with libsnd${ColourReset}")
                             add_executable(Tensor_audio_host Tensor_audio_host.cpp)
-                            if(NOT APPLE)
-                                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
-                            endif(NOT APPLE)
                             target_link_libraries(Tensor_audio_host -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
