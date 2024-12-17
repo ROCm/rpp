@@ -106,7 +106,7 @@ else()
         endif()
 
         # find required libraries
-        find_package(hip QUIET)
+        find_package(HIP QUIET)
         set(Python3_FIND_VIRTUALENV FIRST)
         find_package(Python3 QUIET)
         find_package(NIFTI QUIET)
@@ -132,7 +132,7 @@ else()
         #     ERROR_QUIET                                           # added only on HOST
         # )
 
-        if(hip_FOUND)
+        if(HIP_FOUND)
             message("-- ${Green}HIP found at hip_INCLUDE_DIRS - ${hip_INCLUDE_DIRS} and hip_LIBRARIES - ${hip_LIBRARIES}${ColourReset}")
 
             if(Python3_FOUND)
@@ -234,7 +234,7 @@ else()
             endif(Python3_FOUND)
         else()
             message("-- ${Red}${PROJECT_NAME} Error: ROCm HIP must be installed to run any RPP test_suite HIP tests successfully${ColourReset}")
-        endif(hip_FOUND)
+        endif(HIP_FOUND)
     else()
         message("-- ${Red}${PROJECT_NAME} is supported to build and run only with RPP HIP backend installation${ColourReset}")
     endif("${BACKEND}" STREQUAL "HIP")
