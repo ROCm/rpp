@@ -54,8 +54,10 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
-                cd ${project.paths.project_build_prefix}/build/release
-                make test ARGS="-VV"
+                cd ${project.paths.project_build_prefix}/build
+                mkdir -p test && cd test
+                cmake /opt/rocm/share/rpp/test
+                ctest -VV
                 """
 
     platform.runCommand(this, command)
@@ -116,8 +118,6 @@ def runPackageCommand(platform, project) {
                 mv rpp-test*.${packageType} package/${osType}-rpp-test.${packageType}
                 mv rpp-dev*.${packageType} package/${osType}-rpp-dev.${packageType}
                 mv ${packageRunTime}.${packageType} package/${osType}-rpp.${packageType}
-                mv Testing/Temporary/LastTest.log ${osType}-LastTest.log
-                mv Testing/Temporary/LastTestsFailed.log ${osType}-LastTestsFailed.log
                 ${packageDetail} package/${osType}-rpp-test.${packageType}
                 ${packageDetail} package/${osType}-rpp-dev.${packageType}
                 ${packageDetail} package/${osType}-rpp.${packageType}
