@@ -34,7 +34,8 @@ std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
     {1, "normalize"},
-    {2, "log"}
+    {2, "log"},
+    {3, "concat"}
 };
 
 // Compute strides given Generic Tensor
@@ -115,7 +116,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
         {
             case 2:
             {
-                std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
+                std::array<Rpp32u, 4> roi = {0, 0, 15, 15};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;

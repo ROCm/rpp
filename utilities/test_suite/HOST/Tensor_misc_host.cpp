@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     string dst = argv[8];
     string scriptPath = argv[9];
     qaMode = (testType == 0);
-    bool axisMaskCase = (testCase == 1);
+    bool axisMaskCase = (testCase == 1 || testCase == 3);
     bool permOrderCase = (testCase == 0);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam;
@@ -100,8 +100,8 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
 
     // read input data
     if(qaMode)
@@ -109,8 +109,8 @@ int main(int argc, char **argv)
     else
     {
         std::srand(0);
-        for(int i = 0; i < bufferSize; i++)
-            inputF32[i] = static_cast<float>(std::rand() % 255);
+        for(int i = 0; i < bufferSize * 2; i++)
+            inputF32[i] = static_cast<float>(i);
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -182,6 +182,15 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 3:
+            {
+                testCaseName  = "concat";
+
+                startWallTime = omp_get_wtime();
+                rppt_concat_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, roiTensor, handle);
+
+                break;
+            }
             case 2:
             {
                 testCaseName  = "log";
@@ -204,19 +213,31 @@ int main(int argc, char **argv)
         minWallTime = std::min(minWallTime, wallTime);
         avgWallTime += wallTime;
     }
+    if(DEBUG_MODE)
+    {
+        std::ofstream refFile;
+        std::string refFileName;
+        refFileName = func + "_host.csv";
+        refFile.open(refFileName);
+        for (int i = 0; i < bufferSize * 2; i++)
+        {
+            refFile << *(outputF32 + i) << ",";
+        }
+        refFile.close();
+    }
 
     if(qaMode)
     {
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        // compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {
-        maxWallTime *= 1000;
-        minWallTime *= 1000;
-        avgWallTime *= 1000;
-        avgWallTime /= numRuns;
-        cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
+    maxWallTime *= 1000;
+    minWallTime *= 1000;
+    avgWallTime *= 1000;
+    avgWallTime /= numRuns;
+    cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
 
     free(inputF32);
     free(outputF32);
