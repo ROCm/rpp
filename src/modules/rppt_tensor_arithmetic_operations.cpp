@@ -251,6 +251,18 @@ RppStatus rppt_magnitude_host(RppPtr_t srcPtr1,
                                     layoutParams,
                                     rpp::deref(rppHandle));
     }
+    else if ((srcDescPtr->dataType == RpptDataType::I16) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        magnitude_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                    static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams,
+                                    rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 }
@@ -305,6 +317,29 @@ RppStatus rppt_log_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_log1p_host(RppPtr_t srcPtr,
+                        RpptGenericDescPtr srcGenericDescPtr,
+                        RppPtr_t dstPtr,
+                        RpptGenericDescPtr dstGenericDescPtr,
+                        Rpp32u *roiTensor,
+                        rppHandle_t rppHandle)
+{
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)) return RPP_ERROR_INVALID_DST_DATATYPE;
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        log1p_generic_host_tensor(static_cast<Rpp16s *>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                srcGenericDescPtr,
+                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                dstGenericDescPtr,
+                                roiTensor,
+                                rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
