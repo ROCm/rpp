@@ -31,5 +31,6 @@ SOFTWARE.
 #include "kernel/multiply_scalar.hpp"
 #include "kernel/magnitude.hpp"
 #include "kernel/log.hpp"
+#include "kernel/log1p.hpp"
 
 #endif // HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP

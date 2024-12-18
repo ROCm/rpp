@@ -331,7 +331,7 @@ RppStatus rppt_log1p_host(RppPtr_t srcPtr,
     {
         log1p_generic_host_tensor(static_cast<Rpp16s *>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                 srcGenericDescPtr,
-                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                 dstGenericDescPtr,
                                 roiTensor,
                                 rpp::deref(rppHandle));
