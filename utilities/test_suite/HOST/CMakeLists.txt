@@ -165,15 +165,15 @@ else()
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with OpenCV${ColourReset}")
                             add_executable(Tensor_host Tensor_host.cpp)
-                            target_link_libraries(Tensor_host -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_host -lrpp -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                             if (OPENPYXL_FOUND EQUAL 0)
                                 message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")
                                 add_executable(BatchPD_host_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
                             else()
                                 message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")
                             endif(OPENPYXL_FOUND EQUAL 0)
@@ -191,7 +191,7 @@ else()
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HOST tests set to build with OpenCV${ColourReset}")
                             add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-                            target_link_libraries(Tensor_voxel_host -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_voxel_host -lrpp ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                         endif(OpenCV_FOUND)
@@ -211,7 +211,7 @@ else()
                             if(NOT APPLE)
                                 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
                             endif(NOT APPLE)
-                            target_link_libraries(Tensor_audio_host -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_audio_host -lrpp ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                         endif(libsnd_LIBS)
@@ -221,7 +221,7 @@ else()
 
                     # HOST test set 4 - RPP Tensor-Misc HOST test suite
                     add_executable(Tensor_misc_host Tensor_misc_host.cpp)
-                    target_link_libraries(Tensor_misc_host -lrpp pthread ${LINK_LIBRARY_LIST})
+                    target_link_libraries(Tensor_misc_host -lrpp ${LINK_LIBRARY_LIST})
 
                 else()
                     message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
