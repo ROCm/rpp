@@ -23,17 +23,19 @@ Prerequisites
 
 * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 
-* CMake Version `3.5` and above
+* CMake Version `3.10` and above
 
     .. code-block:: shell
 
       sudo apt-get install cmake
 
-* Clang Version `5.0.1` and above
+* AMD Clang++ Version 18.0.0 or later - installed with ROCm
 
-    .. code-block:: shell
+  * NOTE: For CPU only backend use Clang Version `5.0.1` and above
 
-      sudo apt-get install clang
+      .. code-block:: shell
+
+        sudo apt-get install clang
 
 * IEEE 754-based half-precision floating-point library (half.hpp)
 

@@ -36,14 +36,10 @@ SOFTWARE.
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;
 using namespace std;
-
-using half_float::half;
-typedef half Rpp16f;
 
 int main(int argc, char **argv)
 {
@@ -637,6 +633,27 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    Rpp32f intensityFactor[batchSize];
+                    Rpp32f grayFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        grayFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_host(input, srcDescPtr, output, dstDescPtr, intensityFactor, grayFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 13:
                 {
                     testCaseName = "exposure";
@@ -1118,6 +1135,24 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 54:
+                {
+                    testCaseName = "gaussian_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    Rpp32f stdDevTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        stdDevTensor[i] = 5.0f;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gaussian_filter_host(input, srcDescPtr, output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

@@ -36,10 +36,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <hip/hip_fp16.h>
 #include <fstream>
-
-typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
@@ -410,6 +407,14 @@ int main(int argc, char **argv)
     if(testCase == VIGNETTE)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *intensityFactor = nullptr;
+    Rpp32f *greyFactor = nullptr;
+    if(testCase == 10)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&intensityFactor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&greyFactor, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32u *kernelSizeTensor;
     if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
@@ -672,6 +677,24 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
+
+                    break;
+                }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        greyFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
@@ -1676,6 +1699,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
+    if(intensityFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(intensityFactor));
+    if(greyFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(greyFactor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == JITTER)
