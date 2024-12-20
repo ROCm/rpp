@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
+    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
 
     // read input data
@@ -109,8 +109,8 @@ int main(int argc, char **argv)
     else
     {
         std::srand(0);
-        for(int i = 0; i < bufferSize * 2; i++)
-            inputF32[i] = static_cast<float>(i);
+        for(int i = 0; i < bufferSize; i++)
+            inputF32[i] = static_cast<float>(std::rand() % 255);
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
