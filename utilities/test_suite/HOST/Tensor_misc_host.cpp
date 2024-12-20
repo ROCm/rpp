@@ -228,16 +228,16 @@ int main(int argc, char **argv)
 
     if(qaMode)
     {
-        // compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize * 2, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {
+        maxWallTime *= 1000;
+        minWallTime *= 1000;
+        avgWallTime *= 1000;
+        avgWallTime /= numRuns;
+        cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-    maxWallTime *= 1000;
-    minWallTime *= 1000;
-    avgWallTime *= 1000;
-    avgWallTime /= numRuns;
-    cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
 
     free(inputF32);
     free(outputF32);

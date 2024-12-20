@@ -359,6 +359,10 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     {
         subVariantStride = (additionalParam - 1) * bufferLength;
     }
+    else if(testCase == "concat")
+    {
+        subVariantStride = additionalParam * bufferLength;
+    }
 
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;

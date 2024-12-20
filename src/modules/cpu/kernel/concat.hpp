@@ -26,32 +26,44 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-// Computes concat for 3D non toggle variants
-void concat_3D_tensor(Rpp32f *srcPtr, Rpp32f *srcPtr1, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *length, Rpp32u *strides, Rpp32u axisMask)
+// Computes concat for 3D variants
+void concat_3D_tensor(Rpp32f *srcPtr, Rpp32f *srcPtr1, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u axisMask)
 {
-
-    for(Rpp32u i = 0; i < length[0]; i++)
+    Rpp32u vectorIncrement = 8;
+    Rpp32u bufferLength = dims[2];
+    Rpp32u alignedLength = (bufferLength / 8) * 8;
+    for(Rpp32u i = 0; i < dims[0]; i++)
     {
         Rpp32f *srcPtrRow = srcPtr;
         Rpp32f *srcPtrRow1 = srcPtr1;
         Rpp32f *dstPtrRow = dstPtr;
-        for(Rpp32u j = 0; j < length[1]; j++)
+        for(Rpp32u j = 0; j < dims[1]; j++)
         {
             Rpp32f *srcPtrRowTemp = srcPtrRow;
             Rpp32f *srcPtrRowTemp1 = srcPtrRow1;
             Rpp32f *dstPtrRowTemp = dstPtrRow;
-            for(Rpp32u k = 0; k < length[2]; k++)
+            Rpp32u vectorLoopCount = 0;
+            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
             {
-                *dstPtrRowTemp = *srcPtrRowTemp;
-                srcPtrRowTemp++;
-                dstPtrRowTemp++;
+                __m256 pDst = _mm256_loadu_ps(srcPtrRowTemp);
+                _mm256_storeu_ps(dstPtrRowTemp, pDst);
+                srcPtrRowTemp += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
             }
-            for(Rpp32u k = 0; k < length[2]; k++)
+            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
+                *dstPtrRowTemp++ = *srcPtrRowTemp++;
+            
+            vectorLoopCount = 0;
+            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
             {
-                *dstPtrRowTemp = *srcPtrRowTemp1;
-                srcPtrRowTemp1++;
-                dstPtrRowTemp++;
+                __m256 pDst = _mm256_loadu_ps(srcPtrRowTemp1);
+                _mm256_storeu_ps(dstPtrRowTemp, pDst);
+                srcPtrRowTemp1 += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
             }
+            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
+                *dstPtrRowTemp++ = *srcPtrRowTemp1++;
+
             srcPtrRow += strides[2];
             srcPtrRow1 += strides[2];
             dstPtrRow += (strides[2] * 2);
@@ -63,18 +75,17 @@ void concat_3D_tensor(Rpp32f *srcPtr, Rpp32f *srcPtr1, RpptGenericDescPtr srcGen
    
 }
 
-// Computes normalize for ND non toggle variants for i8 dataype
+// Computes concat for ND variants
 template<typename T1, typename T2>
-void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, Rpp32u *length, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
+void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, Rpp32u *dims, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
 {
     if(level >= axisMask)
     {
         int size = 1;
         for(int i = level; i < tensorDim; i++)
         {
-            size = size * length[i];
+            size = size * dims[i];
         }
-        printf("\n Size : %d",size);
         T1 *srcPtr1 = srcPtr;
         for(int j=0; j < size; j++)
         {
@@ -87,24 +98,21 @@ void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, Rp
     }
     else
     {
-        for (Rpp32u i = 0; i < length[level]; i++)
+        for (Rpp32u i = 0; i < dims[level]; i++)
         {
-            concat_ND_tensor(srcPtr, srcPtr1, srcStride, dstPtr, length, tensorDim, level + 1, axisMask, maxDims);
+            concat_ND_tensor(srcPtr, srcPtr1, srcStride, dstPtr, dims, tensorDim, level + 1, axisMask, maxDims);
             dstPtr += srcStride[level + 1] * 2; 
             srcPtr += srcStride[level + 1];
         }
     }
 }
 
-// Computes normalize for 2D
+// Computes concat for 2D
 void concat_2D_tensor(Rpp32f *srcPtr, Rpp32f *srcPtr1, RpptGenericDescPtr srcDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u axisMask)
 {
     Rpp32u vectorIncrement = 8;
     Rpp32u bufferLength = dims[1];
     Rpp32u alignedLength = (bufferLength / 8) * 8;
-    printf("\n Dims %d %d",dims[0],dims[1]);
-    printf("\n Strides %d %d",strides[0],strides[1]);
-    printf("\n Aligned Length %d BufferLength %d",alignedLength,bufferLength);
     for(Rpp32u i = 0; i < dims[0]; i++)
     {
         Rpp32f *srcPtrTemp = srcPtr + i * strides[1];
@@ -190,11 +198,9 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
         else if(tensorDims == 3) // Called when a 3D tensor is passed to kernel
         {
             Rpp32u srcReductionDims[3], srcStride[3];
-            Rpp32u reductionDims;
-            bool isConsecutive = true;
             switch(axisMask)
             {
-                case 0: // Normalize axes 0
+                case 0: // concat axes 0
                 {
                     srcReductionDims[0] = 1;
                     srcReductionDims[1] = 1;
@@ -204,7 +210,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStride[2] = srcGenericDescPtr->strides[1];
                     break;
                 }
-                case 1: // Normalize axes 1
+                case 1: // concat axes 1
                 {
                     srcReductionDims[0] = 1;
                     srcReductionDims[1] = length[0];
@@ -214,7 +220,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStride[2] = srcGenericDescPtr->strides[1];
                     break;
                 }
-                case 2: // Normalize axes 0, 1
+                case 2: // concat axes 2
                 {
                     srcReductionDims[0] = length[0];
                     srcReductionDims[1] = length[1];
@@ -231,10 +237,10 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             concat_3D_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, srcReductionDims, srcStride, axisMask);
         }
-        // else // Handle any other ND tensor is passed to kernel
-        // {
-        //     concat_ND_tensor(srcPtrChannel, srcStride, dstPtrTemp, length, axisMask);
-        // }
+        else // Handle any other ND tensor is passed to kernel
+        {
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, dstGenericDescPtr->strides, dstPtrTemp, length, tensorDims, 0, axisMask, tensorDims);
+        }
     }
 
     return RPP_SUCCESS;
