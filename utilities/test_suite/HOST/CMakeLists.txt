@@ -23,7 +23,6 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -39,6 +38,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HOST)
 
@@ -151,15 +152,6 @@ else()
                 # include and link directories
                 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
-
-                # set flags
-                if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-                    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-                elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_CXX_COMPILER clang++)
-                endif()
-                set(CMAKE_CXX_STANDARD 17)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
                 if(OpenMP_FOUND)

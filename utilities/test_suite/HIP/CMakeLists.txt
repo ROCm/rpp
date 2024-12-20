@@ -23,7 +23,6 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -39,6 +38,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HIP)
 
@@ -216,7 +217,7 @@ else()
                             if(OpenCV_FOUND)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HIP tests set to build with OpenCV${ColourReset}")
                                 add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
-                                target_link_libraries(Tensor_voxel_hip ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${LINK_LIBRARY_LIST})
+                                target_link_libraries(Tensor_voxel_hip ${LINK_LIBRARY_LIST} ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
                                 message("-- ${White}Tensor_voxel_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                             else()
                                 message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
@@ -234,7 +235,7 @@ else()
                                 link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with libsnd${ColourReset}")
                                 add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
-                                target_link_libraries(Tensor_audio_hip ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
+                                target_link_libraries(Tensor_audio_hip ${LINK_LIBRARY_LIST} ${libsnd_LIBS} -lsndfile)
                                 message("-- ${White}Tensor_audio_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                             else()
                                 message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
