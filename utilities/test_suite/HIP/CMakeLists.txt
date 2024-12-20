@@ -170,6 +170,7 @@ else()
                     # include and link directories
                     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                     link_directories(${ROCM_PATH}/lib /usr/local/lib)
+                    link_directories(${ROCM_PATH}/lib/llvm/lib)
 
                     if(OpenMP_FOUND)
                         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb -O0")
