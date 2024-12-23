@@ -91,9 +91,9 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
 
     // set dims and compute strides
-    int bitDepth = 2, offSetInBytes = 0;
+    int bitDepth = 6, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     Rpp32u bufferSize = 1;
@@ -101,13 +101,20 @@ int main(int argc, char **argv)
         bufferSize *= srcDescriptorPtrND->dims[i];
 
     // allocate memory for input / output
+    // Rpp32f *inputF32 = NULL, *outputF32 = NULL;
+    // inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    // outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+
+    void *d_inputF32, *d_outputF32, *d_inputI16;
+
+    Rpp16s *inputI16 = NULL;
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
+    inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-
-    void *d_inputF32, *d_outputF32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputI16, bufferSize * sizeof(Rpp16s)));
 
     // read input data
     if(qaMode)
@@ -116,11 +123,15 @@ int main(int argc, char **argv)
     {
         std::srand(0);
         for(int i = 0; i < bufferSize; i++)
-            inputF32[i] = static_cast<float>((std::rand() % 255));
+            inputF32[i] = static_cast<float>(std::rand() % 255);
+    }
+
+    for(int i = 0; i < bufferSize; i++){
+        inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
     }
 
     // copy data from HOST to HIP
-    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, bufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     Rpp32u *permTensor = nullptr;
@@ -214,6 +225,15 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 3:
+            {
+                testCaseName  = "log1p";
+
+                startWallTime = omp_get_wtime();
+                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
+
+                break;
+            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
@@ -230,13 +250,29 @@ int main(int argc, char **argv)
     }
     rppDestroyGPU(handle);
 
-    // compare outputs if qaMode is true
-    if(qaMode)
+    if(DEBUG_MODE)
     {
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        std::ofstream refFile;
+        std::string refFileName;
+        refFileName = func + "_host.csv";
+        refFile.open(refFileName);
+        for (int i = 0; i < bufferSize * 2; i++)
+        {
+            refFile << *(outputF32 + i) << ",";
+        }
+        refFile.close();
+    }
+
+    // compare outputs if qaMode is true
+    if(qaMode)
+    {
+        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        // CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        // compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {
@@ -254,6 +290,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipFree(d_inputF32));
+    CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));

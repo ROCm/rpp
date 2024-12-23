@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 2
+caseMax = 3
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -208,7 +208,7 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['0', '1', '2']
+supportedCaseList = ['0', '1', '2', '3']
 noCaseSupported = all(case not in supportedCaseList for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
