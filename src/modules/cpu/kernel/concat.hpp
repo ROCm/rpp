@@ -155,20 +155,21 @@ void concat_NDD_tensor(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rpp32u *dims, 
 
 // Computes concat for ND variants
 template<typename T1, typename T2>
-void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, Rpp32u *dims, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
+void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
 {
 
     if(level >= axisMask)
     {
         concat_NDD_tensor(srcPtr, srcStride, dstPtr, dims, tensorDim, level, axisMask, maxDims);
-        // int size = 1;
-        // for(int i = level; i < tensorDim; i++)
-        // {
-        //     size = size * dims[i];
-        // }
-        // printf("\nStrides %d  Size1 :%d ",srcStride[level],size);
+        int size = 1;
+        for(int i = level; i < tensorDim; i++)
+        {
+            size = size * dims[i];
+        }
+        printf("\nStrides %d  Size1 :%d ",srcStride[level],size);
         // dstPtr += size;
-        dstPtr += srcStride[level];
+        // printf("\n Dstdesc1 %d Dims %d",dstGenericDescPtr->dims[level + 1 ],dims[level]);
+        dstPtr += (srcStride[level]/ dstGenericDescPtr->dims[level + 1 ] ) * dims[level];
         concat_NDD_tensor(srcPtr1, srcStride, dstPtr, dims, tensorDim, level, axisMask, maxDims);
         // int size = 1;
         // T1 *srcPtr1 = srcPtr;
@@ -195,7 +196,7 @@ void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, T2 *dstPtr, Rp
         }
         for (Rpp32u i = 0; i < dims[level]; i++)
         {
-            concat_ND_tensor(srcPtr, srcPtr1, srcStride, dstPtr, dims, tensorDim, level + 1, axisMask, maxDims);
+            concat_ND_tensor(srcPtr, srcPtr1, srcStride, dstPtr, dstGenericDescPtr, dims, tensorDim, level + 1, axisMask, maxDims);
             // dstPtr += srcStride[level + 1] * 2; 
             dstPtr += srcStride[level + 1] * 2; 
             srcPtr += srcStride[level + 1];
@@ -372,7 +373,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
         else // Handle any other ND tensor is passed to kernel
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, dstGenericDescPtr->strides, dstPtrTemp, length, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, tensorDims, 0, axisMask, tensorDims);
         }
     }
 
@@ -475,7 +476,7 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else // Handle any other ND tensor is passed to kernel
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, dstGenericDescPtr->strides, dstPtrTemp, length, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, tensorDims, 0, axisMask, tensorDims);
         }
     }
 
@@ -519,7 +520,7 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr,
             srcPtrChannel1 += begin[i] * srcGenericDescPtr->strides[i + 1];
         }
         
-        concat_ND_tensor(srcPtrChannel, srcPtrChannel1, dstGenericDescPtr->strides, dstPtrTemp, length, tensorDims, level, axisMask, tensorDims);
+        concat_ND_tensor(srcPtrChannel, srcPtrChannel1, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, tensorDims, level, axisMask, tensorDims);
     }
 
     return RPP_SUCCESS;
