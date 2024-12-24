@@ -1723,24 +1723,6 @@ inline void rpp_store24_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG,
     _mm256_storeu_ps(dstPtrB, p[2]);
 }
 
-inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
-{
-    __m128 p128[8];
-    p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
-    p128[1] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 3))));
-    p128[2] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 6))));
-    p128[3] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 9))));
-    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
-    p128[4] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 12))));
-    p128[5] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 15))));
-    p128[6] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 18))));
-    p128[7] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 21))));
-    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
-    p[0] = _mm256_setr_m128(p128[0], p128[4]);
-    p[1] = _mm256_setr_m128(p128[1], p128[5]);
-    p[2] = _mm256_setr_m128(p128[2], p128[6]);
-}
-
 inline void rpp_load24_f32pkd3_to_f64pln3_avx(Rpp32f *srcPtr, __m256d *p)
 {
     __m128 p128[8];
@@ -1819,13 +1801,6 @@ inline void rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
     _mm_storeu_ps(dstPtr + 15, p128[1]);
     _mm_storeu_ps(dstPtr + 18, p128[2]);
     _mm_storeu_ps(dstPtr + 21, p128[3]);
-}
-
-inline void rpp_load24_f16pln3_to_f32pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
-{
-    p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
-    p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
-    p[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB))));
 }
 
 inline void rpp_load24_f32pln3_to_f64pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256d *p)
@@ -1915,11 +1890,6 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
     _mm256_storeu_ps(dstPtr, p[0]);
-}
-
-inline void rpp_load8_f16_to_f32_avx(Rpp16f *srcPtr, __m256 *p)
-{
-    p[0] =  _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
 }
 
 inline void rpp_load8_f32_to_f64_avx(Rpp32f *srcPtr, __m256d *p)
@@ -3225,7 +3195,7 @@ inline void rpp_generic_nn_load_u8pln1_avx(Rpp8u *srcPtrChannel, Rpp32s *srcLoc,
             buffer[i] = *(srcPtrChannel + srcLoc[i]);
     }
     __m128i px = _mm_loadu_si128((__m128i *)buffer);
-    p = _mm256_setr_m128i(px, xmm_px0);
+    p = _mm256_castsi128_si256(px);
 }
 
 inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
@@ -4253,6 +4223,40 @@ inline void rpp_resize_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInter
                           (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2));
 }
 
+inline void rpp_generic_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
+{
+    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]) : 0,
+                          (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]) : 0,
+                          (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4]) : 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5]) : 0,
+                          (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6]) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7]) : 0);
+
+    p[1] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 1) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 1) : 0,
+                          (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 1) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 1) : 0,
+                          (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 1) : 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 1) : 0,
+                          (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 1) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 1) : 0);
+
+    p[2] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 2) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 2) : 0,
+                          (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 2) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 2) : 0,
+                          (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 2) : 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 2) : 0,
+                          (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2) : 0);
+}
+
+inline void rpp_generic_nn_load_f16pkd3_to_f32pkd3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
+{
+    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]): 0, (!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 1): 0,        // Get R01|G01|B01|R02|B02|G02|R03|G03
+                          (!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 2): 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]): 0,        // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
+                          (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 1): 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 2): 0,
+                          (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]): 0, (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 1): 0);
+    p[1] = _mm256_setr_ps((!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 2): 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]): 0,        // Get B03|R04|G04|B04|R05|G05|B05|R06
+                          (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 1): 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 2): 0,    // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
+                          (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4]): 0, (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 1): 0,
+                          (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 2): 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5]): 0);
+    p[2] = _mm256_setr_ps((!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 1): 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 2): 0,    // Get G06|B06|R07|G07|B07|R08|G08|B08
+                          (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6]): 0, (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 1): 0,        // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
+                          (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2): 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7]): 0,
+                          (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 1): 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2): 0);
+}
+
 inline void rpp_resize_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m128 &p)
 {
     __m128 pTemp[4];
@@ -4279,6 +4283,14 @@ inline void rpp_resize_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *
                        (Rpp32f)*(srcRowPtrsForInterp + loc[2]), (Rpp32f)*(srcRowPtrsForInterp + loc[3]),
                        (Rpp32f)*(srcRowPtrsForInterp + loc[4]), (Rpp32f)*(srcRowPtrsForInterp + loc[5]),
                        (Rpp32f)*(srcRowPtrsForInterp + loc[6]), (Rpp32f)*(srcRowPtrsForInterp + loc[7]));
+}
+
+inline void rpp_generic_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 &p)
+{
+    p = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]) : 0,
+                       (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]) : 0,
+                        (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4]) : 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5]) : 0,
+                        (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6]) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7]) : 0);
 }
 
 inline void rpp_resize_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
@@ -4403,8 +4415,6 @@ inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* 
     rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
-
-
 inline void rpp_store12_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
@@ -4447,6 +4457,17 @@ inline void rpp_store24_f32pkd3_to_f32pkd3_avx(Rpp32f* dstPtr, __m256 *p)
     _mm256_storeu_ps(dstPtr, p[0]); /* Store RGB set 1 */
     _mm256_storeu_ps(dstPtr + 8, p[1]); /* Store RGB set 2 */
     _mm256_storeu_ps(dstPtr + 16, p[2]); /* Store RGB set 3 */
+}
+
+inline void rpp_store24_f32pkd3_to_f16pkd3_avx(Rpp16f* dstPtr, __m256* p)
+{
+    __m128i px128[3];
+    px128[0] = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[1] = _mm256_cvtps_ph(p[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    px128[2] = _mm256_cvtps_ph(p[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtr, px128[0]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 8), px128[1]);
+    _mm_storeu_si128((__m128i *)(dstPtr + 16), px128[2]);
 }
 
 inline void rpp_convert24_pkd3_to_pln3(__m128i &pxLower, __m128i &pxUpper, __m128i *pxDstChn)
