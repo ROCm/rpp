@@ -358,7 +358,7 @@ RppStatus rppt_concat_host(RppPtr_t srcPtr,
 
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
-        concat_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+        concat_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                    static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                    srcGenericDescPtr,
                                    static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
