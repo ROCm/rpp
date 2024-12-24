@@ -42,7 +42,7 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
-find_package(hip QUIET)
+find_package(HIP QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 
@@ -59,7 +59,7 @@ else()
     message("-- ${Yellow}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
 
-if (hip_FOUND AND OpenCV_FOUND)
+if (HIP_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
     set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
