@@ -112,7 +112,8 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"}
+    {92, "slice"},
+    {93, "concat"}
 };
 
 // Golden outputs for Tensor min Kernel
@@ -498,6 +499,32 @@ inline void set_generic_descriptor_slice(RpptDescPtr srcDescPtr, RpptGenericDesc
     }
 }
 
+// sets generic descriptor dimensions and strides of src/dst for slice functionality
+inline void set_generic_descriptor_concat(RpptDescPtr srcDescPtr, RpptGenericDescPtr descriptorPtr3D, int batchSize)
+{
+    descriptorPtr3D->offsetInBytes = 0;
+    descriptorPtr3D->dataType = srcDescPtr->dataType;
+    descriptorPtr3D->layout = srcDescPtr->layout;
+    descriptorPtr3D->numDims = 4;
+    descriptorPtr3D->dims[0] = batchSize;
+    if (srcDescPtr->layout == RpptLayout::NHWC)
+    {
+        descriptorPtr3D->dims[1] = srcDescPtr->h;
+        descriptorPtr3D->dims[2] = srcDescPtr->w;
+        descriptorPtr3D->dims[3] = srcDescPtr->c;
+    }
+    else
+    {
+        descriptorPtr3D->dims[1] = srcDescPtr->c;
+        descriptorPtr3D->dims[2] = srcDescPtr->h;
+        descriptorPtr3D->dims[3] = srcDescPtr->w;
+    }
+    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
+    descriptorPtr3D->strides[3] = 1;
+}
+
 // sets descriptor dimensions and strides of src/dst
 inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes, int additionalStride = 0)
 {
@@ -861,8 +888,10 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
-        Rpp32u height = dstImgSizes[j].height;
+        Rpp32u height = dstImgSizes[j].height * 2;
         Rpp32u width = dstImgSizes[j].width;
+        // Rpp32u height = 150;
+        // Rpp32u width = 150;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
@@ -967,7 +996,7 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, string axisMaskName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
     string refFile = "";
@@ -1032,6 +1061,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
+    }
+    else if(testCase == 93)
+    {
+        func += "_axisMask" + axisMaskName;
+        // if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+        // {
+        //     Rpp32u axisMask = std::stoi(axisMaskName);
+        //     axisMask = ((axisMask & 1) << 2) | ((axisMask & 2) >> 1) | ((axisMask & 4) >> 1);
+        //     axisMaskName = std::to_string(axisMask);
+        // }
+        binFile += "_axisMask" + axisMaskName;
     }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
@@ -1342,6 +1382,54 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
             roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
             shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
             shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
+        }
+    }
+}
+
+// initialize the roi values required for concat
+void init_concat(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor)
+{
+    if(descriptorPtr3D->numDims == 4)
+    {
+        if (descriptorPtr3D->layout == RpptLayout::NCHW)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = 0;
+                roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 3] = descriptorPtr3D->dims[1];
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 5] = roiPtrSrc[i].xywhROI.roiWidth;
+            }
+        }
+        else if(descriptorPtr3D->layout == RpptLayout::NHWC)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 2] = 0;
+                roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiWidth;
+                roiTensor[idx2 + 5] = descriptorPtr3D->dims[3];
+            }
+        }
+    }
+    if(descriptorPtr3D->numDims == 3)
+    {
+        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+        {
+            int idx1 = i * 2;
+            int idx2 = i * 4;
+            roiTensor[idx2] = roiPtrSrc[i].xywhROI.xy.y;
+            roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+            roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.roiHeight;
+            roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
         }
     }
 }

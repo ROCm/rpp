@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79  || testCase == 93);
     bool kernelSizeCase = (testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
@@ -195,6 +195,7 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
+    std::string axisMaskName = "";
 
     if (interpolationTypeCase)
     {
@@ -214,6 +215,12 @@ int main(int argc, char **argv)
         std::sprintf(additionalParam_char, "%u", additionalParam);
         func += "_kernelSize";
         func += additionalParam_char;
+    }
+    if(testCase == 93)
+    {
+        axisMaskName = std::to_string(additionalParam);
+        func +="_axisMask";
+        func += std::to_string(additionalParam);        
     }
 
     if(!qaFlag)
@@ -303,7 +310,7 @@ int main(int argc, char **argv)
     Rpp64u ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
     Rpp64u oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
     Rpp64u inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
-    Rpp64u outputBufferSize = oBufferSize * get_size_of_data_type(dstDescPtr->dataType) + dstDescPtr->offsetInBytes;
+    Rpp64u outputBufferSize = (oBufferSize * get_size_of_data_type(dstDescPtr->dataType) + dstDescPtr->offsetInBytes) * 2;
 
     // Initialize 8u host buffers for src/dst
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
@@ -349,10 +356,21 @@ int main(int argc, char **argv)
     // create generic descriptor and params in case of slice
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    // create generic descriptor and params in case of slice and concat
+    RpptGenericDesc srcDescriptor3D, dstDescriptor3D;
+    RpptGenericDescPtr srcDescriptorPtr3D = &srcDescriptor3D;
+    RpptGenericDescPtr dstDescriptorPtr3D = &dstDescriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
     if(testCase == 92)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
+    
+     Rpp32u *concatRoiTensor = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
+    if(testCase == 93)
+    {
+        set_generic_descriptor_concat(srcDescPtr, srcDescriptorPtr3D, batchSize);
+        set_generic_descriptor_concat(dstDescPtr, dstDescriptorPtr3D, batchSize);
+    }
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
@@ -1551,6 +1569,22 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 93:
+                {
+                    testCaseName  = "concat";
+                    Rpp32u numDim = srcDescriptorPtr3D->numDims - 1;
+                    init_concat(srcDescriptorPtr3D, roiTensorPtrSrc, concatRoiTensor);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if(inputBitDepth == 0)
+                        rppt_concat_host(input, srcDescriptorPtr3D, output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -1684,6 +1718,10 @@ int main(int argc, char **argv)
                         }
                     }
                 }
+                else if(testCase == 93)
+                {
+                    
+                }
 
                 /*Compare the output of the function with golden outputs only if
                 1.QA Flag is set
@@ -1691,7 +1729,7 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
+                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, axisMaskName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
