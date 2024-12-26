@@ -30,16 +30,13 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "../rpp_test_suite_common.h"
+#include "../rpp_test_suite_image.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <hip/hip_fp16.h>
 #include <fstream>
-
-typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
@@ -63,12 +60,12 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84 || testCase == 49 || testCase == 54);
-    bool nonQACase = (testCase == 24);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84 || testCase == 49 || testCase == 54);
+    bool nonQACase = (testCase == 24 || testCase == 28 || testCase == 54);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -192,7 +189,7 @@ int main(int argc, char **argv)
     {
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%u", additionalParam);
-        func += "_kSize";
+        func += "_kernelSize";
         func += additionalParam_char;
     }
     else if (interpolationTypeCase)
@@ -277,8 +274,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    Rpp32s additionalStride = 0;
+    if (kernelSizeCase)
+        additionalStride = additionalParam / 2;
+
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes, additionalStride);
     set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
@@ -407,6 +408,14 @@ int main(int argc, char **argv)
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *intensityFactor = nullptr;
+    Rpp32f *greyFactor = nullptr;
+    if(testCase == 10)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&intensityFactor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&greyFactor, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32u *kernelSizeTensor;
     if(testCase == 6)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
@@ -418,6 +427,10 @@ int main(int argc, char **argv)
     void *d_interDstPtr;
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
+    
+    Rpp32f *perspectiveTensorPtr = NULL;
+    if(testCase == 28)
+        CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -672,6 +685,24 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 10:
+                {
+                    testCaseName = "fog";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        intensityFactor[i] = 0;
+                        greyFactor[i] = 0.3;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 13:
                 {
                     testCaseName = "exposure";
@@ -789,6 +820,37 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 28:
+                {
+                    testCaseName = "warp_perspective";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    for (i = 0, j = 0; i < batchSize; i++, j += 9)
+                    {
+                        perspectiveTensorPtr[j + 0] = 0.93;
+                        perspectiveTensorPtr[j + 1] = 0.5;
+                        perspectiveTensorPtr[j + 2] = 0.0;
+                        perspectiveTensorPtr[j + 3] = -0.5;
+                        perspectiveTensorPtr[j + 4] = 0.93;
+                        perspectiveTensorPtr[j + 5] = 0.0;
+                        perspectiveTensorPtr[j + 6] = 0.005;
+                        perspectiveTensorPtr[j + 7] = 0.005;
+                        perspectiveTensorPtr[j + 8] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1589,12 +1651,12 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
+                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
                     convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-
+                    
                 // Check if the ROI values for each input is within the bounds of the max buffer allocated
                 RpptROI roiDefault;
                 RpptROIPtr roiPtrDefault = &roiDefault;
@@ -1657,6 +1719,8 @@ int main(int argc, char **argv)
     }
     if(testCase == 35)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
+    if(perspectiveTensorPtr != NULL)
+      CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
@@ -1673,6 +1737,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
+    if(intensityFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(intensityFactor));
+    if(greyFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(greyFactor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == 6)

@@ -31,5 +31,6 @@ SOFTWARE.
 #include "kernel/tensor_mean.hpp"
 #include "kernel/tensor_stddev.hpp"
 #include "kernel/normalize.hpp"
+#include "kernel/concat.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

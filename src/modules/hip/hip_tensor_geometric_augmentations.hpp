@@ -39,6 +39,10 @@ SOFTWARE.
 #include "kernel/transpose.hpp"
 #include "kernel/crop_and_patch.hpp"
 #include "kernel/flip_voxel.hpp"
+<<<<<<< HEAD
 #include "kernel/concat.hpp"
+=======
+#include "kernel/warp_perspective.hpp"
+>>>>>>> db/concat
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

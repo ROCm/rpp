@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 2
+caseMax = 3
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -73,7 +73,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--toggle', type = int, default = 0, help = "Toggle outputs")
-    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
+    parser.add_argument('--case_list', nargs = "+", help = "A list of specific case numbers to run separated by spaces", required = False)
     parser.add_argument("--num_dims", type = int, default = 2, help = "Number of dimensions for input")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -163,7 +163,7 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['0', '1', '2']
+supportedCaseList = ['0', '1', '2', '3']
 noCaseSupported = all(case not in supportedCaseList for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
@@ -176,6 +176,9 @@ for case in caseList:
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder)
     elif case == "1":
         for axisMask in range(1, pow(2, numDims)):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+    elif case == "3":
+        for axisMask in range(0, numDims):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
     else:
         run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)

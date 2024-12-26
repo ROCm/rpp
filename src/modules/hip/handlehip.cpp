@@ -239,12 +239,24 @@ struct HandleImpl
         }
 
         CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize));
-
-        /* (600000 + 293 + 128) * 128 - Maximum scratch memory required for Non Silent Region Detection HIP kernel used in RNNT training (uses a batchsize 128)
-           - 600000 is the maximum size that will be required for MMS buffer based on Librispeech dataset
-           - 293 is the size required for storing reduction outputs for 600000 size sample
-           - 128 is the size required for storing cutOffDB values for batch size 128 */
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888));
+#ifdef AUDIO_SUPPORT
+        // If AUDIO_SUPPORT is enabled, 'scratchBufferHip' needed to run RNNT training successfully are larger.
+        // Current max allocation size = sizeof(Rpp32f) * 372877312, which is based on Spectrogram requirements
+        // 1. Spectrogram requirements:
+        //      - 372877312 = (512 * 3754 * 192) + (512 * 3754 * 2)
+        //      - Above is the maximum scratch memory required for Spectrogram HIP kernel used in RNNT training (uses a batchsize 192)
+        //      - (512 * 3754 * 192) is the maximum size that will be required for window output based on Librispeech dataset in RNNT training
+        //      - (512 * 3754 * 2) is the size required for storing sin and cos coefficients required for FFT computation in Spectrogram HIP kernel in RNNT training
+        // 2. Non Silent Region Detection requirements:
+        //      - 115293120 = (600000 + 293 + 192) * 192
+        //      - Above is the maximum scratch memory required for Non Silent Region Detection HIP kernel used in RNNT training (uses a batchsize 192)
+        //      - 600000 is the maximum size that will be required for MMS buffer based on Librispeech dataset
+        //      - 293 is the size required for storing reduction outputs for 600000 size sample
+        //      - 192 is the size required for storing cutOffDB values for batch size 192
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 372877312));
+#else
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400));   // 3840 x 2160
+#endif
         CHECK_RETURN_STATUS(hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400));    // 3840 x 2160
     }
 };

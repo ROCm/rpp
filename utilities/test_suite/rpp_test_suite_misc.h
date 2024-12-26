@@ -22,9 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "rpp.h"
 #include "rpp_test_suite_common.h"
-
-using namespace std;
+#include <omp.h>
+#include <string.h>
+#include <iostream>
+#include <map>
+#include <array>
 
 std::map<int, string> augmentationMiscMap =
 {
@@ -354,6 +358,10 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     else if (testCase == "transpose")
     {
         subVariantStride = (additionalParam - 1) * bufferLength;
+    }
+    else if(testCase == "concat")
+    {
+        subVariantStride = additionalParam * bufferLength;
     }
 
     int sampleLength = bufferLength / batchSize;

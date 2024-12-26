@@ -22,14 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
-if (NOT DEFINED CMAKE_CXX_COMPILER)
+cmake_minimum_required(VERSION 3.10)
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.9.1")
+set(VERSION "1.9.10")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -45,14 +59,6 @@ find_program(MAKE_NSIS_EXE makensis)
 find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
-# ROCm Path
-if(DEFINED ENV{ROCM_PATH})
-    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
-elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
-else()
-    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
-endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
@@ -62,7 +68,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(DEFAULT_BUILD_TYPE "Release")
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -114,8 +119,7 @@ endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     # -O0  -- Don't Optimize output file
     # -g -- generate debugging information
-    # -Og -- Optimize for debugging experience rather than speed or size
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -Og")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
 else()
     # -O3 -- Optimize output file
     # TBD:Verify Requirement -Ofast - Optimize for speed disregarding exact standards compliance
@@ -149,7 +153,6 @@ message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -222,20 +225,26 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 
     # Set supported GPU Targets
-    set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx1200;gfx1201")
+    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
+
+    # Set AMD GPU_TARGETS
+    if((AMDGPU_TARGETS OR DEFINED ENV{AMDGPU_TARGETS}) AND (NOT GPU_TARGETS))
+        message("-- ${Red}${PROJECT_NAME} DEPRECATION -- AMDGPU_TARGETS use is deprecated. Use GPU_TARGETS${ColourReset}")
+        if(DEFINED ENV{AMDGPU_TARGETS})
+            set(GPU_TARGETS $ENV{AMDGPU_TARGETS} CACHE STRING "List of specific machine types for library to target")
+        else()
+            set(GPU_TARGETS ${AMDGPU_TARGETS})
+        endif()
     endif()
 
-    # Set AMDGPU_TARGETS
-    if(DEFINED ENV{AMDGPU_TARGETS})
-        set(AMDGPU_TARGETS $ENV{AMDGPU_TARGETS} CACHE STRING "List of specific machine types for library to target")
-    elseif(AMDGPU_TARGETS)
-        message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS set with -D option${ColourReset}")
+    if(DEFINED ENV{GPU_ARCHS})
+        set(GPU_TARGETS $ENV{GPU_ARCHS} CACHE STRING "List of specific machine types for library to target")
+    elseif(GPU_TARGETS)
+        message("-- ${White}${PROJECT_NAME} -- GPU_TARGETS set with -D option${ColourReset}")
     else()
-        set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
+        set(GPU_TARGETS "${DEFAULT_GPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     endif()
-    message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS: ${AMDGPU_TARGETS}${ColourReset}")
+    message("-- ${White}${PROJECT_NAME} -- AMD GPU_TARGETS: ${GPU_TARGETS}${ColourReset}")
 
     find_package(HIP QUIET)
     if(HIP_FOUND)
@@ -246,8 +255,8 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS ${ROCM_PATH}/llvm/bin/clang++)
-		set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+	if (EXISTS "${ROCM_PATH}/bin/amdclang++")
+		set(COMPILER_FOR_HIP "${ROCM_PATH}/bin/amdclang++")
 	else()
 		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
 	endif()
@@ -411,8 +420,19 @@ endif()
 # Set the dependent packages
 set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
 set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, libomp-dev")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half, libomp-devel")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, libopencv-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: OpenCV Package missing on RPM
+
+# Add OS specific dependencies
+if(EXISTS "/etc/os-release")
+    file(READ "/etc/os-release" OS_RELEASE)
+    string(REGEX MATCH "22.04" UBUNTU_22_FOUND ${OS_RELEASE})
+    if(UBUNTU_22_FOUND)
+        set(RPP_DEBIAN_DEV_PACKAGE_LIST "${RPP_DEBIAN_DEV_PACKAGE_LIST}, libstdc++-12-dev")
+    endif()
+endif()
 
 # package release
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
@@ -447,7 +467,7 @@ set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core, ${RPP_DEBIAN_PACKAGE_LIST}"
 set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
 set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_DEV_PACKAGE_LIST}")
 set(CPACK_DEBIAN_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
-set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}-dev, clang")
+set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}-dev, ${RPP_DEBIAN_TEST_PACKAGE_LIST}")
 set(CPACK_DEBIAN_PACKAGE_LICENSE "MIT" )
 # Debian package specific variable for ASAN
 set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
@@ -459,7 +479,7 @@ set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_RPM_DEV_PACKAGE_LIST}")
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
-set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}-devel, clang")
+set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}-devel, ${RPP_RPM_TEST_PACKAGE_LIST}")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
 # RPM package specific variable for ASAN
 set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )

@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     string dst = argv[8];
     string scriptPath = argv[9];
     qaMode = (testType == 0);
-    bool axisMaskCase = (testCase == 1);
+    bool axisMaskCase = (testCase == 1 || testCase == 3);
     bool permOrderCase = (testCase == 0);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
-    int bitDepth = 2, offSetInBytes = 0;
+    int bitDepth = 0, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
@@ -101,7 +101,16 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
+
+    Rpp8u *inputU8 = NULL;
+    Rpp8u *outputU8 = NULL;
+    Rpp64u bufferSizeU8 = bufferSize * sizeof(Rpp8u) ;
+    if(bitDepth == 0)
+    {
+        inputU8 = static_cast<Rpp8u *>(calloc(bufferSize, sizeof(Rpp8u)));
+        outputU8 = static_cast<Rpp8u *>(calloc(bufferSize * 2, sizeof(Rpp8u)));
+    }
 
     // read input data
     if(qaMode)
@@ -110,7 +119,18 @@ int main(int argc, char **argv)
     {
         std::srand(0);
         for(int i = 0; i < bufferSize; i++)
-            inputF32[i] = static_cast<float>(std::rand() % 255);
+        {
+            // inputF32[i] = static_cast<float>(std::rand() % 255);
+            inputF32[i] = static_cast<float>(i);
+        }
+    }
+
+    if (bitDepth == 0)
+    {
+        for(int i = 0; i < bufferSizeU8; i++)
+        {
+            inputU8[i] = std::min(std::max(static_cast<unsigned char>(inputF32[i]), static_cast<unsigned char>(0)), static_cast<unsigned char>(255));
+        }
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -182,6 +202,23 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 3:
+            {
+                testCaseName  = "concat";
+
+                startWallTime = omp_get_wtime();
+                if(bitDepth == 0)
+                {
+                    rppt_concat_host(inputU8, srcDescriptorPtrND, outputU8, dstDescriptorPtrND, axisMask, roiTensor, handle);
+                }
+                else
+                {
+                    rppt_concat_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, roiTensor, handle);
+
+                }
+
+                break;
+            }
             case 2:
             {
                 testCaseName  = "log";
@@ -204,10 +241,32 @@ int main(int argc, char **argv)
         minWallTime = std::min(minWallTime, wallTime);
         avgWallTime += wallTime;
     }
+    
+    if(bitDepth == 0)
+    {
+        Rpp64u bufferLength = bufferSize * sizeof(Rpp8u);
+        // Copy U8 buffer to F32 buffer for display purposes
+        for(int i = 0; i < bufferLength * 2; i++)
+        {
+            outputF32[i] = static_cast<float>(outputU8[i]);
+        }
+    }
+    if(DEBUG_MODE)
+    {
+        std::ofstream refFile;
+        std::string refFileName;
+        refFileName = func + "_host.csv";
+        refFile.open(refFileName);
+        for (int i = 0; i < bufferSize * 2; i++)
+        {
+            refFile << *(outputF32 + i) << ",";
+        }
+        refFile.close();
+    }
 
     if(qaMode)
     {
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize * 2, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {
@@ -220,6 +279,11 @@ int main(int argc, char **argv)
 
     free(inputF32);
     free(outputF32);
+    if(bitDepth == 0)
+    {
+        free(inputU8);
+        free(outputU8);
+    }
     free(roiTensor);
     if(meanTensor != nullptr)
         free(meanTensor);
