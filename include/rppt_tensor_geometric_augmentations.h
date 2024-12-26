@@ -769,6 +769,22 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
 RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *perspectiveTensor, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Concat Generic augmentation on HOST backend
+ * \details Concat the input generic ND buffer for a given ND Tensor. Also has support for 2D and 3D.
+ * \param [in] srcPtr source tensor memory in HOST memory
+ * \param [in] srcPtr1 source tensor memory in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] axisMask axis along which concat needs to be done
+ * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_concat_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

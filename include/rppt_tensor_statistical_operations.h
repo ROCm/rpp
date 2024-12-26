@@ -193,22 +193,6 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_normalize_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp8u computeMeanStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Concat Generic augmentation on HOST backend
- * \details Concat the input generic ND buffer for a given ND Tensor. Also has support for 2D and 3D.
- * \param [in] srcPtr source tensor memory in HOST memory
- * \param [in] srcPtr1 source tensor memory in HOST memory
- * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory in HOST memory
- * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] axisMask axis along which concat needs to be done
- * \param [in] roiTensor values to represent dimensions of input tensor
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_concat_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, rppHandle_t rppHandle);
-
 /*! \brief Tensor mean operation on HOST backend for a NCHW/NHWC layout tensor
  * \details The tensor mean is a reduction operation that finds the channel-wise (R mean / G mean / B mean) and total mean for each image in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
