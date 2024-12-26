@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
-    int bitDepth = 0, offSetInBytes = 0;
+    int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
@@ -209,12 +209,11 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(bitDepth == 0)
                 {
-                    rppt_concat_host(inputU8, srcDescriptorPtrND, outputU8, dstDescriptorPtrND, axisMask, roiTensor, handle);
+                    rppt_concat_host(inputU8, inputU8, srcDescriptorPtrND, srcDescriptorPtrND, outputU8, dstDescriptorPtrND, axisMask, roiTensor, handle);
                 }
                 else
                 {
-                    rppt_concat_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, roiTensor, handle);
-
+                    rppt_concat_host(inputF32, inputF32, srcDescriptorPtrND, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, roiTensor, handle);
                 }
 
                 break;

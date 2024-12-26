@@ -875,8 +875,37 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
+// Read a batch of images using the OpenCV library
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
+{
+    for(int i = 0; i < descPtr->n; i++)
+    {
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        string inputImagePath = *(imagesNamesStart + i);
+        Mat image, imageBgr;
+        if (descPtr->c == 3)
+        {
+            imageBgr = imread(inputImagePath, 1);
+            cvtColor(imageBgr, image, COLOR_BGR2RGB);
+        }
+        else if (descPtr->c == 1)
+            image = imread(inputImagePath, 0);
+
+        int width = image.cols;
+        int height = image.rows;
+        Rpp32u elementsInRow = width * descPtr->c;
+        Rpp8u *inputImage = image.data;
+        for (int j = 0; j < height; j++)
+        {
+            memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
+            inputImage += elementsInRow;
+            inputTemp += descPtr->w * descPtr->c;;
+        }
+    }
+}
+
 // Write a batch of images using the OpenCV library
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
+inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump, int axisMask)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
@@ -888,20 +917,46 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
-        Rpp32u height = dstImgSizes[j].height * 2;
+        Rpp32u height = dstImgSizes[j].height;
         Rpp32u width = dstImgSizes[j].width;
-        // Rpp32u height = 150;
-        // Rpp32u width = 150;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
-        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
+        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize * 2, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
-        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
+        Rpp8u *tempOutputRow1 = tempOutput + elementsInRow;
+        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride * 2;
         for (int k = 0; k < height; k++)
         {
-            memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-            tempOutputRow += elementsInRow;
+            if(axisMask == 1)
+            {
+                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+                outputRow += elementsInRowMax;
+                memcpy(tempOutputRow1, outputRow, elementsInRow * sizeof(Rpp8u));
+                tempOutputRow1 += elementsInRow * 2;
+                tempOutputRow += elementsInRow * 2;
+            }
+            else if(axisMask == 2)
+            {
+                memcpy(tempOutputRow, outputRow, (elementsInRow * 2 * sizeof(Rpp8u)));
+                outputRow += elementsInRowMax;
+                tempOutputRow += elementsInRow * 2;
+            }
+            else
+            {
+                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+                tempOutputRow += elementsInRow;
+            }
             outputRow += elementsInRowMax;
+        }
+        outputRow = offsettedOutput + (j * dstDescPtr->strides.nStride * 2) + dstDescPtr->strides.nStride;
+        if(axisMask == 0)
+        {
+            for (int k = 0; k < height; k++)
+            {
+                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+                outputRow += elementsInRowMax;
+                tempOutputRow += elementsInRow;
+            }
         }
         string outputImagePath = outputFolder + *(imagesNamesStart + j);
         Mat matOutputImage, matOutputImageRgb;
@@ -911,7 +966,10 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
         else if (dstDescPtr->c == 3)
         {
-            matOutputImageRgb = Mat(height, width, CV_8UC3, tempOutput);
+            if(axisMask == 0)
+                matOutputImageRgb = Mat(height * 2, width, CV_8UC3, tempOutput);
+            else
+                matOutputImageRgb = Mat(height, width * 2, CV_8UC3, tempOutput);
             cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 

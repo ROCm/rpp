@@ -774,6 +774,7 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] srcPtr source tensor memory in HOST memory
  * \param [in] srcPtr1 source tensor memory in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [in] srcGenericDescPtr1 source tensor descriptor
  * \param [out] dstPtr destination tensor memory in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] axisMask axis along which concat needs to be done
@@ -783,7 +784,7 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_concat_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_concat_host(RppPtr_t srcPtr, RppPtr_t srcPtr1, RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcGenericDescPtr1, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

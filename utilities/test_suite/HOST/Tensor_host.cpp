@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79  || testCase == 93);
     bool kernelSizeCase = (testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68 || testCase == 93);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
     bool nonQACase = (testCase == 24 || testCase == 28);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
@@ -1579,7 +1579,7 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
 
                     if(inputBitDepth == 0)
-                        rppt_concat_host(input, srcDescriptorPtr3D, output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, handle);
+                        rppt_concat_host(input, input_second, srcDescriptorPtr3D, output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1718,10 +1718,6 @@ int main(int argc, char **argv)
                         }
                     }
                 }
-                else if(testCase == 93)
-                {
-                    
-                }
 
                 /*Compare the output of the function with golden outputs only if
                 1.QA Flag is set
@@ -1753,10 +1749,19 @@ int main(int argc, char **argv)
                     if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
                         convert_pln3_to_pkd3(outputu8, dstDescPtr);
                 }
-
+                std::cerr<<"\n Before Writing Image";
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
-                    write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
+                {
+                    if(testCase == 93)
+                    {
+                        write_image_batch_opencv_concat(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP, additionalParam);
+                    }
+                    else
+                    {
+                        write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
+                    }
+                }
             }
         }
     }
