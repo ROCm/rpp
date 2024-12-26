@@ -112,7 +112,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
         {
             case 2:
             {
-                std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
+                std::array<Rpp32u, 4> roi = {0, 0, 2, 2};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
