@@ -607,7 +607,6 @@ RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
     }
     else if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        printf(" Running for I16");
         hip_exec_log1p_generic_tensor(static_cast<Rpp16s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                     srcGenericDescPtr,
                                     reinterpret_cast<Rpp32f *>(static_cast<Rpp16s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
