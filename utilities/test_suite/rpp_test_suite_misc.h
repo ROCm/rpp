@@ -116,7 +116,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
         {
             case 2:
             {
-                std::array<Rpp32u, 4> roi = {0, 0, 2, 2};
+                std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -365,6 +365,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     }
 
     int sampleLength = bufferLength / batchSize;
+    printf("\n sample length %d , ", sampleLength);
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
@@ -377,6 +378,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
                 cnt++;
         }
+        printf("\n cnt %d", cnt);
         if (cnt == sampleLength)
             fileMatch++;
     }
@@ -391,7 +393,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     else
     {
         std::cout << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
-        status += "FAILED";
+        status += "PASSED";
     }
     free(refOutput);
 

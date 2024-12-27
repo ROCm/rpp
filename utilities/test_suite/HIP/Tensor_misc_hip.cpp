@@ -81,8 +81,9 @@ int main(int argc, char **argv)
     }
 
     // fill roi based on mode and number of dimensions
-    Rpp32u *roiTensor;
+    Rpp32u *roiTensor, *dstRoiTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstRoiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
@@ -103,11 +104,11 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
 
     void *d_inputF32, *d_outputF32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * 2 * sizeof(Rpp32f)));
 
     // read input data
     if(qaMode)
@@ -211,7 +212,24 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 rppt_log_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
+                break;
+            }
+            case 3:
+            {
+                testCaseName  = "concat";
+                Rpp32u *axis;
+                // *axis = 0;
+                for(int i = 0; i < nDim * 2; i++)
+                {
+                    if(i == (0 + nDim))
+                        dstRoiTensor[i] = roiTensor[i] * 2;
+                    else
+                        dstRoiTensor[i] = roiTensor[i];
+                }
+                set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
 
+                startWallTime = omp_get_wtime();
+                rppt_concat_gpu(d_inputF32, srcDescriptorPtrND, d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axis, roiTensor, handle);
                 break;
             }
             default:
@@ -229,6 +247,28 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
     rppDestroyGPU(handle);
+
+    if(DEBUG_MODE)
+    {
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * 2 * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        std::ofstream refFile, refFile1;
+        std::string refFileName;
+        refFileName = func + "_host.csv";
+        refFile1.open("input.csv");
+        refFile.open(refFileName);
+        for (int i = 0; i < bufferSize * 2; i++)
+        {
+            refFile << *(outputF32 + i) << ",";
+        }
+        for (int i = 0; i < bufferSize; i++)
+        {
+            refFile1 << *(inputF32 + i) << ",";
+        }
+        refFile.close();
+        refFile1.close();
+    }
 
     // compare outputs if qaMode is true
     if(qaMode)

@@ -194,8 +194,8 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_misc_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_host")
+        print("---------------------------------- Results of QA Test - Tensor_misc_hip---------------------------------\n")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_hip")
 
 # Performance tests
 if (testType == 1):
