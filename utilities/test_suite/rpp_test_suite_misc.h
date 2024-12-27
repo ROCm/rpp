@@ -157,7 +157,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        roiTensor[lengthIndex + j] = 1920;  // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = 1920*2;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
@@ -384,8 +384,14 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         for(int j = 0; j < sampleLength; j++)
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
-            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
-                cnt++;
+            if(!invalid_comparision )
+            {
+                if(abs(out[j] - ref[j]) < 1e-4)
+                    cnt++;
+                else
+                    printf("\n OP %f Exp %f",out[j],ref[j]);
+            }
+                
         }
         if (cnt == sampleLength)
             fileMatch++;
