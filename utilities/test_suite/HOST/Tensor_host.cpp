@@ -162,12 +162,18 @@ int main(int argc, char **argv)
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
 
     // Initialize tensor descriptors
-    RpptDesc srcDesc, dstDesc;
+    RpptDesc srcDesc, dstDesc, srcDescSecond;
     RpptDescPtr srcDescPtr = &srcDesc;
+    RpptDescPtr srcDescPtrSecond = &srcDescSecond;
     RpptDescPtr dstDescPtr = &dstDesc;
 
     // Set src/dst layout types in tensor descriptors
     set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+    if(testCase == 93)
+    {
+        set_descriptor_layout(srcDescPtrSecond, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+        set_descriptor_data_type(inputBitDepth, funcName, srcDescPtrSecond, dstDescPtr);
+    }
 
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
@@ -266,10 +272,12 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
+    RpptROI *roiTensorPtrSrc1 = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
     RpptROI *roiTensorPtrDst = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
     RpptImagePatch *dstImgSizes = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+    RpptImagePatch *dstImgSizesSecond ;
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -290,6 +298,15 @@ int main(int argc, char **argv)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
         exit(0);
+    }
+    if(testCase == 93)
+    {
+        dstImgSizesSecond = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+        int maxHeight1 = 0;
+        int maxWidth1 = 0;
+        set_max_dimensions(imageNamesPathSecond, maxHeight1, maxWidth1, imagesMixed);
+        set_descriptor_dims_and_strides(srcDescPtrSecond, batchSize, maxHeight1, maxWidth1, outputChannels, offsetInBytes);
+
     }
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
@@ -357,18 +374,21 @@ int main(int argc, char **argv)
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     // create generic descriptor and params in case of slice and concat
-    RpptGenericDesc srcDescriptor3D, dstDescriptor3D;
+    RpptGenericDesc srcDescriptor3D, dstDescriptor3D, srcDescriptor3DSecond;
     RpptGenericDescPtr srcDescriptorPtr3D = &srcDescriptor3D;
+    RpptGenericDescPtr srcDescriptorPtr3DSecond = &srcDescriptor3DSecond;
     RpptGenericDescPtr dstDescriptorPtr3D = &dstDescriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
     if(testCase == 92)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
     
-     Rpp32u *concatRoiTensor = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
+    Rpp32u *concatRoiTensor = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
+    Rpp32u *concatRoiTensorSecond = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
     if(testCase == 93)
     {
         set_generic_descriptor_concat(srcDescPtr, srcDescriptorPtr3D, batchSize);
+        set_generic_descriptor_concat(srcDescPtrSecond, srcDescriptorPtr3DSecond, batchSize);
         set_generic_descriptor_concat(dstDescPtr, dstDescriptorPtr3D, batchSize);
     }
 
@@ -409,6 +429,10 @@ int main(int argc, char **argv)
 
         // Set ROIs for src/dst
         set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        if(testCase == 93)
+        {
+            set_src_and_dst_roi(imagesPathSecondStart, imagesPathSecondEnd, roiTensorPtrSrc1, roiTensorPtrDst, dstImgSizesSecond);
+        }
 
         //Read images
         if(decoderType == 0)
@@ -1574,12 +1598,12 @@ int main(int argc, char **argv)
                     testCaseName  = "concat";
                     Rpp32u numDim = srcDescriptorPtr3D->numDims - 1;
                     init_concat(srcDescriptorPtr3D, roiTensorPtrSrc, concatRoiTensor);
-
+                    init_concat(srcDescriptorPtr3DSecond, roiTensorPtrSrc1, concatRoiTensorSecond);
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
 
                     if(inputBitDepth == 0)
-                        rppt_concat_host(input, input_second, srcDescriptorPtr3D, output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, handle);
+                        rppt_concat_host(input, input_second, srcDescriptorPtr3D, srcDescriptorPtr3DSecond, output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, concatRoiTensorSecond, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1755,7 +1779,7 @@ int main(int argc, char **argv)
                 {
                     if(testCase == 93)
                     {
-                        write_image_batch_opencv_concat(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP, additionalParam);
+                        write_image_batch_opencv_concat(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, dstImgSizesSecond, MAX_IMAGE_DUMP, additionalParam);
                     }
                     else
                     {

@@ -779,12 +779,13 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] axisMask axis along which concat needs to be done
  * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] roiTensor1 values to represent dimensions of input second tensor
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_concat_host(RppPtr_t srcPtr, RppPtr_t srcPtr1, RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcGenericDescPtr1, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_concat_host(RppPtr_t srcPtr, RppPtr_t srcPtr1, RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcGenericDescPtr1, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *roiTensor, Rpp32u *roiTensor1, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
