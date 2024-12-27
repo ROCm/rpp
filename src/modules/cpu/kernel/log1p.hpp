@@ -139,7 +139,8 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
         }
         else if(nDim == 3)
         {
-            alignedLength = length[0] * length[1] & ~15;
+            int combinedLength = length[0] * length[1];
+            alignedLength = combinedLength & ~15;
             for(int i = 0; i < length[2]; i++)
             {
                 Rpp16s *srcPtrTemp = srcPtr1;
@@ -160,22 +161,24 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                         dstPtrTemp += vectorIncrement;
                     }
 #endif
-                    for (; vectorLoopCount < length[0] * length[1]; vectorLoopCount++)
+                    for (; vectorLoopCount < combinedLength; vectorLoopCount++)
                     {
                         compute_log1p(srcPtrTemp, dstPtrTemp);
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
 
-                srcPtr1 += length[0] * length[1];
-                dstPtr1 += length[0] * length[1];
+                srcPtr1 += combinedLength;
+                dstPtr1 += combinedLength;
             }
         }
 
 
         else if(nDim == 4)
         {
-            alignedLength = length[0] * length[1] & ~15;
+            int combinedLength = length[0] * length[1];
+            int combinedLength2 = length[0] * length[1] * length[2];
+            alignedLength = combinedLength & ~15;
             for(int i = 0; i < length[3]; i++)
             {
                 Rpp16s *srcPtrCol = srcPtr1;
@@ -199,18 +202,18 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                         dstPtrTemp += vectorIncrement;
                     }
 #endif
-                        for (; vectorLoopCount < length[0]*length[1]; vectorLoopCount++)
+                        for (; vectorLoopCount < combinedLength; vectorLoopCount++)
                         {
                             compute_log1p(srcPtrTemp, dstPtrTemp);
                             srcPtrTemp++;
                             dstPtrTemp++;
                         }
 
-                    srcPtrCol += length[0] * length[1];
-                    dstPtrCol += length[0] * length[1];
+                    srcPtrCol += combinedLength;
+                    dstPtrCol += combinedLength;
                 }
-                srcPtr1 += length[0] * length[1] * length[2];
-                dstPtr1 += length[0] * length[1] * length[2];
+                srcPtr1 += combinedLength2;
+                dstPtr1 += combinedLength2;
             }
             
         }
