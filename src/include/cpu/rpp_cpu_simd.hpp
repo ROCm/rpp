@@ -2600,6 +2600,8 @@ static inline __m256 log_ps(__m256 x)
     __m256 one = *(__m256 *)&avx_p1;
     __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
 
+    // x = _mm256_add_ps(x, one);
+
     // cut off denormalized stuff
     x = _mm256_max_ps(x, *(__m256 *)&_ps_min_norm_pos_avx);
 
