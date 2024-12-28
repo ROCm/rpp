@@ -429,6 +429,77 @@ inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart,
     tjDestroy(tjInstance);
 }
 
+// sets roi xywh values and dstImg sizes for concat 
+inline void  set_src_and_dst_roi_concat(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, vector<string>::const_iterator imagePathsStartSecond, vector<string>::const_iterator imagePathsEndSecond, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrSrcSecond, RpptROI *roiTensorPtrDst, RpptImagePatchPtr srcImgSizes, RpptImagePatchPtr srcImgSizesSecond, RpptImagePatchPtr dstImgSizes)
+{
+    tjhandle tjInstance = tjInitDecompress();
+    int i = 0;
+    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
+    {
+        const string& imagePath = *imagePathIter;
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
+        roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
+        srcImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
+        srcImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+    }
+    tjDestroy(tjInstance);
+    tjInstance = tjInitDecompress();
+    i = 0;
+    for (auto imagePathIter = imagePathsStartSecond; imagePathIter != imagePathsEndSecond; ++imagePathIter, i++)
+    {
+        const string& imagePath = *imagePathIter;
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        roiTensorPtrSrcSecond[i].xywhROI = {0, 0, width, height};
+        roiTensorPtrDst[i].xywhROI = {0, 0, roiTensorPtrSrc[i].xywhROI.roiWidth + width, roiTensorPtrSrc[i].xywhROI.roiHeight + height};
+        srcImgSizesSecond[i].width = roiTensorPtrSrcSecond[i].xywhROI.roiWidth;
+        srcImgSizesSecond[i].height = roiTensorPtrSrcSecond[i].xywhROI.roiHeight;
+        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
+        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
+    }
+    tjDestroy(tjInstance);
+}
+
 // sets generic descriptor dimensions and strides of src/dst
 inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
 {
@@ -927,7 +998,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
 }
 
 // Write a batch of images using the OpenCV library
-inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, RpptImagePatch *dstImgSizes1, int maxImageDump, int axisMask)
+inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *srcImgSizes, RpptImagePatch *srcImgSizesSecond, RpptImagePatch *dstImgSizes, int maxImageDump, int axisMask)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
@@ -939,29 +1010,31 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output, 
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
-        Rpp32u height = dstImgSizes[j].height;
-        Rpp32u width = dstImgSizes[j].width;
-        Rpp32u elementsInRow = width * dstDescPtr->c;
-        Rpp32u outputSize = height * width * dstDescPtr->c;
-        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize * 2, sizeof(Rpp8u));
+        Rpp32u height = srcImgSizes[j].height;
+        Rpp32u width = srcImgSizes[j].width;
+        Rpp32u height1 = srcImgSizesSecond[j].height;
+        Rpp32u width1 = srcImgSizesSecond[j].width;
+        Rpp32u elementsInRow = width * srcDescPtr->c;
+        Rpp32u elementsInRow1 = width1 * srcDescPtr->c;
+        printf("Elements Max %d %d %d",elementsInRow,elementsInRow1,elementsInRowMax);
+        Rpp32u outputSize = (height * width * srcDescPtr->c) +  (height1 * width1 * srcDescPtr->c);
+        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
         Rpp8u *tempOutputRow1 = tempOutput + elementsInRow;
-        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride * 2;
+        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
         for (int k = 0; k < height; k++)
         {
             if(axisMask == 1)
             {
                 memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-                outputRow += elementsInRowMax;
-                memcpy(tempOutputRow1, outputRow, elementsInRow * sizeof(Rpp8u));
-                tempOutputRow1 += elementsInRow * 2;
-                tempOutputRow += elementsInRow * 2;
+                memcpy(tempOutputRow1, (outputRow +  (srcDescPtr->w * srcDescPtr->c)), elementsInRow1 * sizeof(Rpp8u));
+                tempOutputRow1 += (elementsInRow + elementsInRow1);
+                tempOutputRow += (elementsInRow + elementsInRow1);
             }
             else if(axisMask == 2)
             {
-                memcpy(tempOutputRow, outputRow, (elementsInRow * 2 * sizeof(Rpp8u)));
-                outputRow += elementsInRowMax;
-                tempOutputRow += elementsInRow * 2;
+                memcpy(tempOutputRow, outputRow, ((elementsInRow + elementsInRow1) * sizeof(Rpp8u)));
+                tempOutputRow += (elementsInRow + elementsInRow1);
             }
             else
             {
@@ -970,12 +1043,12 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output, 
             }
             outputRow += elementsInRowMax;
         }
-        outputRow = offsettedOutput + (j * dstDescPtr->strides.nStride * 2) + dstDescPtr->strides.nStride;
+        outputRow = offsettedOutput + (j * dstDescPtr->strides.nStride) + srcDescPtr->strides.nStride;
         if(axisMask == 0)
         {
-            for (int k = 0; k < height; k++)
+            for (int k = 0; k < height1; k++)
             {
-                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+                memcpy(tempOutputRow, outputRow, elementsInRow1 * sizeof(Rpp8u));
                 outputRow += elementsInRowMax;
                 tempOutputRow += elementsInRow;
             }
@@ -986,12 +1059,12 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output, 
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
         else if (dstDescPtr->c == 2)
             matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
-        else if (dstDescPtr->c == 3)
+        else if (dstDescPtr->c == 3 || dstDescPtr->c == 6)
         {
             if(axisMask == 0)
-                matOutputImageRgb = Mat(height * 2, width, CV_8UC3, tempOutput);
+                matOutputImageRgb = Mat(height + height1, width, CV_8UC3, tempOutput);
             else
-                matOutputImageRgb = Mat(height, width * 2, CV_8UC3, tempOutput);
+                matOutputImageRgb = Mat(height, width + width1, CV_8UC3, tempOutput);
             cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 
