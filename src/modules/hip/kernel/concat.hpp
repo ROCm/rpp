@@ -55,72 +55,72 @@ __global__ void concat_2d_hip_tensor(T *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &src_f8);
 }
 
-template <typename T>
-__global__ void concat_3d_hip_tensor(T *srcPtr,
-                                     T *srcPtr2,
-                                     uint *srcStrides,
-                                     uint *src2Strides,
-                                     T *dstPtr,
-                                     uint *dstStrides,
-                                     uint axis,
-                                     Rpp32u *roiTensor)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // 8 floats per AVX register
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+// template <typename T>
+// __global__ void concat_3d_hip_tensor(T *srcPtr,
+//                                      T *srcPtr2,
+//                                      uint *srcStrides,
+//                                      uint *src2Strides,
+//                                      T *dstPtr,
+//                                      uint *dstStrides,
+//                                      uint axis,
+//                                      Rpp32u *roiTensor)
+// {
+//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // 8 floats per AVX register
+//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= dstStrides[0] || id_y >= dstStrides[1] || id_z >= dstStrides[2])
-        return;
+//     if (id_x >= dstStrides[0] || id_y >= dstStrides[1] || id_z >= dstStrides[2])
+//         return;
 
-    uint *roi = roiTensor;
-    uint begin[3] = {roi[0], roi[1], roi[2]};
-    uint length[3] = {roi[3], roi[4], roi[5]};
+//     uint *roi = roiTensor;
+//     uint begin[3] = {roi[0], roi[1], roi[2]};
+//     uint length[3] = {roi[3], roi[4], roi[5]};
 
-    uint dstIdx = id_z * dstStrides[2] + id_y * dstStrides[1] + id_x;
-    __m256 vec;
+//     uint dstIdx = id_z * dstStrides[2] + id_y * dstStrides[1] + id_x;
+//     __m256 vec;
 
-    if (axis == 0) // Concatenate along depth
-    {
-        if (id_z < length[0])
-        {
-            uint srcIdx1 = (id_z + begin[0]) * srcStrides[2] + id_y * srcStrides[1] + id_x;
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
-        }
-        else
-        {
-            uint srcIdx2 = (id_z - length[0] + begin[0]) * src2Strides[2] + id_y * src2Strides[1] + id_x;
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
-        }
-    }
-    else if (axis == 1) // Concatenate along height
-    {
-        if (id_y < length[1])
-        {
-            uint srcIdx1 = id_z * srcStrides[2] + (id_y + begin[1]) * srcStrides[1] + id_x;
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
-        }
-        else
-        {
-            uint srcIdx2 = id_z * src2Strides[2] + (id_y - length[1] + begin[1]) * src2Strides[1] + id_x;
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
-        }
-    }
-    else if (axis == 2) // Concatenate along width
-    {
-        if (id_x < length[2])
-        {
-            uint srcIdx1 = id_z * srcStrides[2] + id_y * srcStrides[1] + (id_x + begin[2]);
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
-        }
-        else
-        {
-            uint srcIdx2 = id_z * src2Strides[2] + id_y * src2Strides[1] + (id_x - length[2] + begin[2]);
-            vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
-        }
-    }
+//     if (axis == 0) // Concatenate along depth
+//     {
+//         if (id_z < length[0])
+//         {
+//             uint srcIdx1 = (id_z + begin[0]) * srcStrides[2] + id_y * srcStrides[1] + id_x;
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
+//         }
+//         else
+//         {
+//             uint srcIdx2 = (id_z - length[0] + begin[0]) * src2Strides[2] + id_y * src2Strides[1] + id_x;
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
+//         }
+//     }
+//     else if (axis == 1) // Concatenate along height
+//     {
+//         if (id_y < length[1])
+//         {
+//             uint srcIdx1 = id_z * srcStrides[2] + (id_y + begin[1]) * srcStrides[1] + id_x;
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
+//         }
+//         else
+//         {
+//             uint srcIdx2 = id_z * src2Strides[2] + (id_y - length[1] + begin[1]) * src2Strides[1] + id_x;
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
+//         }
+//     }
+//     else if (axis == 2) // Concatenate along width
+//     {
+//         if (id_x < length[2])
+//         {
+//             uint srcIdx1 = id_z * srcStrides[2] + id_y * srcStrides[1] + (id_x + begin[2]);
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr[srcIdx1]));
+//         }
+//         else
+//         {
+//             uint srcIdx2 = id_z * src2Strides[2] + id_y * src2Strides[1] + (id_x - length[2] + begin[2]);
+//             vec = _mm256_loadu_ps(reinterpret_cast<float *>(&srcPtr2[srcIdx2]));
+//         }
+//     }
 
-    _mm256_storeu_ps(reinterpret_cast<float *>(&dstPtr[dstIdx]), vec);
-}
+//     _mm256_storeu_ps(reinterpret_cast<float *>(&dstPtr[dstIdx]), vec);
+// }
 
 template <typename T>
 __global__ void concat_generic_hip_tensor(T *srcPtr,
@@ -195,7 +195,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr,
                                  RpptGenericDescPtr src2GenericDescPtr,
                                  T *dstPtr,
                                  RpptGenericDescPtr dstGenericDescPtr,
-                                 Rpp32u *axis,
+                                 Rpp32u axis,
                                  Rpp32u *roiTensor,
                                  rpp::Handle& handle)
 {

@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     string dst = argv[8];
     string scriptPath = argv[9];
     qaMode = (testType == 0);
-    bool axisMaskCase = (testCase == 1);
+    bool axisMaskCase = (testCase == 1 || testCase == 3);
     bool permOrderCase = (testCase == 0);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam;
@@ -81,47 +81,84 @@ int main(int argc, char **argv)
     }
 
     // fill roi based on mode and number of dimensions
-    Rpp32u *roiTensor, *dstRoiTensor;
+    Rpp32u *roiTensor, *dstRoiTensor, *roiTensorSecond;
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstRoiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
+    memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
+    if(testCase == 3)
+    {
+        roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
+        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode);
+        dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask]; 
+    }
 
     // set src/dst generic tensor descriptors
-    RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
+    RpptGenericDescPtr srcDescriptorPtrND, srcDescriptorPtrNDSecond, dstDescriptorPtrND;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
 
     // set dims and compute strides
     int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
+    if(testCase == 3)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrNDSecond, sizeof(RpptGenericDesc)));
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, bitDepth, batchSize, roiTensorSecond);
+        set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
+    }
 
-    Rpp32u bufferSize = 1;
+    Rpp32u iBufferSize = 1;
+    Rpp32u oBufferSize = 1;
+    Rpp32u iBufferSizeSecond = 1;
     for(int i = 0; i <= nDim; i++)
-        bufferSize *= srcDescriptorPtrND->dims[i];
+    {
+        iBufferSize *= srcDescriptorPtrND->dims[i];
+        oBufferSize *= dstDescriptorPtrND->dims[i];
+    }
 
     // allocate memory for input / output
-    Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize * 2, sizeof(Rpp32f)));
+    Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
+    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
+    if(testCase == 3)
+    {
+        for(int i = 0; i <= nDim; i++)
+            iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
+        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
+    }
 
-    void *d_inputF32, *d_outputF32;
-    CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * 2 * sizeof(Rpp32f)));
+    void *d_inputF32, *d_outputF32, *d_inputF32Second;
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, iBufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, oBufferSize * 2 * sizeof(Rpp32f)));
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputF32Second, iBufferSizeSecond * sizeof(Rpp32f)));
 
     // read input data
     if(qaMode)
+    {
         read_data(inputF32, nDim, 0, scriptPath, funcName);
+        if(testCase == 3)
+            read_data(inputF32Second, nDim, 0, scriptPath, funcName);
+    }
     else
     {
         std::srand(0);
-        for(int i = 0; i < bufferSize; i++)
+        for(int i = 0; i < iBufferSize; i++)
             inputF32[i] = static_cast<float>((std::rand() % 255));
+        if(testCase == 3)
+        {
+            for(int i = 0; i < iBufferSizeSecond; i++)
+                inputF32Second[i] = static_cast<float>((std::rand() % 255));
+        }
     }
 
     // copy data from HOST to HIP
-    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipMemcpy(d_inputF32Second, inputF32Second, iBufferSizeSecond * sizeof(Rpp32f), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     Rpp32u *permTensor = nullptr;
@@ -218,18 +255,10 @@ int main(int argc, char **argv)
             {
                 testCaseName  = "concat";
                 Rpp32u *axis;
-                // *axis = 0;
-                for(int i = 0; i < nDim * 2; i++)
-                {
-                    if(i == (0 + nDim))
-                        dstRoiTensor[i] = roiTensor[i] * 2;
-                    else
-                        dstRoiTensor[i] = roiTensor[i];
-                }
                 set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
 
                 startWallTime = omp_get_wtime();
-                rppt_concat_gpu(d_inputF32, srcDescriptorPtrND, d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axis, roiTensor, handle);
+                rppt_concat_gpu(d_inputF32, d_inputF32Second, srcDescriptorPtrND, srcDescriptorPtrNDSecond, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 break;
             }
             default:

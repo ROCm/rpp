@@ -723,7 +723,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
 #endif // GPU_SUPPORT
 
 #ifdef GPU_SUPPORT
-RppStatus rppt_concat_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t srcPtr2, RpptGenericDescPtr src2GenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *axis, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_concat_gpu(RppPtr_t srcPtr, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr src2GenericDescPtrSecond, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axis, Rpp32u *roiTensor, Rpp32u *roiTensorSecond, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 

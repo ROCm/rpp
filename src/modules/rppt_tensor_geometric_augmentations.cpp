@@ -2725,14 +2725,15 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
 /******************** concat ********************/
 
 RppStatus rppt_concat_gpu(RppPtr_t srcPtr,
-                             RpptGenericDescPtr srcGenericDescPtr,
-                            RppPtr_t srcPtr2,
-                             RpptGenericDescPtr src2GenericDescPtr,
-                             RppPtr_t dstPtr,
-                             RpptGenericDescPtr dstGenericDescPtr,
-                             Rpp32u *axis,
-                             Rpp32u *roiTensor,
-                             rppHandle_t rppHandle)
+                          RppPtr_t srcPtr2,
+                          RpptGenericDescPtr srcGenericDescPtr,
+                          RpptGenericDescPtr src2GenericDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptGenericDescPtr dstGenericDescPtr,
+                          Rpp32u axis,
+                          Rpp32u *roiTensor,
+                          Rpp32u *roiTensorSecond,
+                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))

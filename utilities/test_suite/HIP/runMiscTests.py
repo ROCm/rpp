@@ -222,6 +222,9 @@ for case in caseList:
     elif case == "1":
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
+    elif case == "3":
+        for axisMask in range(0, numDims):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
     else:
         run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, "", profilingOption)
 
