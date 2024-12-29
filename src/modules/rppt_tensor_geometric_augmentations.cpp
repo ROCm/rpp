@@ -1582,6 +1582,14 @@ RppStatus rppt_concat_host(RppPtr_t srcPtr,
     else if(tensorDim == 2 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[2]);
 
+    if(srcGenericDescPtr->numDims != srcGenericDescPtr1->numDims)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+    for(int i = 0 ;i < tensorDim ; i++)
+    {
+        if((i != axisMask) && (srcGenericDescPtr->dims[i] != srcGenericDescPtr1->dims[i]))
+            return RPP_ERROR_INVALID_SRC_DIMS;
+    }
+
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
         concat_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,

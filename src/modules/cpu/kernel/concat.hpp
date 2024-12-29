@@ -179,7 +179,7 @@ void concat_3D_axismask0_tensor(Rpp8u *srcPtr, Rpp8u *srcPtr1, RpptGenericDescPt
                 *dstPtrRowTemp++ = *srcPtrRowTemp++;
             }
             srcPtrRow += strides[2];
-            dstPtrRow += (strides[2]);
+            dstPtrRow += strides[2];
         }
         dstPtrRow = dstPtr;
         for(Rpp32u j = 0; j < dims1[1]; j++)
@@ -198,12 +198,13 @@ void concat_3D_axismask0_tensor(Rpp8u *srcPtr, Rpp8u *srcPtr1, RpptGenericDescPt
             for(; vectorLoopCount < dims1[2] ; vectorLoopCount ++)
             {
                 *(dstPtrRowTemp + strides[1]) = *srcPtrRowTemp1++;
+                dstPtrRowTemp++;
             }
             srcPtrRow1 += strides1[2];
-            dstPtrRow += strides[2];
+            dstPtrRow += strides1[2];
         }
         srcPtr += strides[1];
-        srcPtr1 += strides[1];
+        srcPtr1 += strides1[1];
         dstPtr += strides[1];
     }
 }
@@ -238,7 +239,7 @@ void concat_NDD_tensor(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rpp32u *dims, 
 
 // Computes concat for ND variants
 template<typename T1, typename T2>
-void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, Rpp32u *srcStride1, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *dims1, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
+void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, Rpp32u *srcStride1, Rpp32u *dstStride, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *dims1, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
 {
 
     if(level >= axisMask)
@@ -251,8 +252,8 @@ void concat_ND_tensor(T1 *srcPtr, T1 *srcPtr1, Rpp32u *srcStride, Rpp32u *srcStr
     {
         for (Rpp32u i = 0; i < dims[level]; i++)
         {
-            concat_ND_tensor(srcPtr, srcPtr1, srcStride, srcStride1, dstPtr, dstGenericDescPtr, dims, dims1, tensorDim, level + 1, axisMask, maxDims);
-            dstPtr += srcStride[level + 1] * 2; 
+            concat_ND_tensor(srcPtr, srcPtr1, srcStride, srcStride1, dstStride,  dstPtr, dstGenericDescPtr, dims, dims1, tensorDim, level + 1, axisMask, maxDims);
+            dstPtr += dstStride[level + 1]; 
             srcPtr += srcStride[level + 1];
             srcPtr1 += srcStride[level + 1];
         }
@@ -460,7 +461,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
         else // Handle any other ND tensor is passed to kernel
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1,srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1,srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, 0, axisMask, tensorDims);
         }
     }
 
@@ -605,7 +606,7 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else // Handle any other ND tensor is passed to kernel
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, 0, axisMask, tensorDims);
         }
     }
 
@@ -654,7 +655,7 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr,
             srcPtrChannel1 += begin1[i] * srcGenericDescPtr1->strides[i + 1];
         }
         
-        concat_ND_tensor(srcPtrChannel, srcPtrChannel1, srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, level, axisMask, tensorDims);
+        concat_ND_tensor(srcPtrChannel, srcPtrChannel1, srcGenericDescPtr->strides, srcGenericDescPtr1->strides, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, level, axisMask, tensorDims);
     }
 
     return RPP_SUCCESS;

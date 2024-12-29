@@ -1016,7 +1016,6 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
         Rpp32u width1 = srcImgSizesSecond[j].width;
         Rpp32u elementsInRow = width * srcDescPtr->c;
         Rpp32u elementsInRow1 = width1 * srcDescPtr->c;
-        printf("Elements Max %d %d %d",elementsInRow,elementsInRow1,elementsInRowMax);
         Rpp32u outputSize = (height * width * srcDescPtr->c) +  (height1 * width1 * srcDescPtr->c);
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
@@ -1056,7 +1055,12 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
         string outputImagePath = outputFolder + *(imagesNamesStart + j);
         Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
-            matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
+        {
+            if(axisMask == 0)
+                matOutputImage = Mat(height + height1, width, CV_8UC1, tempOutput);
+            else
+                matOutputImage = Mat(height, width + width1, CV_8UC1, tempOutput);
+        }        
         else if (dstDescPtr->c == 2)
             matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
         else if (dstDescPtr->c == 3 || dstDescPtr->c == 6)
@@ -1112,6 +1116,72 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
     }
 }
 
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *srcImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int axisMask)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = srcImgSizes[imageCnt].height;
+        int width = srcImgSizes[imageCnt].width * dstDescPtr->c;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
+                int diff = abs(*outVal - *outRefVal);
+                if(diff <= CUTOFF)
+                    matchedIdx++;
+            }
+            if(axisMask == 1)
+            {
+                rowTemp = outputTemp + (i * dstDescPtr->strides.hStride + dstDescPtr->strides.hStride / 2);
+                rowTempRef = outputTempRef + (i * refOutputHstride + refOutputHstride / 2);
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matchedIdx++;
+                    else
+                    printf("\n Image %d Height %d Width %d %d %d ",imageCnt,i,j,*outVal,*outRefVal);
+                }   
+            }
+        }
+        if(axisMask == 0)
+        {
+            outputTemp = output + (imageCnt * dstDescPtr->strides.nStride + dstDescPtr->strides.nStride / 2);
+            outputTempRef = refOutput + (imageCnt * refOutputSize + refOutputSize/2 );
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTemp + (i * dstDescPtr->strides.hStride);
+                rowTempRef = outputTempRef + (i * refOutputHstride);
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matchedIdx++;
+                }
+            }
+        }
+        if(matchedIdx == (height * srcImgSizes[imageCnt].width * 3 * 2) && matchedIdx !=0)
+            fileMatch++;
+        else
+         printf("\n Matched %d %d ",height * srcImgSizes[imageCnt].width * 3 * 2,matchedIdx);
+    }
+}
+
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
 void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -1159,6 +1229,15 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
     }
+    else if (testCase == 93)
+    {
+        refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+        if(additionalParam == 0)
+            refOutputHeight = refOutputHeight * 2;
+        else if(additionalParam == 1)
+            refOutputWidth = refOutputWidth * 2;
+    }
     else
     {
         refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
@@ -1166,6 +1245,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
+    if(additionalParam == 2)
+        binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 2 * 4;
     int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
@@ -1233,7 +1314,10 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     read_bin_file(refFile, binaryContent);
 
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        if(testCase == 93)
+            compare_outputs_pkd_and_pln1_concat(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, additionalParam);
+        else
+            compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
         compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
