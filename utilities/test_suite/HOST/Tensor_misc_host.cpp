@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     // }
     if(qaMode)
     {
-        //compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {

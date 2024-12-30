@@ -157,7 +157,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        roiTensor[lengthIndex + j] = 1920;  // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = 1920*2;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
