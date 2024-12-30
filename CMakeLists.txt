@@ -422,8 +422,8 @@ set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
 set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
 set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, libomp-dev")
 set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half, libomp-devel")
-set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, libopencv-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: OpenCV Package missing on RPM
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, libopencv-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas") # TBD: OpenCV Package missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")
