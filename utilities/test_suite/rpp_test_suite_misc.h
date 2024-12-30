@@ -34,7 +34,8 @@ std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
     {1, "normalize"},
-    {2, "log"}
+    {2, "log"},
+    {3, "log1p"}
 };
 
 // Compute strides given Generic Tensor
@@ -78,8 +79,12 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, st
 {
     if(nDim != 2 && nDim != 3)
     {
-        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
-        exit(0);
+        //std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
+        // exit(0);
+        if(nDim != 4 ) {
+            std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
+            exit(0);
+        }
     }
     string dataPath = get_path(nDim, readType, scriptPath, testCase, isMeanStd);
     read_bin_file(dataPath, data);
@@ -103,6 +108,14 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 50, 50, 8};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
+                exit(0);
+            }
+            case 4:
+            {
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 50, 50, 50, 4};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
                 exit(0);
@@ -144,7 +157,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = 1920*2;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
@@ -371,8 +384,14 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         for(int j = 0; j < sampleLength; j++)
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
-            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
-                cnt++;
+            if(!invalid_comparision )
+            {
+                if(abs(out[j] - ref[j]) < 1e-4)
+                    cnt++;
+                else
+                    printf("\n OP %f Exp %f",out[j],ref[j]);
+            }
+                
         }
         if (cnt == sampleLength)
             fileMatch++;

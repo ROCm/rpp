@@ -1885,13 +1885,17 @@ inline void rpp_load16_i16_to_f32_avx(Rpp16s *srcPtr, __m256 *p)
 {
     __m256i px =  _mm256_loadu_si256((__m256i *)srcPtr);  
 
-    //Extrcting 16 bits from the px and converting from 16 bit int to 32 bit int
+    //Extracting 16 bits from the px and converting from 16 bit int to 32 bit int
     __m256i px0 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 0)); 
     __m256i px1 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 1)); 
+
+    //Taking absolute values
+    __m256i abs_px0 = _mm256_abs_epi32(px0);  
+    __m256i abs_px1 = _mm256_abs_epi32(px1); 
     
     // Convert 32 bit int to 32 bit floats
-    p[0] = _mm256_cvtepi32_ps(px0); 
-    p[1] = _mm256_cvtepi32_ps(px1); 
+    p[0] = _mm256_cvtepi32_ps(abs_px0); 
+    p[1] = _mm256_cvtepi32_ps(abs_px1); 
 }
 
 inline void rpp_load16_i8_to_f32_mirror_avx(Rpp8s *srcPtr, __m256 *p)
@@ -2595,6 +2599,8 @@ static inline __m256 log_ps(__m256 x)
     __m256i emm0;
     __m256 one = *(__m256 *)&avx_p1;
     __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
+
+    // x = _mm256_add_ps(x, one);
 
     // cut off denormalized stuff
     x = _mm256_max_ps(x, *(__m256 *)&_ps_min_norm_pos_avx);
