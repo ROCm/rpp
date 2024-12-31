@@ -5,9 +5,11 @@
 template <typename T>
 __device__ void log1p_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
 {
-    // if constexpr (std::is_same<T, schar>::value)
-    //     rpp_hip_math_add8_const(src_f8, src_f8, (float4)128);
-
+    if constexpr (std::is_same<T, schar>::value)
+        rpp_hip_math_add8_const(src_f8, src_f8, (float4)128);
+    for(int i = 0; i < 8; i++)
+        src_f8->f1[i] =  fabsf(src_f8->f1[i]);
+    rpp_hip_math_add8_const(src_f8, src_f8, (float4)1);
     rpp_hip_math_log1p(src_f8, dst_f8);
 }
 
@@ -61,52 +63,12 @@ __global__ void log1p_2d_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + beginY) * srcStridesNH.y) + id_x + beginX;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-        // if(id_x == 8 || id_x == 80 || id_x == 345){
-        // printf("\n %d srcIdx",srcIdx);
-        // printf("\n srcPtr %f %f %f  ", static_cast<float>(srcPtr[100]), static_cast<float>(srcPtr[1024]), static_cast<float>(srcPtr[808]));
-    //}
-
 
     d_float8 src_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     log1p_hip_compute(srcPtr, &src_f8, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
-
-template <typename T, typename U>
-__global__ void log1p_3d_hip_tensor(T *srcPtr,
-                                  uint2 srcStridesDH,
-                                  U *dstPtr,
-                                  uint2 dstStridesDH,
-                                  uint *roiTensor)
-{
-    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // lengthX
-    uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // lengthY
-    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // lengthZ
-
-    uint *roi = roiTensor;
-    uint beginZ = roi[0];
-    uint beginY = roi[1];
-    uint beginX = roi[2];
-    uint lengthZ = roi[3];
-    uint lengthY = roi[4];
-    uint lengthX = roi[5];
-
-    if (id_x >= lengthX || id_y >= lengthY || id_z >= lengthZ)
-        return;
-
-    uint srcIdx = ((id_z + beginZ) * srcStridesDH.x) + ((id_y + beginY) * srcStridesDH.y) + id_x + beginX;
-    uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
-    if((id_x == 8 || id_x == 80 || id_x == 345) )
-        printf("\n %d srcIdx",srcIdx);
-
-    d_float8 src_f8, dst_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    log1p_hip_compute(srcPtr, &src_f8, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-}
-
-
 
 template <typename T, typename U>
 __global__ void log1p_nd_hip_tensor(T *srcPtr,
@@ -142,8 +104,7 @@ __global__ void log1p_nd_hip_tensor(T *srcPtr,
         dstIdx += (coords[i] * dstStrides[i]);
         srcIdx += (begin[i] + (coords[i] * srcStrides[i]));
     }
-    if(id_x == 0 && id_z ==0)
-        printf("\n%f  %f ",log1pf(srcPtr[2]),log1pf(srcPtr[3]));
+
     d_float8 src_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     log1p_hip_compute(srcPtr, &src_f8, &dst_f8);
@@ -200,27 +161,6 @@ RppStatus hip_exec_log1p_generic_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
                            roiTensor);
-    }
-    else if (numDims == 3)
-    {
-        // NDHW
-        int globalThreads_x = dstGenericDescPtr->dims[3];
-        int globalThreads_y = dstGenericDescPtr->dims[2];
-        int globalThreads_z = dstGenericDescPtr->dims[1];
-
-        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
-        {
-            hipLaunchKernelGGL(log1p_3d_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
-                               make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
-                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
-                               make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
-                               &roiTensor[batchCount * 6]);
-        }
     }
     else
     {

@@ -581,9 +581,6 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(short *srcPtr
                                     rpp_hip_unpack0_(src_i4.y),
                                     rpp_hip_unpack2_(src_i4.y) 
                                  ); 
-    printf("Unpacked values: %f %f %f %f\n",
-       rpp_hip_unpack0_(src_i4.x), rpp_hip_unpack2_(src_i4.x),
-       rpp_hip_unpack0_(src_i4.y), rpp_hip_unpack2_(src_i4.y));
 
     srcPtr_f8->f4[1] = make_float4( rpp_hip_unpack0_(src_i4.z),
                                     rpp_hip_unpack2_(src_i4.z),
@@ -1938,26 +1935,14 @@ __device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst
 
 __device__ __forceinline__ void rpp_hip_math_log1p(d_float8 *src_f8, d_float8 *dst_f8)
 {
-    // for(int i = 0; i < 8; i++)
-    //     src_f8->f1[i] = (!src_f8->f1[i]) ? std::nextafter(0.0f, 1.0f) : fabsf(src_f8->f1[i]);
-        
-    dst_f8->f1[0] = __logf((src_f8->f1[0])+1);
-    dst_f8->f1[1] = __logf((src_f8->f1[1])+1);
-    dst_f8->f1[2] = __logf((src_f8->f1[2])+1);
-    dst_f8->f1[3] = __logf((src_f8->f1[3])+1);
-    dst_f8->f1[4] = __logf((src_f8->f1[4])+1);
-    dst_f8->f1[5] = __logf((src_f8->f1[5])+1);
-    dst_f8->f1[6] = __logf((src_f8->f1[6])+1);
-    dst_f8->f1[7] = __logf((src_f8->f1[7])+1);
-
-    // dst_f8->f1[0] = log1pf(src_f8->f1[0]);
-    // dst_f8->f1[1] = log1pf(src_f8->f1[1]);
-    // dst_f8->f1[2] = log1pf(src_f8->f1[2]);
-    // dst_f8->f1[3] = log1pf(src_f8->f1[3]);
-    // dst_f8->f1[4] = log1pf(src_f8->f1[4]);
-    // dst_f8->f1[5] = log1pf(src_f8->f1[5]);
-    // dst_f8->f1[6] = log1pf(src_f8->f1[6]);
-    // dst_f8->f1[7] = log1pf(src_f8->f1[7]);
+    dst_f8->f1[0] = __logf((src_f8->f1[0]));
+    dst_f8->f1[1] = __logf((src_f8->f1[1]));
+    dst_f8->f1[2] = __logf((src_f8->f1[2]));
+    dst_f8->f1[3] = __logf((src_f8->f1[3]));
+    dst_f8->f1[4] = __logf((src_f8->f1[4]));
+    dst_f8->f1[5] = __logf((src_f8->f1[5]));
+    dst_f8->f1[6] = __logf((src_f8->f1[6]));
+    dst_f8->f1[7] = __logf((src_f8->f1[7]));
 }
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
