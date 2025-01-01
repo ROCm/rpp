@@ -205,7 +205,73 @@ void concat_3D_axismask0_tensor(Rpp8u *srcPtr, Rpp8u *srcPtr1, RpptGenericDescPt
         }
         srcPtr += strides[1];
         srcPtr1 += strides1[1];
+        dstPtr += strides[1] * 2;
+    }
+}
+
+// Computes concat for 3D variants
+void concat_3D_axismask0_pln_tensor(Rpp8u *srcPtr, Rpp8u *srcPtr1, RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcGenericDescPtr1, Rpp8u *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u *dims1, Rpp32u *strides1, Rpp32u axisMask)
+{
+    Rpp32u vectorIncrement = 8;
+    for(Rpp32u i = 0; i < dims[0]; i++)
+    {
+        Rpp32u bufferLength = dims[2];
+        Rpp32u alignedLength = (bufferLength / 8) * 8;
+        Rpp32u bufferLength1 = dims1[2];
+        Rpp32u alignedLength1 = (bufferLength1 / 8) * 8;
+        Rpp8u *srcPtrRow = srcPtr;
+        Rpp8u *dstPtrRow = dstPtr;
+        for(Rpp32u j = 0; j < dims[1]; j++)
+        {
+            Rpp8u *srcPtrRowTemp = srcPtrRow;
+            Rpp8u *dstPtrRowTemp = dstPtrRow;
+            Rpp32u vectorLoopCount = 0;
+            __m256 pDst ;
+            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+            {
+                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp, &pDst); 
+                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, pDst);
+                srcPtrRowTemp += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
+            }
+            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
+            {
+                *dstPtrRowTemp++ = *srcPtrRowTemp++;
+            }
+            srcPtrRow += strides[2];
+            dstPtrRow += strides[2];
+        }
+        srcPtr += strides[1];
         dstPtr += strides[1];
+    }
+    for(Rpp32u i = 0; i < dims[0]; i++)
+    {
+        Rpp32u bufferLength1 = dims1[2];
+        Rpp32u alignedLength = (bufferLength1 / 8) * 8;
+        Rpp8u *srcPtrRow1 = srcPtr1;
+        Rpp8u *dstPtrRow = dstPtr;
+        for(Rpp32u j = 0; j < dims[1]; j++)
+        {
+            Rpp8u *srcPtrRowTemp1 = srcPtrRow1;
+            Rpp8u *dstPtrRowTemp = dstPtrRow;
+            Rpp32u vectorLoopCount = 0;
+            __m256 pDst ;
+            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+            {
+                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp1, &pDst); 
+                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, pDst);
+                srcPtrRowTemp1 += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
+            }
+            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
+            {
+                *dstPtrRowTemp++ = *srcPtrRowTemp1++;
+            }
+            srcPtrRow1 += strides[2];
+            dstPtrRow += strides[2];
+        }
+        srcPtr1 += strides1[1];
+        dstPtr += strides1[1];
     }
 }
 
@@ -539,40 +605,82 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
             {
                 case 0: // concat axes 0
                 {
-                    srcReductionDims[0] = 1;
-                    srcReductionDims[1] = length[0];
-                    srcReductionDims[2] = length[1] * length[2];
-                    srcStride[0] = 1;
-                    srcStride[1] = srcGenericDescPtr->strides[0];
-                    srcStride[2] = srcGenericDescPtr->strides[1];
-                    srcReductionDims1[0] = 1;
-                    srcReductionDims1[1] = length1[0];
-                    srcReductionDims1[2] = length1[1] * length1[2];
-                    srcStride1[0] = 1;
-                    srcStride1[1] = srcGenericDescPtr1->strides[0];
-                    srcStride1[2] = srcGenericDescPtr1->strides[1];
-                    dstStride[0] = 1;
-                    dstStride[1] = dstGenericDescPtr->strides[0];
-                    dstStride[2] = dstGenericDescPtr->strides[1];
+                    if(srcGenericDescPtr->layout == RpptLayout::NCHW)
+                    {
+                        srcReductionDims[0] = length[0];
+                        srcReductionDims[1] = length[1];
+                        srcReductionDims[2] = length[2];
+                        srcStride[0] = srcGenericDescPtr->strides[0];
+                        srcStride[1] = srcGenericDescPtr->strides[1];
+                        srcStride[2] = srcGenericDescPtr->strides[2];
+                        srcReductionDims1[0] = length1[0];
+                        srcReductionDims1[1] = length1[1];
+                        srcReductionDims1[2] = length1[2];
+                        srcStride1[0] = srcGenericDescPtr1->strides[0];
+                        srcStride1[1] = srcGenericDescPtr1->strides[1];
+                        srcStride1[2] = srcGenericDescPtr1->strides[2];
+                        dstStride[0] = dstGenericDescPtr->strides[0];
+                        dstStride[1] = dstGenericDescPtr->strides[1];
+                        dstStride[2] = dstGenericDescPtr->strides[2];
+                    }
+                    else
+                    {
+                        srcReductionDims[0] = 1;
+                        srcReductionDims[1] = length[0];
+                        srcReductionDims[2] = length[1] * length[2];
+                        srcStride[0] = 1;
+                        srcStride[1] = srcGenericDescPtr->strides[0];
+                        srcStride[2] = srcGenericDescPtr->strides[1];
+                        srcReductionDims1[0] = 1;
+                        srcReductionDims1[1] = length1[0];
+                        srcReductionDims1[2] = length1[1] * length1[2];
+                        srcStride1[0] = 1;
+                        srcStride1[1] = srcGenericDescPtr1->strides[0];
+                        srcStride1[2] = srcGenericDescPtr1->strides[1];
+                        dstStride[0] = 1;
+                        dstStride[1] = dstGenericDescPtr->strides[0];
+                        dstStride[2] = dstGenericDescPtr->strides[1];
+                    }
                     break;
                 }
                 case 1: // concat axes 1
                 {
-                    srcReductionDims[0] = 1;
-                    srcReductionDims[1] = length[0];
-                    srcReductionDims[2] = length[1] * length[2];
-                    srcStride[0] = 1;
-                    srcStride[1] = 1;
-                    srcStride[2] = srcGenericDescPtr->strides[1];
-                    srcReductionDims1[0] = 1;
-                    srcReductionDims1[1] = length1[0];
-                    srcReductionDims1[2] = length1[1] * length1[2];
-                    srcStride1[0] = 1;
-                    srcStride1[1] = 1;
-                    srcStride1[2] = srcGenericDescPtr1->strides[1];
-                    dstStride[0] = 1;
-                    dstStride[1] = 1;
-                    dstStride[2] = dstGenericDescPtr->strides[1];
+                    if(srcGenericDescPtr->layout == RpptLayout::NCHW)
+                    {
+                        srcReductionDims[0] = length[0];
+                        srcReductionDims[1] = length[1];
+                        srcReductionDims[2] = length[2];
+                        srcStride[0] = srcGenericDescPtr->strides[0];
+                        srcStride[1] = srcGenericDescPtr->strides[1];
+                        srcStride[2] = srcGenericDescPtr->strides[2];
+                        srcReductionDims1[0] = length1[0];
+                        srcReductionDims1[1] = length1[1];
+                        srcReductionDims1[2] = length1[2];
+                        srcStride1[0] = srcGenericDescPtr1->strides[0];
+                        srcStride1[1] = srcGenericDescPtr1->strides[1];
+                        srcStride1[2] = srcGenericDescPtr1->strides[2];
+                        dstStride[0] = dstGenericDescPtr->strides[0];
+                        dstStride[1] = dstGenericDescPtr->strides[1];
+                        dstStride[2] = dstGenericDescPtr->strides[2];
+                    }
+                    else
+                    {
+                        srcReductionDims[0] = 1;
+                        srcReductionDims[1] = length[0];
+                        srcReductionDims[2] = length[1] * length[2];
+                        srcStride[0] = 1;
+                        srcStride[1] = 1;
+                        srcStride[2] = srcGenericDescPtr->strides[1];
+                        srcReductionDims1[0] = 1;
+                        srcReductionDims1[1] = length1[0];
+                        srcReductionDims1[2] = length1[1] * length1[2];
+                        srcStride1[0] = 1;
+                        srcStride1[1] = 1;
+                        srcStride1[2] = srcGenericDescPtr1->strides[1];
+                        dstStride[0] = 1;
+                        dstStride[1] = 1;
+                        dstStride[2] = dstGenericDescPtr->strides[1];
+                    }
                     break;
                 }
                 case 2: // concat axes 2
@@ -599,7 +707,9 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
                     std::cout<<"Invalid Axis mask"<<std::endl;
                 }
             }
-            if(axisMask == 0)
+            if(srcGenericDescPtr->layout == RpptLayout::NCHW && axisMask == 0)
+                concat_3D_axismask0_pln_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr, srcGenericDescPtr1, dstPtrTemp, dstGenericDescPtr, srcReductionDims, srcStride, srcReductionDims1, srcStride1, axisMask);
+            else if((srcGenericDescPtr->layout == RpptLayout::NHWC &&  axisMask == 0) || (srcGenericDescPtr->layout == RpptLayout::NCHW &&  axisMask == 1))
                 concat_3D_axismask0_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr, srcGenericDescPtr1, dstPtrTemp, dstGenericDescPtr, srcReductionDims, srcStride, srcReductionDims1, srcStride1, axisMask);
             else
                 concat_3D_tensor(srcPtrTemp, srcPtrTemp1, srcGenericDescPtr, srcGenericDescPtr1, dstPtrTemp, dstGenericDescPtr, srcReductionDims, srcStride, srcReductionDims1, srcStride1, dstStride, axisMask);

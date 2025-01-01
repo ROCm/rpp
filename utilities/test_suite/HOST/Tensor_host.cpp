@@ -308,17 +308,35 @@ int main(int argc, char **argv)
     {
         set_max_dimensions(imageNamesPathSecond, maxHeight1, maxWidth1, imagesMixed);
         set_descriptor_dims_and_strides(srcDescPtrSecond, batchSize, maxHeight1, maxWidth1, outputChannels, offsetInBytes);
-        if(additionalParam == 0)
+        if(srcDescPtr->layout == RpptLayout::NHWC)
         {
-            set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight + maxHeight1, maxWidth, outputChannels, offsetInBytes);
-        }
-        else if(additionalParam == 1)
-        {
-            set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth + maxWidth1, outputChannels, offsetInBytes);
+            if(additionalParam == 0)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight + maxHeight1, maxWidth, outputChannels, offsetInBytes);
+            }
+            else if(additionalParam == 1)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth + maxWidth1, outputChannels, offsetInBytes);
+            }
+            else
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels + outputChannels, offsetInBytes);
+            }
         }
         else
         {
-            set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels + outputChannels, offsetInBytes);
+            if(additionalParam == 0)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels + outputChannels, offsetInBytes);
+            }
+            else if(additionalParam == 1)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight + maxHeight1, maxWidth, outputChannels, offsetInBytes);
+            }
+            else
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth + maxWidth1, outputChannels, offsetInBytes);
+            }
         }
 
     }
@@ -1764,10 +1782,12 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                {
                     if(testCase == 93)
                         compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, srcImgSizes, batchSize, interpolationTypeName, noiseTypeName, axisMaskName, additionalParam, testCase, dst, scriptPath);
                     else
                         compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, axisMaskName, additionalParam, testCase, dst, scriptPath);
+                }
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
@@ -1788,10 +1808,14 @@ int main(int argc, char **argv)
                 // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
                 if (layoutType == 0 || layoutType == 1)
                 {
-                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    if ((dstDescPtr->c == 3 || dstDescPtr->c == 6) && (dstDescPtr->layout == RpptLayout::NCHW))
+                    {
+                        if (testCase == 93)
+                            convert_pln3_to_pkd3_concat(outputu8, dstDescPtr,srcDescPtr, additionalParam);
+                        else
+                            convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    }
                 }
-                std::cerr<<"\n Before Writing Image";
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
                 {

@@ -821,6 +821,67 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
+// converts image data from PLN3 to PKD3
+inline void convert_pln3_to_pkd3_concat(Rpp8u *output, RpptDescPtr descPtr, RpptDescPtr srcPtr, int axisMask)
+{
+    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
+    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(outputCopy, output, bufferSize * sizeof(Rpp8u));
+
+    Rpp8u *outputCopyTemp;
+    outputCopyTemp = outputCopy + descPtr->offsetInBytes;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(descPtr->n)
+    for (int count = 0; count < descPtr->n; count++)
+    {
+        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        Rpp8u *outputCopyTempR1, *outputCopyTempG1, *outputCopyTempB1;
+        outputCopyTempR = outputCopyTemp + count * descPtr->strides.nStride;
+        outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
+        outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
+        Rpp8u *outputTemp = output + descPtr->offsetInBytes + count * descPtr->strides.nStride;
+        Rpp8u *outputTemp1;
+
+        if(axisMask == 0)
+        {
+            outputCopyTempR1 = outputCopyTemp + count * descPtr->strides.nStride + srcPtr->strides.nStride;
+            outputCopyTempG1 = outputCopyTempR1 + descPtr->strides.cStride;
+            outputCopyTempB1 = outputCopyTempG1 + descPtr->strides.cStride;
+        }
+
+        for (int i = 0; i < descPtr->h; i++)
+        {
+            for (int j = 0; j < descPtr->w; j++)
+            {
+                *outputTemp = *outputCopyTempR;
+                outputTemp++;
+                outputCopyTempR++;
+                *outputTemp = *outputCopyTempG;
+                outputTemp++;
+                outputCopyTempG++;
+                *outputTemp = *outputCopyTempB;
+                outputTemp++;
+                outputCopyTempB++;
+                if(axisMask == 0)
+                {
+                    *outputTemp = *outputCopyTempR1;
+                    outputTemp++;
+                    outputCopyTempR1++;
+                    *outputTemp = *outputCopyTempG1;
+                    outputTemp++;
+                    outputCopyTempG1++;
+                    *outputTemp = *outputCopyTempB1;
+                    outputTemp++;
+                    outputCopyTempB1++;
+                }
+            }
+        }
+    }
+
+    free(outputCopy);
+}
+
 // converts image data from PKD3 to PLN3
 inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
@@ -1007,6 +1068,8 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
     static int imageCnt = 0;
 
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
+    if(srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0 && srcDescPtr->c == 1)
+        elementsInRowMax = elementsInRowMax / 2; 
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
@@ -1023,14 +1086,21 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
         Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
         for (int k = 0; k < height; k++)
         {
-            if(axisMask == 1)
+            if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 1) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 2))
             {
                 memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
                 memcpy(tempOutputRow1, (outputRow +  (srcDescPtr->w * srcDescPtr->c)), elementsInRow1 * sizeof(Rpp8u));
                 tempOutputRow1 += (elementsInRow + elementsInRow1);
                 tempOutputRow += (elementsInRow + elementsInRow1);
             }
-            else if(axisMask == 2)
+            else if((srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0 && srcDescPtr->c == 1))
+            {
+                memcpy(tempOutputRow, outputRow, ((elementsInRow) * sizeof(Rpp8u)));
+                tempOutputRow += elementsInRow;
+                memcpy(tempOutputRow, (outputRow + (dstDescPtr->strides.nStride / 2)), ((elementsInRow) * sizeof(Rpp8u)));
+                tempOutputRow += (elementsInRow);
+            }
+            else if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 2) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0))
             {
                 memcpy(tempOutputRow, outputRow, ((elementsInRow + elementsInRow1) * sizeof(Rpp8u)));
                 tempOutputRow += (elementsInRow + elementsInRow1);
@@ -1043,7 +1113,7 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
             outputRow += elementsInRowMax;
         }
         outputRow = offsettedOutput + (j * dstDescPtr->strides.nStride) + srcDescPtr->strides.nStride;
-        if(axisMask == 0)
+        if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 1))
         {
             for (int k = 0; k < height1; k++)
             {
@@ -1056,16 +1126,16 @@ inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,R
         Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
         {
-            if(axisMask == 0)
+            if(axisMask == 1)
                 matOutputImage = Mat(height + height1, width, CV_8UC1, tempOutput);
-            else
+            else if(axisMask == 2)
                 matOutputImage = Mat(height, width + width1, CV_8UC1, tempOutput);
         }        
         else if (dstDescPtr->c == 2)
-            matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
+            matOutputImage = Mat(height, width + width1 , CV_8UC1, tempOutput);
         else if (dstDescPtr->c == 3 || dstDescPtr->c == 6)
         {
-            if(axisMask == 0)
+            if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (srcDescPtr->layout == RpptLayout::NCHW && axisMask == 1))
                 matOutputImageRgb = Mat(height + height1, width, CV_8UC3, tempOutput);
             else
                 matOutputImageRgb = Mat(height, width + width1, CV_8UC3, tempOutput);
@@ -1126,6 +1196,8 @@ void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDe
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = srcImgSizes[imageCnt].height;
         int width = srcImgSizes[imageCnt].width * dstDescPtr->c;
+        if(dstDescPtr->layout == RpptLayout::NCHW && axisMask == 0)
+            width = width / 2;
         int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
@@ -1141,7 +1213,7 @@ void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDe
                 if(diff <= CUTOFF)
                     matchedIdx++;
             }
-            if(axisMask == 1)
+            if((dstDescPtr->layout == RpptLayout::NHWC && axisMask == 1) || (dstDescPtr->layout == RpptLayout::NCHW && axisMask == 2))
             {
                 rowTemp = outputTemp + (i * dstDescPtr->strides.hStride + dstDescPtr->strides.hStride / 2);
                 rowTempRef = outputTempRef + (i * refOutputHstride + refOutputHstride / 2);
@@ -1152,12 +1224,10 @@ void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDe
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
                         matchedIdx++;
-                    else
-                    printf("\n Image %d Height %d Width %d %d %d ",imageCnt,i,j,*outVal,*outRefVal);
                 }   
             }
         }
-        if(axisMask == 0)
+        if((dstDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (dstDescPtr->layout == RpptLayout::NCHW && axisMask != 2))
         {
             outputTemp = output + (imageCnt * dstDescPtr->strides.nStride + dstDescPtr->strides.nStride / 2);
             outputTempRef = refOutput + (imageCnt * refOutputSize + refOutputSize/2 );
@@ -1175,23 +1245,26 @@ void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDe
                 }
             }
         }
-        if(matchedIdx == (height * srcImgSizes[imageCnt].width * 3 * 2) && matchedIdx !=0)
-            fileMatch++;
+        int size = 1;
+        if(dstDescPtr->layout == RpptLayout::NCHW)
+            size = height * srcImgSizes[imageCnt].width  * 2;
         else
-         printf("\n Matched %d %d ",height * srcImgSizes[imageCnt].width * 3 * 2,matchedIdx);
+            size = height * srcImgSizes[imageCnt].width  * 3 * 2;
+        if(matchedIdx == size && matchedIdx !=0)
+            fileMatch++;
     }
 }
 
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
-void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *srcImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + imageCnt * refOutputSize;
-        int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width;
+        int height = srcImgSizes[imageCnt].height;
+        int width = srcImgSizes[imageCnt].width;
         int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
@@ -1218,6 +1291,81 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
     }
 }
 
+// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
+void compare_outputs_pln3_concat(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int axisMask)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempRef1, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        outputTempRef1 = refOutput + imageCnt * refOutputSize +  refOutputSize / 2 ;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    if(axisMask == 0)
+                        outRefVal = rowTempRef + j * 6;
+                    else
+                        outRefVal = rowTempRef + j * 3;
+                        
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matchedIdx++;
+                }
+                if(axisMask == 2)
+                {
+                    rowTemp = outputTempChn + i * dstDescPtr->strides.hStride + dstDescPtr->strides.hStride / 2;
+                    rowTempRef = outputTempRefChn + i * refOutputHstride + refOutputHstride / 2;
+                    for(int j = 0; j < width; j++)
+                    {
+                        outVal = rowTemp + j;
+                        outRefVal = rowTempRef + j * 3;
+                        int diff = abs(*outVal - *outRefVal);
+                        if(diff <= CUTOFF)
+                            matchedIdx++;
+                    }
+                }
+                
+            }
+            if(axisMask == 1)
+            {
+                outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+                outputTempChn = outputTemp + c * dstDescPtr->strides.cStride + dstDescPtr->strides.cStride / 2;
+                outputTempRefChn = outputTempRef1 + c;
+                for(int i = 0; i < height; i++)
+                {
+                    rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                    rowTempRef = outputTempRefChn + i * refOutputHstride;
+                    for(int j = 0; j < width; j++)
+                    {
+                        outVal = rowTemp + j;
+                        outRefVal = rowTempRef + j * 3;
+                        int diff = abs(*outVal - *outRefVal);
+                        if (diff <= CUTOFF)
+                            matchedIdx++;
+                        
+                    }
+                    
+                }
+            }
+        }
+        if(matchedIdx == (height * width * 3 * 2) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
 template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, string axisMaskName, int additionalParam, int testCase, string dst, string scriptPath)
 {
@@ -1233,9 +1381,9 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     {
         refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
-        if(additionalParam == 0)
+        if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 0) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 1))
             refOutputHeight = refOutputHeight * 2;
-        else if(additionalParam == 1)
+        else if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 1) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 2))
             refOutputWidth = refOutputWidth * 2;
     }
     else
@@ -1245,10 +1393,14 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
-    if(additionalParam == 2)
+    if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 2) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 0))
         binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 2 * 4;
-    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
-
+    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3 ;
+    if(srcDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 2)
+    {
+        pln1RefStride = pln1RefStride * 2;
+        refOutputWidth = refOutputWidth / 2;
+    }
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
@@ -1299,12 +1451,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else if(testCase == 93)
     {
         func += "_axisMask" + axisMaskName;
-        // if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        // {
-        //     Rpp32u axisMask = std::stoi(axisMaskName);
-        //     axisMask = ((axisMask & 1) << 2) | ((axisMask & 2) >> 1) | ((axisMask & 4) >> 1);
-        //     axisMaskName = std::to_string(axisMask);
-        // }
+        if(dstDescPtr->layout == RpptLayout::NCHW && (dstDescPtr->c == 3 || dstDescPtr->c == 6))
+        {
+            Rpp32u axisMask = std::stoi(axisMaskName);
+            if(axisMask == 0)
+                axisMask = 2;
+            else if(axisMask == 1)
+                axisMask = 0;
+            else
+                axisMask = 1;
+            axisMaskName = std::to_string(axisMask);
+        }
         binFile += "_axisMask" + axisMaskName;
     }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
@@ -1314,14 +1471,26 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     read_bin_file(refFile, binaryContent);
 
     if(dstDescPtr->layout == RpptLayout::NHWC)
+    {
         if(testCase == 93)
             compare_outputs_pkd_and_pln1_concat(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, additionalParam);
         else
             compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    }
+    else if(dstDescPtr->layout == RpptLayout::NCHW && (dstDescPtr->c == 3 || dstDescPtr->c == 6))
+    {   
+        if (testCase == 93)
+            compare_outputs_pln3_concat(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, additionalParam);
+        else
+            compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    }
     else
-        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    {
+        if (testCase == 93)
+            compare_outputs_pkd_and_pln1_concat(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch,additionalParam);
+        else 
+            compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    }
 
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
