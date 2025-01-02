@@ -419,11 +419,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp, *srcPtrTemp1, *dstPtrTemp, *meanTensor, *stdDevTensor;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         srcPtrTemp1 = srcPtr1 + batchCount * srcGenericDescPtr1->strides[0];
-        dstPtrTemp = dstPtr + batchCount * (dstGenericDescPtr->strides[0]);
-
-        // Set all values in dst buffer to 0.0
-        for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
-            dstPtrTemp[cnt] = 0.0f;
+        dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         if(tensorDims == 2) // Called for audio testcase and for any other 2D case
         {
@@ -564,10 +560,6 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         srcPtrTemp1 = srcPtr1 + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
-
-        // Set all values in dst buffer to 0.0
-        for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
-            dstPtrTemp[cnt] = 0.0f;
 
         Rpp8u *srcPtrChannel = srcPtrTemp;
 
