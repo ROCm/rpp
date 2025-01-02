@@ -60,9 +60,9 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79 || testCase == 93);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68 || testCase == 93);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84 || testCase == 49 || testCase == 54);
     bool nonQACase = (testCase == 24 || testCase == 28 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
@@ -152,12 +152,18 @@ int main(int argc, char **argv)
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HIP");
 
     // Initialize tensor descriptors
-    RpptDesc srcDesc, dstDesc;
+    RpptDesc srcDesc, dstDesc, srcDescSecond;
     RpptDescPtr srcDescPtr = &srcDesc;
+    RpptDescPtr srcDescPtrSecond = &srcDescSecond;
     RpptDescPtr dstDescPtr = &dstDesc;
 
     // Set src/dst layout types in tensor descriptors
     set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+    if(testCase == 93)
+    {
+        set_descriptor_layout(srcDescPtrSecond, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+        set_descriptor_data_type(inputBitDepth, funcName, srcDescPtrSecond, dstDescPtr);
+    }
 
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
@@ -166,6 +172,7 @@ int main(int argc, char **argv)
     int missingFuncFlag = 0;
     int i = 0, j = 0;
     int maxHeight = 0, maxWidth = 0;
+    int maxHeight1 = 0, maxWidth1 = 0;
     int maxDstHeight = 0, maxDstWidth = 0;
     Rpp64u count = 0;
     Rpp64u ioBufferSize = 0;
@@ -185,6 +192,7 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
+    std::string axisMaskName = "";
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -203,6 +211,12 @@ int main(int argc, char **argv)
         noiseTypeName = get_noise_type(additionalParam);
         func += "_noiseType";
         func += noiseTypeName.c_str();
+    }
+    if(testCase == 93)
+    {
+        axisMaskName = std::to_string(additionalParam);
+        func +="_axisMask";
+        func += std::to_string(additionalParam);        
     }
 
     if(!qaFlag)
@@ -281,6 +295,41 @@ int main(int argc, char **argv)
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes, additionalStride);
     set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
+    if(testCase == 93)
+    {
+        set_max_dimensions(imageNamesPathSecond, maxHeight1, maxWidth1, imagesMixed);
+        set_descriptor_dims_and_strides(srcDescPtrSecond, batchSize, maxHeight1, maxWidth1, outputChannels, offsetInBytes);
+        if(srcDescPtr->layout == RpptLayout::NHWC)
+        {
+            if(additionalParam == 0)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight + maxHeight1, maxWidth, outputChannels, offsetInBytes);
+            }
+            else if(additionalParam == 1)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth + maxWidth1, outputChannels, offsetInBytes);
+            }
+            else
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels + outputChannels, offsetInBytes);
+            }
+        }
+        else
+        {
+            if(additionalParam == 0)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels + outputChannels, offsetInBytes);
+            }
+            else if(additionalParam == 1)
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight + maxHeight1, maxWidth, outputChannels, offsetInBytes);
+            }
+            else
+            {
+                set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth + maxWidth1, outputChannels, offsetInBytes);
+            }
+        }
+    }
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
