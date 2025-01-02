@@ -258,7 +258,7 @@ int main(int argc, char **argv)
                 set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
 
                 startWallTime = omp_get_wtime();
-                rppt_concat_gpu(d_inputF32, d_inputF32Second, srcDescriptorPtrND, srcDescriptorPtrNDSecond, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
+                rppt_concat_gpu(d_inputF32, d_inputF32Second, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_outputF32, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 break;
             }
             default:
@@ -287,11 +287,11 @@ int main(int argc, char **argv)
         refFileName = func + "_host.csv";
         refFile1.open("input.csv");
         refFile.open(refFileName);
-        for (int i = 0; i < bufferSize * 2; i++)
+        for (int i = 0; i < oBufferSize * 2; i++)
         {
             refFile << *(outputF32 + i) << ",";
         }
-        for (int i = 0; i < bufferSize; i++)
+        for (int i = 0; i < iBufferSize; i++)
         {
             refFile1 << *(inputF32 + i) << ",";
         }
@@ -303,9 +303,9 @@ int main(int argc, char **argv)
     if(qaMode)
     {
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, oBufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {

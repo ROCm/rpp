@@ -379,7 +379,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1)
                 cnt++;
             else
-                printf("\n output %f ref %f ",out[j],ref[j]);
+                printf("\n index %d output %f ref %f ",j, out[j],ref[j]);
         }
         printf("\n cnt %d", cnt);
         if (cnt == sampleLength)
@@ -396,7 +396,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     else
     {
         std::cout << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
-        status += "PASSED";
+        status += "FAILED";
     }
     free(refOutput);
 
