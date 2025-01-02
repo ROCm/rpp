@@ -105,7 +105,6 @@ const __m128i xmm_px3 = _mm_set1_epi32(3);
 const __m128i xmm_px4 = _mm_set1_epi32(4);
 const __m128i xmm_px5 = _mm_set1_epi32(5);
 const __m128i xmm_pxConvertI8 = _mm_set1_epi8((char)128);
-const __m128i xmm_pxConvertI16 = _mm_set1_epi16((short)32768);
 const __m128 xmm_pDstLocInit = _mm_setr_ps(0, 1, 2, 3);
 
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
@@ -149,8 +148,6 @@ const __m128i xmm_pxMask04To07 = _mm_setr_epi8(4, 0x80, 0x80, 0x80, 5, 0x80, 0x8
 const __m128i xmm_pxMask08To11 = _mm_setr_epi8(8, 0x80, 0x80, 0x80, 9, 0x80, 0x80, 0x80, 10, 0x80, 0x80, 0x80, 11, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask12To15 = _mm_setr_epi8(12, 0x80, 0x80, 0x80, 13, 0x80, 0x80, 0x80, 14, 0x80, 0x80, 0x80, 15, 0x80, 0x80, 0x80);
 
-
-
 const __m128i xmm_pxMask00To02 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask03To05 = _mm_setr_epi8(3, 0x80, 0x80, 0x80, 4, 0x80, 0x80, 0x80, 5, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
 const __m128i xmm_pxMask06To08 = _mm_setr_epi8(6, 0x80, 0x80, 0x80, 7, 0x80, 0x80, 0x80, 8, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
@@ -176,7 +173,6 @@ const __m128i xmm_char_maskB = _mm_setr_epi8(2, 5, 8, 11, 0x80, 0x80, 0x80, 0x80
 const __m128i xmm_pkd_mask = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 0x80, 0x80, 0x80, 0x80);
 const __m128i xmm_store4_pkd_pixels = _mm_setr_epi8(0, 1, 8, 2, 3, 9, 4, 5, 10, 6, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_store8_pkd_pixels = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 23, 15, 14, 22, 13, 12, 21, 11, 10, 20, 9, 8, 19, 7, 6, 18, 5, 4, 17, 3, 2, 16, 1, 0);
-
 
 const __m128i xmm_pxStore4Pkd = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_pxPermPkd = _mm256_setr_epi32(0, 1, 2, 4, 5, 6, 7, 3);
@@ -2123,7 +2119,6 @@ const __m128 m6_m6_p6_p0        = _mm_set_ps(-6.0f ,-6.0f , 6.0f , 0.0f);
 const __m128 p1_p1_m2_p0        = _mm_set_ps(1.0f , 1.0f ,-2.0f , 0.0f);
 const __m128 m1_m1_m1_p1        = _mm_set_ps(-1.0f ,-1.0f ,-1.0f , 1.0f);
 
-
 SIMD_CONST_PI(full       , 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
 SIMD_CONST_PI(sn         , 0x80000000, 0x80000000, 0x80000000, 0x80000000);
 SIMD_CONST_PS(m6_m6_m6_m6,-6.0f ,-6.0f ,-6.0f ,-6.0f);
@@ -2712,8 +2707,6 @@ static inline __m256 log_ps(__m256 x)
     __m256i emm0;
     __m256 one = *(__m256 *)&avx_p1;
     __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
-
-    // x = _mm256_add_ps(x, one);
 
     // cut off denormalized stuff
     x = _mm256_max_ps(x, *(__m256 *)&_ps_min_norm_pos_avx);
