@@ -23,6 +23,7 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -162,10 +163,6 @@ else()
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-
-                    # set flags
-                    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
-                    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
 
                     # include and link directories

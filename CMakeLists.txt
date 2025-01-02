@@ -255,11 +255,6 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS "${ROCM_PATH}/bin/amdclang++")
-		set(COMPILER_FOR_HIP "${ROCM_PATH}/bin/amdclang++")
-	else()
-		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
-	endif()
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API

@@ -23,6 +23,7 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")

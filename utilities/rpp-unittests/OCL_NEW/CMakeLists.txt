@@ -23,6 +23,7 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -43,7 +44,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(rpp_unittests/OCL_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
 
 # Set message options
 if(NOT WIN32)

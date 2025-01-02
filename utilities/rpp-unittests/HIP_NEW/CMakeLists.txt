@@ -23,6 +23,7 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
@@ -43,7 +44,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(rpp_unittests/HIP_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
@@ -70,9 +70,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 if(HIP_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-
     include_directories(${HIP_INCLUDE_DIRS} ${HIP_INCLUDE_DIRS}/hip)
     include_directories(${OpenCV_INCLUDE_DIRS})
     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
