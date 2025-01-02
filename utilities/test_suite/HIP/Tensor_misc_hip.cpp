@@ -280,7 +280,7 @@ int main(int argc, char **argv)
     if(DEBUG_MODE)
     {
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * 2 * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSize * 2 * sizeof(Rpp32f), hipMemcpyDeviceToHost));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         std::ofstream refFile, refFile1;
         std::string refFileName;

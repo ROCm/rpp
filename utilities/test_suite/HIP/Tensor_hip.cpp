@@ -261,12 +261,14 @@ int main(int argc, char **argv)
     }
 
     // Initialize ROI tensors for src/dst
-    RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
+    RpptROI *roiTensorPtrSrc, *roiTensorPtrSrc1, *roiTensorPtrDst;
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
+    if(testCase == 93)
+        CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorPtrSrc1, batchSize * sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
-    RpptImagePatch *dstImgSizes;
+    RpptImagePatch *dstImgSizes, *srcImgSizes, *srcImgSizesSecond;
     CHECK_RETURN_STATUS(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
@@ -279,6 +281,7 @@ int main(int argc, char **argv)
         outputChannels = 1;
     Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
     Rpp32u dstOffsetInBytes = 0;
+    Rpp32u offsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
@@ -403,8 +406,21 @@ int main(int argc, char **argv)
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
+    RpptGenericDesc srcDescriptor3D, dstDescriptor3D, srcDescriptor3DSecond;
+    RpptGenericDescPtr srcDescriptorPtr3D = &srcDescriptor3D;
+    RpptGenericDescPtr srcDescriptorPtr3DSecond = &srcDescriptor3DSecond;
+    RpptGenericDescPtr dstDescriptorPtr3D = &dstDescriptor3D;
     if(testCase == 92)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
+
+    Rpp32u *concatRoiTensor = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
+    Rpp32u *concatRoiTensorSecond = static_cast<Rpp32u *>(calloc(3 * 2 * batchSize, sizeof(Rpp32u)));
+    if(testCase == 93)
+    {
+        set_generic_descriptor_concat(srcDescPtr, srcDescriptorPtr3D, batchSize);
+        set_generic_descriptor_concat(srcDescPtrSecond, srcDescriptorPtr3DSecond, batchSize);
+        set_generic_descriptor_concat(dstDescPtr, dstDescriptorPtr3D, batchSize);
+    }
 
     // Allocate hip memory for src/dst
     CHECK_RETURN_STATUS(hipMalloc(&d_input, inputBufferSize));
@@ -493,7 +509,16 @@ int main(int argc, char **argv)
         vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
 
         // Set ROIs for src/dst
-        set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        if(testCase == 93)
+        {
+            srcImgSizes = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+            srcImgSizesSecond = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+            set_src_and_dst_roi_concat(imagesPathStart, imagesPathEnd, imagesPathSecondStart, imagesPathSecondEnd, roiTensorPtrSrc, roiTensorPtrSrc1, roiTensorPtrDst, srcImgSizes,srcImgSizesSecond, dstImgSizes);
+        }
+        else
+        {
+            set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        }
 
         //Read images
         if(decoderType == 0)
@@ -1561,6 +1586,21 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 93:
+                {
+                    testCaseName  = "concat";
+                    Rpp32u numDim = srcDescriptorPtr3D->numDims - 1;
+                    init_concat(srcDescriptorPtr3D, roiTensorPtrSrc, concatRoiTensor);
+                    init_concat(srcDescriptorPtr3DSecond, roiTensorPtrSrc1, concatRoiTensorSecond);
+                    startWallTime = omp_get_wtime();
+
+                    if(inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_concat_gpu(d_input, d_input_second, srcDescriptorPtr3D, srcDescriptorPtr3D, d_output, dstDescriptorPtr3D, additionalParam, concatRoiTensor, concatRoiTensorSecond, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -1699,9 +1739,13 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                // if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
-                //     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
-
+                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                {
+                    if(testCase == 93)
+                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, srcImgSizes, batchSize, interpolationTypeName, noiseTypeName, axisMaskName, additionalParam, testCase, dst, scriptPath);
+                    else
+                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, axisMaskName, additionalParam, testCase, dst, scriptPath);
+                }
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
                     convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
@@ -1721,8 +1765,13 @@ int main(int argc, char **argv)
                 // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
                 if (layoutType == 0 || layoutType == 1)
                 {
-                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    if ((dstDescPtr->c == 3 || dstDescPtr->c == 6) && (dstDescPtr->layout == RpptLayout::NCHW))
+                    {
+                        if (testCase == 93)
+                            convert_pln3_to_pkd3_concat(outputu8, dstDescPtr,srcDescPtr, additionalParam);
+                        else
+                            convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    }
                 }
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
