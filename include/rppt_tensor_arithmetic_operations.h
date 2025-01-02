@@ -291,31 +291,28 @@ RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, R
  */
 RppStatus rppt_log_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
-#ifdef GPU_SUPPORT
-/*! \brief Logarithm operation on HIP backend
- * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
- *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
- *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
- * \param [in] srcPtr source tensor in HIP memory
+
+/*! \brief Log1p operation on HOST backend
+ * \details Computes Log1p to base e(natural log1p) of the input for a given ND Tensor.
+ *          Supports i16->f32 datatype.
+ *          Uses Absolute of input for log1p computation to avoid undefined result.
+ * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor in HIP memory
+ * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] roiTensor values to represent dimensions of input tensor
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_log1p_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
-
-
 RppStatus rppt_log1p_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
-/*! \brief Logarithm operation on HIP backend
+/*! \brief Log1p operation on HIP backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
- *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
- *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
+ *          Supports u8->f32, i8->f32,i16->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log1p computation to avoid undefined result.
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory
