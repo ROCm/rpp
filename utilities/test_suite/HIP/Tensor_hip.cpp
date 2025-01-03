@@ -426,6 +426,10 @@ int main(int argc, char **argv)
     void *d_interDstPtr;
     if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
+    
+    Rpp32f *perspectiveTensorPtr = NULL;
+    if(testCase == 28)
+        CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -815,6 +819,37 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 28:
+                {
+                    testCaseName = "warp_perspective";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    for (i = 0, j = 0; i < batchSize; i++, j += 9)
+                    {
+                        perspectiveTensorPtr[j + 0] = 0.93;
+                        perspectiveTensorPtr[j + 1] = 0.5;
+                        perspectiveTensorPtr[j + 2] = 0.0;
+                        perspectiveTensorPtr[j + 3] = -0.5;
+                        perspectiveTensorPtr[j + 4] = 0.93;
+                        perspectiveTensorPtr[j + 5] = 0.0;
+                        perspectiveTensorPtr[j + 6] = 0.005;
+                        perspectiveTensorPtr[j + 7] = 0.005;
+                        perspectiveTensorPtr[j + 8] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1683,6 +1718,8 @@ int main(int argc, char **argv)
     }
     if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
+    if(perspectiveTensorPtr != NULL)
+      CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
