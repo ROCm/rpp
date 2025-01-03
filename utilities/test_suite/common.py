@@ -43,12 +43,14 @@ imageAugmentationMap = {
     5: ["pixelate", "HOST", "HIP"],
     6: ["jitter", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
+    10: ["fog", "HOST", "HIP"],
     13: ["exposure", "HOST", "HIP"],
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
+    28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
     30: ["non_linear_blend", "HOST", "HIP"],
     31: ["color_cast", "HOST", "HIP"],
@@ -62,7 +64,7 @@ imageAugmentationMap = {
     39: ["resize_crop_mirror", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
-    49: ["box_filter", "HIP"],
+    49: ["box_filter", "HIP", "HOST"],
     54: ["gaussian_filter", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
@@ -91,10 +93,10 @@ audioAugmentationMap = {
     1: ["to_decibels", "HOST", "HIP"],
     2: ["pre_emphasis_filter", "HOST", "HIP"],
     3: ["down_mixing", "HOST", "HIP"],
-    4: ["spectrogram", "HOST"],
-    5: ["slice", "HOST"],
+    4: ["spectrogram", "HOST", "HIP"],
+    5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST"]
+    7: ["mel_filter_bank", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
@@ -115,8 +117,8 @@ miscAugmentationMap  = {
 
 ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
-    "effects_augmentations" : [5, 6, 8, 29, 30, 32, 35, 46, 82, 83, 84],
-    "geometric_augmentations" : [20, 21, 23, 24, 26, 33, 37, 38, 39, 63, 79, 80, 92],
+    "effects_augmentations" : [5, 6, 8, 10, 29, 30, 32, 35, 46, 82, 83, 84],
+    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
     "filter_augmentations" : [49, 54],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 66, 68],

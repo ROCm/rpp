@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 project(rpp_unittests/HIP_NEW)
@@ -44,7 +44,7 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
-find_package(hip QUIET)
+find_package(HIP QUIET)
 find_package(OpenCV QUIET)
 
 # OpenMP
@@ -52,9 +52,9 @@ find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
-if (hip_FOUND AND OpenCV_FOUND)
+if(HIP_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 
     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
