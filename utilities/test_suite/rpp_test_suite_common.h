@@ -30,7 +30,7 @@ SOFTWARE.
 #include <fstream>
 #include <algorithm>
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 using namespace std;
 
 // Opens a folder and recursively search for files with given extension

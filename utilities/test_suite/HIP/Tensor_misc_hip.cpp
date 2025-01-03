@@ -250,29 +250,13 @@ int main(int argc, char **argv)
     }
     rppDestroyGPU(handle);
 
-    if(DEBUG_MODE)
+    // compare outputs if qaMode is true
+    if(qaMode)
     {
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        std::ofstream refFile;
-        std::string refFileName;
-        refFileName = func + "_host.csv";
-        refFile.open(refFileName);
-        for (int i = 0; i < bufferSize * 2; i++)
-        {
-            refFile << *(outputF32 + i) << ",";
-        }
-        refFile.close();
-    }
-
-    // compare outputs if qaMode is true
-    if(qaMode)
-    {
-        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        // CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-        // CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        // compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {
@@ -282,7 +266,6 @@ int main(int argc, char **argv)
         avgWallTime /= numRuns;
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-
 
     free(inputF32);
     free(outputF32);

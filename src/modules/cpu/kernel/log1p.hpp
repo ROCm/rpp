@@ -25,12 +25,9 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
 
-// 1 pixel log helper functions
+// 1 pixel log1p helper functions
 // Also negative values are converted to positive by taking absolute of inputs
-inline void compute_log1p(Rpp16s *src, Rpp32f *dst) { 
-    *dst =  std::log1p(std::abs(*src));
-    }
-
+inline void compute_log1p(Rpp16s *src, Rpp32f *dst) { *dst =  std::log1p(std::abs(*src)); }
 
 // Computes ND log recursively
 template<typename T1, typename T2>
@@ -49,15 +46,13 @@ void log1p_recursive(T1 *src, Rpp32u *srcStrides, T2 *dst, Rpp32u *dstStrides, R
     }
 }
 
-
 //log(1+x) or log1p(x) for input I16 and output F32
-
 RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
-                                  RpptGenericDescPtr srcGenericDescPtr,
-                                  Rpp32f *dstPtr,
-                                  RpptGenericDescPtr dstGenericDescPtr,
-                                  Rpp32u *roiTensor,
-                                  rpp::Handle& handle)
+                                    RpptGenericDescPtr srcGenericDescPtr,
+                                    Rpp32f *dstPtr,
+                                    RpptGenericDescPtr dstGenericDescPtr,
+                                    Rpp32u *roiTensor,
+                                    rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
@@ -88,7 +83,7 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
             {
                 __m256 p[2];
 
-                rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtr1, p);    // simd loads
+                rpp_simd_load(rpp_load16_abs_i16_to_f32_avx, srcPtr1, p);    // simd loads
                 p[0] = _mm256_add_ps(p[0], one_vec);
                 p[1] = _mm256_add_ps(p[1], one_vec);
                 compute_log_16_host(p);  // log compute
@@ -111,14 +106,13 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
             {
                 Rpp16s *srcPtrTemp = srcPtr1;
                 Rpp32f *dstPtrTemp = dstPtr1;
-
                 int vectorLoopCount = 0;
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[2];
 
-                    rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtr1, p);    // simd loads
+                    rpp_simd_load(rpp_load16_abs_i16_to_f32_avx, srcPtr1, p);    // simd loads
                     p[0] = _mm256_add_ps(p[0], one_vec);
                     p[1] = _mm256_add_ps(p[1], one_vec);
                     compute_log_16_host(p);  // log compute
@@ -144,15 +138,14 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
             for(int i = 0; i < length[2]; i++)
             {
                 Rpp16s *srcPtrTemp = srcPtr1;
-                Rpp32f *dstPtrTemp = dstPtr1;
-
-                    int vectorLoopCount = 0;
+                Rpp32f *dstPtrTemp = dstPtr1; 
+                int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p[2];
 
-                        rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
+                        rpp_simd_load(rpp_load16_abs_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
                         p[0] = _mm256_add_ps(p[0], one_vec);
                         p[1] = _mm256_add_ps(p[1], one_vec);
                         compute_log_16_host(p);  // log compute
@@ -187,13 +180,13 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                 {
                     Rpp16s *srcPtrTemp = srcPtrCol;
                     Rpp32f *dstPtrTemp = dstPtrCol;
-                        int vectorLoopCount = 0;
+                    int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p[2];
 
-                        rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
+                        rpp_simd_load(rpp_load16_abs_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
                         p[0] = _mm256_add_ps(p[0], one_vec);
                         p[1] = _mm256_add_ps(p[1], one_vec);
                         compute_log_16_host(p);  // log compute
