@@ -171,11 +171,9 @@ else()
                     link_directories(${ROCM_PATH}/lib/llvm/lib)
 
                     if(OpenMP_FOUND)
-                        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb -O0")
-                        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
                         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                        include_directories(${OpenMP_INCLUDE_DIRS})
-                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
+                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+                        message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
                         message("-- ${Green}${PROJECT_NAME} All Tensor HIP tests set to build with OpenMP${ColourReset}")
 
                         # HIP test set 1 - RPP Tensor-Image HIP test suite
