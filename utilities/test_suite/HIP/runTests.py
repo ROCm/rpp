@@ -295,8 +295,7 @@ if(testType == 0):
     if noCaseSupported:
         print("case numbers %s are not supported" % caseList)
     for case in caseList:
-                if int(case) not in imageAugmentationMap:
-
+        if int(case) not in imageAugmentationMap:
             continue
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
