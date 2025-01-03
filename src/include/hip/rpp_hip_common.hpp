@@ -573,23 +573,13 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(schar *srcPtr
 }
 
 // I16 loads without layout toggle (8 I16 pixels)
+
 __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(short *srcPtr, d_float8 *srcPtr_f8)
 {
     int4 src_i4 = *(int4 *)srcPtr; 
-    srcPtr_f8->f4[0] = make_float4( rpp_hip_unpack0_(src_i4.x),
-                                    rpp_hip_unpack2_(src_i4.x),
-                                    rpp_hip_unpack0_(src_i4.y),
-                                    rpp_hip_unpack2_(src_i4.y) 
-                                 ); 
-
-    srcPtr_f8->f4[1] = make_float4( rpp_hip_unpack0_(src_i4.z),
-                                    rpp_hip_unpack2_(src_i4.z),
-                                    rpp_hip_unpack0_(src_i4.w),
-                                    rpp_hip_unpack2_(src_i4.w)  
-                                 ); 
+    srcPtr_f8->f4[0] = make_float4(rpp_hip_unpack0_(src_i4.x), rpp_hip_unpack2_(src_i4.x), rpp_hip_unpack0_(src_i4.y), rpp_hip_unpack2_(src_i4.y)); 
+    srcPtr_f8->f4[1] = make_float4(rpp_hip_unpack0_(src_i4.z), rpp_hip_unpack2_(src_i4.z), rpp_hip_unpack0_(src_i4.w), rpp_hip_unpack2_(src_i4.w)); 
 }
-
-
 
 __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8_mirror(schar *srcPtr, d_float8 *srcPtr_f8)
 {
