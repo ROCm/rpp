@@ -164,6 +164,11 @@ if(NOT APPLE)
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
 
+# Threads
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
+
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
@@ -392,10 +397,10 @@ endif()
 # Set the dependent packages
 set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
 set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, libomp-dev")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half, libomp-devel")
-set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, libopencv-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: OpenCV Package missing on RPM
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, libopencv-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas") # TBD: OpenCV Package missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")
