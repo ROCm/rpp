@@ -93,8 +93,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_CPP_KERNELS})
     message("-- ${Green}HIP kernels added${ColourReset}")
 
-    # Set HIP compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    # Set compiler flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
     set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
