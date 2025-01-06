@@ -41,6 +41,7 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <random>
 #include <map>
+#include <unordered_set>
 #include <iomanip>
 
 using namespace cv;
@@ -114,6 +115,66 @@ std::map<int, string> augmentationMap =
     {91, "tensor_stddev"},
     {92, "slice"}
 };
+
+enum Augmentation {
+    BRIGHTNESS = 0,
+    GAMMA_CORRECTION = 1,
+    BLEND = 2,
+    CONTRAST = 4,
+    PIXELATE = 5,
+    JITTER = 6,
+    NOISE = 8,
+    EXPOSURE = 13,
+    FLIP = 20,
+    RESIZE = 21,
+    ROTATE = 23,
+    WARP_AFFINE = 24,
+    LENS_CORRECTION = 26,
+    WATER = 29,
+    NON_LINEAR_BLEND = 30,
+    COLOR_CAST = 31,
+    ERASE = 32,
+    CROP_AND_PATCH = 33,
+    LUT = 34,
+    GLITCH = 35,
+    COLOR_TWIST = 36,
+    CROP = 37,
+    CROP_MIRROR_NORMALIZE = 38,
+    RESIZE_CROP_MIRROR = 39,
+    COLOR_TEMPERATURE = 45,
+    VIGNETTE = 46,
+    BOX_FILTER = 49,
+    GAUSSIAN_FILTER = 54,
+    MAGNITUDE = 61,
+    PHASE = 63,
+    BITWISE_AND = 65,
+    BITWISE_OR = 68,
+    COPY = 70,
+    REMAP = 79,
+    RESIZE_MIRROR_NORMALIZE = 80,
+    COLOR_JITTER = 81,
+    RICAP = 82,
+    GRIDMASK = 83,
+    SPATTER = 84,
+    SWAP_CHANNELS = 85,
+    COLOR_TO_GREYSCALE = 86,
+    TENSOR_SUM = 87,
+    TENSOR_MIN = 88,
+    TENSOR_MAX = 89,
+    TENSOR_MEAN = 90,
+    TENSOR_STDDEV = 91,
+    SLICE = 92
+};
+
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, BOX_FILTER, REMAP};
+const unordered_set<int> kernelSizeCases = {BOX_FILTER};
+const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_OR};
+const unordered_set<int> randomOutputCases = {JITTER, NOISE, SPATTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE};
+const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, REMAP};
+const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
+const unordered_set<int> noiseTypeCases = {NOISE};
+const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =

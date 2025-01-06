@@ -160,7 +160,21 @@ def rpp_test_suite_parser_and_validator():
         print("Invalid input path! QA mode can run only with path:", inFilePath)
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(audioAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+        print(f"Processed case numbers: {case_list}")
+    else:
+        print("No cases provided.")
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -221,13 +235,11 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '6', '7']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
 
-noCaseSupported = all(case not in supportedCaseList for case in caseList)
+noCaseSupported = all(int(case) not in audioAugmentationMap for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
@@ -239,7 +251,7 @@ for case in caseList:
         else:
             srcPath = inFilePath
 
-    if case not in supportedCaseList:
+    if int(case) not in audioAugmentationMap:
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption)
 
@@ -250,7 +262,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_hip")
+        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_hip")
 
 # Performance tests
 if testType == 1 and profilingOption == "NO":

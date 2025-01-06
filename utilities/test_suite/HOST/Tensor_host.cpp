@@ -60,15 +60,15 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79);
-    bool kernelSizeCase = (testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
-    bool nonQACase = (testCase == 24 || testCase == 28);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
-    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
-    bool noiseTypeCase = (testCase == 8);
-    bool pln1OutTypeCase = (testCase == 86);
+    bool additionalParamCase = (additionalParamCases.find(testCase) != additionalParamCases.end());
+    bool kernelSizeCase = (kernelSizeCases.find(testCase) != kernelSizeCases.end());
+    bool dualInputCase = (dualInputCases.find(testCase) != dualInputCases.end());
+    bool randomOutputCase = (randomOutputCases.find(testCase) != randomOutputCases.end());
+    bool nonQACase = (nonQACases.find(testCase) != nonQACases.end());
+    bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
+    bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
+    bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 31 || testCase == 35 || testCase == 36 || testCase == 45 || testCase == 86)
+        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    else if(testCase == 82 && batchSize < 2)
+    else if(testCase == RICAP && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    else if(testCase == 82 && batchSize < 2)
+    else if(testCase == RICAP && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
-    if(testCase == 82 && imagesMixed)
+    if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
         exit(0);
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
-    if(testCase == 38)
+    if(testCase == CROP_MIRROR_NORMALIZE)
         conversionFactor = 1.0;
     Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
@@ -309,7 +309,6 @@ int main(int argc, char **argv)
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *inputu8Second = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *outputu8 = static_cast<Rpp8u *>(calloc(oBufferSizeInBytes_u8, 1));
-    if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     Rpp8u *offsettedInput, *offsettedInputSecond;
     offsettedInput = inputu8 + srcDescPtr->offsetInBytes;
@@ -322,7 +321,7 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     Rpp32f *rowRemapTable, *colRemapTable;
-    if(testCase == 79 || testCase == 26)
+    if(testCase == REMAP || testCase == LENS_CORRECTION)
     {
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
@@ -334,14 +333,14 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
         {
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
             reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
         }
         else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
         {
-            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+            bitDepthByteSize = (testCase == TENSOR_SUM) ? sizeof(Rpp64u) : sizeof(Rpp8u);
             reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
         }
     }
@@ -351,12 +350,12 @@ int main(int argc, char **argv)
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
-    if(testCase == 92)
+    if(testCase == SLICE)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         cropRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
         patchRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
@@ -364,7 +363,7 @@ int main(int argc, char **argv)
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     void *interDstPtr;
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         interDstPtr = static_cast<Rpp8u *>(calloc(srcDescPtr->strides.nStride * srcDescPtr->n , sizeof(Rpp32f)));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -1594,26 +1593,26 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                     print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::F16)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1626,9 +1625,9 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same*/
                 if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
-                    else if (testCase == 90 || testCase == 91)
+                    else if (testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                         compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
@@ -1651,7 +1650,7 @@ int main(int argc, char **argv)
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
                 // for output display and comparision purposes
-                if (testCase == 92)
+                if (testCase == SLICE)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
                     {
@@ -1690,7 +1689,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
@@ -1753,16 +1752,16 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
-    if(testCase == 79)
+    if(testCase == REMAP)
     {
         free(rowRemapTable);
         free(colRemapTable);
     }
     if(reductionTypeCase)
         free(reductionFuncResultArr);
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         free(interDstPtr);
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         free(cropRoi);
         free(patchRoi);
