@@ -23,20 +23,27 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(rpp-test)
-
-# make test with CTest
-enable_testing()
-include(CTest)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+project(rpp-test)
+# make test with CTest
+enable_testing()
+include(CTest)
 
 # Set message options
 if(NOT WIN32)
@@ -66,6 +73,8 @@ List of high level dependency checks - for RPP QA tests in utilities/test_suite/
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
 - TurboJPEG (For IMAGE tests - to decode image inputs)
 ]]
+# add find modules
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
 # find RPP
 find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
@@ -91,6 +100,7 @@ else()
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
     endif()
+    message("-- ${White}${PROJECT_NAME}: Using RPP Backend: ${BACKEND}${ColourReset}")
 
     # RPP installation - Audio support check
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
@@ -123,7 +133,7 @@ else()
     if(Python3_FOUND)
         if (PANDAS_FOUND EQUAL 0)
             if(OpenMP_FOUND)
-
+                message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
                 # HOST test set 1 - rpp_qa_tests_tensor_host_all - HOST Tensor-Image QA PASS/FAIL tests
                 if(TurboJpeg_FOUND)
                     if(OpenCV_FOUND)
@@ -177,9 +187,17 @@ else()
                 )
 
                 if( "${BACKEND}" STREQUAL "HIP")
-                    find_package(hip QUIET)
-                    if(hip_FOUND)
-
+                    if(NOT DEFINED HIP_PATH)
+                        if(NOT DEFINED ENV{HIP_PATH})
+                            set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
+                        else()
+                            set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+                        endif()
+                    endif()
+                    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+                    find_package(HIP QUIET)
+                    if(HIP_FOUND)
+                        message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
                         # HIP test set 1 - rpp_qa_tests_tensor_hip_all - HIP Tensor-Image QA PASS/FAIL tests
                         if(TurboJpeg_FOUND)
                             if(OpenCV_FOUND)
@@ -232,7 +250,7 @@ else()
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
 
-                    endif(hip_FOUND)
+                    endif(HIP_FOUND)
                 elseif( "${BACKEND}" STREQUAL "OCL")
                     # TBD: Add OCL Tests
                     message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
