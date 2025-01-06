@@ -23,7 +23,6 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(test_suite/HIP)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -33,6 +32,15 @@ elseif(ROCM_PATH)
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
+project(test_suite/HIP)
 
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
@@ -105,8 +113,11 @@ else()
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
 
+        # add find modules
+        list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
         # find required libraries
-        find_package(hip QUIET)
+        find_package(HIP QUIET)
         set(Python3_FIND_VIRTUALENV FIRST)
         find_package(Python3 QUIET)
         find_package(NIFTI QUIET)
@@ -117,6 +128,7 @@ else()
         find_package(OpenMP QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
+        find_package(StdFilesystem QUIET)
 
         # find required python3-pip imports
         execute_process(
@@ -132,7 +144,7 @@ else()
         #     ERROR_QUIET                                           # added only on HOST
         # )
 
-        if(hip_FOUND)
+        if(HIP_FOUND)
             message("-- ${Green}HIP found at hip_INCLUDE_DIRS - ${hip_INCLUDE_DIRS} and hip_LIBRARIES - ${hip_LIBRARIES}${ColourReset}")
 
             if(Python3_FOUND)
@@ -209,9 +221,6 @@ else()
                                 link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with libsnd${ColourReset}")
                                 add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
-                                if(NOT APPLE)
-                                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
-                                endif(NOT APPLE)
                                 target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                             else()
                                 message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
@@ -234,7 +243,7 @@ else()
             endif(Python3_FOUND)
         else()
             message("-- ${Red}${PROJECT_NAME} Error: ROCm HIP must be installed to run any RPP test_suite HIP tests successfully${ColourReset}")
-        endif(hip_FOUND)
+        endif(HIP_FOUND)
     else()
         message("-- ${Red}${PROJECT_NAME} is supported to build and run only with RPP HIP backend installation${ColourReset}")
     endif("${BACKEND}" STREQUAL "HIP")
