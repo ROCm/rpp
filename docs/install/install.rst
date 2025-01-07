@@ -14,7 +14,6 @@ Prerequisites
 =============================
 
 * Linux distribution
-
   - Ubuntu 22.04 or 24.04
   - RedHat 8 or 9
   - SLES 15-SP5
@@ -23,12 +22,6 @@ Prerequisites
 
 * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 
-* CMake Version `3.10` and above
-
-    .. code-block:: shell
-
-      sudo apt-get install cmake
-
 * AMD Clang++ Version 18.0.0 or later - installed with ROCm
 
   * NOTE: For CPU only backend use Clang Version `5.0.1` and above
@@ -36,26 +29,23 @@ Prerequisites
       .. code-block:: shell
 
         sudo apt-get install clang
+  
+  * Required compiler support
+    - C++ Version `17` and above
+    - OpenMP
+    - Threads
+
+* CMake Version `3.10` and above
+
+    .. code-block:: shell
+
+      sudo apt-get install cmake
 
 * IEEE 754-based half-precision floating-point library (half.hpp)
 
     .. code-block:: shell
 
       sudo apt-get install half
-
-* Compiler with support for C++ Version `17` and above
-
-    .. code-block:: shell
-
-      sudo apt-get install libstdc++-12-dev
-
-* OpenMP
-
-    .. code-block:: shell
-
-      sudo apt-get install libomp-dev
-
-* Threads
 
     .. note::
         Use appropriate package manager depending on the OS 
