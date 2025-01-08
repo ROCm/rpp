@@ -134,7 +134,7 @@ else()
         if (PANDAS_FOUND EQUAL 0)
             if(OpenMP_FOUND)
                 message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
-                # HOST test set 1 - rpp_qa_tests_tensor_host_all - HOST Tensor-Image QA PASS/FAIL tests
+                # HOST test set 1 - rpp_qa_tests_tensor_image_host_all - HOST Tensor-Image QA PASS/FAIL tests
                 if(TurboJpeg_FOUND)
                     if(OpenCV_FOUND)
                         add_test(
@@ -198,7 +198,7 @@ else()
                     find_package(HIP QUIET)
                     if(HIP_FOUND)
                         message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
-                        # HIP test set 1 - rpp_qa_tests_tensor_hip_all - HIP Tensor-Image QA PASS/FAIL tests
+                        # HIP test set 1 - rpp_qa_tests_tensor_image_hip_all - HIP Tensor-Image QA PASS/FAIL tests
                         if(TurboJpeg_FOUND)
                             if(OpenCV_FOUND)
                                 add_test(
