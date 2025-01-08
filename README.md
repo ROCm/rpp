@@ -42,24 +42,25 @@ Spectrogram kernel output represented as a image <br><br>
   
 ## Prerequisites
 
+### Operating Systems
 * Linux
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
 
-* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+### Hardware
+* **CPU**: [AMD64](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+* **GPU**: [AMD Radeon&trade; Graphics](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) / [AMD Instinct&trade; Accelerators](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+
 > [!IMPORTANT] 
-> `gfx908` or higher GPU required
+> * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+> * `gfx908` or higher GPU required
 
 * Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
-* CMake Version `3.10` and above
-  ```shell
-  sudo apt install cmake
-  ```
-
+### Compiler
 * AMD Clang++ Version 18.0.0 or later - installed with ROCm
 > [!NOTE]
 > * For CPU only backend use Clang Version `5.0.1` and above
@@ -67,22 +68,26 @@ Spectrogram kernel output represented as a image <br><br>
 >    sudo apt install clang
 >   ```
 
+### Libraries
+* CMake Version `3.10` and above
+  ```shell
+  sudo apt install cmake
+  ```
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
   ```shell
   sudo apt install half
   ```
 
 > [!IMPORTANT]
-> * Compiler features required
+> * Required compiler support
 >   * C++17
->     ```shell
->     sudo apt install libstdc++-12-dev
->     ```
 >   * OpenMP
->     ```shell
->     sudo apt install libomp-dev
->     ```
 >   * Threads
+> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
+>  ```shell
+>  sudo apt install libstdc++-12-dev
+>  ```
+
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
@@ -234,5 +239,5 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 * ROCm: rocm-core - `6.3.0.60300`
 * CMake - Version `3.16.3`+
 * AMD Clang++ - Version `18.0.0`
-* half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0.60200`
+* half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
