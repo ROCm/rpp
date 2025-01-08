@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-
 cmake_minimum_required(VERSION 3.10)
 
 # ROCM Path
@@ -164,11 +163,6 @@ message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${Open
 if(NOT APPLE)
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
-
-# Threads
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
@@ -396,10 +390,10 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
-set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
 set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, libopencv-dev")
 set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas") # TBD: OpenCV Package missing on RPM
 
