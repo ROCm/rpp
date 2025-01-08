@@ -165,11 +165,6 @@ if(NOT APPLE)
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
 
-# Threads
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
-
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
