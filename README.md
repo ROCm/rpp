@@ -82,7 +82,6 @@ Spectrogram kernel output represented as a image <br><br>
 >     ```shell
 >     sudo apt install libomp-dev
 >     ```
->   * Threads
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
