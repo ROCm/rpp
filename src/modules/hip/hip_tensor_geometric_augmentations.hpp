@@ -39,6 +39,6 @@ SOFTWARE.
 #include "kernel/transpose.hpp"
 #include "kernel/crop_and_patch.hpp"
 #include "kernel/flip_voxel.hpp"
-#include "kernel/jpeg_compression_distortion.hpp"
+#include "kernel/jpeg_smem.hpp"
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

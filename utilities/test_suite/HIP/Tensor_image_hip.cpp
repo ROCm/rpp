@@ -1695,6 +1695,22 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 93:
+                {
+                    testCaseName = "jpeg_compression_distortion";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+                    memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

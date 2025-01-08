@@ -2724,59 +2724,48 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
 
 //********jpeg_compression_distrtion************/
 RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
-                       RpptGenericDescPtr srcGenericDescPtr,
-                       RppPtr_t dstPtr,
-                       RpptGenericDescPtr dstGenericDescPtr,
-                       Rpp32u *roiTensor,
-                       rppHandle_t rppHandle)
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          RpptROIPtr roiTensorPtrSrc,
+                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        hip_exec_jpeg_compression_distortion(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                    srcGenericDescPtr,
-                                    reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                    dstGenericDescPtr,
-                                    roiTensor,
-                                    rpp::deref(rppHandle));
+        hip_exec_jpeg_compression_distortion(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               rpp::deref(rppHandle));
     }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-       hip_exec_jpeg_compression_distortion(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                    srcGenericDescPtr,
-                                    reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                    dstGenericDescPtr,
-                                    roiTensor,
-                                    rpp::deref(rppHandle));
+        hip_exec_jpeg_compression_distortion(reinterpret_cast<half*>((static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes)),
+                               srcDescPtr,
+                               reinterpret_cast<half*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               rpp::deref(rppHandle));
     }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_jpeg_compression_distortion(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                    srcGenericDescPtr,
-                                    reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                    dstGenericDescPtr,
-                                    roiTensor,
-                                    rpp::deref(rppHandle));
+        hip_exec_jpeg_compression_distortion(reinterpret_cast<Rpp32f*>((static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes)),
+                               srcDescPtr,
+                               reinterpret_cast<Rpp32f*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               rpp::deref(rppHandle));
     }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        hip_exec_jpeg_compression_distortion(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                    srcGenericDescPtr,
-                                    reinterpret_cast<Rpp32f *>(static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                    dstGenericDescPtr,
-                                    roiTensor,
-                                    rpp::deref(rppHandle));
-    }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
-    {
-        hip_exec_jpeg_compression_distortion(static_cast<Rpp16s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                    srcGenericDescPtr,
-                                    reinterpret_cast<Rpp32f *>(static_cast<Rpp16s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                    dstGenericDescPtr,
-                                    roiTensor,
-                                    rpp::deref(rppHandle));
+        hip_exec_jpeg_compression_distortion(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
