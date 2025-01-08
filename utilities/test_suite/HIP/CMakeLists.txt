@@ -133,9 +133,7 @@ else()
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads QUIET)
-
+        
         # find required python3-pip imports
         execute_process(
             COMMAND ${Python3_EXECUTABLE} -m pip show pandas
@@ -154,10 +152,7 @@ else()
             message("-- ${Green}HIP found at HIP_INCLUDE_DIRS - ${HIP_INCLUDE_DIRS} and HIP_LIBRARIES - ${HIP_LIBRARIES}${ColourReset}")
             include_directories(${HIP_INCLUDE_DIRS} ${HIP_INCLUDE_DIRS}/hip)
             set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_LIBRARIES})
-            if(Threads_FOUND)
-                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
-            endif()
-
+            
             if(Python3_FOUND)
                 message("-- ${Green}Python3 found${ColourReset}")
                 # Check pandas for all RPP rocprof performance test results

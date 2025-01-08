@@ -82,12 +82,9 @@ Spectrogram kernel output represented as a image <br><br>
 > * Required compiler support
 >   * C++17
 >   * OpenMP
->   * Threads
-> * On Ubuntu 22.04 - Additional package required: libstdc++-12-dev
->  ```shell
->  sudo apt install libstdc++-12-dev
->  ```
-
+>     ```shell
+>     sudo apt install libomp-dev
+>     ```
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
