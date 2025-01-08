@@ -55,10 +55,6 @@ Prerequisites
 
       sudo apt-get install libomp-dev
 
-* Threads
-
-    .. note::
-        Use appropriate package manager depending on the OS 
 
 Build and install instructions
 ================================
