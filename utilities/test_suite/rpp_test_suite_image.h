@@ -1028,7 +1028,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == 49)
+    else if(testCase == 49 || testCase == 54)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
