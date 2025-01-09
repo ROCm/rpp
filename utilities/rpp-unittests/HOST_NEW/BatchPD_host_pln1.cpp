@@ -654,7 +654,7 @@ int main(int argc, char **argv)
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
-    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
+    rppCreateHost(&handle, noOfImages, numThreads);
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;

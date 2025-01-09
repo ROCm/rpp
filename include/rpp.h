@@ -102,33 +102,6 @@ typedef void (*rppDeallocatorFunction)(void* context, void* memory);
 extern "C" {
 #endif
 
-/*! \brief Returns error string.
- * \details Returns a NULL terminated character string of the passed error code.
- * \param [in] error Error status of rppStatus_t type.
- * \ingroup group_rpp
- * \return <tt>\ref const char*</tt>
- * \returns Returns an error string among those listed under \ref rppStatus_t.
- */
-extern "C" SHARED_PUBLIC const char* rppGetErrorString(rppStatus_t error);
-
-/*! \brief Creates RPP handle for HOST single image processing - To be deprecated.
- * \details Function to create a RPP handle. To be called in the beginning to initialize the RPP environment.
- * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- * \deprecated
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
-
 /*! \brief Creates RPP handle for HOST batch processing.
  * \details Function to create a RPP handle for a batch. To be called in the beginning to initialize the RPP environment.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
@@ -146,24 +119,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
  */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0);
-
-/*! \brief Destory RPP handle.
- * \details Function to destroy a RPP handle. To be called in the end to break down the RPP environment.
- * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle);
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateHost(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0);
 
 /*! \brief Destory RPP HOST handle - To be deprecated.
  * \details Function to destroy a RPP handle's host memory allocation. To be called in the end to break down the rpp environment.
@@ -221,25 +177,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t 
 
 #if GPU_SUPPORT
 
-/*! \brief Creates RPP handle with accelerator stream for GPU single image processing - To be deprecated.
- * \details Function to create a RPP handle with an accelerator stream. To be called in the beginning to initialize the RPP environment.
- * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- * \deprecated
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
-
 /*! \brief Creates RPP handle with accelerator stream for GPU batch processing.
  * \details Function to create a RPP handle with an accelerator stream for a batch. To be called in the beginning to initialize the RPP environment.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
@@ -257,7 +194,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStream(rppHandle_t* handle, rp
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
  */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateGPU(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
 
 /*! \brief Destory RPP GPU handle.
  * \details Function to destroy a RPP handle's device memory allocation. To be called in the end to break down the RPP environment.
@@ -275,24 +212,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t
  * \retval rppStatusUnsupportedOp
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroyGPU(rppHandle_t handle);
-
-/*! \brief Set accelerator stream given a RPP handle.
- * \details Function to set an accelerator stream previously created.
- * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
 
 /*! \brief Get accelerator stream given a RPP handle.
  * \details Function to get an accelerator stream previously created.

@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, batchSize, numThreads);
+    rppCreateHost(&handle, batchSize, numThreads);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     bool externalMeanStd = true;

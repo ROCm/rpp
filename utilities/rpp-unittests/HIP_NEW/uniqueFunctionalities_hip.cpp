@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     rppHandle_t handle;
 	hipStream_t stream;
 	hipStreamCreate(&stream);
-	rppCreateWithStreamAndBatchSize(&handle, stream, 2);
+	rppCreateGPU(&handle, stream, 2);
 
     clock_t start, end;
     double gpu_time_used;

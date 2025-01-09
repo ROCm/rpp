@@ -153,7 +153,7 @@ int main(int argc, char * argv[])
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    rppCreateGPU(&handle, stream, batchSize);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;

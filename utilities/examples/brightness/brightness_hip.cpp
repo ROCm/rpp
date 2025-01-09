@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+    rppCreateGPU(&handle, stream, noOfImages);
 
     //parameters for brightness node
     Rpp32f alpha[images];

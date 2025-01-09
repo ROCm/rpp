@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
 
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, 1);
+    rppCreateGPU(&handle, theQueue, 1);
 
     clock_t start, end;
     double gpu_time_used;

@@ -86,31 +86,11 @@ int get_device_id() // Get random device
     return device;
 }
 
-void set_device(int id)
-{
-    auto status = hipSetDevice(id);
-    if(status != hipSuccess)
-        RPP_THROW("Error setting device");
-}
-
 void set_ctx(hipCtx_t ctx)
 {
     auto status =  0;
     if(status != hipSuccess)
         RPP_THROW("Error setting context");
-}
-
-int set_default_device()
-{
-    int n;
-    auto status = hipGetDeviceCount(&n);
-    if(status != hipSuccess)
-        RPP_THROW("Error getting device count");
-    // Pick device based on process id
-    auto pid = ::getpid();
-    assert(pid > 0);
-    set_device(pid % n);
-    return (pid % n);
 }
 
 struct HandleImpl
@@ -129,15 +109,6 @@ struct HandleImpl
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
-
-    StreamPtr create_stream()
-    {
-        hipStream_t result;
-        auto status = hipStreamCreate(&result);
-        if(status != hipSuccess)
-            RPP_THROW_HIP_STATUS(status, "Failed to allocate stream");
-        return StreamPtr{result, &hipStreamDestroy};
-    }
 
     static StreamPtr reference_stream(hipStream_t s)
     {
@@ -277,20 +248,6 @@ Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new Handle
     RPP_LOG_I(*this);
 }
 
-Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
-{
-    this->impl->device = get_device_id();
-    this->impl->ctx    = get_ctx();
-
-    if(stream == nullptr)
-        this->impl->stream = HandleImpl::reference_stream(nullptr);
-    else
-        this->impl->stream = HandleImpl::reference_stream(stream);
-
-    this->SetAllocator(nullptr, nullptr, nullptr);
-    impl->PreInitializeBuffer();
-    RPP_LOG_I(*this);
-}
 
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
@@ -303,31 +260,7 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
     impl->PreInitializeBufferCPU();
 }
 
-Handle::Handle() : impl(new HandleImpl())
-{
-#if RPP_BUILD_DEV
-    this->impl->device = set_default_device();
-    this->impl->ctx    = get_ctx();
-    this->impl->stream = impl->create_stream();
-#else
-    this->impl->device = get_device_id();
-    this->impl->ctx    = get_ctx();
-    this->impl->stream = HandleImpl::reference_stream(nullptr);
-#endif
-    this->SetAllocator(nullptr, nullptr, nullptr);
-    impl->PreInitializeBuffer();
-    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
-    if(impl->numThreads == 0)
-        impl->numThreads = impl->nBatchSize;
-    RPP_LOG_I(*this);
-}
-
 Handle::~Handle() {}
-
-void Handle::SetStream(rppAcceleratorQueue_t streamID) const
-{
-    this->impl->stream = HandleImpl::reference_stream(streamID);
-}
 
 void Handle::rpp_destroy_object_gpu()
 {
