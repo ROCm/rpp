@@ -161,23 +161,34 @@ __device__ void YCbCr_hip_compute(float *Ch1, float *Ch2,float *Ch3)
     *Ch3_f8 =  Cr_f8;  
 }
 
-__device__ void verticalDownSampling(d_float8 *Cb_f8_1, d_float8 *Cb_f8_2,d_float8 *Cr_f8_1, d_float8 *Cr_f8_2)
+__device__ void verticalDownSampling(float *Cb1, float *Cb2,float *Cr1, float *Cr2)
 {
+    d_float8 *Cb1_f8,*Cb2_f8,*Cr1_f8,*Cr2_f8;
+    Cb1_f8 = (d_float8 *)Cb1;
+    Cb2_f8 = (d_float8 *)Cb2;
+    Cr1_f8 = (d_float8 *)Cr1;
+    Cr2_f8 = (d_float8 *)Cr2;
+
     //Storing the results back into the shared memory (Inplace)
-	Cb_f8_1->f4[0] = (Cb_f8_1->f4[0] + Cb_f8_2->f4[0]) * (float4)0.5f;
-	Cb_f8_1->f4[1] = (Cb_f8_1->f4[1] + Cb_f8_2->f4[1]) * (float4)0.5f;
-    Cr_f8_1->f4[0] = (Cr_f8_1->f4[0] + Cr_f8_2->f4[0]) * (float4)0.5f;
-	Cr_f8_1->f4[1] = (Cr_f8_1->f4[1] + Cr_f8_2->f4[1]) * (float4)0.5f;
+	Cb1_f8->f4[0] = (Cb1_f8->f4[0] + Cb2_f8->f4[0]) * (float4)0.5f;
+	Cb1_f8->f4[1] = (Cb1_f8->f4[1] + Cb2_f8->f4[1]) * (float4)0.5f;
+    Cr1_f8->f4[0] = (Cr1_f8->f4[0] + Cr2_f8->f4[0]) * (float4)0.5f;
+	Cr1_f8->f4[1] = (Cr1_f8->f4[1] + Cr2_f8->f4[1]) * (float4)0.5f;
 }
 
-__device__ void horizontalDownSampling(d_float8 *Cb_f8_1, d_float8 *Cb_f8_2,d_float8 *Cr_f8_1, d_float8 *Cr_f8_2,d_float8 *Cb, d_float8 *Cr)
+__device__ void horizontalDownSampling(float *Cb1, float *Cb2,float *Cr1, float *Cr2,d_float8 *Cb, d_float8 *Cr)
 {
+    d_float8 *Cb1_f8,*Cb2_f8,*Cr1_f8,*Cr2_f8;
+    Cb1_f8 = (d_float8 *)Cb1;
+    Cb2_f8 = (d_float8 *)Cb2;
+    Cr1_f8 = (d_float8 *)Cr1;
+    Cr2_f8 = (d_float8 *)Cr2;
     //Each thread carries 8 elements (float8) per channel add odd elements to even elements and * 0.5
     d_float8 odds,evens;
-    evens.f4[0] = make_float4(Cb_f8_1->f4[0].x,Cb_f8_1->f4[0].z,Cb_f8_1->f4[1].x,Cb_f8_1->f4[1].z) ;
-    evens.f4[1] = make_float4(Cb_f8_2->f4[0].x,Cb_f8_2->f4[0].z,Cb_f8_2->f4[1].x,Cb_f8_2->f4[1].z) ;
-    odds.f4[0] = make_float4(Cb_f8_1->f4[0].y,Cb_f8_1->f4[0].w,Cb_f8_1->f4[1].y,Cb_f8_1->f4[1].w) ;
-    odds.f4[1] = make_float4(Cb_f8_2->f4[0].y,Cb_f8_2->f4[0].w,Cb_f8_2->f4[1].y,Cb_f8_2->f4[1].w) ;
+    evens.f4[0] = make_float4(Cb1_f8->f4[0].x,Cb1_f8->f4[0].z,Cb1_f8->f4[1].x,Cb1_f8->f4[1].z) ;
+    evens.f4[1] = make_float4(Cb2_f8->f4[0].x,Cb2_f8->f4[0].z,Cb2_f8->f4[1].x,Cb2_f8->f4[1].z) ;
+    odds.f4[0]  = make_float4(Cb1_f8->f4[0].y,Cb1_f8->f4[0].w,Cb1_f8->f4[1].y,Cb1_f8->f4[1].w) ;
+    odds.f4[1]  = make_float4(Cb2_f8->f4[0].y,Cb2_f8->f4[0].w,Cb2_f8->f4[1].y,Cb2_f8->f4[1].w) ;
 
     // Horizontal average for Cb and Store the results back in the first d_float8 in  Cb
     evens.f4[0] = (evens.f4[0] + odds.f4[0]) * (float4) 0.5;
@@ -185,10 +196,10 @@ __device__ void horizontalDownSampling(d_float8 *Cb_f8_1, d_float8 *Cb_f8_2,d_fl
     *Cb = evens;
 
     // Repeat the process for Cr
-    evens.f4[0] = make_float4(Cr_f8_1->f4[0].x,Cr_f8_1->f4[0].z,Cr_f8_1->f4[1].x,Cr_f8_1->f4[1].z) ;
-    evens.f4[1] = make_float4(Cr_f8_2->f4[0].x,Cr_f8_2->f4[0].z,Cr_f8_2->f4[1].x,Cr_f8_2->f4[1].z) ;
-    odds.f4[0] = make_float4(Cr_f8_1->f4[0].y,Cr_f8_1->f4[0].w,Cr_f8_1->f4[1].y,Cr_f8_1->f4[1].w) ;
-    odds.f4[1] = make_float4(Cr_f8_2->f4[0].y,Cr_f8_2->f4[0].w,Cr_f8_2->f4[1].y,Cr_f8_2->f4[1].w) ;
+    evens.f4[0] = make_float4(Cr1_f8->f4[0].x,Cr1_f8->f4[0].z,Cr1_f8->f4[1].x,Cr1_f8->f4[1].z) ;
+    evens.f4[1] = make_float4(Cr2_f8->f4[0].x,Cr2_f8->f4[0].z,Cr2_f8->f4[1].x,Cr2_f8->f4[1].z) ;
+    odds.f4[0]  = make_float4(Cr1_f8->f4[0].y,Cr1_f8->f4[0].w,Cr1_f8->f4[1].y,Cr1_f8->f4[1].w) ;
+    odds.f4[1]  = make_float4(Cr2_f8->f4[0].y,Cr2_f8->f4[0].w,Cr2_f8->f4[1].y,Cr2_f8->f4[1].w) ;
 
     // Horizontal average for Cr and Store the results back in the first d_float8 in  Cr
     evens.f4[0] = (evens.f4[0] + odds.f4[0]) * (float4) 0.5;
@@ -246,7 +257,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
         
     if ((id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight) && (id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
+        rpp_hip_load24_pkd3_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
     }
     else
     {
@@ -278,6 +289,8 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
                                &Cr);
 
         *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = Cb;
+        //As we are writing Cr into Cb place let all Cb complete before writing Cr
+        __syncthreads();
         //src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = Cr;
         //Storing Cr beside Cb block
         *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][64 + hipThreadIdx_x8] = Cr;

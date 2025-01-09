@@ -1428,6 +1428,33 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(float *srcPtr
     srcPtrB_uc8->uc4[1] = make_uchar4(srcPtr_uc24->uc1[14], srcPtr_uc24->uc1[17], srcPtr_uc24->uc1[20], srcPtr_uc24->uc1[23]);    // write B04-B07
 }
 
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(float *srcPtr, float **srcPtrs_f8)
+{
+    d_float24 src_f24;
+    *(d_float24 *)&src_f24 = *(d_float24 *)srcPtr;
+    d_float8 *srcPtrR_f8, *srcPtrG_f8, *srcPtrB_f8;
+
+    srcPtrR_f8 = (d_float8 *)srcPtrs_f8[0];
+    srcPtrG_f8 = (d_float8 *)srcPtrs_f8[1];
+    srcPtrB_f8 = (d_float8 *)srcPtrs_f8[2];
+
+    srcPtrR_f8->f4[0] = make_float4(src_f24.f1[ 0], src_f24.f1[ 3], src_f24.f1[ 6], src_f24.f1[ 9]);    // write R00-R03
+    srcPtrR_f8->f4[1] = make_float4(src_f24.f1[12], src_f24.f1[15], src_f24.f1[18], src_f24.f1[21]);    // write R04-R07
+    srcPtrG_f8->f4[0] = make_float4(src_f24.f1[ 1], src_f24.f1[ 4], src_f24.f1[ 7], src_f24.f1[10]);    // write G00-G03
+    srcPtrG_f8->f4[1] = make_float4(src_f24.f1[13], src_f24.f1[16], src_f24.f1[19], src_f24.f1[22]);    // write G04-G07
+    srcPtrB_f8->f4[0] = make_float4(src_f24.f1[ 2], src_f24.f1[ 5], src_f24.f1[ 8], src_f24.f1[11]);    // write B00-B03
+    srcPtrB_f8->f4[1] = make_float4(src_f24.f1[14], src_f24.f1[17], src_f24.f1[20], src_f24.f1[23]);    // write B04-B07
+}
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPtr, float **srcPtrs_f8)
+{
+}
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f8)
+{
+}
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f8)
+{
+}
+
 // I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
 
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(schar *srcPtr, uchar **srcPtrs_uc8)
