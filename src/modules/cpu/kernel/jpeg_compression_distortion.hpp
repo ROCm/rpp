@@ -95,6 +95,30 @@ void GetChromaQuantizationTable(int quality, uint8_t outputTable[BLOCK_SIZE][BLO
     ComputeQuantizationTableAVX(&baseChromaTable[0][0], scale, &outputTable[0][0]);
 }
 
+void jpeg_zigzag_avx2_float(_m256 *pVec)
+{
+    // Create shuffle control vectors
+    __m256i shuffleMaskA = _mm256_setr_ps(0, 1, 8, -1, 9, 2, 3, 10);
+    __m256i shuffleMaskB = _mm256_setr_ps(-1, 3, 10, -1, -1, 11, 4, 5);
+    __m256i shuffleMaskC = _mm256_setr_ps(6, 13, -1, 14, 7, -1, -1, 15);
+
+    // Shuffle input floats based on masks
+    __m256 shufA = _mm256_permutevar8x32_ps(pVec[0], shuffleMaskA);
+    __m256 shufB = _mm256_permutevar8x32_ps(pVec[0], shuffleMaskB);
+    __m256 shufC = _mm256_permutevar8x32_ps(pVec[1], shuffleMaskC);
+
+    // Combine shuffled values
+    __m256 result1 = _mm256_blend_ps(shufA, shufB, 0b10101010); // Blend alternating
+    pVec[0] = _mm256_blend_ps(result1, shufC, 0b11000000);
+
+    __m256 shufD = _mm256_permutevar8x32_ps(pVec[2], shuffleMaskA);
+    __m256 shufE = _mm256_permutevar8x32_ps(pVec[2], shuffleMaskB);
+    __m256 shufF = _mm256_permutevar8x32_ps(pVec[3], shuffleMaskC);
+
+    __m256 result3 = _mm256_blend_ps(shufD, shufE, 0b10101010);
+    pVec[1] = _mm256_blend_ps(result3, shufF, 0b11000000);
+}
+
 __m256 dct_row(__m256 x) {
     // Constants for DCT calculation
     __m256 c1 = _mm256_set1_ps(0.3535533906); // 1/sqrt(2)
