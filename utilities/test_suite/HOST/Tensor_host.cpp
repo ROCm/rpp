@@ -450,7 +450,7 @@ int main(int argc, char **argv)
             double startWallTime, endWallTime;
             switch (testCase)
             {
-                case 0:
+                case BRIGHTNESS:
                 {
                     testCaseName = "brightness";
                     Rpp32f alpha[batchSize];
@@ -470,7 +470,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case GAMMA_CORRECTION:
                 {
                     testCaseName = "gamma_correction";
 
@@ -487,7 +487,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case BLEND:
                 {
                     testCaseName = "blend";
 
@@ -504,7 +504,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case CONTRAST:
                 {
                     testCaseName = "contrast";
 
@@ -525,7 +525,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 5:
+                case PIXELATE:
                 {
                     testCaseName = "pixelate";
 
@@ -540,7 +540,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case JITTER:
                 {
                     testCaseName = "jitter";
 
@@ -558,7 +558,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 8:
+                case NOISE:
                 {
                     testCaseName = "noise";
 
@@ -633,7 +633,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 10:
+                case FOG:
                 {
                     testCaseName = "fog";
 
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 13:
+                case EXPOSURE:
                 {
                     testCaseName = "exposure";
 
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 20:
+                case FLIP:
                 {
                     testCaseName = "flip";
 
@@ -692,7 +692,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 21:
+                case RESIZE:
                 {
                     testCaseName = "resize";
 
@@ -711,7 +711,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 23:
+                case ROTATE:
                 {
                     testCaseName = "rotate";
 
@@ -734,7 +734,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 24:
+                case WARP_AFFINE:
                 {
                     testCaseName = "warp_affine";
 
@@ -765,7 +765,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 26:
+                case LENS_CORRECTION:
                 {
                     testCaseName = "lens_correction";
 
@@ -784,7 +784,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 28:
+                case WARP_PERSPECTIVE:
                 {
                     testCaseName = "warp_perspective";
 
@@ -818,7 +818,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 29:
+                case WATER:
                 {
                     testCaseName = "water";
 
@@ -848,7 +848,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 30:
+                case NON_LINEAR_BLEND:
                 {
                     testCaseName = "non_linear_blend";
 
@@ -865,7 +865,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 31:
+                case COLOR_CAST:
                 {
                     testCaseName = "color_cast";
 
@@ -888,7 +888,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 32:
+                case ERASE:
                 {
                     testCaseName = "erase";
                     Rpp32u boxesInEachImage = 3;
@@ -908,7 +908,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 33:
+                case CROP_AND_PATCH:
                 {
                     testCaseName = "crop_and_patch";
 
@@ -929,7 +929,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 34:
+                case LUT:
                 {
                     testCaseName = "lut";
 
@@ -967,7 +967,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 35:
+                case GLITCH:
                 {
                     testCaseName = "glitch";
                     RpptChannelOffsets rgbOffsets[batchSize];
@@ -991,7 +991,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 36:
+                case COLOR_TWIST:
                 {
                     testCaseName = "color_twist";
 
@@ -1016,7 +1016,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 37:
+                case CROP:
                 {
                     testCaseName = "crop";
 
@@ -1037,7 +1037,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 38:
+                case CROP_MIRROR_NORMALIZE:
                 {
                     testCaseName = "crop_mirror_normalize";
                     Rpp32f multiplier[batchSize * srcDescPtr->c];
@@ -1093,7 +1093,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 39:
+                case RESIZE_CROP_MIRROR:
                 {
                     testCaseName = "resize_crop_mirror";
 
@@ -1126,7 +1126,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 45:
+                case COLOR_TEMPERATURE:
                 {
                     testCaseName = "color_temperature";
 
@@ -1143,7 +1143,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 46:
+                case VIGNETTE:
                 {
                     testCaseName = "vignette";
 
@@ -1160,7 +1160,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 49:
+                case BOX_FILTER:
                 {
                     testCaseName = "box_filter";
                     Rpp32u kernelSize = additionalParam;
@@ -1174,7 +1174,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 54:
+                case GAUSSIAN_FILTER:
                 {
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
@@ -1192,7 +1192,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 61:
+                case MAGNITUDE:
                 {
                     testCaseName = "magnitude";
 
@@ -1205,7 +1205,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 63:
+                case PHASE:
                 {
                     testCaseName = "phase";
 
@@ -1218,7 +1218,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 65:
+                case BITWISE_AND:
                 {
                     testCaseName = "bitwise_and";
 
@@ -1231,7 +1231,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 68:
+                case BITWISE_OR:
                 {
                     testCaseName = "bitwise_or";
 
@@ -1244,7 +1244,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 70:
+                case COPY:
                 {
                     testCaseName = "copy";
 
@@ -1257,7 +1257,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 79:
+                case REMAP:
                 {
                     testCaseName = "remap";
 
@@ -1274,7 +1274,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 80:
+                case RESIZE_MIRROR_NORMALIZE:
                 {
                     testCaseName = "resize_mirror_normalize";
 
@@ -1315,7 +1315,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 81:
+                case COLOR_JITTER:
                 {
                     testCaseName = "color_jitter";
 
@@ -1340,7 +1340,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 82:
+                case RICAP:
                 {
                     testCaseName = "ricap";
 
@@ -1367,7 +1367,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 83:
+                case GRIDMASK:
                 {
                     testCaseName = "gridmask";
 
@@ -1387,7 +1387,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 84:
+                case SPATTER:
                 {
                     testCaseName = "spatter";
 
@@ -1417,7 +1417,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 85:
+                case SWAP_CHANNELS:
                 {
                     testCaseName = "swap_channels";
 
@@ -1430,7 +1430,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 86:
+                case COLOR_TO_GREYSCALE:
                 {
                     testCaseName = "color_to_greyscale";
 
@@ -1445,7 +1445,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 87:
+                case TENSOR_SUM:
                 {
                     testCaseName = "tensor_sum";
 
@@ -1461,7 +1461,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 88:
+                case TENSOR_MIN:
                 {
                     testCaseName = "tensor_min";
 
@@ -1477,7 +1477,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 89:
+                case TENSOR_MAX:
                 {
                     testCaseName = "tensor_max";
 
@@ -1493,7 +1493,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 90:
+                case TENSOR_MEAN:
                 {
                     testCaseName = "tensor_mean";
 
@@ -1509,7 +1509,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 91:
+                case TENSOR_STDDEV:
                 {
                     testCaseName = "tensor_stddev";
 
@@ -1526,7 +1526,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 92:
+                case SLICE:
                 {
                     testCaseName = "slice";
                     Rpp32u numDims = descriptorPtr3D->numDims - 1; // exclude batchSize from input dims

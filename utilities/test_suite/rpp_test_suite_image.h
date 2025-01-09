@@ -130,6 +130,7 @@ enum Augmentation {
     ROTATE = 23,
     WARP_AFFINE = 24,
     LENS_CORRECTION = 26,
+    WARP_PERSPECTIVE = 28,
     WATER = 29,
     NON_LINEAR_BLEND = 30,
     COLOR_CAST = 31,
@@ -166,12 +167,12 @@ enum Augmentation {
     SLICE = 92
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, BOX_FILTER, REMAP};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, SPATTER};
-const unordered_set<int> nonQACases = {WARP_AFFINE};
-const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, REMAP};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
+const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
@@ -1033,7 +1034,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     string func = funcName;
     string refFile = "";
     int refOutputWidth, refOutputHeight;
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
@@ -1067,7 +1068,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
             func += "Tensor_PLN3";
         else
         {
-            if(testCase == 86)
+            if(testCase == COLOR_TO_GREYSCALE)
             {
                 if(srcDescPtr->layout == RpptLayout::NHWC)
                     func += "Tensor_PKD3";
@@ -1079,17 +1080,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
+    if(testCase == RESIZE ||testCase == ROTATE || testCase == WARP_AFFINE || testCase == WARP_PERSPECTIVE || testCase == REMAP)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
     }
-    else if(testCase == 8)
+    else if(testCase == NOISE)
     {
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == 49)
+    else if(testCase == BOX_FILTER)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
@@ -1156,15 +1157,15 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     T *refOutput;
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    if(testCase == 88)
+    if(testCase == TENSOR_MIN)
         refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
-    else if(testCase == 89)
+    else if(testCase == TENSOR_MAX)
         refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
-    else if(testCase == 87)
+    else if(testCase == TENSOR_SUM)
         refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
-    else if(testCase == 90)
+    else if(testCase == TENSOR_MEAN)
         refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
-    else if(testCase == 91)
+    else if(testCase == TENSOR_STDDEV)
         refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)

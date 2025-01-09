@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
-            case 0:
+            case TRANSPOSE:
             {
                 testCaseName  = "transpose";
                 Rpp32u permTensor[nDim];
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 1:
+            case NORMALIZE:
             {
                 testCaseName  = "normalize";
                 float scale = 1.0;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 2:
+            case LOG:
             {
                 testCaseName  = "log";
 

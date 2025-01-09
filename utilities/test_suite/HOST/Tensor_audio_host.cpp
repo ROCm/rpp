@@ -185,7 +185,7 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 0:
+                case NON_SILENT_REGION_DETECTION:
                 {
                     testCaseName = "non_silent_region_detection";
                     Rpp32f cutOffDB = -60.0;
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case TO_DECIBELS:
                 {
                     testCaseName = "to_decibels";
                     Rpp32f cutOffDB = std::log(1e-20);
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case PRE_EMPHASIS_FILTER:
                 {
                     testCaseName = "pre_emphasis_filter";
                     Rpp32f coeff[batchSize];
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 3:
+                case DOWN_MIXING:
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case SPECTROGRAM:
                 {
                     testCaseName = "spectrogram";
                     bool centerWindows = true;
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 5:
+                case SLICE:
                 {
                     testCaseName = "slice";
                     Rpp32u nDim = 1; // testing for 1D slice
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case RESAMPLE:
                 {
                     testCaseName = "resample";
                     Rpp32f inRateTensor[batchSize];
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 7:
+                case MEL_FILTER_BANK:
                 {
                     testCaseName = "mel_filter_bank";
 
