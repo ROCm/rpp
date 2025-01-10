@@ -1698,14 +1698,10 @@ int main(int argc, char **argv)
                 case 93:
                 {
                     testCaseName = "jpeg_compression_distortion";
-
-                    if(srcDescPtr->c == 1)
-                        reductionFuncResultArrLength = srcDescPtr->n;
-                    memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
-
+                    RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr,d_output,dstDescPtr,roiTensorPtrSrc,handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1804,7 +1800,7 @@ int main(int argc, char **argv)
                     std::ofstream refFile;
                     refFile.open(func + ".csv");
                     for (int i = 0; i < oBufferSize; i++)
-                        refFile << static_cast<int>(*(outputu8 + i)) << ",";
+                        refFile << static_cast<int>(*(inputu8 + i)) << ",";
                     refFile.close();
                 }
 
@@ -1849,7 +1845,22 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
+        // if(DEBUG_MODE)
+        // {
+        //     CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        //     CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        //     CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        //     std::ofstream refFile;
+        //     std::string refFileName;
+        //     refFileName = func + "_host.csv";
+        //     refFile.open(refFileName);
+        //     for (int i = 0; i < bufferSize * 2; i++)
+        //     {
+        //         refFile << *(outputF32 + i) << ",";
+        //     }
+        //     refFile.close();
+        // }
+                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

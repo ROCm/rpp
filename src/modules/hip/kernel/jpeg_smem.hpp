@@ -10,136 +10,6 @@ __device__ constexpr float e = 0.541196100146197f;    // sqrt(2) * cos(3 * pi / 
 __device__ constexpr float f = 0.275899379282943f;    // sqrt(2) * cos(7 * pi / 16)
 __device__ constexpr float norm_factor = 0.3535533905932737f;  // 1 / sqrt(8)
 
-__device__ constexpr uchar2 zigzag_pattern[8][8] = {
-    { {0, 0}, {0, 1}, {0, 5}, {0, 6}, {1, 6}, {1, 7}, {3, 3}, {3, 4} },
-    { {0, 2}, {0, 4}, {0, 7}, {1, 5}, {2, 0}, {3, 2}, {3, 5}, {5, 2} },
-    { {0, 3}, {1, 0}, {1, 4}, {2, 1}, {3, 1}, {3, 6}, {5, 1}, {5, 3} },
-    { {1, 1}, {1, 3}, {2, 2}, {3, 0}, {3, 7}, {5, 0}, {5, 4}, {6, 5} },
-    { {1, 2}, {2, 3}, {2, 7}, {4, 0}, {4, 7}, {5, 5}, {6, 4}, {6, 6} },
-    { {2, 4}, {2, 6}, {4, 1}, {4, 6}, {5, 6}, {6, 3}, {6, 7}, {7, 4} },
-    { {2, 5}, {4, 2}, {4, 5}, {5, 7}, {6, 2}, {7, 0}, {7, 3}, {7, 5} },
-    { {4, 3}, {4, 4}, {6, 0}, {6, 1}, {7, 1}, {7, 2}, {7, 6}, {7, 7} }
-};
-
-// DCT forward 1D implementation
-__device__ void dct_fwd_8x8_1d(float *vecf8, int stride,int col, bool row) 
-{
-    uint4 x_idx1,x_idx2;
-    if(row)
-    {
-        x_idx1 = make_uint4(0,1,2,3);
-        x_idx2 = make_uint4(4,5,6,7);
-    }
-    else
-    {
-       x_idx1 = (uint4)col;
-       x_idx2 = (uint4)col;
-    }
-
-    //Adjust for rows and columns
-    float x0 = vecf8[0 * stride + x_idx1.x];
-    float x1 = vecf8[1 * stride + x_idx1.y];
-    float x2 = vecf8[2 * stride + x_idx1.z];
-    float x3 = vecf8[3 * stride + x_idx1.w];
-    float x4 = vecf8[4 * stride + x_idx2.x];
-    float x5 = vecf8[5 * stride + x_idx2.y];
-    float x6 = vecf8[6 * stride + x_idx2.z];
-    float x7 = vecf8[7 * stride + x_idx2.w];
-
-    float tmp0 = x0 + x7;
-    float tmp1 = x1 + x6;
-    float tmp2 = x2 + x5;
-    float tmp3 = x3 + x4;
-    float tmp4 = x0 - x7;
-    float tmp5 = x6 - x1;
-    float tmp6 = x2 - x5;
-    float tmp7 = x4 - x3;
-
-    float tmp8 = tmp0 + tmp3;
-    float tmp9 = tmp0 - tmp3;
-    float tmp10 = tmp1 + tmp2;
-    float tmp11 = tmp1 - tmp2;
-
-    x0 = norm_factor * (tmp8 + tmp10);
-    x2 = norm_factor * (b * tmp9 + e * tmp11);
-    x4 = norm_factor * (tmp8 - tmp10);
-    x6 = norm_factor * (e * tmp9 - b * tmp11);
-
-    x1 = norm_factor * (a * tmp4 - c * tmp5 + d * tmp6 - f * tmp7);
-    x3 = norm_factor * (c * tmp4 + f * tmp5 - a * tmp6 + d * tmp7);
-    x5 = norm_factor * (d * tmp4 + a * tmp5 + f * tmp6 - c * tmp7);
-    x7 = norm_factor * (f * tmp4 + d * tmp5 + c * tmp6 + a * tmp7);
-
-    vecf8[0 * stride + x_idx1.x] = x0;
-    vecf8[1 * stride + x_idx1.y] = x1;
-    vecf8[2 * stride + x_idx1.z] = x2;
-    vecf8[3 * stride + x_idx1.w] = x3;
-    vecf8[4 * stride + x_idx2.x] = x4;
-    vecf8[5 * stride + x_idx2.y] = x5;
-    vecf8[6 * stride + x_idx2.z] = x6;
-    vecf8[7 * stride + x_idx2.w] = x7;
-}
-
-__device__ void dct_inv_8x8_1d(float *vecf8, int stride,int col, bool row) 
-{
-    uint4 x_idx1,x_idx2;
-    if(row)
-    {
-        x_idx1 = uint4(0,1,2,3);
-        x_idx2 = uint4(4,5,6,7);
-    }
-    else
-    {
-       x_idx1 = (uint4)col;
-       x_idx2 = (uint4)col;
-    }
-
-    //Adjust for rows and columns
-    float x0 = vecf8[0 * stride + x_idx1.x];
-    float x1 = vecf8[1 * stride + x_idx1.y];
-    float x2 = vecf8[2 * stride + x_idx1.z];
-    float x3 = vecf8[3 * stride + x_idx1.w];
-    float x4 = vecf8[4 * stride + x_idx2.x];
-    float x5 = vecf8[5 * stride + x_idx2.y];
-    float x6 = vecf8[6 * stride + x_idx2.z];
-    float x7 = vecf8[7 * stride + x_idx2.w];
-
-    float tmp0 = x0 + x4;
-    float tmp1 = b * x2 + e * x6;
-
-    float tmp2 = tmp0 + tmp1;
-    float tmp3 = tmp0 - tmp1;
-    float tmp4 = f * x7 + a * x1 + c * x3 + d * x5;
-    float tmp5 = a * x7 - f * x1 + d * x3 - c * x5;
-
-    float tmp6 = x0 - x4;
-    float tmp7 = e * x2 - b * x6;
-
-    float tmp8 = tmp6 + tmp7;
-    float tmp9 = tmp6 - tmp7;
-    float tmp10 = c * x1 - d * x7 - f * x3 - a * x5;
-    float tmp11 = d * x1 + c * x7 - a * x3 + f * x5;
-
-    x0 = norm_factor * (tmp2 + tmp4);
-    x7 = norm_factor * (tmp2 - tmp4);
-    x4 = norm_factor * (tmp3 + tmp5);
-    x3 = norm_factor * (tmp3 - tmp5);
-
-    x1 = norm_factor * (tmp8 + tmp10);
-    x5 = norm_factor * (tmp9 - tmp11);
-    x2 = norm_factor * (tmp9 + tmp11);
-    x6 = norm_factor * (tmp8 - tmp10);
-  
-    vecf8[0 * stride + x_idx1.x] = x0;
-    vecf8[1 * stride + x_idx1.y] = x1;
-    vecf8[2 * stride + x_idx1.z] = x2;
-    vecf8[3 * stride + x_idx1.w] = x3;
-    vecf8[4 * stride + x_idx2.x] = x4;
-    vecf8[5 * stride + x_idx2.y] = x5;
-    vecf8[6 * stride + x_idx2.z] = x6;
-    vecf8[7 * stride + x_idx2.w] = x7;
-}
-
 __device__ void YCbCr_hip_compute(float *Ch1, float *Ch2,float *Ch3)
 {
     d_float8 Y_f8,Cb_f8,Cr_f8,*Ch1_f8,*Ch2_f8,*Ch3_f8;
@@ -206,13 +76,161 @@ __device__ void horizontalDownSampling(float *Cb1, float *Cb2,float *Cr1, float 
     evens.f4[1] = (evens.f4[1] + odds.f4[1]) * (float4) 0.5;
     *Cr = evens;
 }
-
-__device__ __inline__ void quantize(float* dup,float* value, int* coeff) {
+//Quantization
+//coeff * round( value * 1/coeff)
+__device__ __inline__ void quantize(float* value, int* coeff) {
     for(int i=0; i<8 ;i++)
-    {
         value[i] = coeff[i] * roundf(value[i] * __frcp_rn(coeff[i]));
-        dup[i] = value[i];
+}
+// DCT forward 1D implementation
+__device__ void dct_fwd_8x8_1d(float *vecf8, int stride,int col, bool row) 
+{
+    uint4 x_idx1,x_idx2;
+    if(row)
+    {
+        x_idx1 = make_uint4(0,1,2,3);
+        x_idx2 = make_uint4(4,5,6,7);
     }
+    else
+    {
+       x_idx1 = (uint4)col;
+       x_idx2 = (uint4)col;
+    }
+
+    //Adjust for rows and columns
+    float x0 = vecf8[0 * stride + x_idx1.x];
+    float x1 = vecf8[1 * stride + x_idx1.y];
+    float x2 = vecf8[2 * stride + x_idx1.z];
+    float x3 = vecf8[3 * stride + x_idx1.w];
+    float x4 = vecf8[4 * stride + x_idx2.x];
+    float x5 = vecf8[5 * stride + x_idx2.y];
+    float x6 = vecf8[6 * stride + x_idx2.z];
+    float x7 = vecf8[7 * stride + x_idx2.w];
+
+    float tmp0 = x0 + x7;
+    float tmp1 = x1 + x6;
+    float tmp2 = x2 + x5;
+    float tmp3 = x3 + x4;
+    float tmp4 = x0 - x7;
+    float tmp5 = x6 - x1;
+    float tmp6 = x2 - x5;
+    float tmp7 = x4 - x3;
+
+    float tmp8 = tmp0 + tmp3;
+    float tmp9 = tmp0 - tmp3;
+    float tmp10 = tmp1 + tmp2;
+    float tmp11 = tmp1 - tmp2;
+
+    x0 = norm_factor * (tmp8 + tmp10);
+    x2 = norm_factor * (b * tmp9 + e * tmp11);
+    x4 = norm_factor * (tmp8 - tmp10);
+    x6 = norm_factor * (e * tmp9 - b * tmp11);
+
+    x1 = norm_factor * (a * tmp4 - c * tmp5 + d * tmp6 - f * tmp7);
+    x3 = norm_factor * (c * tmp4 + f * tmp5 - a * tmp6 + d * tmp7);
+    x5 = norm_factor * (d * tmp4 + a * tmp5 + f * tmp6 - c * tmp7);
+    x7 = norm_factor * (f * tmp4 + d * tmp5 + c * tmp6 + a * tmp7);
+
+    vecf8[0 * stride + x_idx1.x] = x0;
+    vecf8[1 * stride + x_idx1.y] = x1;
+    vecf8[2 * stride + x_idx1.z] = x2;
+    vecf8[3 * stride + x_idx1.w] = x3;
+    vecf8[4 * stride + x_idx2.x] = x4;
+    vecf8[5 * stride + x_idx2.y] = x5;
+    vecf8[6 * stride + x_idx2.z] = x6;
+    vecf8[7 * stride + x_idx2.w] = x7;
+}
+//Inverse DCT
+__device__ void dct_inv_8x8_1d(float *vecf8, int stride,int col, bool row) 
+{
+    uint4 x_idx1,x_idx2;
+    if(row)
+    {
+        x_idx1 = uint4(0,1,2,3);
+        x_idx2 = uint4(4,5,6,7);
+    }
+    else
+    {
+       x_idx1 = (uint4)col;
+       x_idx2 = (uint4)col;
+    }
+
+    //Adjust for rows and columns
+    float x0 = vecf8[0 * stride + x_idx1.x];
+    float x1 = vecf8[1 * stride + x_idx1.y];
+    float x2 = vecf8[2 * stride + x_idx1.z];
+    float x3 = vecf8[3 * stride + x_idx1.w];
+    float x4 = vecf8[4 * stride + x_idx2.x];
+    float x5 = vecf8[5 * stride + x_idx2.y];
+    float x6 = vecf8[6 * stride + x_idx2.z];
+    float x7 = vecf8[7 * stride + x_idx2.w];
+
+    float tmp0 = x0 + x4;
+    float tmp1 = b * x2 + e * x6;
+
+    float tmp2 = tmp0 + tmp1;
+    float tmp3 = tmp0 - tmp1;
+    float tmp4 = f * x7 + a * x1 + c * x3 + d * x5;
+    float tmp5 = a * x7 - f * x1 + d * x3 - c * x5;
+
+    float tmp6 = x0 - x4;
+    float tmp7 = e * x2 - b * x6;
+
+    float tmp8 = tmp6 + tmp7;
+    float tmp9 = tmp6 - tmp7;
+    float tmp10 = c * x1 - d * x7 - f * x3 - a * x5;
+    float tmp11 = d * x1 + c * x7 - a * x3 + f * x5;
+
+    x0 = norm_factor * (tmp2 + tmp4);
+    x7 = norm_factor * (tmp2 - tmp4);
+    x4 = norm_factor * (tmp3 + tmp5);
+    x3 = norm_factor * (tmp3 - tmp5);
+
+    x1 = norm_factor * (tmp8 + tmp10);
+    x5 = norm_factor * (tmp9 - tmp11);
+    x2 = norm_factor * (tmp9 + tmp11);
+    x6 = norm_factor * (tmp8 - tmp10);
+  
+    vecf8[0 * stride + x_idx1.x] = x0;
+    vecf8[1 * stride + x_idx1.y] = x1;
+    vecf8[2 * stride + x_idx1.z] = x2;
+    vecf8[3 * stride + x_idx1.w] = x3;
+    vecf8[4 * stride + x_idx2.x] = x4;
+    vecf8[5 * stride + x_idx2.y] = x5;
+    vecf8[6 * stride + x_idx2.z] = x6;
+    vecf8[7 * stride + x_idx2.w] = x7;
+}
+//DeQuantization
+__device__ __inline__ void dequantize(float* value, int* coeff) {
+    for(int i=0; i<8 ;i++)
+        value[i] = value[i] / coeff[i];
+}
+//RGB to YCbCr
+__device__ void RGB_hip_compute(float *Ch1, float *Ch2,float *Ch3)
+{
+    d_float8 R_f8,G_f8,B_f8,*Ch1_f8,*Ch2_f8,*Ch3_f8;
+    Ch1_f8 = (d_float8 *)Ch1;
+    //From Cb and Cr channels elements are upsampled horizontally
+    //Vertical Upsampling is being done as part of sending same Cb & Cr row for two Y channel rows
+    Ch2_f8->f4[0] = make_float4(Ch2[0],Ch2[0],Ch2[1],Ch2[1]);
+    Ch2_f8->f4[1] = make_float4(Ch2[2],Ch2[2],Ch2[3],Ch2[3]);
+    
+    Ch3_f8->f4[0] = make_float4(Ch3[0],Ch3[0],Ch3[1],Ch3[1]);
+    Ch3_f8->f4[1] = make_float4(Ch3[2],Ch3[2],Ch3[3],Ch3[3]);
+// R = Y + 1.402 × (Cr−128)   
+    R_f8.f4[0] = Ch1_f8->f4[0] + (Ch3_f8->f4[0] - (float4)128) * (float4)1.402;
+    R_f8.f4[1] = Ch1_f8->f4[1] + (Ch3_f8->f4[1] - (float4)128) * (float4)1.402;
+ // G = Y − 0.344136 ×(Cb−128) − 0.714136×(Cr−128)
+    G_f8.f4[0] = Ch1_f8->f4[0] - (Ch2_f8->f4[0] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[0] - (float4)128) * (float4)0.714136;
+    G_f8.f4[1] = Ch1_f8->f4[1] - (Ch2_f8->f4[1] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[1] - (float4)128) * (float4)0.714136;
+ // B = Y + 1.772 × (Cb−128)
+    B_f8.f4[0] = Ch1_f8->f4[0] + (float4)1.772 * (Ch2_f8->f4[0] - (float4)128);
+    B_f8.f4[1] = Ch1_f8->f4[1] + (float4)1.772 * (Ch2_f8->f4[1] - (float4)128);
+
+    //Storing the results back into the shared memory (Inplace)
+    *Ch1_f8 =  R_f8; 
+    *Ch2_f8 =  G_f8;  
+    *Ch3_f8 =  B_f8;  
 }
 
 template <typename T>
@@ -243,8 +261,8 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     d_float24 src_f24, dst_f24;
     // 16 Rows x 3 Channels and 16 x 8 columns with each element being a float8 
     __shared__ float src_smem[16*3][16*8];
-    auto& copyY= src_smem;
-    auto& copyCbCr = src_smem;
+    // auto& copyY= src_smem;
+    // auto& copyCbCr = src_smem;
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
@@ -296,11 +314,11 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
         *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][64 + hipThreadIdx_x8] = Cr;
         __syncthreads();
     }
+    //Fwd DCT
     //1D row wise DCT for Y channel
     dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],0,0,true);
     //1D row wise DCT for Cb and Cr channels but should only done for 8 rows but here being done for 16 rows
     dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],0,0,true);  
-
     // After row-wise DCT and synchronization
     __syncthreads();
     //Now for each column we should do DCT
@@ -313,10 +331,8 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     if (col < 128) { 
         // 1D DCT for First 8 rows (Y channel)   
         dct_fwd_8x8_1d(&src_smem[0][col], 128,col,false);
-      
         // 1D DCT for Second 8 rows (Y channel)
         dct_fwd_8x8_1d(&src_smem[8][col], 128,col,false);
-        
         // 1D DCT for 8 rows (Cb/Cr channels)
         dct_fwd_8x8_1d(&src_smem[16][col],128,col,false);
     }
@@ -327,36 +343,49 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     //For Cb Cr
     //Here we can do this for only 8 threads in Y, here and in row wise DCT
     if(hipThreadIdx_y < 8)
-        quantize(&copyCbCr[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8],&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);  
+        quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);  
     //For Y also
-    quantize(&copyY[hipThreadIdx_y_channel.z][hipThreadIdx_x8],&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
+//INVERSE STEPS
+    //Dequantization
+    if(hipThreadIdx_y < 8)
+        dequantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);  
+    //For Y also
+    dequantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
+    __syncthreads();
+    //Inverse DCT
+    //1D row wise DCT for Y channel
+    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],0,0,true);
+    //1D row wise DCT for Cb and Cr channels but should only done for 8 rows but here being done for 16 rows
+    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],0,0,true);  
 
-    //Zig Zag Scan
-    //Copy elements to the extra shared memory and then access as per the reference table 
-    //(DONE AS PART OF QUANTIZATION)
-    //Fill the original Y using copy Y taking the index references from the zigzag reference table
-    //Now that there are 12 blocks of 16 x 16 size (Including Y Cb Cr)
-    //Iterate over 8 tiles and in each tile map respected src to dst w.r.t ref for Y CbCr
-    int numTiles = 8;
-    for(int t = 0, offset = 0; t < numTiles; t++, offset += hipBlockDim_x)
-    {
-        int srcCol = (offset + hipThreadIdx_x);
-        if(srcCol < 128)
-        {
-            const uchar2 src_xy = zigzag_pattern[hipThreadIdx_y_channel.z % 8][srcCol % 8];
-            int block_row = hipThreadIdx_y < 8 ? src_xy.x + 32 : 32 + 8 + src_xy.x;
-            int block_col = hipThreadIdx_x < 8 ? src_xy.y + offset : 8 + src_xy.y + offset;
-
-            src_smem[hipThreadIdx_y_channel.x][srcCol] = copyY[block_row][block_col]; 
-            //Each thread after performing Y it acts on the 8 rows of Cb and Cr also
-            if(hipThreadIdx_y < 8)                        //duplicate CbCr from 24 to 32
-                src_smem[hipThreadIdx_y_channel.y][srcCol] = copyCbCr[block_row - 8][block_col];
-        }
-        __syncthreads();
+    // After row-wise DCT and synchronization
+    __syncthreads();
+    //Now for each column we should do DCT
+    //So by now in smem first [0 to 16] x (16 x 8) has Y, [16 to 24] x (8 x 8) has Cb and [16 to 24] x (8 x 8) has Cr
+    //We have 16 x 16 threads on X and Y dimension and 128 elements in each row
+    // Each thread takes one column (total 128 threads for 128 columns)
+    // Process all 128 columns 
+    if (col < 128) { 
+        // 1D DCT for First 8 rows (Y channel)   
+        dct_inv_8x8_1d(&src_smem[0][col], 128,col,false);
+      
+        // 1D DCT for Second 8 rows (Y channel)
+        dct_inv_8x8_1d(&src_smem[8][col], 128,col,false);
+        
+        // 1D DCT for 8 rows (Cb/Cr channels)
+        dct_inv_8x8_1d(&src_smem[16][col],128,col,false);
     }
+    __syncthreads();
     
-    //rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+     //RGB to YCbCr
+    int Cby, Cry;
+    Cby = 16 + (hipThreadIdx_y/2) * 2;
+    Cry = 16 + 64 + (hipThreadIdx_y/2) * 2;
+    int hipThreadIdx_x4 = hipThreadIdx_x >> 2;
+    RGB_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],&src_smem[Cby][hipThreadIdx_x4],&src_smem[Cry][hipThreadIdx_x4]);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
 template <typename T>

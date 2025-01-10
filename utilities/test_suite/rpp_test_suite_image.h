@@ -116,7 +116,8 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"}
+    {92, "slice"},
+    {93, "jpeg_compression_distortion"}
 };
 
 enum Augmentation {

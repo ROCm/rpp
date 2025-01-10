@@ -1445,11 +1445,29 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(float *srcPt
     srcPtrB_f8->f4[0] = make_float4(src_f24.f1[ 2], src_f24.f1[ 5], src_f24.f1[ 8], src_f24.f1[11]);    // write B00-B03
     srcPtrB_f8->f4[1] = make_float4(src_f24.f1[14], src_f24.f1[17], src_f24.f1[20], src_f24.f1[23]);    // write B04-B07
 }
+//U8 loads with layout toggle PKD3 to PLN3 (24 U8 pixels)
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPtr, float **srcPtrs_f8)
 {
+    d_uchar24 src_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+
+    d_float8 *srcPtrR_f8, *srcPtrG_f8, *srcPtrB_f8;
+    srcPtrR_f8 = (d_float8 *)srcPtrs_f8[0];
+    srcPtrG_f8 = (d_float8 *)srcPtrs_f8[1];
+    srcPtrB_f8 = (d_float8 *)srcPtrs_f8[2];
+    // std::cout<< src_uc24.uc1[ 0] << src_uc24.uc1[ 3]<< std::endl;
+    printf("\n Zer %d One %d  Two %d Thre %d ",src_uc24.uc1[ 0] ,src_uc24.uc1[ 1], src_uc24.uc1[ 2], src_uc24.uc1[ 3]);
+    srcPtrR_f8->f4[0] = make_float4(src_uc24.uc1[ 0], src_uc24.uc1[ 3], src_uc24.uc1[ 6], src_uc24.uc1[ 9]);    // write R00-R03
+    srcPtrR_f8->f4[1] = make_float4(src_uc24.uc1[12], src_uc24.uc1[15], src_uc24.uc1[18], src_uc24.uc1[21]);    // write R04-R07
+    srcPtrG_f8->f4[0] = make_float4(src_uc24.uc1[ 1], src_uc24.uc1[ 4], src_uc24.uc1[ 7], src_uc24.uc1[10]);    // write G00-G03
+    srcPtrG_f8->f4[1] = make_float4(src_uc24.uc1[13], src_uc24.uc1[16], src_uc24.uc1[19], src_uc24.uc1[22]);    // write G04-G07
+    srcPtrB_f8->f4[0] = make_float4(src_uc24.uc1[ 2], src_uc24.uc1[ 5], src_uc24.uc1[ 8], src_uc24.uc1[11]);    // write B00-B03
+    srcPtrB_f8->f4[1] = make_float4(src_uc24.uc1[14], src_uc24.uc1[17], src_uc24.uc1[20], src_uc24.uc1[23]);
+    // printf("\n Fl: Zer %lf One %lf  Two %lf Thre %lf ",srcPtrG_f8->f4[0] ,srcPtrG_f8->f1[ 1], srcPtrB_f8->f1[ 2], srcPtrR_f8->f1[ 3]);
 }
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f8)
 {
+
 }
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f8)
 {
