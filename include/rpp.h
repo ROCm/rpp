@@ -102,6 +102,42 @@ typedef void (*rppDeallocatorFunction)(void* context, void* memory);
 extern "C" {
 #endif
 
+/*! \brief Creates RPP handle for HOST and HIP batch processing.
+ * \details Function to create a RPP handle for a batch. To be called in the beginning to initialize the RPP environment.
+ * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
+ * \param [in] nBatchSize Batch size.
+ * \param [in] numThreads Number of threads to be used for OpenMP pragma.
+ * \ingroup group_rpp
+ * \return A <tt> \ref rppStatus_t</tt> enumeration.
+ * \retval rppStatusSuccess
+ * \retval rppStatusNotInitialized
+ * \retval rppStatusInvalidValue
+ * \retval rppStatusBadParm
+ * \retval rppStatusAllocFailed
+ * \retval rppStatusInternalError
+ * \retval rppStatusNotImplemented
+ * \retval rppStatusUnknownError
+ * \retval rppStatusUnsupportedOp
+ */
+extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, void* numThreadsOrStream, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
+
+/*! \brief Destory RPP HOST/GPU handle.
+ * \details Function to destroy a RPP handle's host/device memory allocation. To be called in the end to break down the RPP environment.
+ * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
+ * \ingroup group_rpp
+ * \return A <tt> \ref rppStatus_t</tt> enumeration.
+ * \retval rppStatusSuccess
+ * \retval rppStatusNotInitialized
+ * \retval rppStatusInvalidValue
+ * \retval rppStatusBadParm
+ * \retval rppStatusAllocFailed
+ * \retval rppStatusInternalError
+ * \retval rppStatusNotImplemented
+ * \retval rppStatusUnknownError
+ * \retval rppStatusUnsupportedOp
+ */
+extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
+
 /*! \brief Creates RPP handle for HOST batch processing.
  * \details Function to create a RPP handle for a batch. To be called in the beginning to initialize the RPP environment.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.

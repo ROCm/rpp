@@ -26,6 +26,43 @@ SOFTWARE.
 #include "rpp/errors.hpp"
 #include "rpp/handle.hpp"
 
+extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, void* numThreadsOrStream, RppBackend backend)
+{
+    if(backend == RppBackend::RPP_HOST_BACKEND)
+    {
+        Rpp32u numThreads = static_cast<Rpp32u>(reinterpret_cast<size_t>(numThreadsOrStream));
+        return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
+    }
+    if(backend == RppBackend::RPP_HIP_BACKEND)
+    {
+#if GPU_SUPPORT  
+            return rpp::try_([&] { 
+            rpp::deref(handle) = new rpp::Handle(reinterpret_cast<rppAcceleratorQueue_t>(numThreadsOrStream), nBatchSize); 
+        });
+#endif // GPU_SUPPORT
+    }
+    return rppStatusNotImplemented;
+   
+}
+
+extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
+{
+    if(backend == RppBackend::RPP_HOST_BACKEND)
+    {
+        return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
+    }
+    else if(backend == RppBackend::RPP_HIP_BACKEND)
+    {
+#if GPU_SUPPORT
+        return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
+#endif // GPU_SUPPORT
+    }
+    else 
+    {
+        return rppStatusNotImplemented;
+    }
+}
+
 extern "C" rppStatus_t rppCreateHost(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads)
 {
     return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });

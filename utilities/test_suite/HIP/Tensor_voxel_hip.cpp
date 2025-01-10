@@ -153,7 +153,8 @@ int main(int argc, char * argv[])
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateGPU(&handle, stream, batchSize);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, batchSize, stream, backend);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
@@ -541,7 +542,7 @@ int main(int argc, char * argv[])
         avgWallTime /= (numRuns * noOfIterations);
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // Free memory
     free(niftiDataArray);
