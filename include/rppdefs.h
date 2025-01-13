@@ -171,6 +171,7 @@ typedef enum
 {
     RPP_HOST_BACKEND,
     RPP_HIP_BACKEND,
+    RPP_OCL_BACKEND
 } RppBackend;
 
 /*! \brief RPP rppStatus_t type enums

@@ -39,8 +39,6 @@ SOFTWARE.
 #include <hip/hip_fp16.h>
 #include <fstream>
 
-typedef half Rpp16f;
-
 using namespace cv;
 using namespace std;
 
@@ -315,7 +313,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateGPU(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, stream, backend);
 
     //parameters for brightness node
     Rpp32f alpha[images];

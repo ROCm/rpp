@@ -753,7 +753,8 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
 
-    rppCreateGPU(&handle, theQueue, noOfImages);
+    RppBackend backend = RppBackend::RPP_OCL_BACKEND;
+    rppCreate(&handle, noOfImages, theQueue, backend);
 
     clock_t start, end;
     double gpu_time_used;

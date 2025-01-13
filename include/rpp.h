@@ -138,25 +138,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatc
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
 
-/*! \brief Creates RPP handle for HOST batch processing.
- * \details Function to create a RPP handle for a batch. To be called in the beginning to initialize the RPP environment.
- * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] nBatchSize Batch size.
- * \param [in] numThreads Number of threads to be used for OpenMP pragma.
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateHost(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0);
-
 /*! \brief Destory RPP HOST handle - To be deprecated.
  * \details Function to destroy a RPP handle's host memory allocation. To be called in the end to break down the rpp environment.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
@@ -212,25 +193,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t 
 extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
 #if GPU_SUPPORT
-
-/*! \brief Creates RPP handle with accelerator stream for GPU batch processing.
- * \details Function to create a RPP handle with an accelerator stream for a batch. To be called in the beginning to initialize the RPP environment.
- * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
- * \param [in] nBatchSize Batch size
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateGPU(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
 
 /*! \brief Destory RPP GPU handle.
  * \details Function to destroy a RPP handle's device memory allocation. To be called in the end to break down the RPP environment.

@@ -170,7 +170,7 @@ int main(int argc, char **argv)
     printf("\nip_bitDepth = %d\ntest_case = %d", ip_bitDepth, test_case);
 
     rppHandle_t handle;
-    rppCreate(&handle);
+    rppCreate(&handle, 2, 0);
 
     clock_t start, end;
     double start_omp, end_omp;

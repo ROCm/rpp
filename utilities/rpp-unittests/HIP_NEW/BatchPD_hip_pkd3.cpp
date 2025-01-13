@@ -753,7 +753,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateGPU(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, stream, backend);
 
     clock_t start, end;
     double gpu_time_used;
