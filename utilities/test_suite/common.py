@@ -131,45 +131,6 @@ ImageAugmentationGroupMap = {
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
-def get_case_number(map, case):
-    # Check if the input is numeric (case number)
-    if case.isdigit():
-        return str(case)
-    
-    # Otherwise, treat it as a case name and find the corresponding number
-    for caseNum, info in map.items():
-        if case.lower() == info[0].lower():
-            return str(caseNum)
-    raise ValueError(f"Invalid case name or number: {case}")
-
-StatusMap = {
-    0: "RPP_SUCCESS",
-    -1: "RPP_ERROR",
-    -2: "RPP_ERROR_INVALID_ARGUMENTS",
-    -3: "RPP_ERROR_LOW_OFFSET",
-    -4: "RPP_ERROR_ZERO_DIVISION",
-    -5: "RPP_ERROR_HIGH_SRC_DIMENSION",
-    -6: "RPP_ERROR_NOT_IMPLEMENTED",
-    -7: "RPP_ERROR_INVALID_SRC_CHANNELS",
-    -8: "RPP_ERROR_INVALID_DST_CHANNELS",
-    -9: "RPP_ERROR_INVALID_SRC_LAYOUT",
-    -10: "RPP_ERROR_INVALID_DST_LAYOUT",
-    -11: "RPP_ERROR_INVALID_SRC_DATATYPE",
-    -12: "RPP_ERROR_INVALID_DST_DATATYPE",
-    -13: "RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE",
-    -14: "RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH",
-    -15: "RPP_ERROR_INVALID_PARAMETER_DATATYPE",
-    -16: "RPP_ERROR_NOT_ENOUGH_MEMORY",
-    -17: "RPP_ERROR_OUT_OF_BOUND_SRC_ROI",
-    -18: "RPP_ERROR_LAYOUT_MISMATCH",
-    -19: "RPP_ERROR_INVALID_CHANNELS",
-    -20: "RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH",
-    -21: "RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE",
-    -22: "RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE",
-    -23: "RPP_ERROR_INVALID_SRC_DIMS",
-    -24: "RPP_ERROR_INVALID_DST_DIMS",
-}
-
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
