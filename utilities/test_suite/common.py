@@ -46,6 +46,7 @@ imageAugmentationMap = {
     10: ["fog", "HOST", "HIP"],
     11: ["rain", "HOST", "HIP"],
     13: ["exposure", "HOST", "HIP"],
+    15: ["threshold", "HOST", "HIP"],
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
@@ -123,7 +124,7 @@ ImageAugmentationGroupMap = {
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 68],
     "data_exchange_operations" : [70, 85, 86],
-    "statistical_operations" : [87, 88, 89, 90, 91]
+    "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
