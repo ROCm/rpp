@@ -267,6 +267,58 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
 RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Threshold augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The Threshold augmentation outputs a black/white binary mask image, based on whether or not each pixel is within the user-specified pixel-range bounds, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.<br>
+ * Note: Returns a black image for below 2 cases:
+ *       1. If the minimum cutoff value greater than the maximum cutoff value for the given input in a batch.<br>
+ *       2. Values provided for minimum cutoff value, maximum cutoff value are beyond the below specified min and max values.<br>
+            Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \image html img150x150.png Sample Input
+ * \image html statistical_operations_threshold_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] minTensor minimum cutoff value (1D tensor in HOST memory, of size batchSize * channels) - minTensor ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \param [in] maxTensor maximum cutoff value (1D tensor in HOST memory, of size batchSize * channels) - maxTensor ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_threshold_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *minTensor, Rpp32f *maxTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Threshold augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The Threshold augmentation outputs a black/white binary mask image, based on whether or not each pixel is within the user-specified pixel-range bounds, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.<br>
+ * Note: Returns a black image for below 2 cases:
+ *       1. If the minimum cutoff value greater than the maximum cutoff value for the given input in a batch.<br>
+ *       2. Values provided for minimum cutoff value, maximum cutoff value are beyond the below specified min and max values.<br>
+            Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \image html img150x150.png Sample Input
+ * \image html statistical_operations_threshold_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] minTensor minimum cutoff value (1D tensor in pinned/HIP memory, of size batchSize * channels) - minTensor ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \param [in] maxTensor maximum cutoff value (1D tensor in pinned/HIP memory, of size batchSize * channels) - maxTensor ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_threshold_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *minTensor, Rpp32f *maxTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif
+
 /*! @}
  */
 

@@ -426,10 +426,21 @@ int main(int argc, char **argv)
     void *d_interDstPtr;
     if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
-    
+
     Rpp32f *perspectiveTensorPtr = NULL;
     if(testCase == WARP_PERSPECTIVE)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
+
+    Rpp32f *alpha = nullptr;
+    if(testCase == RAIN)
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
+    if(testCase == THRESHOLD)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+    }
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -713,6 +724,52 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case RAIN:
+                {
+                    testCaseName = "rain";
+
+                    Rpp32f rainPercentage = 7;
+                    Rpp32u rainHeight = 6;
+                    Rpp32u rainWidth = 1;
+                    Rpp32f slantAngle = 0;
+                    for (int i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rain_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case THRESHOLD:
+                {
+                    testCaseName = "threshold";
+                    Rpp32f normFactor = 1;
+                    Rpp32f subtractionFactor = 0;
+                    if (inputBitDepth == 1 || inputBitDepth == 2)
+                        normFactor = 255;
+                    else if (inputBitDepth == 5)
+                        subtractionFactor = 128;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
+                        {
+                            minTensor[k] = (30 / normFactor) - subtractionFactor;
+                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
+                        }
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_threshold_gpu(d_input, srcDescPtr, d_output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1655,7 +1712,7 @@ int main(int argc, char **argv)
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
                     convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-                    
+
                 // Check if the ROI values for each input is within the bounds of the max buffer allocated
                 RpptROI roiDefault;
                 RpptROIPtr roiPtrDefault = &roiDefault;
@@ -1756,5 +1813,11 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
+    if(alpha != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if (minTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(minTensor));
+    if (maxTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     return 0;
 }

@@ -324,7 +324,7 @@ else:
             run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
-nonQACaseList = ['6', '8', '10', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
+nonQACaseList = ['6', '8', '10', '11', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
