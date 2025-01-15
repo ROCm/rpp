@@ -28,12 +28,12 @@ SOFTWARE.
 
 int BLOCK_SIZE = 8;
 
-static constexpr float a = 1.387039845322148f;
-static constexpr float b = 1.306562964876377f;
-static constexpr float c = 1.175875602419359f;
-static constexpr float d = 0.785694958387102f;
-static constexpr float e = 0.541196100146197f;
-static constexpr float f = 0.275899379282943f;
+static float a = 1.387039845322148f;
+static float b = 1.306562964876377f;
+static float c = 1.175875602419359f;
+static float d = 0.785694958387102f;
+static float e = 0.541196100146197f;
+static float f = 0.275899379282943f;
 __m256 norm_factor = _mm256_set1_ps(0.3535533905932737f);
 
 inline float GetQualityScale(int quality)
@@ -95,220 +95,179 @@ void GetChromaQuantizationTable(int quality, uint8_t outputTable[BLOCK_SIZE][BLO
     ComputeQuantizationTableAVX(&baseChromaTable[0][0], scale, &outputTable[0][0]);
 }
 
-void jpeg_zigzag_avx2_float(_m256 *pVec)
+void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __m256& f, __m256& g, __m256& h)
 {
-    // Create shuffle control vectors
-    __m256i shuffleMaskA = _mm256_setr_ps(0, 1, 8, -1, 9, 2, 3, 10);
-    __m256i shuffleMaskB = _mm256_setr_ps(-1, 3, 10, -1, -1, 11, 4, 5);
-    __m256i shuffleMaskC = _mm256_setr_ps(6, 13, -1, 14, 7, -1, -1, 15);
+    __m256 ac0145 = _mm256_unpacklo_ps(a, c); // a0 c0 a1 c1 a4 c4 a5 c5
+    __m256 ac2367 = _mm256_unpackhi_ps(a, c); // a2 c2 a3 c3 a6 c6 a7 c7
+    __m256 bd0145 = _mm256_unpacklo_ps(b, d); // b0 d0 b1 d1 b4 d4 b5 d5
+    __m256 bd2367 = _mm256_unpackhi_ps(b, d); // b2 d2 b3 d3 b6 d6 b7 d7
+    __m256 eg0145 = _mm256_unpacklo_ps(e, g); // e0 g0 e1 g1 e4 g4 e5 g5
+    __m256 eg2367 = _mm256_unpackhi_ps(e, g); // e2 g2 e3 g3 e6 g6 e7 g7
+    __m256 fh0145 = _mm256_unpacklo_ps(f, h); // f0 h0 f1 h1 f4 h4 f5 h5
+    __m256 fh2367 = _mm256_unpackhi_ps(f, h); // f2 h2 f3 h3 f6 h6 f7 h7
 
-    // Shuffle input floats based on masks
-    __m256 shufA = _mm256_permutevar8x32_ps(pVec[0], shuffleMaskA);
-    __m256 shufB = _mm256_permutevar8x32_ps(pVec[0], shuffleMaskB);
-    __m256 shufC = _mm256_permutevar8x32_ps(pVec[1], shuffleMaskC);
+    __m256 abcd04 = _mm256_unpacklo_ps(ac0145, bd0145); // a0 b0 c0 d0 a4 b4 c4 d4
+    __m256 abcd15 = _mm256_unpackhi_ps(ac0145, bd0145); // a1 b1 c1 d1 a5 b5 c5 d5
+    __m256 abcd26 = _mm256_unpacklo_ps(ac2367, bd2367); // a2 b2 c2 d2 a6 b6 c6 d6
+    __m256 abcd37 = _mm256_unpackhi_ps(ac2367, bd2367); // a3 b3 c3 d3 a7 b7 c7 d7
+    __m256 efgh04 = _mm256_unpacklo_ps(eg0145, fh0145); // e0 f0 g0 h0 e4 f4 g4 h4
+    __m256 efgh15 = _mm256_unpackhi_ps(eg0145, fh0145); // e1 f1 g1 h1 e5 f5 g5 h5
+    __m256 efgh26 = _mm256_unpacklo_ps(eg2367, fh2367); // e2 f2 g2 h2 e6 f6 g6 h6
+    __m256 efgh37 = _mm256_unpackhi_ps(eg2367, fh2367); // e3 f3 g3 h3 e7 f7 g7 h7
 
-    // Combine shuffled values
-    __m256 result1 = _mm256_blend_ps(shufA, shufB, 0b10101010); // Blend alternating
-    pVec[0] = _mm256_blend_ps(result1, shufC, 0b11000000);
-
-    __m256 shufD = _mm256_permutevar8x32_ps(pVec[2], shuffleMaskA);
-    __m256 shufE = _mm256_permutevar8x32_ps(pVec[2], shuffleMaskB);
-    __m256 shufF = _mm256_permutevar8x32_ps(pVec[3], shuffleMaskC);
-
-    __m256 result3 = _mm256_blend_ps(shufD, shufE, 0b10101010);
-    pVec[1] = _mm256_blend_ps(result3, shufF, 0b11000000);
+    a = _mm256_permute2f128_ps(abcd04, efgh04, (2 << 4) | 0); //a0 b0 c0 d0 e0 f0 g0 h0
+    e = _mm256_permute2f128_ps(abcd04, efgh04, (3 << 4) | 1); //a4 b4 c4 d4 e4 f4 g4 h4
+    b = _mm256_permute2f128_ps(abcd15, efgh15, (2 << 4) | 0); //a1 b1 c1 d1 e1 f1 g1 h1
+    f = _mm256_permute2f128_ps(abcd15, efgh15, (3 << 4) | 1); //a5 b5 c5 d5 e5 f5 g5 h5
+    c = _mm256_permute2f128_ps(abcd26, efgh26, (2 << 4) | 0); //a2 b2 c2 d2 e2 f2 g2 h2
+    g = _mm256_permute2f128_ps(abcd26, efgh26, (3 << 4) | 1); //a6 b6 c6 d6 e6 f6 g6 h6
+    d = _mm256_permute2f128_ps(abcd37, efgh37, (2 << 4) | 0); //a3 b3 c3 d3 e3 f3 g3 h3
+    h = _mm256_permute2f128_ps(abcd37, efgh37, (3 << 4) | 1); //a7 b7 c7 d7 e7 f7 g7 h7
 }
 
-__m256 dct_row(__m256 x) {
-    // Constants for DCT calculation
-    __m256 c1 = _mm256_set1_ps(0.3535533906); // 1/sqrt(2)
-    __m256 c2 = _mm256_set1_ps(0.9238795325); // cos(pi/8)
-    __m256 c3 = _mm256_set1_ps(0.7071067812); // cos(2*pi/8)
-    __m256 c4 = _mm256_set1_ps(0.3826834324); // cos(3*pi/8)
-
-    // Perform DCT calculations
-    __m256 t0 = _mm256_add_ps(x, _mm256_permute2f128_ps(x, x, 0x21)); // x[0] + x[4]
-    __m256 t1 = _mm256_sub_ps(x, _mm256_permute2f128_ps(x, x, 0x21)); // x[0] - x[4]
-    __m256 t2 = _mm256_add_ps(x, _mm256_permute2f128_ps(x, x, 0x31)); // x[2] + x[6]
-    __m256 t3 = _mm256_sub_ps(x, _mm256_permute2f128_ps(x, x, 0x31)); // x[2] - x[6]
-    __m256 t4 = _mm256_add_ps(_mm256_permute2f128_ps(t0, t0, 0x21), t2); // (x[0]+x[4]) + (x[2]+x[6])
-    __m256 t5 = _mm256_sub_ps(_mm256_permute2f128_ps(t0, t0, 0x21), t2); // (x[0]+x[4]) - (x[2]+x[6])
-    __m256 t6 = _mm256_add_ps(t1, _mm256_permute2f128_ps(t3, t3, 0x21)); // (x[0]-x[4]) + (x[2]-x[6])
-    __m256 t7 = _mm256_sub_ps(t1, _mm256_permute2f128_ps(t3, t3, 0x21)); // (x[0]-x[4]) - (x[2]-x[6])
-
-    __m256 x0 = _mm256_mul_ps(t4, c1); // (x[0]+x[4]+x[2]+x[6]) * c1
-    __m256 x1 = _mm256_mul_ps(t5, c2); // (x[0]+x[4]-x[2]-x[6]) * c2
-    __m256 x2 = _mm256_mul_ps(t6, c3); // (x[0]-x[4]+x[2]-x[6]) * c3
-    __m256 x3 = _mm256_mul_ps(t7, c4); // (x[0]-x[4]-x[2]+x[6]) * c4
-
-    return _mm256_add_ps(_mm256_add_ps(x0, x1), _mm256_add_ps(x2, x3));
-}
-
-__m256 dct_col(__m256 x) {
-    // Transpose the vector for column-wise DCT
-    __m256 t0 = _mm256_unpacklo_ps(x, _mm256_setzero_ps());
-    __m256 t1 = _mm256_unpackhi_ps(x, _mm256_setzero_ps());
-    __m256 t2 = _mm256_unpacklo_ps(t1, t0); 
-
-    // Perform DCT on the transposed vector
-    return dct_row(t2);
-}
-
-// Function to perform 8x8 2D IDCT using AVX2
-__m256 idct_row(__m256 x) {
-    // Constants for IDCT calculation
-    __m256 c1 = _mm256_set1_ps(0.3535533906); // 1/sqrt(2)
-    __m256 c2 = _mm256_set1_ps(0.9238795325); // cos(pi/8)
-    __m256 c3 = _mm256_set1_ps(0.7071067812); // cos(2*pi/8)
-    __m256 c4 = _mm256_set1_ps(0.3826834324); // cos(3*pi/8)
-
-    // Perform IDCT calculations
-    __m256 t0 = _mm256_mul_ps(x, c1);
-    __m256 t1 = _mm256_mul_ps(x, c2);
-    __m256 t2 = _mm256_mul_ps(x, c3);
-    __m256 t3 = _mm256_mul_ps(x, c4);
-
-    __m256 x0 = _mm256_add_ps(_mm256_add_ps(t0, t1), _mm256_add_ps(t2, t3));
-    __m256 x1 = _mm256_sub_ps(_mm256_add_ps(t0, t1), _mm256_add_ps(t2, t3));
-    __m256 x2 = _mm256_sub_ps(_mm256_add_ps(t0, t2), _mm256_add_ps(t1, t3));
-    __m256 x3 = _mm256_sub_ps(_mm256_add_ps(t0, t3), _mm256_add_ps(t1, t2));
-
-    __m256 t4 = _mm256_add_ps(x0, x1);
-    __m256 t5 = _mm256_sub_ps(x0, x1);
-    __m256 t6 = _mm256_add_ps(x2, x3);
-    __m256 t7 = _mm256_sub_ps(x2, x3);
-
-    __m256 r0 = _mm256_add_ps(t4, t6);
-    __m256 r1 = _mm256_sub_ps(t5, _mm256_permute2f128_ps(t7, t7, 0x21));
-    __m256 r2 = _mm256_sub_ps(t5, _mm256_permute2f128_ps(t7, t7, 0x31));
-    __m256 r3 = _mm256_add_ps(t4, t7);
-
-    return _mm256_blend_ps(r0, r1, 0x55);
-}
-
-void dct_fwd_8x8_1d_avx2(__m256 *x)
+static __forceinline void fdct_8x8_llm_fma3(
+    __m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5,
+    __m256& s6, __m256& s7) noexcept
 {
-    // Temporary values (sum and difference)
-    __m256 tmp0 = _mm256_add_ps(x[0], x[7]);
-    __m256 tmp1 = _mm256_add_ps(x[1], x[6]);
-    __m256 tmp2 = _mm256_add_ps(x[2], x[5]);
-    __m256 tmp3 = _mm256_add_ps(x[3], x[4]);
+    const __m256 xr1 = _mm256_set1_ps(r1);
+    const __m256 xr2 = _mm256_set1_ps(r2);
+    const __m256 xr3 = _mm256_set1_ps(r3);
+    const __m256 xr5 = _mm256_set1_ps(r5);
+    const __m256 xr6 = _mm256_set1_ps(r6);
+    const __m256 xr7 = _mm256_set1_ps(r7);
+    const __m256 xisqrt2 = _mm256_set1_ps(isqrt2);
 
-    __m256 tmp4 = _mm256_sub_ps(x[0], x[7]);
-    __m256 tmp5 = _mm256_sub_ps(x[6], x[1]);
-    __m256 tmp6 = _mm256_sub_ps(x[2], x[5]);
-    __m256 tmp7 = _mm256_sub_ps(x[4], x[3]);
+    __m256 t0 = _mm256_add_ps(s0, s7);
+    __m256 t7 = _mm256_sub_ps(s0, s7);
+    __m256 t1 = _mm256_add_ps(s1, s6);
+    __m256 t6 = _mm256_sub_ps(s1, s6);
+    __m256 t2 = _mm256_add_ps(s2, s5);
+    __m256 t5 = _mm256_sub_ps(s2, s5);
+    __m256 t3 = _mm256_add_ps(s3, s4);
+    __m256 t4 = _mm256_sub_ps(s3, s4);
 
-    // Additional sums and differences
-    __m256 tmp8 = _mm256_add_ps(tmp0, tmp3);
-    __m256 tmp9 = _mm256_sub_ps(tmp0, tmp3);
-    __m256 tmp10 = _mm256_add_ps(tmp1, tmp2);
-    __m256 tmp11 = _mm256_sub_ps(tmp1, tmp2);
+    __m256 c0 = _mm256_add_ps(t0, t3);
+    __m256 c3 = _mm256_sub_ps(t0, t3);
+    __m256 c1 = _mm256_add_ps(t1, t2);
+    __m256 c2 = _mm256_sub_ps(t1, t2);
 
-    // Apply DCT formula (with constants a, b, c, d, e, f)
-    x[0] = _mm256_mul_ps(norm_factor, _mm256_add_ps(tmp8, tmp10));
-    x[2] = _mm256_mul_ps(norm_factor, _mm256_add_ps(
-        _mm256_mul_ps(_mm256_set1_ps(b), tmp9),
-        _mm256_mul_ps(_mm256_set1_ps(e), tmp11)
-    ));
-    x[4] = _mm256_mul_ps(norm_factor, _mm256_sub_ps(tmp8, tmp10));
-    x[6] = _mm256_mul_ps(norm_factor, _mm256_sub_ps(
-        _mm256_mul_ps(_mm256_set1_ps(e), tmp9),
-        _mm256_mul_ps(_mm256_set1_ps(b), tmp11)
-    ));
+    s0 = _mm256_add_ps(c0, c1);
+    s4 = _mm256_sub_ps(c0, c1);
+    s2 = _mm256_fmadd_ps(c2, xr6, _mm256_mul_ps(c3, xr2));
+    s6 = _mm256_fmsub_ps(c3, xr6, _mm256_mul_ps(c2, xr2));
 
-    x[1] = _mm256_mul_ps(norm_factor, _mm256_add_ps(
-        _mm256_mul_ps(_mm256_set1_ps(a), tmp4),
-        _mm256_add_ps(
-            _mm256_mul_ps(_mm256_set1_ps(-c), tmp5),
-            _mm256_add_ps(
-                _mm256_mul_ps(_mm256_set1_ps(d), tmp6),
-                _mm256_mul_ps(_mm256_set1_ps(-f), tmp7)
-            )
-        )
-    ));
+    c3 = _mm256_fmadd_ps(t4, xr3, _mm256_mul_ps(t7, xr5));
+    c0 = _mm256_fmsub_ps(t7, xr3, _mm256_mul_ps(t4, xr5));
+    c2 = _mm256_fmadd_ps(t5, xr1, _mm256_mul_ps(t6, xr7));
+    c1 = _mm256_fmsub_ps(t6, xr1, _mm256_mul_ps(t5, xr7));
 
-    x[3] = _mm256_mul_ps(norm_factor, _mm256_add_ps(
-        _mm256_mul_ps(_mm256_set1_ps(c), tmp4),
-        _mm256_add_ps(
-            _mm256_mul_ps(_mm256_set1_ps(f), tmp5),
-            _mm256_add_ps(
-                _mm256_mul_ps(_mm256_set1_ps(-a), tmp6),
-                _mm256_mul_ps(_mm256_set1_ps(d), tmp7)
-            )
-        )
-    ));
+    s3 = _mm256_sub_ps(c0, c2);
+    s5 = _mm256_sub_ps(c3, c1);
 
-    x[5] = _mm256_mul_ps(norm_factor, _mm256_add_ps(
-        _mm256_mul_ps(_mm256_set1_ps(d), tmp4),
-        _mm256_add_ps(
-            _mm256_mul_ps(_mm256_set1_ps(a), tmp5),
-            _mm256_add_ps(
-                _mm256_mul_ps(_mm256_set1_ps(f), tmp6),
-                _mm256_mul_ps(_mm256_set1_ps(-c), tmp7)
-            )
-        )
-    ));
+    c0 = _mm256_mul_ps(_mm256_add_ps(c0, c2), xisqrt2);
+    c3 = _mm256_mul_ps(_mm256_add_ps(c1, c3), xisqrt2);
 
-    x[7] = _mm256_mul_ps(norm_factor, _mm256_add_ps(
-        _mm256_mul_ps(_mm256_set1_ps(f), tmp4),
-        _mm256_add_ps(
-            _mm256_mul_ps(_mm256_set1_ps(d), tmp5),
-            _mm256_add_ps(
-                _mm256_mul_ps(_mm256_set1_ps(c), tmp6),
-                _mm256_mul_ps(_mm256_set1_ps(a), tmp7)
-            )
-        )
-    ));
+    s1 = _mm256_add_ps(c0, c3);
+    s7 = _mm256_sub_ps(c0, c3);
 }
 
-inline void rgb_to_ycbcr(__m256 *pRgb, __m256 *pYCbCr)
+
+static __forceinline void idct_8x8_llm_fma3(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5, __m256& s6, __m256& s7)
+{
+    __m256 z0 = _mm256_add_ps(s1, s7);
+    __m256 z1 = _mm256_add_ps(s3, s5);
+    __m256 z4 = _mm256_mul_ps(_mm256_add_ps(z0, z1), _mm256_set1_ps(r3));
+    __m256 z2 = _mm256_fmadd_ps(_mm256_set1_ps(-r3 - r5), _mm256_add_ps(s3, s7), z4);
+    __m256 z3 = _mm256_fmadd_ps(_mm256_set1_ps(-r3 + r5), _mm256_add_ps(s1, s5), z4);
+    z0 = _mm256_mul_ps(z0, _mm256_set1_ps(-r3 + r7));
+    z1 = _mm256_mul_ps(z1, _mm256_set1_ps(-r3 - r1));
+
+    __m256 b3 = _mm256_fmadd_ps(s7, _mm256_set1_ps(-r1 + r3 + r5 - r7), _mm256_add_ps(z0, z2));
+    __m256 b2 = _mm256_fmadd_ps(s5, _mm256_set1_ps(r1 + r3 - r5 + r7), _mm256_add_ps(z1, z3));
+    __m256 b1 = _mm256_fmadd_ps(s3, _mm256_set1_ps(r1 + r3 + r5 - r7), _mm256_add_ps(z1, z2));
+    __m256 b0 = _mm256_fmadd_ps(s1, _mm256_set1_ps(r1 + r3 - r5 - r7), _mm256_add_ps(z0, z3));
+
+    z0 = _mm256_add_ps(s0, s4);
+    z1 = _mm256_sub_ps(s0, s4);
+    z4 = _mm256_mul_ps(_mm256_add_ps(s2, s6), _mm256_set1_ps(r6));
+
+    z2 = _mm256_sub_ps(z4, _mm256_mul_ps(s6, _mm256_set1_ps(r2 + r6)));
+    z3 = _mm256_fmadd_ps(s2, _mm256_set1_ps(r2 - r6), z4);
+
+    __m256 a0 = _mm256_add_ps(z0, z3);
+    __m256 a3 = _mm256_sub_ps(z0, z3);
+    __m256 a1 = _mm256_add_ps(z1, z2);
+    __m256 a2 = _mm256_sub_ps(z1, z2);
+
+    s0 = _mm256_add_ps(a0, b0);
+    s7 = _mm256_sub_ps(a0, b0);
+    s1 = _mm256_add_ps(a1, b1);
+    s6 = _mm256_sub_ps(a1, b1);
+    s2 = _mm256_add_ps(a2, b2);
+    s5 = _mm256_sub_ps(a2, b2);
+    s3 = _mm256_add_ps(a3, b3);
+    s4 = _mm256_sub_ps(a3, b3);
+}
+
+inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m256 *pCr)
 {
     // Coefficients for Y channel
-    const __m256 coeffY_R = _mm256_set1_ps(0.299f);
-    const __m256 coeffY_G = _mm256_set1_ps(0.587f);
-    const __m256 coeffY_B = _mm256_set1_ps(0.114f);
+     __m256 coeffY_R = _mm256_set1_ps(0.299f);
+     __m256 coeffY_G = _mm256_set1_ps(0.587f);
+     __m256 coeffY_B = _mm256_set1_ps(0.114f);
 
     // Coefficients for Cb channel
-    const __m256 coeffCb_R = _mm256_set1_ps(-0.168736f);
-    const __m256 coeffCb_G = _mm256_set1_ps(-0.331264f);
-    const __m256 coeffCb_B = _mm256_set1_ps(0.5f);
+     __m256 coeffCb_R = _mm256_set1_ps(-0.168736f);
+     __m256 coeffCb_G = _mm256_set1_ps(-0.331264f);
+     __m256 coeffCb_B = _mm256_set1_ps(0.5f);
 
     // Coefficients for Cr channel
-    const __m256 coeffCr_R = _mm256_set1_ps(0.5f);
-    const __m256 coeffCr_G = _mm256_set1_ps(-0.418688f);
-    const __m256 coeffCr_B = _mm256_set1_ps(-0.081312f);
-
-    const __m256 offset = _mm256_set1_ps(128.0f);
+    __m256 coeffCr_R = _mm256_set1_ps(0.5f);
+    __m256 coeffCr_G = _mm256_set1_ps(-0.418688f);
+    __m256 coeffCr_B = _mm256_set1_ps(-0.081312f);
+    __m256 offset = _mm256_set1_ps(128.0f);
 
     for(int i = 0; i < 16; i++)
     {
         int idx = i * 6;
+        int idx1 = i * 2;
         // Compute Y
-        __m256 pY[i] = _mm256_add_ps(
+        pY[idx1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx], coeffY_R), _mm256_mul_ps(pRgb[idx + 2], coeffY_G)),
             _mm256_mul_ps(pRgb[idx + 4], coeffY_B));
-        __m256 pY[i + 16] = _mm256_add_ps(
+        pY[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffY_R), _mm256_mul_ps(pRgb[idx + 3], coeffY_G)),
             _mm256_mul_ps(pRgb[5], coeffY_B));
 
         // Compute Cb
-        __m256 pCb[i] = _mm256_add_ps(
+        pCb[idx1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx], coeffCb_R), _mm256_mul_ps(pRgb[idx + 2], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 4], coeffCb_B), offset));
-        __m256 pCb[i + 16] = _mm256_add_ps(
+        pCb[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCb_R), _mm256_mul_ps(pRgb[idx + 3], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCb_B), offset));
 
         // Compute Cr
-        __m256 pCr[i] = _mm256_add_ps(
+        pCr[idx1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx], coeffCr_R), _mm256_mul_ps(pRgb[idx + 2], coeffCr_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 4], coeffCr_B), offset));
-        __m256 pCr[i + 16] = _mm256_add_ps(
+        pCr[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCr_R), _mm256_mul_ps(pRgb[idx + 3], coeffCr_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCr_B), offset));
-    }
 
+        __m256 cbTemp = _mm256_hadd_ps(pCb[idx1], pCb[idx1 + 1]);
+        cbTemp = _mm256_permutevar8x32_ps(cbTemp, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+        __m256 crTemp = _mm256_hadd_ps(pCr[idx1], pCr[idx1 + 1]);
+        crTemp = _mm256_permutevar8x32_ps(crTemp, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
+        pCb[i] = _mm256_mul_ps(cbTemp, _mm256_set1_ps(0.5));
+        pCr[i] = _mm256_mul_ps(crTemp, _mm256_set1_ps(0.5));
+    }
+    for(int i = 0; i < 8; i++)
+    {
+        int idx = i * 2;
+        pCb[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
+        pCr[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
+    }
 }
 
 RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -369,12 +328,10 @@ RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
 #if __AVX2__
                     __m256 pRgb[96];
-                    __m256 pYCbCr[96];
+                    __m256 pY[32], pCb[32], pCr[32];
                     for(int row = 0; row < 16; row++)
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp, pRgb[row * 6]);                                 // simd loads
-                    rgb_to_ycbcr(pRgb, y, cb, cr);
-                    for(int row = 0; row < 16; row++)
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp, pRgb[row * 6]);
+                    rgb_to_ycbcr(pRgb, pY, pCb, pCr);
                     dct_fwd_8x8_1d_avx2(pY[0], p)
                 }
 #endif
