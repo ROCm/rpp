@@ -272,7 +272,7 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '5', '6', '8', '10', '13', '15', '20', '21', '23', '24', '26', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
+supportedCaseList = ['0', '1', '2', '4', '5', '6', '8', '10', '11', '13', '15', '20', '21', '23', '24', '26', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -478,7 +478,7 @@ if (testType == 1 and profilingOption == "NO"):
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 # print the results of qa tests
-nonQACaseList = ['6', '8', '10', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
+nonQACaseList = ['6', '8', '10', '11', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
