@@ -141,7 +141,7 @@ enum Augmentation {
     COLOR_CAST = 31,
     ERASE = 32,
     CROP_AND_PATCH = 33,
-    LUT = 34,
+    LOOK_UP_TABLE = 34,
     GLITCH = 35,
     COLOR_TWIST = 36,
     CROP = 37,

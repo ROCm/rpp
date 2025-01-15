@@ -1012,7 +1012,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case LUT:
+                case LOOK_UP_TABLE:
                 {
                     testCaseName = "lut";
 
