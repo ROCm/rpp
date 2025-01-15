@@ -2011,7 +2011,7 @@ int main(int argc, char **argv)
 
     cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     // Free memory
 

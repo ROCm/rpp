@@ -3131,7 +3131,7 @@ int main(int argc, char **argv)
             cout << "Unable to open file!";
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     mkdir(dst, 0700);
     strcat(dst, "/");

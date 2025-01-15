@@ -2128,7 +2128,7 @@ int main(int argc, char **argv)
         roiTensorPtrSrc[i].xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.xy.y);
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump
 

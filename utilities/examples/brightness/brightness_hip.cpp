@@ -405,7 +405,7 @@ int main(int argc, char **argv)
         if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
             convert_pln3_to_pkd3(outputu8, dstDescPtr);
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump (if testType is unit test and QA mode is not set)
     write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);

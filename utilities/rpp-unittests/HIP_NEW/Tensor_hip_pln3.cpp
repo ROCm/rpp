@@ -2387,7 +2387,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump
 

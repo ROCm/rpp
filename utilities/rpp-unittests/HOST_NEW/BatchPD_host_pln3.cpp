@@ -3695,7 +3695,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     mkdir(dst, 0700);
     strcat(dst, "/");

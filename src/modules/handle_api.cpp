@@ -51,7 +51,7 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
     {
         return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
     }
-    else if(backend == RppBackend::RPP_HIP_BACKEND)
+    else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
     {
 #if GPU_SUPPORT
         return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
@@ -61,11 +61,6 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
     {
         return rppStatusNotImplemented;
     }
-}
-
-extern "C" rppStatus_t rppDestroyHost(rppHandle_t handle)
-{
-    return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
 }
 
 extern "C" rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize)
@@ -80,10 +75,6 @@ extern "C" rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize)
 
 #if GPU_SUPPORT
 
-extern "C" rppStatus_t rppDestroyGPU(rppHandle_t handle)
-{
-    return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
-}
 extern "C" rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID)
 {
     return rpp::try_([&] { rpp::deref(streamID) = rpp::deref(handle).GetStream(); });

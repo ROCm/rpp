@@ -138,24 +138,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatc
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
 
-/*! \brief Destory RPP HOST handle - To be deprecated.
- * \details Function to destroy a RPP handle's host memory allocation. To be called in the end to break down the rpp environment.
- * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- * \deprecated
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppDestroyHost(rppHandle_t handle);
-
 /*! \brief Set batch size given a RPP handle.
  * \details Function to set batch size for handle previously created.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
@@ -193,23 +175,6 @@ extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t 
 extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
 #if GPU_SUPPORT
-
-/*! \brief Destory RPP GPU handle.
- * \details Function to destroy a RPP handle's device memory allocation. To be called in the end to break down the RPP environment.
- * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \ingroup group_rpp
- * \return A <tt> \ref rppStatus_t</tt> enumeration.
- * \retval rppStatusSuccess
- * \retval rppStatusNotInitialized
- * \retval rppStatusInvalidValue
- * \retval rppStatusBadParm
- * \retval rppStatusAllocFailed
- * \retval rppStatusInternalError
- * \retval rppStatusNotImplemented
- * \retval rppStatusUnknownError
- * \retval rppStatusUnsupportedOp
- */
-extern "C" SHARED_PUBLIC rppStatus_t rppDestroyGPU(rppHandle_t handle);
 
 /*! \brief Get accelerator stream given a RPP handle.
  * \details Function to get an accelerator stream previously created.

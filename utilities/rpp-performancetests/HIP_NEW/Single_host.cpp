@@ -569,7 +569,7 @@ int main(int argc, char **argv)
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
     cout << " Single : " << cpu_time_used << endl;
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     unsigned long long count3 = 0;
     for (j = 0; j < noOfImages; j++)

@@ -3377,7 +3377,7 @@ int main(int argc, char **argv)
     avg_time_used /= 100;
     cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     free(srcSize);
     free(dstSize);

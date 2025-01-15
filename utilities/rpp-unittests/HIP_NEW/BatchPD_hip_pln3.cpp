@@ -3496,7 +3496,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     mkdir(dst, 0700);
     strcat(dst, "/");

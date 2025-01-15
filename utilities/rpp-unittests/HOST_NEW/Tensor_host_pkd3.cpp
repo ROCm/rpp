@@ -2122,7 +2122,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump
 
