@@ -44,8 +44,8 @@ void log_recursive(T1 *src, Rpp32u *srcStrides, T2 *dst, Rpp32u *dstStrides, Rpp
         for (int i = 0; i < *dstShape; i++)
         {
             log_recursive(src, srcStrides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1);
-            dst += *dstStrides;
-            src += *srcStrides;
+            dst += *(dstStrides + 1);
+            src += *(srcStrides + 1);
         }
     }
 }
