@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84 || testCase == 49 || testCase == 54);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 11 || testCase == 84 || testCase == 49 || testCase == 54);
     bool nonQACase = (testCase == 24 || testCase == 28 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
@@ -427,10 +427,14 @@ int main(int argc, char **argv)
     void *d_interDstPtr;
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
-    
+
     Rpp32f *perspectiveTensorPtr = NULL;
     if(testCase == 28)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
+
+    Rpp32f *alpha = nullptr;
+    if(testCase == 11)
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
     if(testCase == 15)
@@ -705,6 +709,25 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 11:
+                {
+                    testCaseName = "rain";
+
+                    Rpp32f rainPercentage = 7;
+                    Rpp32u rainHeight = 6;
+                    Rpp32u rainWidth = 1;
+                    Rpp32f slantAngle = 0;
+                    for (int i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rain_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1690,7 +1713,7 @@ int main(int argc, char **argv)
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
                     convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-                    
+
                 // Check if the ROI values for each input is within the bounds of the max buffer allocated
                 RpptROI roiDefault;
                 RpptROIPtr roiPtrDefault = &roiDefault;
@@ -1791,6 +1814,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
+    if(alpha != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
     if (minTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
