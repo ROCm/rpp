@@ -17,14 +17,14 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     }
     else if (platform.jenkinsLabel.contains('ubuntu')) {
         enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
-        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
         if (platform.jenkinsLabel.contains('ubuntu20')) {
             backend = 'OCL'
         }
     }
     else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install -y libsndfile-devel'
-        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
     
 
