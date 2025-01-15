@@ -1,15 +1,24 @@
 .. meta::
-  :description: ROCm Performance Primitives (RPP) supported functionalities
-  :keywords: RPP, ROCm, Performance Primitives, documentation, support, functionalities, audio, image
+  :description: What is RPP
+  :keywords: RPP, ROCm, Performance Primitives, documentation
+
+.. _what-is:
 
 ********************************************************************
-ROCm Performance Primitives supported functionalities and variants
+What is RPP?
 ********************************************************************
 
-The following tables show the CPU and GPU support for ROCm Performance Primitives (RPP) functionalities and variants. 
+AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
+vision library for AMD processors that have HIP, OpenCL, or CPU backends.
 
-CPU support is also referred to as HOST support.
+.. image:: ./data/rpp_structure_4.png
+  :alt: RPP Functions
 
+Supported functionalities and variants
+==========================================
+
+The following tables show the CPU and GPU support for various RPP functionalities and variants. You
+can view image samples following the tables.
 
 Image augmentations
 -----------------------------------------------------------------------------------------------
@@ -190,17 +199,20 @@ Computer vision
   "tensor matrix multiply", "✅", "✅"
   "tensor transpose", "✅", "✅"
 
-Audio
------------------------------------------------------------------------------------------------
+Image examples
+---------------------------------------------------------------
 
-.. csv-table::
-  :widths: 7, 3, 3
-  :header: "Type", "CPU", "GPU"
+.. image:: ./data/supported_functionalities_samples.jpg
+  :alt: Supported function samples
 
-  "non Silent Region Detection", "✅", "✅"
-  "to Decibels", "✅", "✅"  
-  "downmixing", "✅", "✅"
-  "pre-emphasis Filter", "✅", "✅"
-  "resample", "✅", "✅"
-  "mel Filter Bank", "✅", "✅"
-  "spectrogram", "✅", "✅"
+3D images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following is an example of a 3D medical image before and after ``fused_multiply_add_scalar``.
+
+.. list-table::
+
+  * - Original image
+    - Modified image
+  * - .. image:: ./data/niftiInput.gif
+    - .. image:: ./data/niftiOutputBrightened.gif

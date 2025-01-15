@@ -8,25 +8,13 @@ subtrees:
 
 - caption: Install
   entries:
-  - file: install/rpp-prerequisites.rst
-    title: RPP prerequisites
-  - file: install/rpp-install.rst
+  - file: install/install.rst
     title: Install RPP
-  - file: install/rpp-install-with-installer.rst
-    title: Install RPP with package installer 
-  - file: install/rpp-build-and-install.rst
-    title: Build and install RPP from source  
-  - file: install/rpp-verify-install.rst
-    title: Verify the RPP installation
 
 - caption: Reference
   entries:
-  - file: reference/rpp-supported-functionalities.rst
-    title: Supported functionalities and variants
-  - file: reference/rpp-supported-func-and-var-examples.rst
-    title: Functionality and variant example outputs
-  - file: reference/rpp-api-reference.rst
-    title: RPP API reference
+  - file: doxygen/html/globals
+    title: API library
     subtrees:
     - entries:
       - file: doxygen/html/files
