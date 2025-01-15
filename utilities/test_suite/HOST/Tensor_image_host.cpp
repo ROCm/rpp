@@ -64,8 +64,8 @@ int main(int argc, char **argv)
     bool kernelSizeCase = (testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 84);
-    bool nonQACase = (testCase == 24 || testCase == 28);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
+    bool nonQACase = (testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -655,6 +655,27 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 11:
+                {
+                    testCaseName = "rain";
+
+                    Rpp32f rainPercentage = 7;
+                    Rpp32u rainHeight = 6;
+                    Rpp32u rainWidth = 1;
+                    Rpp32f slantAngle = 0;
+                    Rpp32f alpha[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 13:
                 {
                     testCaseName = "exposure";
@@ -667,6 +688,38 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 15:
+                {
+                    testCaseName = "threshold";
+                    
+                    Rpp32f minTensor[batchSize * srcDescPtr->c];
+                    Rpp32f maxTensor[batchSize * srcDescPtr->c];
+                    Rpp32f normFactor = 1;
+                    Rpp32f subtractionFactor = 0;
+
+                    if (inputBitDepth == 1 || inputBitDepth == 2)
+                        normFactor = 255;
+                    else if (inputBitDepth == 5)
+                        subtractionFactor = 128;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
+                        {
+                            minTensor[k] = (30 / normFactor) - subtractionFactor;
+                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
+                        }
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_threshold_host(input, srcDescPtr, output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
