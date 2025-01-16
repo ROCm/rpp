@@ -164,7 +164,9 @@ typedef enum
     /*! \brief Number of src dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_SRC_DIMS          = -23,
     /*! \brief Number of dst dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DST_DIMS          = -24
+    RPP_ERROR_INVALID_DST_DIMS          = -24,
+    /*! \brief Cpp API functionality is not implemented. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_CPP_API_NOT_IMPLEMENTED    = -25
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums

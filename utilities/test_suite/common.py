@@ -130,6 +130,35 @@ ImageAugmentationGroupMap = {
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
+StatusMap = {
+    0: "RPP_SUCCESS",
+    -1: "RPP_ERROR",
+    -2: "RPP_ERROR_INVALID_ARGUMENTS",
+    -3: "RPP_ERROR_LOW_OFFSET",
+    -4: "RPP_ERROR_ZERO_DIVISION",
+    -5: "RPP_ERROR_HIGH_SRC_DIMENSION",
+    -6: "RPP_ERROR_NOT_IMPLEMENTED",
+    -7: "RPP_ERROR_INVALID_SRC_CHANNELS",
+    -8: "RPP_ERROR_INVALID_DST_CHANNELS",
+    -9: "RPP_ERROR_INVALID_SRC_LAYOUT",
+    -10: "RPP_ERROR_INVALID_DST_LAYOUT",
+    -11: "RPP_ERROR_INVALID_SRC_DATATYPE",
+    -12: "RPP_ERROR_INVALID_DST_DATATYPE",
+    -13: "RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE",
+    -14: "RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH",
+    -15: "RPP_ERROR_INVALID_PARAMETER_DATATYPE",
+    -16: "RPP_ERROR_NOT_ENOUGH_MEMORY",
+    -17: "RPP_ERROR_OUT_OF_BOUND_SRC_ROI",
+    -18: "RPP_ERROR_LAYOUT_MISMATCH",
+    -19: "RPP_ERROR_INVALID_CHANNELS",
+    -20: "RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH",
+    -21: "RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE",
+    -22: "RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE",
+    -23: "RPP_ERROR_INVALID_SRC_DIMS",
+    -24: "RPP_ERROR_INVALID_DST_DIMS",
+    -25: "RPP_ERROR_CPP_API_NOT_IMPLEMENTED",
+}
+
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
@@ -458,6 +487,10 @@ def get_signal_name_from_return_code(returnCode):
                 signalName = signame
                 break
         result = result + signalName
+    elif( returnCode > 127):
+        signalNum = returnCode - 256
+        if signalNum in StatusMap.keys():
+            result = result + " Error = " +StatusMap[signalNum]
     return result
 
 def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
@@ -465,6 +498,9 @@ def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificN
     print(stdoutData.decode())
     exitCode = result.returncode
     if(exitCode != 0):
-        errorData = "Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode();
+        if exitCode > 127:
+            errorData = "Returned non-zero exit status : "+ str(exitCode - 256) + " " + stderrData.decode()
+        else:
+            errorData = "Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode()
         msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + get_signal_name_from_return_code(exitCode)
         errorLog.append(msg)
