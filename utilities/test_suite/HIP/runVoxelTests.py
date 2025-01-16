@@ -39,7 +39,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 6
-errorLog = []
+errorLog = [{"notExecutedFunctionality" : 0}]
 
 def get_log_file_list(preserveOutput):
     return [
@@ -361,8 +361,10 @@ elif (testType == 1 and profilingOption == "NO"): # Performance tests
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
-if errorLog:
+if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     print("\n---------------------------------- Log of function variants requested but not run - Tensor_voxel_hip  ----------------------------------\n")
-    for error in errorLog:
-        print(error)
+    for i in range(1,len(errorLog)):
+        print(errorLog[i])
+    if(errorLog[0]["notExecutedFunctionality"] != 0):
+        print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_voxel_hip were not executed since these sub-variants are not currently supported in RPP.\n")
     print("-----------------------------------------------------------------------------------------------")
