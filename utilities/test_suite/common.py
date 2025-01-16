@@ -497,9 +497,12 @@ def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificN
     print(stdoutData.decode())
     exitCode = result.returncode
     if(exitCode != 0):
-        if exitCode > 127:
-            errorData = "Returned non-zero exit status : " + str(exitCode - 256) + " " + stderrData.decode()
+        if exitCode == 250:
+            errorLog[0]["notExecutedFunctionality"] += 1
         else:
-            errorData = "Returned non-zero exit status : " + str(exitCode) + " " + stderrData.decode()
-        msg = caseName + functionBitDepth + functionSpecificName + " - " + errorData + get_signal_name_from_return_code(exitCode)
-        errorLog.append(msg)
+            if exitCode > 127:
+                errorData = "Returned non-zero exit status : " + str(exitCode - 256) + " " + stderrData.decode()
+            else:
+                errorData = "Returned non-zero exit status : " + str(exitCode) + " " + stderrData.decode()
+            msg = caseName + functionBitDepth + functionSpecificName + " - " + errorData + get_signal_name_from_return_code(exitCode)
+            errorLog.append(msg)

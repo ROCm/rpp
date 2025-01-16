@@ -37,7 +37,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 7
-errorLog = []
+errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -211,9 +211,11 @@ if (testType == 1):
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
 
-if errorLog:
+if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     print("\n---------------------------------- Log of function variants requested but not run - Tensor_audio_host ----------------------------------\n")
-    for error in errorLog:
-        print(error)
+    for i in range(1,len(errorLog)):
+        print(errorLog[i])
+    if(errorLog[0]["notExecutedFunctionality"] != 0):
+        print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_audio_host were not executed since these sub-variants are not currently supported in RPP.\n")
     print("-----------------------------------------------------------------------------------------------")
 
