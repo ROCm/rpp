@@ -1065,26 +1065,29 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     std::string binFile = func + "Tensor";
-    if(dstDescPtr->layout == RpptLayout::NHWC)
+    if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
     else
     {
-        if (dstDescPtr->c == 3)
+        if (srcDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
+            func += "Tensor_PLN1";
+    }
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        func += "_to_PKD3";
+    else
+    {
+        if (dstDescPtr->c == 3)
+            func += "_to_PLN3";
+        else
         {
+            func += "_to_PLN1";
             if(testCase == COLOR_TO_GREYSCALE)
-            {
-                if(srcDescPtr->layout == RpptLayout::NHWC)
-                    func += "Tensor_PKD3";
-                else
-                    func += "Tensor_PLN3";
                 pln1RefStride = 0;
-            }
-            else
-                func += "Tensor_PLN1";
         }
     }
+
     if(testCase == RESIZE ||testCase == ROTATE || testCase == WARP_AFFINE || testCase == WARP_PERSPECTIVE || testCase == REMAP)
     {
         func += "_interpolationType" + interpolationTypeName;
