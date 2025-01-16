@@ -37,7 +37,7 @@ __global__ void exclusive_or_pkd_hip_tensor(Rpp8u *srcPtr1,
     exclusive_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
     exclusive_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
     exclusive_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
-    rpp_hip_load24_pkd3_and_unpack_to_uchar24_pkd3(dstPtr + dstIdx, &dst_uc24);
+    rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_uc24);
 }
 
 __global__ void exclusive_or_pln_hip_tensor(Rpp8u *srcPtr1,
@@ -108,7 +108,7 @@ __global__ void exclusive_or_pkd3_pln3_hip_tensor(Rpp8u *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    d_float24 src1_uc24, src2_uc24, dst_uc24;
+    d_uchar24 src1_uc24, src2_uc24, dst_uc24;
 
     rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr1 + srcIdx, &src1_uc24);
     rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr2 + srcIdx, &src2_uc24);
