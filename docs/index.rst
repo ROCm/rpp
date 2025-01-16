@@ -6,30 +6,31 @@
 ROCm Performance Primitives documentation
 ********************************************************************
 
-AMD ROCm Performance Primitives (RPP) is a comprehensive, high-performance computer vision
-library for AMD processors that have HIP, OpenCL, or CPU backends. For more information, refer to
-:doc:`./what-is-rpp`
+AMD ROCm Performance Primitives (RPP) is a high-performance computer vision
+library for AMD processors that have HIP, OpenCL, or CPU backends. RPP provides a way to utilize all the hardware available for training and augmentation.
 
-Our code is open and hosted at `https://github.com/ROCm/rpp <https://github.com/ROCm/rpp>`_.
-
-The RPP documentation is structured as follows:
+The RPP public repository is located at `https://github.com/ROCm/rpp <https://github.com/ROCm/rpp>`_.
 
 .. grid:: 2
   :gutter: 3
 
   .. grid-item-card:: Install
 
-    * :doc:`Install RPP <./install/install>`
+    * :doc:`RPP prerequisites <./install/rpp-prerequisites>`
+    * :doc:`Installing RPP <./install/rpp-install>`
+    * :doc:`Installing RPP with the package installer <./install/rpp-install-with-installer>`
+    * :doc:`Building and installing RPP from source <./install/rpp-build-and-install>`
+    * :doc:`Verifying the RPP installation <./install/rpp-verify-install>`
 
   .. grid-item-card:: Reference
 
+    * :doc:`Supported RPP functionalities and variants <./reference/rpp-supported-functionalities>`
     * :doc:`API library <./doxygen/html/globals>`
 
       * :doc:`Modules <./doxygen/html/files>`
       * :doc:`Data structures <./doxygen/html/annotated>`
       * :doc:`Deprecated functions <./doxygen/html/deprecated>`
 
-To contribute to the documentation refer to
-:doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
+To contribute to the documentation refer to :doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
 
 You can find licensing information on the :doc:`Licensing <rocm:about/license>` page.
