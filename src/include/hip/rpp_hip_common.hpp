@@ -1249,6 +1249,67 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
     *(d_half24 *)dstPtr = dst_h24;
 }
 
+//Storing from shared mem
+
+__device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar *dstPtr, float **srcPtrs_uc8)
+{
+    // Cast input float pointers
+    d_float8 *srcPtrR_f8, *srcPtrG_f8, *srcPtrB_f8;
+    srcPtrR_f8 = (d_float8 *)srcPtrs_uc8[0];
+    srcPtrG_f8 = (d_float8 *)srcPtrs_uc8[1];
+    srcPtrB_f8 = (d_float8 *)srcPtrs_uc8[2];
+// printf("rpp_hip_pack_float24_pln3_and_store24_pkd3" __FILE__);
+    // Create output structure
+    d_uchar24 dst_uc24;
+
+    // Scale factor to convert back to uchar range [0,255]
+    const float scale = 1.0f;
+    // Load R channel values and store in interleaved format
+
+    dst_uc24.uc1[ 0] = (uchar)(srcPtrR_f8->f4[0].x * scale);
+    dst_uc24.uc1[ 3] = (uchar)(srcPtrR_f8->f4[0].y * scale);
+    dst_uc24.uc1[ 6] = (uchar)(srcPtrR_f8->f4[0].z * scale);
+    dst_uc24.uc1[ 9] = (uchar)(srcPtrR_f8->f4[0].w * scale);
+    dst_uc24.uc1[12] = (uchar)(srcPtrR_f8->f4[1].x * scale);
+    dst_uc24.uc1[15] = (uchar)(srcPtrR_f8->f4[1].y * scale);
+    dst_uc24.uc1[18] = (uchar)(srcPtrR_f8->f4[1].z * scale);
+    dst_uc24.uc1[21] = (uchar)(srcPtrR_f8->f4[1].w * scale);
+    
+    // Load G channel values and store in interleaved format
+
+    dst_uc24.uc1[ 1] = (uchar)(srcPtrG_f8->f4[0].x * scale);
+    dst_uc24.uc1[ 4] = (uchar)(srcPtrG_f8->f4[0].y * scale);
+    dst_uc24.uc1[ 7] = (uchar)(srcPtrG_f8->f4[0].z * scale);
+    dst_uc24.uc1[10] = (uchar)(srcPtrG_f8->f4[0].w * scale);
+    dst_uc24.uc1[13] = (uchar)(srcPtrG_f8->f4[1].x * scale);
+    dst_uc24.uc1[16] = (uchar)(srcPtrG_f8->f4[1].y * scale);
+    dst_uc24.uc1[19] = (uchar)(srcPtrG_f8->f4[1].z * scale);
+    dst_uc24.uc1[22] = (uchar)(srcPtrG_f8->f4[1].w * scale);
+    
+    // Load B channel values and store in interleaved format
+
+    dst_uc24.uc1[ 2] = (uchar)(srcPtrB_f8->f4[0].x * scale);
+    dst_uc24.uc1[ 5] = (uchar)(srcPtrB_f8->f4[0].y * scale);
+    dst_uc24.uc1[ 8] = (uchar)(srcPtrB_f8->f4[0].z * scale);
+    dst_uc24.uc1[11] = (uchar)(srcPtrB_f8->f4[0].w * scale);
+    dst_uc24.uc1[14] = (uchar)(srcPtrB_f8->f4[1].x * scale);
+    dst_uc24.uc1[17] = (uchar)(srcPtrB_f8->f4[1].y * scale);
+    dst_uc24.uc1[20] = (uchar)(srcPtrB_f8->f4[1].z * scale);
+    dst_uc24.uc1[23] = (uchar)(srcPtrB_f8->f4[1].w * scale);
+
+    // Store the final packed result
+    *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)&dst_uc24;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar *dstPtr, float **srcPtrs_uc8)
+{
+}
+__device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half *dstPtr, float **srcPtrs_uc8)
+{
+}
+__device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float *dstPtr, float **srcPtrs_uc8)
+{
+}
 // U8 stores with layout toggle PKD3 to PLN3 (24 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint increment, d_float24 *dstPtr_f24)
@@ -1455,23 +1516,37 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
     srcPtrR_f8 = (d_float8 *)srcPtrs_f8[0];
     srcPtrG_f8 = (d_float8 *)srcPtrs_f8[1];
     srcPtrB_f8 = (d_float8 *)srcPtrs_f8[2];
-    // std::cout<< src_uc24.uc1[ 0] << src_uc24.uc1[ 3]<< std::endl;
-    printf("\n Zer %d One %d  Two %d Thre %d ",src_uc24.uc1[ 0] ,src_uc24.uc1[ 1], src_uc24.uc1[ 2], src_uc24.uc1[ 3]);
-    srcPtrR_f8->f4[0] = make_float4(src_uc24.uc1[ 0], src_uc24.uc1[ 3], src_uc24.uc1[ 6], src_uc24.uc1[ 9]);    // write R00-R03
-    srcPtrR_f8->f4[1] = make_float4(src_uc24.uc1[12], src_uc24.uc1[15], src_uc24.uc1[18], src_uc24.uc1[21]);    // write R04-R07
-    srcPtrG_f8->f4[0] = make_float4(src_uc24.uc1[ 1], src_uc24.uc1[ 4], src_uc24.uc1[ 7], src_uc24.uc1[10]);    // write G00-G03
-    srcPtrG_f8->f4[1] = make_float4(src_uc24.uc1[13], src_uc24.uc1[16], src_uc24.uc1[19], src_uc24.uc1[22]);    // write G04-G07
-    srcPtrB_f8->f4[0] = make_float4(src_uc24.uc1[ 2], src_uc24.uc1[ 5], src_uc24.uc1[ 8], src_uc24.uc1[11]);    // write B00-B03
-    srcPtrB_f8->f4[1] = make_float4(src_uc24.uc1[14], src_uc24.uc1[17], src_uc24.uc1[20], src_uc24.uc1[23]);
-    // printf("\n Fl: Zer %lf One %lf  Two %lf Thre %lf ",srcPtrG_f8->f4[0] ,srcPtrG_f8->f1[ 1], srcPtrB_f8->f1[ 2], srcPtrR_f8->f1[ 3]);
+
+    const float scale = 1.0f ;
+    
+    srcPtrR_f8->f4[0] = make_float4(src_uc24.uc1[ 0] * scale, src_uc24.uc1[ 3] * scale, 
+                                   src_uc24.uc1[ 6] * scale, src_uc24.uc1[ 9] * scale);    // write R00-R03
+    srcPtrR_f8->f4[1] = make_float4(src_uc24.uc1[12] * scale, src_uc24.uc1[15] * scale, 
+                                   src_uc24.uc1[18] * scale, src_uc24.uc1[21] * scale);    // write R04-R07
+    
+    srcPtrG_f8->f4[0] = make_float4(src_uc24.uc1[ 1] * scale, src_uc24.uc1[ 4] * scale, 
+                                   src_uc24.uc1[ 7] * scale, src_uc24.uc1[10] * scale);    // write G00-G03
+    srcPtrG_f8->f4[1] = make_float4(src_uc24.uc1[13] * scale, src_uc24.uc1[16] * scale, 
+                                   src_uc24.uc1[19] * scale, src_uc24.uc1[22] * scale);    // write G04-G07
+    
+    srcPtrB_f8->f4[0] = make_float4(src_uc24.uc1[ 2] * scale, src_uc24.uc1[ 5] * scale, 
+                                   src_uc24.uc1[ 8] * scale, src_uc24.uc1[11] * scale);    // write B00-B03
+    srcPtrB_f8->f4[1] = make_float4(src_uc24.uc1[14] * scale, src_uc24.uc1[17] * scale, 
+                                   src_uc24.uc1[20] * scale, src_uc24.uc1[23] * scale);    // write B04-B07
 }
+// For signed char implementation
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f8)
 {
 
 }
+
+// For half precision implementation
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f8)
 {
+   
 }
+
+// To store from the shared memory
 
 // I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
 
