@@ -301,7 +301,7 @@ elif testType == 1 and profilingOption == "YES":
         print("Unable to open results in " + CONSOLIDATED_FILE)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_audio_hip ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_audio_hip  ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")

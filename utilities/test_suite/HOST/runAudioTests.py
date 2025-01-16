@@ -212,7 +212,7 @@ if (testType == 1):
         print_performance_tests_summary(log_file, "", numRuns)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_audio_host ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_audio_host ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")

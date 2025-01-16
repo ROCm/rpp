@@ -290,7 +290,7 @@ if (testType == 1 and profilingOption == "NO"):
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_misc_hip ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_misc_hip  ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")
