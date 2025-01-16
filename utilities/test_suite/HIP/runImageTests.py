@@ -496,7 +496,7 @@ if qaMode and testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_image_hip ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_hip  ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")

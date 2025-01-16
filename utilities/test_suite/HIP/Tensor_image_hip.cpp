@@ -1582,7 +1582,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return RPP_ERROR_CPP_API_NOT_IMPLEMENTED;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             maxWallTime = max(maxWallTime, wallTime);

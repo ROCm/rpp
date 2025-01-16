@@ -156,7 +156,6 @@ StatusMap = {
     -22: "RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE",
     -23: "RPP_ERROR_INVALID_SRC_DIMS",
     -24: "RPP_ERROR_INVALID_DST_DIMS",
-    -25: "RPP_ERROR_CPP_API_NOT_IMPLEMENTED",
 }
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
@@ -481,16 +480,16 @@ def get_signal_name_from_return_code(returnCode):
     result = ""
     if returnCode < 0:
         signalNum = -returnCode
-        result = result + " Signal = "
+        result = result + " ( "
         for signame, signum in signal.__dict__.items():
             if isinstance(signum, int) and signum == signalNum:
                 signalName = signame
                 break
-        result = result + signalName
-    elif( returnCode > 127):
+        result = result + signalName + " ) "
+    elif(returnCode > 127):
         signalNum = returnCode - 256
         if signalNum in StatusMap.keys():
-            result = result + " Error = " +StatusMap[signalNum]
+            result = result + " ( " + StatusMap[signalNum] + " ) "
     return result
 
 def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
@@ -499,8 +498,8 @@ def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificN
     exitCode = result.returncode
     if(exitCode != 0):
         if exitCode > 127:
-            errorData = "Returned non-zero exit status : "+ str(exitCode - 256) + " " + stderrData.decode()
+            errorData = "Returned non-zero exit status : " + str(exitCode - 256) + " " + stderrData.decode()
         else:
-            errorData = "Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode()
-        msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + get_signal_name_from_return_code(exitCode)
+            errorData = "Returned non-zero exit status : " + str(exitCode) + " " + stderrData.decode()
+        msg = caseName + functionBitDepth + functionSpecificName + " - " + errorData + get_signal_name_from_return_code(exitCode)
         errorLog.append(msg)

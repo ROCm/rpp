@@ -488,7 +488,7 @@ elif (testType == 1 and qaMode == 0):
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_image_host ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_host ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")
