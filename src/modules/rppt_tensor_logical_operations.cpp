@@ -321,39 +321,6 @@ RppStatus rppt_exclusive_or_gpu(RppPtr_t srcPtr1,
                                      roiType,
                                      rpp::deref(rppHandle));
     }
-    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    {
-        hip_exec_exclusive_or_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
-                                     reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
-                                     srcDescPtr,
-                                     reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        hip_exec_exclusive_or_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
-                                     reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
-                                     srcDescPtr,
-                                     reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     rpp::deref(rppHandle));
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-    {
-        hip_exec_exclusive_or_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                     static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     rpp::deref(rppHandle));
-    }
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
