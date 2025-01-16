@@ -78,7 +78,7 @@ enum Augmentation {
     FLIP_VOXEL = 4,
     MULTIPLY_SCALAR = 5,
     GAUSSIAN_NOISE_VOXEL = 6
-}
+};
 
 void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
 {
