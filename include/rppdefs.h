@@ -167,6 +167,10 @@ typedef enum
     RPP_ERROR_INVALID_DST_DIMS          = -24
 } RppStatus;
 
+/*! \brief RPP RppBackend type enums
+ * \ingroup group_rppdefs
+ */
+
 typedef enum
 {
     RPP_HOST_BACKEND,

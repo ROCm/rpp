@@ -642,6 +642,8 @@ int main(int argc, char **argv)
         break;
     }
 
+    rppDestroy(handle, backend);
+
     if (missingFuncFlag == 1)
     {
         cout << "\nThis functionality sub-type of " << test_case_name << " doesn't yet exist in RPP\n";

@@ -89,7 +89,7 @@ struct Handle : rppHandle
     void SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const;
 
     // Device handle related
-    Handle(rppAcceleratorQueue_t stream, size_t nBatchSize);
+    Handle(size_t nBatchSize, rppAcceleratorQueue_t stream);
     void rpp_destroy_object_gpu();
     rppAcceleratorQueue_t GetStream() const;
 

@@ -232,7 +232,7 @@ struct HandleImpl
     }
 };
 
-Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
     this->impl->device = get_device_id();

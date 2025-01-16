@@ -33,15 +33,16 @@ extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, void* n
         Rpp32u numThreads = static_cast<Rpp32u>(reinterpret_cast<size_t>(numThreadsOrStream));
         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
     }
-    if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
-    {
 #if GPU_SUPPORT  
+    else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
+    {
             return rpp::try_([&] { 
-            rpp::deref(handle) = new rpp::Handle(reinterpret_cast<rppAcceleratorQueue_t>(numThreadsOrStream), nBatchSize); 
+            rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(numThreadsOrStream)); 
         });
-#endif // GPU_SUPPORT
     }
-    return rppStatusNotImplemented;
+#endif // GPU_SUPPORT
+    else
+        return rppStatusNotImplemented;
    
 }
 
@@ -51,16 +52,14 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
     {
         return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
     }
+#if GPU_SUPPORT
     else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
     {
-#if GPU_SUPPORT
         return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
+    }
 #endif // GPU_SUPPORT
-    }
     else 
-    {
         return rppStatusNotImplemented;
-    }
 }
 
 extern "C" rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize)
