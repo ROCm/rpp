@@ -4,9 +4,24 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
-* Turbo JPEG
+* [Turbo JPEG](https://libjpeg-turbo.org/)
+  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2)
   ```shell
-  sudo apt-get install libturbojpeg0-dev
+  sudo apt-get install nasm
+  sudo apt-get install wget
+  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  cd libjpeg-turbo
+  mkdir build
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=RELEASE  \
+        -DENABLE_STATIC=FALSE       \
+        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
+        -DWITH_JPEG8=TRUE           \
+        ..
+  make -j$nproc
+  sudo make install
   ```
 
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
@@ -27,13 +42,7 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 * Libsndfile
   ```shell
-  git clone https://github.com/NIFTI-Imaging/nifti_clib.git
-  cd nifti_clib
-  git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788
-  mkdir build
-  cd build
-  cmake ..
-  sudo make -j$nproc install
+  sudo apt-get install libsndfile1-dev
   ```
 
 * Python3 and Python3 PIP
