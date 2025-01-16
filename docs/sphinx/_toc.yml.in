@@ -11,7 +11,7 @@ subtrees:
   - file: install/rpp-prerequisites.rst
     title: RPP prerequisites
   - file: install/rpp-install.rst
-    title: Install RPP 
+    title: Install RPP with package installer 
   - file: install/rpp-install-with-installer.rst
     title: Install RPP with package installer 
   - file: install/rpp-build-and-install.rst
@@ -23,10 +23,11 @@ subtrees:
   entries:
   - file: reference/rpp-supported-functionalities.rst
     title: Supported functionalities and variants
-  - file: doxygen/html/globals
-    title: API library
-    subtrees:
-    - entries:
+  subtrees:
+  - caption: API library
+    entries:
+      - file: doxygen/html/globals
+        title: Globals
       - file: doxygen/html/files
         title: Modules
       - file: doxygen/html/annotated
