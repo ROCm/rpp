@@ -224,7 +224,7 @@ int main(int argc, char * argv[])
             double startWallTime, endWallTime;
             switch (testCase)
             {
-                case 0:
+                case FUSED_MULTIPLY_ADD_SCALAR:
                 {
                     testCaseName = "fused_multiply_add_scalar";
                     Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
@@ -244,7 +244,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 1:
+                case SLICE:
                 {
                     testCaseName = "slice";
                     if(anchorTensor == NULL)
@@ -267,7 +267,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 2:
+                case ADD_SCALAR:
                 {
                     testCaseName = "add_scalar";
                     Rpp32f addTensor[batchSize];
@@ -283,7 +283,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 3:
+                case SUBTRACT_SCALAR:
                 {
                     testCaseName = "subtract_scalar";
                     Rpp32f subtractTensor[batchSize];
@@ -299,7 +299,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 4:
+                case FLIP_VOXEL:
                 {
                     testCaseName = "flip_voxel";
                     Rpp32u horizontalTensor[batchSize];
@@ -323,7 +323,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 5:
+                case MULTIPLY_SCALAR:
                 {
                     testCaseName = "multiply_scalar";
                     Rpp32f mulTensor[batchSize];
@@ -339,7 +339,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 6:
+                case GAUSSIAN_NOISE_VOXEL:
                 {
                     testCaseName = "gaussian_noise_voxel";
                     Rpp32f meanTensor[batchSize];
@@ -414,7 +414,7 @@ int main(int argc, char * argv[])
 
             // if test case is slice and qaFlag is set, update the ROI with shapeTensor values
             // for output display and comparison purposes
-            if(testCase == 1)
+            if(testCase == SLICE)
             {
                 // update the roi for comparision with the shapeTensor values
                 if (descriptorPtr3D->layout == RpptLayout::NCDHW)

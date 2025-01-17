@@ -46,8 +46,8 @@ int main(int argc, char **argv)
     string dst = argv[8];
     string scriptPath = argv[9];
     qaMode = (testType == 0);
-    bool axisMaskCase = (testCase == 1);
-    bool permOrderCase = (testCase == 0);
+    bool axisMaskCase = (testCase == NORMALIZE);
+    bool permOrderCase = (testCase == TRANSPOSE);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam;
 
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     Rpp32u *permTensor = nullptr;
-    if (testCase == 0)
+    if (testCase == TRANSPOSE)
         CHECK_RETURN_STATUS(hipHostMalloc(&permTensor, nDim * sizeof(Rpp32u)));
 
     rppHandle_t handle;
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
-            case 0:
+            case TRANSPOSE:
             {
                 testCaseName  = "transpose";
                 fill_perm_values(nDim, permTensor, qaMode, permOrder);
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 1:
+            case NORMALIZE:
             {
                 testCaseName  = "normalize";
                 float scale = 1.0;
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 2:
+            case LOG:
             {
                 testCaseName  = "log";
 
