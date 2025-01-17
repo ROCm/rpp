@@ -70,6 +70,16 @@ std::map<int, string> augmentationMap =
     {6, "gaussian_noise_voxel"}
 };
 
+enum Augmentation {
+    FUSED_MULTIPLY_ADD_SCALAR = 0,
+    SLICE = 1,
+    ADD_SCALAR = 2,
+    SUBTRACT_SCALAR = 3,
+    FLIP_VOXEL = 4,
+    MULTIPLY_SCALAR = 5,
+    GAUSSIAN_NOISE_VOXEL = 6
+};
+
 void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
 {
     int remainingFiles = batchCount - (noOfFiles % batchCount);

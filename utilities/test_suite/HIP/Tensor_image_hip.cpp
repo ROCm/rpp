@@ -60,15 +60,15 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
-    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 11 || testCase == 84 || testCase == 49 || testCase == 54);
-    bool nonQACase = (testCase == 24 || testCase == 28 || testCase == 54);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
-    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
-    bool noiseTypeCase = (testCase == 8);
-    bool pln1OutTypeCase = (testCase == 86);
+    bool additionalParamCase = (additionalParamCases.find(testCase) != additionalParamCases.end());
+    bool kernelSizeCase = (kernelSizeCases.find(testCase) != kernelSizeCases.end());
+    bool dualInputCase = (dualInputCases.find(testCase) != dualInputCases.end());
+    bool randomOutputCase = (randomOutputCases.find(testCase) != randomOutputCases.end());
+    bool nonQACase = (nonQACases.find(testCase) != nonQACases.end());
+    bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
+    bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
+    bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 35 || testCase == 45 || testCase == 86)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    else if(testCase == 82 && batchSize < 2)
+    else if(testCase == RICAP && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
     RpptDescPtr dstDescPtr = &dstDesc;
 
     // Set src/dst layout types in tensor descriptors
-    set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+    set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
-    if(testCase == 82 && imagesMixed)
+    if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
         exit(0);
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
-    if(testCase == 38)
+    if(testCase == CROP_MIRROR_NORMALIZE)
         conversionFactor = 1.0;
     Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
@@ -302,7 +302,6 @@ int main(int argc, char **argv)
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *inputu8Second = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *outputu8 = static_cast<Rpp8u *>(calloc(oBufferSizeInBytes_u8, 1));
-    if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     Rpp8u *offsettedInput, *offsettedInputSecond;
     offsettedInput = inputu8 + srcDescPtr->offsetInBytes;
@@ -315,7 +314,7 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     Rpp32f *rowRemapTable, *colRemapTable;
-    if(testCase == 79)
+    if(testCase == REMAP)
     {
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
@@ -339,13 +338,13 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
         else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
-            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+            bitDepthByteSize = (testCase == TENSOR_SUM) ? sizeof(Rpp64u) : sizeof(Rpp8u);
 
         CHECK_RETURN_STATUS(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
-        if(testCase == 91)
+        if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostMalloc(&mean, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
@@ -354,7 +353,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
-    if(testCase == 92)
+    if(testCase == SLICE)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
 
     // Allocate hip memory for src/dst
@@ -364,11 +363,11 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
 
     RpptROI *roiPtrInputCropRegion;
-    if(testCase == 82)
+    if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     void *d_rowRemapTable, *d_colRemapTable;
-    if(testCase == 26 || testCase == 79)
+    if(testCase == LENS_CORRECTION || testCase == REMAP)
     {
         CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
         CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
@@ -377,7 +376,7 @@ int main(int argc, char **argv)
     }
 
     Rpp32f *cameraMatrix, *distortionCoeffs;
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
@@ -387,7 +386,7 @@ int main(int argc, char **argv)
     Rpp32f *colorBuffer;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numOfBoxes;
-    if(testCase == 32)
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
@@ -397,7 +396,7 @@ int main(int argc, char **argv)
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
         CHECK_RETURN_STATUS(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
@@ -405,7 +404,7 @@ int main(int argc, char **argv)
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     Rpp32f *intensity;
-    if(testCase == 46)
+    if(testCase == VIGNETTE)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *intensityFactor = nullptr;
@@ -417,27 +416,27 @@ int main(int argc, char **argv)
     }
 
     Rpp32u *kernelSizeTensor;
-    if(testCase == 6)
+    if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
 
     RpptChannelOffsets *rgbOffsets;
-    if(testCase == 35)
+    if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
     void *d_interDstPtr;
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
     Rpp32f *perspectiveTensorPtr = NULL;
-    if(testCase == 28)
+    if(testCase == WARP_PERSPECTIVE)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
 
     Rpp32f *alpha = nullptr;
-    if(testCase == 11)
+    if(testCase == RAIN)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
-    if(testCase == 15)
+    if(testCase == THRESHOLD)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
@@ -522,7 +521,7 @@ int main(int argc, char **argv)
             double startWallTime, endWallTime;
             switch (testCase)
             {
-                case 0:
+                case BRIGHTNESS:
                 {
                     testCaseName = "brightness";
 
@@ -542,7 +541,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case GAMMA_CORRECTION:
                 {
                     testCaseName = "gamma_correction";
 
@@ -558,7 +557,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case BLEND:
                 {
                     testCaseName = "blend";
 
@@ -574,7 +573,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case CONTRAST:
                 {
                     testCaseName = "contrast";
 
@@ -594,7 +593,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 5:
+                case PIXELATE:
                 {
                     testCaseName = "pixelate";
 
@@ -608,7 +607,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case JITTER:
                 {
                     testCaseName = "jitter";
 
@@ -624,7 +623,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 8:
+                case NOISE:
                 {
                     testCaseName = "noise";
 
@@ -696,7 +695,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 10:
+                case FOG:
                 {
                     testCaseName = "fog";
 
@@ -714,7 +713,23 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 11:
+                case EXPOSURE:
+                {
+                    testCaseName = "exposure";
+
+                    Rpp32f exposureFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        exposureFactor[i] = 1.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case RAIN:
                 {
                     testCaseName = "rain";
 
@@ -733,23 +748,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 13:
-                {
-                    testCaseName = "exposure";
-
-                    Rpp32f exposureFactor[batchSize];
-                    for (i = 0; i < batchSize; i++)
-                        exposureFactor[i] = 1.4;
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 15:
+                case THRESHOLD:
                 {
                     testCaseName = "threshold";
                     Rpp32f normFactor = 1;
@@ -776,7 +775,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 20:
+                case FLIP:
                 {
                     testCaseName = "flip";
 
@@ -796,7 +795,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 21:
+                case RESIZE:
                 {
                     testCaseName = "resize";
 
@@ -814,7 +813,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 23:
+                case ROTATE:
                 {
                     testCaseName = "rotate";
 
@@ -836,7 +835,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 24:
+                case WARP_AFFINE:
                 {
                     testCaseName = "warp_affine";
 
@@ -866,7 +865,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 26:
+                case LENS_CORRECTION:
                 {
                     testCaseName = "lens_correction";
 
@@ -882,7 +881,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 28:
+                case WARP_PERSPECTIVE:
                 {
                     testCaseName = "warp_perspective";
 
@@ -913,7 +912,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 29:
+                case WATER:
                 {
                     testCaseName = "water";
 
@@ -942,7 +941,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 30:
+                case NON_LINEAR_BLEND:
                 {
                     testCaseName = "non_linear_blend";
 
@@ -958,7 +957,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 31:
+                case COLOR_CAST:
                 {
                     testCaseName = "color_cast";
 
@@ -981,7 +980,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 32:
+                case ERASE:
                 {
                     testCaseName = "erase";
 
@@ -994,7 +993,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 33:
+                case CROP_AND_PATCH:
                 {
                     testCaseName = "crop_and_patch";
                     for (i = 0; i < batchSize; i++)
@@ -1013,7 +1012,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 34:
+                case LOOK_UP_TABLE:
                 {
                     testCaseName = "lut";
 
@@ -1053,7 +1052,7 @@ int main(int argc, char **argv)
 
                     CHECK_RETURN_STATUS(hipHostFree(lutBuffer));
                 }
-                case 35:
+                case GLITCH:
                 {
                     testCaseName = "glitch";
 
@@ -1075,7 +1074,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 36:
+                case COLOR_TWIST:
                 {
                     testCaseName = "color_twist";
 
@@ -1099,7 +1098,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 37:
+                case CROP:
                 {
                     testCaseName = "crop";
 
@@ -1119,7 +1118,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 38:
+                case CROP_MIRROR_NORMALIZE:
                 {
                     testCaseName = "crop_mirror_normalize";
                     Rpp32f multiplier[batchSize * srcDescPtr->c];
@@ -1174,7 +1173,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 39:
+                case RESIZE_CROP_MIRROR:
                 {
                     testCaseName = "resize_crop_mirror";
 
@@ -1206,7 +1205,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 45:
+                case COLOR_TEMPERATURE:
                 {
                     testCaseName = "color_temperature";
 
@@ -1222,7 +1221,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 46:
+                case VIGNETTE:
                 {
                     testCaseName = "vignette";
 
@@ -1237,7 +1236,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 49:
+                case BOX_FILTER:
                 {
                     testCaseName = "box_filter";
                     Rpp32u kernelSize = additionalParam;
@@ -1250,7 +1249,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 54:
+                case GAUSSIAN_FILTER:
                 {
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
@@ -1269,7 +1268,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 61:
+                case MAGNITUDE:
                 {
                     testCaseName = "magnitude";
 
@@ -1281,7 +1280,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 63:
+                case PHASE:
                 {
                     testCaseName = "phase";
 
@@ -1293,7 +1292,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 65:
+                case BITWISE_AND:
                 {
                     testCaseName = "bitwise_and";
 
@@ -1305,7 +1304,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 68:
+                case BITWISE_OR:
                 {
                     testCaseName = "bitwise_or";
 
@@ -1317,7 +1316,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 70:
+                case COPY:
                 {
                     testCaseName = "copy";
 
@@ -1329,7 +1328,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 79:
+                case REMAP:
                 {
                     testCaseName = "remap";
 
@@ -1348,7 +1347,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 80:
+                case RESIZE_MIRROR_NORMALIZE:
                 {
                     testCaseName = "resize_mirror_normalize";
 
@@ -1388,7 +1387,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 82:
+                case RICAP:
                 {
                     testCaseName = "ricap";
 
@@ -1405,7 +1404,7 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
                     break;
                 }
-                case 83:
+                case GRIDMASK:
                 {
                     testCaseName = "gridmask";
 
@@ -1424,7 +1423,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 84:
+                case SPATTER:
                 {
                     testCaseName = "spatter";
 
@@ -1451,7 +1450,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 85:
+                case SWAP_CHANNELS:
                 {
                     testCaseName = "swap_channels";
 
@@ -1463,7 +1462,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 86:
+                case COLOR_TO_GREYSCALE:
                 {
                     testCaseName = "color_to_greyscale";
 
@@ -1477,7 +1476,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 87:
+                case TENSOR_SUM:
                 {
                     testCaseName = "tensor_sum";
 
@@ -1492,7 +1491,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 88:
+                case TENSOR_MIN:
                 {
                     testCaseName = "tensor_min";
 
@@ -1504,7 +1503,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 89:
+                case TENSOR_MAX:
                 {
                     testCaseName = "tensor_max";
 
@@ -1516,7 +1515,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 90:
+                case TENSOR_MEAN:
                 {
                     testCaseName = "tensor_mean";
 
@@ -1531,7 +1530,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 91:
+                case TENSOR_STDDEV:
                 {
                     testCaseName = "tensor_stddev";
 
@@ -1547,7 +1546,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 92:
+                case SLICE:
                 {
                     testCaseName = "slice";
                     Rpp32u numDims = descriptorPtr3D->numDims - 1; // exclude batchSize from input dims
@@ -1582,7 +1581,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             maxWallTime = max(maxWallTime, wallTime);
@@ -1609,26 +1608,26 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                     print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::F16)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1641,9 +1640,9 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same*/
                 if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
-                    if (testCase == 87)
+                    if (testCase == TENSOR_SUM)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
-                    else if (testCase == 90 || testCase == 91)
+                    else if (testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                         compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
@@ -1668,7 +1667,7 @@ int main(int argc, char **argv)
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
                 // for output display and comparision purposes
-                if (testCase == 92)
+                if (testCase == SLICE)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
                     {
@@ -1707,7 +1706,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
@@ -1753,38 +1752,38 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrSrc));
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrDst));
     CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
-    if(testCase == 46)
+    if(testCase == VIGNETTE)
         CHECK_RETURN_STATUS(hipHostFree(intensity));
-    if(testCase == 82)
+    if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostFree(roiPtrInputCropRegion));
-    if(testCase == 33)
+    if(testCase == CROP_AND_PATCH)
     {
         CHECK_RETURN_STATUS(hipHostFree(cropRoi));
         CHECK_RETURN_STATUS(hipHostFree(patchRoi));
     }
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         CHECK_RETURN_STATUS(hipHostFree(cameraMatrix));
         CHECK_RETURN_STATUS(hipHostFree(distortionCoeffs));
     }
-    if(testCase == 79)
+    if(testCase == REMAP)
     {
         free(rowRemapTable);
         free(colRemapTable);
         CHECK_RETURN_STATUS(hipFree(d_rowRemapTable));
         CHECK_RETURN_STATUS(hipFree(d_colRemapTable));
     }
-    if(testCase == 35)
+    if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if(perspectiveTensorPtr != NULL)
       CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
-        if(testCase == 91)
+        if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostFree(mean));
     }
-    if(testCase == 32)
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
@@ -1800,7 +1799,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(greyFactor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
-    if(testCase == 6)
+    if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostFree(kernelSizeTensor));
     free(input);
     free(input_second);
@@ -1812,7 +1811,7 @@ int main(int argc, char **argv)
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipFree(d_input_second));
     CHECK_RETURN_STATUS(hipFree(d_output));
-    if(testCase == 5)
+    if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
     if(alpha != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
