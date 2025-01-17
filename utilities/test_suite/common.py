@@ -28,12 +28,15 @@ import sys
 import datetime
 import shutil
 import pandas as pd
+import signal
 
 try:
     from errno import FileExistsError
 except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
+
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -125,6 +128,34 @@ ImageAugmentationGroupMap = {
     "logical_operations" : [65, 68],
     "data_exchange_operations" : [70, 85, 86],
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
+}
+
+StatusMap = {
+    0: "RPP_SUCCESS",
+    -1: "RPP_ERROR",
+    -2: "RPP_ERROR_INVALID_ARGUMENTS",
+    -3: "RPP_ERROR_LOW_OFFSET",
+    -4: "RPP_ERROR_ZERO_DIVISION",
+    -5: "RPP_ERROR_HIGH_SRC_DIMENSION",
+    -6: "RPP_ERROR_NOT_IMPLEMENTED",
+    -7: "RPP_ERROR_INVALID_SRC_CHANNELS",
+    -8: "RPP_ERROR_INVALID_DST_CHANNELS",
+    -9: "RPP_ERROR_INVALID_SRC_LAYOUT",
+    -10: "RPP_ERROR_INVALID_DST_LAYOUT",
+    -11: "RPP_ERROR_INVALID_SRC_DATATYPE",
+    -12: "RPP_ERROR_INVALID_DST_DATATYPE",
+    -13: "RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE",
+    -14: "RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH",
+    -15: "RPP_ERROR_INVALID_PARAMETER_DATATYPE",
+    -16: "RPP_ERROR_NOT_ENOUGH_MEMORY",
+    -17: "RPP_ERROR_OUT_OF_BOUND_SRC_ROI",
+    -18: "RPP_ERROR_LAYOUT_MISMATCH",
+    -19: "RPP_ERROR_INVALID_CHANNELS",
+    -20: "RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH",
+    -21: "RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE",
+    -22: "RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE",
+    -23: "RPP_ERROR_INVALID_SRC_DIMS",
+    -24: "RPP_ERROR_INVALID_DST_DIMS",
 }
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
@@ -392,3 +423,86 @@ def dataframe_to_markdown(df):
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
 
     return md
+
+def get_image_layout_type(layout, outputFormatToggle, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3"
+        if outputFormatToggle:
+            result += "_toPLN3"
+        else:
+            result += "_toPKD3"
+    elif layout == 1:
+        result += "_PLN3"
+        if outputFormatToggle:
+            result += "_toPKD3"
+        else:
+            result += "_toPLN3"
+    else:
+       result += "_PLN1"
+       result += "_toPLN1"
+    return result
+
+def get_misc_func_name(testCase, nDim, additionalArg):
+    axisMaskCase = 0
+    permOrderCase = 0
+    if testCase == 1:
+        axisMaskCase = 1
+    elif testCase == 0:
+        permOrderCase = 1
+    additionalParam = 1
+    if axisMaskCase or permOrderCase:
+        additionalParam = additionalArg
+    axisMask = additionalParam
+    permOrder = additionalParam
+    result = ""
+    if (axisMaskCase):
+        result = result + str(nDim) + "d" + "_axisMask" + str(axisMask)
+    if (permOrderCase):
+        result = result + str(nDim) + "d" + "_permOrder" + str(permOrder)
+    return result
+
+def get_voxel_layout_type(layout, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3_toPKD3"
+    elif layout == 1:
+        result += "_PLN3_toPLN3"
+    else:
+       result += "_PLN1_toPLN1"
+    return result
+
+def get_bit_depth(bitDepth):
+    result = str(bitDepthDict[bitDepth])
+    return result
+
+def get_signal_name_from_return_code(returnCode):
+    result = ""
+    if returnCode < 0:
+        signalNum = -returnCode
+        result = result + " ( "
+        for signame, signum in signal.__dict__.items():
+            if isinstance(signum, int) and signum == signalNum:
+                signalName = signame
+                break
+        result = result + signalName + " ) "
+    elif(returnCode > 127):
+        signalNum = returnCode - 256
+        if signalNum in StatusMap.keys():
+            result = result + " ( " + StatusMap[signalNum] + " ) "
+    return result
+
+def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        if exitCode == 250:
+            errorLog[0]["notExecutedFunctionality"] += 1
+        else:
+            if exitCode > 127:
+                errorData = "Returned non-zero exit status : " + str(exitCode - 256) + " " + stderrData.decode()
+            else:
+                errorData = "Returned non-zero exit status : " + str(exitCode) + " " + stderrData.decode()
+            msg = caseName + functionBitDepth + functionSpecificName + " - " + errorData + get_signal_name_from_return_code(exitCode)
+            errorLog.append(msg)
