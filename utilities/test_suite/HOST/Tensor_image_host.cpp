@@ -60,15 +60,15 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 49 || testCase ==54 || testCase == 79);
-    bool kernelSizeCase = (testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 11 || testCase == 84);
-    bool nonQACase = (testCase == 24 || testCase == 28);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 28 || testCase == 79);
-    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
-    bool noiseTypeCase = (testCase == 8);
-    bool pln1OutTypeCase = (testCase == 86);
+    bool additionalParamCase = (additionalParamCases.find(testCase) != additionalParamCases.end());
+    bool kernelSizeCase = (kernelSizeCases.find(testCase) != kernelSizeCases.end());
+    bool dualInputCase = (dualInputCases.find(testCase) != dualInputCases.end());
+    bool randomOutputCase = (randomOutputCases.find(testCase) != randomOutputCases.end());
+    bool nonQACase = (nonQACases.find(testCase) != nonQACases.end());
+    bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
+    bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
+    bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -634,90 +634,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 10:
-                {
-                    testCaseName = "fog";
-
-                    Rpp32f intensityFactor[batchSize];
-                    Rpp32f grayFactor[batchSize];
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        intensityFactor[i] = 0;
-                        grayFactor[i] = 0.3;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_fog_host(input, srcDescPtr, output, dstDescPtr, intensityFactor, grayFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 11:
-                {
-                    testCaseName = "rain";
-
-                    Rpp32f rainPercentage = 7;
-                    Rpp32u rainHeight = 6;
-                    Rpp32u rainWidth = 1;
-                    Rpp32f slantAngle = 0;
-                    Rpp32f alpha[batchSize];
-                    for (int i = 0; i < batchSize; i++)
-                        alpha[i] = 0.4;
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 11:
-                {
-                    testCaseName = "rain";
-
-                    Rpp32f rainPercentage = 7;
-                    Rpp32u rainHeight = 6;
-                    Rpp32u rainWidth = 1;
-                    Rpp32f slantAngle = 0;
-                    Rpp32f alpha[batchSize];
-                    for (int i = 0; i < batchSize; i++)
-                        alpha[i] = 0.4;
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 10:
-                {
-                    testCaseName = "fog";
-
-                    Rpp32f intensityFactor[batchSize];
-                    Rpp32f grayFactor[batchSize];
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        intensityFactor[i] = 0;
-                        grayFactor[i] = 0.3;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_fog_host(input, srcDescPtr, output, dstDescPtr, intensityFactor, grayFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
                 case FOG:
                 {
                     testCaseName = "fog";
@@ -756,70 +672,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 15:
-                {
-                    testCaseName = "threshold";
-                    
-                    Rpp32f minTensor[batchSize * srcDescPtr->c];
-                    Rpp32f maxTensor[batchSize * srcDescPtr->c];
-                    Rpp32f normFactor = 1;
-                    Rpp32f subtractionFactor = 0;
-
-                    if (inputBitDepth == 1 || inputBitDepth == 2)
-                        normFactor = 255;
-                    else if (inputBitDepth == 5)
-                        subtractionFactor = 128;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
-                        {
-                            minTensor[k] = (30 / normFactor) - subtractionFactor;
-                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
-                        }
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_threshold_host(input, srcDescPtr, output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 15:
-                {
-                    testCaseName = "threshold";
-                    
-                    Rpp32f minTensor[batchSize * srcDescPtr->c];
-                    Rpp32f maxTensor[batchSize * srcDescPtr->c];
-                    Rpp32f normFactor = 1;
-                    Rpp32f subtractionFactor = 0;
-
-                    if (inputBitDepth == 1 || inputBitDepth == 2)
-                        normFactor = 255;
-                    else if (inputBitDepth == 5)
-                        subtractionFactor = 128;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
-                        {
-                            minTensor[k] = (30 / normFactor) - subtractionFactor;
-                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
-                        }
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_threshold_host(input, srcDescPtr, output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
                 case RAIN:
                 {
                     testCaseName = "rain";
@@ -844,7 +696,7 @@ int main(int argc, char **argv)
                 case THRESHOLD:
                 {
                     testCaseName = "threshold";
-
+                    
                     Rpp32f minTensor[batchSize * srcDescPtr->c];
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
                     Rpp32f normFactor = 1;
@@ -981,40 +833,6 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_lens_correction_host(input, srcDescPtr, output, dstDescPtr, rowRemapTable, colRemapTable, tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 28:
-                {
-                    testCaseName = "warp_perspective";
-
-                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
-
-                    Rpp32f9 perspectiveTensor_f9[batchSize];
-                    Rpp32f *perspectiveTensor = reinterpret_cast<Rpp32f *>(perspectiveTensor_f9);
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        perspectiveTensor_f9[i].data[0] = 0.93;
-                        perspectiveTensor_f9[i].data[1] = 0.5;
-                        perspectiveTensor_f9[i].data[2] = 0.0;
-                        perspectiveTensor_f9[i].data[3] = -0.5;
-                        perspectiveTensor_f9[i].data[4] = 0.93;
-                        perspectiveTensor_f9[i].data[5] = 0.0;
-                        perspectiveTensor_f9[i].data[6] = 0.005;
-                        perspectiveTensor_f9[i].data[7] = 0.005;
-                        perspectiveTensor_f9[i].data[8] = 1;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_warp_perspective_host(input, srcDescPtr, output, dstDescPtr, perspectiveTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1462,32 +1280,6 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0)
                         rppt_bitwise_and_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case BITWISE_NOT:
-                {
-                    testCaseName = "bitwise_not";
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0)
-                        rppt_bitwise_not_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case BITWISE_XOR:
-                {
-                    testCaseName = "bitwise_xor";
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0)
-                        rppt_bitwise_xor_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

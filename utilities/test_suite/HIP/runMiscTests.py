@@ -220,8 +220,7 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
-noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
+noCaseSupported = all(int(case) not in miscAugmentationMap.keys() for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
@@ -289,7 +288,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_misc_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_hip")
+        print_qa_tests_summary(qaFilePath, list(miscAugmentationMap.keys()), nonQACaseList, "Tensor_misc_hip")
 
 # Performance tests
 if (testType == 1 and profilingOption == "NO"):

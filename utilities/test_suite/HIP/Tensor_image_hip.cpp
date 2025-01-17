@@ -60,15 +60,15 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 28 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
-    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 10 || testCase == 11 || testCase == 84 || testCase == 49 || testCase == 54);
-    bool nonQACase = (testCase == 24 || testCase == 28 || testCase == 54);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24|| testCase == 28 || testCase == 79);
-    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
-    bool noiseTypeCase = (testCase == 8);
-    bool pln1OutTypeCase = (testCase == 86);
+    bool additionalParamCase = (additionalParamCases.find(testCase) != additionalParamCases.end());
+    bool kernelSizeCase = (kernelSizeCases.find(testCase) != kernelSizeCases.end());
+    bool dualInputCase = (dualInputCases.find(testCase) != dualInputCases.end());
+    bool randomOutputCase = (randomOutputCases.find(testCase) != randomOutputCases.end());
+    bool nonQACase = (nonQACases.find(testCase) != nonQACases.end());
+    bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
+    bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
+    bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -429,15 +429,15 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
     Rpp32f *perspectiveTensorPtr = NULL;
-    if(testCase == 28)
+    if(testCase == WARP_PERSPECTIVE)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
 
     Rpp32f *alpha = nullptr;
-    if(testCase == 11)
+    if(testCase == RAIN)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
-    if(testCase == 15)
+    if(testCase == THRESHOLD)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
@@ -696,80 +696,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 10:
-                {
-                    testCaseName = "fog";
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        intensityFactor[i] = 0;
-                        greyFactor[i] = 0.3;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 11:
-                {
-                    testCaseName = "rain";
-
-                    Rpp32f rainPercentage = 7;
-                    Rpp32u rainHeight = 6;
-                    Rpp32u rainWidth = 1;
-                    Rpp32f slantAngle = 0;
-                    for (int i = 0; i < batchSize; i++)
-                        alpha[i] = 0.4;
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 11:
-                {
-                    testCaseName = "rain";
-
-                    Rpp32f rainPercentage = 7;
-                    Rpp32u rainHeight = 6;
-                    Rpp32u rainWidth = 1;
-                    Rpp32f slantAngle = 0;
-                    for (int i = 0; i < batchSize; i++)
-                        alpha[i] = 0.4;
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 10:
-                {
-                    testCaseName = "fog";
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        intensityFactor[i] = 0;
-                        greyFactor[i] = 0.3;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
                 case FOG:
                 {
                     testCaseName = "fog";
@@ -799,60 +725,6 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 15:
-                {
-                    testCaseName = "threshold";
-                    Rpp32f normFactor = 1;
-                    Rpp32f subtractionFactor = 0;
-                    if (inputBitDepth == 1 || inputBitDepth == 2)
-                        normFactor = 255;
-                    else if (inputBitDepth == 5)
-                        subtractionFactor = 128;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
-                        {
-                            minTensor[k] = (30 / normFactor) - subtractionFactor;
-                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
-                        }
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_threshold_gpu(d_input, srcDescPtr, d_output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 15:
-                {
-                    testCaseName = "threshold";
-                    Rpp32f normFactor = 1;
-                    Rpp32f subtractionFactor = 0;
-                    if (inputBitDepth == 1 || inputBitDepth == 2)
-                        normFactor = 255;
-                    else if (inputBitDepth == 5)
-                        subtractionFactor = 128;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
-                        {
-                            minTensor[k] = (30 / normFactor) - subtractionFactor;
-                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
-                        }
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_threshold_gpu(d_input, srcDescPtr, d_output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1005,68 +877,6 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 28:
-                {
-                    testCaseName = "warp_perspective";
-
-                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
-
-                    for (i = 0, j = 0; i < batchSize; i++, j += 9)
-                    {
-                        perspectiveTensorPtr[j + 0] = 0.93;
-                        perspectiveTensorPtr[j + 1] = 0.5;
-                        perspectiveTensorPtr[j + 2] = 0.0;
-                        perspectiveTensorPtr[j + 3] = -0.5;
-                        perspectiveTensorPtr[j + 4] = 0.93;
-                        perspectiveTensorPtr[j + 5] = 0.0;
-                        perspectiveTensorPtr[j + 6] = 0.005;
-                        perspectiveTensorPtr[j + 7] = 0.005;
-                        perspectiveTensorPtr[j + 8] = 1;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 28:
-                {
-                    testCaseName = "warp_perspective";
-
-                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
-
-                    for (i = 0, j = 0; i < batchSize; i++, j += 9)
-                    {
-                        perspectiveTensorPtr[j + 0] = 0.93;
-                        perspectiveTensorPtr[j + 1] = 0.5;
-                        perspectiveTensorPtr[j + 2] = 0.0;
-                        perspectiveTensorPtr[j + 3] = -0.5;
-                        perspectiveTensorPtr[j + 4] = 0.93;
-                        perspectiveTensorPtr[j + 5] = 0.0;
-                        perspectiveTensorPtr[j + 6] = 0.005;
-                        perspectiveTensorPtr[j + 7] = 0.005;
-                        perspectiveTensorPtr[j + 8] = 1;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1495,30 +1305,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case BITWISE_NOT:
-                {
-                    testCaseName = "bitwise_not";
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
-                        rppt_bitwise_not_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case BITWISE_XOR:
-                {
-                    testCaseName = "bitwise_xor";
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
-                        rppt_bitwise_xor_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
                 case BITWISE_OR:
                 {
                     testCaseName = "bitwise_or";
@@ -1933,22 +1719,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-        // if(DEBUG_MODE)
-        // {
-        //     CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        //     CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-        //     CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        //     std::ofstream refFile;
-        //     std::string refFileName;
-        //     refFileName = func + "_host.csv";
-        //     refFile.open(refFileName);
-        //     for (int i = 0; i < bufferSize * 2; i++)
-        //     {
-        //         refFile << *(outputF32 + i) << ",";
-        //     }
-        //     refFile.close();
-        // }
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

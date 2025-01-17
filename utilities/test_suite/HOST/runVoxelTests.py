@@ -252,7 +252,7 @@ if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_host")
+        print_qa_tests_summary(qaFilePath, list(voxelAugmentationMap.keys()), nonQACaseList, "Tensor_voxel_host")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0):   # Unit tests

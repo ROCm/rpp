@@ -279,9 +279,6 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '5', '6', '8', '10', '11', '13', '15', '20', '21', '23', '24', '26', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
-
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PKD3")
@@ -291,7 +288,7 @@ if testType == 1 and profilingOption == "YES":
 supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
 
 if(testType == 0):
-    noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
+    noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
     if noCaseSupported:
         print("case numbers %s are not supported" % caseList)
     for case in caseList:
@@ -347,7 +344,7 @@ else:
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
 
-        noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
+        noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
         if noCaseSupported:
             print("case numbers %s are not supported" % caseList)
         for case in caseList:
@@ -504,7 +501,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_image_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
+        print_qa_tests_summary(qaFilePath, list(imageAugmentationMap.keys()), nonQACaseList, "Tensor_image_hip")
 
 if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_hip  ----------------------------------\n")

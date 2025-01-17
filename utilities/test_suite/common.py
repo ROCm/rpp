@@ -132,6 +132,17 @@ ImageAugmentationGroupMap = {
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
+def get_case_number(map, case):
+    # Check if the input is numeric (case number)
+    if case.isdigit():
+        return str(case)
+    
+    # Otherwise, treat it as a case name and find the corresponding number
+    for caseNum, info in map.items():
+        if case.lower() == info[0].lower():
+            return str(caseNum)
+    raise ValueError(f"Invalid case name or number: {case}")
+
 StatusMap = {
     0: "RPP_SUCCESS",
     -1: "RPP_ERROR",
