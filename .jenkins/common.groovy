@@ -30,7 +30,10 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     def command = """#!/usr/bin/env bash
                 set -x
-                sudo apt install half
+                wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+                unzip half-1.12.0.zip -d half-files
+                sudo mkdir -p /usr/local/include/half
+                sudo cp half-files/include/half.hpp /usr/local/include/half
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
