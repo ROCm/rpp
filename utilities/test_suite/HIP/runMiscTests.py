@@ -160,10 +160,6 @@ def rpp_test_suite_parser_and_validator():
             except ValueError as e:
                 print(e)
 
-        print(f"Processed case numbers: {case_list}")
-    else:
-        print("No cases provided.")
-
     args.case_list = case_list
     if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
