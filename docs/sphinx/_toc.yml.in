@@ -11,11 +11,11 @@ subtrees:
   - file: install/rpp-prerequisites.rst
     title: RPP prerequisites
   - file: install/rpp-install.rst
-    title: Install RPP with package installer 
+    title: Install RPP
   - file: install/rpp-install-with-installer.rst
     title: Install RPP with package installer 
   - file: install/rpp-build-and-install.rst
-    title: Build and install RPP  
+    title: Build and install RPP from source  
   - file: install/rpp-verify-install.rst
     title: Verify the RPP installation
 
@@ -23,17 +23,19 @@ subtrees:
   entries:
   - file: reference/rpp-supported-functionalities.rst
     title: Supported functionalities and variants
-  subtrees:
-  - caption: API library
-    entries:
-      - file: doxygen/html/globals
-        title: Globals
+  - file: reference/rpp-api-reference.rst
+    title: API library
+    subtrees:
+    - entries:
+      - file: doxygen/html/topics
+        title: RPP APIs
       - file: doxygen/html/files
-        title: Modules
+        title: RPP header files
+      - file: doxygen/html/group__group__rppdef
+        title: RPP Common definitions
       - file: doxygen/html/annotated
-        title: Data structures
-      - file: doxygen/html/deprecated
-        title: Deprecated functions
+        title: RPP data structures
+
 
 - caption: About
   entries:

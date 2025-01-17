@@ -31,12 +31,12 @@ The RPP public repository is located at `https://github.com/ROCm/rpp <https://gi
   .. grid-item-card:: Reference
 
     * :doc:`Supported RPP functionalities and variants <./reference/rpp-supported-functionalities>`
-    * API library
-    
-      * :doc:`Globals <./doxygen/html/globals>`
-      * :doc:`Modules <./doxygen/html/files>`
-      * :doc:`Data structures <./doxygen/html/annotated>`
-      * :doc:`Deprecated functions <./doxygen/html/deprecated>`
+    * RPP API reference
+
+      * :doc:`RPP APIs <./doxygen/html/topics>`
+      * :doc:`RPP header files <./doxygen/html/files>`
+      * :doc:`RPP common definitions <./doxygen/html/group__group__rppdefs>`
+      * :doc:`RPP data structures <./doxygen/html/annotated>`
 
 To contribute to the documentation refer to :doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
 
