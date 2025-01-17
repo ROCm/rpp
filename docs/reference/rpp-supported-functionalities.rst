@@ -1,24 +1,7 @@
-.. meta::
-  :description: What is RPP
-  :keywords: RPP, ROCm, Performance Primitives, documentation
-
-.. _what-is:
-
-********************************************************************
-What is RPP?
-********************************************************************
-
-AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
-vision library for AMD processors that have HIP, OpenCL, or CPU backends.
-
-.. image:: ./data/rpp_structure_4.png
-  :alt: RPP Functions
-
 Supported functionalities and variants
 ==========================================
 
-The following tables show the CPU and GPU support for various RPP functionalities and variants. You
-can view image samples following the tables.
+The following tables show the CPU and GPU support for ROCm Performance Primitives (RPP) functionalities and variants. 
 
 Image augmentations
 -----------------------------------------------------------------------------------------------
@@ -198,21 +181,3 @@ Computer vision
   "remap", "✅", "❌"
   "tensor matrix multiply", "✅", "✅"
   "tensor transpose", "✅", "✅"
-
-Image examples
----------------------------------------------------------------
-
-.. image:: ./data/supported_functionalities_samples.jpg
-  :alt: Supported function samples
-
-3D images
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following is an example of a 3D medical image before and after ``fused_multiply_add_scalar``.
-
-.. list-table::
-
-  * - Original image
-    - Modified image
-  * - .. image:: ./data/niftiInput.gif
-    - .. image:: ./data/niftiOutputBrightened.gif

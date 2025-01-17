@@ -4,16 +4,6 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
-* OpenMP
-  ```shell
-  sudo apt install libomp-dev
-  ```
-
-* OpenCV Version `3.X`/`4.X`
-  ```shell
-  sudo apt install libopencv-dev
-  ```
-
 * [Turbo JPEG](https://libjpeg-turbo.org/)
   * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
   * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2)
@@ -34,19 +24,25 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo make install
   ```
 
-* Libsndfile
-  ```shell
-  sudo apt-get install libsndfile1-dev
-  ```
-
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
   ```shell
   git clone https://github.com/NIFTI-Imaging/nifti_clib.git
   cd nifti_clib
+  git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788
   mkdir build
   cd build
   cmake ..
   sudo make -j$nproc install
+  ```
+
+* OpenCV Version `3.X`/`4.X`
+  ```shell
+  sudo apt install libopencv-dev
+  ```
+
+* Libsndfile
+  ```shell
+  sudo apt-get install libsndfile1-dev
   ```
 
 * Python3 and Python3 PIP
@@ -54,14 +50,14 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo apt install python3-dev python3-pip
   ```
 
-* Python: Openpyxl
-  ```shell
-  pip install openpyxl
-  ```
-
 * Python: Pandas
   ```shell
-  pip install pandas
+  sudo apt install python3-pandas
+  ```
+
+* Python: Openpyxl
+  ```shell
+  sudo apt install python3-openpyxl
   ```
 
 >[!NOTE]
