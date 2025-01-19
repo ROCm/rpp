@@ -1572,10 +1572,10 @@ int main(int argc, char **argv)
                 case 93:
                 {
                     testCaseName = "jpeg_compression_distortion";
-                    RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
+                    // RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr,d_output,dstDescPtr,roiTensorPtrSrc,handle);
+                        rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr,d_output,dstDescPtr,roiTensorPtrSrc,roiTypeSrc,handle);
                     else
                         missingFuncFlag = 1;
 

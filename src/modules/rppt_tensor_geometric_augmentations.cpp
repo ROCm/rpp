@@ -2728,6 +2728,7 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                           RppPtr_t dstPtr,
                           RpptDescPtr dstDescPtr,
                           RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
@@ -2738,6 +2739,7 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
                                roiTensorPtrSrc,
+                               roiType,
                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
@@ -2747,6 +2749,7 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                reinterpret_cast<half*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
                                dstDescPtr,
                                roiTensorPtrSrc,
+                               roiType,
                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
@@ -2756,6 +2759,7 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                reinterpret_cast<Rpp32f*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
                                dstDescPtr,
                                roiTensorPtrSrc,
+                               roiType,
                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
@@ -2765,6 +2769,7 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
                                roiTensorPtrSrc,
+                               roiType,
                                rpp::deref(rppHandle));
     }
 
