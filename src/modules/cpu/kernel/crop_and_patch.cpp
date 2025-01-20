@@ -1535,4 +1535,3 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
     return RPP_SUCCESS;
 }
-

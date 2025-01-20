@@ -35,10 +35,6 @@ RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& Handle);
 
-/* BitwiseOR is logical operation only on U8/I8 types.
-   For a Rpp32f precision image (pixel values from 0-1), the BitwiseOR is applied on a 0-255
-   range-translated approximation, of the original 0-1 decimal-range image.
-   The bitwise operation is applied to the char representation of the raw floating-point data in memory */
 RppStatus bitwise_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                          Rpp32f *srcPtr2,
                                          RpptDescPtr srcDescPtr,

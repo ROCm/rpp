@@ -44,13 +44,13 @@ inline void get_inverse(float *mat, float *invMat)
 }
 
 void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
-                                                             Rpp32f *rowRemapTable,
-                                                             Rpp32f *colRemapTable,
-                                                             RpptDescPtr tableDescPtr,
-                                                             Rpp32f *cameraMatrixTensor,
-                                                             Rpp32f *distortionCoeffsTensor,
-                                                             RpptROIPtr roiTensorPtrSrc,
-                                                             rpp::Handle& handle)
+                                                      Rpp32f *rowRemapTable,
+                                                      Rpp32f *colRemapTable,
+                                                      RpptDescPtr tableDescPtr,
+                                                      Rpp32f *cameraMatrixTensor,
+                                                      Rpp32f *distortionCoeffsTensor,
+                                                      RpptROIPtr roiTensorPtrSrc,
+                                                      rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);

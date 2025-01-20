@@ -22,9 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
-#include "rpp_cpu_common.hpp"
+#include "bitwise_or.hpp"
 
 RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                        Rpp8u *srcPtr2,
