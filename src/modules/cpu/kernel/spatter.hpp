@@ -24,11 +24,7 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-
-#define SPATTER_MAX_WIDTH 1920
-#define SPATTER_MAX_HEIGHT 1080
-#define SPATTER_MAX_XDIM 1919
-#define SPATTER_MAX_YDIM 1079
+#include "spatter_mask.hpp"
 
 RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                     RpptDescPtr srcDescPtr,
