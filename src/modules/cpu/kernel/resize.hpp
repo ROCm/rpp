@@ -27,26 +27,6 @@ SOFTWARE.
 #include "rpp_cpu_common_geometric.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
-{
-    *dst = RPPPIXELCHECK(pixel);
-}
-
-inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
-{
-    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
-}
-
-inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
-{
-    *dst = (Rpp32f)pixel;
-}
-
-inline void saturate_pixel(Rpp32f pixel, Rpp16f* dst)
-{
-    *dst = (Rpp16f)pixel;
-}
-
 // Move with resample
 inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)
 {

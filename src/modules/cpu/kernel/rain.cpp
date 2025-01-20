@@ -29,6 +29,31 @@ SOFTWARE.
 #define RAIN_INTENSITY_8S 72    // Intensity value for Rpp8s
 #define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
+inline void compute_rain_48_host(__m256 *p1, __m256 *p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
+    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+}
+
+inline void compute_rain_32_host(__m256 *p1, __m256 *p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[2], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[3], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+}
+
+inline void compute_rain_24_host(__m256 *p1, __m256 p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+}
+
 template<typename T>
 inline void create_rain_layer(T *rainLayer, Rpp32f rainPercentage, RpptDescPtr srcDescPtr, Rpp32f slantAngle, Rpp32u dropLength, Rpp32u rainWidth)
 {

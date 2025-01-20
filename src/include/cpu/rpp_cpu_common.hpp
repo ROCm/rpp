@@ -273,6 +273,26 @@ inline void compute_roi3D_validation_host(RpptROI3DPtr roiPtrInput, RpptROI3DPtr
     }
 }
 
+inline void saturate_pixel(Rpp32f &pixel, Rpp8u* dst)
+{
+    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel)));
+}
+
+inline void saturate_pixel(Rpp32f &pixel, Rpp8s* dst)
+{
+    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(pixel) - 128));
+}
+
+inline void saturate_pixel(Rpp32f &pixel, Rpp32f* dst)
+{
+    *dst = RPPPIXELCHECKF32(pixel);
+}
+
+inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
+{
+    *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
+}
+
 // Helper func for randomization
 //Random code
 #endif //RPP_CPU_COMMON_H

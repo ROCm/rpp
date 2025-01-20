@@ -52,7 +52,7 @@ inline Rpp32s get_num_windows(Rpp32s length, Rpp32s windowLength, Rpp32s windowS
 }
 
 // Compute reflect start idx to pad
-inline Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s maxLoc)
+inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s maxLoc)
 {
     if (maxLoc - minLoc < 2)
         return maxLoc - 1;
