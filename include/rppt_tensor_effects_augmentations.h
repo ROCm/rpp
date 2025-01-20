@@ -470,7 +470,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html effects_augmentations_jitter_150x150.png Sample Output
+ * \image html effects_augmentations_jitter_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -491,7 +491,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html effects_augmentations_jitter_150x150.png Sample Output
+ * \image html effects_augmentations_jitter_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param un[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -518,7 +518,11 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
  * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] seed A user-defined seed value (single Rpp32u value)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
@@ -641,6 +645,60 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptChannelOffsets *rgbOffsets, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Rain augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Rain augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values in pinned / HIP memory is used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! \brief Pixelate augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The pixelate augmentation performs a pixelate transformation for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
@@ -685,6 +743,51 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t intermediateScratchBufferPtr, Rpp32f pixelationPercentage, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Fog augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_fog_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in HOST memory, of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
+ * \param [in] grayFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in HOST memory, of size batchSize, with 0 <= grayFactor <= 1 for each image in batch)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor,Rpp32f *grayFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Fog augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_fog_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
+ * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_fog_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor, Rpp32f *greyFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 /*! @}
  */
 

@@ -37,6 +37,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 7
+errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -46,16 +47,16 @@ def get_log_file_list():
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HOST")
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_host_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HOST")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -73,7 +74,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing end case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
-    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
+    parser.add_argument('--case_list', nargs = "+", help = "A list of specific case numbers to run separated by spaces", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )")
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
@@ -112,7 +113,17 @@ def rpp_test_suite_parser_and_validator():
         print("Invalid input path! QA mode can run only with path:", inFilePath)
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(audioAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -172,13 +183,11 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6', '7']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
 
-noCaseSupported = all(case not in supportedCaseList for case in caseList)
+noCaseSupported = all(int(case) not in audioAugmentationMap for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
@@ -190,7 +199,7 @@ for case in caseList:
         else:
             srcPath = inFilePath
 
-    if case not in supportedCaseList:
+    if int(case) not in audioAugmentationMap:
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
@@ -202,11 +211,19 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_host")
+        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_host")
 
 # Performance tests
 if (testType == 1):
     log_file_list = get_log_file_list()
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
+
+if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_audio_host ----------------------------------\n")
+    for i in range(1,len(errorLog)):
+        print(errorLog[i])
+    if(errorLog[0]["notExecutedFunctionality"] != 0):
+        print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_audio_host were not executed since these sub-variants are not currently supported in RPP.\n")
+    print("-----------------------------------------------------------------------------------------------")
 

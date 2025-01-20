@@ -52,6 +52,12 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 Rpp32s resetInterval,
                                                 rppHandle_t rppHandle)
 {
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
         non_silent_region_detection_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -87,8 +93,15 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
                                 Rpp32f referenceMagnitude,
                                 rppHandle_t rppHandle)
 {
-    if (multiplier == 0)
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if (!multiplier)
         return RPP_ERROR_ZERO_DIVISION;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         to_decibels_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -154,6 +167,12 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 bool  normalizeWeights,
                                 rppHandle_t rppHandle)
 {
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         down_mixing_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -188,7 +207,17 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
                                 Rpp32s windowStep,
                                 rppHandle_t rppHandle)
 {
-    if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) 
+        return RPP_ERROR_INVALID_DST_LAYOUT;
+    
+    // Disabled this checks for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // Rpp32u dstTensorDims = dstDescPtr->numDims - 1; // exclude batchsize from output dims
+    // if (srcTensorDims != 1)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+    // if (dstTensorDims != 2)
+    //     return RPP_ERROR_INVALID_DST_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -231,6 +260,12 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // if (maxFreq < 0 || maxFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
+    // if (minFreq < 0 || minFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -266,6 +301,12 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         resample_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -424,7 +465,6 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-
     if (srcDescPtr->numDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
 
@@ -438,6 +478,57 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                                    srcLengthTensor,
                                                    borderType,
                                                    rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** mel_filter_bank ********************/
+
+RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32s* srcDimsTensor,
+                                   Rpp32f maxFreq,
+                                   Rpp32f minFreq,
+                                   RpptMelScaleFormula melFormula,
+                                   Rpp32s numFilter,
+                                   Rpp32f sampleRate,
+                                   bool normalize,
+                                   rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+    if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (maxFreq < 0 || maxFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (minFreq < 0 || minFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        return hip_exec_mel_filter_bank_tensor(static_cast<Rpp32f*>(srcPtr),
+                                               srcDescPtr,
+                                               static_cast<Rpp32f*>(dstPtr),
+                                               dstDescPtr,
+                                               srcDimsTensor,
+                                               maxFreq,
+                                               minFreq,
+                                               melFormula,
+                                               numFilter,
+                                               sampleRate,
+                                               normalize,
+                                               rpp::deref(rppHandle));
     }
     else
     {
@@ -477,6 +568,60 @@ RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
                                  srcDimsTensor,
                                  window,
                                  rpp::deref(rppHandle));
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** spectrogram ********************/
+
+RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32s *srcLengthTensor,
+                               bool centerWindows,
+                               bool reflectPadding,
+                               Rpp32f *windowFunction,
+                               Rpp32s nfft,
+                               Rpp32s power,
+                               Rpp32s windowLength,
+                               Rpp32s windowStep,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) 
+        return RPP_ERROR_INVALID_DST_LAYOUT;
+    Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    Rpp32u dstTensorDims = dstDescPtr->numDims - 1; // exclude batchsize from output dims
+    if (srcTensorDims != 1)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+    if (dstTensorDims != 2)
+        return RPP_ERROR_INVALID_DST_DIMS;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_spectrogram_tensor(static_cast<Rpp32f*>(srcPtr),
+                                    srcDescPtr,
+                                    static_cast<Rpp32f*>(dstPtr),
+                                    dstDescPtr,
+                                    srcLengthTensor,
+                                    centerWindows,
+                                    reflectPadding,
+                                    windowFunction,
+                                    nfft,
+                                    power,
+                                    windowLength,
+                                    windowStep,
+                                    rpp::deref(rppHandle));
+
         return RPP_SUCCESS;
     }
     else

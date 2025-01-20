@@ -26,15 +26,11 @@ SOFTWARE.
 #define RPP_HIP_COMMON_H
 
 #include <hip/hip_runtime.h>
-#include <hip/hip_fp16.h>
-#include <half/half.hpp>
 
 #include "rppdefs.h"
 #include "rpp/handle.hpp"
 #include "rpp_hip_roi_conversion.hpp"
 
-using halfhpp = half_float::half;
-typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
 typedef signed char schar;
 typedef struct { uint   data[ 6]; } d_uint6_s;
@@ -129,6 +125,7 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
 #define PI                              3.14159265
+#define TWO_PI                          6.2831853
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
 #define RGB_TO_GREY_WEIGHT_BLUE         0.114f

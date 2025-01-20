@@ -1,56 +1,74 @@
 # Changelog for RPP
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
- 
-## RPP 1.9.1 for ROCm 6.3.0
- 
-### Changes
- 
-* Test - Prerequisites Updates
-* RPP Glitch on HOST and HIP
-* AMD Advanced - Build Flag
-* RPP Audio Support HIP - Resample
-* RPP Audio Support HIP - Pre emphasis filter
-* RPP Pixelate - HOST and HIP
-* RPP Audio Support HIP - Down-mixing 
-* RPP Audio Support HIP - To Decibels
-* RPP Audio Support HIP - Non silent region
 
-### Removals
- 
-* TurboJPEG - older version
- 
-### Optimizations
- 
-* macOS - Build fix 
-* Docs - changed roiTensorSrc to roiTensorPtrSrc in documentation
-* Test Suite - updates 
- 
+## (Unreleased) RPP 1.9.10
+
+### Changed
+
+* RPP Tensor Gaussian Filter support on HOST
+* RPP Fog augmentation on HOST and HIP
+* RPP Rain augmentation on HOST and HIP
+* RPP Warp Perspective on HOST and HIP
+* RPP Threshold on HOST and HIP
+
+## (Unreleased) RPP 1.9.4
+
+### Changed
+* AMD Clang is now the default CXX and C compiler
+* RPP Tensor Box Filter support on HOST
+
+## (Unreleased) RPP 1.9.3
+
+### Changed
+
+* RPP Audio Support HIP - Spectrogram
+
+## (Unreleased) RPP 1.9.2 
+
+### Changed
+
+* RPP Audio Support HIP - Mel Filter Bank
+
+## RPP 1.9.1 for ROCm 6.3.0
+
+### Added
+
+* RPP Glitch has been added to the HOST and HIP backend.
+* RPP Pixelate has been added to the HOST and HIP backend.
+* The following audio support was added to the HIP backend:
+  * Resample
+  * Pre emphasis filter
+  * Down-mixing
+  * To Decibels
+  * Non silent region
+
+### Changed
+
+* Test prerequisites have been updated.
+
+### Removed
+
+* Older versions of TurboJPEG have been removed.
+
+### Optimized
+
+* Updated the test suite
+
 ### Resolved issues
- 
-* RPP Test Suite - augmentations fix 
-* Copy - bugfix for `NCDHW` layout
-* MIVisionX compatibility fix - Resample and pre-emphasis filter
-* Docs - fix broken image links
- 
+
+* macOS build
+* RPP Test Suite: augmentations fix
+* Copy: bugfix for `NCDHW` layout
+* MIVisionX compatibility fix: Resample and pre-emphasis filter
+
 ### Known issues
 
-* Package only supports HIP backend
- 
+* Package installation only supports the HIP backend.
+
 ### Upcoming changes
- 
-* Optimized audio augmentations 
 
-### Tested configurations
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RHEL - `8`/`9`
-* ROCm: rocm-core - `6.3.0.60300`
-* Clang - Version `5.0.1`+
-* CMake - Version `3.16.3`+
-* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+* Optimized audio augmentations
 
 
 ## RPP 1.8.0 for ROCm 6.2.0

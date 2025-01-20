@@ -30,7 +30,6 @@ SOFTWARE.
 #include "cpu/kernel/color_to_greyscale.hpp"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_data_exchange_operations.hpp"
 #endif // HIP_COMPILE
 

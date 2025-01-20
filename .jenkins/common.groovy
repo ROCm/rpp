@@ -17,14 +17,14 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     }
     else if (platform.jenkinsLabel.contains('ubuntu')) {
         enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
-        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
         if (platform.jenkinsLabel.contains('ubuntu20')) {
             backend = 'OCL'
         }
     }
     else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install -y libsndfile-devel'
-        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
     
 
@@ -54,8 +54,10 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
-                cd ${project.paths.project_build_prefix}/build/release
-                make test ARGS="-VV"
+                cd ${project.paths.project_build_prefix}/build
+                mkdir -p test && cd test
+                cmake /opt/rocm/share/rpp/test
+                ctest -VV
                 """
 
     platform.runCommand(this, command)
@@ -116,8 +118,6 @@ def runPackageCommand(platform, project) {
                 mv rpp-test*.${packageType} package/${osType}-rpp-test.${packageType}
                 mv rpp-dev*.${packageType} package/${osType}-rpp-dev.${packageType}
                 mv ${packageRunTime}.${packageType} package/${osType}-rpp.${packageType}
-                mv Testing/Temporary/LastTest.log ${osType}-LastTest.log
-                mv Testing/Temporary/LastTestsFailed.log ${osType}-LastTestsFailed.log
                 ${packageDetail} package/${osType}-rpp-test.${packageType}
                 ${packageDetail} package/${osType}-rpp-dev.${packageType}
                 ${packageDetail} package/${osType}-rpp.${packageType}

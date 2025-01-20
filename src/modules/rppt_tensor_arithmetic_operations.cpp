@@ -33,7 +33,6 @@ SOFTWARE.
 #include "cpu/kernel/log.hpp"
 
 #ifdef HIP_COMPILE
-    #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_arithmetic_operations.hpp"
 #endif // HIP_COMPILE
 

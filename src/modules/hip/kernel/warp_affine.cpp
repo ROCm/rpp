@@ -1,8 +1,5 @@
 #include <hip/hip_runtime.h>
-#include <half/half.hpp>
 #include "rpp_hip_host_decls.hpp"
-
-using half_float::half;
 
 extern "C" __global__ void warp_affine_pln(unsigned char *srcPtr,
                                            unsigned char *dstPtr,
