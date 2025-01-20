@@ -38,6 +38,7 @@ SOFTWARE.
 #include "cpu/kernel/resize_mirror_normalize.hpp"
 #include "cpu/kernel/slice.hpp"
 #include "cpu/kernel/warp_affine.hpp"
+#include "cpu/kernel/warp_perspective.hpp"
 #include "cpu/kernel/transpose.hpp"
 
 #ifdef HIP_COMPILE

@@ -30,6 +30,7 @@ SOFTWARE.
 #include "cpu/kernel/tensor_max.hpp"
 #include "cpu/kernel/tensor_mean.hpp"
 #include "cpu/kernel/tensor_stddev.hpp"
+#include "cpu/kernel/threshold.hpp"
 #include "cpu/kernel/normalize.hpp"
 
 #ifdef HIP_COMPILE

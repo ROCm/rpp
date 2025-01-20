@@ -41,6 +41,8 @@ SOFTWARE.
 #include "cpu/kernel/vignette.hpp"
 #include "cpu/kernel/resize.hpp"  //pixelate dependency
 #include "cpu/kernel/erase.hpp"
+#include "cpu/kernel/fog.hpp"
+#include "cpu/kernel/rain.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/hip_tensor_effects_augmentations.hpp"

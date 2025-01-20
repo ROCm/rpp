@@ -31,6 +31,7 @@ SOFTWARE.
 #include <cstring>
 #include <rppdefs.h>
 #include <omp.h>
+#include "rpp/handle.hpp"
 #include "rpp_cpu_simd.hpp"
 
 #define PI                              3.14159265
