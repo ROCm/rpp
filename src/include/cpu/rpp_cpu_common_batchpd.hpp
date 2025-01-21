@@ -120,6 +120,14 @@ struct RPPTensorFunctionMetaData
 };
 #endif // GPU_SUPPORT
 
+inline int power_function(int a, int b)
+{
+    int product = 1;
+    for(int i = 0; i < b; i++)
+        product *= product * a;
+    return product;
+}
+
 template <typename T>
 RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
