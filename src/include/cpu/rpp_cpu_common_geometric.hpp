@@ -1,6 +1,8 @@
 #ifndef RPP_CPU_COMMON_GEOMETRIC_H
 #define RPP_CPU_COMMON_GEOMETRIC_H
 
+#define RPPFLOOR(a)                     ((int) a)
+
 inline void compute_offset_i8_1c_avx(__m256 &p)
 {
     p = _mm256_add_ps(p, avx_p128);
