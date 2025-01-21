@@ -44,4 +44,4 @@ inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s 
     return loc;
 }
 
-#endif RPP_SPECTROGRAM_HELPER_H
+#endif
