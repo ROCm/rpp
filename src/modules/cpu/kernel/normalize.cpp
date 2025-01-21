@@ -895,9 +895,9 @@ template RppStatus normalize_generic_host_tensor<Rpp16f, Rpp16f>(Rpp16f*,
                                                                  RppLayoutParams,
                                                                  rpp::Handle&);
 
-template RppStatus normalize_generic_host_tensor<Rpp8s, Rpp8s>(Rpp8s*,
+template RppStatus normalize_generic_host_tensor<Rpp8s, Rpp8u>(Rpp8s*,
                                                                RpptGenericDescPtr,
-                                                               Rpp8s*,
+                                                               Rpp8u*,
                                                                RpptGenericDescPtr,
                                                                Rpp32u,
                                                                Rpp32f*,
