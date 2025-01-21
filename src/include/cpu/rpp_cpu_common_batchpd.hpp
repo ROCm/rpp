@@ -13,12 +13,9 @@ typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
 #define PI                              3.14159265
-#define PI_OVER_180                     0.0174532925
-#define ONE_OVER_255                    0.00392156862745f
-#define ONE_OVER_256                    0.00390625f
-#define RPP_128_OVER_255                0.50196078431f
 #define RAD(deg)                        (deg * PI / 180)
 #define RPPABS(a)                       ((a < 0) ? (-a) : (a))
+#define RPPCEIL(a)                      ((int) (a + 1.0))
 #define RPPMIN2(a,b)                    ((a < b) ? a : b)
 #define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
 #define RPPMAX2(a,b)                    ((a > b) ? a : b)
@@ -26,21 +23,12 @@ typedef halfhpp Rpp16f;
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
 #define RPPPRANGECHECK(value, a, b)     (value < (Rpp32f) a) ? ((Rpp32f) a) : ((value < (Rpp32f) b) ? value : ((Rpp32f) b))
 #define RPPFLOOR(a)                     ((int) a)
-#define RPPCEIL(a)                      ((int) (a + 1.0))
 #define RPPISEVEN(a)                    ((a % 2 == 0) ? 1 : 0)
 #define RPPPIXELCHECK(pixel)            (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
 #define RPPPIXELCHECKF32(pixel)         (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1))
 #define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
 #define RPPISGREATER(pixel, value)      ((pixel > value) ? 1 : 0)
 #define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
-#define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment
-#define XORWOW_EXPONENT_MASK            0x3F800000  // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
-#define RGB_TO_GREY_WEIGHT_RED          0.299f
-#define RGB_TO_GREY_WEIGHT_GREEN        0.587f
-#define RGB_TO_GREY_WEIGHT_BLUE         0.114f
-#define INTERP_BILINEAR_KERNEL_SIZE     2           // Kernel size needed for Bilinear Interpolation
-#define INTERP_BILINEAR_KERNEL_RADIUS   1.0f        // Kernel radius needed for Bilinear Interpolation
-#define INTERP_BILINEAR_NUM_COEFFS      4           // Number of coefficents needed for Bilinear Interpolation
 #define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
 #define RPP_2POW32                      0x100000000         // (2^32)
 #define RPP_2POW32_INV                  2.3283064e-10f      // (1 / 2^32)
@@ -50,35 +38,14 @@ typedef halfhpp Rpp16f;
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
 #define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
-const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
-const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
-const __m128 xmm_p2Pow32InvDiv2 = _mm_set1_ps(RPP_2POW32_INV_DIV_2);
-const __m128 xmm_p2Pow32InvMul2Pi = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI);
-const __m128 xmm_p2Pow32InvMul2PiDiv2 = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
 const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-
-const __m256 avx_p2Pow32 = _mm256_set1_ps(RPP_2POW32);
-const __m256 avx_p2Pow32Inv = _mm256_set1_ps(RPP_2POW32_INV);
-const __m256 avx_p2Pow32InvDiv2 = _mm256_set1_ps(RPP_2POW32_INV_DIV_2);
-const __m256 avx_p2Pow32InvMul2Pi = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI);
-const __m256 avx_p2Pow32InvMul2PiDiv2 = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
 const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-
-#if __AVX2__
-#define SIMD_FLOAT_VECTOR_LENGTH        8
-#else
-#define SIMD_FLOAT_VECTOR_LENGTH        4
-#endif
 
 /*Constants used for Gaussian interpolation*/
 // Here sigma is considered as 0.5f
 #define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
 #define GAUSSCONSTANT2                  0.7978845608028654f // 1 / ((2 * PI)*(1/2) * sigma)
 static uint16_t wyhash16_x;
-
-alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-alignas(64) const Rpp32f ssh_mat[16] = {0.168f, -0.328f, 1.250f, 0.0f, 0.330f, 0.035f, -1.050f, 0.0f, -0.497f, 0.292f, -0.203f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-alignas(64) const Rpp32u multiseedStreamOffset[8] = {0x15E975, 0x2359A3, 0x42CC61, 0x1925A7, 0x123AA3, 0x21F149, 0x2DDE23, 0x2A93BB};    // Prime numbers for multiseed stream initialization
 
 inline uint32_t hash16(uint32_t input, uint32_t key) {
   uint32_t hash = input * key;
