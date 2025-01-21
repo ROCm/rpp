@@ -1,8 +1,6 @@
 #ifndef RPP_CPU_COMMON_GEOMETRIC_H
 #define RPP_CPU_COMMON_GEOMETRIC_H
 
-#define RPPFLOOR(a)                     ((int) a)
-
 inline void compute_offset_i8_1c_avx(__m256 &p)
 {
     p = _mm256_add_ps(p, avx_p128);
@@ -34,7 +32,7 @@ inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32s &src
 inline void compute_resize_nn_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32u limit, Rpp32s &srcLoc, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     Rpp32f srcLocation = ((Rpp32f) dstLocation) * scale + offset;
-    Rpp32s srcLocationFloor = (Rpp32s) RPPFLOOR(srcLocation);
+    Rpp32s srcLocationFloor = std::floor(srcLocation);
     srcLoc = ((srcLocationFloor > limit) ? limit : srcLocationFloor) * srcStride;
 }
 
