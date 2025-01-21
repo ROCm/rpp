@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
+#include "spectrogram_helper.hpp"
 
 /* Spectrogram kernel working overview
 1D Input -> 2D Output
