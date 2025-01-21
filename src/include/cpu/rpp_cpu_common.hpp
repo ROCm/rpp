@@ -45,6 +45,7 @@ SOFTWARE.
 #define RPPPIXELCHECK(pixel)            (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 255) ? pixel : ((Rpp32f) 255))
 #define RPPPIXELCHECKF32(pixel)         (pixel < (Rpp32f) 0) ? ((Rpp32f) 0) : ((pixel < (Rpp32f) 1) ? pixel : ((Rpp32f) 1))
 #define RPPPIXELCHECKI8(pixel)          (pixel < (Rpp32f) -128) ? ((Rpp32f) -128) : ((pixel < (Rpp32f) 127) ? pixel : ((Rpp32f) 127))
+#define RPPISLESSER(pixel, value)       ((pixel < value) ? 1 : 0)
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
 #define RGB_TO_GREY_WEIGHT_BLUE         0.114f
