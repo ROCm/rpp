@@ -27,6 +27,7 @@ SOFTWARE.
 #include "third_party/ffts/ffts_attributes.h"
 #include <complex>
 #include "rpp_cpu_common.hpp"
+#include "spectrogram_helper.hpp"
 
 RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
