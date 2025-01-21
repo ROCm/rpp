@@ -24,11 +24,9 @@ subtrees:
   - file: reference/rpp-supported-functionalities.rst
     title: Supported functionalities and variants
   - file: reference/rpp-api-reference.rst
-    title: API library
+    title: RPP API reference
     subtrees:
     - entries:
-      - file: doxygen/html/topics.html
-        title: RPP APIs
       - file: doxygen/html/files
         title: RPP header files
       - file: doxygen/html/group__group__rppdefs

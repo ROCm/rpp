@@ -33,7 +33,6 @@ The RPP public repository is located at `https://github.com/ROCm/rpp <https://gi
     * :doc:`Supported RPP functionalities and variants <./reference/rpp-supported-functionalities>`
     * RPP API reference
 
-      * :doc:`RPP APIs <./doxygen/html/topics>`
       * :doc:`RPP header files <./doxygen/html/files>`
       * :doc:`RPP common definitions <./doxygen/html/group__group__rppdefs>`
       * :doc:`RPP data structures <./doxygen/html/annotated>`
