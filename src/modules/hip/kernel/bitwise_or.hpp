@@ -63,9 +63,11 @@ __global__ void bitwise_or_pln_hip_tensor(Rpp8u *srcPtr1,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_uchar8 src1_uc8, src2_uc8, dst_uc8;
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
 
-    rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, &src1_uc8);
-    rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, &src2_uc8);
+    rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+    rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
     bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
     rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 
@@ -74,16 +76,16 @@ __global__ void bitwise_or_pln_hip_tensor(Rpp8u *srcPtr1,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, &src1_uc8);
-        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, &src2_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
         bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
         rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, &src1_uc8);
-        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, &src2_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
         bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
         rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
     }
@@ -112,9 +114,9 @@ __global__ void bitwise_or_pkd3_pln3_hip_tensor(Rpp8u *srcPtr1,
 
     rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr1 + srcIdx, &src1_uc24);
     rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr2 + srcIdx, &src2_uc24);
-    bitwise_or_hip_compute(&src1_uc24.f8[0], &src2_uc24.f8[0], &dst_uc24.f8[0]);
-    bitwise_or_hip_compute(&src1_uc24.f8[1], &src2_uc24.f8[1], &dst_uc24.f8[1]);
-    bitwise_or_hip_compute(&src1_uc24.f8[2], &src2_uc24.f8[2], &dst_uc24.f8[2]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
     rpp_hip_pack_uchar24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_uc24);
 }
 
@@ -141,9 +143,9 @@ __global__ void bitwise_or_pln3_pkd3_hip_tensor(Rpp8u *srcPtr1,
 
     rpp_hip_load24_pln3_and_unpack_to_uchar24_pkd3(srcPtr1 + srcIdx, srcStridesNCH.y, &src1_uc24);
     rpp_hip_load24_pln3_and_unpack_to_uchar24_pkd3(srcPtr2 + srcIdx, srcStridesNCH.y, &src2_uc24);
-    bitwise_or_hip_compute(&src1_uc24.f8[0], &src2_uc24.f8[0], &dst_uc24.f8[0]);
-    bitwise_or_hip_compute(&src1_uc24.f8[1], &src2_uc24.f8[1], &dst_uc24.f8[1]);
-    bitwise_or_hip_compute(&src1_uc24.f8[2], &src2_uc24.f8[2], &dst_uc24.f8[2]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
     rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_uc24);
 }
 
