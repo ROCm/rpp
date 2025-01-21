@@ -7,7 +7,7 @@ ROCm Performance Primitives API reference
 *******************************************
 
 
-* :doc:`APIs <../doxygen/html/topics>`
+* :doc:`APIs <../doxygen/html/topics.html>`
 * :doc:`Header files <../doxygen/html/files>`
 * :doc:`Common definitions <../doxygen/html/group__group__rppdefs>`
 * :doc:`Data structures <../doxygen/html/annotated>`
