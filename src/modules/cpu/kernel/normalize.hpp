@@ -25,6 +25,7 @@ SOFTWARE.
 #define NORMALIZE_HPP
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
