@@ -118,7 +118,7 @@ void dumpKernel(cl_kernel kern,
     buf[size] = 0;
     char fileName[1024];
     FILE* fp;
-    sprintf(fileName, "dump_%03d_command.txt", dumpOpenCLFileCounter);
+    snprintf(fileName, sizeof(fileName), "dump_%03d_command.txt", dumpOpenCLFileCounter);
     fp = fopen(fileName, "w");
     if(!fp)
     {
@@ -190,7 +190,7 @@ void dumpKernel(cl_kernel kern,
                fileName,
                work.c_str());
     }
-    sprintf(fileName, "dump_%03d_kernel.cl", dumpOpenCLFileCounter);
+    snprintf(fileName, sizeof(fileName), "dump_%03d_kernel.cl", dumpOpenCLFileCounter);
     fp = fopen(fileName, "w");
     if(!fp)
     {
