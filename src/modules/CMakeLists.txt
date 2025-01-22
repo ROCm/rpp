@@ -92,7 +92,8 @@ if( "${BACKEND}" STREQUAL "HIP")
     # Add HIP kernels
     file(GLOB MOD_HIP_CPP "hip/*.cpp" )
     file(GLOB MOD_HIP_CPP_KERNELS "hip/kernel/*.cpp" )
-    list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_CPP_KERNELS})
+    file(GLOB MOD_HOST_CPP_KERNELS "cpu/kernel/*.cpp" )
+    list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_CPP_KERNELS} ${MOD_HOST_CPP_KERNELS})
     message("-- ${Green}HIP kernels added${ColourReset}")
 
     # Set compiler flags
