@@ -2123,9 +2123,6 @@ static inline Rpp32u HorMax256(__m256i pmax)
 }
 #endif
 
-#define set1_ps_hex(x) _mm_castsi128_ps(_mm_set1_epi32(x))
-#define set1_ps_hex_avx(x) _mm256_castsi256_ps(_mm256_set1_epi32(x))
-
 /* Generic interpolation loads  */
 
 inline void rpp_generic_nn_load_u8pkd3(Rpp8u *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)

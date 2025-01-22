@@ -62,9 +62,6 @@ SOFTWARE.
 #define SIMD_FLOAT_VECTOR_LENGTH        4
 #endif
 
-const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-
 /*Constants used for Gaussian interpolation*/
 // Here sigma is considered as 0.5f
 
@@ -94,34 +91,6 @@ inline float rpp_host_math_inverse_sqrt_1(float x)
     x = x * (1.5f - xHalf * x * x);                 // One round of Newton's method
 
     return x;
-}
-
-// SSE implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
-inline __m128 rpp_host_math_inverse_sqrt_4_sse(__m128 p)
-{
-    __m128 pHalfNeg;
-    __m128i pxI;
-    pHalfNeg = _mm_mul_ps(_ps_n0p5, p);                                         // float xHalfNeg = -0.5f * x;
-    pxI = *(__m128i *)&p;                                                       // int i = *(int*)&x;
-    pxI = _mm_sub_epi32(xmm_newtonMethodInitialGuess, _mm_srli_epi32(pxI, 1));  // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
-    p = *(__m128 *)&pxI;                                                        // x = *(float*)&i;
-    p = _mm_mul_ps(p, _mm_fmadd_ps(p, _mm_mul_ps(p, pHalfNeg), _ps_1p5));       // x = x * (1.5f - xHalf * x * x);
-
-    return p;
-}
-
-// AVX2 implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
-inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
-{
-    __m256 pHalfNeg;
-    __m256i pxI;
-    pHalfNeg = _mm256_mul_ps(_ps_n0p5_avx, p);                                          // float xHalfNeg = -0.5f * x;
-    pxI = *(__m256i *)&p;                                                               // int i = *(int*)&x;
-    pxI = _mm256_sub_epi32(avx_newtonMethodInitialGuess, _mm256_srli_epi32(pxI, 1));    // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
-    p = *(__m256 *)&pxI;                                                                // x = *(float*)&i;
-    p = _mm256_mul_ps(p, _mm256_fmadd_ps(p, _mm256_mul_ps(p, pHalfNeg), _ps_1p5_avx));  // x = x * (1.5f - xHalf * x * x);
-
-    return p;
 }
 
 // copy ROI of voxel data from input to output

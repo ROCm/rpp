@@ -11,7 +11,15 @@
 #include <immintrin.h>
 #endif
 
+#define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
+
+#define set1_ps_hex(x) _mm_castsi128_ps(_mm_set1_epi32(x))
+#define set1_ps_hex_avx(x) _mm256_castsi256_ps(_mm256_set1_epi32(x))
+
+const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
+
+const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 
 static const __m128 _ps_0 = _mm_set1_ps(0.f);
 static const __m128 _ps_1 = _mm_set1_ps(1.f);
@@ -908,5 +916,35 @@ static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
         _mm_store_ps(&C[4*i], row);                     // Example for row 0 computation -> Storing whole computed row 0
     }
 }
+
+// SSE implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
+inline __m128 rpp_host_math_inverse_sqrt_4_sse(__m128 p)
+{
+    __m128 pHalfNeg;
+    __m128i pxI;
+    pHalfNeg = _mm_mul_ps(_ps_n0p5, p);                                         // float xHalfNeg = -0.5f * x;
+    pxI = *(__m128i *)&p;                                                       // int i = *(int*)&x;
+    pxI = _mm_sub_epi32(xmm_newtonMethodInitialGuess, _mm_srli_epi32(pxI, 1));  // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
+    p = *(__m128 *)&pxI;                                                        // x = *(float*)&i;
+    p = _mm_mul_ps(p, _mm_fmadd_ps(p, _mm_mul_ps(p, pHalfNeg), _ps_1p5));       // x = x * (1.5f - xHalf * x * x);
+
+    return p;
+}
+
+// AVX2 implementation of fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
+inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
+{
+    __m256 pHalfNeg;
+    __m256i pxI;
+    pHalfNeg = _mm256_mul_ps(_ps_n0p5_avx, p);                                          // float xHalfNeg = -0.5f * x;
+    pxI = *(__m256i *)&p;                                                               // int i = *(int*)&x;
+    pxI = _mm256_sub_epi32(avx_newtonMethodInitialGuess, _mm256_srli_epi32(pxI, 1));    // i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);
+    p = *(__m256 *)&pxI;                                                                // x = *(float*)&i;
+    p = _mm256_mul_ps(p, _mm256_fmadd_ps(p, _mm256_mul_ps(p, pHalfNeg), _ps_1p5_avx));  // x = x * (1.5f - xHalf * x * x);
+
+    return p;
+}
+
+
 
 #endif //AMD_RPP_RPP_CPU_SIMD_MATH_HPP

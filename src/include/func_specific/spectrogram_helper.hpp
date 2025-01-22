@@ -3,7 +3,7 @@
 
 #include <rppdefs.h>
 
-bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
+inline bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
 inline bool can_use_real_impl(Rpp64s n) { return is_pow2(n); }
 inline Rpp64s size_in_buf(Rpp64s n) { return can_use_real_impl(n) ? n : 2 * n; }
 inline Rpp64s size_out_buf(Rpp64s n) { return can_use_real_impl(n) ? n + 2 : 2 * n; }
