@@ -81,6 +81,7 @@ const __m128 xmm_p4 = _mm_set1_ps(4.0f);
 const __m128 xmm_p6 = _mm_set1_ps(6.0f);
 const __m128 xmm_p16 = _mm_set1_ps(16.0f);
 const __m128 xmm_p255 = _mm_set1_ps(255.0f);
+const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
 const __m128 xmm_p1op3 = _mm_set1_ps(1.0f / 3.0f);
 const __m128 xmm_p2op3 = _mm_set1_ps(2.0f / 3.0f);
 

@@ -18,7 +18,6 @@
 #define set1_ps_hex_avx(x) _mm256_castsi256_ps(_mm256_set1_epi32(x))
 
 const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
 
 const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 
