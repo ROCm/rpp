@@ -68,14 +68,14 @@ int main(int argc, char **argv)
     if (axisMaskCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%d", axisMask);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%d", axisMask);
         func += "_" + std::to_string(nDim) + "d" + "_axisMask";
         func += additionalParam_char;
     }
     if (permOrderCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%d", permOrder);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%d", permOrder);
         func += "_" + std::to_string(nDim) + "d" + "_permOrder";
         func += additionalParam_char;
     }
