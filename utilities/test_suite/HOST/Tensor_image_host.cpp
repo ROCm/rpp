@@ -696,7 +696,7 @@ int main(int argc, char **argv)
                 case THRESHOLD:
                 {
                     testCaseName = "threshold";
-                    
+
                     Rpp32f minTensor[batchSize * srcDescPtr->c];
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
                     Rpp32f normFactor = 1;
