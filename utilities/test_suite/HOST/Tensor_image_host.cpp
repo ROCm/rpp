@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     else if (kernelSizeCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%u", additionalParam);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         func += "_kernelSize";
         func += additionalParam_char;
     }
@@ -695,7 +695,7 @@ int main(int argc, char **argv)
                 case THRESHOLD:
                 {
                     testCaseName = "threshold";
-                    
+
                     Rpp32f minTensor[batchSize * srcDescPtr->c];
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
                     Rpp32f normFactor = 1;
