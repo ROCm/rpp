@@ -130,7 +130,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, batchSize, stream, backend);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
@@ -228,7 +229,7 @@ int main(int argc, char **argv)
         minWallTime = std::min(minWallTime, wallTime);
         avgWallTime += wallTime;
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle,backend);
 
     // compare outputs if qaMode is true
     if(qaMode)

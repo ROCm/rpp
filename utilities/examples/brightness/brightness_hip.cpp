@@ -39,8 +39,6 @@ SOFTWARE.
 #include <hip/hip_fp16.h>
 #include <fstream>
 
-typedef half Rpp16f;
-
 using namespace cv;
 using namespace std;
 
@@ -315,7 +313,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, stream, backend);
 
     //parameters for brightness node
     Rpp32f alpha[images];
@@ -406,7 +405,7 @@ int main(int argc, char **argv)
         if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
             convert_pln3_to_pkd3(outputu8, dstDescPtr);
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump (if testType is unit test and QA mode is not set)
     write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);

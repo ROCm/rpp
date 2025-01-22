@@ -170,7 +170,8 @@ int main(int argc, char **argv)
     printf("\nip_bitDepth = %d\ntest_case = %d", ip_bitDepth, test_case);
 
     rppHandle_t handle;
-    rppCreate(&handle);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, 2, 0, backend);
 
     clock_t start, end;
     double start_omp, end_omp;
@@ -960,6 +961,8 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
         break;
     }
+
+    rppDestroy(handle, backend);
 
     if (missingFuncFlag == 1)
     {

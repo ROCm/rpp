@@ -370,7 +370,8 @@ int main(int argc, char **argv)
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, noOfImages, &numThreads, backend);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
@@ -1775,7 +1776,7 @@ int main(int argc, char **argv)
         }
     }
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     if(testType == 1)
     {

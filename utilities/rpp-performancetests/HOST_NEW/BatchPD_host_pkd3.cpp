@@ -651,7 +651,8 @@ int main(int argc, char **argv)
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
-    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, noOfImages, &numThreads, backend);
     clock_t start, end;
     double start_omp, end_omp;
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
@@ -3468,7 +3469,7 @@ int main(int argc, char **argv)
     avg_time_used /= 100;
     cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     free(srcSize);
     free(dstSize);

@@ -149,7 +149,8 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
 
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, 1);
+    RppBackend backend = RppBackend::RPP_OCL_BACKEND;
+    rppCreate(&handle, 1, theQueue, backend);
 
     clock_t start, end;
     double gpu_time_used;
@@ -1019,6 +1020,8 @@ int main(int argc, char **argv)
         missingFuncFlag = 1;
         break;
     }
+
+    rppDestroy(handle, backend);
 
     if (missingFuncFlag == 1)
     {

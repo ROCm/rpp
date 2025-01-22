@@ -167,7 +167,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
 	hipStream_t stream;
 	hipStreamCreate(&stream);
-	rppCreateWithStreamAndBatchSize(&handle, stream, 2);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+	rppCreate(&handle, 2, stream, backend);
 
     clock_t start, end;
     double gpu_time_used;
@@ -642,6 +643,8 @@ int main(int argc, char **argv)
         break;
     }
 
+    rppDestroy(handle, backend);
+    
     if (missingFuncFlag == 1)
     {
         cout << "\nThis functionality sub-type of " << test_case_name << " doesn't yet exist in RPP\n";
