@@ -2,6 +2,7 @@
 #define AMD_RPP_RPP_CPU_SIMD_MATH_HPP
 
 #include "rppdefs.h"
+#include "rpp_cpu_simd.hpp"
 
 #if _WIN32
 #include <intrin.h>
