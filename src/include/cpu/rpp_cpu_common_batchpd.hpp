@@ -38,9 +38,6 @@ typedef halfhpp Rpp16f;
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
 #define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
-const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
-
 /*Constants used for Gaussian interpolation*/
 // Here sigma is considered as 0.5f
 #define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
