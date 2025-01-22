@@ -99,7 +99,7 @@ std::map<int, string> augmentationMap =
     {61, "magnitude"},
     {63, "phase"},
     {65, "bitwise_and"},
-    {67, "exclusive_or"},
+    {67, "bitwise_xor"},
     {68, "bitwise_or"},
     {70, "copy"},
     {79, "remap"},
