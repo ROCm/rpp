@@ -340,7 +340,7 @@ else:
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
     elif (testType == 1 and profilingOption == "YES"):
-        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
+        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
 
         noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
         if noCaseSupported:
