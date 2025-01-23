@@ -25,9 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_data_exchange_operations.h"
-#include "cpu/kernel/copy.hpp"
-#include "cpu/kernel/swap_channels.hpp"
-#include "cpu/kernel/color_to_greyscale.hpp"
+#include "cpu/host_tensor_data_exchange_operations.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/hip_tensor_data_exchange_operations.hpp"

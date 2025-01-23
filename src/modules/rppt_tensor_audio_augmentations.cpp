@@ -27,14 +27,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_audio_augmentations.h"
-#include "cpu/kernel/non_silent_region_detection.hpp"
-#include "cpu/kernel/to_decibels.hpp"
-#include "cpu/kernel/pre_emphasis_filter.hpp"
-#include "cpu/kernel/down_mixing.hpp"
-#include "cpu/kernel/spectrogram.hpp"
-#include "cpu/kernel/mel_filter_bank.hpp"
-#include "cpu/kernel/resample.hpp"
-
+#include "cpu/host_tensor_audio_augmentations.hpp"
 #ifdef HIP_COMPILE
     #include "hip/hip_tensor_audio_augmentations.hpp"
 #endif // HIP_COMPILE

@@ -25,16 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_color_augmentations.h"
-#include "cpu/kernel/brightness.hpp"
-#include "cpu/kernel/gamma_correction.hpp"
-#include "cpu/kernel/blend.hpp"
-#include "cpu/kernel/color_twist.hpp"
-#include "cpu/kernel/color_jitter.hpp"
-#include "cpu/kernel/color_cast.hpp"
-#include "cpu/kernel/exposure.hpp"
-#include "cpu/kernel/contrast.hpp"
-#include "cpu/kernel/lut.hpp"
-#include "cpu/kernel/color_temperature.hpp"
+#include "cpu/host_tensor_color_augmentations.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/hip_tensor_color_augmentations.hpp"
