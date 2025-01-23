@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_simd_math.hpp"
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,

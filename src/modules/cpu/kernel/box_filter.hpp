@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_filter.hpp"
 
 template<typename T>
 RppStatus box_filter_char_host_tensor(T *srcPtr,

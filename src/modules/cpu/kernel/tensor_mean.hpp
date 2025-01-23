@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "reduction.hpp"
 
 RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                                   RpptDescPtr srcDescPtr,

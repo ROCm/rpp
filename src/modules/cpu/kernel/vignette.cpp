@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "vignette.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 inline void compute_vignette_48_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
 {

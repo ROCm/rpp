@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "rain.hpp"
+#include <random>
 
 // Constants to represent the rain intensity for different data types
 #define RAIN_INTENSITY_8U 200   // Intensity value for Rpp8u

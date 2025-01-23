@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "threshold.hpp"
 
-
 inline void compute_threshold_8_host(__m256 *p, __m256 *pThresholdParams)
 {
     p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));

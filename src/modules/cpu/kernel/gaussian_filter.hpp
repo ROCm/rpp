@@ -19,9 +19,7 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_filter.hpp"
 
 template<typename T>
 RppStatus gaussian_filter_host_tensor(T *srcPtr,

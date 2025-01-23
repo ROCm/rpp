@@ -24,8 +24,6 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_common_interpolation.hpp"
-#include "rpp_cpu_common_geometric.hpp"
 
 /************* NEAREST NEIGHBOR INTERPOLATION *************/
 

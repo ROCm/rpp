@@ -21,11 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#ifndef NORMALIZE_HPP
-#define NORMALIZE_HPP
+
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_simd_math.hpp"
 
 RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
@@ -55,4 +53,3 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
                                         Rpp32u *roiTensor,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
-#endif

@@ -25,6 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
+#include "reduction.hpp"
 #include "cpu/kernel/tensor_sum.hpp"
 #include "cpu/kernel/tensor_min.hpp"
 #include "cpu/kernel/tensor_max.hpp"

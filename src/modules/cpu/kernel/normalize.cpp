@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "normalize.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 // Recursive reduction helper function to compute difference of input with mean and squares them up
 template<typename T>

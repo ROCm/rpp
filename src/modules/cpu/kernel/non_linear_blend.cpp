@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "non_linear_blend.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 // -------------------- non_linear_blend host helpers --------------------
 

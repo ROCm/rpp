@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "mel_filter_bank.hpp"
+
 RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       Rpp32f *dstPtr,

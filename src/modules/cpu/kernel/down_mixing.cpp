@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "down_mixing.hpp"
-#include <omp.h>
+#include "rpp_cpu_simd_math.hpp"
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,

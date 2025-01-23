@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "box_filter.hpp"
+#include "rpp_cpu_filter.hpp"
 
 /* box filter algorithm explanation for U8 PLN1 3x3 kernel size variant
 Lets take an example input of 3x32 image

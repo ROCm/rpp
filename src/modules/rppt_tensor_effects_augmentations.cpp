@@ -27,7 +27,6 @@ SOFTWARE.
 #include "rppi_validate.hpp"
 #include "rppt_api_helpers.h"
 #include "rppt_tensor_effects_augmentations.h"
-#include "../include/cpu/rpp_cpu_common_random.hpp"
 #include "cpu/kernel/gridmask.hpp"
 #include "cpu/kernel/spatter.hpp"
 #include "cpu/kernel/noise_salt_and_pepper.hpp"

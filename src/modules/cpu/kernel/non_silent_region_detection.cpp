@@ -84,8 +84,6 @@ the entire MMS buffer and compare these values with the calculated cutoff value
 */
 
 #include "non_silent_region_detection.hpp"
-#include <omp.h>
-#include <algorithm>
 
 Rpp32f getSquare(Rpp32f &value)
 {

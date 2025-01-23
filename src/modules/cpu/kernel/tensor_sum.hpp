@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "reduction.hpp"
 
 RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "log.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 // 1 pixel log helper functions
 // NOTE: log(0) leads to undefined thus using nextafter() to avoid this result

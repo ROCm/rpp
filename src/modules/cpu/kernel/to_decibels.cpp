@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "to_decibels.hpp"
-#include <omp.h>
 
 RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,

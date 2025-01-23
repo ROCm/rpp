@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "color_twist.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 inline void compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pColorTwistParams)
 {

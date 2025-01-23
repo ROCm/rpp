@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "transpose.hpp"
+
 using namespace std;
 
 inline void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u tensorDims, Rpp32u increment)
