@@ -100,6 +100,7 @@ std::map<int, string> augmentationMap =
     {61, "magnitude"},
     {63, "phase"},
     {65, "bitwise_and"},
+    {67, "bitwise_xor"},
     {68, "bitwise_or"},
     {70, "copy"},
     {79, "remap"},
@@ -154,6 +155,7 @@ enum Augmentation {
     MAGNITUDE = 61,
     PHASE = 63,
     BITWISE_AND = 65,
+    BITWISE_XOR = 67,
     BITWISE_OR = 68,
     COPY = 70,
     REMAP = 79,
@@ -174,7 +176,7 @@ enum Augmentation {
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER};
-const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_OR};
+const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
 const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
