@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "noise_gaussian.hpp"
-#include "rpp_cpu_common_random.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)

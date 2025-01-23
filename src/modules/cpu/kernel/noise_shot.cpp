@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "noise_shot.hpp"
-#include "rpp_cpu_common_random.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)

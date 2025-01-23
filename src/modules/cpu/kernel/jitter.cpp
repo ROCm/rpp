@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "jitter.hpp"
-#include "rpp_cpu_common_random.hpp"
 
 inline void compute_jitter_src_loc_avx(__m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 &pRow, __m256 &pCol, __m256 &pKernelSize, __m256 &pBound, __m256 &pHeightLimit, __m256 &pWidthLimit, __m256 &pStride, __m256 &pChannel, Rpp32s *srcLoc)
 {
