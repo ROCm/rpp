@@ -26,7 +26,7 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-/* bitwiseXOR is logical operation only on U8 types.*/
+/* bitwiseXOR is logical operation only on U8/I8 types.*/
 
 RppStatus bitwise_xor_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                          Rpp8u *srcPtr2,

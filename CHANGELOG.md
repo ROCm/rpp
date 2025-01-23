@@ -13,6 +13,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * RPP Fog augmentation on HOST and HIP
 * RPP Rain augmentation on HOST and HIP
 * RPP Warp Perspective on HOST and HIP
+* RPP Tensor Bitwise-XOR support on HOST and HIP
 * RPP Threshold on HOST and HIP
 
 ### Removed
@@ -26,15 +27,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Added
 
-* RPP Tensor Gaussian Filter support on HOST (CPU) backend. (#478)
-* RPP Fog augmentation on HOST (CPU) and HIP backends. (#446)
-* RPP Rain augmentation on HOST(CPU) and HIP backends. (#463)
-* RPP Warp Perspective on HOST (CPU) and HIP backends. (#451)
-* RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
-* RPP Threshold on HOST (CPU) and HIP backends. (#456)
-* RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
-* RPP Audio Support for Spectrogram on HIP backend. (#433)
-* RPP Audio Support for Mel Filter Bank on HIP backend. (#421)
+## (Unreleased) RPP 1.9.2
 
 ### Changed
 
