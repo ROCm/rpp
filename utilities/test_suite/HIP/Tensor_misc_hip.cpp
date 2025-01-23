@@ -224,15 +224,6 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 4:
-            {
-                testCaseName  = "jpeg_compression_distrtion";
-
-                startWallTime = omp_get_wtime();
-                rppt_jpeg_compression_distrtion_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
-
-                break;
-            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;

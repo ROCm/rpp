@@ -1263,6 +1263,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar
     d_uchar24 dst_uc24;
 
     // Scale factor to convert back to uchar range [0,255]
+    //DEBUG
     const float scale = 1.0f;
     // Load R channel values and store in interleaved format
 
@@ -1516,7 +1517,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
     srcPtrR_f8 = (d_float8 *)srcPtrs_f8[0];
     srcPtrG_f8 = (d_float8 *)srcPtrs_f8[1];
     srcPtrB_f8 = (d_float8 *)srcPtrs_f8[2];
-
+//DEBUG
     const float scale = 1.0f ;
     
     srcPtrR_f8->f4[0] = make_float4(src_uc24.uc1[ 0] * scale, src_uc24.uc1[ 3] * scale, 

@@ -69,10 +69,11 @@ __device__ void YCbCr_hip_compute(float *Ch1, float *Ch2, float *Ch3)
 
 __device__ void verticalDownSampling(float *CbCr1, float *CbCr2)
 {
+    if (!CbCr1 || !CbCr2) return;
+
     d_float8 *CbCr1_f8, *CbCr2_f8;
     CbCr1_f8 = (d_float8 *)CbCr1;
     CbCr2_f8 = (d_float8 *)CbCr2;
-
 
     //For Debugging
     float4 tempCbCr1[2];
@@ -101,6 +102,8 @@ __device__ void verticalDownSampling(float *CbCr1, float *CbCr2)
 
 __device__ void horizontalDownSampling(float *CbCr1, float *CbCr2, d_float8 *CbCr)
 {
+    if (!CbCr1 || !CbCr2 || !CbCr) return; 
+
     d_float8 *CbCr1_f8,*CbCr2_f8;
     CbCr1_f8 = (d_float8 *)CbCr1;
     CbCr2_f8 = (d_float8 *)CbCr2;
@@ -139,12 +142,15 @@ __device__ void horizontalDownSampling(float *CbCr1, float *CbCr2, d_float8 *CbC
 __device__ void dct_fwd_8x8_1d(float *vecf8, int stride,int rowcol, bool row) 
 {
     uint4 x_idx1,x_idx2,y_idx1,y_idx2;
+    float val;
     if(row)
     {
        x_idx1 = make_uint4(0,1,2,3);
        x_idx2 = make_uint4(4,5,6,7);
        y_idx1 = (uint4)rowcol;
        y_idx2 = (uint4)rowcol;
+
+       val = 0.0f;
     }
     else
     {
@@ -152,17 +158,19 @@ __device__ void dct_fwd_8x8_1d(float *vecf8, int stride,int rowcol, bool row)
        x_idx2 = (uint4)rowcol;
        y_idx1 = make_uint4(0,1,2,3);
        y_idx2 = make_uint4(4,5,6,7);
+
+       val = 0.0f;
     }
 
     //Adjust for rows and columns
-    float x0 = vecf8[y_idx1.x * stride + x_idx1.x];
-    float x1 = vecf8[y_idx1.y * stride + x_idx1.y];
-    float x2 = vecf8[y_idx1.z * stride + x_idx1.z];
-    float x3 = vecf8[y_idx1.w * stride + x_idx1.w];
-    float x4 = vecf8[y_idx2.x * stride + x_idx2.x];
-    float x5 = vecf8[y_idx2.y * stride + x_idx2.y];
-    float x6 = vecf8[y_idx2.z * stride + x_idx2.z];
-    float x7 = vecf8[y_idx2.w * stride + x_idx2.w];
+    float x0 = vecf8[y_idx1.x * stride + x_idx1.x] - val;
+    float x1 = vecf8[y_idx1.y * stride + x_idx1.y] - val;
+    float x2 = vecf8[y_idx1.z * stride + x_idx1.z] - val;
+    float x3 = vecf8[y_idx1.w * stride + x_idx1.w] - val;
+    float x4 = vecf8[y_idx2.x * stride + x_idx2.x] - val;
+    float x5 = vecf8[y_idx2.y * stride + x_idx2.y] - val;
+    float x6 = vecf8[y_idx2.z * stride + x_idx2.z] - val;
+    float x7 = vecf8[y_idx2.w * stride + x_idx2.w] - val;
 
     float tmp0 = x0 + x7;
     float tmp1 = x1 + x6;
@@ -225,12 +233,15 @@ __device__ void dct_inv_8x8_1d(float *vecf8, int stride,int rowcol, bool row)
 {
     // printf("Hiii");
     uint4 x_idx1,x_idx2,y_idx1,y_idx2;
+    float val;
     if(row)
     {
        x_idx1 = make_uint4(0,1,2,3);
        x_idx2 = make_uint4(4,5,6,7);
        y_idx1 = (uint4)rowcol;
        y_idx2 = (uint4)rowcol;
+
+       val = 0.0f;
     }
     else
     {
@@ -238,6 +249,8 @@ __device__ void dct_inv_8x8_1d(float *vecf8, int stride,int rowcol, bool row)
        x_idx2 = (uint4)rowcol;
        y_idx1 = make_uint4(0,1,2,3);
        y_idx2 = make_uint4(4,5,6,7);
+
+       val = 0.0f;
     }
 
     //Adjust for rows and columns
@@ -276,49 +289,104 @@ __device__ void dct_inv_8x8_1d(float *vecf8, int stride,int rowcol, bool row)
     x2 = norm_factor * (tmp9 + tmp11);
     x6 = norm_factor * (tmp8 - tmp10);
   
-    vecf8[y_idx1.x * stride + x_idx1.x] = x0;
-    vecf8[y_idx1.y * stride + x_idx1.y] = x1;
-    vecf8[y_idx1.z * stride + x_idx1.z] = x2;
-    vecf8[y_idx1.w * stride + x_idx1.w] = x3;
-    vecf8[y_idx2.x * stride + x_idx2.x] = x4;
-    vecf8[y_idx2.y * stride + x_idx2.y] = x5;
-    vecf8[y_idx2.z * stride + x_idx2.z] = x6;
-    vecf8[y_idx2.w * stride + x_idx2.w] = x7;
+    vecf8[y_idx1.x * stride + x_idx1.x] = x0 + val;
+    vecf8[y_idx1.y * stride + x_idx1.y] = x1 + val;
+    vecf8[y_idx1.z * stride + x_idx1.z] = x2 + val;
+    vecf8[y_idx1.w * stride + x_idx1.w] = x3 + val;
+    vecf8[y_idx2.x * stride + x_idx2.x] = x4 + val;
+    vecf8[y_idx2.y * stride + x_idx2.y] = x5 + val;
+    vecf8[y_idx2.z * stride + x_idx2.z] = x6 + val;
+    vecf8[y_idx2.w * stride + x_idx2.w] = x7 + val;
+    if(hipBlockIdx_x == 0 && hipBlockIdx_y == 0 &&  hipBlockIdx_z == 0){
+        printf("\n [%f %f %f %f %f %f %f %f] tidX %d tidY %d tidZ %d", x0,x1,x2,x3,x4,x5,x6,x7,hipThreadIdx_x,hipThreadIdx_y,hipThreadIdx_z);
+    }
 }
 
 //RGB to YCbCr
-__device__ void RGB_hip_compute(float *Ch1, float *Ch2, float *Ch3)
+__device__ void RGB_hip_compute(float *Ch1, float *Ch2, float *Ch3, d_float8 *R_f8, d_float8 *G_f8, d_float8 *B_f8)
 {
-    d_float8 R_f8,G_f8,B_f8,*Ch1_f8,*Ch2_f8,*Ch3_f8;
+
+    d_float8 *Ch1_f8,*Ch2_f8,*Ch3_f8;
     Ch1_f8 = (d_float8 *)Ch1;
+    Ch2_f8 = (d_float8 *)Ch2;
+    Ch3_f8 = (d_float8 *)Ch3;
+
     //From Cb and Cr channels elements are upsampled horizontally
     //Vertical Upsampling is being done as part of sending same Cb & Cr row for two Y channel rows
     Ch2_f8->f4[0] = make_float4(Ch2[0],Ch2[0],Ch2[1],Ch2[1]);
     Ch2_f8->f4[1] = make_float4(Ch2[2],Ch2[2],Ch2[3],Ch2[3]);
-    
+
     Ch3_f8->f4[0] = make_float4(Ch3[0],Ch3[0],Ch3[1],Ch3[1]);
     Ch3_f8->f4[1] = make_float4(Ch3[2],Ch3[2],Ch3[3],Ch3[3]);
-    //if(hipThreadIdx_x && hipThreadIdx_y )
-    // {
-    //     printf("\n YCbCr :[R %f %f %f %f] [G %f %f %f %f] [B %f %f %f %f] idX %d idY %d",Ch1_f8->f4[0].x,Ch1_f8->f4[0].y,Ch1_f8->f4[0].z,Ch1_f8->f4[0].w,
-    //                                                                Ch2_f8->f4[0].x,Ch2_f8->f4[0].y,Ch2_f8->f4[0].z,Ch2_f8->f4[0].w,
-    //                                                                Ch3_f8->f4[0].x,Ch3_f8->f4[0].y,Ch3_f8->f4[0].z,Ch3_f8->f4[0].w,
-    //                                                                hipThreadIdx_x,hipThreadIdx_y);
-    // }
-// R = Y + 1.402 × (Cr−128)   
-    R_f8.f4[0] = Ch1_f8->f4[0] + (Ch3_f8->f4[0] - (float4)128) * (float4)1.402;
-    R_f8.f4[1] = Ch1_f8->f4[1] + (Ch3_f8->f4[1] - (float4)128) * (float4)1.402;
- // G = Y − 0.344136 ×(Cb−128) − 0.714136×(Cr−128)
-    G_f8.f4[0] = Ch1_f8->f4[0] - (Ch2_f8->f4[0] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[0] - (float4)128) * (float4)0.714136;
-    G_f8.f4[1] = Ch1_f8->f4[1] - (Ch2_f8->f4[1] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[1] - (float4)128) * (float4)0.714136;
- // B = Y + 1.772 × (Cb−128)
-    B_f8.f4[0] = Ch1_f8->f4[0] + (float4)1.772 * (Ch2_f8->f4[0] - (float4)128);
-    B_f8.f4[1] = Ch1_f8->f4[1] + (float4)1.772 * (Ch2_f8->f4[1] - (float4)128);
 
-    //Storing the results back into the shared memory (Inplace)
-    *Ch1_f8 =  R_f8; 
-    *Ch2_f8 =  G_f8;  
-    *Ch3_f8 =  B_f8;  
+// R = Y + 1.402 × (Cr−128)   
+    R_f8->f4[0] = Ch1_f8->f4[0] + (Ch3_f8->f4[0] - (float4)128) * (float4)1.402;
+    R_f8->f4[1] = Ch1_f8->f4[1] + (Ch3_f8->f4[1] - (float4)128) * (float4)1.402;
+
+    // R_f8->f4[0] = make_float4(
+    //     fminf(fmaxf(R_f8->f4[0].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[0].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[0].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[0].w, 0.0f), 255.0f)
+    // );
+    // R_f8->f4[1] = make_float4(
+    //     fminf(fmaxf(R_f8->f4[1].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[1].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[1].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(R_f8->f4[1].w, 0.0f), 255.0f)
+    // );
+ // G = Y − 0.344136 ×(Cb−128) − 0.714136×(Cr−128)
+    G_f8->f4[0] = Ch1_f8->f4[0] - (Ch2_f8->f4[0] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[0] - (float4)128) * (float4)0.714136;
+    G_f8->f4[1] = Ch1_f8->f4[1] - (Ch2_f8->f4[1] - (float4)128) * (float4)0.344136 - (Ch3_f8->f4[1] - (float4)128) * (float4)0.714136;
+ 
+    //  G_f8->f4[0] = make_float4(
+    //     fminf(fmaxf(G_f8->f4[0].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[0].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[0].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[0].w, 0.0f), 255.0f)
+    // );
+    // G_f8->f4[1] = make_float4(
+    //     fminf(fmaxf(G_f8->f4[1].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[1].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[1].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(G_f8->f4[1].w, 0.0f), 255.0f)
+    // );
+ 
+ // B = Y + 1.772 × (Cb−128)
+    B_f8->f4[0] = Ch1_f8->f4[0] + (float4)1.772 * (Ch2_f8->f4[0] - (float4)128);
+    B_f8->f4[1] = Ch1_f8->f4[1] + (float4)1.772 * (Ch2_f8->f4[1] - (float4)128);
+
+    //  B_f8->f4[0] = make_float4(
+    //     fminf(fmaxf(B_f8->f4[0].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[0].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[0].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[0].w, 0.0f), 255.0f)
+    // );
+    // B_f8->f4[1] = make_float4(
+    //     fminf(fmaxf(B_f8->f4[1].x, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[1].y, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[1].z, 0.0f), 255.0f),
+    //     fminf(fmaxf(B_f8->f4[1].w, 0.0f), 255.0f)
+    // );
+
+    
+    if(hipBlockIdx_x == 0 && hipBlockIdx_y == 0 &&  hipBlockIdx_z == 0)
+    {
+        printf("\n YCbCr :[Y %f %f %f %f] [Cb %f %f %f %f] [Cr %f %f %f %f] [R %f %f %f %f] [G %f %f %f %f] [B %f %f %f %f]idX %d idY %d  idZ %d",
+                                                                   Ch1_f8->f4[0].x,Ch1_f8->f4[0].y,Ch1_f8->f4[0].z,Ch1_f8->f4[0].w,
+                                                                   Ch2_f8->f4[0].x,Ch2_f8->f4[0].y,Ch2_f8->f4[0].z,Ch2_f8->f4[0].w,
+                                                                   Ch3_f8->f4[0].x,Ch3_f8->f4[0].y,Ch3_f8->f4[0].z,Ch3_f8->f4[0].w,
+                                                                   R_f8->f4[0].x,R_f8->f4[0].y,R_f8->f4[0].z,R_f8->f4[0].w,
+                                                                   G_f8->f4[0].x,G_f8->f4[0].y,G_f8->f4[0].z,G_f8->f4[0].w,
+                                                                   B_f8->f4[0].x,B_f8->f4[0].y,B_f8->f4[0].z,B_f8->f4[0].w,
+                                                                   hipThreadIdx_x,hipThreadIdx_y,hipThreadIdx_z);
+    }
+
+}
+__device__ inline void clamp_range(float* values, float lower_limit, float upper_limit, int num_elements = 8) {
+    for (int j = 0; j < num_elements; j++) {
+        values[j] = fminf(fmaxf(values[j], lower_limit), upper_limit);
+    }
 }
 
 template <typename T>
@@ -336,7 +404,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int hipThreadIdx_x16 = hipThreadIdx_x8 * 2;
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth) )
     {
         return;
     }
@@ -365,9 +433,9 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     }
     else
     {
-        // *(uint2 *)src_smem_channel[0] = (uint2)0;
-        // *(uint2 *)src_smem_channel[1] = (uint2)0;
-        // *(uint2 *)src_smem_channel[2] = (uint2)0;
+    *(float2*)src_smem_channel[0] = make_float2(0.0f, 0.0f);
+    *(float2*)src_smem_channel[1] = make_float2(0.0f, 0.0f);
+    *(float2*)src_smem_channel[2] = make_float2(0.0f, 0.0f);
     }
     __syncthreads();
     //RGB to YCbCr
@@ -376,6 +444,8 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     
     YCbCr_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     __syncthreads();
+
+
     //Downsampling
     int CbCry = hipThreadIdx_y * 2;
     //if(CbCry < 32 && hipThreadIdx_x8 <  128)
@@ -391,16 +461,20 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
         //} 
     //if(hipThreadIdx_x8 <  128)  
         d_float8 CbCr;
+        if(hipThreadIdx_x16 <  128) 
         horizontalDownSampling(
                                &src_smem[16 + CbCry][hipThreadIdx_x16],
                                &src_smem[16 + CbCry][hipThreadIdx_x16 + 8],
                             //    &src_smem[32 + CbCry][hipThreadIdx_x16],
                             //    &src_smem[32 + CbCry][hipThreadIdx_x16 + 8],
-                               &CbCr);
-        if(CbCry < 16)
-            *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = CbCr;
-        if(CbCry > 16 )
-            *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][64 + hipThreadIdx_x8] = CbCr;
+                               &CbCr);    
+        __syncthreads();                  
+
+            if(hipThreadIdx_y < 8 && hipThreadIdx_x < 8)
+                *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = CbCr;
+            if(hipThreadIdx_y < 8 && hipThreadIdx_x >= 8)
+                *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][64 + hipThreadIdx_x8] = CbCr;
+
         __syncthreads();
         //Storing Cr beside Cb block
         // if(hipThreadIdx_y < 8 && hipThreadIdx_x < 8)
@@ -410,15 +484,39 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
         // //src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = Cr;
         //Storing Cr beside Cb block
       //  *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][64 + hipThreadIdx_x8] = Cr;
+    // Assuming src_smem contains 8 consecutive values per row
 
+// -128.0f before DCT
 
-    
-    //Fwd DCT
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] -= (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + 4] -= (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8] -= (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + 4] -= (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8] -= (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + 4] -= (float4)128.0f;
+
+//Fwd DCT
+ int col = hipThreadIdx_x * 16 + hipThreadIdx_y; 
+    d_float8 col_f8;
+    // Process all 128 columns 
+    if (col < 128  && col < roiTensorPtrSrc[id_z].xywhROI.roiWidth) { 
+        for(int i = 0 ; i < 3 ; i++)
+            dct_fwd_8x8_1d(&src_smem[i * 8][col], 128,0,false);
+        // 1D DCT for First 8 rows (Y channel)   
+        
+        // 1D DCT for Second 8 rows (Y channel)
+        // dct_fwd_8x8_1d(&src_smem[8][col], 128,col,false);
+        // // 1D DCT for 8 rows (Cb/Cr channels)
+        // dct_fwd_8x8_1d(&src_smem[16][col],128,col,false);
+
+    }
+    __syncthreads();
     //1D row wise DCT for Y channel
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],1,hipThreadIdx_x8,true);
+    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],0,hipThreadIdx_x8,true);
+    __syncthreads();
     //1D row wise DCT for Cb and Cr channels but should only done for 8 rows but here being done for 16 rows
     if(hipThreadIdx_y < 8)
-        dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],1,hipThreadIdx_x8,true);  
+        dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],0,hipThreadIdx_x8,true);  
     // After row-wise DCT and synchronization
     __syncthreads();
     //Now for each column we should do DCT
@@ -426,42 +524,48 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     //So by now in smem first [0 to 16] x (16 x 8) has Y, [16 to 24] x (8 x 8) has Cb and [16 to 24] x (8 x 8) has Cr
     //We have 16 x 16 threads on X and Y dimension and 128 elements in each row
     // Each thread takes one column (total 128 threads for 128 columns)
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y; 
+ /*   int col = hipThreadIdx_x * 16 + hipThreadIdx_y; 
+    d_float8 col_f8;
     // Process all 128 columns 
-    if (col < 128) { 
+    if (col < 128  && col < roiTensorPtrSrc[id_z].xywhROI.roiWidth) { 
+        for(int i = 0 ; i < 3 ; i++)
+            dct_fwd_8x8_1d(&src_smem[i * 8][col], 128,col,false);
         // 1D DCT for First 8 rows (Y channel)   
-        dct_fwd_8x8_1d(&src_smem[0][col], 128,col,false);
+        
         // 1D DCT for Second 8 rows (Y channel)
-        dct_fwd_8x8_1d(&src_smem[8][col], 128,col,false);
-        // 1D DCT for 8 rows (Cb/Cr channels)
-        dct_fwd_8x8_1d(&src_smem[16][col],128,col,false);
+        // dct_fwd_8x8_1d(&src_smem[8][col], 128,col,false);
+        // // 1D DCT for 8 rows (Cb/Cr channels)
+        // dct_fwd_8x8_1d(&src_smem[16][col],128,col,false);
+
     }
-    __syncthreads();
+    __syncthreads(); 
+    */
     //Quantization on each layer of Y Cb Cr
     //For every 8 elements row wise, we are taking respected row in the table and doing quantization
     //For Cb Cr
     //Here we can do this for only 8 threads in Y, here and in row wise DCT
-/*    if(hipThreadIdx_y < 8){
+    if(hipThreadIdx_y < 8)
         quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);  
-    }
+    __syncthreads();
     //For Y also
     quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 //INVERSE STEPS
-    //Dequantization
-    if(hipThreadIdx_y < 8){
-        dequantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);  
-    }
-    //For Y also
-    dequantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
-    __syncthreads();
- */  
+   // Dequantization
+    // if(hipThreadIdx_y < 8)
+    //     dequantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);
+    // //For Y also
+    // dequantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
+    // __syncthreads();
+ 
+ 
     //Inverse DCT
     //1D row wise DCT for Y channel
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],1,hipThreadIdx_x8,true);
+    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],0,hipThreadIdx_x8,true);
+    __syncthreads();
     //1D row wise DCT for Cb and Cr channels but should only done for 8 rows but here being done for 16 rows
     if(hipThreadIdx_y < 8)
-        dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],1,hipThreadIdx_x8,true);  
+        dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],0,hipThreadIdx_x8,true);  
 
     // After row-wise DCT and synchronization
     __syncthreads();
@@ -471,24 +575,38 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor( T *srcPtr,
     // Each thread takes one column (total 128 threads for 128 columns)
     // Process all 128 columns 
     if (col < 128) { 
-        // 1D DCT for First 8 rows (Y channel)   
-        dct_inv_8x8_1d(&src_smem[0][col], 128,col,false);
-      
-        // 1D DCT for Second 8 rows (Y channel)
-        dct_inv_8x8_1d(&src_smem[8][col], 128,col,false);
-        
-        // 1D DCT for 8 rows (Cb/Cr channels)
-        dct_inv_8x8_1d(&src_smem[16][col],128,col,false);
-
-        printf("DCT INV");
+        // 1D DCT for First 8 rows (Y channel) 
+        for(int i = 0 ; i < 3 ; i++)
+            dct_inv_8x8_1d(&src_smem[i * 8][col], 128,0,false);  
+        // dct_inv_8x8_1d(&src_smem[0][col], 128,col,false);
+        // // 1D DCT for Second 8 rows (Y channel)
+        // dct_inv_8x8_1d(&src_smem[8][col], 128,col,false);
+        // // 1D DCT for 8 rows (Cb/Cr channels)
+        // dct_inv_8x8_1d(&src_smem[16][col],128,col,false);
     }
     __syncthreads();
-    
-     //RGB to YCbCr
+
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]     += (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + 4] += (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]     += (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + 4] += (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]     += (float4)128.0f;
+    *(float4 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + 4] += (float4)128.0f;
+
+    clamp_range(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], 0.0f, 255.0f);
+    clamp_range(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], 0.0f, 255.0f);
+    clamp_range(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], 0.0f, 255.0f);
+   
+    //RGB to YCbCr
+    // d_float8 R,G,B;
     // CbCry = 16 + (hipThreadIdx_y/2) * 2;
     // int hipThreadIdx_x4 = hipThreadIdx_x >> 2;
-    // RGB_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],&src_smem[CbCry][hipThreadIdx_x4],&src_smem[CbCry][64 + hipThreadIdx_x4],);
-    // __syncthreads(); 
+    // RGB_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],&src_smem[CbCry][hipThreadIdx_x4],&src_smem[CbCry][64 + hipThreadIdx_x4],&R,&G,&B);
+    // __syncthreads();
+    //  *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = R;
+    //  *(d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = G;
+    //  *(d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = B;
+    __syncthreads(); 
     
     // Store properly
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx,src_smem_channel);
@@ -508,8 +626,8 @@ RppStatus hip_exec_jpeg_compression_distortion( T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int globalThreads_x = 1024;
-    int globalThreads_y = 1024;
+    int globalThreads_x = srcDescPtr->strides.hStride;
+    int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
     // Rpp32u *Ytable = handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem;
     // Rpp32u *CbCrtable = handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem;
@@ -540,9 +658,9 @@ RppStatus hip_exec_jpeg_compression_distortion( T *srcPtr,
     hipMalloc((void**)&gpuYtable, 64 * sizeof(int));
     hipMalloc((void**)&gpuCbCrtable, 64 * sizeof(int));
     hipMemcpy(gpuYtable, Ytable, 64 * sizeof(int), hipMemcpyHostToDevice);
-    hipMemcpy(gpuCbCrtable, gpuCbCrtable, 64 * sizeof(int), hipMemcpyHostToDevice);
+    hipMemcpy(gpuCbCrtable, CbCrtable, 64 * sizeof(int), hipMemcpyHostToDevice);
     //globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
-//correct the number ofthreads launched
+
     printf("\n Total number of threads in X %d Blocks %f", LOCAL_THREADS_X,ceil((float)globalThreads_x/LOCAL_THREADS_X) );
     printf("\n Total number of threads in Y %d Blocks %f", LOCAL_THREADS_Y,ceil((float)globalThreads_y/LOCAL_THREADS_Y));
     printf("\n Total number of threads in Z %d Blocks %f", LOCAL_THREADS_Z,ceil((float)globalThreads_z/LOCAL_THREADS_Z) );
