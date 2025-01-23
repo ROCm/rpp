@@ -1469,6 +1469,49 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(half *srcPtr,
     rpp_hip_load24_pkd3_to_uchar8_pln3((float *)&src_f24, srcPtrs_uchar8);
 }
 
+// U8 loads with layout toggle PKD3 to PLN3 (24 U8 pixels) into d_uchar24
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(uchar *srcPtr, d_uchar24 *srcPtr_uc24)
+{
+    d_uchar24 src_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+
+    srcPtr_uc24->uc4[0] = make_uchar4(src_uc24.uc1[ 0], src_uc24.uc1[ 3], src_uc24.uc1[ 6], src_uc24.uc1[ 9]);    // write R00-R03
+    srcPtr_uc24->uc4[1] = make_uchar4(src_uc24.uc1[12], src_uc24.uc1[15], src_uc24.uc1[18], src_uc24.uc1[21]);    // write R04-R07
+    srcPtr_uc24->uc4[2] = make_uchar4(src_uc24.uc1[ 1], src_uc24.uc1[ 4], src_uc24.uc1[ 7], src_uc24.uc1[10]);    // write G00-G03
+    srcPtr_uc24->uc4[3] = make_uchar4(src_uc24.uc1[13], src_uc24.uc1[16], src_uc24.uc1[19], src_uc24.uc1[22]);    // write G04-G07
+    srcPtr_uc24->uc4[4] = make_uchar4(src_uc24.uc1[ 2], src_uc24.uc1[ 5], src_uc24.uc1[ 8], src_uc24.uc1[11]);    // write B00-B03
+    srcPtr_uc24->uc4[5] = make_uchar4(src_uc24.uc1[14], src_uc24.uc1[17], src_uc24.uc1[20], src_uc24.uc1[23]);    // write B00-B03
+}
+
+// U8 loads with layout non toggle PKD3 to PKD3 (24 U8 pixels) into d_uchar24
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_uchar24_pkd3(uchar *srcPtr, d_uchar24 *srcPtr_uc24)
+{
+    *(d_uchar24_s *)srcPtr_uc24 = *(d_uchar24_s *)srcPtr;
+
+}
+
+// U8 loads with layout non toggle PLN3 to PKD3 (24 U8 pixels) into d_uchar24
+
+__device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_uchar24_pkd3(uchar *srcPtr, uint increment, d_uchar24 *srcPtr_uc24)
+{
+    d_uchar24 src_uc24;
+
+    *(d_uchar8_s *)&(src_uc24.uc8[0]) = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&(src_uc24.uc8[1]) = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&(src_uc24.uc8[2]) = *(d_uchar8_s *)srcPtr;
+
+    srcPtr_uc24->uc4[0] = make_uchar4(src_uc24.uc1[ 0], src_uc24.uc1[ 8], src_uc24.uc1[16], src_uc24.uc1[ 1]);    // write R00G00B00R01
+    srcPtr_uc24->uc4[1] = make_uchar4(src_uc24.uc1[ 9], src_uc24.uc1[17], src_uc24.uc1[ 2], src_uc24.uc1[10]);    // write G01B01R02G02
+    srcPtr_uc24->uc4[2] = make_uchar4(src_uc24.uc1[18], src_uc24.uc1[ 3], src_uc24.uc1[11], src_uc24.uc1[19]);    // write B02R03G03B03
+    srcPtr_uc24->uc4[3] = make_uchar4(src_uc24.uc1[ 4], src_uc24.uc1[12], src_uc24.uc1[20], src_uc24.uc1[ 5]);    // write R04G04B04R05
+    srcPtr_uc24->uc4[4] = make_uchar4(src_uc24.uc1[13], src_uc24.uc1[21], src_uc24.uc1[ 6], src_uc24.uc1[14]);    // write G05B05R06G06
+    srcPtr_uc24->uc4[5] = make_uchar4(src_uc24.uc1[22], src_uc24.uc1[ 7], src_uc24.uc1[15], src_uc24.uc1[23]);    // write B06R07G07B07
+}
+
 // -------------------- Set 7 - Templated layout toggles --------------------
 
 // PKD3 to PLN3
@@ -1614,6 +1657,27 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr,
     rpp_hip_pack_int8(&src_sc24.sc8[0], &srcPtr_i24->i8[0]);     // write R00-R07
     rpp_hip_pack_int8(&src_sc24.sc8[1], &srcPtr_i24->i8[1]);     // write G00-G07
     rpp_hip_pack_int8(&src_sc24.sc8[2], &srcPtr_i24->i8[2]);     // write B00-B07
+}
+
+// ------------------------- Set 9 - Stores from uchar8 --------------------------
+
+__device__ __forceinline__ void rpp_hip_pack_uchar8_and_store8(uchar *dstPtr, d_uchar8 *dstPtr_f8)
+{
+    *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)dstPtr_f8;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(uchar *dstPtr, d_uchar24 *dstPtr_f24)
+{
+    *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)dstPtr_f24;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_uchar24_pln3_and_store24_pln3(uchar *dstPtr, uint increment, d_uchar24 *dstPtr_f24)
+{
+    *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)&(dstPtr_f24->uc8[0]);
+    dstPtr += increment;
+    *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)&(dstPtr_f24->uc8[1]);
+    dstPtr += increment;
+    *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)&(dstPtr_f24->uc8[2]);
 }
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
@@ -1820,6 +1884,18 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_float8 *src1_f8, d_flo
         dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) | (uchar)(src2_f8->f1[5]));
         dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) | (uchar)(src2_f8->f1[6]));
         dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) | (uchar)(src2_f8->f1[7]));
+}
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
+{
+        dst_uc8->uc1[0] = src1_uc8->uc1[0] ^ src2_uc8->uc1[0];
+        dst_uc8->uc1[1] = src1_uc8->uc1[1] ^ src2_uc8->uc1[1];
+        dst_uc8->uc1[2] = src1_uc8->uc1[2] ^ src2_uc8->uc1[2];
+        dst_uc8->uc1[3] = src1_uc8->uc1[3] ^ src2_uc8->uc1[3];
+        dst_uc8->uc1[4] = src1_uc8->uc1[4] ^ src2_uc8->uc1[4];
+        dst_uc8->uc1[5] = src1_uc8->uc1[5] ^ src2_uc8->uc1[5];
+        dst_uc8->uc1[6] = src1_uc8->uc1[6] ^ src2_uc8->uc1[6];
+        dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
 
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
