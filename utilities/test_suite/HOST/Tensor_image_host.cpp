@@ -1284,6 +1284,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case BITWISE_XOR:
+                {
+                    testCaseName = "bitwise_xor";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0)
+                        rppt_bitwise_xor_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case BITWISE_OR:
                 {
                     testCaseName = "bitwise_or";
