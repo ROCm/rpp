@@ -96,6 +96,38 @@ RppStatus rppt_bitwise_and_host(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
+/******************** bitwise XOR ********************/
+
+RppStatus rppt_bitwise_xor_host(RppPtr_t srcPtr1,
+                                RppPtr_t srcPtr2,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        bitwise_xor_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                      static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                      srcDescPtr,
+                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                      dstDescPtr,
+                                      roiTensorPtrSrc,
+                                      roiType,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /******************** bitwise OR ********************/
 
 RppStatus rppt_bitwise_or_host(RppPtr_t srcPtr1,
@@ -220,6 +252,40 @@ RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1,
                                     static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                    dstDescPtr,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** bitwise XOR ********************/
+
+RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1,
+                               RppPtr_t srcPtr2,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+
+    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_bitwise_xor_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                    static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                    srcDescPtr,
+                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
                                     roiTensorPtrSrc,
                                     roiType,

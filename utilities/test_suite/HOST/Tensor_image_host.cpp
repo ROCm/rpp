@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     else if (kernelSizeCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%u", additionalParam);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         func += "_kernelSize";
         func += additionalParam_char;
     }
@@ -695,7 +695,7 @@ int main(int argc, char **argv)
                 case THRESHOLD:
                 {
                     testCaseName = "threshold";
-                    
+
                     Rpp32f minTensor[batchSize * srcDescPtr->c];
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
                     Rpp32f normFactor = 1;
@@ -1279,6 +1279,19 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_bitwise_and_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case BITWISE_XOR:
+                {
+                    testCaseName = "bitwise_xor";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0)
+                        rppt_bitwise_xor_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
