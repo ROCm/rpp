@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "hip_declarations.hpp"
-#include "batch_pd/rpp_hip_host_decls.hpp"
+#include "rpp_hip_host_decls.hpp"
 
 /******************** dilate ********************/
 

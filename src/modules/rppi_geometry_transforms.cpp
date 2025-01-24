@@ -29,7 +29,7 @@ SOFTWARE.
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"
-#include "hip/hip_declarations.hpp"
+#include "hip/batch_pd/hip_declarations.hpp"
 #elif defined(OCL_COMPILE)
 #include "rpp_cl_common.hpp"
 #include "cl/cl_declarations.hpp"
