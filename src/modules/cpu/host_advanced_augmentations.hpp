@@ -25,7 +25,6 @@ SOFTWARE.
 #ifndef HOST_ADVANCED_AUGMENTATIONS_H
 #define HOST_ADVANCED_AUGMENTATIONS_H
 
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_simd_math.hpp"
 #include "rpp_cpu_common_batchpd.hpp"
 
