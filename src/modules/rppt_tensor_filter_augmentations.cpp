@@ -28,7 +28,7 @@ SOFTWARE.
 #include "cpu/host_tensor_filter_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-#include "hip/hip_tensor_filter_augmentations.hpp"
+#include "hip/kernel/hip_tensor_filter_augmentations.hpp"
 #endif // HIP_COMPILE
 
 /******************** box_filter ********************/

@@ -28,7 +28,7 @@ SOFTWARE.
 #include "cpu/host_tensor_logical_operations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/hip_tensor_logical_operations.hpp"
+    #include "hip/kernel/hip_tensor_logical_operations.hpp"
 #endif // HIP_COMPILE
 
 /******************** bitwise AND ********************/
