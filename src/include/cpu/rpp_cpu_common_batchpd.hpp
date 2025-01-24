@@ -1997,6 +1997,7 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
     return RPP_SUCCESS;
 }
 
+// Compute Functions for RPP Image API
 template<typename T>
 inline RppStatus compute_subimage_location_host(T* ptr, T** ptrSubImage,
                                          RppiSize size, RppiSize *sizeSubImage,
@@ -3418,7 +3419,6 @@ inline void compute_padded_from_unpadded_host(T* srcPtrUnpadded, RppiSize srcSiz
     }
 }
 
-// Compute Functions for RPP Image API
 template <typename T>
 inline void compute_planar_to_packed_host(T* srcPtr, RppiSize srcSize, T* dstPtr,
                                         Rpp32u channel)
