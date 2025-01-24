@@ -1,5 +1,4 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+#include "hip_tensor_logical_operations.hpp"
 
 /* BitwiseXOR is logical operation only on U8/I8 types.*/
 
