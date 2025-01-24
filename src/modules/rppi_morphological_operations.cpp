@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_morphological_transforms.h"
-#include "cpu/host_morphological_transforms.hpp"
+#include "cpu/batch_pd/host_morphological_transforms.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

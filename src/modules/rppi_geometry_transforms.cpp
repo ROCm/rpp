@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_geometry_transforms.h"
-#include "cpu/host_geometry_transforms.hpp"
+#include "cpu/batch_pd/host_geometry_transforms.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

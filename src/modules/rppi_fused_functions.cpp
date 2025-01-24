@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_fused_functions.h"
-#include "cpu/host_fused_functions.hpp"
+#include "cpu/batch_pd/host_fused_functions.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

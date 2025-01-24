@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_statistical_operations.h"
-#include "cpu/host_statistical_operations.hpp"
+#include "cpu/batch_pd/host_statistical_operations.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

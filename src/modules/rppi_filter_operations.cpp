@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_filter_operations.h"
-#include "cpu/host_filter_operations.hpp"
+#include "cpu/batch_pd/host_filter_operations.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"
