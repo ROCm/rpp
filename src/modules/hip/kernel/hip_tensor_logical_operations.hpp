@@ -48,4 +48,13 @@ RppStatus hip_exec_bitwise_or_tensor(T *srcPtr1,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
+                                      Rpp8u *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
 #endif // HIP_TENSOR_LOGICAL_OPERATIONS_HPP
