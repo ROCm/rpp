@@ -27,6 +27,8 @@ subtrees:
     title: RPP API reference
     subtrees:
     - entries:
+      - file: doxygen/html/topics
+        title: RPP APIs
       - file: doxygen/html/files
         title: RPP header files
       - file: doxygen/html/group__group__rppdefs
