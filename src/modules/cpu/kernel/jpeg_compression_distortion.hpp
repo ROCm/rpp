@@ -28,59 +28,7 @@ SOFTWARE.
 
 int BLOCK_SIZE = 8;
 
-static float a = 1.387039845322148f;
-static float b = 1.306562964876377f;
-static float c = 1.175875602419359f;
-static float d = 0.785694958387102f;
-static float e = 0.541196100146197f;
-static float f = 0.275899379282943f;
-__m256 norm_factor = _mm256_set1_ps(0.3535533905932737f);
-
-inline float GetQualityScale(int quality)
-{
-  quality = std::max(1, std::min(quality, 100));
-  float qScale = 1.0f;
-  if (quality < 50)
-    qScale = 50.0f / quality;
-  else
-    qScale = 2.0f - (2 * quality / 100.0f);
-  return qScale;
-}
-
-// Compute quantization table using AVX
-void ComputeQuantizationTableAVX(float* baseTable, float scale, float* outputTable)
-{
-    float scaledTable[BLOCK_SIZE * BLOCK_SIZE];
-
-    // Scale each row
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        __m256 row = load_float_avx(baseTable + i * BLOCK_SIZE);
-        row = _mm256_mul_ps(row, _mm256_set1_ps(scale));
-        store_uint8_avx(outputTable + i * BLOCK_SIZE, row);
-    }
-}
-
-// Get Luma Quantization Table
-void GetLumaQuantizationTable(int quality, float outputTable[BLOCK_SIZE][BLOCK_SIZE]) {
-    float baseLumaTable[BLOCK_SIZE][BLOCK_SIZE] = {
-        {16, 11, 10, 16, 24, 40, 51, 61},
-        {12, 12, 14, 19, 26, 58, 60, 55},
-        {14, 13, 16, 24, 40, 57, 69, 56},
-        {14, 17, 22, 29, 51, 87, 80, 62},
-        {18, 22, 37, 56, 68, 109, 103, 77},
-        {24, 35, 55, 64, 81, 104, 113, 92},
-        {49, 64, 78, 87, 103, 121, 120, 101},
-        {72, 92, 95, 98, 112, 100, 103, 99}
-    };
-
-    float scale = GetQualityFactorScale(quality) / 100.0f;
-    ComputeQuantizationTableAVX(&baseLumaTable[0][0], scale, &outputTable[0][0]);
-}
-
-// Get Chroma Quantization Table
-void GetChromaQuantizationTable(int quality, uint8_t outputTable[BLOCK_SIZE][BLOCK_SIZE]) {
-    float baseChromaTable[BLOCK_SIZE][BLOCK_SIZE] = {
+float baseChromaTable[8][8] = {
         {17, 18, 24, 47, 99, 99, 99, 99},
         {18, 21, 26, 66, 99, 99, 99, 99},
         {24, 26, 56, 99, 99, 99, 99, 99},
@@ -89,11 +37,26 @@ void GetChromaQuantizationTable(int quality, uint8_t outputTable[BLOCK_SIZE][BLO
         {99, 99, 99, 99, 99, 99, 99, 99},
         {99, 99, 99, 99, 99, 99, 99, 99},
         {99, 99, 99, 99, 99, 99, 99, 99}
-    };
+};
 
-    float scale = GetQualityFactorScale(quality) / 100.0f;
-    ComputeQuantizationTableAVX(&baseChromaTable[0][0], scale, &outputTable[0][0]);
-}
+float baseLumaTable[8][8] = {
+        {16, 11, 10, 16, 24, 40, 51, 61},
+        {12, 12, 14, 19, 26, 58, 60, 55},
+        {14, 13, 16, 24, 40, 57, 69, 56},
+        {14, 17, 22, 29, 51, 87, 80, 62},
+        {18, 22, 37, 56, 68, 109, 103, 77},
+        {24, 35, 55, 64, 81, 104, 113, 92},
+        {49, 64, 78, 87, 103, 121, 120, 101},
+        {72, 92, 95, 98, 112, 100, 103, 99}
+};
+
+constexpr float r1 = 1.3870398998f; // cos(1 / 16.0 * PI) * SQRT2
+constexpr float r2 = 1.3065630198f; // cos(2 / 16.0 * PI) * SQRT2
+constexpr float r3 = 1.1758755445f; // cos(3 / 16.0 * PI) * SQRT2
+constexpr float r5 = 0.7856949568f; // cos(5 / 16.0 * PI) * SQRT2
+constexpr float r6 = 0.5411961079f; // cos(6 / 16.0 * PI) * SQRT2
+constexpr float r7 = 0.2758993804f; // cos(7 / 16.0 * PI) * SQRT2
+constexpr float isqrt2 = 0.3535533905932737f; // 1.0f / SQRT2
 
 void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __m256& f, __m256& g, __m256& h)
 {
@@ -125,9 +88,9 @@ void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __
     h = _mm256_permute2f128_ps(abcd37, efgh37, (3 << 4) | 1); //a7 b7 c7 d7 e7 f7 g7 h7
 }
 
-static __forceinline void fdct_8x8_llm_fma3(
+void dct_fwd_8x8_1d_avx2(
     __m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5,
-    __m256& s6, __m256& s7) noexcept
+    __m256& s6, __m256& s7)
 {
     const __m256 xr1 = _mm256_set1_ps(r1);
     const __m256 xr2 = _mm256_set1_ps(r2);
@@ -171,8 +134,7 @@ static __forceinline void fdct_8x8_llm_fma3(
     s7 = _mm256_sub_ps(c0, c3);
 }
 
-
-static __forceinline void idct_8x8_llm_fma3(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5, __m256& s6, __m256& s7)
+void idct_8x8_1d_avx2(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5, __m256& s6, __m256& s7)
 {
     __m256 z0 = _mm256_add_ps(s1, s7);
     __m256 z1 = _mm256_add_ps(s3, s5);
@@ -207,6 +169,24 @@ static __forceinline void idct_8x8_llm_fma3(__m256& s0, __m256& s1, __m256& s2, 
     s5 = _mm256_sub_ps(a2, b2);
     s3 = _mm256_add_ps(a3, b3);
     s4 = _mm256_sub_ps(a3, b3);
+
+    // s0 = _mm256_max_ps(avx_p0, _mm256_min_ps(s0, avx_p255));
+    // s1 = _mm256_max_ps(avx_p0, _mm256_min_ps(s1, avx_p255));
+    // s2 = _mm256_max_ps(avx_p0, _mm256_min_ps(s2, avx_p255));
+    // s3 = _mm256_max_ps(avx_p0, _mm256_min_ps(s3, avx_p255));
+    // s4 = _mm256_max_ps(avx_p0, _mm256_min_ps(s4, avx_p255));
+    // s5 = _mm256_max_ps(avx_p0, _mm256_min_ps(s5, avx_p255));
+    // s6 = _mm256_max_ps(avx_p0, _mm256_min_ps(s7, avx_p255));
+    // s7 = _mm256_max_ps(avx_p0, _mm256_min_ps(s0, avx_p255));
+}
+
+void quantizeBlockAVX2(__m256 *p, float quantTable[8][8])
+{
+    for (int i = 0; i < 8; i++)
+    {
+        __m256 quantRow = _mm256_loadu_ps(quantTable[i]);   // Load 8 floats
+        p[i] = _mm256_div_ps(p[i], quantRow);   // Perform element-wise division for quantization
+    }
 }
 
 inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m256 *pCr)
@@ -237,12 +217,25 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
             _mm256_mul_ps(pRgb[idx + 4], coeffY_B));
         pY[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffY_R), _mm256_mul_ps(pRgb[idx + 3], coeffY_G)),
-            _mm256_mul_ps(pRgb[5], coeffY_B));
+            _mm256_mul_ps(pRgb[idx + 5], coeffY_B));
+
+        pY[idx1] = _mm256_ceil_ps(pY[idx1]);
+        pY[idx1 + 1] = _mm256_ceil_ps(pY[idx1 + 1]);
+
+        pY[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[idx1], avx_p255));
+        pY[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[idx1 + 1], avx_p255));
+        pY[idx1] =_mm256_sub_ps(pY[idx1], avx_p128);
+        pY[idx1 + 1] =_mm256_sub_ps(pY[idx1 + 1], avx_p128);
 
         // Compute Cb
         pCb[idx1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx], coeffCb_R), _mm256_mul_ps(pRgb[idx + 2], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 4], coeffCb_B), offset));
+        if(i ==0)
+        {
+            printf("\n cb in the function");
+            rpp_mm256_print_ps(pCb[idx1]);
+        }
         pCb[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCb_R), _mm256_mul_ps(pRgb[idx + 3], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCb_B), offset));
@@ -254,6 +247,12 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
         pCr[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCr_R), _mm256_mul_ps(pRgb[idx + 3], coeffCr_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCr_B), offset));
+
+        // pCr[idx1] = _mm256_ceil_ps(pCr[idx1]);
+        // pCr[idx1 + 1] = _mm256_ceil_ps(pCr[idx1 + 1]);
+
+        // pCr[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1], avx_p255));
+        // pCr[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1 + 1], avx_p255));
 
         __m256 cbTemp = _mm256_hadd_ps(pCb[idx1], pCb[idx1 + 1]);
         cbTemp = _mm256_permutevar8x32_ps(cbTemp, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
@@ -267,10 +266,77 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
         int idx = i * 2;
         pCb[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
         pCr[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
+        pCb[i] = _mm256_ceil_ps(pCb[i]);
+        pCr[i] = _mm256_ceil_ps(pCr[i]);
+        pCb[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[i], avx_p255));
+        pCr[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[i], avx_p255));
+        pCb[i] =_mm256_sub_ps(pCb[i], avx_p128);
+        pCr[i] =_mm256_sub_ps(pCr[i], avx_p128);
     }
 }
 
-RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
+inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256* pRgb) {
+    // Coefficients for YCbCr to RGB conversion
+    const __m256 coeffR_Y = _mm256_set1_ps(1.0f);
+    const __m256 coeffR_Cr = _mm256_set1_ps(1.402f);
+
+    const __m256 coeffG_Y = _mm256_set1_ps(1.0f);
+    const __m256 coeffG_Cb = _mm256_set1_ps(-0.344136f);
+    const __m256 coeffG_Cr = _mm256_set1_ps(-0.714136f);
+
+    const __m256 coeffB_Y = _mm256_set1_ps(1.0f);
+    const __m256 coeffB_Cb = _mm256_set1_ps(1.772f);
+
+    const __m256 offset = _mm256_set1_ps(128.0f);
+
+    for (int i = 0; i < 8; i++)
+    {
+        pCb[i] = _mm256_add_ps(pCb[i], avx_p128);
+        pCr[i] = _mm256_add_ps(pCr[i], avx_p128);
+        pCb[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[i], avx_p255));
+        pCr[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[i], avx_p255));
+        for(int j = 0; j < 4; j++)
+        {
+            pY[i * 4 + j] = _mm256_add_ps(pY[i*4 + i], avx_p128);
+            pY[i * 4 + j] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[i * 4 + j], avx_p255));
+        }
+        // Upsample Cb and Cr (average neighboring values)
+        __m256 cb_upsampled = _mm256_mul_ps(pCb[i], _mm256_set1_ps(2.0f));
+        __m256 cr_upsampled = _mm256_mul_ps(pCr[i], _mm256_set1_ps(2.0f));
+
+        // Add offsets back to Cb and Cr
+        __m256 cb = _mm256_sub_ps(cb_upsampled, offset);
+        __m256 cr = _mm256_sub_ps(cr_upsampled, offset);
+
+        for (int j = 0; j < 4; j++)
+        {
+            int idx = i * 12 + (j / 2) * 6 + (j % 2);
+
+            // Calculate R = Y + 1.402 * Cr
+            __m256 r = _mm256_fmadd_ps(coeffR_Cr, cr, pY[i * 4 + j]);
+
+            // Calculate G = Y - 0.344136 * Cb - 0.714136 * Cr
+            __m256 g = _mm256_fmadd_ps(coeffG_Cr, cr, _mm256_fmadd_ps(coeffG_Cb, cb, pY[i * 4 + j]));
+
+            printf("\n gval ");
+            rpp_mm256_print_ps(g);
+
+            // Calculate B = Y + 1.772 * Cb
+            __m256 b = _mm256_fmadd_ps(coeffB_Cb, cb, pY[i * 4 + j]);
+
+            r = _mm256_max_ps(avx_p0, _mm256_min_ps(r, avx_p255));
+            g = _mm256_max_ps(avx_p0, _mm256_min_ps(g, avx_p255));
+            b = _mm256_max_ps(avx_p0, _mm256_min_ps(b, avx_p255));
+
+            // Store interleaved R, G, B
+            pRgb[idx] = r;
+            pRgb[idx + 2] = g;
+            pRgb[idx + 4] = b;
+        }
+    }
+}
+
+RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                                              RpptDescPtr srcDescPtr,
                                              Rpp8u *dstPtr,
                                              RpptDescPtr dstDescPtr,
@@ -299,7 +365,7 @@ RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
         dstPtrChannel = dstPtrImage;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u alignedLength = (bufferLength / 16) * 16;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
@@ -313,7 +379,7 @@ RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            for(Rpp32u i = 0; i < 1; i += 16)
             {
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -324,18 +390,111 @@ RppStatus jpeg_compression_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                for (; vectorLoopCount < 1; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
                     __m256 pRgb[96];
                     __m256 pY[32], pCb[32], pCr[32];
                     for(int row = 0; row < 16; row++)
-                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp, pRgb[row * 6]);                                 // simd loads
-                    rgb_to_ycbcr(pRgb, pY, pCb, pCr);
-                    dct_fwd_8x8_1d_avx2(pY[0], p)
+                    {
+                        Rpp8u *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
+                    if(vectorLoopCount == 0)
+                    {
+                        rpp_mm256_print_ps(pRgb[0]);
+                        rpp_mm256_print_ps(pRgb[1]);
+                        rpp_mm256_print_ps(pRgb[2]);
+                        rpp_mm256_print_ps(pRgb[3]);
+                        rpp_mm256_print_ps(pRgb[4]);
+                        rpp_mm256_print_ps(pRgb[5]);
+                        rpp_mm256_print_ps(pY[0]);
+                        rpp_mm256_print_ps(pY[1]);
+                        for(int cb = 0; cb < 8; cb++)
+                        {
+                            rpp_mm256_print_ps(pCb[cb]);
+                        }
+                    }
+                    for(int y = 0; y < 4; y++)
+                    {
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                    }
+
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    if(vectorLoopCount == 0)
+                    {
+                        printf("\n after col DCT ");
+                        rpp_mm256_print_ps(pCb[0]);
+                    }
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    if(vectorLoopCount == 0)
+                    {
+                        printf("\n after row DCT ");
+                        rpp_mm256_print_ps(pCb[0]);
+                    }
+                    quantizeBlockAVX2(pCb, baseChromaTable);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    quantizeBlockAVX2(pCr, baseChromaTable);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+                    ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    if(vectorLoopCount == 0)
+                    {
+                        std::cout<<"\n after inv DCT ";
+                        rpp_mm256_print_ps(pCb[0]);
+                        rpp_mm256_print_ps(pRgb[0]);
+                        rpp_mm256_print_ps(pRgb[2]);
+                        rpp_mm256_print_ps(pRgb[4]);
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
                 }
 #endif
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
             }
         }
     }
+    return RPP_SUCCESS;
 }

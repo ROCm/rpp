@@ -1551,6 +1551,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 93:
+                {
+                    testCaseName = "jpeg_compression_distortion";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

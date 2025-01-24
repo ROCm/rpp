@@ -1555,6 +1555,32 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
                                                           rpp::deref(rppHandle));
         }
     }
+
+        return RPP_SUCCESS;
+}
+
+RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                RppPtr_t dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        jpeg_compression_distortion_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                      srcDescPtr,
+                                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                      dstDescPtr,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      layoutParams,
+                                                      rpp::deref(rppHandle));
+    }
+
     return RPP_SUCCESS;
 }
 
