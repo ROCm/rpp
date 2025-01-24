@@ -20,7 +20,6 @@ inline void compute_dst_size_cap_host(RpptImagePatchPtr dstImgSize, RpptDescPtr 
     dstImgSize->height = std::min(dstImgSize->height, dstDescPtr->h);
 }
 
-// Resize
 inline void compute_resize_src_loc(Rpp32s dstLocation, Rpp32f scale, Rpp32s &srcLoc, Rpp32f &weight, Rpp32f offset = 0, Rpp32u srcStride = 1)
 {
     Rpp32f srcLocationFloat = ((Rpp32f) dstLocation) * scale + offset;

@@ -231,7 +231,6 @@ inline Rpp32f rpp_host_rng_xorwow_f32(T *xorwowState)
     return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
 }
 
-// Gaussian noise gen
 inline void rpp_host_rng_16_gaussian_f32_avx(__m256 *pRngVals, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter)
 {
     __m256 pU, pV, pS;                                                                                  // Rpp32f u, v, s;
@@ -284,6 +283,5 @@ inline float rpp_host_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
 
     return xorwowState->boxMullerExtra;
 }
-//Random code
 
 #endif //RPP_CPU_COMMON_RANDOM_H
