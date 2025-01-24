@@ -1,219 +1,410 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_effects_augmentations.hpp"
+#include <random>
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
-
-extern "C" __global__ void fog_planar(unsigned char *input,
-                                      const unsigned int height,
-                                      const unsigned int width,
-                                      const unsigned int channel,
-                                      const float fogValue)
+__device__ __forceinline__ void fog_grey_hip_compute(d_float8 *r_f8, d_float8 *g_f8, d_float8 *b_f8, float4 *greyFactor_f4)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    float4 grey_f4[2];
+    float4 rMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_RED);
+    float4 gMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_GREEN);
+    float4 bMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_BLUE);
+    grey_f4[0] = r_f8->f4[0] * rMultiplier_f4 + g_f8->f4[0] * gMultiplier_f4 + b_f8->f4[0] * bMultiplier_f4;
+    grey_f4[1] = r_f8->f4[1] * rMultiplier_f4 + g_f8->f4[1] * gMultiplier_f4 + b_f8->f4[1] * bMultiplier_f4;
+    float4 oneMinusGreyFactor_f4 = static_cast<float4>(1.0f) - *greyFactor_f4;
+    grey_f4[0] = grey_f4[0] * *greyFactor_f4;
+    grey_f4[1] = grey_f4[1] * *greyFactor_f4;
+    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    r_f8->f4[1] = (r_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
+    g_f8->f4[1] = (g_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
+    b_f8->f4[1] = (b_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
+}
+
+__device__ __forceinline__ void fog_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
+{
+    float4 alphaFactor_f4[2];
+    alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
+    alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0]));
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1]));
+}
+
+__device__ __forceinline__ void fog_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
+{
+    float4 pixNorm_f4[2], alphaFactor_f4[2];
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
+    alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
+    alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
+    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+}
+
+__device__ __forceinline__ void fog_hip_compute(schar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
+{
+    float4 alphaFactor_f4[2];
+    alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
+    alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[0]) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0])) - static_cast<float4>(128);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[1]) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1])) - static_cast<float4>(128);
+}
+
+__device__ __forceinline__ void fog_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
+{
+    float4 pixNorm_f4[2], alphaFactor_f4[2];
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
+    alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
+    alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
+    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+}
+
+template <typename T>
+__global__ void fog_pkd_hip_tensor(T *srcPtr,
+                                   uint2 srcStridesNH,
+                                   T *dstPtr,
+                                   uint2 dstStridesNH,
+                                   float *fogAlphaMaskPtr,
+                                   float *fogIntensityMaskPtr,
+                                   float *intensityFactor,
+                                   float *greyFactor,
+                                   uint *maskLocOffsetX,
+                                   uint *maskLocOffsetY,
+                                   RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height)
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         return;
     }
 
-    int pixId= width * id_y + id_x;
-    int c = width * height;
-    float check = input[pixId];
-    if(channel > 1)
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * (srcStridesNH.y / 3)) + (id_x + maskLocOffsetX[id_z]);
+
+    d_float24 src_f24, dst_f24;
+    d_float8 maskAlpha_f8, maskIntensity_f8;
+    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
+    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
+    rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
+    rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
+    fog_grey_hip_compute(&src_f24.f8[0], &src_f24.f8[1], &src_f24.f8[2], &greyFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+template <typename T>
+__global__ void fog_pln_hip_tensor(T *srcPtr,
+                                   uint3 srcStridesNCH,
+                                   T *dstPtr,
+                                   uint3 dstStridesNCH,
+                                   int channelsDst,
+                                   float *fogAlphaMaskPtr,
+                                   float *fogIntensityMaskPtr,
+                                   float *intensityFactor,
+                                   float *greyFactor,
+                                   uint *maskLocOffsetX,
+                                   uint *maskLocOffsetY,
+                                   RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        check += input[pixId+c] + input[pixId + c * 2];
-        check = check / 3;
+        return;
     }
-    if(check >= (240) && fogValue!=0)
-    {}
-    else if(check>=(170))
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * srcStridesNCH.z) + (id_x + maskLocOffsetX[id_z]);
+
+    d_float8 maskAlpha_f8, maskIntensity_f8;
+    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
+    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
+    rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
+
+    if (channelsDst == 3)
     {
-        float pixel = ((float) input[pixId]) * (1.5 + fogValue) - (fogValue*4) + (7 * fogValue);
-        input[pixId] = saturate_8u(pixel);
-        if(channel > 1)
-        {
-            pixel = ((float) input[pixId+c]) * (1.5 + fogValue) + (7 * fogValue);
-            input[pixId+c] = saturate_8u(pixel);
-            pixel = ((float) input[pixId + c * 2]) * (1.5 + fogValue) + (fogValue * 4) + (7 * fogValue);
-            input[pixId+c*2] = saturate_8u(pixel);
-        }
-    }
-    else if(check <= (85))
-    {
-        float pixel = ((float) input[pixId]) * (1.5 + (fogValue*fogValue)) - (fogValue * 4) + (130 * fogValue);
-        input[pixId] = saturate_8u(pixel);
-        if(channel > 1)
-        {
-            pixel = ((float) input[pixId+c]) * (1.5 + (fogValue * fogValue)) + (130 * fogValue);
-            input[pixId + c] = saturate_8u(pixel);
-            pixel = ((float) input[pixId + c * 2]) * (1.5 + (fogValue * fogValue)) + (fogValue * 4) + 130 * fogValue;
-            input[pixId + c * 2] = saturate_8u(pixel);
-        }
+        d_float24 src_f24, dst_f24;
+        rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
+
+        fog_grey_hip_compute(&src_f24.f8[0], &src_f24.f8[1], &src_f24.f8[2], &greyFactor_f4);
+        fog_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+        fog_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+        fog_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
     }
     else
     {
-        float pixel = ((float) input[pixId]) * (1.5 + (fogValue * ( fogValue * 1.414))) - (fogValue * 4) + 20 + (100 * fogValue);
-        input[pixId] = saturate_8u(pixel);
-        if(channel>1)
-        {
-            pixel = ((float) input[pixId+c]) * (1.5 + (fogValue * (fogValue * 1.414))) + 20 + (100 * fogValue);
-            input[pixId + c] = saturate_8u(pixel);
-            pixel = ((float) input[pixId + c * 2]) * (1.5 + (fogValue * (fogValue * 1.414))) + (fogValue * 4) + (100 * fogValue);
-            input[pixId + c * 2] = saturate_8u(pixel);
-        }
+        d_float8 src_f8, dst_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+        fog_hip_compute(srcPtr, &src_f8, &dst_f8, &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
-extern "C" __global__ void fog_pkd(unsigned char *input,
-                                   const unsigned int height,
-                                   const unsigned int width,
-                                   const unsigned int channel,
-                                   const float fogValue)
+template <typename T>
+__global__ void fog_pkd3_pln3_hip_tensor(T *srcPtr,
+                                         uint2 srcStridesNH,
+                                         T *dstPtr,
+                                         uint3 dstStridesNCH,
+                                         float *fogAlphaMaskPtr,
+                                         float *fogIntensityMaskPtr,
+                                         float *intensityFactor,
+                                         float *greyFactor,
+                                         uint *maskLocOffsetX,
+                                         uint *maskLocOffsetY,
+                                         RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height)
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         return;
     }
 
-    int i = width * id_y * channel + id_x * channel;
-    float check = input[i] + input[i + 1] + input[i + 2];
-    if(check >= (240 * 3) && fogValue != 0)
-    {}
-    else if(check >= (170 * 3) && fogValue != 0)
-    {
-        float pixel = ((float) input[i]) * (1.5 + fogValue) - (fogValue * 4) + (7 * fogValue);
-        input[i] = saturate_8u(pixel);
-        pixel = ((float) input[i + 1]) * (1.5 + fogValue) + (7 * fogValue);
-        input[i + 1] = saturate_8u(pixel);
-        pixel = ((float) input[i + 2]) * (1.5 + fogValue) + (fogValue * 4) + (7 * fogValue);
-        input[i + 2] = saturate_8u(pixel);
-    }
-    else if(check <= (85 * 3) && fogValue != 0)
-    {
-        float pixel = ((float) input[i]) * (1.5 + (fogValue*fogValue)) - (fogValue*4) + (130*fogValue);
-        input[i] = saturate_8u(pixel);
-        pixel = ((float) input[i + 1]) * (1.5 + (fogValue*fogValue)) + (130*fogValue);
-        input[i+1] = saturate_8u(pixel);
-        pixel = ((float) input[i + 2]) * (1.5 + (fogValue*fogValue)) + (fogValue*4) + 130*fogValue;
-        input[i+2] = saturate_8u(pixel);
-    }
-    else if(fogValue != 0)
-    {
-        float pixel = ((float) input[i]) * (1.5 + (fogValue * (fogValue * 1.414))) - (fogValue * 4) + 20 + (100 * fogValue);
-        input[i] = saturate_8u(pixel);
-        pixel = ((float) input[i + 1]) * (1.5 + (fogValue * ( fogValue * 1.414))) + 20 + (100 * fogValue);
-        input[i + 1] = saturate_8u(pixel);
-        pixel = ((float) input[i + 2]) * (1.5 + (fogValue * ( fogValue * 1.414))) + (fogValue * 4) + (100 * fogValue);
-        input[i + 2] = saturate_8u(pixel);
-    }
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * (srcStridesNH.y / 3)) + (id_x + maskLocOffsetX[id_z]);
+
+    d_float24 src_f24, dst_f24;
+    d_float8 maskAlpha_f8, maskIntensity_f8;
+    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
+    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
+    rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
+    rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
+    fog_grey_hip_compute(&src_f24.f8[0], &src_f24.f8[1], &src_f24.f8[2], &greyFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
-extern "C" __global__ void fog_batch(unsigned char *input,
-                                     unsigned char *output,
-                                     float *fogValue,
-                                     unsigned int *height,
-                                     unsigned int *width,
-                                     unsigned int *max_width,
-                                     unsigned long long *batch_index,
-                                     const unsigned int channel,
-                                     unsigned int *inc, // use width * height for pln and 1 for pkd
-                                     const int plnpkdindex) // use 1 pln 3 for pkd
+template <typename T>
+__global__ void fog_pln3_pkd3_hip_tensor(T *srcPtr,
+                                         uint3 srcStridesNCH,
+                                         T *dstPtr,
+                                         uint2 dstStridesNH,
+                                         float *fogAlphaMaskPtr,
+                                         float *fogIntensityMaskPtr,
+                                         float *intensityFactor,
+                                         float *greyFactor,
+                                         uint *maskLocOffsetX,
+                                         uint *maskLocOffsetY,
+                                         RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    float tempFogValue = fogValue[id_z];
-    int indextmp = 0;
-    unsigned long pixIdx = 0;
-
-    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
-
-    if((id_y >= 0 ) && (id_y < height[id_z]) && (id_x >= 0) && (id_x < width[id_z]))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        float check = input[pixIdx];
-        if(channel == 3)
-        {
-            check = (check + input[pixIdx + inc[id_z]] + input[pixIdx + inc[id_z] * 2]) / 3;
-        }
-        if(check >= (240) && tempFogValue!=0)
-        {
-            output[pixIdx] = input[pixIdx];
-            if(channel > 1)
-            {
-                output[pixIdx + inc[id_z]] = input[pixIdx + inc[id_z]];
-                output[pixIdx + inc[id_z] * 2] = input[pixIdx + inc[id_z] * 2];
-            }
-        }
-        else if(check >= (170) && tempFogValue != 0)
-        {
-            float pixel = ((float)input[pixIdx]) * (1.5 + tempFogValue) - (tempFogValue * 4) + (7 * tempFogValue);
-            output[pixIdx] = saturate_8u(pixel);
-            if(channel > 1)
-            {
-                pixel = ((float)input[pixIdx + inc[id_z]]) * (1.5 + tempFogValue) + (7 * tempFogValue);
-                output[pixIdx + inc[id_z]] = saturate_8u(pixel);
-                pixel = ((float)input[pixIdx + inc[id_z] * 2]) * (1.5 + tempFogValue) + (tempFogValue * 4) + (7 * tempFogValue);
-                output[pixIdx + inc[id_z] * 2] = saturate_8u(pixel);
-            }
-        }
-        else if(check <= (85) && tempFogValue != 0)
-        {
-            float pixel = ((float)input[pixIdx]) * (1.5 + (tempFogValue * tempFogValue)) - (tempFogValue * 4) + (130 * tempFogValue);
-            output[pixIdx] = saturate_8u(pixel);
-            if(channel > 1)
-            {
-                pixel = ((float)input[pixIdx + inc[id_z]]) * (1.5 + (tempFogValue * tempFogValue)) + (130 * tempFogValue);
-                output[pixIdx + inc[id_z]] = saturate_8u(pixel);
-                pixel = ((float)input[pixIdx + inc[id_z] * 2]) * (1.5 + (tempFogValue * tempFogValue)) + (tempFogValue * 4) + 130 * tempFogValue;
-                output[pixIdx + inc[id_z] * 2] = saturate_8u(pixel);
-            }
-        }
-        else if(tempFogValue != 0)
-        {
-            float pixel = ((float)input[pixIdx]) * (1.5 + (tempFogValue * (tempFogValue * 1.414))) - (tempFogValue * 4) + 20 + (100 * tempFogValue);
-            output[pixIdx] = saturate_8u(pixel);
-            if(channel > 1)
-            {
-                pixel = ((float)input[pixIdx + inc[id_z]]) * (1.5 + (tempFogValue * (tempFogValue * 1.414))) + 20 + (100 * tempFogValue);
-                output[pixIdx + inc[id_z]] = saturate_8u(pixel);
-                pixel = ((float)input[pixIdx + inc[id_z] * 2]) * (1.5 + (tempFogValue * (tempFogValue * 1.414))) + (tempFogValue * 4) + (100 * tempFogValue);
-                output[pixIdx + inc[id_z] * 2] = saturate_8u(pixel);
-            }
-        }
+        return;
     }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * srcStridesNCH.z) + (id_x + maskLocOffsetX[id_z]);
+
+    d_float24 src_f24, dst_f24;
+    d_float8 maskAlpha_f8, maskIntensity_f8;
+    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
+    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
+    rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
+    rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
+    fog_grey_hip_compute(&src_f24.f8[0], &src_f24.f8[1], &src_f24.f8[2], &greyFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    fog_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &maskAlpha_f8, &maskIntensity_f8, &intensityFactor_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-RppStatus hip_exec_fog_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+template <typename T>
+RppStatus hip_exec_fog_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32f *d_fogAlphaMaskPtr,
+                              Rpp32f *d_fogIntensityMaskPtr,
+                              Rpp32f *intensityFactor,
+                              Rpp32f *greyFactor,
+                              Rpp32u *maskLocOffsetX,
+                              Rpp32u *maskLocOffsetY,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle)
 {
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    hipLaunchKernelGGL(fog_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       channel,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       plnpkdind);
+    Rpp32s globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    Rpp32s globalThreads_y = dstDescPtr->h;
+    Rpp32s globalThreads_z = dstDescPtr->n;
+
+    // fill the random starting point (x, y) in mask for each image in batch 
+    std::random_device rd;  // Random number engine seed
+    std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
+    for (Rpp32s i = 0; i < dstDescPtr->n; i++)
+    {
+        std::uniform_int_distribution<> distribX(0, srcDescPtr->w - roiTensorPtrSrc[i].xywhROI.roiWidth);
+        std::uniform_int_distribution<> distribY(0, srcDescPtr->h - roiTensorPtrSrc[i].xywhROI.roiHeight);
+        maskLocOffsetX[i] = distribX(gen);
+        maskLocOffsetY[i] = distribY(gen);
+    }
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
+        hipLaunchKernelGGL(fog_pkd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           d_fogAlphaMaskPtr,
+                           d_fogIntensityMaskPtr,
+                           intensityFactor,
+                           greyFactor,
+                           maskLocOffsetX,
+                           maskLocOffsetY,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        hipLaunchKernelGGL(fog_pln_hip_tensor,
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           d_fogAlphaMaskPtr,
+                           d_fogIntensityMaskPtr,
+                           intensityFactor,
+                           greyFactor,
+                           maskLocOffsetX,
+                           maskLocOffsetY,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(fog_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               d_fogAlphaMaskPtr,
+                               d_fogIntensityMaskPtr,
+                               intensityFactor,
+                               greyFactor,
+                               maskLocOffsetX,
+                               maskLocOffsetY,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+            hipLaunchKernelGGL(fog_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               d_fogAlphaMaskPtr,
+                               d_fogIntensityMaskPtr,
+                               intensityFactor,
+                               greyFactor,
+                               maskLocOffsetX,
+                               maskLocOffsetY,
+                               roiTensorPtrSrc);
+        }
+    }
 
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_fog_tensor<Rpp8u>(Rpp8u*,
+                                              RpptDescPtr,
+                                              Rpp8u*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u*,
+                                              Rpp32u*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);
+
+template RppStatus hip_exec_fog_tensor<half>(half*,
+                                             RpptDescPtr,
+                                             half*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32u*,
+                                             Rpp32u*,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             rpp::Handle&);
+
+template RppStatus hip_exec_fog_tensor<Rpp32f>(Rpp32f*,
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               Rpp32f*,
+                                               Rpp32f*,
+                                               Rpp32f*,
+                                               Rpp32u*,
+                                               Rpp32u*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
+
+template RppStatus hip_exec_fog_tensor<Rpp8s>(Rpp8s*,
+                                              RpptDescPtr,
+                                              Rpp8s*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u*,
+                                              Rpp32u*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);

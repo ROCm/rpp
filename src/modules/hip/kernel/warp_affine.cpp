@@ -1,472 +1,512 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_geometric_augmentations.hpp"
 
-extern "C" __global__ void warp_affine_pln(unsigned char *srcPtr,
-                                           unsigned char *dstPtr,
-                                           float *affine,
-                                           const unsigned int source_height,
-                                           const unsigned int source_width,
-                                           const unsigned int dest_height,
-                                           const unsigned int dest_width,
-                                           const unsigned int channel)
+// -------------------- Set 0 - warp_affine device helpers --------------------
+
+__device__ void warp_affine_srclocs_hip_compute(float affineMatrixElement, float4 locSrcComponent_f4, d_float8 *locSrcPtr_f8)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    int xc = id_x - source_width/2;
-    int yc = id_y - source_height/2;
-
-    int k ;
-    int l ;
-
-    k = (int)((affine[0] * xc )+ (affine[1] * yc)) + affine[2];
-    l = (int)((affine[3] * xc) + (affine[4] * yc)) + affine[5];
-
-    k = k + source_width/2;
-    l = l + source_height/2;
-
-    if (l < source_height && l >=0 && k < source_width && k >=0)
-    {
-        dstPtr[(id_z * dest_height * dest_width) + (id_y * dest_width) + id_x] = srcPtr[(id_z * source_height * source_width) + (l * source_width) + k];
-    }
-    else
-    {
-        dstPtr[(id_z * dest_height * dest_width) + (id_y * dest_width) + id_x] = 0;
-    }
+    d_float8 increment_f8;
+    increment_f8.f4[0] = make_float4(0, affineMatrixElement, affineMatrixElement + affineMatrixElement, affineMatrixElement + affineMatrixElement + affineMatrixElement);
+    increment_f8.f4[1] = (float4)(affineMatrixElement + increment_f8.f4[0].w) + increment_f8.f4[0];
+    locSrcPtr_f8->f4[0] = locSrcComponent_f4 + increment_f8.f4[0];
+    locSrcPtr_f8->f4[1] = locSrcComponent_f4 + increment_f8.f4[1];
 }
 
-extern "C" __global__ void warp_affine_pkd(unsigned char *srcPtr,
-                                           unsigned char *dstPtr,
-                                           float* affine,
-                                           const unsigned int source_height,
-                                           const unsigned int source_width,
-                                           const unsigned int dest_height,
-                                           const unsigned int dest_width,
-                                           const unsigned int channel)
+__device__ void warp_affine_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, int id_x, int id_y, d_float6 *affineMatrix_f6, d_float16 *locSrc_f16)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    int xc = id_x - source_width / 2;
-    int yc = id_y - source_height / 2;
-
-    int k;
-    int l;
-
-    k = (int)((affine[0] * xc )+ (affine[1] * yc)) + affine[2];
-    l = (int)((affine[3] * xc) + (affine[4] * yc)) + affine[5];
-
-    k = k + source_width/2;
-    l = l + source_height/2;
-
-    if (l < source_height && l >=0 && k < source_width && k >=0)
-    {
-        dstPtr[id_z + (channel * id_y * dest_width) + (channel * id_x)] = srcPtr[id_z + (channel * l * source_width) + (channel * k)];
-    }
-    else
-    {
-        dstPtr[id_z + (channel * id_y * dest_width) + (channel * id_x)] = 0;
-    }
+    float2 locDst_f2, locSrc_f2;
+    int roiHalfWidth = (srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) >> 1;
+    int roiHalfHeight = (srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) >> 1;
+    locDst_f2.x = (float) (id_x - roiHalfWidth);
+    locDst_f2.y = (float) (id_y - roiHalfHeight);
+    locSrc_f2.x = fmaf(locDst_f2.x, affineMatrix_f6->f1[0], fmaf(locDst_f2.y, affineMatrix_f6->f1[1], affineMatrix_f6->f1[2])) + roiHalfWidth;
+    locSrc_f2.y = fmaf(locDst_f2.x, affineMatrix_f6->f1[3], fmaf(locDst_f2.y, affineMatrix_f6->f1[4], affineMatrix_f6->f1[5])) + roiHalfHeight;
+    warp_affine_srclocs_hip_compute(affineMatrix_f6->f1[0], (float4)locSrc_f2.x, &(locSrc_f16->f8[0]));    // Compute 8 locSrcX
+    warp_affine_srclocs_hip_compute(affineMatrix_f6->f1[3], (float4)locSrc_f2.y, &(locSrc_f16->f8[1]));    // Compute 8 locSrcY
 }
 
-extern "C" __global__ void warp_affine_batch(unsigned char *srcPtr,
-                                             unsigned char *dstPtr,
-                                             float *affine,
-                                             unsigned int *source_height,
-                                             unsigned int *source_width,
-                                             unsigned int *dest_height,
-                                             unsigned int *dest_width,
-                                             unsigned int *xroi_begin,
-                                             unsigned int *xroi_end,
-                                             unsigned int *yroi_begin,
-                                             unsigned int *yroi_end,
-                                             unsigned int *max_source_width,
-                                             unsigned int *max_dest_width,
-                                             unsigned long long *source_batch_index,
-                                             unsigned long long *dest_batch_index,
-                                             const unsigned int channel,
-                                             unsigned int *source_inc, // use width * height for pln and 1 for pkd
-                                             unsigned int *dest_inc,
-                                             const int in_plnpkdind, // use 1 pln 3 for pkd
-                                             const int out_plnpkdind)
+// -------------------- Set 1 - Bilinear Interpolation --------------------
+
+template <typename T>
+__global__ void warp_affine_bilinear_pkd_hip_tensor(T *srcPtr,
+                                                    uint2 srcStridesNH,
+                                                    T *dstPtr,
+                                                    uint2 dstStridesNH,
+                                                    uint2 dstDimsWH,
+                                                    d_float6 *affineTensorPtr,
+                                                    RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
 
-    int indextmp = 0;
-    int xc = id_x - (dest_width[id_z] >> 1);
-    int yc = id_y - (dest_height[id_z] >> 1);
-    int affine_index = id_z * 6;
-    int k = (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) + affine[affine_index + 2];
-    int l = (int)((affine[affine_index + 3] * xc) + (affine[affine_index + 4] * yc)) + affine[affine_index + 5];
-    k = k + (source_width[id_z] >> 1);
-    l = l + (source_height[id_z] >> 1);
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] && (k >= xroi_begin[id_z]))
-    {
-        unsigned long src_pixIdx, dst_pixIdx;
-        src_pixIdx = source_batch_index[id_z] + (k + l * max_source_width[id_z]) * in_plnpkdind;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
-        {
-            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
-            src_pixIdx += source_inc[id_z];
-            dst_pixIdx += dest_inc[id_z];
-        }
-    }
-    else
-    {
-        unsigned long dst_pixIdx;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
-        {
-            dstPtr[dst_pixIdx] = 0;
-            dst_pixIdx += dest_inc[id_z];
-        }
-    }
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-extern "C" __global__ void warp_affine_batch_fp32(float *srcPtr,
-                                                  float *dstPtr,
-                                                  float *affine,
-                                                  unsigned int *source_height,
-                                                  unsigned int *source_width,
-                                                  unsigned int *dest_height,
-                                                  unsigned int *dest_width,
-                                                  unsigned int *xroi_begin,
-                                                  unsigned int *xroi_end,
-                                                  unsigned int *yroi_begin,
-                                                  unsigned int *yroi_end,
-                                                  unsigned int *max_source_width,
-                                                  unsigned int *max_dest_width,
-                                                  unsigned long long *source_batch_index,
-                                                  unsigned long long *dest_batch_index,
-                                                  const unsigned int channel,
-                                                  unsigned int *source_inc, // use width * height for pln and 1 for pkd
-                                                  unsigned int *dest_inc,
-                                                  const int in_plnpkdind, // use 1 pln 3 for pkd
-                                                  const int out_plnpkdind)
+template <typename T>
+__global__ void warp_affine_bilinear_pln_hip_tensor(T *srcPtr,
+                                                    uint3 srcStridesNCH,
+                                                    T *dstPtr,
+                                                    uint3 dstStridesNCH,
+                                                    uint2 dstDimsWH,
+                                                    int channelsDst,
+                                                    d_float6 *affineTensorPtr,
+                                                    RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
 
-    int indextmp = 0;
-    int xc = id_x - (dest_width[id_z] >> 1);
-    int yc = id_y - (dest_height[id_z] >> 1);
-    int affine_index = id_z * 6;
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    int k = (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) + affine[affine_index + 2];
-    int l = (int)((affine[affine_index + 3] * xc) + (affine[affine_index + 4] * yc)) + affine[affine_index + 5];
-    k = k + (source_width[id_z] >> 1);
-    l = l + (source_height[id_z] >> 1);
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
-    if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] && (k >= xroi_begin[id_z]))
+    d_float8 dst_f8;
+    rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+    if (channelsDst == 3)
     {
-        unsigned long src_pixIdx, dst_pixIdx;
-        src_pixIdx = source_batch_index[id_z] + (k + l * max_source_width[id_z]) * in_plnpkdind;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
-        {
-            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
-            src_pixIdx += source_inc[id_z];
-            dst_pixIdx += dest_inc[id_z];
-        }
-    }
-    else
-    {
-        unsigned long dst_pixIdx;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
-        {
-            dstPtr[dst_pixIdx] = 0;
-            dst_pixIdx += dest_inc[id_z];
-        }
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
-// extern "C" __global__ void warp_affine_batch_fp16(
-//     half *srcPtr, half *dstPtr, float *affine,
-//     unsigned int *source_height, unsigned int *source_width,
-//     unsigned int *dest_height, unsigned int *dest_width,
-//     unsigned int *xroi_begin, unsigned int *xroi_end,
-//     unsigned int *yroi_begin, unsigned int *yroi_end,
-//     unsigned int *max_source_width,
-//     unsigned int *max_dest_width,
-//     unsigned long long *source_batch_index,
-//     unsigned long long *dest_batch_index, const unsigned int channel,
-//     unsigned int *source_inc, unsigned int *dest_inc, // use width * height for pln and 1 for pkd
-//     const int in_plnpkdind, const int out_plnpkdind) // use 1 pln 3 for pkd
-// {
-//   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-//    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-//   if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
-//     return;
-
-//   int indextmp = 0;
-//   unsigned long src_pixIdx = 0, dst_pixIdx = 0;
-//   int xc = id_x - (dest_width[id_z] >> 1);
-//   int yc = id_y - (dest_height[id_z] >> 1);
-//   int affine_index = id_z * 6;
-
-//   int k =
-//       (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) +
-//       affine[affine_index + 2];
-//   int l =
-//       (int)((affine[affine_index + 3] * xc) + (affine[affine_index + 4] * yc)) +
-//       affine[affine_index + 5];
-//   k = k + (source_width[id_z] >> 1);
-//   l = l + (source_height[id_z] >> 1);
-
-//   if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] &&
-//       (k >= xroi_begin[id_z])) {
-//     src_pixIdx = source_batch_index[id_z] +
-//                  (k + l * max_source_width[id_z]) * in_plnpkdind;
-//     dst_pixIdx = dest_batch_index[id_z] +
-//                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-//     for (indextmp = 0; indextmp < channel; indextmp++) {
-//       dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
-//       src_pixIdx += source_inc[id_z];
-//       dst_pixIdx += dest_inc[id_z];
-//     }
-//   }
-
-//   else {
-//     dst_pixIdx = dest_batch_index[id_z] +
-//                  (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-//     for (indextmp = 0; indextmp < channel; indextmp++) {
-//       dstPtr[dst_pixIdx] = 0;
-//       dst_pixIdx += dest_inc[id_z];
-//     }
-//   }
-// }
-
-extern "C" __global__ void warp_affine_batch_int8(signed char *srcPtr,
-                                                  signed char *dstPtr,
-                                                  float *affine,
-                                                  unsigned int *source_height,
-                                                  unsigned int *source_width,
-                                                  unsigned int *dest_height,
-                                                  unsigned int *dest_width,
-                                                  unsigned int *xroi_begin,
-                                                  unsigned int *xroi_end,
-                                                  unsigned int *yroi_begin,
-                                                  unsigned int *yroi_end,
-                                                  unsigned int *max_source_width,
-                                                  unsigned int *max_dest_width,
-                                                  unsigned long long *source_batch_index,
-                                                  unsigned long long *dest_batch_index,
-                                                  const unsigned int channel,
-                                                  unsigned int *source_inc, // use width * height for pln and 1 for pkd
-                                                  unsigned int *dest_inc,
-                                                  const int in_plnpkdind, // use 1 pln 3 for pkd
-                                                  const int out_plnpkdind)
+template <typename T>
+__global__ void warp_affine_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                          uint2 srcStridesNH,
+                                                          T *dstPtr,
+                                                          uint3 dstStridesNCH,
+                                                          uint2 dstDimsWH,
+                                                          d_float6 *affineTensorPtr,
+                                                          RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= dest_width[id_z] || id_y >= dest_height[id_z])
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
 
-    int indextmp = 0;
-    int xc = id_x - (dest_width[id_z] >> 1);
-    int yc = id_y - (dest_height[id_z] >> 1);
-    int affine_index = id_z * 6;
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    int k = (int)((affine[affine_index + 0] * xc) + (affine[affine_index + 1] * yc)) + affine[affine_index + 2];
-    int l = (int)((affine[affine_index + 3] * xc) + (affine[affine_index + 4] * yc)) + affine[affine_index + 5];
-    k = k + (source_width[id_z] >> 1);
-    l = l + (source_height[id_z] >> 1);
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
 
-    if (l < yroi_end[id_z] && (l >= yroi_begin[id_z]) && k < xroi_end[id_z] && (k >= xroi_begin[id_z]))
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_bilinear_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+template <typename T>
+__global__ void warp_affine_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                          uint3 srcStridesNCH,
+                                                          T *dstPtr,
+                                                          uint2 dstStridesNH,
+                                                          uint2 dstDimsWH,
+                                                          d_float6 *affineTensorPtr,
+                                                          RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
-        unsigned long src_pixIdx, dst_pixIdx;
-        src_pixIdx = source_batch_index[id_z] + (k + l * max_source_width[id_z]) * in_plnpkdind;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_bilinear_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+// -------------------- Set 2 - Nearest Neighbor Interpolation --------------------
+
+template <typename T>
+__global__ void warp_affine_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
+                                                            uint2 srcStridesNH,
+                                                            T *dstPtr,
+                                                            uint2 dstStridesNH,
+                                                            uint2 dstDimsWH,
+                                                            d_float6 *affineTensorPtr,
+                                                            RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+template <typename T>
+__global__ void warp_affine_nearest_neighbor_pln_hip_tensor(T *srcPtr,
+                                                            uint3 srcStridesNCH,
+                                                            T *dstPtr,
+                                                            uint3 dstStridesNCH,
+                                                            uint2 dstDimsWH,
+                                                            int channelsDst,
+                                                            d_float6 *affineTensorPtr,
+                                                            RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float8 dst_f8;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+    if (channelsDst == 3)
+    {
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+
+        srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+
+        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    }
+}
+
+template <typename T>
+__global__ void warp_affine_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                                  uint2 srcStridesNH,
+                                                                  T *dstPtr,
+                                                                  uint3 dstStridesNCH,
+                                                                  uint2 dstDimsWH,
+                                                                  d_float6 *affineTensorPtr,
+                                                                  RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+template <typename T>
+__global__ void warp_affine_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                                  uint3 srcStridesNCH,
+                                                                  T *dstPtr,
+                                                                  uint2 dstStridesNH,
+                                                                  uint2 dstDimsWH,
+                                                                  d_float6 *affineTensorPtr,
+                                                                  RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    d_float6 affineMatrix_f6 = affineTensorPtr[id_z];
+    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    d_float16 locSrc_f16;
+    warp_affine_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &affineMatrix_f6, &locSrc_f16);
+
+    d_float24 dst_f24;
+    rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesNCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+// -------------------- Set 3 - Kernel Executors --------------------
+
+template <typename T>
+RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *affineTensor,
+                                      RpptInterpolationType interpolationType,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::XYWH)
+        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = handle.GetBatchSize();
+
+    float *affineTensorPtr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
+    CHECK_RETURN_STATUS(hipMemcpy(affineTensorPtr, affineTensor, 6 * handle.GetBatchSize() * sizeof(float), hipMemcpyHostToDevice));
+
+    if (interpolationType == RpptInterpolationType::BILINEAR)
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            dstPtr[dst_pixIdx] = srcPtr[src_pixIdx];
-            src_pixIdx += source_inc[id_z];
-            dst_pixIdx += dest_inc[id_z];
+            hipLaunchKernelGGL(warp_affine_bilinear_pkd_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            make_uint2(dstDescPtr->w, dstDescPtr->h),
+                            (d_float6 *)affineTensorPtr,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(warp_affine_bilinear_pln_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                            make_uint2(dstDescPtr->w, dstDescPtr->h),
+                            dstDescPtr->c,
+                            (d_float6 *)affineTensorPtr,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+        {
+            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                hipLaunchKernelGGL(warp_affine_bilinear_pkd3_pln3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                make_uint2(dstDescPtr->w, dstDescPtr->h),
+                                (d_float6 *)affineTensorPtr,
+                                roiTensorPtrSrc);
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+                hipLaunchKernelGGL(warp_affine_bilinear_pln3_pkd3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                make_uint2(dstDescPtr->w, dstDescPtr->h),
+                                (d_float6 *)affineTensorPtr,
+                                roiTensorPtrSrc);
+            }
         }
     }
-    else
+    else if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
     {
-        unsigned long dst_pixIdx;
-        dst_pixIdx = dest_batch_index[id_z] + (id_x + id_y * max_dest_width[id_z]) * out_plnpkdind;
-        for (indextmp = 0; indextmp < channel; indextmp++)
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            dstPtr[dst_pixIdx] = -128;
-            dst_pixIdx += dest_inc[id_z];
+            hipLaunchKernelGGL(warp_affine_nearest_neighbor_pkd_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            make_uint2(dstDescPtr->w, dstDescPtr->h),
+                            (d_float6 *)affineTensorPtr,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(warp_affine_nearest_neighbor_pln_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                            make_uint2(dstDescPtr->w, dstDescPtr->h),
+                            dstDescPtr->c,
+                            (d_float6 *)affineTensorPtr,
+                            roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+        {
+            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                hipLaunchKernelGGL(warp_affine_nearest_neighbor_pkd3_pln3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                make_uint2(dstDescPtr->w, dstDescPtr->h),
+                                (d_float6 *)affineTensorPtr,
+                                roiTensorPtrSrc);
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+                hipLaunchKernelGGL(warp_affine_nearest_neighbor_pln3_pkd3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                make_uint2(dstDescPtr->w, dstDescPtr->h),
+                                (d_float6 *)affineTensorPtr,
+                                roiTensorPtrSrc);
+            }
         }
     }
-}
-
-RppStatus hip_exec_warp_affine_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
-
-    hipLaunchKernelGGL(warp_affine_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       affine,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.height,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-                       tensor_info._in_channels,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       handle.GetInitHandle()->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
 
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_warp_affine_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    // int localThreads_x = 16;
-    // int localThreads_y = 16;
-    // int localThreads_z = 1;
-    // int globalThreads_x = max_width;
-    // int globalThreads_y = max_height;
-    // int globalThreads_z = handle.GetBatchSize();
+template RppStatus hip_exec_warp_affine_tensor<Rpp8u>(Rpp8u*,
+                                                      RpptDescPtr,
+                                                      Rpp8u*,
+                                                      RpptDescPtr,
+                                                      Rpp32f*,
+                                                      RpptInterpolationType,
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      rpp::Handle&);
 
-    // hipLaunchKernelGGL(warp_affine_batch_fp16,
-    //                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-    //                    dim3(localThreads_x, localThreads_y, localThreads_z),
-    //                    0,
-    //                    handle.GetStream(),
-    //                    srcPtr,
-    //                    dstPtr,
-    //                    affine,
-    //                    handle.GetInitHandle()->mem.mgpu.srcSize.height,
-    //                    handle.GetInitHandle()->mem.mgpu.srcSize.width,
-    //                    handle.GetInitHandle()->mem.mgpu.dstSize.height,
-    //                    handle.GetInitHandle()->mem.mgpu.dstSize.width,
-    //                    handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-    //                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-    //                    handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-    //                    handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-    //                    handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-    //                    handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-    //                    handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-    //                    handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-    //                    tensor_info._in_channels,
-    //                    handle.GetInitHandle()->mem.mgpu.inc,
-    //                    handle.GetInitHandle()->mem.mgpu.dstInc,
-    //                    in_plnpkdind,
-    //                    out_plnpkdind);
+template RppStatus hip_exec_warp_affine_tensor<half>(half*,
+                                                     RpptDescPtr,
+                                                     half*,
+                                                     RpptDescPtr,
+                                                     Rpp32f*,
+                                                     RpptInterpolationType,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     rpp::Handle&);
 
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_warp_affine_tensor<Rpp32f>(Rpp32f*,
+                                                       RpptDescPtr,
+                                                       Rpp32f*,
+                                                       RpptDescPtr,
+                                                       Rpp32f*,
+                                                       RpptInterpolationType,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);
 
-RppStatus hip_exec_warp_affine_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle& handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
-
-    hipLaunchKernelGGL(warp_affine_batch_fp32,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       affine,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.height,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-                       tensor_info._in_channels,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       handle.GetInitHandle()->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus hip_exec_warp_affine_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle& handle, Rpp32f *affine, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 16;
-    int localThreads_y = 16;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
-
-    hipLaunchKernelGGL(warp_affine_batch_int8,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       affine,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.height,
-                       handle.GetInitHandle()->mem.mgpu.dstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxDstSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       handle.GetInitHandle()->mem.mgpu.dstBatchIndex,
-                       tensor_info._in_channels,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       handle.GetInitHandle()->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_warp_affine_tensor<Rpp8s>(Rpp8s*,
+                                                       RpptDescPtr,
+                                                       Rpp8s*,
+                                                       RpptDescPtr,
+                                                       Rpp32f*,
+                                                       RpptInterpolationType,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);

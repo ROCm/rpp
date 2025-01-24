@@ -1,146 +1,254 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_color_augmentations.hpp"
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
-
-__device__ unsigned char temperature(unsigned char input, unsigned char value, int RGB)
+template <typename T>
+__device__ void color_temperature_hip_compute(T *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
 {
-    if(RGB == 0)
+    float4 adjustment_f4;
+    if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
     {
-        return saturate_8u((short)input + (short)value);
+        adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
     }
-    else if(RGB == 1)
+    else if constexpr (std::is_same<T, schar>::value)
     {
-        return (input);
+        adjustment_f4 = *adjustmentValue_f4;
+        rpp_hip_math_add24_const(pix_f24, pix_f24, (float4)128);
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
+        rpp_hip_pixel_check_0to255(pix_f24);
+        rpp_hip_math_subtract24_const(pix_f24, pix_f24, (float4)128);
     }
     else
     {
-        return saturate_8u((short)input - (short)value);
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], *adjustmentValue_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], *adjustmentValue_f4);
     }
 }
 
-extern "C" __global__ void temperature_planar(unsigned char *input,
-                                              unsigned char *output,
-                                              const unsigned int height,
-                                              const unsigned int width,
-                                              const unsigned int channel,
-                                              const int modificationValue)
+template <typename T>
+__global__ void color_temperature_pkd_hip_tensor(T *srcPtr,
+                                                 uint2 srcStridesNH,
+                                                 T *dstPtr,
+                                                 uint2 dstStridesNH,
+                                                 int *adjustmentValueTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if (id_x >= width || id_y >= height)
-    {
-        return;
-    }
-
-    int pixIdx = id_x + id_y * width;
-    int c = width * height;
-    int res = input[pixIdx] + modificationValue;
-    output[pixIdx] = saturate_8u(res);
-
-    if (channel > 1)
-    {
-        output[pixIdx + c] = input[pixIdx + c];
-        res = input[pixIdx + c * 2] - modificationValue;
-        output[pixIdx + c * 2] = saturate_8u(res);
-    }
-}
-
-extern "C" __global__ void temperature_packed(unsigned char *input,
-                                              unsigned char *output,
-                                              const unsigned int height,
-                                              const unsigned int width,
-                                              const unsigned int channel,
-                                              const int modificationValue)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if (id_x >= width || id_y >= height)
-    {
-        return;
-    }
-
-    int pixIdx = id_y * width * channel + id_x * channel;
-    int res = input[pixIdx] + modificationValue;
-    output[pixIdx] = saturate_8u(res);
-    output[pixIdx + 1] = input[pixIdx + 1];
-    res = input[pixIdx+2] - modificationValue;
-    output[pixIdx+2] = saturate_8u(res);
-}
-
-
-
-extern "C" __global__ void color_temperature_batch(unsigned char *input,
-                                                   unsigned char *output,
-                                                   int *modificationValue,
-                                                   unsigned int *xroi_begin,
-                                                   unsigned int *xroi_end,
-                                                   unsigned int *yroi_begin,
-                                                   unsigned int *yroi_end,
-                                                   unsigned int *height,
-                                                   unsigned int *width,
-                                                   unsigned int *max_width,
-                                                   unsigned long long *batch_index,
-                                                   const unsigned int channel,
-                                                   unsigned int *inc, // use width * height for pln and 1 for pkd
-                                                   const int plnpkdindex) // use 1 pln 3 for pkd
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char modificationValuetmp = modificationValue[id_z];
-    long pixIdx = 0;
-    pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex;
-
-    if((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        for(int indextmp = channel - 1; indextmp >= 0; indextmp--)
-        {
-            output[pixIdx] = temperature(input[pixIdx], modificationValuetmp, indextmp);
-            pixIdx += inc[id_z];
-        }
+        return;
     }
-    else if((id_x < width[id_z] ) && (id_y < height[id_z]))
-    {
-            for(int indextmp = 0; indextmp < channel; indextmp++)
-            {
-                output[pixIdx] = input[pixIdx];
-                pixIdx += inc[id_z];
-            }
-        }
+
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 adjustmentValue_f4 = (float4)((float)adjustmentValueTensor[id_z]);
+
+    d_float24 pix_f24;
+
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    color_temperature_hip_compute(srcPtr, &pix_f24, &adjustmentValue_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
-RppStatus hip_exec_color_temperature_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
+template <typename T>
+__global__ void color_temperature_pln_hip_tensor(T *srcPtr,
+                                                 uint3 srcStridesNCH,
+                                                 T *dstPtr,
+                                                 uint3 dstStridesNCH,
+                                                 int *adjustmentValueTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    hipLaunchKernelGGL(color_temperature_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       channel,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       plnpkdind);
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    float4 adjustmentValue_f4 = (float4)((float)adjustmentValueTensor[id_z]);
+
+    d_float24 pix_f24;
+
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    color_temperature_hip_compute(srcPtr, &pix_f24, &adjustmentValue_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
+}
+
+template <typename T>
+__global__ void color_temperature_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                       uint2 srcStridesNH,
+                                                       T *dstPtr,
+                                                       uint3 dstStridesNCH,
+                                                       int *adjustmentValueTensor,
+                                                       RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    float4 adjustmentValue_f4 = (float4)((float)adjustmentValueTensor[id_z]);
+
+    d_float24 pix_f24;
+
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    color_temperature_hip_compute(srcPtr, &pix_f24, &adjustmentValue_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
+}
+
+template <typename T>
+__global__ void color_temperature_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                       uint3 srcStridesNCH,
+                                                       T *dstPtr,
+                                                       uint2 dstStridesNH,
+                                                       int *adjustmentValueTensor,
+                                                       RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 adjustmentValue_f4 = (float4)((float)adjustmentValueTensor[id_z]);
+
+    d_float24 pix_f24;
+
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    color_temperature_hip_compute(srcPtr, &pix_f24, &adjustmentValue_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
+}
+
+template <typename T>
+RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = handle.GetBatchSize();
+
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(color_temperature_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(color_temperature_pln_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(color_temperature_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(color_temperature_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               roiTensorPtrSrc);
+        }
+    }
 
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_color_temperature_tensor<Rpp8u>(Rpp8u*,
+                                            RpptDescPtr,
+                                            Rpp8u*,
+                                            RpptDescPtr,
+                                            RpptROIPtr,
+                                            RpptRoiType,
+                                            rpp::Handle&);
+
+template RppStatus hip_exec_color_temperature_tensor<half>(half*,
+                                            RpptDescPtr,
+                                            half*,
+                                            RpptDescPtr,
+                                            RpptROIPtr,
+                                            RpptRoiType,
+                                            rpp::Handle&);
+
+template RppStatus hip_exec_color_temperature_tensor<Rpp32f>(Rpp32f*,
+                                            RpptDescPtr,
+                                            Rpp32f*,
+                                            RpptDescPtr,
+                                            RpptROIPtr,
+                                            RpptRoiType,
+                                            rpp::Handle&);
+
+template RppStatus hip_exec_color_temperature_tensor<Rpp8s>(Rpp8s*,
+                                            RpptDescPtr,
+                                            Rpp8s*,
+                                            RpptDescPtr,
+                                            RpptROIPtr,
+                                            RpptRoiType,
+                                            rpp::Handle&);

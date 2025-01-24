@@ -1,233 +1,182 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_geometric_augmentations.hpp"
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+// -------------------- Set 0 - lens_correction device helpers --------------------
 
-extern "C" __global__ void lenscorrection_pkd(const  unsigned char* input,
-                                              unsigned char* output,
-                                              const float strength,
-                                              const float zoom,
-                                              const float halfWidth,
-                                              const float halfHeight,
-                                              const float correctionRadius,
-                                              const unsigned int height,
-                                              const unsigned int width,
-                                              const unsigned int channel)
+__device__ __forceinline__ void camera_coordinates_hip_compute(d_float8 *cameraCoords_f8, int id_y, d_float8 *locDst_f8x, float3 *inverseMatrix)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    float4 inverseCoord1_f4 = static_cast<float4>(id_y * inverseMatrix->y + inverseMatrix->z);
+    float4 inverseCoord2_f4 = static_cast<float4>(inverseMatrix->x);
+    cameraCoords_f8->f4[0] = inverseCoord1_f4 + locDst_f8x->f4[0] * inverseCoord2_f4;
+    cameraCoords_f8->f4[1] = inverseCoord1_f4 + locDst_f8x->f4[1] * inverseCoord2_f4;
+}
+
+// -------------------- Set 1 - lens_correction kernels --------------------
+
+// compute inverse of 3x3 camera matrix
+__global__ void compute_inverse_matrix_hip_tensor(d_float9 *matTensor, d_float9 *invMatTensor)
+{
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    d_float9 *mat_f9 = &matTensor[id_z];
+    d_float9 *invMat_f9 = &invMatTensor[id_z];
+
+    // initialize all values in invMat_f9 to zero
+    invMat_f9->f3[0] = static_cast<float3>(0.0f);
+    invMat_f9->f3[1] = invMat_f9->f3[0];
+    invMat_f9->f3[2] = invMat_f9->f3[0];
+
+    // compute determinant mat_f9
+    float det =  (mat_f9->f1[0] * ((mat_f9->f1[4] * mat_f9->f1[8]) - (mat_f9->f1[7] * mat_f9->f1[5])))
+               - (mat_f9->f1[1] * ((mat_f9->f1[3] * mat_f9->f1[8]) - (mat_f9->f1[5] * mat_f9->f1[6])))
+               + (mat_f9->f1[2] * ((mat_f9->f1[3] * mat_f9->f1[7]) - (mat_f9->f1[4] * mat_f9->f1[6])));
+    if(det != 0)
+    {
+        float invDet = 1 / det;
+        invMat_f9->f1[0] = (mat_f9->f1[4] * mat_f9->f1[8] - mat_f9->f1[7] * mat_f9->f1[5]) * invDet;
+        invMat_f9->f1[1] = (mat_f9->f1[2] * mat_f9->f1[7] - mat_f9->f1[1] * mat_f9->f1[8]) * invDet;
+        invMat_f9->f1[2] = (mat_f9->f1[1] * mat_f9->f1[5] - mat_f9->f1[2] * mat_f9->f1[4]) * invDet;
+        invMat_f9->f1[3] = (mat_f9->f1[5] * mat_f9->f1[6] - mat_f9->f1[3] * mat_f9->f1[8]) * invDet;
+        invMat_f9->f1[4] = (mat_f9->f1[0] * mat_f9->f1[8] - mat_f9->f1[2] * mat_f9->f1[6]) * invDet;
+        invMat_f9->f1[5] = (mat_f9->f1[3] * mat_f9->f1[2] - mat_f9->f1[0] * mat_f9->f1[5]) * invDet;
+        invMat_f9->f1[6] = (mat_f9->f1[3] * mat_f9->f1[7] - mat_f9->f1[6] * mat_f9->f1[4]) * invDet;
+        invMat_f9->f1[7] = (mat_f9->f1[6] * mat_f9->f1[1] - mat_f9->f1[0] * mat_f9->f1[7]) * invDet;
+        invMat_f9->f1[8] = (mat_f9->f1[0] * mat_f9->f1[4] - mat_f9->f1[3] * mat_f9->f1[1]) * invDet;
+    }
+}
+
+// compute remap tables from the camera matrix and distortion coefficients
+__global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
+                                                float *colRemapTable,
+                                                d_float9 *cameraMatrixTensor,
+                                                d_float9 *inverseMatrixTensor,
+                                                d_float8 *distortionCoeffsTensor,
+                                                uint2 remapTableStridesNH,
+                                                RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height || id_z >= channel)
-    {
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
-    }
 
-    int pix, pix_right, pix_right_down, pix_down, pixVal;
-    int dstpixIdx = id_x * channel + id_y * width * channel + id_z;
-    float theta;
-    float newX = id_x - halfWidth;
-    float newY = id_y - halfHeight;
-    float r = (float)(sqrt(newX * newX + newY * newY)) / (float)correctionRadius;
+    d_float9 cameraMatrix_f9 = cameraMatrixTensor[id_z];
+    d_float9 inverseMatrix_f9 = inverseMatrixTensor[id_z];
+    d_float8 distortionCoeffs_f8 = distortionCoeffsTensor[id_z];
 
-    if (r == 0)
-    {
-        theta = 1.0;
-    }
-    else
-    {
-        theta = atan(r) / r;
-    }
+    // Get radial and tangential distortion coefficients
+    float radialCoeff[6] = {distortionCoeffs_f8.f1[0], distortionCoeffs_f8.f1[1], distortionCoeffs_f8.f1[4], distortionCoeffs_f8.f1[5], distortionCoeffs_f8.f1[6], distortionCoeffs_f8.f1[7]};
+    float tangentialCoeff[2] = {distortionCoeffs_f8.f1[2], distortionCoeffs_f8.f1[3]};
 
-    float new_idx = (halfWidth + theta * newX * zoom);
-    float new_idy = (halfHeight + theta * newY * zoom);
-    int x = (int) new_idx;
-    int y = (int) new_idy;
-    float x_diff = new_idx - x;
-    float y_diff = new_idy - y;
+    uint dstIdx = id_z * remapTableStridesNH.x + id_y * remapTableStridesNH.y + id_x;
+    d_float8 locDst_f8x;
+    locDst_f8x.f4[0] = static_cast<float4>(id_x) + make_float4(0, 1, 2, 3);
+    locDst_f8x.f4[1] = static_cast<float4>(id_x) + make_float4(4, 5, 6, 7);
 
-    if ((x >= 0) && (y >= 0) && (x < width - 2) && (y < height - 2))
-    {
-        pix = input[x * channel + y * width * channel + id_z];
-        pix_right = input[(x + 1) * channel + y * width * channel + id_z];
-        pix_right_down = input[x * channel + (y + 1) * width * channel + id_z];
-        pix_down = input[(x + 1) * channel + (y + 1) * width * channel + id_z];
+    float4 one_f4 = static_cast<float4>(1.0f);
+    float4 two_f4 = static_cast<float4>(2.0f);
+    d_float8 z_f8, y_f8, x_f8;
+    camera_coordinates_hip_compute(&z_f8, id_y, &locDst_f8x, &inverseMatrix_f9.f3[2]);          // float zCamera = id_y * inverseMatrix.f1[7] + inverseMatrix.f1[8] + id_x * inverseMatrix.f1[6]
+    camera_coordinates_hip_compute(&y_f8, id_y, &locDst_f8x, &inverseMatrix_f9.f3[1]);          // float yCamera = id_y * inverseMatrix.f1[4] + inverseMatrix.f1[5] + id_x * inverseMatrix.f1[3]
+    camera_coordinates_hip_compute(&x_f8, id_y, &locDst_f8x, &inverseMatrix_f9.f3[0]);          // float xCamera = id_y * inverseMatrix.f1[1] + inverseMatrix.f1[2] + id_x * inverseMatrix.f1[0]
+    rpp_hip_math_divide8_const(&z_f8, &z_f8, one_f4);                                           // float z = 1./zCamera
+    rpp_hip_math_multiply8(&y_f8, &z_f8, &y_f8);                                                // float y = yCamera * z;
+    rpp_hip_math_multiply8(&x_f8, &z_f8, &x_f8);                                                // float x = xCamera * z;
 
-        pixVal = (int)(pix * (1 - x_diff) * (1 - y_diff) + pix_right * (x_diff) * (1 - y_diff) + pix_right_down*(y_diff)*(1-x_diff)   +  pix_down * (x_diff * y_diff));
-        output[dstpixIdx] =  saturate_8u(pixVal);
-    }
-    else
-    {
-        output[dstpixIdx] = 0;
-    }
+    d_float8 ySquare_f8, xSquare_f8;
+    rpp_hip_math_multiply8(&y_f8, &y_f8, &ySquare_f8);                                          // float ySquare = x * x
+    rpp_hip_math_multiply8(&x_f8, &x_f8, &xSquare_f8);                                          // float xSquare = x * x
+
+    d_float8 r2_f8, kr_f8, kr1_f8, kr2_f8;
+    rpp_hip_math_add8(&xSquare_f8, &ySquare_f8, &r2_f8);                                        // float r2 = xSquare + ySquare
+
+    d_float8 r2Cube_f8, r2Square_f8;
+    rpp_hip_math_multiply8(&r2_f8, &r2_f8, &r2Square_f8);                                       // float r2Square = r2 * r2;
+    rpp_hip_math_multiply8(&r2Square_f8, &r2_f8, &r2Cube_f8);                                   // float r2Cube = r2Square * r2;
+
+    d_float24 radialCoeff_f24;
+    radialCoeff_f24.f4[0] = static_cast<float4>(radialCoeff[0]);
+    radialCoeff_f24.f4[1] = static_cast<float4>(radialCoeff[1]);
+    radialCoeff_f24.f4[2] = static_cast<float4>(radialCoeff[2]);
+    radialCoeff_f24.f4[3] = static_cast<float4>(radialCoeff[3]);
+    radialCoeff_f24.f4[4] = static_cast<float4>(radialCoeff[4]);
+    radialCoeff_f24.f4[5] = static_cast<float4>(radialCoeff[5]);
+
+    // float kr = (1 + (radialCoeff[2] * r2Cube) + (radialCoeff[1] * r2Square) + (radialCoeff[0]) * r2)) / (1 + (radialCoeff[5] * r2Cube) + (radialCoeff[4] * r2Square) + (radialCoeff[3]) *r2))
+    kr1_f8.f4[0] = (one_f4 + (radialCoeff_f24.f4[2] * r2Cube_f8.f4[0]) + (radialCoeff_f24.f4[1] *  r2Square_f8.f4[0]) + (radialCoeff_f24.f4[0] *  r2_f8.f4[0]));
+    kr1_f8.f4[1] = (one_f4 + (radialCoeff_f24.f4[2] * r2Cube_f8.f4[1]) + (radialCoeff_f24.f4[1] *  r2Square_f8.f4[1]) + (radialCoeff_f24.f4[0] *  r2_f8.f4[1]));
+    kr2_f8.f4[0] = (one_f4 + (radialCoeff_f24.f4[5] * r2Cube_f8.f4[0]) + (radialCoeff_f24.f4[4] *  r2Square_f8.f4[0]) + (radialCoeff_f24.f4[3] *  r2_f8.f4[0]));
+    kr2_f8.f4[1] = (one_f4 + (radialCoeff_f24.f4[5] * r2Cube_f8.f4[1]) + (radialCoeff_f24.f4[4] *  r2Square_f8.f4[1]) + (radialCoeff_f24.f4[3] *  r2_f8.f4[1]));
+    rpp_hip_math_divide8(&kr1_f8, &kr2_f8, &kr_f8);
+
+    d_float8 xyMul2_f8;
+    rpp_hip_math_multiply8(&x_f8, &y_f8, &xyMul2_f8);
+    rpp_hip_math_multiply8_const(&xyMul2_f8, &xyMul2_f8, two_f4);                               // float xyMul2 = 2 * x * y
+
+    d_float8 colLoc_f8, rowLoc_f8;
+    rpp_hip_math_multiply8_const(&xSquare_f8, &xSquare_f8, two_f4);                             // xSquare = xSquare * 2;
+    rpp_hip_math_multiply8_const(&ySquare_f8, &ySquare_f8, two_f4);                             // ySquare = ySquare * 2;
+
+    d_float16 cameraMatrix_f16;
+    cameraMatrix_f16.f4[0] = static_cast<float4>(cameraMatrix_f9.f1[0]);
+    cameraMatrix_f16.f4[1] = static_cast<float4>(cameraMatrix_f9.f1[2]);
+    cameraMatrix_f16.f4[2] = static_cast<float4>(cameraMatrix_f9.f1[4]);
+    cameraMatrix_f16.f4[3] = static_cast<float4>(cameraMatrix_f9.f1[5]);
+
+    d_float8 tangentialCoeff_f8;
+    tangentialCoeff_f8.f4[0] = static_cast<float4>(tangentialCoeff[0]);
+    tangentialCoeff_f8.f4[1] = static_cast<float4>(tangentialCoeff[1]);
+
+    // float colLoc = cameraMatrix[0] * (x * kr + tangentialCoeff[0] * xyMul2 + tangentialCoeff[1] * (r2 + 2 * xSquare)) + cameraMatrix[2];
+    colLoc_f8.f4[0] = cameraMatrix_f16.f4[0] * ((x_f8.f4[0] * kr_f8.f4[0]) + (tangentialCoeff_f8.f4[0] * xyMul2_f8.f4[0]) + (tangentialCoeff_f8.f4[1] * (r2_f8.f4[0] + xSquare_f8.f4[0]))) + cameraMatrix_f16.f4[1];
+    colLoc_f8.f4[1] = cameraMatrix_f16.f4[0] * ((x_f8.f4[1] * kr_f8.f4[1]) + (tangentialCoeff_f8.f4[0] * xyMul2_f8.f4[1]) + (tangentialCoeff_f8.f4[1] * (r2_f8.f4[1] + xSquare_f8.f4[1]))) + cameraMatrix_f16.f4[1];
+
+    // float rowLoc = cameraMatrix[4] * (y * kr + tangentialCoeff[1] * xyMul2 + tangentialCoeff[0] * (r2 + 2 * ySquare)) + cameraMatrix[4];
+    rowLoc_f8.f4[0] = cameraMatrix_f16.f4[2] * ((y_f8.f4[0] * kr_f8.f4[0]) + (tangentialCoeff_f8.f4[1] * xyMul2_f8.f4[0]) + (tangentialCoeff_f8.f4[0] * (r2_f8.f4[0] + ySquare_f8.f4[0]))) + cameraMatrix_f16.f4[3];
+    rowLoc_f8.f4[1] = cameraMatrix_f16.f4[2] * ((y_f8.f4[1] * kr_f8.f4[1]) + (tangentialCoeff_f8.f4[1] * xyMul2_f8.f4[1]) + (tangentialCoeff_f8.f4[0] * (r2_f8.f4[1] + ySquare_f8.f4[1]))) + cameraMatrix_f16.f4[3];
+
+    rpp_hip_pack_float8_and_store8(colRemapTable + dstIdx, &colLoc_f8);
+    rpp_hip_pack_float8_and_store8(rowRemapTable + dstIdx, &rowLoc_f8);
 }
 
-extern "C" __global__ void lenscorrection_pln(const  unsigned char *input,
-                                              unsigned char *output,
-                                              const float strength,
-                                              const float zoom,
-                                              const float halfWidth,
-                                              const float halfHeight,
-                                              const float correctionRadius,
-                                              const unsigned int height,
-                                              const unsigned int width,
-                                              const unsigned int channel)
+// -------------------- Set 2 - Kernel Executors --------------------
+
+RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
+                                          Rpp32f *rowRemapTable,
+                                          Rpp32f *colRemapTable,
+                                          RpptDescPtr remapTableDescPtr,
+                                          Rpp32f *cameraMatrix,
+                                          Rpp32f *distanceCoeffs,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    if (id_x >= width || id_y >= height || id_z >= channel)
-    {
-        return;
-    }
+    int globalThreads_x = (dstDescPtr->w + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = dstDescPtr->n;
 
-    int pix, pix_right, pix_right_down, pix_down, pixVal;
-
-    int dstpixIdx = id_x + id_y * width + id_z  * channel;
-    float newX = id_x - halfWidth;
-    float newY = id_y - halfHeight;
-    float r = (float)(sqrt(newX * newX + newY * newY)) / (float)correctionRadius;
-
-    float theta;
-    if (r == 0)
-    {
-        theta = 1.0;
-    }
-    else
-    {
-        theta = atan(r) / r;
-    }
-
-    float new_idx = (halfWidth + theta * newX * zoom);
-    float new_idy = (halfHeight + theta * newY * zoom);
-    int x = (int) new_idx;
-    int y = (int) new_idy;
-    float x_diff = new_idx - x;
-    float y_diff = new_idy - y;
-
-    if ((x >= 0) && (y >= 0) && (x < width - 2) && (y < height - 2))
-    {
-        pix = input[x + y * width + id_z * channel];
-        pix_right = input[(x +1) + y * width + id_z * channel];
-        pix_right_down = input[x + (y + 1) * width + id_z * channel];
-        pix_down = input[(x + 1) + (y + 1) * width + id_z * channel];
-
-        pixVal = (int)(pix * (1 - x_diff) * (1 - y_diff) + pix_right * (x_diff) * (1 - y_diff) + pix_right_down * (y_diff) * (1 - x_diff) + pix_down * (x_diff * y_diff));
-        output[dstpixIdx] = saturate_8u(pixVal);
-    }
-    else
-    {
-        output[dstpixIdx] = 0;
-    }
-}
-
-extern "C" __global__ void lens_correction_batch(unsigned char *input,
-                                                 unsigned char *output,
-                                                 float *strength,
-                                                 float *zoom,
-                                                 unsigned int *xroi_begin,
-                                                 unsigned int *xroi_end,
-                                                 unsigned int *yroi_begin,
-                                                 unsigned int *yroi_end,
-                                                 unsigned int *height,
-                                                 unsigned int *width,
-                                                 unsigned int *max_width,
-                                                 unsigned long long *batch_index,
-                                                 const unsigned int channel,
-                                                 unsigned int *inc, // use width * height for pln and 1 for pkd
-                                                 const int plnpkdindex) // use 1 pln 3 for pkd
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    // int pix;
-    int indextmp = 0;
-    int dstpixIdx = 0;
-    dstpixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z] ) * plnpkdindex;
-    float strength_img = strength[id_z];
-
-    if (strength_img == 0)
-    {
-        strength_img = 0.000001;
-    }
-
-    float temp_val = width[id_z] * width[id_z] + height[id_z] * height[id_z];
-    float correctionRadius = (float)sqrt(temp_val) / (float)strength_img;
-    float halfWidth = width[id_z] / 2.0;
-    float halfHeight = height[id_z] / 2.0;
-
-    float newX = id_x - halfWidth;
-    float newY = id_y - halfHeight;
-    float r = (float)(sqrt(newX * newX + newY * newY)) / correctionRadius;
-
-    float theta;
-    if (r == 0)
-    {
-        theta = 1.0;
-    }
-    else
-    {
-        theta = atan(r) / r;
-    }
-
-    float new_idx = (halfWidth + theta * newX * zoom[id_z]);
-    float new_idy = (halfHeight + theta * newY * zoom[id_z]);
-    int x = (int) new_idx;
-    int y = (int) new_idy;
-    float x_diff = new_idx - x;
-    float y_diff = new_idy - y;
-
-    if ((x >= xroi_begin[id_z]) && (y >= yroi_begin[id_z]) && (x < xroi_end[id_z]) && (y < yroi_end[id_z]))
-    {
-        for(indextmp=0; indextmp < channel; indextmp ++)
-        {
-            int pix = input[batch_index[id_z] + (x  + y * max_width[id_z]) * plnpkdindex + indextmp * inc[id_z]];
-            // pixVal = (int)(pix * (1 - x_diff) * (1 - y_diff) + pix_right * (x_diff) * (1 - y_diff) + pix_right_down * (y_diff) * (1 - x_diff) +  pix_down * (x_diff * y_diff));
-            output[dstpixIdx + indextmp*inc[id_z]] =  saturate_8u(pix);
-        }
-    }
-    else
-    {
-        dstpixIdx = batch_index[id_z] + (id_x  + id_y * max_width[id_z]) * plnpkdindex;
-        for(indextmp = 0; indextmp < channel; indextmp++)
-        {
-            output[dstpixIdx] = 0;
-            dstpixIdx += inc[id_z];
-        }
-    }
-}
-
-RppStatus hip_exec_lens_correction_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = max_width;
-    int globalThreads_y = max_height;
-    int globalThreads_z = handle.GetBatchSize();
-
-    hipLaunchKernelGGL(lens_correction_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
+    float *inverseMatrix = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
+    hipLaunchKernelGGL(compute_inverse_matrix_hip_tensor,
+                       dim3(1, 1, ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                       dim3(1, 1, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.x,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.y,
-                       handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       channel,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       plnpkdind);
+                       reinterpret_cast<d_float9 *>(cameraMatrix),
+                       reinterpret_cast<d_float9 *>(inverseMatrix));
+    hipLaunchKernelGGL(compute_remap_tables_hip_tensor,
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                       0,
+                       handle.GetStream(),
+                       rowRemapTable,
+                       colRemapTable,
+                       reinterpret_cast<d_float9 *>(cameraMatrix),
+                       reinterpret_cast<d_float9 *>(inverseMatrix),
+                       reinterpret_cast<d_float8 *>(distanceCoeffs),
+                       make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
+                       roiTensorPtrSrc);
 
     return RPP_SUCCESS;
 }

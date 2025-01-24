@@ -1,546 +1,310 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_effects_augmentations.hpp"
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
-
-extern "C" __global__ void erase_batch(unsigned char *input,
-                                       unsigned char *output,
-                                       unsigned int *box_info,
-                                       unsigned char *colors,
-                                       unsigned int *box_offset,
-                                       unsigned int *no_of_boxes,
-                                       unsigned int *src_height,
-                                       unsigned int *src_width,
-                                       unsigned int *max_width,
-                                       unsigned long long *batch_index,
-                                       unsigned int *src_inc,
-                                       unsigned int *dst_inc,
-                                       const int in_plnpkdind,
-                                       const int out_plnpkdind)
+// -------------------- Set 0 - Erase main kernels --------------------
+template <typename T, typename U>
+__global__ void erase_pkd_hip_tensor(T *dstPtr,
+                                     uint2 dstStridesNH,
+                                     RpptRoiLtrb *anchorBoxInfoTensor,
+                                     U *colorsTensor,
+                                     Rpp32u *numBoxesTensor,
+                                     RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uchar3 pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+        return;
 
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
+    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    // check if the co-ordinates is within any user defined box
+    for (int i = 0; i < numBoxes; i++)
     {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
+        int temp = (id_z * numBoxes) + i;
+        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            is_erase = true;
-            temp = (l_box_offset + i) * 3;
-            pixel.x = colors[temp];
-            pixel.y = colors[temp + 1];
-            pixel.z = colors[temp + 2];
+            *reinterpret_cast<U *>(dstPtr + dstIdx) = static_cast<U>(colorsTensor[temp]);
             break;
         }
     }
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel.x;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.y;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.z;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
 }
 
-extern "C" __global__ void erase_pln1_batch(unsigned char *input,
-                                            unsigned char *output,
-                                            unsigned int *box_info,
-                                            unsigned char *colors,
-                                            unsigned int *box_offset,
-                                            unsigned int *no_of_boxes,
-                                            unsigned int *src_height,
-                                            unsigned int *src_width,
-                                            unsigned int *max_width,
-                                            unsigned long long *batch_index,
-                                            unsigned int *src_inc,
-                                            unsigned int *dst_inc,
-                                            const int in_plnpkdind,
-                                            const int out_plnpkdind)
+template <typename T>
+__global__ void erase_pln_hip_tensor(T *dstPtr,
+                                     uint3 dstStridesNCH,
+                                     RpptRoiLtrb *anchorBoxInfoTensor,
+                                     T *colorsTensor,
+                                     Rpp32u *numBoxesTensor,
+                                     RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uchar pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+        return;
 
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
+    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    // check if the co-ordinates is within any user defined box
+    for (int i = 0; i < numBoxes; i++)
     {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
+        int temp = (id_z * numBoxes) + i;
+        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            is_erase = true;
-            temp = (l_box_offset + i);
-            pixel = colors[temp];
+            *static_cast<T *>((dstPtr + dstIdx)) = colorsTensor[temp];
             break;
         }
     }
-
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
 }
 
-extern "C" __global__ void erase_batch_int8(signed char *input,
-                                            signed char *output,
-                                            unsigned int *box_info,
-                                            signed char *colors,
-                                            unsigned int *box_offset,
-                                            unsigned int *no_of_boxes,
-                                            unsigned int *src_height,
-                                            unsigned int *src_width,
-                                            unsigned int *max_width,
-                                            unsigned long long *batch_index,
-                                            unsigned int *src_inc,
-                                            unsigned int *dst_inc,
-                                            const int in_plnpkdind,
-                                            const int out_plnpkdind)
+template <typename T>
+__global__ void erase_pln3_hip_tensor(T *dstPtr,
+                                      uint3 dstStridesNCH,
+                                      RpptRoiLtrb *anchorBoxInfoTensor,
+                                      T *colorsTensor,
+                                      Rpp32u *numBoxesTensor,
+                                      RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    char3 pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+        return;
 
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
+    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    // check if the co-ordinates is within any user defined box
+    for (int i = 0; i < numBoxes; i++)
     {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
+        int temp = (id_z * numBoxes) + i;
+        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            is_erase = true;
-            temp = (l_box_offset + i) * 3;
-            pixel.x = colors[temp];
-            pixel.y = colors[temp + 1];
-            pixel.z = colors[temp + 2];
+            temp *= 3;
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp];
+            dstIdx += dstStridesNCH.y;
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 1];
+            dstIdx += dstStridesNCH.y;
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 2];
             break;
         }
     }
-
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel.x;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.y;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.z;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
 }
 
-extern "C" __global__ void erase_pln1_batch_int8(char *input,
-                                                 char *output,
-                                                 unsigned int *box_info,
-                                                 char *colors,
-                                                 unsigned int *box_offset,
-                                                 unsigned int *no_of_boxes,
-                                                 unsigned int *src_height,
-                                                 unsigned int *src_width,
-                                                 unsigned int *max_width,
-                                                 unsigned long long *batch_index,
-                                                 unsigned int *src_inc,
-                                                 unsigned int *dst_inc,
-                                                 const int in_plnpkdind,
-                                                 const int out_plnpkdind)
+// -------------------- Set 1 - Kernel Executors --------------------
+template <typename T, typename U>
+RppStatus hip_exec_erase_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptRoiLtrb *anchorBoxInfoTensor,
+                                U *colorsTensor,
+                                Rpp32u *numBoxesTensor,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    char pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
-
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
-    {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
-        {
-            is_erase = true;
-            temp = (l_box_offset + i);
-            pixel = colors[temp];
-            break;
-        }
-    }
-
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
-}
-
-extern "C" __global__ void erase_batch_fp32(float *input,
-                                            float *output,
-                                            unsigned int *box_info,
-                                            float *colors,
-                                            unsigned int *box_offset,
-                                            unsigned int *no_of_boxes,
-                                            unsigned int *src_height,
-                                            unsigned int *src_width,
-                                            unsigned int *max_width,
-                                            unsigned long long *batch_index,
-                                            unsigned int *src_inc,
-                                            unsigned int *dst_inc,
-                                            const int in_plnpkdind,
-                                            const int out_plnpkdind)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    float3 pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
-
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
-    {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
-        {
-            is_erase = true;
-            temp = (l_box_offset + i) * 3;
-            pixel.x = colors[temp];
-            pixel.y = colors[temp + 1];
-            pixel.z = colors[temp + 2];
-            break;
-        }
-    }
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel.x;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.y;
-        dst_pix_idx += dst_inc[id_z];
-        output[dst_pix_idx] = pixel.z;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-        dst_pix_idx += dst_inc[id_z];
-        src_pix_idx += src_inc[id_z];
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
-}
-
-extern "C" __global__ void erase_pln1_batch_fp32(float *input,
-                                                 float *output,
-                                                 unsigned int *box_info,
-                                                 float *colors,
-                                                 unsigned int *box_offset,
-                                                 unsigned int *no_of_boxes,
-                                                 unsigned int *src_height,
-                                                 unsigned int *src_width,
-                                                 unsigned int *max_width,
-                                                 unsigned long long *batch_index,
-                                                 unsigned int *src_inc,
-                                                 unsigned int *dst_inc,
-                                                 const int in_plnpkdind,
-                                                 const int out_plnpkdind)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    float pixel;
-    uint l_box_offset = box_offset[id_z];
-    bool is_erase = false;
-
-    for (int i = 0; i < no_of_boxes[id_z]; i++)
-    {
-        int temp = (l_box_offset + i) * 4;
-        if (id_x >= box_info[temp] && id_x < box_info[temp + 2] && id_y >= box_info[temp + 1] && id_y < box_info[temp + 3])
-        {
-            is_erase = true;
-            temp = (l_box_offset + i);
-            pixel = colors[temp];
-            break;
-        }
-    }
-
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    if (is_erase == true)
-    {
-        output[dst_pix_idx] = pixel;
-    }
-    else
-    {
-        output[dst_pix_idx] = input[src_pix_idx];
-    }
-}
-
-// extern "C" __global__ void erase_batch_fp16(
-//     half *input, half *output,
-//     unsigned int *box_info, half *colors,
-//     unsigned int *box_offset, unsigned int *no_of_boxes,
-//     unsigned int *src_height, unsigned int *src_width,
-//     unsigned int *max_width, unsigned long *batch_index,
-//     unsigned int *src_inc, unsigned int *dst_inc,
-//     const int in_plnpkdind, const int out_plnpkdind) {
-//   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-//   half3 pixel;
-//   uint l_box_offset = box_offset[id_z];
-//   bool is_erase = false;
-//   for (int i = 0; i < no_of_boxes[id_z]; i++) {
-//     int temp = (l_box_offset + i) * 4;
-//     if (id_x >= box_info[temp] && id_x < box_info[temp + 2] &&
-//         id_y >= box_info[temp + 1] && id_y < box_info[temp + 3]) {
-//       is_erase = true;
-//       temp = (l_box_offset + i) * 3;
-//       pixel.x = colors[temp];
-//       pixel.y = colors[temp + 1];
-//       pixel.z = colors[temp + 2];
-//       break;
-//     }
-//   }
-//   unsigned long src_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-//   unsigned long dst_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-//   if (is_erase == true)
-//   {
-//     output[dst_pix_idx] = pixel.x;
-//     dst_pix_idx += dst_inc[id_z];
-//     output[dst_pix_idx] = pixel.y;
-//     dst_pix_idx += dst_inc[id_z];
-//     output[dst_pix_idx] = pixel.z;
-//   }
-//   else
-//   {
-//     output[dst_pix_idx] = input[src_pix_idx];
-//     dst_pix_idx += dst_inc[id_z];
-//     src_pix_idx += src_inc[id_z];
-//     output[dst_pix_idx] = input[src_pix_idx];
-//     dst_pix_idx += dst_inc[id_z];
-//     src_pix_idx += src_inc[id_z];
-//     output[dst_pix_idx] = input[src_pix_idx];
-//   }
-// }
-
-// extern "C" __global__ void erase_pln1_batch_fp16(
-//     half *input, half *output,
-//     unsigned int *box_info, half *colors,
-//     unsigned int *box_offset, unsigned int *no_of_boxes,
-//     unsigned int *src_height, unsigned int *src_width,
-//     unsigned int *max_width, unsigned long *batch_index,
-//     unsigned int *src_inc, unsigned int *dst_inc,
-//     const int in_plnpkdind, const int out_plnpkdind) {
-//   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-//   half pixel;
-//   uint l_box_offset = box_offset[id_z];
-//   bool is_erase = false;
-//   for (int i = 0; i < no_of_boxes[id_z]; i++) {
-//     int temp = (l_box_offset + i) * 4;
-//     if (id_x >= box_info[temp] && id_x < box_info[temp + 2] &&
-//         id_y >= box_info[temp + 1] && id_y < box_info[temp + 3]) {
-//       is_erase = true;
-//       temp = (l_box_offset + i);
-//       pixel = colors[temp];
-//       break;
-//     }
-//   }
-//   unsigned long src_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-//   unsigned long dst_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-//   if (is_erase == true)
-//   {
-//     output[dst_pix_idx] = pixel;
-//   }
-//   else
-//   {
-//     output[dst_pix_idx] = input[src_pix_idx];
-//   }
-// }
-
-RppStatus hip_exec_erase_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, Rpp32u* anchor_box_info, Rpp8u* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
+    int globalThreads_x = dstDescPtr->w;
+    int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
 
-    hipLaunchKernelGGL(erase_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       anchor_box_info,
-                       colors,
-                       box_offset,
-                       handle_obj->mem.mgpu.uintArr[0].uintmem,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
+    if (dstDescPtr->layout == RpptLayout::NHWC)
+    {
+        // if src layout is NHWC, copy src to dst
+        if (srcDescPtr->layout == RpptLayout::NHWC)
+        {
+            hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
+            hipStreamSynchronize(handle.GetStream());
+        }
+        // if src layout is NCHW, convert src from NCHW to NHWC
+        else if (srcDescPtr->layout == RpptLayout::NCHW)
+        {
+            globalThreads_x = (dstDescPtr->w + 7) >> 3;
+            hipLaunchKernelGGL(convert_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               roiTensorPtrSrc);
+            globalThreads_x = dstDescPtr->w;
+            hipStreamSynchronize(handle.GetStream());
+        }
+
+        if (srcDescPtr->dataType == RpptDataType::U8)
+        {
+            hipLaunchKernelGGL(erase_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<uchar3*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
+        }
+        else if (srcDescPtr->dataType == RpptDataType::F16)
+        {
+            hipLaunchKernelGGL(erase_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<d_half3_s*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
+        }
+        else if (srcDescPtr->dataType == RpptDataType::F32)
+        {
+            hipLaunchKernelGGL(erase_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<float3*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
+        }
+        else if (srcDescPtr->dataType == RpptDataType::I8)
+        {
+            hipLaunchKernelGGL(erase_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<d_schar3_s*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
+        }
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)
+    {
+        hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
+        hipLaunchKernelGGL(erase_pln_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           anchorBoxInfoTensor,
+                           colorsTensor,
+                           numBoxesTensor,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 3)
+    {
+        hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
+        hipLaunchKernelGGL(erase_pln3_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           anchorBoxInfoTensor,
+                           colorsTensor,
+                           numBoxesTensor,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            globalThreads_x = (dstDescPtr->w + 7) >> 3;
+            hipLaunchKernelGGL(convert_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               roiTensorPtrSrc);
+            hipStreamSynchronize(handle.GetStream());
+            globalThreads_x = dstDescPtr->w;
+            hipLaunchKernelGGL(erase_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               colorsTensor,
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
+        }
+    }
 
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_erase_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, Rpp32u* anchor_box_info, Rpp16f* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-//     int localThreads_x = 32;
-//     int localThreads_y = 32;
-//     int localThreads_z = 1;
-//     int globalThreads_x = (max_width + 31) & ~31;
-//     int globalThreads_y = (max_height + 31) & ~31;
-//     int globalThreads_z = handle.GetBatchSize();
+template RppStatus hip_exec_erase_tensor<Rpp8u, Rpp8u>(Rpp8u*,
+                                                       RpptDescPtr,
+                                                       Rpp8u*,
+                                                       RpptDescPtr,
+                                                       RpptRoiLtrb*,
+                                                       Rpp8u*,
+                                                       Rpp32u*,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);
 
-//     hipLaunchKernelGGL(erase_batch_fp16,
-//                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                        dim3(localThreads_x, localThreads_y, localThreads_z),
-//                        0,
-//                        handle.GetStream(),
-//                        srcPtr,
-                        //   dstPtr,
-                        //   anchor_box_info,
-                        //   colors,
-                        //   box_offset,
-                        //   handle_obj->mem.mgpu.uintArr[0].uintmem,
-                        //   handle_obj->mem.mgpu.srcSize.height,
-                        //   handle_obj->mem.mgpu.srcSize.width,
-                        //   handle_obj->mem.mgpu.maxSrcSize.width,
-                        //   handle_obj->mem.mgpu.srcBatchIndex,
-                        //   handle_obj->mem.mgpu.inc,
-                        //   handle_obj->mem.mgpu.dstInc,
-                        //   in_plnpkdind,
-                        //   out_plnpkdind);
+template RppStatus hip_exec_erase_tensor<half, half>(half*,
+                                                     RpptDescPtr,
+                                                     half*,
+                                                     RpptDescPtr,
+                                                     RpptRoiLtrb*,
+                                                     half*,
+                                                     Rpp32u*,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     rpp::Handle&);
 
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_erase_tensor<Rpp32f, Rpp32f>(Rpp32f*,
+                                                         RpptDescPtr,
+                                                         Rpp32f*,
+                                                         RpptDescPtr,
+                                                         RpptRoiLtrb*,
+                                                         Rpp32f*,
+                                                         Rpp32u*,
+                                                         RpptROIPtr,
+                                                         RpptRoiType,
+                                                         rpp::Handle&);
 
-RppStatus hip_exec_erase_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, Rpp32u* anchor_box_info, Rpp32f* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
-
-    hipLaunchKernelGGL(erase_batch_fp32,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       anchor_box_info,
-                       colors,
-                       box_offset,
-                       handle_obj->mem.mgpu.uintArr[0].uintmem,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus hip_exec_erase_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, Rpp32u* anchor_box_info, Rpp8s* colors, rpp::Handle &handle, Rpp32u* box_offset, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
-
-    hipLaunchKernelGGL(erase_batch_int8,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       anchor_box_info,
-                       colors,
-                       box_offset,
-                       handle_obj->mem.mgpu.uintArr[0].uintmem,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_erase_tensor<Rpp8s, Rpp8s>(Rpp8s*,
+                                                       RpptDescPtr,
+                                                       Rpp8s*,
+                                                       RpptDescPtr,
+                                                       RpptRoiLtrb*,
+                                                       Rpp8s*,
+                                                       Rpp32u*,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);

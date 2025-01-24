@@ -1,361 +1,284 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_color_augmentations.hpp"
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
-
-extern "C" __global__ void color_cast_batch(unsigned char *input,
-                                            unsigned char *output,
-                                            unsigned char *user_input_r,  //which color to cast for red
-                                            unsigned char *user_input_g,  //which color to cast for green
-                                            unsigned char *user_input_b,  //which color to cast for blue
-                                            float *alpha,
-                                            unsigned int *xroi_begin,
-                                            unsigned int *xroi_end,
-                                            unsigned int *yroi_begin,
-                                            unsigned int *yroi_end,
-                                            unsigned int *height,
-                                            unsigned int *width,
-                                            unsigned int *max_width,
-                                            unsigned long long *batch_index,
-                                            const unsigned int channel,
-                                            unsigned int *inc,  // use width * height for pln and 1 for pkd
-                                            unsigned int *dstinc , // use width * height for pln and 1 for pkd
-                                            int in_plnpkdind,         // use 1 pln 3 for pkd
-                                            int out_plnpkdind)
+__device__ void color_cast_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
+    dst_f8->f4[0] = (src_f8->f4[0] - *pix_f4) * *alpha_f4 + *pix_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - *pix_f4) * *alpha_f4 + *pix_f4;
+}
 
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+__device__ void color_cast_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
+{
+    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+}
+
+__device__ void color_cast_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = (src_f8->f4[0] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
+    dst_f8->f4[1] = (src_f8->f4[1] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
+}
+
+__device__ void color_cast_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
+{
+    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+    dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
+}
+
+template <typename T>
+__global__ void color_cast_pkd_hip_tensor(T *srcPtr,
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          RpptRGB *rgbTensor,
+                                          float *alphaTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    unsigned char user_input[3] = {user_input_r[id_z], user_input_g[id_z], user_input_b[id_z]};
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-    float alphatmp=alpha[id_z];
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-    if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {
-        for (int indextmp = channel - 1; indextmp >= 0; indextmp--)
-        {
-            unsigned char input_pixel1 = input[src_pix_idx];
-            unsigned char input_pixel2 = user_input[indextmp];
-            output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-            src_pix_idx += inc[id_z];
-            dst_pix_idx += dstinc[id_z];
-        }
-    }
-    else if((id_x < width[id_z]) && (id_y < height[id_z]))
-    {
-        for (int indextmp = 0; indextmp < channel; indextmp++)
-        {
-            output[dst_pix_idx] = 0;
-            dst_pix_idx += dstinc[id_z];
-        }
-    }
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+
+    d_float24 src_f24, dst_f24;
+
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-// extern "C" __global__ void color_cast_batch_fp16(
-//     half *input,
-//     half *output,
-//     unsigned char* user_input_r,  //which color to cast for red
-//     unsigned char* user_input_g,  //which color to cast for green
-//     unsigned char* user_input_b,  //which color to cast for blue
-//     float *alpha,
-//     int *xroi_begin,
-//     int *xroi_end,
-//     int *yroi_begin,
-//     int *yroi_end,
-//     unsigned int *height,
-//     unsigned int *width,
-//     unsigned int *max_width,
-//     unsigned long *batch_index,
-//     const unsigned int channel,
-//     unsigned int *inc,  // use width * height for pln and 1 for pkd
-//     unsigned int *dstinc , // use width * height for pln and 1 for pkd
-//     int in_plnpkdind,         // use 1 pln 3 for pkd
-//     int out_plnpkdind
-// ) {
-
-//   int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-//   half user_input[3]={(half)(user_input_r[id_z]/255.0 ),(half)(user_input_g[id_z]/255.0) ,(half)(user_input_b[id_z]/255.0) };
-//   unsigned long src_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-//   unsigned long dst_pix_idx =
-//       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-//   float alphatmp=alpha[id_z];
-
-//   if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) &&
-//       (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z])) {
-
-//     for (int indextmp = channel - 1; indextmp >= 0; indextmp--) {
-//       half input_pixel1 = input[src_pix_idx];
-//       half input_pixel2 = user_input[indextmp];
-//       output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-
-//       src_pix_idx += inc[id_z];
-//       dst_pix_idx += dstinc[id_z];
-//     }
-//   } else if((id_x < width[id_z] ) && (id_y < height[id_z])){
-//     for (int indextmp = 0; indextmp < channel; indextmp++) {
-//       output[dst_pix_idx] = 0;
-//       dst_pix_idx += dstinc[id_z];
-//     }
-//   }
-// }
-
-extern "C" __global__ void color_cast_batch_fp32(float *input,
-                                                 float *output,
-                                                 unsigned char *user_input_r,  //which color to cast for red
-                                                 unsigned char *user_input_g,  //which color to cast for green
-                                                 unsigned char *user_input_b,  //which color to cast for blue
-                                                 float *alpha,
-                                                 unsigned int *xroi_begin,
-                                                 unsigned int *xroi_end,
-                                                 unsigned int *yroi_begin,
-                                                 unsigned int *yroi_end,
-                                                 unsigned int *height,
-                                                 unsigned int *width,
-                                                 unsigned int *max_width,
-                                                 unsigned long long *batch_index,
-                                                 const unsigned int channel,
-                                                 unsigned int *inc,  // use width * height for pln and 1 for pkd
-                                                 unsigned int *dstinc , // use width * height for pln and 1 for pkd
-                                                 int in_plnpkdind,         // use 1 pln 3 for pkd
-                                                 int out_plnpkdind)
+template <typename T>
+__global__ void color_cast_pln_hip_tensor(T *srcPtr,
+                                          uint3 srcStridesNCH,
+                                          T *dstPtr,
+                                          uint3 dstStridesNCH,
+                                          RpptRGB *rgbTensor,
+                                          float *alphaTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    float divisor = 255;
-    float user_input[3] = {user_input_r[id_z] / divisor, user_input_g[id_z] / divisor, user_input_b[id_z] / divisor};
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-    float alphatmp=alpha[id_z];
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
 
-    if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
-    {
-        for (int indextmp = channel - 1; indextmp >= 0; indextmp--)
-        {
-            float input_pixel1 = input[src_pix_idx];
-            float input_pixel2 = user_input[indextmp];
-            output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-            src_pix_idx += inc[id_z];
-            dst_pix_idx += dstinc[id_z];
-        }
-    }
-    else if((id_x < width[id_z]) && (id_y < height[id_z]))
-    {
-        for (int indextmp = 0; indextmp < channel; indextmp++)
-        {
-            output[dst_pix_idx] = 0;
-            dst_pix_idx += dstinc[id_z];
-        }
-    }
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+
+    d_float24 src_f24, dst_f24;
+
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
-extern "C" __global__ void color_cast_batch_int8(signed char *input,
-                                                 signed char *output,
-                                                 unsigned char* user_input_r,  //which color to cast for red
-                                                 unsigned char* user_input_g,  //which color to cast for green
-                                                 unsigned char* user_input_b,  //which color to cast for blue
-                                                 float *alpha,
-                                                 unsigned int *xroi_begin,
-                                                 unsigned int *xroi_end,
-                                                 unsigned int *yroi_begin,
-                                                 unsigned int *yroi_end,
-                                                 unsigned int *height,
-                                                 unsigned int *width,
-                                                 unsigned int *max_width,
-                                                 unsigned long long *batch_index,
-                                                 const unsigned int channel,
-                                                 unsigned int *inc,  // use width * height for pln and 1 for pkd
-                                                 unsigned int *dstinc , // use width * height for pln and 1 for pkd
-                                                 int in_plnpkdind,         // use 1 pln 3 for pkd
-                                                 int out_plnpkdind)
+template <typename T>
+__global__ void color_cast_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                uint2 srcStridesNH,
+                                                T *dstPtr,
+                                                uint3 dstStridesNCH,
+                                                RpptRGB *rgbTensor,
+                                                float *alphaTensor,
+                                                RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int subtrahend = 128;
-    char user_input[3] = {(char) (user_input_r[id_z] - subtrahend), (char) (user_input_g[id_z] - subtrahend), (char) (user_input_b[id_z] - subtrahend)};
-    unsigned long src_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
-    unsigned long dst_pix_idx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-
-    float alphatmp = alpha[id_z];
-
-    if ((id_y >= yroi_begin[id_z]) && (id_y <= yroi_end[id_z]) && (id_x >= xroi_begin[id_z]) && (id_x <= xroi_end[id_z]))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        for (int indextmp = channel - 1; indextmp >= 0; indextmp--)
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+
+    d_float24 src_f24, dst_f24;
+
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+template <typename T>
+__global__ void color_cast_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                uint3 srcStridesNCH,
+                                                T *dstPtr,
+                                                uint2 dstStridesNH,
+                                                RpptRGB *rgbTensor,
+                                                float *alphaTensor,
+                                                RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
+    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
+    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+
+    d_float24 src_f24, dst_f24;
+
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &b_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &g_f4, &alpha_f4);
+    color_cast_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &r_f4, &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+template <typename T>
+RppStatus hip_exec_color_cast_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = handle.GetBatchSize();
+
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            char input_pixel1 = input[src_pix_idx];
-            char input_pixel2 = user_input[indextmp];
-            output[dst_pix_idx] =(alphatmp * input_pixel1 + (1 - alphatmp) * input_pixel2);
-            src_pix_idx += inc[id_z];
-            dst_pix_idx += dstinc[id_z];
+            globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
+            hipLaunchKernelGGL(color_cast_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(color_cast_pln_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(color_cast_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+            hipLaunchKernelGGL(color_cast_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem,
+                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               roiTensorPtrSrc);
         }
     }
-    else if((id_x < width[id_z]) && (id_y < height[id_z]))
-    {
-        for (int indextmp = 0; indextmp < channel; indextmp++)
-        {
-            output[dst_pix_idx] = 0;
-            dst_pix_idx += dstinc[id_z];
-        }
-    }
-}
-
-RppStatus hip_exec_color_cast_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
-
-    hipLaunchKernelGGL(color_cast_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle_obj->mem.mgpu.ucharArr[0].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[1].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[2].ucharmem,
-                       handle_obj->mem.mgpu.floatArr[3].floatmem,
-                       handle_obj->mem.mgpu.roiPoints.x,
-                       handle_obj->mem.mgpu.roiPoints.roiWidth,
-                       handle_obj->mem.mgpu.roiPoints.y,
-                       handle_obj->mem.mgpu.roiPoints.roiHeight,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       tensor_info._in_channels,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
 
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_color_cast_batch_fp16(Rpp16f *srcPtr, Rpp16f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-//     int localThreads_x = 32;
-//     int localThreads_y = 32;
-//     int localThreads_z = 1;
-//     int globalThreads_x = (max_width + 31) & ~31;
-//     int globalThreads_y = (max_height + 31) & ~31;
-//     int globalThreads_z = handle.GetBatchSize();
+template RppStatus hip_exec_color_cast_tensor<Rpp8u>(Rpp8u*,
+                                                     RpptDescPtr,
+                                                     Rpp8u*,
+                                                     RpptDescPtr,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     rpp::Handle&);
 
-//     hipLaunchKernelGGL(color_cast_batch_fp16,
-//                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-//                        dim3(localThreads_x, localThreads_y, localThreads_z),
-//                        0,
-//                        handle.GetStream(),
-//                        srcPtr,
-                    //    dstPtr,
-                    //    handle_obj->mem.mgpu.ucharArr[0].ucharmem,
-                    //    handle_obj->mem.mgpu.ucharArr[1].ucharmem,
-                    //    handle_obj->mem.mgpu.ucharArr[2].ucharmem,
-                    //    handle_obj->mem.mgpu.floatArr[3].floatmem,
-                    //    handle_obj->mem.mgpu.roiPoints.x,
-                    //    handle_obj->mem.mgpu.roiPoints.roiWidth,
-                    //    handle_obj->mem.mgpu.roiPoints.y,
-                    //    handle_obj->mem.mgpu.roiPoints.roiHeight,
-                    //    handle_obj->mem.mgpu.srcSize.height,
-                    //    handle_obj->mem.mgpu.srcSize.width,
-                    //    handle_obj->mem.mgpu.maxSrcSize.width,
-                    //    handle_obj->mem.mgpu.srcBatchIndex,
-                    //    tensor_info._in_channels,
-                    //    handle_obj->mem.mgpu.inc,
-                    //    handle_obj->mem.mgpu.dstInc,
-                    //    in_plnpkdind,
-                    //    out_plnpkdind);
+template RppStatus hip_exec_color_cast_tensor<half>(half*,
+                                                    RpptDescPtr,
+                                                    half*,
+                                                    RpptDescPtr,
+                                                    RpptROIPtr,
+                                                    RpptRoiType,
+                                                    rpp::Handle&);
 
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_color_cast_tensor<Rpp32f>(Rpp32f*,
+                                                    RpptDescPtr,
+                                                    Rpp32f*,
+                                                    RpptDescPtr,
+                                                    RpptROIPtr,
+                                                    RpptRoiType,
+                                                    rpp::Handle&);
 
-RppStatus hip_exec_color_cast_batch_fp32(Rpp32f *srcPtr, Rpp32f *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
-
-    hipLaunchKernelGGL(color_cast_batch_fp32,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle_obj->mem.mgpu.ucharArr[0].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[1].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[2].ucharmem,
-                       handle_obj->mem.mgpu.floatArr[3].floatmem,
-                       handle_obj->mem.mgpu.roiPoints.x,
-                       handle_obj->mem.mgpu.roiPoints.roiWidth,
-                       handle_obj->mem.mgpu.roiPoints.y,
-                       handle_obj->mem.mgpu.roiPoints.roiHeight,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       tensor_info._in_channels,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-
-    return RPP_SUCCESS;
-}
-
-RppStatus hip_exec_color_cast_batch_int8(Rpp8s *srcPtr, Rpp8s *dstPtr, rpp::Handle& handle, RPPTensorFunctionMetaData &tensor_info, Rpp32s in_plnpkdind, Rpp32s out_plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
-    InitHandle *handle_obj = handle.GetInitHandle();
-
-    hipLaunchKernelGGL(color_cast_batch_int8,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle_obj->mem.mgpu.ucharArr[0].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[1].ucharmem,
-                       handle_obj->mem.mgpu.ucharArr[2].ucharmem,
-                       handle_obj->mem.mgpu.floatArr[3].floatmem,
-                       handle_obj->mem.mgpu.roiPoints.x,
-                       handle_obj->mem.mgpu.roiPoints.roiWidth,
-                       handle_obj->mem.mgpu.roiPoints.y,
-                       handle_obj->mem.mgpu.roiPoints.roiHeight,
-                       handle_obj->mem.mgpu.srcSize.height,
-                       handle_obj->mem.mgpu.srcSize.width,
-                       handle_obj->mem.mgpu.maxSrcSize.width,
-                       handle_obj->mem.mgpu.srcBatchIndex,
-                       tensor_info._in_channels,
-                       handle_obj->mem.mgpu.inc,
-                       handle_obj->mem.mgpu.dstInc,
-                       in_plnpkdind,
-                       out_plnpkdind);
-    return RPP_SUCCESS;
-}
+template RppStatus hip_exec_color_cast_tensor<Rpp8s>(Rpp8s*,
+                                                    RpptDescPtr,
+                                                    Rpp8s*,
+                                                    RpptDescPtr,
+                                                    RpptROIPtr,
+                                                    RpptRoiType,
+                                                    rpp::Handle&);

@@ -1,250 +1,356 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_host_decls.hpp"
+#include "hip_tensor_effects_augmentations.hpp"
+#include <random>
 
-#define saturate_8u(value) ((value) > 255 ? 255 : ((value) < 0 ? 0 : (value)))
+// Constants to represent the rain intensity for different data types
+#define RAIN_INTENSITY_8U 200   // Intensity value for Rpp8u
+#define RAIN_INTENSITY_8S 72    // Intensity value for Rpp8s
+#define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
-__device__ unsigned int rain_xorshift(int pixid)
+__device__ __forceinline__ void rain_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
-    unsigned int x = 123456789;
-    unsigned int w = 88675123;
-    unsigned int seed = x + pixid;
-    unsigned int t = seed ^ (seed << 11);
-    unsigned int res = w ^ (w >> 19) ^ (t ^(t >> 8));
-    return res;
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
 }
 
-extern "C" __global__ void rain(unsigned char *input,
-                                unsigned char *output,
-                                const unsigned int height,
-                                const unsigned int width,
-                                const unsigned int channel)
+__device__ __forceinline__ void rain_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to1((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to1((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
+}
+
+__device__ __forceinline__ void rain_hip_compute(schar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0] + (float4)128) - (float4)128;
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1] + (float4)128) - (float4)128;
+}
+
+__device__ __forceinline__ void rain_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to1((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to1((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
+}
+
+template <typename T>
+__global__ void rain_pkd_hip_tensor(T *srcPtr1,
+                                    T *srcPtr2,
+                                    uint3 srcStridesNHW,
+                                    T *dstPtr,
+                                    uint2 dstStridesNH,
+                                    float *alpha,
+                                    RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height)
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3))
     {
         return;
     }
 
-    int pixIdx = id_y * width * channel + id_x * channel + id_z;
-    int pixel = input[pixIdx] + output[pixIdx];
-    output[pixIdx] = saturate_8u(pixel);
+    uint srcIdx1 = (id_z * srcStridesNHW.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    d_float24 src1_f24, dst_f24;
+    d_float8 src2_f8;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-extern "C" __global__ void rain_pkd(unsigned char *output,
-                                    const unsigned int height,
-                                    const unsigned int width,
-                                    const unsigned int channel,
-                                    const unsigned int pixelDistance,
-                                    const unsigned int rainWidth,
-                                    const unsigned int rainHeight,
-                                    const float transparency)
+template <typename T>
+__global__ void rain_pln_hip_tensor(T *srcPtr1,
+                                    T *srcPtr2,
+                                    uint3 srcStridesNCH,
+                                    T *dstPtr,
+                                    uint3 dstStridesNCH,
+                                    int channelsDst,
+                                    float *alpha,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height)
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         return;
     }
 
-    int pixIdx = id_y * width * channel + id_x * channel;
+    uint srcIdx1 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    output[pixIdx] = 0;
-    output[pixIdx + 1] = 0;
-    output[pixIdx + 2] = 0;
-    int rand;
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    d_float8 src1_f8, src2_f8, dst_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
+    rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
-    if (pixIdx % pixelDistance == 0)
+    if (channelsDst == 3)
     {
-        int rand_id = rain_xorshift(pixIdx) % 997;
-        rand_id -= rand_id % 3;
-
-        for (int i = 0; i < rainWidth; i++)
-        {
-            for (int j = 0; j < rainHeight; j++)
-            {
-                if (id_x + i + rainWidth <= width && id_y + j < height)
-                {
-                    int id = i * channel + j * width * channel;
-                    for(int k = 0; k < channel; k++)
-                    {
-                        if(channel == 0)
-                        {
-                            output[pixIdx + rand_id + id + k] = transparency * 196;
-                        }
-                        else if(channel == 1)
-                        {
-                            output[pixIdx + rand_id + id + k] = transparency * 226;
-                        }
-                        else
-                        {
-                            output[pixIdx + rand_id + id + k] = transparency * 255;
-                        }
-                    }
-                }
-            }
-        }
+        srcIdx1 += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
+        rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+        srcIdx1 += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
+        rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
 
-extern "C" __global__ void rain_pln(unsigned char *output,
-                                    const unsigned int height,
-                                    const unsigned int width,
-                                    const unsigned int channel,
-                                    const unsigned int pixelDistance,
-                                    const unsigned int rainWidth,
-                                    const unsigned int rainHeight,
-                                    const float transparency)
+template <typename T>
+__global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
+                                          T *srcPtr2,
+                                          uint3 srcStridesNHW,
+                                          T *dstPtr,
+                                          uint3 dstStridesNCH,
+                                          float *alpha,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= width || id_y >= height)
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         return;
     }
 
-    int pixIdx = id_y * width + id_x;
-    int channelSize = width * height;
-    output[pixIdx] = 0;
-    if (channel > 1)
-    {
-        output[pixIdx + channelSize] = 0;
-        output[pixIdx + 2 * channelSize] = 0;
-    }
-    int rand;
+    uint srcIdx1 = (id_z * srcStridesNHW.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    if (pixIdx % pixelDistance == 0)
-    {
-        int rand_id = rain_xorshift(pixIdx) % 997;
-        for (int i = 0; i < rainWidth; i++)
-        {
-            for (int j = 0; j < rainHeight; j++)
-            {
-                if (id_x + i + rainWidth <= width && id_y + j < height)
-                {
-                    int id = i + j * width;
-                    for(int k = 0; k < channel; k++)
-                    {
-                        if(channel == 0)
-                        {
-                            output[pixIdx + rand_id + id + (k * channelSize)] = transparency * 196;
-                        }
-                        else if(channel == 1)
-                        {
-                            output[pixIdx + rand_id + id + (k * channelSize)] = transparency * 226;
-                        }
-                        else
-                        {
-                            output[pixIdx + rand_id + id + (k * channelSize)] = transparency * 255;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    d_float24 src1_f24, dst_f24;
+    d_float8 src2_f8;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
-extern "C" __global__ void rain_batch(unsigned char *input,
-                                      unsigned char *output,
-                                      float *rainPercentage,
-                                      unsigned int *rainWidth,
-                                      unsigned int *rainHeight,
-                                      float *transparency,
-                                      unsigned int *height,
-                                      unsigned int *width,
-                                      unsigned int *max_width,
-                                      unsigned long long *batch_index,
-                                      const unsigned int channel,
-                                      unsigned int *inc, // use width * height for pln and 1 for pkd
-                                      const int plnpkdindex) // use 1 pln 3 for pkd
+template <typename T>
+__global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
+                                          T *srcPtr2,
+                                          uint3 srcStridesNCH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          float *alpha,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    float rainProbTemp = rainPercentage[id_z];
-    float rainTransTemp = transparency[id_z];
-    unsigned int rainHeightTemp = rainHeight[id_z];
-    unsigned int rainWidthTemp = rainWidth[id_z];
-    int indextmp=0;
-    long pixIdx = 0;
-    int rand;
-
-    if(id_x < width[id_z] && id_y < height[id_z])
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        pixIdx = batch_index[id_z] + (id_x + id_y * max_width[id_z]) * plnpkdindex ;
-        if((id_y >= 0 ) && (id_y < height[id_z]) && (id_x >= 0) && (id_x < width[id_z]))
-        {
-            float pixelDistance = 1.0;
-            pixelDistance /= (rainProbTemp / 100);
+        return;
+    }
 
-            if((pixIdx - batch_index[id_z]) % (int)pixelDistance == 0)
+    uint srcIdx1 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    d_float24 src1_f24, dst_f24;
+    d_float8 src2_f8;
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, srcStridesNCH.y, &src1_f24);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
+template <typename T>
+RppStatus hip_exec_rain_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f rainPercentage,
+                               Rpp32u rainWidth,
+                               Rpp32u rainHeight,
+                               Rpp32f slantAngle,
+                               Rpp32f *alpha,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    Rpp32f rainPercent = rainPercentage * 0.004f; //Scaling factor to convert percentage to a range suitable for rain effect intensity
+    Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
+    Rpp32f slant = sin(slantAngle) * rainHeight;
+
+    // Seed the random number generator and set up the uniform distributions
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<Rpp32u> distX(0, srcDescPtr->w - slant - 1);
+    std::uniform_int_distribution<Rpp32u> distY(0, srcDescPtr->h - rainHeight - 1);
+
+    T *rainLayer = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
+    T initValue = 0;
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        initValue = static_cast<T>(0x81);   // 0x81 represents -127 in signed 8-bit integer(Rpp8s).
+    std::memset(rainLayer, initValue, srcDescPtr->w * srcDescPtr->h * sizeof(T));
+    // Choose the rain intensity value based on the data type
+    T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(RAIN_INTENSITY_8U) :
+                  std::is_same<T, Rpp8s>::value ? static_cast<T>(RAIN_INTENSITY_8S) :
+                  static_cast<T>(RAIN_INTENSITY_FLOAT);
+    Rpp32f slantPerDropLength = static_cast<Rpp32f>(slant) / rainHeight;
+    for (Rpp32u i = 0; i < numDrops; i++)
+    {
+        Rpp32u xStart = distX(rng);
+        Rpp32u yStart = distX(rng);
+        for (Rpp32u j = 0; j < rainHeight; j++)
+        {
+            Rpp32u x = xStart + j * slantPerDropLength;
+            Rpp32u y = yStart + j;
+
+            if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
-                int rand_id = rain_xorshift(pixIdx) % (9973);
-                rand_id = rand_id % (int)pixelDistance;
-                rand_id -= rand_id % 3;
-                if(rand_id + id_x > width[id_z])
-                {
-                    return;
-                }
-                rand_id = rand_id * plnpkdindex;
-                for(int i = 0; i < rainHeightTemp; i++)
-                {
-                    for(int j = 0; j < rainWidthTemp; j++)
-                    {
-                        if (id_x + i + rainWidthTemp <= width[id_z] && id_y + j + rainHeightTemp < height[id_z])
-                        {
-                            int id = (i * max_width[id_z] + j) * plnpkdindex;
-                            int pixValue = (int)(rainTransTemp * 196);
-                            output[pixIdx + rand_id + id] = saturate_8u(pixValue + output[pixIdx + rand_id + id]);
-                            if(channel == 3)
-                            {
-                                pixValue = (int)(rainTransTemp * 226);
-                                output[pixIdx + rand_id + inc[id_z] + id] = saturate_8u(pixValue + output[pixIdx + rand_id + inc[id_z] + id]);
-                                pixValue = (int)(rainTransTemp * 255);
-                                output[pixIdx + rand_id + inc[id_z] * 2 + id] = saturate_8u(pixValue + output[pixIdx + rand_id + inc[id_z] * 2 + id]);
-                            }
-                        }
-                    }
-                }
+                T *rainLayerTemp = rainLayer + y * srcDescPtr->w + x;
+                for (Rpp32u k = 0; k < rainWidth; k++)
+                    rainLayerTemp[k] = rainValue;
             }
         }
     }
-}
 
-RppStatus hip_exec_rain_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, Rpp32u channel, Rpp32s plnpkdind, Rpp32u max_height, Rpp32u max_width)
-{
-    int localThreads_x = 32;
-    int localThreads_y = 32;
-    int localThreads_z = 1;
-    int globalThreads_x = (max_width + 31) & ~31;
-    int globalThreads_y = (max_height + 31) & ~31;
-    int globalThreads_z = handle.GetBatchSize();
+    T *rainLayerHip = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    CHECK_RETURN_STATUS(hipMemcpyAsync(rainLayerHip, rainLayer, srcDescPtr->w * srcDescPtr->h * sizeof(T), hipMemcpyHostToDevice, handle.GetStream()));
 
-    hipLaunchKernelGGL(rain_batch,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       dstPtr,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                       handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                       handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.height,
-                       handle.GetInitHandle()->mem.mgpu.srcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.maxSrcSize.width,
-                       handle.GetInitHandle()->mem.mgpu.srcBatchIndex,
-                       channel,
-                       handle.GetInitHandle()->mem.mgpu.inc,
-                       plnpkdind);
+    int globalThreads_x = (dstDescPtr->w + 7) >> 3;;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = dstDescPtr->n;
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        hipLaunchKernelGGL(rain_pkd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           rainLayerHip,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride, srcDescPtr->w),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           alpha,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        hipLaunchKernelGGL(rain_pln_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           rainLayerHip,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           alpha,
+                           roiTensorPtrSrc);
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(rain_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               rainLayerHip,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride, srcDescPtr->w),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               alpha,
+                               roiTensorPtrSrc);
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(rain_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               rainLayerHip,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               alpha,
+                               roiTensorPtrSrc);
+        }
+    }
 
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_rain_tensor<Rpp8u>(Rpp8u*,
+                                               RpptDescPtr,
+                                               Rpp8u*,
+                                               RpptDescPtr,
+                                               Rpp32f,
+                                               Rpp32u,
+                                               Rpp32u,
+                                               Rpp32f,
+                                               Rpp32f*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
+
+template RppStatus hip_exec_rain_tensor<half>(half*,
+                                              RpptDescPtr,
+                                              half*,
+                                              RpptDescPtr,
+                                              Rpp32f,
+                                              Rpp32u,
+                                              Rpp32u,
+                                              Rpp32f,
+                                              Rpp32f*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);
+
+template RppStatus hip_exec_rain_tensor<Rpp32f>(Rpp32f*,
+                                                RpptDescPtr,
+                                                Rpp32f*,
+                                                RpptDescPtr,
+                                                Rpp32f,
+                                                Rpp32u,
+                                                Rpp32u,
+                                                Rpp32f,
+                                                Rpp32f*,
+                                                RpptROIPtr,
+                                                RpptRoiType,
+                                                rpp::Handle&);
+
+template RppStatus hip_exec_rain_tensor<Rpp8s>(Rpp8s*,
+                                               RpptDescPtr,
+                                               Rpp8s*,
+                                               RpptDescPtr,
+                                               Rpp32f,
+                                               Rpp32u,
+                                               Rpp32u,
+                                               Rpp32f,
+                                               Rpp32f*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
