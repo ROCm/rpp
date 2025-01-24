@@ -27,7 +27,7 @@ SOFTWARE.
 #include "rppi_validate.hpp"
 #include "rppt_api_helpers.h"
 #include "rppt_tensor_effects_augmentations.h"
-#include "cpu/host_tensor_effects_augmentations.hpp"
+#include "cpu/kernel/host_tensor_effects_augmentations.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/kernel/hip_tensor_effects_augmentations.hpp"

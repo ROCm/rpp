@@ -22,11 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
-#define HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
+#ifndef HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
+#define HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
-#include "kernel/copy.hpp"
-#include "kernel/swap_channels.hpp"
-#include "kernel/color_to_greyscale.hpp"
+#include "non_silent_region_detection.hpp"
+#include "to_decibels.hpp"
+#include "pre_emphasis_filter.hpp"
+#include "down_mixing.hpp"
+#include "spectrogram.hpp"
+#include "mel_filter_bank.hpp"
+#include "resample.hpp"
 
-#endif // HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
+#endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP

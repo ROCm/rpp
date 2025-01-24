@@ -22,23 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
-#define HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#ifndef HOST_TENSOR_LOGICAL_OPERATIONS_HPP
+#define HOST_TENSOR_LOGICAL_OPERATIONS_HPP
 
-#include "kernel/gridmask.hpp"
-#include "kernel/spatter.hpp"
-#include "kernel/noise_salt_and_pepper.hpp"
-#include "kernel/noise_shot.hpp"
-#include "kernel/noise_gaussian.hpp"
-#include "kernel/non_linear_blend.hpp"
-#include "kernel/jitter.hpp"
-#include "kernel/glitch.hpp"
-#include "kernel/water.hpp"
-#include "kernel/ricap.hpp"
-#include "kernel/vignette.hpp"
-#include "kernel/resize.hpp"  //pixelate dependency
-#include "kernel/erase.hpp"
-#include "kernel/fog.hpp"
-#include "kernel/rain.hpp"
+#include "bitwise_and.hpp"
+#include "bitwise_or.hpp"
+#include "bitwise_xor.hpp"
 
-#endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#endif // HOST_TENSOR_LOGICAL_OPERATIONS_HPP

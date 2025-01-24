@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_color_augmentations.h"
-#include "cpu/host_tensor_color_augmentations.hpp"
+#include "cpu/kernel/host_tensor_color_augmentations.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/kernel/hip_tensor_color_augmentations.hpp"

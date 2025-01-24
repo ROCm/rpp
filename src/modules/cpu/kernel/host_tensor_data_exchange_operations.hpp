@@ -22,18 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
-#define HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
+#ifndef HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
+#define HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
 
-#include "kernel/brightness.hpp"
-#include "kernel/gamma_correction.hpp"
-#include "kernel/blend.hpp"
-#include "kernel/color_twist.hpp"
-#include "kernel/color_jitter.hpp"
-#include "kernel/color_cast.hpp"
-#include "kernel/exposure.hpp"
-#include "kernel/contrast.hpp"
-#include "kernel/lut.hpp"
-#include "kernel/color_temperature.hpp"
+#include "copy.hpp"
+#include "swap_channels.hpp"
+#include "color_to_greyscale.hpp"
 
-#endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
+#endif // HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP

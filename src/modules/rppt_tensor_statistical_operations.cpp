@@ -26,7 +26,7 @@ SOFTWARE.
 #include "rppi_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
 #include "reduction.hpp"
-#include "cpu/host_tensor_statistical_operations.hpp"
+#include "cpu/kernel/host_tensor_statistical_operations.hpp"
 
 #ifdef HIP_COMPILE
     #include "hip/kernel/hip_tensor_statistical_operations.hpp"

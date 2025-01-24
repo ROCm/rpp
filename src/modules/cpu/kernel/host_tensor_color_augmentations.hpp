@@ -22,23 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
-#define HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
+#ifndef HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
+#define HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
 
-#include "kernel/crop.hpp"
-#include "kernel/crop_mirror_normalize.hpp"
-#include "kernel/flip.hpp"
-#include "kernel/remap.hpp"
-#include "kernel/resize.hpp"
-#include "kernel/resize_mirror_normalize.hpp"
-#include "kernel/resize_crop_mirror.hpp"
-#include "kernel/warp_affine.hpp"
-#include "kernel/phase.hpp"
-#include "kernel/slice.hpp"
-#include "kernel/lens_correction.hpp"
-#include "kernel/transpose.hpp"
-#include "kernel/crop_and_patch.hpp"
-#include "kernel/flip_voxel.hpp"
-#include "kernel/warp_perspective.hpp"
+#include "brightness.hpp"
+#include "gamma_correction.hpp"
+#include "blend.hpp"
+#include "color_twist.hpp"
+#include "color_jitter.hpp"
+#include "color_cast.hpp"
+#include "exposure.hpp"
+#include "contrast.hpp"
+#include "lut.hpp"
+#include "color_temperature.hpp"
 
-#endif // HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
+#endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP

@@ -22,15 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
-#define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
+#ifndef HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
+#define HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
 
-#include "kernel/tensor_sum.hpp"
-#include "kernel/tensor_min.hpp"
-#include "kernel/tensor_max.hpp"
-#include "kernel/tensor_mean.hpp"
-#include "kernel/tensor_stddev.hpp"
-#include "kernel/normalize.hpp"
-#include "kernel/threshold.hpp"
+#include "gaussian_filter.hpp"
+#include "box_filter.hpp"
 
-#endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
+#endif // HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
