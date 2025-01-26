@@ -80,7 +80,6 @@ inline void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u tensorDim)
     }
 }
 
-// Not used anywhere
 // Uses fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline float rpp_host_math_inverse_sqrt_1(float x)
 {
@@ -148,8 +147,6 @@ void copy_3d_host_tensor(T *srcPtr,
         }
     }
 }
-
-// Compute Functions for RPP Tensor API
 
 inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
 {

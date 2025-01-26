@@ -34,6 +34,18 @@ inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
   return x;
 }
 
+inline void compute_shot_noise_params_initialize_4_host_sse(Rpp32f &shotNoiseFactor, Rpp32f &shotNoiseFactorInv, __m128 &pShotNoiseFactor, __m128 &pShotNoiseFactorInv)
+{
+    pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
+    pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
+}
+
+inline void compute_shot_noise_params_initialize_8_host_avx(Rpp32f &shotNoiseFactor, Rpp32f &shotNoiseFactorInv, __m256 &pShotNoiseFactor, __m256 &pShotNoiseFactorInv)
+{
+    pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
+    pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
+}
+
 inline void compute_shot_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
 {
     __m256 pShotNoiseValue = avx_p0;                                                                                                                                // Rpp32u shotNoiseValue = 0;
@@ -131,18 +143,6 @@ inline Rpp32u compute_shot_noise_1_host(RpptXorwowState *xorwowStatePtr, Rpp32f 
     } while (factValue > 1.0f);                                  // loop while factValue >= 1.0f
 
     return shotNoiseValue - 1;
-}
-
-inline void compute_shot_noise_params_initialize_4_host_sse(Rpp32f &shotNoiseFactor, Rpp32f &shotNoiseFactorInv, __m128 &pShotNoiseFactor, __m128 &pShotNoiseFactorInv)
-{
-    pShotNoiseFactor = _mm_set1_ps(shotNoiseFactor);
-    pShotNoiseFactorInv = _mm_set1_ps(shotNoiseFactorInv);
-}
-
-inline void compute_shot_noise_params_initialize_8_host_avx(Rpp32f &shotNoiseFactor, Rpp32f &shotNoiseFactorInv, __m256 &pShotNoiseFactor, __m256 &pShotNoiseFactorInv)
-{
-    pShotNoiseFactor = _mm256_set1_ps(shotNoiseFactor);
-    pShotNoiseFactorInv = _mm256_set1_ps(shotNoiseFactorInv);
 }
 
 RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,

@@ -25,6 +25,18 @@ SOFTWARE.
 #include "noise_gaussian.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
+inline void compute_gaussian_noise_params_initialize_4_host_sse(Rpp32f &mean, Rpp32f &stdDev, __m128 *pGaussianNoiseParams)
+{
+    pGaussianNoiseParams[0] = _mm_set1_ps(mean);
+    pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
+}
+
+inline void compute_gaussian_noise_params_initialize_8_host_avx(Rpp32f &mean, Rpp32f &stdDev, __m256 *pGaussianNoiseParams)
+{
+    pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
+    pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
+}
+
 inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
 {
     __m256 pRngVals[2], pSqrt[2];
@@ -171,18 +183,6 @@ inline Rpp32f compute_gaussian_noise_voxel_1_host(Rpp32f pixVal, RpptXorwowState
     rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     rngVal = rngVal * stdDev + mean;
     return pixVal + rngVal;
-}
-
-inline void compute_gaussian_noise_params_initialize_4_host_sse(Rpp32f &mean, Rpp32f &stdDev, __m128 *pGaussianNoiseParams)
-{
-    pGaussianNoiseParams[0] = _mm_set1_ps(mean);
-    pGaussianNoiseParams[1] = _mm_set1_ps(stdDev);
-}
-
-inline void compute_gaussian_noise_params_initialize_8_host_avx(Rpp32f &mean, Rpp32f &stdDev, __m256 *pGaussianNoiseParams)
-{
-    pGaussianNoiseParams[0] = _mm256_set1_ps(mean);
-    pGaussianNoiseParams[1] = _mm256_set1_ps(stdDev);
 }
 
 RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,

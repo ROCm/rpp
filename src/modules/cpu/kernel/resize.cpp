@@ -25,7 +25,6 @@ SOFTWARE.
 #include "rpp_cpu_common_geometric.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
 
-// Move with resample
 inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)
 {
     for(int i = 0; i < numVecs; i++)
@@ -39,8 +38,6 @@ inline void set_zeros_avx(__m256 *pVecs, Rpp32s numVecs)
 }
 
 // Perform resampling along the rows
-// If only for resize, add above resize
-/// Interpl
 template <typename T>
 inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
                                                 RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, GenericFilter &filter)
