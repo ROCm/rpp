@@ -116,7 +116,8 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"}
+    {92, "slice"},
+    {93, "random_channel_permute"},
 };
 
 enum Augmentation {
@@ -171,10 +172,11 @@ enum Augmentation {
     TENSOR_MAX = 89,
     TENSOR_MEAN = 90,
     TENSOR_STDDEV = 91,
-    SLICE = 92
+    SLICE = 92,
+    RANDOM_CHANNEL_PERMUTE = 93,
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP, RANDOM_CHANNEL_PERMUTE};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -183,6 +185,7 @@ const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, 
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
+const unordered_set<int> axisMaskCases = {RANDOM_CHANNEL_PERMUTE}; 
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =

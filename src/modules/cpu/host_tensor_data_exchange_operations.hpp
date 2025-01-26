@@ -28,5 +28,6 @@ SOFTWARE.
 #include "kernel/copy.hpp"
 #include "kernel/swap_channels.hpp"
 #include "kernel/color_to_greyscale.hpp"
+#include "kernel/random_channel_permute.hpp"
 
 #endif // HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
