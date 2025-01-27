@@ -234,6 +234,7 @@ RppStatus rppt_random_channel_permute_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
+                                          axisMask,
                                           layoutParams,
                                           rpp::deref(rppHandle));
     }
@@ -243,6 +244,7 @@ RppStatus rppt_random_channel_permute_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
+                                          axisMask,
                                           layoutParams,
                                           rpp::deref(rppHandle));
     }
@@ -252,6 +254,7 @@ RppStatus rppt_random_channel_permute_host(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
+                                        axisMask,
                                         layoutParams,
                                         rpp::deref(rppHandle));
     }

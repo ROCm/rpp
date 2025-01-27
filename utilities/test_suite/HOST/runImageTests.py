@@ -52,7 +52,7 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    bitDepths = [0]
+    bitDepths = range(7)
     outputFormatToggles = [0, 1]
     if qaMode:
         bitDepths = [0]
