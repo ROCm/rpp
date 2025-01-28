@@ -28,7 +28,7 @@ cmake_minimum_required(VERSION 3.10)
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- test_suite-HIP: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
@@ -39,6 +39,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HIP)
 
@@ -101,6 +103,8 @@ else()
         set(BACKEND "CPU")
         message("-- ${Red}${PROJECT_NAME} is not supported to build and run with RPP HOST backend installation${ColourReset}")
     endif()
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${RPP_LIBRARY})
+    include_directories(${RPP_INCLUDE_DIR})
 
     # RPP HIP test suite works for RPP built with HIP backend
     if("${BACKEND}" STREQUAL "HIP")
@@ -129,7 +133,7 @@ else()
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
-
+        
         # find required python3-pip imports
         execute_process(
             COMMAND ${Python3_EXECUTABLE} -m pip show pandas
@@ -145,48 +149,48 @@ else()
         # )
 
         if(HIP_FOUND)
-            message("-- ${Green}HIP found at hip_INCLUDE_DIRS - ${hip_INCLUDE_DIRS} and hip_LIBRARIES - ${hip_LIBRARIES}${ColourReset}")
-
+            message("-- ${Green}HIP found at HIP_INCLUDE_DIRS - ${HIP_INCLUDE_DIRS} and HIP_LIBRARIES - ${HIP_LIBRARIES}${ColourReset}")
+            include_directories(${HIP_INCLUDE_DIRS} ${HIP_INCLUDE_DIRS}/hip)
+            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${HIP_LIBRARIES})
+            
             if(Python3_FOUND)
                 message("-- ${Green}Python3 found${ColourReset}")
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-
-                    # set flags
-                    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
-                    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
 
                     # include and link directories
-                    include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
                     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                     link_directories(${ROCM_PATH}/lib /usr/local/lib)
+                    link_directories(${ROCM_PATH}/lib/llvm/lib)
 
-                    if(OpenMP_FOUND)
-                        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
+                    if(OpenMP_CXX_FOUND)
                         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
+                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+                        message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
                         message("-- ${Green}${PROJECT_NAME} All Tensor HIP tests set to build with OpenMP${ColourReset}")
 
                         # HIP test set 1 - RPP Tensor-Image HIP test suite
                         if(TurboJpeg_FOUND)
                             include_directories(${TurboJpeg_INCLUDE_DIRS})
-                            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
+                            set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Image HIP tests set to build with TurboJpeg${ColourReset}")
                             if(OpenCV_FOUND)
                                 include_directories(${OpenCV_INCLUDE_DIRS})
+                                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenCV_LIBRARIES})
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Image HIP tests set to build with OpenCV${ColourReset}")
-                                add_executable(Tensor_hip Tensor_hip.cpp)
-                                target_link_libraries(Tensor_hip -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
+                                add_executable(Tensor_image_hip Tensor_image_hip.cpp)
+                                target_link_libraries(Tensor_image_hip ${LINK_LIBRARY_LIST})
+                                message("-- ${White}Tensor_image_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                                 # if (OPENPYXL_FOUND EQUAL 0)                                                                                                                                   # added only on HOST
                                 #     message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")                                                                                           # added only on HOST
                                 #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln1.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
                                 # else()                                                                                                                                                        # added only on HOST
                                 #     message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")          # added only on HOST
                                 # endif(OPENPYXL_FOUND EQUAL 0)                                                                                                                                 # added only on HOST
@@ -201,10 +205,10 @@ else()
                         if(NIFTI_FOUND)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HIP tests set to build with libniftiio${ColourReset}")
                             if(OpenCV_FOUND)
-                                include_directories(${OpenCV_INCLUDE_DIRS})
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HIP tests set to build with OpenCV${ColourReset}")
                                 add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
-                                target_link_libraries(Tensor_voxel_hip -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
+                                target_link_libraries(Tensor_voxel_hip ${LINK_LIBRARY_LIST} ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
+                                message("-- ${White}Tensor_voxel_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                             else()
                                 message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                             endif(OpenCV_FOUND)
@@ -221,7 +225,8 @@ else()
                                 link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with libsnd${ColourReset}")
                                 add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
-                                target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
+                                target_link_libraries(Tensor_audio_hip ${LINK_LIBRARY_LIST} ${libsnd_LIBS} -lsndfile)
+                                message("-- ${White}Tensor_audio_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                             else()
                                 message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                             endif(libsnd_LIBS)
@@ -231,10 +236,11 @@ else()
 
                         # HIP test set 4 - RPP Tensor-Misc HIP test suite
                         add_executable(Tensor_misc_hip Tensor_misc_hip.cpp)
-                        target_link_libraries(Tensor_misc_hip -lrpp pthread ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
+                        target_link_libraries(Tensor_misc_hip ${LINK_LIBRARY_LIST})
+                        message("-- ${White}Tensor_misc_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                     else()
                         message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
-                    endif(OpenMP_FOUND)
+                    endif(OpenMP_CXX_FOUND)
                 else()
                     message("-- ${Red}${PROJECT_NAME} Error: Pandas for Python3 must be installed to run any RPP test_suite performance tests with profiling successfully${ColourReset}")
                 endif(PANDAS_FOUND EQUAL 0)

@@ -41,6 +41,7 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <random>
 #include <map>
+#include <unordered_set>
 #include <iomanip>
 
 using namespace cv;
@@ -72,7 +73,9 @@ std::map<int, string> augmentationMap =
     {6, "jitter"},
     {8, "noise"},
     {10, "fog"},
+    {11, "rain"},
     {13, "exposure"},
+    {15, "threshold"},
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
@@ -97,6 +100,7 @@ std::map<int, string> augmentationMap =
     {61, "magnitude"},
     {63, "phase"},
     {65, "bitwise_and"},
+    {67, "bitwise_xor"},
     {68, "bitwise_or"},
     {70, "copy"},
     {79, "remap"},
@@ -114,6 +118,71 @@ std::map<int, string> augmentationMap =
     {91, "tensor_stddev"},
     {92, "slice"}
 };
+
+enum Augmentation {
+    BRIGHTNESS = 0,
+    GAMMA_CORRECTION = 1,
+    BLEND = 2,
+    CONTRAST = 4,
+    PIXELATE = 5,
+    JITTER = 6,
+    NOISE = 8,
+    FOG = 10,
+    RAIN = 11,
+    EXPOSURE = 13,
+    THRESHOLD = 15,
+    FLIP = 20,
+    RESIZE = 21,
+    ROTATE = 23,
+    WARP_AFFINE = 24,
+    LENS_CORRECTION = 26,
+    WARP_PERSPECTIVE = 28,
+    WATER = 29,
+    NON_LINEAR_BLEND = 30,
+    COLOR_CAST = 31,
+    ERASE = 32,
+    CROP_AND_PATCH = 33,
+    LOOK_UP_TABLE = 34,
+    GLITCH = 35,
+    COLOR_TWIST = 36,
+    CROP = 37,
+    CROP_MIRROR_NORMALIZE = 38,
+    RESIZE_CROP_MIRROR = 39,
+    COLOR_TEMPERATURE = 45,
+    VIGNETTE = 46,
+    BOX_FILTER = 49,
+    GAUSSIAN_FILTER = 54,
+    MAGNITUDE = 61,
+    PHASE = 63,
+    BITWISE_AND = 65,
+    BITWISE_XOR = 67,
+    BITWISE_OR = 68,
+    COPY = 70,
+    REMAP = 79,
+    RESIZE_MIRROR_NORMALIZE = 80,
+    COLOR_JITTER = 81,
+    RICAP = 82,
+    GRIDMASK = 83,
+    SPATTER = 84,
+    SWAP_CHANNELS = 85,
+    COLOR_TO_GREYSCALE = 86,
+    TENSOR_SUM = 87,
+    TENSOR_MIN = 88,
+    TENSOR_MAX = 89,
+    TENSOR_MEAN = 90,
+    TENSOR_STDDEV = 91,
+    SLICE = 92
+};
+
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP};
+const unordered_set<int> kernelSizeCases = {BOX_FILTER};
+const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
+const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
+const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
+const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
+const unordered_set<int> noiseTypeCases = {NOISE};
+const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
@@ -972,7 +1041,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     string func = funcName;
     string refFile = "";
     int refOutputWidth, refOutputHeight;
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
@@ -998,37 +1067,40 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     std::string binFile = func + "Tensor";
-    if(dstDescPtr->layout == RpptLayout::NHWC)
+    if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
     else
     {
-        if (dstDescPtr->c == 3)
+        if (srcDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
+            func += "Tensor_PLN1";
+    }
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        func += "_to_PKD3";
+    else
+    {
+        if (dstDescPtr->c == 3)
+            func += "_to_PLN3";
+        else
         {
-            if(testCase == 86)
-            {
-                if(srcDescPtr->layout == RpptLayout::NHWC)
-                    func += "Tensor_PKD3";
-                else
-                    func += "Tensor_PLN3";
+            func += "_to_PLN1";
+            if(testCase == COLOR_TO_GREYSCALE)
                 pln1RefStride = 0;
-            }
-            else
-                func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
+
+    if(testCase == RESIZE ||testCase == ROTATE || testCase == WARP_AFFINE || testCase == WARP_PERSPECTIVE || testCase == REMAP)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
     }
-    else if(testCase == 8)
+    else if(testCase == NOISE)
     {
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == 49)
+    else if(testCase == BOX_FILTER || testCase == GAUSSIAN_FILTER)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
@@ -1095,15 +1167,15 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     T *refOutput;
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    if(testCase == 88)
+    if(testCase == TENSOR_MIN)
         refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
-    else if(testCase == 89)
+    else if(testCase == TENSOR_MAX)
         refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
-    else if(testCase == 87)
+    else if(testCase == TENSOR_SUM)
         refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
-    else if(testCase == 90)
+    else if(testCase == TENSOR_MEAN)
         refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
-    else if(testCase == 91)
+    else if(testCase == TENSOR_STDDEV)
         refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)

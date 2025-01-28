@@ -105,14 +105,14 @@ int main(int argc, char **argv)
     Rpp32u offsetInBytes = 0;
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
-    if(testCase == 3)
+    if(testCase == DOWN_MIXING)
     {
         srcDescPtr->numDims = 3;
         maxDstChannels = 1;
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
     // set buffer sizes for src/dst
-    if(testCase == 7)
+    if(testCase == MEL_FILTER_BANK)
     {
         iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
         oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -125,12 +125,12 @@ int main(int argc, char **argv)
 
     // compute maximum possible buffer size of resample
     Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
-    if (testCase == 6)
+    if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
     Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
-    if (testCase == 4)
+    if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
     // allocate hip buffers for input & output
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
-    if(testCase == 0)
+    if(testCase == NON_SILENT_REGION_DETECTION)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
@@ -165,14 +165,14 @@ int main(int argc, char **argv)
     // declare pointer of type RpptResamplingWindow used for resample augmentation
     Rpp32f *inRateTensor = nullptr, *outRateTensor = nullptr;
     RpptResamplingWindow *window = nullptr;
-    if (testCase == 6)
+    if (testCase == RESAMPLE)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
     }
 
     Rpp32f *coeff = nullptr;
-    if(testCase == 2)
+    if(testCase == PRE_EMPHASIS_FILTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 0:
+                case NON_SILENT_REGION_DETECTION:
                 {
                     testCaseName = "non_silent_region_detection";
                     Rpp32f cutOffDB = -60.0;
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case TO_DECIBELS:
                 {
                     testCaseName = "to_decibels";
                     Rpp32f cutOffDB = std::log(1e-20);
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case PRE_EMPHASIS_FILTER:
                 {
                     testCaseName = "pre_emphasis_filter";
                     for (int i = 0; i < batchSize; i++)
@@ -243,7 +243,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 3:
+                case DOWN_MIXING:
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case SPECTROGRAM:
                 {
                     testCaseName = "spectrogram";
                     bool centerWindows = true;
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case RESAMPLE:
                 {
                     testCaseName = "resample";
 
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 7:
+                case MEL_FILTER_BANK:
                 {
                     testCaseName = "mel_filter_bank";
 
@@ -391,7 +391,7 @@ int main(int argc, char **argv)
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-            if (testCase != 0)
+            if (testCase != NON_SILENT_REGION_DETECTION)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
             else
                 verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
             1. DEBUG_MODE is enabled
             2. Current iteration is 1st iteration
             3. Test case is not 0 */
-            if (DEBUG_MODE && iterCount == 0 && testCase != 0)
+            if (DEBUG_MODE && iterCount == 0 && testCase != NON_SILENT_REGION_DETECTION)
             {
                 std::ofstream refFile;
                 refFile.open(func + ".csv");

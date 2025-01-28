@@ -23,9 +23,27 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- rpp_performancetests-HOST_NEW: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 project(rpp_performancetests/HOST_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
 
 # Set message options
 if(NOT WIN32)
@@ -46,8 +64,9 @@ find_package(OpenCV QUIET)
 
 # OpenMP
 find_package(OpenMP REQUIRED)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
 
 if (OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp and OpenCV${ColourReset}")
@@ -62,14 +81,14 @@ if (OpenCV_FOUND)
     add_executable(Tensor_host_pln1 Tensor_host_pln1.cpp)
     add_executable(Tensor_host_pln3 Tensor_host_pln3.cpp)
     # add_executable(Single_host Single_host.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRPP_BACKEND_OPENCL=1 -std=gnu++14")
-    target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    # target_link_libraries(Single_host ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread  )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRPP_BACKEND_OPENCL=1 -std=gnu++17")
+    target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} ${LINK_LIBRARY_LIST})
+    # target_link_libraries(Single_host ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES}  )
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

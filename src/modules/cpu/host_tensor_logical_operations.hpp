@@ -28,5 +28,6 @@ SOFTWARE.
 #include "kernel/bitwise_and.hpp"
 #include "kernel/bitwise_not.hpp"
 #include "kernel/bitwise_or.hpp"
+#include "kernel/bitwise_xor.hpp"
 
 #endif // HOST_TENSOR_LOGICAL_OPERATIONS_HPP

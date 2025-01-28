@@ -21,14 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-
 cmake_minimum_required(VERSION 3.10)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
@@ -39,8 +38,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # RPP Version
 set(VERSION "1.9.10")
@@ -156,36 +155,14 @@ message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP au
 
 # OpenMP
 find_package(OpenMP REQUIRED)
-if(APPLE)
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        set(OpenMP_C "${CMAKE_C_COMPILER}")
-        set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-        set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
-        set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-        set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-        set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
-    endif()
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
-        set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-        set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5")
-        set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-        set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-        set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-    endif()
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    # STD Filesystem
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+
+# STD Filesystem
+if(NOT APPLE)
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
-include_directories(${OpenMP_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
-
-# Threads
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
@@ -255,11 +232,6 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS "${ROCM_PATH}/bin/amdclang++")
-		set(COMPILER_FOR_HIP "${ROCM_PATH}/bin/amdclang++")
-	else()
-		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
-	endif()
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API
@@ -418,12 +390,12 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
-set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half, libomp-dev")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half, libomp-devel")
-set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, libopencv-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: OpenCV Package missing on RPM
+set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas, python3-openpyxl") # TBD: OpenCV & libsnd packages missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")

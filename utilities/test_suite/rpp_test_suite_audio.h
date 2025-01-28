@@ -49,6 +49,17 @@ std::map<int, string> audioAugmentationMap =
     {7, "mel_filter_bank"}
 };
 
+enum Augmentation {
+    NON_SILENT_REGION_DETECTION = 0,
+    TO_DECIBELS = 1,
+    PRE_EMPHASIS_FILTER = 2,
+    DOWN_MIXING = 3,
+    SPECTROGRAM = 4,
+    SLICE = 5,
+    RESAMPLE = 6,
+    MEL_FILTER_BANK = 7
+};
+
 // Golden outputs for Non Silent Region Detection
 std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 {

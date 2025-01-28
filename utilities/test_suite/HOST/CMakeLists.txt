@@ -28,7 +28,7 @@ cmake_minimum_required(VERSION 3.10)
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- test_suite-HOST: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
@@ -39,6 +39,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HOST)
 
@@ -151,21 +153,12 @@ else()
                 # include and link directories
                 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
-
-                # set flags
-                if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-                    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-                elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_CXX_COMPILER clang++)
-                endif()
-                set(CMAKE_CXX_STANDARD 17)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
-                if(OpenMP_FOUND)
-                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
+                if(OpenMP_CXX_FOUND)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
+                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+                    message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
 
                     # HOST test set 1 - RPP Tensor-Image HOST test suite
@@ -176,16 +169,16 @@ else()
                         if(OpenCV_FOUND)
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with OpenCV${ColourReset}")
-                            add_executable(Tensor_host Tensor_host.cpp)
-                            target_link_libraries(Tensor_host -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            add_executable(Tensor_image_host Tensor_image_host.cpp)
+                            target_link_libraries(Tensor_image_host -lrpp -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                             if (OPENPYXL_FOUND EQUAL 0)
                                 message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")
                                 add_executable(BatchPD_host_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
                             else()
                                 message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")
                             endif(OPENPYXL_FOUND EQUAL 0)
@@ -203,7 +196,7 @@ else()
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HOST tests set to build with OpenCV${ColourReset}")
                             add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-                            target_link_libraries(Tensor_voxel_host -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_voxel_host -lrpp ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                         endif(OpenCV_FOUND)
@@ -220,7 +213,7 @@ else()
                             link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HOST tests set to build with libsnd${ColourReset}")
                             add_executable(Tensor_audio_host Tensor_audio_host.cpp)
-                            target_link_libraries(Tensor_audio_host -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_audio_host -lrpp ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                         endif(libsnd_LIBS)
@@ -230,11 +223,11 @@ else()
 
                     # HOST test set 4 - RPP Tensor-Misc HOST test suite
                     add_executable(Tensor_misc_host Tensor_misc_host.cpp)
-                    target_link_libraries(Tensor_misc_host -lrpp pthread ${LINK_LIBRARY_LIST})
+                    target_link_libraries(Tensor_misc_host -lrpp ${LINK_LIBRARY_LIST})
 
                 else()
                     message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
-                endif(OpenMP_FOUND)
+                endif(OpenMP_CXX_FOUND)
             else()
                 message("-- ${Red}${PROJECT_NAME} Error: Pandas for Python3 must be installed to run any RPP test_suite performance tests with profiling successfully${ColourReset}")
             endif(PANDAS_FOUND EQUAL 0)

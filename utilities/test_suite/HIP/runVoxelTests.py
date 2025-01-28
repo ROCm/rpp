@@ -39,6 +39,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 6
+errorLog = [{"notExecutedFunctionality" : 0}]
 
 def get_log_file_list(preserveOutput):
     return [
@@ -58,29 +59,31 @@ def func_group_finder(case_number):
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
+    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
     print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
    with open(loggingFolder + "/Tensor_voxel_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
             output = output.decode('utf-8')
             if output:
-                print(output, end='')
-                logFile.write(output)
+                print(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
                 logFile.write(cleanedOutput + '\n')
                 if "max,min,avg wall times" in output:
                     logFile.write("\n")
+            else:
+                logFile.write(output)
+        
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
         print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -100,6 +103,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerP
                     break
                 print(output.strip())
                 logFile.write(output.decode('utf-8'))
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption = 'NO'):
@@ -161,7 +165,17 @@ def rpp_test_suite_parser_and_validator():
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(voxelAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -235,9 +249,6 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
-
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PKD3")
@@ -246,12 +257,12 @@ if testType == 1 and profilingOption == "YES":
 
 bitDepths = [0, 2]
 if (testType == 0 or (testType == 1 and profilingOption == "NO")):
-    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
     for case in caseList:
-        if case not in supportedCaseList:
+        if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
@@ -266,12 +277,12 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
                 run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
-    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
     for case in caseList:
-        if case not in supportedCaseList:
+        if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
@@ -345,7 +356,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_voxel_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_hip")
+        print_qa_tests_summary(qaFilePath, list(voxelAugmentationMap.keys()), nonQACaseList, "Tensor_voxel_hip")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0): # Unit tests
@@ -356,3 +367,11 @@ elif (testType == 1 and profilingOption == "NO"): # Performance tests
 
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
+
+if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_voxel_hip  ----------------------------------\n")
+    for i in range(1,len(errorLog)):
+        print(errorLog[i])
+    if(errorLog[0]["notExecutedFunctionality"] != 0):
+        print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_voxel_hip were not executed since these sub-variants are not currently supported in RPP.\n")
+    print("-----------------------------------------------------------------------------------------------")

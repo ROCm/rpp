@@ -645,6 +645,60 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptChannelOffsets *rgbOffsets, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Rain augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Rain augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values in pinned / HIP memory is used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! \brief Pixelate augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The pixelate augmentation performs a pixelate transformation for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).

@@ -37,6 +37,12 @@ std::map<int, string> augmentationMiscMap =
     {2, "log"}
 };
 
+enum Augmentation {
+    TRANSPOSE = 0,
+    NORMALIZE = 1,
+    LOG = 2
+};
+
 // Compute strides given Generic Tensor
 void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
@@ -78,8 +84,10 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, st
 {
     if(nDim != 2 && nDim != 3)
     {
-        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
-        exit(0);
+        if(nDim != 4 || testCase != "log") {
+            std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
+            exit(0);
+        }
     }
     string dataPath = get_path(nDim, readType, scriptPath, testCase, isMeanStd);
     read_bin_file(dataPath, data);
@@ -103,6 +111,14 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 50, 50, 8};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
+                exit(0);
+            }
+            case 4:
+            {
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 50, 50, 50, 4};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
                 exit(0);

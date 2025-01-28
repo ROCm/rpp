@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         cout << "\nImproper Usage! Needs all arguments!\n";
-        cout << "\nUsage: ./Tensor_host_audio <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
+        cout << "\nUsage: ./Tensor_audio_host <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
         return -1;
     }
 
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     Rpp32u offsetInBytes = 0;
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
-    if(testCase == 3)
+    if(testCase == DOWN_MIXING)
     {
         srcDescPtr->numDims = 3;
         maxDstChannels = 1;
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     // create generic descriptor in case of slice
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
-    if(testCase == 5)
+    if(testCase == SLICE)
     {
         descriptorPtr3D->numDims = 2;
         descriptorPtr3D->offsetInBytes = 0;
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     }
 
     // set buffer sizes for src/dst
-    if(testCase == 7)
+    if(testCase == MEL_FILTER_BANK)
     {
         iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
         oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -139,12 +139,12 @@ int main(int argc, char **argv)
 
     // compute maximum possible buffer size of resample
     Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
-    if (testCase == 6)
+    if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
     Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
-    if (testCase == 4)
+    if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
     // allocate host buffers for input & output
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 0:
+                case NON_SILENT_REGION_DETECTION:
                 {
                     testCaseName = "non_silent_region_detection";
                     Rpp32f cutOffDB = -60.0;
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case TO_DECIBELS:
                 {
                     testCaseName = "to_decibels";
                     Rpp32f cutOffDB = std::log(1e-20);
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case PRE_EMPHASIS_FILTER:
                 {
                     testCaseName = "pre_emphasis_filter";
                     Rpp32f coeff[batchSize];
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 3:
+                case DOWN_MIXING:
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case SPECTROGRAM:
                 {
                     testCaseName = "spectrogram";
                     bool centerWindows = true;
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 5:
+                case SLICE:
                 {
                     testCaseName = "slice";
                     Rpp32u nDim = 1; // testing for 1D slice
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case RESAMPLE:
                 {
                     testCaseName = "resample";
                     Rpp32f inRateTensor[batchSize];
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 7:
+                case MEL_FILTER_BANK:
                 {
                     testCaseName = "mel_filter_bank";
 
@@ -395,7 +395,7 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            if (testCase == 0)
+            if (testCase == NON_SILENT_REGION_DETECTION)
                 verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
             else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HOST");
