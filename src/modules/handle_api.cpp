@@ -26,18 +26,15 @@ SOFTWARE.
 #include "rpp/errors.hpp"
 #include "rpp/handle.hpp"
 
-extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, void* numThreadsOrStream, RppBackend backend)
+extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads, void* stream, RppBackend backend)
 {
     if(backend == RppBackend::RPP_HOST_BACKEND)
-    {
-        Rpp32u numThreads = static_cast<Rpp32u>(reinterpret_cast<size_t>(numThreadsOrStream));
         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
-    }
 #if GPU_SUPPORT  
     else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
     {
             return rpp::try_([&] { 
-            rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(numThreadsOrStream)); 
+            rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(stream)); 
         });
     }
 #endif // GPU_SUPPORT

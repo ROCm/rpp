@@ -106,7 +106,8 @@ extern "C" {
  * \details Function to create a RPP handle, and the necessary host/device memory allocations.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \param [in] nBatchSize Batch size.
- * \param [in] numThreadsOrStream A pointer to Number of threads or stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
+ * \param [in] numThreads Number of threads for HOST backend and provide 0 for HIP backend.
+ * \param [in] stream A pointer to stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL) and provide nullptr for HOST backend .
  * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND / RppBackend::RPP_OCL_BACKEND)
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
@@ -120,7 +121,7 @@ extern "C" {
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
  */
-extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, void* numThreadsOrStream, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
+extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0, void* stream = nullptr, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
 
 /*! \brief Destroys RPP handle for HOST/HIP/OCL backend batch processing.
  * \details Function to destroy a RPP handle's host/device memory allocation. To be called in the end to break down the RPP environment.

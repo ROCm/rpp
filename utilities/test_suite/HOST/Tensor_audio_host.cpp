@@ -170,7 +170,7 @@ int main(int argc, char **argv)
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     RppBackend backend = RppBackend::RPP_HOST_BACKEND;
-    rppCreate(&handle, batchSize, &numThreads, backend);
+    rppCreate(&handle, batchSize, numThreads, nullptr, backend);
 
     int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;

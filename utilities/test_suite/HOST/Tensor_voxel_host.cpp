@@ -151,7 +151,7 @@ int main(int argc, char * argv[])
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     RppBackend backend = RppBackend::RPP_HOST_BACKEND;
-    rppCreate(&handle, noOfFiles, &numThreads, backend);
+    rppCreate(&handle, noOfFiles, numThreads, nullptr, backend);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;

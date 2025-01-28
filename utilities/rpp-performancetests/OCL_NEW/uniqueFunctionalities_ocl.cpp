@@ -150,7 +150,7 @@ int main(int argc, char **argv)
     rppHandle_t handle;
 
     RppBackend backend = RppBackend::RPP_OCL_BACKEND;
-    rppCreate(&handle, 1, theQueue, backend);
+    rppCreate(&handle, 1, 0, theQueue, backend);
 
     clock_t start, end;
     double gpu_time_used;

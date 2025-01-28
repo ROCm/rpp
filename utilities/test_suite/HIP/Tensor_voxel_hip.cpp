@@ -156,7 +156,7 @@ int main(int argc, char * argv[])
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     RppBackend backend = RppBackend::RPP_HIP_BACKEND;
-    rppCreate(&handle, batchSize, stream, backend);
+    rppCreate(&handle, batchSize, 0, stream, backend);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
