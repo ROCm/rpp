@@ -6,7 +6,7 @@
 Installing ROCm Performance Primitives
 ********************************************************************
 
-ROCm Performance Primitives (RPP) supports HIP, OpenCL, and CPU-only backends.
+ROCm Performance Primitives (RPP) supports HIP, OpenCL, and CPU-only backends. The CPU backend is also referred to as the HOST backend.
 
 A :doc:`package installer <./rpp-install-with-installer>` is available for installing either only the RPP runtime, or the RPP runtime and development packages.
 
