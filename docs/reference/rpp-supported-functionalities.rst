@@ -147,7 +147,7 @@ Arithmetic operations
   "tensor multiply", "✅", "✅"
   "accumulate squared", "✅", "✅"
 
-Logical operations
+Bitwise operations
 -----------------------------------------------------------------------------------------------
 
 .. csv-table::

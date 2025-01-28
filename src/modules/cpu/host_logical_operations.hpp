@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_LOGICAL_OPERATIONS_HPP
-#define HOST_LOGICAL_OPERATIONS_HPP
+#ifndef HOST_BITWISE_OPERATIONS_HPP
+#define HOST_BITWISE_OPERATIONS_HPP
 
 #include "rpp_cpu_common.hpp"
 
@@ -876,4 +876,4 @@ RppStatus inclusive_OR_host(T* srcPtr1, U* srcPtr2, RppiSize srcSize, T* dstPtr,
 
 // }
 
-#endif // #ifndef HOST_LOGICAL_OPERATIONS_HPP
+#endif // #ifndef HOST_BITWISE_OPERATIONS_HPP
