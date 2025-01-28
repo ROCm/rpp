@@ -92,6 +92,7 @@ struct Handle : rppHandle
     Handle(size_t nBatchSize, rppAcceleratorQueue_t stream);
     void rpp_destroy_object_gpu();
     rppAcceleratorQueue_t GetStream() const;
+    void SetStream(rppAcceleratorQueue_t streamID) const;
 
     // Profiling and timing related
     void EnableProfiling(bool enable = true);

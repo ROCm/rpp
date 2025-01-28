@@ -71,6 +71,11 @@ extern "C" rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize)
 
 #if GPU_SUPPORT
 
+extern "C" rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID)
+{
+    return rpp::try_([&] { rpp::deref(handle).SetStream(streamID); });
+}
+
 extern "C" rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID)
 {
     return rpp::try_([&] { rpp::deref(streamID) = rpp::deref(handle).GetStream(); });

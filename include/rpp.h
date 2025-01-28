@@ -179,6 +179,24 @@ extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t 
 
 #if GPU_SUPPORT
 
+/*! \brief Set accelerator stream given a RPP handle.
+ * \details Function to set an accelerator stream previously created.
+ * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
+ * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
+ * \ingroup group_rpp
+ * \return A <tt> \ref rppStatus_t</tt> enumeration.
+ * \retval rppStatusSuccess
+ * \retval rppStatusNotInitialized
+ * \retval rppStatusInvalidValue
+ * \retval rppStatusBadParm
+ * \retval rppStatusAllocFailed
+ * \retval rppStatusInternalError
+ * \retval rppStatusNotImplemented
+ * \retval rppStatusUnknownError
+ * \retval rppStatusUnsupportedOp
+ */
+extern "C" SHARED_PUBLIC rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
+
 /*! \brief Get accelerator stream given a RPP handle.
  * \details Function to get an accelerator stream previously created.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
