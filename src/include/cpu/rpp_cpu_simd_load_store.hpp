@@ -37,6 +37,9 @@ SOFTWARE.
 #endif
 
 #define M256I(m256i_register) (*((_m256i_union*)&m256i_register))
+
+#ifndef RPP_SIMD_VECTOR_UNION
+#define RPP_SIMD_VECTOR_UNION
 typedef union
 {
     char m256i_i8[32];
@@ -45,6 +48,7 @@ typedef union
     long long m256i_i64[4];
     __m128i m256i_i128[2];
 } _m256i_union;
+#endif
 
 #if defined(_MSC_VER)
 #define SIMD_ALIGN_VAR(type, name, alignment) \
