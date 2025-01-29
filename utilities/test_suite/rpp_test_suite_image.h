@@ -176,7 +176,7 @@ enum Augmentation {
     RANDOM_CHANNEL_PERMUTE = 93,
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP, RANDOM_CHANNEL_PERMUTE};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP, RANDOM_CHANNEL_PERMUTE, SWAP_CHANNELS};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -1514,4 +1514,29 @@ void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *
     tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
     tableDescPtr->strides.hStride = srcDescPtr->w;
     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+}
+
+// fill the permutation values used for transpose
+void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
+{
+    if(qaMode)
+    {
+
+        permTensor[0] = 2;
+        permTensor[1] = 1;
+        permTensor[2] = 0;
+    }
+    else
+    {
+        Rpp8u mapping[][3] = {
+            {0, 1, 2}, // axisMask 0 → R, G, B
+            {0, 2, 1}, // axisMask 1 → R, B, G
+            {1, 0, 2}, // axisMask 2 → G, R, B
+            {1, 2, 0}, // axisMask 3 → G, B, R
+            {2, 0, 1}, // axisMask 4 → B, R, G
+            {2, 1, 0}  // axisMask 5 → B, G, R
+        };
+        for(int i = 0; i < 3; i++)
+            permTensor[i] = mapping[permOrder][i];
+    }
 }
