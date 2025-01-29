@@ -2,7 +2,6 @@
 #define AMD_RPP_RPP_CPU_SIMD_MATH_HPP
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 
 #if _WIN32
 #include <intrin.h>
@@ -23,6 +22,7 @@ const __m128 xmm_p0 = _mm_setzero_ps();
 const __m128 xmm_p3 = _mm_set1_ps(3.0f);
 
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
+const __m256 avx_p1 = _mm256_set1_ps(1.0f);
 const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 #endif
 

@@ -78,6 +78,7 @@ const __m128 xmm_p0 = _mm_setzero_ps();
 const __m128 xmm_p3 = _mm_set1_ps(3.0f);
 
 const __m256 avx_p0 = _mm256_set1_ps(0.0f);
+const __m256 avx_p1 = _mm256_set1_ps(1.0f);
 const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 #endif
 
@@ -100,7 +101,6 @@ const __m128i xmm_px5 = _mm_set1_epi32(5);
 const __m128i xmm_pxConvertI8 = _mm_set1_epi8((char)128);
 const __m128 xmm_pDstLocInit = _mm_setr_ps(0, 1, 2, 3);
 
-const __m256 avx_p1 = _mm256_set1_ps(1.0f);
 const __m256 avx_p2 = _mm256_set1_ps(2.0f);
 const __m256 avx_pm2 = _mm256_set1_ps(-2.0f);
 const __m256 avx_p4 = _mm256_set1_ps(4.0f);
