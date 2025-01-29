@@ -22,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HIP_TENSOR_LOGICAL_OPERATIONS_HPP
-#define HIP_TENSOR_LOGICAL_OPERATIONS_HPP
+#ifndef HIP_TENSOR_BITWISE_OPERATIONS_HPP
+#define HIP_TENSOR_BITWISE_OPERATIONS_HPP
 
 #include "kernel/bitwise_and.hpp"
 #include "kernel/bitwise_not.hpp"
 #include "kernel/bitwise_or.hpp"
 #include "kernel/bitwise_xor.hpp"
 
-#endif // HIP_TENSOR_LOGICAL_OPERATIONS_HPP
+#endif // HIP_TENSOR_BITWISE_OPERATIONS_HPP

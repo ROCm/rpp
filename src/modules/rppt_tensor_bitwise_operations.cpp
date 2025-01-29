@@ -24,11 +24,11 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
-#include "rppt_tensor_logical_operations.h"
-#include "cpu/host_tensor_logical_operations.hpp"
+#include "rppt_tensor_bitwise_operations.h"
+#include "cpu/host_tensor_bitwise_operations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/hip_tensor_logical_operations.hpp"
+    #include "hip/hip_tensor_bitwise_operations.hpp"
 #endif // HIP_COMPILE
 
 /******************** bitwise AND ********************/

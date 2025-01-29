@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPPT_TENSOR_LOGICAL_OPERATIONS_H
-#define RPPT_TENSOR_LOGICAL_OPERATIONS_H
+#ifndef RPPT_TENSOR_BITWISE_OPERATIONS_H
+#define RPPT_TENSOR_BITWISE_OPERATIONS_H
 
 #include "rpp.h"
 #include "rppdefs.h"
@@ -33,12 +33,12 @@ extern "C" {
 
 /*!
  * \file
- * \brief RPPT Tensor Operations - Logical Operations.
- * \defgroup group_rppt_tensor_logical_operations RPPT Tensor Operations - Logical Operations.
- * \brief RPPT Tensor Operations - Logical Operations.
+ * \brief RPPT Tensor Operations - Bitwise Operations.
+ * \defgroup group_rppt_tensor_bitwise_operations RPPT Tensor Operations - Bitwise Operations.
+ * \brief RPPT Tensor Operations - Bitwise Operations.
  */
 
-/*! \addtogroup group_rppt_tensor_logical_operations
+/*! \addtogroup group_rppt_tensor_bitwise_operations
  * @{
  */
 
@@ -48,7 +48,7 @@ extern "C" {
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_and_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_and_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -70,7 +70,7 @@ RppStatus rppt_bitwise_and_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr 
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_and_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_and_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HIP memory
  * \param [in] srcPtr2 source2 tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -92,7 +92,7 @@ RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr s
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_xor_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_xor_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8, layout = NCHW/NHWC, c = 1/3)
@@ -114,7 +114,7 @@ RppStatus rppt_bitwise_xor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr 
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_xor_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_xor_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HIP memory
  * \param [in] srcPtr2 source2 tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8, layout = NCHW/NHWC, c = 1/3)
@@ -136,7 +136,7 @@ RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr s
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_or_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_or_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -158,7 +158,7 @@ RppStatus rppt_bitwise_or_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr s
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
- * \image html logical_operations_bitwise_or_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_or_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HIP memory
  * \param [in] srcPtr2 source2 tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -179,7 +179,7 @@ RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr sr
  *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
- * \image html logical_operations_bitwise_not_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_not_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -199,7 +199,7 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input1
- * \image html logical_operations_bitwise_not_img150x150.png Sample Output
+ * \image html bitwise_operations_bitwise_not_img150x150.png Sample Output
  * \param [in] srcPtr source1 tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -220,4 +220,4 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 #ifdef __cplusplus
 }
 #endif
-#endif // RPPT_TENSOR_LOGICAL_OPERATIONS_H
+#endif // RPPT_TENSOR_BITWISE_OPERATIONS_H
