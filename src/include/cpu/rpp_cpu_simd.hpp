@@ -72,31 +72,24 @@ typedef union
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
+#ifndef RPP_SIMD_COMMON_VARIABLES
+#define RPP_SIMD_COMMON_VARIABLES
 const __m128 xmm_p0 = _mm_setzero_ps();
+const __m128 xmm_p3 = _mm_set1_ps(3.0f);
+
+const __m256 avx_p0 = _mm256_set1_ps(0.0f);
+const __m256 avx_p3 = _mm256_set1_ps(3.0f);
+#endif
+
 const __m128 xmm_p1 = _mm_set1_ps(1.0f);
 const __m128 xmm_p2 = _mm_set1_ps(2.0f);
 const __m128 xmm_pm2 = _mm_set1_ps(-2.0f);
-const __m128 xmm_p3 = _mm_set1_ps(3.0f);
 const __m128 xmm_p4 = _mm_set1_ps(4.0f);
 const __m128 xmm_p6 = _mm_set1_ps(6.0f);
 const __m128 xmm_p16 = _mm_set1_ps(16.0f);
 const __m128 xmm_p255 = _mm_set1_ps(255.0f);
-const __m128 xmm_p1op255 = _mm_set1_ps(1.0f / 255.0f);
 const __m128 xmm_p1op3 = _mm_set1_ps(1.0f / 3.0f);
 const __m128 xmm_p2op3 = _mm_set1_ps(2.0f / 3.0f);
-
-const __m128 xmm_cephesSQRTHF = _mm_set1_ps(0.707106781186547524);
-const __m128 xmm_cephesLogP0 = _mm_set1_ps(7.0376836292E-2);
-const __m128 xmm_cephesLogP1 = _mm_set1_ps(-1.1514610310E-1);
-const __m128 xmm_cephesLogP2 = _mm_set1_ps(1.1676998740E-1);
-const __m128 xmm_cephesLogP3 = _mm_set1_ps(-1.2420140846E-1);
-const __m128 xmm_cephesLogP4 = _mm_set1_ps(1.4249322787E-1);
-const __m128 xmm_cephesLogP5 = _mm_set1_ps(-1.6668057665E-1);
-const __m128 xmm_cephesLogP6 = _mm_set1_ps(2.0000714765E-1);
-const __m128 xmm_cephesLogP7 = _mm_set1_ps(-2.4999993993E-1);
-const __m128 xmm_cephesLogP8 = _mm_set1_ps(3.3333331174E-1);
-const __m128 xmm_cephesLogQ1 = _mm_set1_ps(-2.12194440e-4);
-const __m128 xmm_cephesLogQ2 = _mm_set1_ps(0.693359375);
 
 const __m128i xmm_px0 = _mm_set1_epi32(0);
 const __m128i xmm_px1 = _mm_set1_epi32(1);
@@ -107,32 +100,16 @@ const __m128i xmm_px5 = _mm_set1_epi32(5);
 const __m128i xmm_pxConvertI8 = _mm_set1_epi8((char)128);
 const __m128 xmm_pDstLocInit = _mm_setr_ps(0, 1, 2, 3);
 
-const __m256 avx_p0 = _mm256_set1_ps(0.0f);
 const __m256 avx_p1 = _mm256_set1_ps(1.0f);
 const __m256 avx_p2 = _mm256_set1_ps(2.0f);
 const __m256 avx_pm2 = _mm256_set1_ps(-2.0f);
-const __m256 avx_p3 = _mm256_set1_ps(3.0f);
 const __m256 avx_p4 = _mm256_set1_ps(4.0f);
 const __m256 avx_p6 = _mm256_set1_ps(6.0f);
 const __m256 avx_p8 = _mm256_set1_ps(8.0f);
 const __m256 avx_p128 = _mm256_set1_ps(128.0f);
 const __m256 avx_p255 = _mm256_set1_ps(255.0f);
-const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
 const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
 const __m256 avx_p2op3 = _mm256_set1_ps(2.0f / 3.0f);
-
-const __m256i avx_cephesSQRTHF = _mm256_set1_ps(0.707106781186547524);
-const __m256i avx_cephesLogP0 = _mm256_set1_ps(7.0376836292E-2);
-const __m256i avx_cephesLogP1 = _mm256_set1_ps(-1.1514610310E-1);
-const __m256i avx_cephesLogP2 = _mm256_set1_ps(1.1676998740E-1);
-const __m256i avx_cephesLogP3 = _mm256_set1_ps(-1.2420140846E-1);
-const __m256i avx_cephesLogP4 = _mm256_set1_ps(1.4249322787E-1);
-const __m256i avx_cephesLogP5 = _mm256_set1_ps(-1.6668057665E-1);
-const __m256i avx_cephesLogP6 = _mm256_set1_ps(2.0000714765E-1);
-const __m256i avx_cephesLogP7 = _mm256_set1_ps(-2.4999993993E-1);
-const __m256i avx_cephesLogP8 = _mm256_set1_ps(3.3333331174E-1);
-const __m256i avx_cephesLogQ1 = _mm256_set1_ps(-2.12194440e-4);
-const __m256i avx_cephesLogQ2 = _mm256_set1_ps(0.693359375);
 
 const __m256i avx_px0 = _mm256_set1_epi32(0);
 const __m256i avx_px1 = _mm256_set1_epi32(1);

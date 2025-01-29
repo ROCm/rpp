@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "bitwise_or.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                        Rpp8u *srcPtr2,
