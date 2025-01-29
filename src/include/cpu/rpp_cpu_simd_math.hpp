@@ -229,6 +229,48 @@ inline __m128i _mm_mullo_epi8(__m128i a, __m128i b)
      return C;
 }
 
+static inline Rpp32u HorMin(__m128i pmin)
+{
+    pmin = _mm_min_epu8(pmin, _mm_shuffle_epi32(pmin, _MM_SHUFFLE(3, 2, 3, 2)));
+    pmin = _mm_min_epu8(pmin, _mm_shuffle_epi32(pmin, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmin = _mm_min_epu8(pmin, _mm_shufflelo_epi16(pmin, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmin = _mm_min_epu8(pmin, _mm_srli_epi16(pmin, 8));
+    return (_mm_cvtsi128_si32(pmin) & 0x000000FF);
+}
+
+static inline Rpp32u HorMax(__m128i pmax)
+{
+    pmax = _mm_min_epu8(pmax, _mm_shuffle_epi32(pmax, _MM_SHUFFLE(3, 2, 3, 2)));
+    pmax = _mm_min_epu8(pmax, _mm_shuffle_epi32(pmax, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmax = _mm_min_epu8(pmax, _mm_shufflelo_epi16(pmax, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmax = _mm_min_epu8(pmax, _mm_srli_epi16(pmax, 8));
+    return (_mm_cvtsi128_si32(pmax) & 0x000000FF);
+}
+
+#if __AVX__
+static inline Rpp32u HorMin256(__m256i pmin)
+{
+    __m128i pmin_128;
+    pmin = _mm256_min_epu8(pmin, _mm256_permute4x64_epi64(pmin, _MM_SHUFFLE(3, 2, 3, 2)));
+    pmin = _mm256_min_epu8(pmin, _mm256_permute4x64_epi64(pmin, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmin_128 = M256I(pmin).m256i_i128[0];
+    pmin_128 = _mm_min_epu8(pmin_128, _mm_shufflelo_epi16(pmin_128, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmin_128 = _mm_min_epu8(pmin_128, _mm_srli_epi16(pmin_128, 8));
+    return (_mm_cvtsi128_si32(pmin_128) & 0x000000FF);
+}
+
+static inline Rpp32u HorMax256(__m256i pmax)
+{
+    __m128i pmax_128;
+    pmax = _mm256_max_epu8(pmax, _mm256_permute4x64_epi64(pmax, _MM_SHUFFLE(3, 2, 3, 2)));
+    pmax = _mm256_max_epu8(pmax, _mm256_permute4x64_epi64(pmax, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmax_128 = M256I(pmax).m256i_i128[0];
+    pmax_128 = _mm_max_epi8(pmax_128, _mm_shufflelo_epi16(pmax_128, _MM_SHUFFLE(1, 1, 1, 1)));
+    pmax_128 = _mm_max_epi8(pmax_128, _mm_srli_epi16(pmax_128, 8));
+    return (_mm_cvtsi128_si32(pmax_128) & 0x000000FF);
+}
+#endif
+
 static  inline __m128 fast_exp_sse (__m128 x)
 {
     __m128 t, f, e, p, r;
