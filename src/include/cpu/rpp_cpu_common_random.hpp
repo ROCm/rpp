@@ -1,7 +1,7 @@
 #ifndef RPP_CPU_COMMON_RANDOM_H
 #define RPP_CPU_COMMON_RANDOM_H
 
-#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_simd_load_store.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 #define XORWOW_COUNTER_INC              0x587C5     // Hex 0x587C5 = Dec 362437U - xorwow counter increment

@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef AMD_RPP_RPP_CPU_COMMON_FILTER_HPP
 #define AMD_RPP_RPP_CPU_COMMON_FILTER_HPP
 
-#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_simd_load_store.hpp"
 
 // declare masks used for shuffle and permute operations used in filter functions
 const __m128i xmm_pxMaskRotate0To1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);

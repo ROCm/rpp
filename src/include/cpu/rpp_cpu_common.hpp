@@ -32,7 +32,7 @@ SOFTWARE.
 #include <rppdefs.h>
 #include <omp.h>
 #include "rpp/handle.hpp"
-#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_simd_load_store.hpp"
 
 #define PI_OVER_180                     0.0174532925
 #define ONE_OVER_255                    0.00392156862745f

@@ -10,7 +10,7 @@
 #include <half/half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
-#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_simd_load_store.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 #define PI                              3.14159265
