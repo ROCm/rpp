@@ -1,6 +1,8 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+/* BitwiseNOT is logical operation only on U8 types. */
+
 __device__ void bitwise_not_hip_compute(d_uchar8 *src_uc8, d_uchar8 *dst_uc8)
 {
     rpp_hip_math_bitwiseNot8(src_uc8, dst_uc8);

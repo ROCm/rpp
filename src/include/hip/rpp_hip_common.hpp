@@ -1858,7 +1858,7 @@ __device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_f
     dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
 }
 
-// d_float8 bitwiseAND
+// d_uchar8 bitwiseAND
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
@@ -1872,7 +1872,7 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
 }
 
-// d_float8 bitwiseOR
+// d_uchar8 bitwiseOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
@@ -1886,6 +1886,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uc
         dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
 
+// d_uchar8 bitwiseXOR
+
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
         dst_uc8->uc1[0] = src1_uc8->uc1[0] ^ src2_uc8->uc1[0];
@@ -1897,6 +1899,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[6] = src1_uc8->uc1[6] ^ src2_uc8->uc1[6];
         dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
+
+// d_uchar8 bitwiseNOT
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseNot8(d_uchar8 *src_uc8, d_uchar8 *dst_uc8)
 {

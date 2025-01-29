@@ -1,10 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-/* BitwiseAND is logical operation only on U8/I8 types.
-   For a Rpp32f precision image (pixel values from 0-1), the BitwiseAND is applied on a 0-255
-   range-translated approximation, of the original 0-1 decimal-range image.
-   The bitwise operation is applied to the char representation of the raw floating-point data in memory */
+/* BitwiseAND is logical operation only on U8 types. */
 
 __device__ void bitwise_and_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {

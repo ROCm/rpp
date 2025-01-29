@@ -23,8 +23,9 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
+
+/* bitwiseNOT is logical operation only on U8 types.*/
 
 RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                                         RpptDescPtr srcDescPtr,
@@ -137,7 +138,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     __m256i p[3];
 
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     p[0] = _mm256_xor_si256(p[0], pxMax);
                     p[1] = _mm256_xor_si256(p[1], pxMax);
                     p[2] = _mm256_xor_si256(p[2], pxMax);
@@ -197,7 +198,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     __m256i p[3];
 
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     p[0] = _mm256_xor_si256(p[0], pxMax);
                     p[1] = _mm256_xor_si256(p[1], pxMax);
                     p[2] = _mm256_xor_si256(p[2], pxMax);
