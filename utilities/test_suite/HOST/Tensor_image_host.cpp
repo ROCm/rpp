@@ -69,7 +69,6 @@ int main(int argc, char **argv)
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
-    bool axisMaskCase = (axisMaskCases.find(testCase) != axisMaskCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -216,11 +215,11 @@ int main(int argc, char **argv)
         func += "_kernelSize";
         func += additionalParam_char;
     }
-    else if (axisMaskCase)
+    else if(testCase == SWAP_CHANNELS)
     {
         char additionalParam_char[2];
         std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
-        func += "_axisMask";
+        func += "_permOrder";
         func += additionalParam_char;
     }
 
@@ -1494,11 +1493,13 @@ int main(int argc, char **argv)
                 case SWAP_CHANNELS:
                 {
                     testCaseName = "swap_channels";
+                    Rpp32u permTensor[3];
+                    fill_perm_values(permTensor, qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
+                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, permTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1619,19 +1620,6 @@ int main(int argc, char **argv)
 
                     if((inputBitDepth == 0 || inputBitDepth == 2) && srcDescPtr->layout == dstDescPtr->layout)
                         rppt_slice_host(input, descriptorPtr3D, output, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case RANDOM_CHANNEL_PERMUTE:
-                {
-                    testCaseName = "random_channel_permute";
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_random_channel_permute_host(input, srcDescPtr, output, dstDescPtr, additionalParam, handle);
                     else
                         missingFuncFlag = 1;
 

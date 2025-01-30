@@ -91,7 +91,6 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["random_channel_permute", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -128,7 +127,7 @@ ImageAugmentationGroupMap = {
     "filter_augmentations" : [49, 54],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 67, 68],
-    "data_exchange_operations" : [70, 85, 86, 93],
+    "data_exchange_operations" : [70, 85, 86],
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
