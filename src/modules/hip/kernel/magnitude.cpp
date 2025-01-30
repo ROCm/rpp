@@ -1,4 +1,6 @@
 #include "hip_tensor_arithmetic_operations.hpp"
+#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_common_misc.hpp"
 
 template <typename T>
 __device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)

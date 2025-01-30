@@ -1,4 +1,7 @@
 #include "hip_tensor_effects_augmentations.hpp"
+#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_common_random.hpp"
+#include "rpp_hip_common_misc.hpp"
 #include "rng_seed_stream.hpp"
 
 __device__ void shot_noise_1_hip_compute(float *pix, RpptXorwowStateBoxMuller *xorwowState)

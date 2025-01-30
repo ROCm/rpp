@@ -1,4 +1,5 @@
 #include "hip_tensor_geometric_augmentations.hpp"
+#include "rpp_hip_common_math.hpp"
 
 // -------------------- Set 0 - lens_correction device helpers --------------------
 

@@ -1,4 +1,6 @@
 #include "hip_tensor_effects_augmentations.hpp"
+#include "rpp_hip_common_misc.hpp"
+#include "rpp_hip_common_math.hpp"
 
 __device__ void vignette_gaussian_hip_compute(float &multiplier, int2 &halfDimsWH_i2, int2 &idXY_i2, d_float8 *gaussianValue_f8)
 {

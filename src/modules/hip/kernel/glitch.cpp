@@ -1,4 +1,5 @@
 #include "hip_tensor_effects_augmentations.hpp"
+#include "rpp_hip_common_interpolation.hpp"
 
 template <typename T>
 __device__ __forceinline__ void rpp_hip_load1_glitch(T *srcPtr, uint2 srcStrideCH, float &locSrcX, float &locSrcY, float *dst, int channels)

@@ -1,4 +1,5 @@
 #include "hip_tensor_statistical_operations.hpp"
+#include "rpp_hip_common_math.hpp"
 
 #define MAX_SHARED_MEMORY_SIZE 1024
 

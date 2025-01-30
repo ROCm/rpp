@@ -1,4 +1,6 @@
 #include "hip_tensor_geometric_augmentations.hpp"
+#include "rpp_hip_common_misc.hpp"
+#include "rpp_hip_common_interpolation.hpp"
 
 __device__ void rmn_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {

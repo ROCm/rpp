@@ -25,6 +25,7 @@ SOFTWARE.
 #include "fog.hpp"
 #include <random>
 #include "rpp_cpu_simd_math.hpp"
+#include "rpp_hip_common_misc.hpp"
 
 inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor, __m256 *pConversionFactor)
 {

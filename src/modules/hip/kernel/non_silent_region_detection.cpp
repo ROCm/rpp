@@ -1,4 +1,5 @@
 #include "hip_tensor_audio_augmentations.hpp"
+#include "rpp_hip_common_math.hpp"
 
 // -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 

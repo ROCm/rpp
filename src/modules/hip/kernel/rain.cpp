@@ -1,4 +1,5 @@
 #include "hip_tensor_effects_augmentations.hpp"
+#include "rpp_hip_common_misc.hpp"
 #include <random>
 
 // Constants to represent the rain intensity for different data types
