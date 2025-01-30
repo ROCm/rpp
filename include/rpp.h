@@ -106,8 +106,8 @@ extern "C" {
  * \details Function to create a RPP handle, and the necessary host/device memory allocations.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \param [in] nBatchSize Batch size.
- * \param [in] numThreads Number of threads for HOST backend and provide 0 for HIP backend.
- * \param [in] stream A pointer to stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL) and provide nullptr for HOST backend .
+ * \param [in] numThreads Number of threads to use if backend = RppBackend::RPP_HOST_BACKEND. (Pass 0 if backend = RppBackend::RPP_HIP_BACKEND).
+ * \param [in] stream A pointer to an accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> - hipStream_t if backend = RppBackend::RPP_HIP_BACKEND and cl_command_queue if backend = RppBackend::RPP_OCL_BACKEND. (Pass nullptr if backend = RppBackend::RPP_HOST_BACKEND).
  * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND / RppBackend::RPP_OCL_BACKEND)
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
