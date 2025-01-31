@@ -84,8 +84,6 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
             elif case == "85":
                 swapOrderRange = 6
-                if qaMode:
-                    swapOrderRange = 1
                 # Run all variants of swap channel functions with additional argument of swapOrder (0 - 5)
                 for swapOrder in range(swapOrderRange):
                     print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(swapOrder))

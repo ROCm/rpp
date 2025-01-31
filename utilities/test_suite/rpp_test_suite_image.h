@@ -1105,6 +1105,11 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
     }
+    else if(testCase == SWAP_CHANNELS)
+    {
+        func += "_permOrder" + std::to_string(additionalParam);
+        binFile += "_permOrder" + std::to_string(additionalParam);
+    }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
 
@@ -1516,24 +1521,14 @@ void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *
 // fill the permutation values used for transpose
 void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
 {
-    if(qaMode)
-    {
-
-        permTensor[0] = 2;
-        permTensor[1] = 1;
-        permTensor[2] = 0;
-    }
-    else
-    {
-        Rpp8u mapping[][3] = {
-            {0, 1, 2}, // axisMask 0 → R, G, B
-            {0, 2, 1}, // axisMask 1 → R, B, G
-            {1, 0, 2}, // axisMask 2 → G, R, B
-            {1, 2, 0}, // axisMask 3 → G, B, R
-            {2, 0, 1}, // axisMask 4 → B, R, G
-            {2, 1, 0}  // axisMask 5 → B, G, R
-        };
-        for(int i = 0; i < 3; i++)
-            permTensor[i] = mapping[permOrder][i];
-    }
+    Rpp8u mapping[][3] = {
+        {0, 1, 2}, // axisMask 0 → R, G, B
+        {0, 2, 1}, // axisMask 1 → R, B, G
+        {1, 0, 2}, // axisMask 2 → G, R, B
+        {1, 2, 0}, // axisMask 3 → G, B, R
+        {2, 0, 1}, // axisMask 4 → B, R, G
+        {2, 1, 0}  // axisMask 5 → B, G, R
+    };
+    for(int i = 0; i < 3; i++)
+        permTensor[i] = mapping[permOrder][i];
 }

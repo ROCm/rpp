@@ -62,7 +62,6 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                Rpp8u *dstPtrTemp[3] = {dstPtrTempR, dstPtrTempG, dstPtrTempB};
                 int vectorLoopCount = 0;
 #if __AVX2__
                 for (; vectorLoopCount < 48; vectorLoopCount+=48)
@@ -84,9 +83,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    *dstPtrTemp[permTensor[0]]++ = srcPtrTemp[0];
-                    *dstPtrTemp[permTensor[1]]++ = srcPtrTemp[1];
-                    *dstPtrTemp[permTensor[2]]++ = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[permTensor[0]];
+                    *dstPtrTempG++ = srcPtrTemp[permTensor[1]];
+                    *dstPtrTempB++ = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                 }
 
@@ -175,9 +174,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    dstPtrTemp[permTensor[0]] = srcPtrTemp[0];
-                    dstPtrTemp[permTensor[1]] = srcPtrTemp[1];
-                    dstPtrTemp[permTensor[2]] = srcPtrTemp[2];
+                    dstPtrTemp[0] = srcPtrTemp[permTensor[0]];
+                    dstPtrTemp[1] = srcPtrTemp[permTensor[1]];
+                    dstPtrTemp[2] = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
                 }
@@ -303,9 +302,9 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = srcPtrTemp[0];
-                    *dstPtrTempG++ = srcPtrTemp[1];
-                    *dstPtrTempB++ = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[permTensor[0]];
+                    *dstPtrTempG++ = srcPtrTemp[permTensor[1]];
+                    *dstPtrTempB++ = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                 }
 
@@ -394,9 +393,9 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[permTensor[0]] = srcPtrTemp[0];
-                    dstPtrTemp[permTensor[1]] = srcPtrTemp[1];
-                    dstPtrTemp[permTensor[2]] = srcPtrTemp[2];
+                    dstPtrTemp[0] = srcPtrTemp[permTensor[0]];
+                    dstPtrTemp[1] = srcPtrTemp[permTensor[1]];
+                    dstPtrTemp[2] = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
                 }
@@ -523,9 +522,9 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = srcPtrTemp[0];
-                    *dstPtrTempG++ = srcPtrTemp[1];
-                    *dstPtrTempB++ = srcPtrTemp[2];
+                    *dstPtrTempR++ = srcPtrTemp[permTensor[0]];
+                    *dstPtrTempG++ = srcPtrTemp[permTensor[1]];
+                    *dstPtrTempB++ = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                 }
 
@@ -614,9 +613,9 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[permTensor[0]] = srcPtrTemp[0];
-                    dstPtrTemp[permTensor[1]] = srcPtrTemp[1];
-                    dstPtrTemp[permTensor[2]] = srcPtrTemp[2];
+                    dstPtrTemp[0] = srcPtrTemp[permTensor[0]];
+                    dstPtrTemp[1] = srcPtrTemp[permTensor[1]];
+                    dstPtrTemp[2] = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
                 }
@@ -833,9 +832,9 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
-                    dstPtrTemp[permTensor[0]] = srcPtrTemp[0];
-                    dstPtrTemp[permTensor[1]] = srcPtrTemp[1];
-                    dstPtrTemp[permTensor[2]] = srcPtrTemp[2];
+                    dstPtrTemp[0] = srcPtrTemp[permTensor[0]];
+                    dstPtrTemp[1] = srcPtrTemp[permTensor[1]];
+                    dstPtrTemp[2] = srcPtrTemp[permTensor[2]];
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
                 }
