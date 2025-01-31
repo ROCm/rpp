@@ -129,13 +129,7 @@ struct RPPTensorFunctionMetaData
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
 #define RGB_TO_GREY_WEIGHT_BLUE         0.114f
-#define XORWOW_COUNTER_INC              0x587C5             // Hex 0x587C5 = Dec 362437U - xorwow counter increment
-#define XORWOW_EXPONENT_MASK            0x3F800000          // Hex 0x3F800000 = Bin 0b111111100000000000000000000000 - 23 bits of mantissa set to 0, 01111111 for the exponent, 0 for the sign bit
 #define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
-#define RPP_2POW32_INV                  2.3283064e-10f      // (1 / 2^32)
-#define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
-#define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
-#define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
 #define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 #define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
@@ -196,157 +190,12 @@ inline void getImageBitDepthMinMax(schar *srcPtr, float2 *bitDepthMinMax_f2) { *
 
 /******************** DEVICE FUNCTIONS ********************/
 
-// -------------------- Set 0 - Range checks and Range adjustment --------------------
-
-// float pixel check for 0-255 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, uchar* dst)
-{
-    pixel = fmax(fminf(pixel, 255), 0);
-    *dst = (uchar)pixel;
-}
-
-// float pixel check for -128-127 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, schar* dst)
-{
-    pixel = fmax(fminf(pixel, 127), -128);
-    *dst = (schar)pixel;
-}
-
-// float pixel check for 0-1 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, float* dst)
-{
-    pixel = fmax(fminf(pixel, 1), 0);
-    *dst = pixel;
-}
-
-__device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, half* dst)
-{
-    pixel = fmax(fminf(pixel, 1), 0);
-    *dst = (half)pixel;
-}
-
-// float4 pixel check for 0-255 range
-
 __device__ __forceinline__ float4 rpp_hip_pixel_check_0to255(float4 src_f4)
 {
     return make_float4(fminf(fmaxf(src_f4.x, 0.0f), 255.0f),
                        fminf(fmaxf(src_f4.y, 0.0f), 255.0f),
                        fminf(fmaxf(src_f4.z, 0.0f), 255.0f),
                        fminf(fmaxf(src_f4.w, 0.0f), 255.0f));
-}
-
-__device__ __forceinline__ float rpp_hip_pixel_check_0to255(float src_f1)
-{
-    return fminf(fmaxf(src_f1, 0), 255);
-}
-
-// float4 pixel check for 0-1 range
-
-__device__ __forceinline__ float4 rpp_hip_pixel_check_0to1(float4 src_f4)
-{
-    return make_float4(fminf(fmaxf(src_f4.x, 0), 1),
-                       fminf(fmaxf(src_f4.y, 0), 1),
-                       fminf(fmaxf(src_f4.z, 0), 1),
-                       fminf(fmaxf(src_f4.w, 0), 1));
-}
-
-// d_float8 pixel check for 0-255 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float8 *pix_f8)
-{
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(pix_f8->f4[0]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(pix_f8->f4[1]);
-}
-
-// d_float8 pixel check for 0-1 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_0to1(d_float8 *pix_f8)
-{
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1(pix_f8->f4[0]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1(pix_f8->f4[1]);
-}
-
-// d_float24 pixel check for 0-255 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float24 *pix_f24)
-{
-    pix_f24->f4[0] = rpp_hip_pixel_check_0to255(pix_f24->f4[0]);
-    pix_f24->f4[1] = rpp_hip_pixel_check_0to255(pix_f24->f4[1]);
-    pix_f24->f4[2] = rpp_hip_pixel_check_0to255(pix_f24->f4[2]);
-    pix_f24->f4[3] = rpp_hip_pixel_check_0to255(pix_f24->f4[3]);
-    pix_f24->f4[4] = rpp_hip_pixel_check_0to255(pix_f24->f4[4]);
-    pix_f24->f4[5] = rpp_hip_pixel_check_0to255(pix_f24->f4[5]);
-}
-
-// d_float24 pixel check for 0-1 range
-
-__device__ __forceinline__ void rpp_hip_pixel_check_0to1(d_float24 *pix_f24)
-{
-    pix_f24->f4[0] = rpp_hip_pixel_check_0to1(pix_f24->f4[0]);
-    pix_f24->f4[1] = rpp_hip_pixel_check_0to1(pix_f24->f4[1]);
-    pix_f24->f4[2] = rpp_hip_pixel_check_0to1(pix_f24->f4[2]);
-    pix_f24->f4[3] = rpp_hip_pixel_check_0to1(pix_f24->f4[3]);
-    pix_f24->f4[4] = rpp_hip_pixel_check_0to1(pix_f24->f4[4]);
-    pix_f24->f4[5] = rpp_hip_pixel_check_0to1(pix_f24->f4[5]);
-}
-
-// d_float8 adjust pixel range for different bit depths
-
-__device__ __forceinline__ void rpp_hip_adjust_range(uchar *dstPtr, d_float8 *sum_f8){}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(float *dstPtr, d_float8 *sum_f8)
-{
-    sum_f8->f4[0] = sum_f8->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f8->f4[1] = sum_f8->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(schar *dstPtr, d_float8 *sum_f8)
-{
-    sum_f8->f4[0] = sum_f8->f4[0] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f8->f4[1] = sum_f8->f4[1] - (float4) 128;    // Subtract 128 for schar image data
-}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float8 *sum_f8)
-{
-    sum_f8->f4[0] = sum_f8->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f8->f4[1] = sum_f8->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-}
-
-// d_float24 adjust pixel range for different bit depths
-
-__device__ __forceinline__ void rpp_hip_adjust_range(uchar *dstPtr, d_float24 *sum_f24){}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(float *dstPtr, d_float24 *sum_f24)
-{
-    sum_f24->f4[0] = sum_f24->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[1] = sum_f24->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[2] = sum_f24->f4[2] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[3] = sum_f24->f4[3] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[4] = sum_f24->f4[4] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[5] = sum_f24->f4[5] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(schar *dstPtr, d_float24 *sum_f24)
-{
-    sum_f24->f4[0] = sum_f24->f4[0] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[1] = sum_f24->f4[1] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[2] = sum_f24->f4[2] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[3] = sum_f24->f4[3] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[4] = sum_f24->f4[4] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[5] = sum_f24->f4[5] - (float4) 128;    // Subtract 128 for schar image data
-}
-
-__device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float24 *sum_f24)
-{
-    sum_f24->f4[0] = sum_f24->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[1] = sum_f24->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[2] = sum_f24->f4[2] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[3] = sum_f24->f4[3] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[4] = sum_f24->f4[4] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[5] = sum_f24->f4[5] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
 }
 
 // -------------------- Set 1 - Packing --------------------

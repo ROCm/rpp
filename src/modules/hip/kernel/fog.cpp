@@ -1,5 +1,6 @@
 #include "hip_tensor_effects_augmentations.hpp"
 #include <random>
+#include "rpp_hip_common_misc.hpp"
 
 __device__ __forceinline__ void fog_grey_hip_compute(d_float8 *r_f8, d_float8 *g_f8, d_float8 *b_f8, float4 *greyFactor_f4)
 {
