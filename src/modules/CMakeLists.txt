@@ -79,7 +79,11 @@ function(add_kernel_includes KERNEL_FILES)
 endfunction()
 
 file(GLOB CPPFILES "*.cpp" )
+file(GLOB BATCH_PD_CPPFILES "batch_pd/*.cpp" )
+file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
+list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
+list(APPEND Rpp_Source ${TENSOR_CPPFILES})
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel.cpp)
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
 
