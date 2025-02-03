@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_tensor_geometric_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-#include "hip/kernel/hip_tensor_geometric_augmentations.hpp"
+#include "hip_tensor_geometric_augmentations.hpp"
 #endif // HIP_COMPILE
 
 #if __APPLE__

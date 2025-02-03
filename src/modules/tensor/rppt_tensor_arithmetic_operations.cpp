@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_tensor_arithmetic_operations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/kernel/hip_tensor_arithmetic_operations.hpp"
+    #include "hip_tensor_arithmetic_operations.hpp"
 #endif // HIP_COMPILE
 
 /******************** fused_multiply_add_scalar ********************/

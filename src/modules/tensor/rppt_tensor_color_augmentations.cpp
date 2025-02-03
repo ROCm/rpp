@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_tensor_color_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/kernel/hip_tensor_color_augmentations.hpp"
+    #include "hip_tensor_color_augmentations.hpp"
 #endif // HIP_COMPILE
 
 /******************** brightness ********************/

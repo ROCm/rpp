@@ -29,7 +29,7 @@ SOFTWARE.
 #include "host_tensor_statistical_operations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip/kernel/hip_tensor_statistical_operations.hpp"
+    #include "hip_tensor_statistical_operations.hpp"
 #endif // HIP_COMPILE
 
 /******************** tensor_sum ********************/
