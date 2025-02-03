@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_color_model_conversions.h"
-#include "cpu/batch_pd/host_color_model_conversions.hpp"
+#include "host_color_model_conversions.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

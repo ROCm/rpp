@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_arithmetic_operations.h"
-#include "cpu/batch_pd/host_arithmetic_operations.hpp"
+#include "host_arithmetic_operations.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

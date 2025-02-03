@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_image_augmentations.h"
-#include "cpu/batch_pd/host_image_augmentations.hpp"
+#include "host_image_augmentations.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"

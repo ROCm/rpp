@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_filter_augmentations.h"
-#include "cpu/kernel/host_tensor_filter_augmentations.hpp"
+#include "host_tensor_filter_augmentations.hpp"
 
 #ifdef HIP_COMPILE
 #include "hip/kernel/hip_tensor_filter_augmentations.hpp"

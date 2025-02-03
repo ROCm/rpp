@@ -25,7 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppi_computer_vision.h"
-#include "cpu/batch_pd/host_computer_vision.hpp"
+#include "host_computer_vision.hpp"
 
 #ifdef HIP_COMPILE
 #include "rpp_hip_common.hpp"
