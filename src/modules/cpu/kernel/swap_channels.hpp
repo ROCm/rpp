@@ -46,7 +46,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 48) * 48;
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NHWC -> NCHW)
+        // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -102,7 +102,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NCHW -> NHWC)
+        // Swap Channels with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -148,7 +148,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NHWC -> NHWC)
+        // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -198,7 +198,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NCHW -> NCHW)
+        // Swap Channels without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -276,7 +276,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NHWC -> NCHW)
+        // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -327,7 +327,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NCHW -> NHWC)
+        // Swap Channels with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -373,7 +373,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NHWC -> NHWC)
+        // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRow, *dstPtrRow;
@@ -417,7 +417,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NCHW -> NCHW)
+        // Swap Channels without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -496,7 +496,7 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NHWC -> NCHW)
+        // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -547,7 +547,7 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NCHW -> NHWC)
+        // Swap Channels with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -593,7 +593,7 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NHWC -> NHWC)
+        // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRow, *dstPtrRow;
@@ -637,7 +637,7 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NCHW -> NCHW)
+        // Swap Channels without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -715,7 +715,7 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 48) * 48;
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NHWC -> NCHW)
+        // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -772,7 +772,7 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) with fused output-layout toggle (NCHW -> NHWC)
+        // Swap Channels with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -818,7 +818,7 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NHWC -> NHWC)
+        // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRow, *dstPtrRow;
@@ -868,7 +868,7 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Swap Channels (RGB<->BGR) without fused output-layout toggle (NCHW -> NCHW)
+        // Swap Channels without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
