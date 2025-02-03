@@ -125,6 +125,12 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
                 for interpolationType in range(6):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
+            elif case == "85":
+                swapOrderRange = 6
+                # Run all variants of swap channel functions with additional argument of swapOrder (0 - 5)
+                for swapOrder in range(swapOrderRange):
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, swapOrder, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                 print("------------------------------------------------------------------------------------------\n")
