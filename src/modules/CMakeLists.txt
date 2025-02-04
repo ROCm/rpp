@@ -172,7 +172,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/hip
-        ${CMAKE_SOURCE_DIR}/src/include/hip/tensor
+        ${CMAKE_SOURCE_DIR}/src/include/tensor/hip
         ${CMAKE_SOURCE_DIR}/src/include/hip/batch_pd
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
