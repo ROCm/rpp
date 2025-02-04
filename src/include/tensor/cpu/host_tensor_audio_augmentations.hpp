@@ -22,15 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
-#define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
+#ifndef HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
+#define HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
-#include "tensor_sum.hpp"
-#include "tensor_min.hpp"
-#include "tensor_max.hpp"
-#include "tensor_mean.hpp"
-#include "tensor_stddev.hpp"
-#include "normalize.hpp"
-#include "threshold.hpp"
+#include "kernel/non_silent_region_detection.hpp"
+#include "kernel/to_decibels.hpp"
+#include "kernel/pre_emphasis_filter.hpp"
+#include "kernel/down_mixing.hpp"
+#include "kernel/spectrogram.hpp"
+#include "kernel/mel_filter_bank.hpp"
+#include "kernel/resample.hpp"
 
-#endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
+#endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP

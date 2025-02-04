@@ -160,7 +160,7 @@ target_include_directories( ${PROJECT_NAME}
         ${ROCM_INC}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cpu
-        ${CMAKE_SOURCE_DIR}/src/include/cpu/tensor
+        ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu
         ${CMAKE_SOURCE_DIR}/src/include/cpu/batch_pd
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/tensor/func_specific

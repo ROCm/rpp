@@ -25,11 +25,11 @@ SOFTWARE.
 #ifndef HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP
 #define HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
-#include "fused_multiply_add_scalar.hpp"
-#include "add_scalar.hpp"
-#include "subtract_scalar.hpp"
-#include "multiply_scalar.hpp"
-#include "magnitude.hpp"
-#include "log.hpp"
+#include "kernel/fused_multiply_add_scalar.hpp"
+#include "kernel/add_scalar.hpp"
+#include "kernel/subtract_scalar.hpp"
+#include "kernel/multiply_scalar.hpp"
+#include "kernel/magnitude.hpp"
+#include "kernel/log.hpp"
 
 #endif // HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP
