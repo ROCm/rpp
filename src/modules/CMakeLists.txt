@@ -113,7 +113,7 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/hip/tensor/ ${CMAKE_SOURCE_DIR}/src/include/hip/batch_pd/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/hip/ ${CMAKE_SOURCE_DIR}/src/include/tensor/hip/ ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
@@ -173,7 +173,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/hip
         ${CMAKE_SOURCE_DIR}/src/include/tensor/hip
-        ${CMAKE_SOURCE_DIR}/src/include/hip/batch_pd
+        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
 elseif( "${BACKEND}" STREQUAL "OCL")
