@@ -159,11 +159,11 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/include
         ${ROCM_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/cpu
-        ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu
-        ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu/kernel
         ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu
         ${CMAKE_SOURCE_DIR}/src/include/common
+        ${CMAKE_SOURCE_DIR}/src/include/common/cpu
+        ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu
+        ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu/kernel
         ${CMAKE_SOURCE_DIR}/src/include/tensor/func_specific
         ${INCLUDE_LIST}
 )
@@ -172,8 +172,9 @@ if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/hip
-        ${CMAKE_SOURCE_DIR}/src/include/tensor/hip
         ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip
+        ${CMAKE_SOURCE_DIR}/src/include/common/hip
+        ${CMAKE_SOURCE_DIR}/src/include/tensor/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
 elseif( "${BACKEND}" STREQUAL "OCL")
