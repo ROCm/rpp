@@ -1,30 +1,6 @@
 #ifndef AMD_RPP_RPP_CPU_SIMD_MATH_HPP
 #define AMD_RPP_RPP_CPU_SIMD_MATH_HPP
 
-#include "rppdefs.h"
-
-#if _WIN32
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#include <smmintrin.h>
-#include <immintrin.h>
-#endif
-
-#define M256I(m256i_register) (*((_m256i_union*)&m256i_register))
-
-#ifndef RPP_SIMD_VECTOR_UNION
-#define RPP_SIMD_VECTOR_UNION
-typedef union
-{
-    char m256i_i8[32];
-    short m256i_i16[16];
-    int m256i_i32[8];
-    long long m256i_i64[4];
-    __m128i m256i_i128[2];
-} _m256i_union;
-#endif
-
 #define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
 
 #define set1_ps_hex(x) _mm_castsi128_ps(_mm_set1_epi32(x))
