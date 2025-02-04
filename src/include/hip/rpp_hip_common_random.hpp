@@ -34,15 +34,8 @@ SOFTWARE.
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
 
-__device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
-{
-  x = 1.0 + x * ONE_OVER_256;
-  x *= x; x *= x; x *= x; x *= x;
-  x *= x; x *= x; x *= x; x *= x;
-
-  return x;
-}
-
+#ifndef RPP_HIP_MATH_DEPENDENCIES
+#define RPP_HIP_MATH_DEPENDENCIES
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
 {
     float xHalf = 0.5f * x;
@@ -53,6 +46,16 @@ __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
 
     return x;
 }
+
+__device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
+{
+  x = 1.0 + x * ONE_OVER_256;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+
+  return x;
+}
+#endif
 
 template<typename T>
 __device__ __forceinline__ void rpp_hip_rng_xorwow_state_update(T *xorwowState)

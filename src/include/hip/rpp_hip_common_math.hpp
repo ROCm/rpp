@@ -24,6 +24,7 @@ SOFTWARE.
 
 #ifndef RPP_HIP_COMMON_MATH_H
 #define RPP_HIP_COMMON_MATH_H
+#define RPP_HIP_MATH_DEPENDENCIES
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
@@ -243,6 +244,17 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
 
+__device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
+{
+    float xHalf = 0.5f * x;
+    int i = *(int*)&x;                              // float bits in int
+    i = NEWTON_METHOD_INITIAL_GUESS - (i >> 1);     // initial guess for Newton's method
+    x = *(float*)&i;                                // new bits to float
+    x = x * (1.5f - xHalf * x * x);                 // One round of Newton's method
+
+    return x;
+}
+
 __device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 x_f4)
 {
     float4 xHalf_f4 = (float4)0.5f * x_f4;
@@ -280,6 +292,15 @@ __device__ __forceinline__ void rpp_hip_math_sqrt24(d_float24 *pix_f24, d_float2
     pixSqrt_f24->f4[3] = one_f4 / pixSqrt_f24->f4[3];
     pixSqrt_f24->f4[4] = one_f4 / pixSqrt_f24->f4[4];
     pixSqrt_f24->f4[5] = one_f4 / pixSqrt_f24->f4[5];
+}
+
+__device__ __forceinline__ float rpp_hip_math_exp_lim256approx(float x)
+{
+  x = 1.0 + x * ONE_OVER_256;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+
+  return x;
 }
 
 __device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst_f8)
