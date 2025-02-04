@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
 
 #include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+#include "rpp_hip_common_load_store.hpp"
 
 template <typename T>
 RppStatus hip_exec_crop_tensor(T *srcPtr,

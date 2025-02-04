@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
 #include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+#include "rpp_hip_common_load_store.hpp"
 
 RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
                                       RpptDescPtr srcDescPtr,

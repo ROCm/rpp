@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rpp/handle.hpp"
-#include "rpp_hip_common.hpp"
+#include "rpp_hip_common_load_store.hpp"
 
 // ===== Utils
 
