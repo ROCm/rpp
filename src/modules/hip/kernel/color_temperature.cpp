@@ -1,6 +1,5 @@
 #include "hip_tensor_color_augmentations.hpp"
 #include "rpp_hip_common_math.hpp"
-#include "rpp_hip_common_misc.hpp"
 
 template <typename T>
 __device__ void color_temperature_hip_compute(T *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)

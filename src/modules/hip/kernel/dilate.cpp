@@ -1,5 +1,4 @@
 #include "hip_tensor_morphological_operations.hpp"
-#include "rpp_hip_common_misc.hpp"
 
 // -------------------- Set 0 - dilate device helpers --------------------
 

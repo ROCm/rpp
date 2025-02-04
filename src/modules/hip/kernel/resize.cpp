@@ -1,6 +1,5 @@
 #include "hip_tensor_geometric_augmentations.hpp"
 #include "rpp_hip_common_interpolation.hpp"
-#include "rpp_hip_common_misc.hpp"
 
 // -------------------- Set 0 - resize device helpers --------------------
 

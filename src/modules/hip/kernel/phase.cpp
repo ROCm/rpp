@@ -1,5 +1,4 @@
 #include "hip_tensor_geometric_augmentations.hpp"
-#include "rpp_hip_common_misc.hpp"
 
 __device__ void phase_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {

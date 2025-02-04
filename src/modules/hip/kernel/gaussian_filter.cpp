@@ -1,5 +1,4 @@
 #include "hip_tensor_filter_augmentations.hpp"
-#include "rpp_hip_common_misc.hpp"
 
 // -------------------- Set 0 - gaussian_filter device helpers --------------------
 
