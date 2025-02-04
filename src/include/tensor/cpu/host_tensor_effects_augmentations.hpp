@@ -25,20 +25,20 @@ SOFTWARE.
 #ifndef HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
 #define HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
 
-#include "kernel/gridmask.hpp"
-#include "kernel/spatter.hpp"
-#include "kernel/noise_salt_and_pepper.hpp"
-#include "kernel/noise_shot.hpp"
-#include "kernel/noise_gaussian.hpp"
-#include "kernel/non_linear_blend.hpp"
-#include "kernel/jitter.hpp"
-#include "kernel/glitch.hpp"
-#include "kernel/water.hpp"
-#include "kernel/ricap.hpp"
-#include "kernel/vignette.hpp"
-#include "kernel/resize.hpp"  //pixelate dependency
-#include "kernel/erase.hpp"
-#include "kernel/fog.hpp"
-#include "kernel/rain.hpp"
+#include "gridmask.hpp"
+#include "spatter.hpp"
+#include "noise_salt_and_pepper.hpp"
+#include "noise_shot.hpp"
+#include "noise_gaussian.hpp"
+#include "non_linear_blend.hpp"
+#include "jitter.hpp"
+#include "glitch.hpp"
+#include "water.hpp"
+#include "ricap.hpp"
+#include "vignette.hpp"
+#include "resize.hpp"  //pixelate dependency
+#include "erase.hpp"
+#include "fog.hpp"
+#include "rain.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP

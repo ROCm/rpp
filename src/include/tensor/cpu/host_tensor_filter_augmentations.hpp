@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
 #define HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
 
-#include "kernel/gaussian_filter.hpp"
-#include "kernel/box_filter.hpp"
+#include "gaussian_filter.hpp"
+#include "box_filter.hpp"
 
 #endif // HOST_TENSOR_FILTER_AUGMENTATIONS_HPP

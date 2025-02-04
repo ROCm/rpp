@@ -25,15 +25,15 @@ SOFTWARE.
 #ifndef HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
 #define HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
 
-#include "kernel/brightness.hpp"
-#include "kernel/gamma_correction.hpp"
-#include "kernel/blend.hpp"
-#include "kernel/color_twist.hpp"
-#include "kernel/color_jitter.hpp"
-#include "kernel/color_cast.hpp"
-#include "kernel/exposure.hpp"
-#include "kernel/contrast.hpp"
-#include "kernel/lut.hpp"
-#include "kernel/color_temperature.hpp"
+#include "brightness.hpp"
+#include "gamma_correction.hpp"
+#include "blend.hpp"
+#include "color_twist.hpp"
+#include "color_jitter.hpp"
+#include "color_cast.hpp"
+#include "exposure.hpp"
+#include "contrast.hpp"
+#include "lut.hpp"
+#include "color_temperature.hpp"
 
 #endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP

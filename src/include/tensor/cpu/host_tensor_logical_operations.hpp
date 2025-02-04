@@ -25,8 +25,8 @@ SOFTWARE.
 #ifndef HOST_TENSOR_LOGICAL_OPERATIONS_HPP
 #define HOST_TENSOR_LOGICAL_OPERATIONS_HPP
 
-#include "kernel/bitwise_and.hpp"
-#include "kernel/bitwise_or.hpp"
-#include "kernel/bitwise_xor.hpp"
+#include "bitwise_and.hpp"
+#include "bitwise_or.hpp"
+#include "bitwise_xor.hpp"
 
 #endif // HOST_TENSOR_LOGICAL_OPERATIONS_HPP

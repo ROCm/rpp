@@ -25,12 +25,12 @@ SOFTWARE.
 #ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/tensor_sum.hpp"
-#include "kernel/tensor_min.hpp"
-#include "kernel/tensor_max.hpp"
-#include "kernel/tensor_mean.hpp"
-#include "kernel/tensor_stddev.hpp"
-#include "kernel/normalize.hpp"
-#include "kernel/threshold.hpp"
+#include "tensor_sum.hpp"
+#include "tensor_min.hpp"
+#include "tensor_max.hpp"
+#include "tensor_mean.hpp"
+#include "tensor_stddev.hpp"
+#include "normalize.hpp"
+#include "threshold.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

@@ -25,12 +25,12 @@ SOFTWARE.
 #ifndef HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
 #define HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
-#include "kernel/non_silent_region_detection.hpp"
-#include "kernel/to_decibels.hpp"
-#include "kernel/pre_emphasis_filter.hpp"
-#include "kernel/down_mixing.hpp"
-#include "kernel/spectrogram.hpp"
-#include "kernel/mel_filter_bank.hpp"
-#include "kernel/resample.hpp"
+#include "non_silent_region_detection.hpp"
+#include "to_decibels.hpp"
+#include "pre_emphasis_filter.hpp"
+#include "down_mixing.hpp"
+#include "spectrogram.hpp"
+#include "mel_filter_bank.hpp"
+#include "resample.hpp"
 
 #endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP

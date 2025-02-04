@@ -25,8 +25,8 @@ SOFTWARE.
 #ifndef HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
 #define HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
 
-#include "kernel/copy.hpp"
-#include "kernel/swap_channels.hpp"
-#include "kernel/color_to_greyscale.hpp"
+#include "copy.hpp"
+#include "swap_channels.hpp"
+#include "color_to_greyscale.hpp"
 
 #endif // HOST_TENSOR_DATA_EXCHANGEE_OPERATIONS_HPP
