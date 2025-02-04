@@ -170,7 +170,6 @@ typedef enum
 /*! \brief RPP RppBackend type enums
  * \ingroup group_rppdefs
  */
-
 typedef enum
 {
     RPP_HOST_BACKEND,
