@@ -162,7 +162,7 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/src/include/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu/kernel
-        ${CMAKE_SOURCE_DIR}/src/include/cpu/batch_pd
+        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/tensor/func_specific
         ${INCLUDE_LIST}
