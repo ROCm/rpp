@@ -50,13 +50,13 @@ float baseLumaTable[8][8] = {
         {72, 92, 95, 98, 112, 100, 103, 99}
 };
 
-constexpr float r1 = 1.3870398998f; // cos(1 / 16.0 * PI) * SQRT2
-constexpr float r2 = 1.3065630198f; // cos(2 / 16.0 * PI) * SQRT2
-constexpr float r3 = 1.1758755445f; // cos(3 / 16.0 * PI) * SQRT2
-constexpr float r5 = 0.7856949568f; // cos(5 / 16.0 * PI) * SQRT2
-constexpr float r6 = 0.5411961079f; // cos(6 / 16.0 * PI) * SQRT2
-constexpr float r7 = 0.2758993804f; // cos(7 / 16.0 * PI) * SQRT2
-constexpr float isqrt2 = 0.3535533905932737f; // 1.0f / SQRT2
+constexpr float r1 = 0.9807852804f; // cos(1 / 16.0 * PI) * SQRT2
+constexpr float r2 = 0.9238795325f; // cos(2 / 16.0 * PI) * SQRT2
+constexpr float r3 = 0.8314696123f; // cos(3 / 16.0 * PI) * SQRT2
+constexpr float r5 = 0.5555702330f; // cos(5 / 16.0 * PI) * SQRT2
+constexpr float r6 = 0.3826834324f; // cos(6 / 16.0 * PI) * SQRT2
+constexpr float r7 = 0.1950903220f; // cos(7 / 16.0 * PI) * SQRT2
+constexpr float isqrt2 = 0.7071067812f; // 1.0f / SQRT2
 
 void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __m256& f, __m256& g, __m256& h)
 {
@@ -88,6 +88,60 @@ void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __
     h = _mm256_permute2f128_ps(abcd37, efgh37, (3 << 4) | 1); //a7 b7 c7 d7 e7 f7 g7 h7
 }
 
+static constexpr float a = 1.387039845322148f;             // sqrt(2) * cos(    pi / 16);
+static constexpr float b = 1.306562964876377f;             // sqrt(2) * cos(    pi /  8);
+static constexpr float c = 1.175875602419359f;             // sqrt(2) * cos(3 * pi / 16);
+static constexpr float d = 0.785694958387102f;             // sqrt(2) * cos(5 * pi / 16);
+static constexpr float e = 0.541196100146197f;             // sqrt(2) * cos(3 * pi /  8);
+static constexpr float f = 0.275899379282943f;             // sqrt(2) * cos(7 * pi / 16);
+static constexpr float norm_factor = 0.3535533905932737f;  // 1 / sqrt(8)
+
+template <int stride>
+void dct_fwd_8x8_1d(float* data) {
+  float x0 = data[0 * stride];
+  float x1 = data[1 * stride];
+  float x2 = data[2 * stride];
+  float x3 = data[3 * stride];
+  float x4 = data[4 * stride];
+  float x5 = data[5 * stride];
+  float x6 = data[6 * stride];
+  float x7 = data[7 * stride];
+
+  float tmp0 = x0 + x7;
+  float tmp1 = x1 + x6;
+  float tmp2 = x2 + x5;
+  float tmp3 = x3 + x4;
+
+  float tmp4 = x0 - x7;
+  float tmp5 = x6 - x1;
+  float tmp6 = x2 - x5;
+  float tmp7 = x4 - x3;
+
+  float tmp8 = tmp0 + tmp3;
+  float tmp9 = tmp0 - tmp3;
+  float tmp10 = tmp1 + tmp2;
+  float tmp11 = tmp1 - tmp2;
+
+  x0 = norm_factor * (tmp8 + tmp10);
+  x2 = norm_factor * (b * tmp9 + e * tmp11);
+  x4 = norm_factor * (tmp8 - tmp10);
+  x6 = norm_factor * (e * tmp9 - b * tmp11);
+
+  x1 = norm_factor * (a * tmp4 - c * tmp5 + d * tmp6 - f * tmp7);
+  x3 = norm_factor * (c * tmp4 + f * tmp5 - a * tmp6 + d * tmp7);
+  x5 = norm_factor * (d * tmp4 + a * tmp5 + f * tmp6 - c * tmp7);
+  x7 = norm_factor * (f * tmp4 + d * tmp5 + c * tmp6 + a * tmp7);
+
+  data[0 * stride] = x0;
+  data[1 * stride] = x1;
+  data[2 * stride] = x2;
+  data[3 * stride] = x3;
+  data[4 * stride] = x4;
+  data[5 * stride] = x5;
+  data[6 * stride] = x6;
+  data[7 * stride] = x7;
+}
+
 void dct_fwd_8x8_1d_avx2(
     __m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5,
     __m256& s6, __m256& s7)
@@ -99,6 +153,7 @@ void dct_fwd_8x8_1d_avx2(
     const __m256 xr6 = _mm256_set1_ps(r6);
     const __m256 xr7 = _mm256_set1_ps(r7);
     const __m256 xisqrt2 = _mm256_set1_ps(isqrt2);
+    const __m256 xhalf = _mm256_set1_ps(0.5f);
 
     __m256 t0 = _mm256_add_ps(s0, s7);
     __m256 t7 = _mm256_sub_ps(s0, s7);
@@ -114,33 +169,74 @@ void dct_fwd_8x8_1d_avx2(
     __m256 c1 = _mm256_add_ps(t1, t2);
     __m256 c2 = _mm256_sub_ps(t1, t2);
 
-    s0 = _mm256_add_ps(c0, c1);
-    s4 = _mm256_sub_ps(c0, c1);
-    s2 = _mm256_fmadd_ps(c2, xr6, _mm256_mul_ps(c3, xr2));
-    s6 = _mm256_fmsub_ps(c3, xr6, _mm256_mul_ps(c2, xr2));
+    // Even part processing with correct scaling
+    __m256 even_scale_dc = _mm256_set1_ps(isqrt2 * 0.5f);
+    s0 = _mm256_mul_ps(_mm256_add_ps(c0, c1), even_scale_dc); // DC scaled by 0.5 * isqrt2
+    s4 = _mm256_mul_ps(_mm256_sub_ps(c0, c1), even_scale_dc);
 
-    c3 = _mm256_fmadd_ps(t4, xr3, _mm256_mul_ps(t7, xr5));
-    c0 = _mm256_fmsub_ps(t7, xr3, _mm256_mul_ps(t4, xr5));
-    c2 = _mm256_fmadd_ps(t5, xr1, _mm256_mul_ps(t6, xr7));
-    c1 = _mm256_fmsub_ps(t6, xr1, _mm256_mul_ps(t5, xr7));
+    __m256 even_scale = xhalf; // Scale other even coefficients by 0.5
+    s2 = _mm256_mul_ps(_mm256_fmadd_ps(c2, xr6, _mm256_mul_ps(c3, xr2)), even_scale);
+    s6 = _mm256_mul_ps(_mm256_fmsub_ps(c3, xr6, _mm256_mul_ps(c2, xr2)), even_scale);
 
-    s3 = _mm256_sub_ps(c0, c2);
-    s5 = _mm256_sub_ps(c3, c1);
+    // Odd part processing with correct scaling
+    __m256 odd_scale = xhalf; // Scale odd coefficients by 0.5
+    __m256 c3_odd = _mm256_fmadd_ps(t4, xr3, _mm256_mul_ps(t7, xr5));
+    __m256 c0_odd = _mm256_fmsub_ps(t7, xr3, _mm256_mul_ps(t4, xr5));
+    __m256 c2_odd = _mm256_fmadd_ps(t5, xr1, _mm256_mul_ps(t6, xr7));
+    __m256 c1_odd = _mm256_fmsub_ps(t6, xr1, _mm256_mul_ps(t5, xr7));
 
-    c0 = _mm256_mul_ps(_mm256_add_ps(c0, c2), xisqrt2);
-    c3 = _mm256_mul_ps(_mm256_add_ps(c1, c3), xisqrt2);
+    s3 = _mm256_mul_ps(_mm256_sub_ps(c0_odd, c2_odd), odd_scale);
+    s5 = _mm256_mul_ps(_mm256_sub_ps(c3_odd, c1_odd), odd_scale);
 
-    s1 = _mm256_add_ps(c0, c3);
-    s7 = _mm256_sub_ps(c0, c3);
+    __m256 temp0 = _mm256_add_ps(c0_odd, c2_odd);
+    __m256 temp3 = _mm256_add_ps(c1_odd, c3_odd);
+    temp0 = _mm256_mul_ps(temp0, odd_scale);
+    temp3 = _mm256_mul_ps(temp3, odd_scale);
+
+    s1 = _mm256_add_ps(temp0, temp3);
+    s7 = _mm256_sub_ps(temp0, temp3);
 }
 
 void idct_8x8_1d_avx2(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4, __m256& s5, __m256& s6, __m256& s7)
 {
+    const __m256 sqrt2 = _mm256_set1_ps(std::sqrt(2.0f));
+    const __m256 two = _mm256_set1_ps(2.0f);
+    const __m256 xr1 = _mm256_set1_ps(r1);
+    const __m256 xr2 = _mm256_set1_ps(r2);
+    const __m256 xr3 = _mm256_set1_ps(r3);
+    const __m256 xr5 = _mm256_set1_ps(r5);
+    const __m256 xr6 = _mm256_set1_ps(r6);
+    const __m256 xr7 = _mm256_set1_ps(r7);
+
+    // Reverse scaling for even and odd parts
+    __m256 even_scale = _mm256_mul_ps(sqrt2, two);
+    __m256 odd_scale = two;
+
+    // Process even components
+    __m256 z0_even = _mm256_add_ps(s0, s4);
+    __m256 z1_even = _mm256_sub_ps(s0, s4);
+    __m256 z4_even = _mm256_mul_ps(_mm256_add_ps(s2, s6), xr6);
+
+    __m256 z2_even = _mm256_sub_ps(z4_even, _mm256_mul_ps(s6, _mm256_add_ps(xr2, xr6)));
+    __m256 z3_even = _mm256_fmadd_ps(s2, _mm256_sub_ps(xr2, xr6), z4_even);
+
+    __m256 a0 = _mm256_add_ps(z0_even, z3_even);
+    __m256 a3 = _mm256_sub_ps(z0_even, z3_even);
+    __m256 a1 = _mm256_add_ps(z1_even, z2_even);
+    __m256 a2 = _mm256_sub_ps(z1_even, z2_even);
+
+    a0 = _mm256_mul_ps(a0, even_scale);
+    a1 = _mm256_mul_ps(a1, even_scale);
+    a2 = _mm256_mul_ps(a2, even_scale);
+    a3 = _mm256_mul_ps(a3, even_scale);
+
+    // Process odd components
     __m256 z0 = _mm256_add_ps(s1, s7);
     __m256 z1 = _mm256_add_ps(s3, s5);
-    __m256 z4 = _mm256_mul_ps(_mm256_add_ps(z0, z1), _mm256_set1_ps(r3));
-    __m256 z2 = _mm256_fmadd_ps(_mm256_set1_ps(-r3 - r5), _mm256_add_ps(s3, s7), z4);
-    __m256 z3 = _mm256_fmadd_ps(_mm256_set1_ps(-r3 + r5), _mm256_add_ps(s1, s5), z4);
+    __m256 z4 = _mm256_mul_ps(_mm256_add_ps(z0, z1), xr3);
+
+    __m256 z2 = _mm256_fmsub_ps(_mm256_set1_ps(-r3 - r5), _mm256_add_ps(s3, s7), z4);
+    __m256 z3 = _mm256_fmsub_ps(_mm256_set1_ps(-r3 + r5), _mm256_add_ps(s1, s5), z4);
     z0 = _mm256_mul_ps(z0, _mm256_set1_ps(-r3 + r7));
     z1 = _mm256_mul_ps(z1, _mm256_set1_ps(-r3 - r1));
 
@@ -149,18 +245,12 @@ void idct_8x8_1d_avx2(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4
     __m256 b1 = _mm256_fmadd_ps(s3, _mm256_set1_ps(r1 + r3 + r5 - r7), _mm256_add_ps(z1, z2));
     __m256 b0 = _mm256_fmadd_ps(s1, _mm256_set1_ps(r1 + r3 - r5 - r7), _mm256_add_ps(z0, z3));
 
-    z0 = _mm256_add_ps(s0, s4);
-    z1 = _mm256_sub_ps(s0, s4);
-    z4 = _mm256_mul_ps(_mm256_add_ps(s2, s6), _mm256_set1_ps(r6));
+    b3 = _mm256_mul_ps(b3, odd_scale);
+    b2 = _mm256_mul_ps(b2, odd_scale);
+    b1 = _mm256_mul_ps(b1, odd_scale);
+    b0 = _mm256_mul_ps(b0, odd_scale);
 
-    z2 = _mm256_sub_ps(z4, _mm256_mul_ps(s6, _mm256_set1_ps(r2 + r6)));
-    z3 = _mm256_fmadd_ps(s2, _mm256_set1_ps(r2 - r6), z4);
-
-    __m256 a0 = _mm256_add_ps(z0, z3);
-    __m256 a3 = _mm256_sub_ps(z0, z3);
-    __m256 a1 = _mm256_add_ps(z1, z2);
-    __m256 a2 = _mm256_sub_ps(z1, z2);
-
+    // Combine even and odd parts
     s0 = _mm256_add_ps(a0, b0);
     s7 = _mm256_sub_ps(a0, b0);
     s1 = _mm256_add_ps(a1, b1);
@@ -169,15 +259,6 @@ void idct_8x8_1d_avx2(__m256& s0, __m256& s1, __m256& s2, __m256& s3, __m256& s4
     s5 = _mm256_sub_ps(a2, b2);
     s3 = _mm256_add_ps(a3, b3);
     s4 = _mm256_sub_ps(a3, b3);
-
-    // s0 = _mm256_max_ps(avx_p0, _mm256_min_ps(s0, avx_p255));
-    // s1 = _mm256_max_ps(avx_p0, _mm256_min_ps(s1, avx_p255));
-    // s2 = _mm256_max_ps(avx_p0, _mm256_min_ps(s2, avx_p255));
-    // s3 = _mm256_max_ps(avx_p0, _mm256_min_ps(s3, avx_p255));
-    // s4 = _mm256_max_ps(avx_p0, _mm256_min_ps(s4, avx_p255));
-    // s5 = _mm256_max_ps(avx_p0, _mm256_min_ps(s5, avx_p255));
-    // s6 = _mm256_max_ps(avx_p0, _mm256_min_ps(s7, avx_p255));
-    // s7 = _mm256_max_ps(avx_p0, _mm256_min_ps(s0, avx_p255));
 }
 
 void quantizeBlockAVX2(__m256 *p, float quantTable[8][8])
@@ -219,9 +300,6 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffY_R), _mm256_mul_ps(pRgb[idx + 3], coeffY_G)),
             _mm256_mul_ps(pRgb[idx + 5], coeffY_B));
 
-        pY[idx1] = _mm256_ceil_ps(pY[idx1]);
-        pY[idx1 + 1] = _mm256_ceil_ps(pY[idx1 + 1]);
-
         pY[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[idx1], avx_p255));
         pY[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[idx1 + 1], avx_p255));
         pY[idx1] =_mm256_sub_ps(pY[idx1], avx_p128);
@@ -231,14 +309,13 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
         pCb[idx1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx], coeffCb_R), _mm256_mul_ps(pRgb[idx + 2], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 4], coeffCb_B), offset));
-        if(i ==0)
-        {
-            printf("\n cb in the function");
-            rpp_mm256_print_ps(pCb[idx1]);
-        }
+
         pCb[idx1 + 1] = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCb_R), _mm256_mul_ps(pRgb[idx + 3], coeffCb_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCb_B), offset));
+
+        pCb[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[idx1], avx_p255));
+        pCb[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[idx1 + 1], avx_p255));
 
         // Compute Cr
         pCr[idx1] = _mm256_add_ps(
@@ -248,11 +325,8 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 1], coeffCr_R), _mm256_mul_ps(pRgb[idx + 3], coeffCr_G)),
             _mm256_add_ps(_mm256_mul_ps(pRgb[idx + 5], coeffCr_B), offset));
 
-        // pCr[idx1] = _mm256_ceil_ps(pCr[idx1]);
-        // pCr[idx1 + 1] = _mm256_ceil_ps(pCr[idx1 + 1]);
-
-        // pCr[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1], avx_p255));
-        // pCr[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1 + 1], avx_p255));
+        pCr[idx1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1], avx_p255));
+        pCr[idx1 + 1] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[idx1 + 1], avx_p255));
 
         __m256 cbTemp = _mm256_hadd_ps(pCb[idx1], pCb[idx1 + 1]);
         cbTemp = _mm256_permutevar8x32_ps(cbTemp, _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7));
@@ -265,11 +339,7 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
     {
         int idx = i * 2;
         pCb[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
-        pCr[i] = _mm256_mul_ps((_mm256_add_ps(pCb[idx], pCb[idx + 1])), _mm256_set1_ps(0.5));
-        pCb[i] = _mm256_ceil_ps(pCb[i]);
-        pCr[i] = _mm256_ceil_ps(pCr[i]);
-        pCb[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[i], avx_p255));
-        pCr[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[i], avx_p255));
+        pCr[i] = _mm256_mul_ps((_mm256_add_ps(pCr[idx], pCr[idx + 1])), _mm256_set1_ps(0.5));
         pCb[i] =_mm256_sub_ps(pCb[i], avx_p128);
         pCr[i] =_mm256_sub_ps(pCr[i], avx_p128);
     }
@@ -297,16 +367,13 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
         pCr[i] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[i], avx_p255));
         for(int j = 0; j < 4; j++)
         {
-            pY[i * 4 + j] = _mm256_add_ps(pY[i*4 + i], avx_p128);
+            pY[i * 4 + j] = _mm256_add_ps(pY[i*4 + j], avx_p128);
             pY[i * 4 + j] = _mm256_max_ps(avx_p0, _mm256_min_ps(pY[i * 4 + j], avx_p255));
         }
-        // Upsample Cb and Cr (average neighboring values)
-        __m256 cb_upsampled = _mm256_mul_ps(pCb[i], _mm256_set1_ps(2.0f));
-        __m256 cr_upsampled = _mm256_mul_ps(pCr[i], _mm256_set1_ps(2.0f));
 
         // Add offsets back to Cb and Cr
-        __m256 cb = _mm256_sub_ps(cb_upsampled, offset);
-        __m256 cr = _mm256_sub_ps(cr_upsampled, offset);
+        __m256 cb = _mm256_sub_ps(pCb[i], offset);
+        __m256 cr = _mm256_sub_ps(pCr[i], offset);
 
         for (int j = 0; j < 4; j++)
         {
@@ -318,8 +385,8 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
             // Calculate G = Y - 0.344136 * Cb - 0.714136 * Cr
             __m256 g = _mm256_fmadd_ps(coeffG_Cr, cr, _mm256_fmadd_ps(coeffG_Cb, cb, pY[i * 4 + j]));
 
-            printf("\n gval ");
-            rpp_mm256_print_ps(g);
+            // printf("\n gval ");
+            // rpp_mm256_print_ps(g);
 
             // Calculate B = Y + 1.772 * Cb
             __m256 b = _mm256_fmadd_ps(coeffB_Cb, cb, pY[i * 4 + j]);
@@ -337,13 +404,13 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
 }
 
 RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                             RpptDescPtr srcDescPtr,
-                                             Rpp8u *dstPtr,
-                                             RpptDescPtr dstDescPtr,
-                                             RpptROIPtr roiTensorPtrSrc,
-                                             RpptRoiType roiType,
-                                             RppLayoutParams layoutParams,
-                                             rpp::Handle& handle)
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp8u *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams layoutParams,
+                                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -379,7 +446,7 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(Rpp32u i = 0; i < 1; i += 16)
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
             {
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -390,7 +457,7 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < 1; vectorLoopCount += vectorIncrementPerChannel)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
                     __m256 pRgb[96];
@@ -404,21 +471,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
                     }
                     rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-                    if(vectorLoopCount == 0)
-                    {
-                        rpp_mm256_print_ps(pRgb[0]);
-                        rpp_mm256_print_ps(pRgb[1]);
-                        rpp_mm256_print_ps(pRgb[2]);
-                        rpp_mm256_print_ps(pRgb[3]);
-                        rpp_mm256_print_ps(pRgb[4]);
-                        rpp_mm256_print_ps(pRgb[5]);
-                        rpp_mm256_print_ps(pY[0]);
-                        rpp_mm256_print_ps(pY[1]);
-                        for(int cb = 0; cb < 8; cb++)
-                        {
-                            rpp_mm256_print_ps(pCb[cb]);
-                        }
-                    }
                     for(int y = 0; y < 4; y++)
                     {
                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
@@ -426,41 +478,31 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                         dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                         quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
-                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                         idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                         idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
                     }
 
                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
                     dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    if(vectorLoopCount == 0)
-                    {
-                        printf("\n after col DCT ");
-                        rpp_mm256_print_ps(pCb[0]);
-                    }
                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
                     dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    if(vectorLoopCount == 0)
-                    {
-                        printf("\n after row DCT ");
-                        rpp_mm256_print_ps(pCb[0]);
-                    }
-                    quantizeBlockAVX2(pCb, baseChromaTable);
-                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
                     idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
                     idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
 
                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     quantizeBlockAVX2(pCr, baseChromaTable);
-                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
                     idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
 
                     ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
                     for(int row = 0; row < 16; row++)
@@ -470,14 +512,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
                         rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-                    }
-                    if(vectorLoopCount == 0)
-                    {
-                        std::cout<<"\n after inv DCT ";
-                        rpp_mm256_print_ps(pCb[0]);
-                        rpp_mm256_print_ps(pRgb[0]);
-                        rpp_mm256_print_ps(pRgb[2]);
-                        rpp_mm256_print_ps(pRgb[4]);
                     }
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -493,6 +527,135 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowR += 16 * dstDescPtr->strides.hStride;
                 dstPtrRowG += 16 * dstDescPtr->strides.hStride;
                 dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
+                    for(int y = 0; y < 4; y++)
+                    {
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
+                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+                    }
+
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    quantizeBlockAVX2(pCr, baseChromaTable);
+                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+                    ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTemp += 48;
+                }
+#endif
+                    srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                    dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if((srcDescPtr->c == 1 ) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8u *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 8)
+            {
+                Rpp8u *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < dstDescPtr->w; vectorLoopCount += 8)
+                {
+#if __AVX2__
+                    __m256 p[8];
+                    for(int row = 0; row < 8; row++)
+                    {
+                        Rpp8u *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrTempRow, &p[row]);                                 // simd loads
+                    }
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    dct_fwd_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    dct_fwd_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+
+                    if(i == 0)
+                    {
+                        std::cout<<"after fwd DCT";
+                        rpp_mm256_print_ps(p[0]);
+                    }
+
+                    quantizeBlockAVX2(p, baseLumaTable);
+                    idct_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    idct_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+
+                    for(int row = 0; row < 8; row++)
+                    {
+                        Rpp8u *dstPtrTempRow;
+                        dstPtrTempRow = dstPtrTemp + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store8_f32pln1_to_u8pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
+                    }
+#endif
+                    dstPtrTemp += 8;
+                    srcPtrTemp += 8;
+                }
+                srcPtrRow += 8 * srcDescPtr->strides.hStride;
+                dstPtrRow += 8 * dstDescPtr->strides.hStride;
             }
         }
     }
