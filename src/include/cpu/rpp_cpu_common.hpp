@@ -4214,9 +4214,9 @@ inline void compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
         {
             // Load
-            h1 =  _mm_loadu_si128((__m128i *)srcPtrTempH);
-            h2 =  _mm_loadu_si128((__m128i *)srcPtrTempS);
-            h3 =  _mm_loadu_si128((__m128i *)srcPtrTempV);
+            h1 =  _mm_loadu_ps((float*)srcPtrTempH);
+            h2 =  _mm_loadu_ps((float*)srcPtrTempS);
+            h3 =  _mm_loadu_ps((float*)srcPtrTempV);
 
             h1 = _mm_div_ps(h1, pDiv);
 
@@ -5905,7 +5905,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                         for(int k = 0; k < filter.size; k += filterKernelStride)
                         {
                             // Generate mask to determine the negative indices in the iteration
-                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128 pNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
                             __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels], pCoeffs[numOutPixels];
                             Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
@@ -5916,7 +5916,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
 
                             for(int l = 0; l < numOutPixels; l++)
                             {
-                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                pNegativeIndexMask[l] = _mm_castsi128_ps(_mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pxDstLocInit), xmm_px0));    // Generate mask to determine the negative indices in the iteration
                                 Rpp32s srcx = index[x + l] + k;
 
                                 // Load filterKernelStride(4) consecutive pixels
@@ -5926,9 +5926,9 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));        // Load coefficients
 
                                 // If negative index is present replace the input pixel value with first value in the row
-                                pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pxNegativeIndexMask[l]);
-                                pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pxNegativeIndexMask[l]);
-                                pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pxNegativeIndexMask[l]);
+                                pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pNegativeIndexMask[l]);
+                                pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pNegativeIndexMask[l]);
+                                pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pNegativeIndexMask[l]);
                             }
 
                             // Perform transpose operation to arrange input pixels from different output locations in each vector
@@ -6114,7 +6114,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                         pxIdx[3] = _mm_set1_epi32(index[x + 3]);
                         for(int k = 0; k < filter.size; k += filterKernelStride)
                         {
-                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128 pNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
                             __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
                             Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
@@ -6122,10 +6122,10 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                             set_zeros(pCoeffs, numOutPixels);
                             for(int l = 0; l < numOutPixels; l++)
                             {
-                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                pNegativeIndexMask[l] = _mm_castsi128_ps(_mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pxDstLocInit), xmm_px0));    // Generate mask to determine the negative indices in the iteration
                                 rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[index[x + l] + k], &pInput[l]);   // Load filterKernelStride(4) consecutive pixels
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));                 // Load coefficients
-                                pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pxNegativeIndexMask[l]);        // If negative index is present replace the pixel value with first value in the row
+                                pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pNegativeIndexMask[l]);         // If negative index is present replace the pixel value with first value in the row
                             }
                             _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
                             for (int l = 0; l < kernelAdd; l++)

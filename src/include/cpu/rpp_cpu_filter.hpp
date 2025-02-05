@@ -481,9 +481,9 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
         rpp_load24_u8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
     else
     {
-        pRow[6] = avx_px0;
-        pRow[7] = avx_px0;
-        pRow[8] = avx_px0;
+        pRow[6] = avx_p0;
+        pRow[7] = avx_p0;
+        pRow[8] = avx_p0;
     }
 }
 
@@ -630,9 +630,9 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
         rpp_load24_i8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
     else
     {
-        pRow[6] = avx_px0;
-        pRow[7] = avx_px0;
-        pRow[8] = avx_px0;
+        pRow[6] = avx_p0;
+        pRow[7] = avx_p0;
+        pRow[8] = avx_p0;
     }
 }
 
@@ -779,9 +779,9 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
         rpp_load24_f32_to_f32_avx(srcPtrTemp[2], &pRow[6]);
     else
     {
-        pRow[6] = avx_px0;
-        pRow[7] = avx_px0;
-        pRow[8] = avx_px0;
+        pRow[6] = avx_p0;
+        pRow[7] = avx_p0;
+        pRow[8] = avx_p0;
     }
 }
 
@@ -931,9 +931,9 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
         rpp_load24_f16_to_f32_avx(srcPtrTemp[2], &pRow[6]);
     else
     {
-        pRow[6] = avx_px0;
-        pRow[7] = avx_px0;
-        pRow[8] = avx_px0;
+        pRow[6] = avx_p0;
+        pRow[7] = avx_p0;
+        pRow[8] = avx_p0;
     }
 }
 
@@ -1082,7 +1082,7 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pxRow[2] =  _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
     else
-        pxRow[2] = avx_p0;
+        pxRow[2] = avx_px0;
 }
 
 // load function for 5x5 kernel size
@@ -1095,7 +1095,7 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 5; k++)
-        pxRow[k] = avx_p0;
+        pxRow[k] = avx_px0;
 }
 
 // load function for 7x7 kernel size
@@ -1109,7 +1109,7 @@ inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 4; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 7; k++)
-        pxRow[k] = avx_p0;
+        pxRow[k] = avx_px0;
 }
 
 // load function for 9x9 kernel size
@@ -1124,7 +1124,7 @@ inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 5; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 9; k++)
-        pxRow[k] = avx_p0;
+        pxRow[k] = avx_px0;
 }
 
 // -------------------- Filter load functions for F32 bitdepth --------------------
@@ -1138,7 +1138,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_loadu_ps(srcPtrTemp[2]);
     else
-        pRow[2] = avx_px0;
+        pRow[2] = avx_p0;
 }
 
 // load function for 5x5 kernel size
@@ -1194,7 +1194,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2]))));
     else
-        pRow[2] = avx_px0;
+        pRow[2] = avx_p0;
 }
 
 // load function for 5x5 kernel size
