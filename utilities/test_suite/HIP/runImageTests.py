@@ -285,8 +285,10 @@ if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PLN1")
     os.makedirs(dstPath + "/Tensor_PLN3")
 
+supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
+
 if(testType == 0):
-    noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
+    noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
     if noCaseSupported:
         print("case numbers %s are not supported" % caseList)
     for case in caseList:
@@ -319,7 +321,7 @@ if(testType == 0):
         create_layout_directories(dstPath, layoutDict)
 else:
     if (testType == 1 and profilingOption == "NO"):
-        noCaseSupported = all(case not in supportedCaseList for case in caseList)
+        noCaseSupported = all(case not in imageAugmentationMap for case in caseList)
         if noCaseSupported:
             print("case numbers %s are not supported" % caseList)
         for case in caseList:
@@ -342,7 +344,7 @@ else:
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
 
-        noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
+        noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
         if noCaseSupported:
             print("case numbers %s are not supported" % caseList)
         for case in caseList:
@@ -499,7 +501,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_image_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(imageAugmentationMap.keys()), nonQACaseList, "Tensor_image_hip")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
 
 if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_hip  ----------------------------------\n")

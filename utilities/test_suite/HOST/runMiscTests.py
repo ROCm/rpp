@@ -192,6 +192,7 @@ for case in caseList:
 
 # print the results of qa tests
 nonQACaseList = []
+supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HOST" in values]
 supportedCases = 0
 for num in caseList:
     if int(num) in miscAugmentationMap:
@@ -202,7 +203,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_misc_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(miscAugmentationMap.keys()), nonQACaseList, "Tensor_misc_host")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_host")
 
 # Performance tests
 if (testType == 1):

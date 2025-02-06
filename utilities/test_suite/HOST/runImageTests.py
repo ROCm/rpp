@@ -267,8 +267,9 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
+supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HOST" in values]
 if testType == 0:
-    noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
+    noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
@@ -332,7 +333,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(imageAugmentationMap.keys()), nonQACaseList, "Tensor_host")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_host")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled
