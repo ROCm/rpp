@@ -29,8 +29,8 @@ SOFTWARE.
 #include <algorithm>
 #include <typeinfo>
 #include <cstring>
-#include <rppdefs.h>
 #include <omp.h>
+#include "rppdefs.h"
 #include "rpp/handle.hpp"
 #include "rpp_cpu_simd_load_store.hpp"
 

@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef RPP_RNG_SEED_STREAM_H
 #define RPP_RNG_SEED_STREAM_H
 
-#include <rppdefs.h>
+#include "rppdefs.h"
 #define SEED_STREAM_MAX_SIZE 4050
 
 alignas(64) inline Rpp32u rngSeedStream4050[SEED_STREAM_MAX_SIZE] = {

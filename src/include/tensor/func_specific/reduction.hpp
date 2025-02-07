@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef RPP_REDUCTION_H
 #define RPP_REDUCTION_H
 
-#include <rppdefs.h>
+#include "rppdefs.h"
 
 #define REDUCTION_MAX_WIDTH 3840
 #define REDUCTION_MAX_HEIGHT 2160

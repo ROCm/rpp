@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <typeinfo>
 #include <cstring>
-#include <rppdefs.h>
 #include <omp.h>
 #include <half/half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
+#include "rppdefs.h"
 #include "rpp_cpu_simd_load_store.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
