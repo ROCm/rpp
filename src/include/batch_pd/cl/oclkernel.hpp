@@ -37,7 +37,7 @@ SOFTWARE.
 #include <utility>
 #include <vector>
 
-#include "rpp/clhelper.hpp"
+#include "clhelper.hpp"
 #include "rpp/each_args.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/op_kernel_args.hpp"

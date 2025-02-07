@@ -117,7 +117,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
-    file(GLOB MOD_CL_CPP "cl/*.cpp" )
+    file(GLOB MOD_CL_CPP "batch_pd/cl/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
@@ -126,7 +126,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
     add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
-    add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/cl/kernel/")
+    add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/batch_pd/cl/kernel/")
 
     # Add OpenCL specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
