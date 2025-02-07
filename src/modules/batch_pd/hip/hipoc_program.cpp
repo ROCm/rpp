@@ -27,10 +27,10 @@ SOFTWARE.
 #include <unistd.h>
 #include <hip/hiprtc.h>
 
+#include "hipoc_program.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/gcn_asm_utils.hpp"
 #include "rpp/hip_build_utils.hpp"
-#include "rpp/hipoc_program.hpp"
 #include "rpp/kernel.hpp"
 #include "rpp/kernel_warnings.hpp"
 #include "rpp/stringutils.hpp"

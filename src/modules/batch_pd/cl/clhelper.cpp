@@ -28,14 +28,14 @@ SOFTWARE.
 #include <string>
 #include <vector>
 
-#include "rpp/clhelper.hpp"
+#include "clhelper.hpp"
+#include "ocldeviceinfo.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/gcn_asm_utils.hpp"
 #include "rpp/hip_build_utils.hpp"
 #include "rpp/kernel.hpp"
 #include "rpp/kernel_warnings.hpp"
 #include "rpp/stringutils.hpp"
-#include "rpp/ocldeviceinfo.hpp"
 #include "rpp/tmp_dir.hpp"
 #include "rpp/write_file.hpp"
 

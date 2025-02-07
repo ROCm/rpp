@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <fstream>
 
-#include "rpp/temp_file.hpp"
+#include "temp_file.hpp"
 #include "rpp/errors.hpp"
 
 namespace rpp {

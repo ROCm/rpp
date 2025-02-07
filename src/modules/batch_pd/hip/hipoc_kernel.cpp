@@ -27,10 +27,10 @@ SOFTWARE.
 #include <hip/hip_ext.h>
 #include <hip/hip_runtime.h>
 
+#include "hipoc_kernel.hpp"
 #include "rpp/errors.hpp"
-#include "rpp/hipoc_kernel.hpp"
 #if defined(STATIC)
-#include "rpp/hip_kernels.hpp"
+#include "hip_kernels.hpp"
 #endif
 
 namespace rpp {

@@ -28,17 +28,17 @@ SOFTWARE.
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <rpp/env.hpp>
-#include <rpp/errors.hpp>
-#include <rpp/gcn_asm_utils.hpp>
-#include <rpp/manage_ptr.hpp>
-#include <rpp/write_file.hpp>
-#include <rpp/kernel.hpp>
-#include <rpp/logger.hpp>
 #include <sstream>
+#include "rpp/env.hpp"
+#include "rpp/errors.hpp"
+#include "rpp/gcn_asm_utils.hpp"
+#include "rpp/manage_ptr.hpp"
+#include "rpp/write_file.hpp"
+#include "rpp/kernel.hpp"
+#include "rpp/logger.hpp"
 
 #ifdef __linux__
-#include <rpp/temp_file.hpp>
+#include "temp_file.hpp"
 
 #include <paths.h>
 #include <sys/stat.h>

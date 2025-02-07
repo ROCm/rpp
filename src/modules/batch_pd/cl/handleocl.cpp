@@ -28,14 +28,14 @@ SOFTWARE.
 #endif
 
 #include <thread>
+#include "ocldeviceinfo.hpp"
+#include "load_file.hpp"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 #include "rpp/kernel_cache.hpp"
 #include "rpp/binary_cache.hpp"
-#include "rpp/ocldeviceinfo.hpp"
-#include "rpp/load_file.hpp"
 
 namespace rpp {
 

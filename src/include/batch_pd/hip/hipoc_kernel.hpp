@@ -31,7 +31,7 @@ SOFTWARE.
 #include <memory.h>
 
 #include "rpp/errors.hpp"
-#include "rpp/hipoc_program.hpp"
+#include "hipoc_program.hpp"
 #include "rpp/stringutils.hpp"
 #include "rpp/op_kernel_args.hpp"
 

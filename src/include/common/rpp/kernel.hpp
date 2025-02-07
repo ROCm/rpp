@@ -30,7 +30,7 @@ SOFTWARE.
 
 #ifdef HIP_COMPILE
 
-#include "rpp/hipoc_kernel.hpp"
+#include "hipoc_kernel.hpp"
 namespace rpp {
 std::string GetKernelSrc(std::string name);
 std::string GetKernelInc(std::string key);
@@ -42,8 +42,8 @@ using Program      = HIPOCProgram;
 
 #elif defined(OCL_COMPILE)
 
-#include "rpp/clhelper.hpp"
-#include "rpp/oclkernel.hpp"
+#include "clhelper.hpp"
+#include "oclkernel.hpp"
 namespace rpp {
 std::string GetKernelSrc(std::string name);
 std::string GetKernelInc(std::string key);
