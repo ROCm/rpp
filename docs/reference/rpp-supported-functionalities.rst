@@ -1,7 +1,15 @@
-Supported functionalities and variants
-==========================================
+.. meta::
+  :description: ROCm Performance Primitives (RPP) supported functionalities
+  :keywords: RPP, ROCm, Performance Primitives, documentation, support, functionalities, audio, image
+
+********************************************************************
+ROCm Performance Primitives supported functionalities and variants
+********************************************************************
 
 The following tables show the CPU and GPU support for ROCm Performance Primitives (RPP) functionalities and variants. 
+
+CPU support is also referred to as HOST support.
+
 
 Image augmentations
 -----------------------------------------------------------------------------------------------
@@ -181,3 +189,18 @@ Computer vision
   "remap", "✅", "❌"
   "tensor matrix multiply", "✅", "✅"
   "tensor transpose", "✅", "✅"
+
+Audio
+-----------------------------------------------------------------------------------------------
+
+.. csv-table::
+  :widths: 7, 3, 3
+  :header: "Type", "CPU", "GPU"
+
+  "non Silent Region Detection", "✅", "✅"
+  "to Decibels", "✅", "✅"  
+  "downmixing", "✅", "✅"
+  "pre-emphasis Filter", "✅", "✅"
+  "resample", "✅", "✅"
+  "mel Filter Bank", "✅", "✅"
+  "spectrogram", "✅", "✅"
