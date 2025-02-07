@@ -443,6 +443,17 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 
 Handle::~Handle()                 = default;
 
+void Handle::SetStream(rppAcceleratorQueue_t streamID) const
+{
+    if(streamID == nullptr)
+    {
+        RPP_THROW("Error setting stream to nullptr");
+    }
+
+    clRetainCommandQueue(streamID);
+    impl->queue = HandleImpl::AqPtr{streamID};
+}
+
 void Handle::rpp_destroy_object_gpu()
 {
     this->rpp_destroy_object_host();

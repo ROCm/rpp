@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     RppBackend backend = RppBackend::RPP_HOST_BACKEND;
-    rppCreate(&handle, batchSize, &numThreads, backend);
+    rppCreate(&handle, batchSize, numThreads, nullptr, backend);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     bool externalMeanStd = true;

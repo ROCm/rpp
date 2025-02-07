@@ -325,7 +325,7 @@ int main(int argc, char **argv)
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     RppBackend backend = RppBackend::RPP_HIP_BACKEND;
-    rppCreate(&handle, batchSize, stream, backend);
+    rppCreate(&handle, batchSize, 0, stream, backend);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;

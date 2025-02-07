@@ -262,6 +262,11 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 
 Handle::~Handle() {}
 
+void Handle::SetStream(rppAcceleratorQueue_t streamID) const
+{
+    this->impl->stream = HandleImpl::reference_stream(streamID);
+}
+
 void Handle::rpp_destroy_object_gpu()
 {
     this->rpp_destroy_object_host();

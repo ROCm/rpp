@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
     RppBackend backend = RppBackend::RPP_HOST_BACKEND;
-    rppCreate(&handle, 2, 0, backend);
+    rppCreate(&handle, 2, 0, nullptr, backend);
 
     clock_t start, end;
     double start_omp, end_omp;
