@@ -118,7 +118,8 @@ if( "${BACKEND}" STREQUAL "HIP")
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
     file(GLOB MOD_CL_CPP "batch_pd/cl/*.cpp" )
-    list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
+    file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
+    list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
     set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
