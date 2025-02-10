@@ -345,9 +345,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32(atan(srcPtr1Temp[0] / srcPtr2Temp[0]) * multiplier);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32(atan(srcPtr1Temp[1] / srcPtr2Temp[1]) * multiplier);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32(atan(srcPtr1Temp[2] / srcPtr2Temp[2]) * multiplier);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(atan2f(srcPtr1Temp[0] , srcPtr2Temp[0]) * multiplier);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(atan2f(srcPtr1Temp[1] , srcPtr2Temp[1]) * multiplier);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(atan2f(srcPtr1Temp[2] , srcPtr2Temp[2]) * multiplier);
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -408,9 +408,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32(atan(*srcPtr1TempR / *srcPtr2TempR) * multiplier);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32(atan(*srcPtr1TempG / *srcPtr2TempG) * multiplier);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32(atan(*srcPtr1TempB / *srcPtr2TempB) * multiplier);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32(atan2f(*srcPtr1TempR , *srcPtr2TempR) * multiplier);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32(atan2f(*srcPtr1TempG , *srcPtr2TempG) * multiplier);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32(atan2f(*srcPtr1TempB , *srcPtr2TempB) * multiplier);
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -470,7 +470,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = RPPPIXELCHECKF32(atan(*srcPtr1Temp / *srcPtr2Temp) * multiplier);
+                        *dstPtrTemp++ = RPPPIXELCHECKF32(atan2f(*srcPtr1Temp , *srcPtr2Temp) * multiplier);
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;

@@ -2742,6 +2742,8 @@ static inline __m256 atan2_ps(__m256 y, __m256 x)
     __m256 y_eq_0 = _mm256_cmp_ps(y, avx_p0, _CMP_EQ_OQ);
     __m256 x_lt_0 = _mm256_cmp_ps(x, avx_p0, _CMP_LT_OS);
     __m256 y_lt_0 = _mm256_cmp_ps(y, avx_p0, _CMP_LT_OS);
+    x_eq_0 = _mm256_blendv_ps(avx_p1, x_eq_0, _mm256_cmp_ps(x_eq_0, x_eq_0, _CMP_ORD_Q));
+    y_eq_0 = _mm256_blendv_ps(avx_p1, y_eq_0, _mm256_cmp_ps(y_eq_0, y_eq_0, _CMP_ORD_Q));
 
     // Computes a zero mask, set if either both x=y=0 or y=0&x>0
     __m256 zero_mask = _mm256_and_ps(x_eq_0, y_eq_0);
@@ -2772,6 +2774,7 @@ static inline __m256 atan2_ps(__m256 y, __m256 x)
     __m256 arg = _mm256_div_ps(y, x);
     __m256 atan_result = atan_ps(arg);
     atan_result = _mm256_add_ps(atan_result, offset);
+    atan_result = _mm256_blendv_ps(avx_p0, atan_result, _mm256_cmp_ps(atan_result, atan_result, _CMP_ORD_Q));
 
     // Select between zero_result, pio2_result and atan_result
     __m256 result = _mm256_andnot_ps(zero_mask, pio2_result);
