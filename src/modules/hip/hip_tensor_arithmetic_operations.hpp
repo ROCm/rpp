@@ -32,6 +32,6 @@ SOFTWARE.
 #include "kernel/magnitude.hpp"
 #include "kernel/log.hpp"
 #include "kernel/log1p.hpp"
-#include "kernel/jpeg_smem.hpp"
+#include "kernel/jpeg_compression_distorton.hpp"
 
 #endif // HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP

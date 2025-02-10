@@ -1566,7 +1566,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
     srcPtrR_f8 = (d_float8 *)srcPtrs_f8[0];
     srcPtrG_f8 = (d_float8 *)srcPtrs_f8[1];
     srcPtrB_f8 = (d_float8 *)srcPtrs_f8[2];
-//DEBUG
+
     const float scale = 1.0f ;
     
     srcPtrR_f8->f4[0] = make_float4(src_uc24.uc1[ 0] * scale, src_uc24.uc1[ 3] * scale, 
@@ -1585,40 +1585,43 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
                                    src_uc24.uc1[20] * scale, src_uc24.uc1[23] * scale);    // write B04-B07
 }
 // For signed char implementation
-__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f8)
-{
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f24) {
+    d_schar24_s *src_sc24_s = (d_schar24_s *)srcPtr;
 
+    d_float8 *srcPtrR_f8, *srcPtrG_f8, *srcPtrB_f8;
+    srcPtrR_f8 = (d_float8 *)srcPtrs_f24[0];
+    srcPtrG_f8 = (d_float8 *)srcPtrs_f24[1];
+    srcPtrB_f8 = (d_float8 *)srcPtrs_f24[2];
+    
+    srcPtrR_f8->f4[0] = make_float4(src_sc24_s->sc8[0].sc1[0], src_sc24_s->sc8[0].sc1[3], src_sc24_s->sc8[0].sc1[6], src_sc24_s->sc8[1].sc1[1]);
+    srcPtrR_f8->f4[1] = make_float4(src_sc24_s->sc8[1].sc1[4], src_sc24_s->sc8[1].sc1[7], src_sc24_s->sc8[2].sc1[2], src_sc24_s->sc8[2].sc1[5]);
+    srcPtrG_f8->f4[0] = make_float4(src_sc24_s->sc8[0].sc1[1], src_sc24_s->sc8[0].sc1[4], src_sc24_s->sc8[0].sc1[7], src_sc24_s->sc8[1].sc1[2]);
+    srcPtrG_f8->f4[1] = make_float4(src_sc24_s->sc8[1].sc1[5], src_sc24_s->sc8[2].sc1[0], src_sc24_s->sc8[2].sc1[3], src_sc24_s->sc8[2].sc1[6]);
+    srcPtrB_f8->f4[0] = make_float4(src_sc24_s->sc8[0].sc1[2], src_sc24_s->sc8[0].sc1[5], src_sc24_s->sc8[1].sc1[0], src_sc24_s->sc8[1].sc1[3]);
+    srcPtrB_f8->f4[1] = make_float4(src_sc24_s->sc8[1].sc1[6], src_sc24_s->sc8[2].sc1[1], src_sc24_s->sc8[2].sc1[4], src_sc24_s->sc8[2].sc1[7]);
 }
 
 // For half precision implementation
-__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f8)
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f24)
 {
-    d_half24 src_h24 = *(d_half24 *)srcPtr;
-    d_float24 src_f24;
-    
-    // Convert half to float for each channel
-    float2 src1_f2, src2_f2;
-    
-    // R channel conversion
-    src1_f2 = __half22float2(src_h24.h2[0]);
-    src2_f2 = __half22float2(src_h24.h2[1]);
-    src_f24.f4[0] = make_float4(src1_f2.x, src1_f2.y, src2_f2.x, src2_f2.y);
-    
-    // G channel conversion
-    src1_f2 = __half22float2(src_h24.h2[2]);
-    src2_f2 = __half22float2(src_h24.h2[3]);
-    src_f24.f4[1] = make_float4(src1_f2.x, src1_f2.y, src2_f2.x, src2_f2.y);
-    
-    // B channel conversion
-    src1_f2 = __half22float2(src_h24.h2[4]);
-    src2_f2 = __half22float2(src_h24.h2[5]);
-    src_f24.f4[2] = make_float4(src1_f2.x, src1_f2.y, src2_f2.x, src2_f2.y);
-    
-    srcPtrs_f8[0] = (float *)&src_f24.f4[0];
-    srcPtrs_f8[1] = (float *)&src_f24.f4[1];
-    srcPtrs_f8[2] = (float *)&src_f24.f4[2];
-}
+    // Load packed half-precision data
+    d_half24 *src_h24 = (d_half24 *)srcPtr;  // Fixed: Added pointer declaration
 
+    d_float8 *srcPtrR_f8;  
+    d_float8 *srcPtrG_f8;
+    d_float8 *srcPtrB_f8;
+
+    srcPtrR_f8 = (d_float8 *)srcPtrs_f24[0];
+    srcPtrG_f8 = (d_float8 *)srcPtrs_f24[1];
+    srcPtrB_f8 = (d_float8 *)srcPtrs_f24[2];
+
+    srcPtrR_f8->f4[0] = make_float4(__half2float(src_h24->h1[0]), __half2float(src_h24->h1[3]),__half2float(src_h24->h1[6]),__half2float(src_h24->h1[9]));    // R00-R03
+    srcPtrR_f8->f4[1] = make_float4(__half2float(src_h24->h1[12]),__half2float(src_h24->h1[15]),__half2float(src_h24->h1[18]),__half2float(src_h24->h1[21]));    // R04-R07
+    srcPtrG_f8->f4[0] = make_float4(__half2float(src_h24->h1[1]),__half2float(src_h24->h1[4]),__half2float(src_h24->h1[7]),__half2float(src_h24->h1[10]));    // G00-G03
+    srcPtrG_f8->f4[1] = make_float4(__half2float(src_h24->h1[13]),__half2float(src_h24->h1[16]),__half2float(src_h24->h1[19]),__half2float(src_h24->h1[22]));    // G04-G07
+    srcPtrB_f8->f4[0] = make_float4(__half2float(src_h24->h1[2]),__half2float(src_h24->h1[5]),__half2float(src_h24->h1[8]),__half2float(src_h24->h1[11]));    // B00-B03
+    srcPtrB_f8->f4[1] = make_float4(__half2float(src_h24->h1[14]),__half2float(src_h24->h1[17]),__half2float(src_h24->h1[20]),__half2float(src_h24->h1[23]));    // B04-B07
+}
 // To store from the shared memory
 
 // I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
