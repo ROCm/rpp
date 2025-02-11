@@ -44,6 +44,7 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr,
                                rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -758,6 +759,7 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
     Rpp32u paramIndex = 0;
     copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_float(betaTensor, rpp::deref(rppHandle), paramIndex++);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

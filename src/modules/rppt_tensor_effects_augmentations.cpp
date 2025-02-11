@@ -583,6 +583,8 @@ RppStatus rppt_water_host(RppPtr_t srcPtr,
                           rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         water_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -667,6 +669,7 @@ RppStatus rppt_vignette_host(RppPtr_t srcPtr,
                              rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1927,6 +1930,8 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
+
     Rpp32u paramIndex = 0;
     copy_param_float(amplitudeXTensor, rpp::deref(rppHandle), paramIndex++);
     copy_param_float(amplitudeYTensor, rpp::deref(rppHandle), paramIndex++);
@@ -1994,6 +1999,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

@@ -990,6 +990,7 @@ RppStatus rppt_phase_host(RppPtr_t srcPtr1,
                           rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -2268,6 +2269,7 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1,
                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

@@ -43,6 +43,7 @@ RppStatus rppt_box_filter_host(RppPtr_t srcPtr,
                                rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -186,6 +187,7 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
                               rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
