@@ -150,7 +150,8 @@ int main(int argc, char * argv[])
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfFiles, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, noOfFiles, numThreads, nullptr, backend);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
@@ -525,7 +526,7 @@ int main(int argc, char * argv[])
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     // Free memory
     free(niftiDataArray);
