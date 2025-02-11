@@ -21,6 +21,16 @@ __device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *sr
         dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
         dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
     }
+    else if constexpr (std::is_same<T, float>::value)  // For Float32
+    {
+        dst_f8->f4[0] = rpp_hip_pixel_check_0to1(dst_f8->f4[0]); // Clamp to [0,1]
+        dst_f8->f4[1] = rpp_hip_pixel_check_0to1(dst_f8->f4[1]); // Clamp to [0,1]
+    }
+    else if constexpr (std::is_same<T, half>::value)  // For Float16
+    {
+        dst_f8->f4[0] = rpp_hip_pixel_check_0to1(dst_f8->f4[0]); // Clamp to [0,1]
+        dst_f8->f4[1] = rpp_hip_pixel_check_0to1(dst_f8->f4[1]); // Clamp to [0,1]
+    }
 }
 
 template <typename T>

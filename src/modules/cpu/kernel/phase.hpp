@@ -331,9 +331,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
+                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
+                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul));    // phase computation
+                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul));    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
@@ -392,9 +392,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
+                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
+                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul));    // phase computation
+                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul));    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
@@ -460,7 +460,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
+                        p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
@@ -568,9 +568,9 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp_ps, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp_ps, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
+                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
+                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul));    // phase computation
+                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul));    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
@@ -642,9 +642,9 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1Temp_ps, srcPtr1Temp_ps + 8, srcPtr1Temp_ps + 16, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2Temp_ps, srcPtr2Temp_ps + 8, srcPtr2Temp_ps + 16, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
+                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
+                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul));    // phase computation
+                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul));    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
@@ -718,7 +718,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp_ps, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp_ps, p2);    // simd loads
-                        p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
+                        p1[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul));    // phase computation
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;

@@ -2607,9 +2607,9 @@ inline void compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams)
 
 inline void compute_brightness_24_host(__m256 *p, __m256 *pBrightnessParams)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[1] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[2] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams)
@@ -2638,14 +2638,14 @@ inline void compute_brightness_16_host(__m128 *p, __m128 *pBrightnessParams)
 
 inline void compute_brightness_12_host(__m128 *p, __m128 *pBrightnessParams)
 {
-    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[1] = _mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[2] = _mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_sse(_mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[1] = rpp_pixel_check_0to1_sse(_mm_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[2] = rpp_pixel_check_0to1_sse(_mm_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_brightness_8_host(__m256 *p, __m256 *pBrightnessParams)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
@@ -2656,7 +2656,7 @@ inline void compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
 
 inline void compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
 {
-    p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_sse(_mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
@@ -6280,9 +6280,9 @@ inline void compute_vignette_24_host(__m256 *p, __m256 &pMultiplier, __m256 &pIL
 {
     __m256 pGaussianValue;
     pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
-    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
-    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
-    p[2] = _mm256_mul_ps(p[2], pGaussianValue);    // vignette adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(p[0], pGaussianValue));    // vignette adjustment
+    p[1] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(p[1], pGaussianValue));    // vignette adjustment
+    p[2] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(p[2], pGaussianValue));    // vignette adjustment
     pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
 }
 
@@ -6301,7 +6301,7 @@ inline void compute_vignette_8_host(__m256 *p, __m256 &pMultiplier, __m256 &pILo
 {
     __m256 pGaussianValue;
     pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
-    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_mul_ps(p[0], pGaussianValue));    // vignette adjustment
     pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
 }
 
@@ -6693,7 +6693,7 @@ inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s 
 
 inline void compute_threshold_8_host(__m256 *p, __m256 *pThresholdParams)
 {
-    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ))));
 }
 
 inline void compute_threshold_16_host(__m256 *p, __m256 *pThresholdParams)
@@ -6708,7 +6708,7 @@ inline void compute_threshold_24_host(__m256 *p, __m256 *pThresholdParams)
     pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ));
     pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[3],_CMP_LE_OQ));
     pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[2], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[2], pThresholdParams[5],_CMP_LE_OQ));
-    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2])));
     p[1] = p[0];
     p[2] = p[0];
 }
