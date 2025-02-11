@@ -4,24 +4,9 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
-* [Turbo JPEG](https://libjpeg-turbo.org/)
-  * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2)
+* Turbo JPEG
   ```shell
-  sudo apt-get install nasm
-  sudo apt-get install wget
-  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  cd libjpeg-turbo
-  mkdir build
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=RELEASE  \
-        -DENABLE_STATIC=FALSE       \
-        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
-        -DWITH_JPEG8=TRUE           \
-        ..
-  make -j$nproc
-  sudo make install
+  sudo apt-get install libturbojpeg0-dev
   ```
 
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
