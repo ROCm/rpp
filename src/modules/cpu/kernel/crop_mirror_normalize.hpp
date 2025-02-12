@@ -935,12 +935,9 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        Rpp32f srcPtrTemp_ps[24];
-                        for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);     //simd loads
+                        rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);     //simd loads
                         compute_cmn_24_host(p, pCMNParams);    // cmn adjustment
 
                         rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
@@ -990,12 +987,8 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                     {
                         srcPtrTemp -= vectorIncrement;
 
-                        Rpp32f srcPtrTemp_ps[24];
-                        for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_mirror_avx, srcPtrTemp_ps, p);      // simd loads
+                        rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_mirror_avx, srcPtrTemp, p);      // simd loads
                         compute_cmn_24_host(p, pCMNParams);    // cmn adjustment
 
                         rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
@@ -1047,16 +1040,9 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
-                            srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                            srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                            srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
-                        }
 
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
+                        rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p, pCMNParams);    // cmn adjustment
 
                         rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
@@ -1108,16 +1094,8 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTempG -= vectorIncrementPerChannel;
                         srcPtrTempB -= vectorIncrementPerChannel;
 
-                        Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
-                            srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                            srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                            srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
-                        }
-
                         __m256 p[3];
-                        rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_mirror_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
+                        rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_mirror_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                         compute_cmn_24_host(p, pCMNParams);    // cmn adjustment
 
                         rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
