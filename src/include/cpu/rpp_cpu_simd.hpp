@@ -1656,7 +1656,7 @@ inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_permutevar8x32_ps(p[2], pxMask); /* shuffle as B08-B01 */
 }
 
-inline void rpp_load24_f16pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
+inline void rpp_load24_f16pkd3_to_f32pln3_mirror_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
@@ -1734,7 +1734,7 @@ inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *sr
     p[2] = _mm256_permutevar8x32_ps(p[2], pxMask); /* shuffle as B08-B01 */
 }
 
-inline void rpp_load24_f16pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
+inline void rpp_load24_f16pln3_to_f32pln3_mirror_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
 {
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
 

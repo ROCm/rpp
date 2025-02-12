@@ -540,8 +540,8 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                     compute_brightness_24_host(p, pBrightnessParams);  // brightness adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
-                    Rpp32f srcPtrTemp_ps[24];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
+                    Rpp32f srcPtrTemp_ps[12];
+                    Rpp32f dstPtrTempR_ps[4], dstPtrTempG_ps[4], dstPtrTempB_ps[4];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
@@ -606,10 +606,10 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);   // simd loads
                     compute_brightness_24_host(p, pBrightnessParams);  // brightness adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p); // simd stores
 #else
-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                    Rpp32f dstPtrTemp_ps[25];
+                    Rpp32f srcPtrTempR_ps[4], srcPtrTempG_ps[4], srcPtrTempB_ps[4];
+                    Rpp32f dstPtrTemp_ps[12];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
@@ -676,7 +676,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                         compute_brightness_8_host(p, pBrightnessParams);  // brightness adjustment
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);    // simd stores
 #else
-                        Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
+                        Rpp32f srcPtrTemp_ps[4], dstPtrTemp_ps[4];
 
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {

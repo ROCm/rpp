@@ -624,8 +624,8 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 {
                     __m256 p1[4], p2[4];
 
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
                     p1[1] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1])));    // magnitude computation
                     p1[2] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2])));    // magnitude computation
