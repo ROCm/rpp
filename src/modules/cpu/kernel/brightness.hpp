@@ -680,7 +680,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
-                            srcPtrTemp_ps[cnt] = (Rpp16f) srcPtrTemp[cnt];
+                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
                         }
                         __m128 p[1];
 
