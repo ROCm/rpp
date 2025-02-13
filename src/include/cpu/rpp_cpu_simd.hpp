@@ -2318,28 +2318,25 @@ static  inline __m128 fast_exp_sse (__m128 x)
 }
 
 #if __AVX2__
-static inline __m256 fast_exp_avx(__m256 x)
+static inline __m256 fast_exp_avx(__m256 _x)
 {
-    __m256 t, f, e, p, r;
-    __m256i i, j;
-    __m256 l2e = _mm256_set1_ps(1.442695041f);    /* log2(e) */
-    __m256 c0  = _mm256_set1_ps(0.3371894346f);
-    __m256 c1  = _mm256_set1_ps(0.657636276f);
-    __m256 c2  = _mm256_set1_ps(1.00172476f);
-
-    /* exp(x) = 2^i * 2^f; i = floor (log2(e) * x), 0 <= f <= 1 */
-    t = _mm256_mul_ps(x, l2e);             /* t = log2(e) * x */
-    e = _mm256_floor_ps(t);                /* floor(t) */
-    i = _mm256_cvtps_epi32(e);             /* (int)floor(t) */
-    f = _mm256_sub_ps(t, e);               /* f = t - floor(t) */
-    p = c0;                                /* c0 */
-    p = _mm256_mul_ps(p, f);               /* c0 * f */
-    p = _mm256_add_ps(p, c1);              /* c0 * f + c1 */
-    p = _mm256_mul_ps(p, f);               /* (c0 * f + c1) * f */
-    p = _mm256_add_ps(p, c2);              /* p = (c0 * f + c1) * f + c2 ~= 2^f */
-    j = _mm256_slli_epi32(i, 23);          /* i << 23 */
-    r = _mm256_castsi256_ps(_mm256_add_epi32(j, _mm256_castps_si256(p)));    /* r = p * 2^i*/
-    return r;
+    __m256 c1 = _mm256_set1_ps(0.007972914726F);
+    __m256 c2 = _mm256_set1_ps(0.1385283768F);
+    __m256 c3 = _mm256_set1_ps(2.885390043F);
+    __m256 c4 = _mm256_set1_ps(1.442695022F);
+    __m256 x = _mm256_mul_ps(_x, c4); //convert to 2^(x)
+    __m256 intPartf = _mm256_round_ps(x, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    x = _mm256_sub_ps(x, intPartf);
+    __m256 xx = _mm256_mul_ps(x, x);
+    __m256 a = _mm256_add_ps(x, _mm256_mul_ps(c1, _mm256_mul_ps(xx, x))); //can be improved with FMA
+    __m256 b = _mm256_add_ps(c3, _mm256_mul_ps(c2, xx));
+    __m256 res = _mm256_div_ps(_mm256_add_ps(b, a), _mm256_sub_ps(b, a));
+    __m256i intPart = _mm256_cvtps_epi32(intPartf); //res = 2^intPart. Can be improved with AVX2!
+    __m128i ii0 = _mm_slli_epi32(_mm256_castsi256_si128(intPart), 23);
+    __m128i ii1 = _mm_slli_epi32(_mm256_extractf128_si256(intPart, 1), 23);     
+    __m128i res_0 = _mm_add_epi32(ii0, _mm256_castsi256_si128(_mm256_castps_si256(res)));
+    __m128i res_1 = _mm_add_epi32(ii1, _mm256_extractf128_si256(_mm256_castps_si256(res), 1));
+    return _mm256_insertf128_ps(_mm256_castsi256_ps(_mm256_castsi128_si256(res_0)), _mm_castsi128_ps(res_1), 1);
 }
 #endif
 

@@ -14,8 +14,9 @@ __device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *sr
     rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
     rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
     rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
-    rpp_hip_math_sqrt8(&sum_f8, dst_f8);
-
+    dst_f8->f4[0] = make_float4(sqrtf(sum_f8.f4[0].x), sqrtf(sum_f8.f4[0].y), sqrtf(sum_f8.f4[0].z), sqrtf(sum_f8.f4[0].w));
+    dst_f8->f4[1] = make_float4(sqrtf(sum_f8.f4[1].x), sqrtf(sum_f8.f4[1].y), sqrtf(sum_f8.f4[1].z), sqrtf(sum_f8.f4[1].w));
+    
     if constexpr (std::is_same<T, schar>::value)
     {
         dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
