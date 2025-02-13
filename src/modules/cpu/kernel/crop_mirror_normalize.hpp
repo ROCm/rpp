@@ -1269,7 +1269,7 @@ RppStatus crop_mirror_normalize_f16_f16_host_tensor(Rpp16f *srcPtr,
                             srcPtrTemp -= vectorIncrementPerChannel;
 
                             __m256 p[1];
-                            rpp_simd_load(rpp_load8_f16_to_f32_mirror_avx, srcPtrTemp_ps, p);    // simd loads
+                            rpp_simd_load(rpp_load8_f16_to_f32_mirror_avx, srcPtrTemp, p);    // simd loads
                             compute_cmn_8_host(p, &pCMNParams[2 * c]);    // cmn adjustment
 
                             rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);    // simd stores
