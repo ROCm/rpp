@@ -202,7 +202,19 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx950;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
+    find_package(ROCmCMakeBuildTools)
+    #include( ROCMSetupVersion )
+    include( ROCMCreatePackage )
+    message("-- ROCm Version Found: ${ROCM_PLATFORM_VERSION}")
+    set(GPU_TARGETS_ROCM_6.3 "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
+    set(GPU_TARGETS_ROCM_6.4 "gfx908;gfx90a;gfx942;gfx950;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
+
+    if(${ROCM_PLATFORM_VERSION} GREATER_EQUAL 6.1.0 AND ${ROCM_PLATFORM_VERSION} LESS_EQUAL 6.3.0)
+        set(DEFAULT_GPU_TARGETS "${GPU_TARGETS_ROCM_6.3}")
+    elseif(${ROCM_PLATFORM_VERSION} GREATER_EQUAL 6.4.0)
+        set(DEFAULT_GPU_TARGETS "${GPU_TARGETS_ROCM_6.4}")
+    endif()
+
 
     # Set AMD GPU_TARGETS
     if((AMDGPU_TARGETS OR DEFINED ENV{AMDGPU_TARGETS}) AND (NOT GPU_TARGETS))
