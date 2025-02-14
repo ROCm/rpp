@@ -362,9 +362,9 @@ RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
                     __m128 p[3];
-                    rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
+                    rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                     compute_color_12_to_greyscale_4_host(p, pChannelWeights);        // color_to_greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);           // simd stores
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp_ps, p);           // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
@@ -421,9 +421,9 @@ RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                     }
 
                     __m128 p[4];
-                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p); // simd loads
+                    rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p); // simd loads
                     compute_color_12_to_greyscale_4_host(p, pChannelWeights);                                // color_to_greyscale adjustment
-                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);                                   // simd stores
+                    rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp_ps, p);                                   // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
