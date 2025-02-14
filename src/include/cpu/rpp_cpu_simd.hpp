@@ -1863,7 +1863,7 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
     p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
 }
 
-inline void rpp_load8_f16_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
+inline void rpp_load8_f16_to_f32_mirror_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
 
