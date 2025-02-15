@@ -61,9 +61,7 @@ using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle
 
 struct Handle : rppHandle
 {
-    Handle();
     Handle(size_t nBatchSize, Rpp32u numThreads = 0);
-    Handle(Handle&&) noexcept;
     ~Handle();
 
     InitHandle* GetInitHandle() const;
@@ -79,9 +77,7 @@ struct Handle : rppHandle
 struct Handle : rppHandle
 {
     // Host handle related
-    Handle();
     Handle(size_t nBatchSize, Rpp32u numThreads = 0);
-    Handle(Handle&&) noexcept;
     ~Handle();
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
@@ -93,8 +89,7 @@ struct Handle : rppHandle
     void SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const;
 
     // Device handle related
-    Handle(rppAcceleratorQueue_t stream);
-    Handle(rppAcceleratorQueue_t stream, size_t nBatchSize);
+    Handle(size_t nBatchSize, rppAcceleratorQueue_t stream);
     void rpp_destroy_object_gpu();
     rppAcceleratorQueue_t GetStream() const;
     void SetStream(rppAcceleratorQueue_t streamID) const;

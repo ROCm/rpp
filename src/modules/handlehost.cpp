@@ -61,15 +61,6 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
     impl->PreInitializeBufferCPU();
 }
 
-Handle::Handle() : impl(new HandleImpl())
-{
-    impl->PreInitializeBufferCPU();
-    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
-    if(impl->numThreads == 0)
-        impl->numThreads = impl->nBatchSize;
-    RPP_LOG_I(*this);
-}
-
 Handle::~Handle() {}
 
 void Handle::rpp_destroy_object_host()

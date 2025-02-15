@@ -57,7 +57,7 @@ extern "C" {
  * \param [in] windowLength window length used for computing short-term power of the signal
  * \param [in] referencePower reference power that is used to convert the signal to dB
  * \param [in] resetInterval number of samples after which the moving mean average is recalculated to avoid precision loss
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -78,7 +78,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
  * \param [in] windowLength window length used for computing short-term power of the signal
  * \param [in] referencePower reference power that is used to convert the signal to dB
  * \param [in] resetInterval number of samples after which the moving mean average is recalculated to avoid precision loss
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -96,7 +96,7 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr, RpptDescPtr srcD
  * \param [in] cutOffDB  minimum or cut-off ratio in dB
  * \param [in] multiplier factor by which the logarithm is multiplied
  * \param [in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -114,7 +114,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] cutOffDB  minimum or cut-off ratio in dB
  * \param [in] multiplier factor by which the logarithm is multiplied
  * \param [in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -131,7 +131,7 @@ RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [in] coeffTensor preemphasis coefficient (1D tensor in HOST memory, of size batchSize)
  * \param [in] borderType border value policy
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -148,7 +148,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory, of size batchSize)
 * \param [in] coeffTensor preemphasis coefficient (1D tensor in Pinned / HIP memory, of size batchSize)
 * \param [in] borderType border value policy
-* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
@@ -164,7 +164,7 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, 
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
-* \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+* \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
@@ -180,7 +180,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HIP/Pinned memory, of size batchSize * 2)
 * \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
-* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
@@ -202,7 +202,7 @@ RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] power exponent of the magnitude of the spectrum
  * \param [in] windowLength window size in number of samples
  * \param [in] windowStep step between the STFT windows in number of samples
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -224,7 +224,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] power exponent of the magnitude of the spectrum
  * \param [in] windowLength window size in number of samples
  * \param [in] windowStep step between the STFT windows in number of samples
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -245,7 +245,7 @@ RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param[in] numFilter number of mel filters
  * \param[in] sampleRate sampling rate of the audio
  * \param[in] normalize boolean variable that determine whether to normalize weights / not
- * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -266,7 +266,7 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param[in] numFilter number of mel filters
  * \param[in] sampleRate sampling rate of the audio
  * \param[in] normalize boolean variable that determine whether to normalize weights / not
- * \param[in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param[in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -284,7 +284,7 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
 * \param [in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param [in] window Resampling window (struct of type RpptRpptResamplingWindow)
-* \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+* \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
@@ -302,7 +302,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 * \param [in] outRate Output sampling rate (1D tensor in Pinned memory, of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in Pinned memory, of size batchSize * 2)
 * \param [in] window Resampling window (struct of type RpptRpptResamplingWindow in HIP/Pinned memory)
-* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
