@@ -101,20 +101,13 @@ int main(int argc, char **argv)
         bufferSize *= srcDescriptorPtrND->dims[i];
 
     // allocate memory for input / output
-    // Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    // inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-    // outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
-
-    void *d_inputF32, *d_outputF32, *d_inputI16;
-
-    Rpp16s *inputI16 = NULL;
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+
+    void *d_inputF32, *d_outputF32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMalloc(&d_inputI16, bufferSize * sizeof(Rpp16s)));
 
     // read input data
     if(qaMode)
@@ -123,15 +116,11 @@ int main(int argc, char **argv)
     {
         std::srand(0);
         for(int i = 0; i < bufferSize; i++)
-            inputF32[i] = static_cast<float>(std::rand() % 255);
-    }
-
-    for(int i = 0; i < bufferSize; i++){
-        inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+            inputF32[i] = static_cast<float>((std::rand() % 255));
     }
 
     // copy data from HOST to HIP
-    CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, bufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     Rpp32u *permTensor = nullptr;
@@ -225,15 +214,6 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 3:
-            {
-                testCaseName  = "log1p";
-
-                startWallTime = omp_get_wtime();
-                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
-
-                break;
-            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
@@ -267,13 +247,13 @@ int main(int argc, char **argv)
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
+
     free(inputF32);
     free(outputF32);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipFree(d_inputF32));
-    CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));

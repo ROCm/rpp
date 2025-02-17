@@ -112,10 +112,6 @@ int main(int argc, char **argv)
         for(int i = 0; i < bufferSize; i++)
             inputF32[i] = static_cast<float>(std::rand() % 255);
     }
-
-    for(int i = 0; i < bufferSize; i++)
-        inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
-
     
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -192,15 +188,6 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 rppt_log_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, roiTensor, handle);
-
-                break;
-            }
-            case 3:
-            {
-                testCaseName  = "log1p";
-
-                startWallTime = omp_get_wtime();
-                rppt_log1p_host(inputI16, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, roiTensor, handle);
 
                 break;
             }

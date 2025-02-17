@@ -34,8 +34,7 @@ std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
     {1, "normalize"},
-    {2, "log"},
-    {3, "log1p"}
+    {2, "log"}
 };
 
 enum Augmentation {
@@ -85,7 +84,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, st
 {
     if(nDim != 2 && nDim != 3)
     {
-        if(nDim != 4 || (testCase != "log" || testCase != "log1p")) {
+        if(nDim != 4 || testCase != "log") {
             std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
             exit(0);
         }
@@ -161,7 +160,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        roiTensor[lengthIndex + j] = 1920;  // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
@@ -230,8 +229,6 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
         descriptorPtr3D->dataType = RpptDataType::F32;
     else if (bitDepth == 5)
         descriptorPtr3D->dataType = RpptDataType::I8;
-    else if (bitDepth == 6)
-        descriptorPtr3D->dataType = RpptDataType::I16;
     descriptorPtr3D->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
         descriptorPtr3D->dims[i] = roiTensor[nDim + i - 1];
@@ -388,14 +385,8 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         for(int j = 0; j < sampleLength; j++)
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
-            if(!invalid_comparision )
-            {
-                if(abs(out[j] - ref[j]) < 1e-4)
+            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
                     cnt++;
-                else
-                    printf("\n OP %f Exp %f",out[j],ref[j]);
-            }
-                
         }
         if (cnt == sampleLength)
             fileMatch++;
