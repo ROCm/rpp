@@ -21,14 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
-
 cmake_minimum_required(VERSION 3.10)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
@@ -39,11 +38,11 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # RPP Version
-set(VERSION "1.9.5")
+set(VERSION "1.9.10")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -68,7 +67,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(DEFAULT_BUILD_TYPE "Release")
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -154,40 +152,17 @@ message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP REQUIRED)
-if(APPLE)
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        set(OpenMP_C "${CMAKE_C_COMPILER}")
-        set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-        set(OpenMP_C_LIB_NAMES "libomp" "libgomp" "libiomp5")
-        set(OpenMP_libomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-        set(OpenMP_libgomp_LIBRARY ${OpenMP_C_LIB_NAMES})
-        set(OpenMP_libiomp5_LIBRARY ${OpenMP_C_LIB_NAMES})
-    endif()
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(OpenMP_CXX "${CMAKE_CXX_COMPILER}")
-        set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument")
-        set(OpenMP_CXX_LIB_NAMES "libomp" "libgomp" "libiomp5")
-        set(OpenMP_libomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-        set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-        set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
-    endif()
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    # STD Filesystem
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
+message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+
+# STD Filesystem
+if(NOT APPLE)
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
-include_directories(${OpenMP_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
-
-# Threads
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
@@ -227,10 +202,7 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_GPU_TARGETS ${DEFAULT_GPU_TARGETS} "gfx1200;gfx1201")
-    endif()
+    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
 
     # Set AMD GPU_TARGETS
     if((AMDGPU_TARGETS OR DEFINED ENV{AMDGPU_TARGETS}) AND (NOT GPU_TARGETS))
@@ -260,11 +232,6 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS "${ROCM_PATH}/bin/amdclang++")
-		set(COMPILER_FOR_HIP "${ROCM_PATH}/bin/amdclang++")
-	else()
-		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
-	endif()
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API
@@ -423,10 +390,21 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime")
-set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, half")
+set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas, python3-openpyxl") # TBD: OpenCV & libsnd packages missing on RPM
+
+# Add OS specific dependencies
+if(EXISTS "/etc/os-release")
+    file(READ "/etc/os-release" OS_RELEASE)
+    string(REGEX MATCH "22.04" UBUNTU_22_FOUND ${OS_RELEASE})
+    if(UBUNTU_22_FOUND)
+        set(RPP_DEBIAN_DEV_PACKAGE_LIST "${RPP_DEBIAN_DEV_PACKAGE_LIST}, libstdc++-12-dev")
+    endif()
+endif()
 
 # package release
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
@@ -461,7 +439,7 @@ set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core, ${RPP_DEBIAN_PACKAGE_LIST}"
 set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
 set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_DEV_PACKAGE_LIST}")
 set(CPACK_DEBIAN_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
-set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}-dev, clang")
+set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}-dev, ${RPP_DEBIAN_TEST_PACKAGE_LIST}")
 set(CPACK_DEBIAN_PACKAGE_LICENSE "MIT" )
 # Debian package specific variable for ASAN
 set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
@@ -473,7 +451,7 @@ set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_RPM_DEV_PACKAGE_LIST}")
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
-set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}-devel, clang")
+set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}-devel, ${RPP_RPM_TEST_PACKAGE_LIST}")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
 # RPM package specific variable for ASAN
 set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )

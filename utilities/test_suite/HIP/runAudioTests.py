@@ -37,6 +37,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 7
+errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -73,16 +74,16 @@ def generate_performance_reports(RESULTS_DIR):
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
         print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -90,7 +91,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
         os.mkdir(outFilePath + "/case_" + case)
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
         print("\nrocprof --basenames on --timestamp on --stats -o " + outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + case + "/output_case" + case + ".csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + case + "/output_case" + case + ".csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -98,6 +99,8 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             print(output.strip())
             output_str = output.decode('utf-8')
             logFile.write(output_str)
+        
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
@@ -160,7 +163,17 @@ def rpp_test_suite_parser_and_validator():
         print("Invalid input path! QA mode can run only with path:", inFilePath)
         exit(0)
 
-    if args.case_list is None:
+    case_list = []
+    if args.case_list:
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(audioAugmentationMap, case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+    args.case_list = case_list
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -221,13 +234,11 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '6', '7']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
 
-noCaseSupported = all(case not in supportedCaseList for case in caseList)
+noCaseSupported = all(int(case) not in audioAugmentationMap for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
@@ -239,7 +250,7 @@ for case in caseList:
         else:
             srcPath = inFilePath
 
-    if case not in supportedCaseList:
+    if int(case) not in audioAugmentationMap:
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption)
 
@@ -250,7 +261,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_hip")
+        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_hip")
 
 # Performance tests
 if testType == 1 and profilingOption == "NO":
@@ -296,3 +307,11 @@ elif testType == 1 and profilingOption == "YES":
                 CONSOLIDATED_FILE + "\n")
     except IOError:
         print("Unable to open results in " + CONSOLIDATED_FILE)
+
+if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
+    print("\n---------------------------------- Log of function variants requested but not run - Tensor_audio_hip  ----------------------------------\n")
+    for i in range(1,len(errorLog)):
+        print(errorLog[i])
+    if(errorLog[0]["notExecutedFunctionality"] != 0):
+        print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_audio_hip were not executed since these sub-variants are not currently supported in RPP.\n")
+    print("-----------------------------------------------------------------------------------------------")
