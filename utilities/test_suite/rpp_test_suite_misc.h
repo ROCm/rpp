@@ -85,7 +85,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, st
 {
     if(nDim != 2 && nDim != 3)
     {
-        if(nDim != 4 || testCase != "log1p") {
+        if(nDim != 4 || (testCase != "log" || testCase != "log1p")) {
             std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
             exit(0);
         }
