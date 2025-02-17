@@ -609,7 +609,7 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p); // simd stores
 #else
                     Rpp32f srcPtrTempR_ps[4], srcPtrTempG_ps[4], srcPtrTempB_ps[4];
-                    Rpp32f dstPtrTemp_ps[12];
+                    Rpp32f dstPtrTemp_ps[13];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
