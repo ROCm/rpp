@@ -989,9 +989,10 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                     if (shotNoiseFactor)
                         compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-#endif
+
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1142,13 +1143,14 @@ RppStatus shot_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                     if (shotNoiseFactor)
                         compute_shot_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, &pShotNoiseFactorInv, &pShotNoiseFactor);    // shot_noise adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-#endif
+
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
                         dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
                         dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
                     }
+#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
