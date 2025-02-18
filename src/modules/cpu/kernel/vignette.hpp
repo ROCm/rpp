@@ -558,7 +558,7 @@ RppStatus vignette_f32_f32_host_tensor(Rpp32f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    __m256 p[3];
+                    __m256 p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_vignette_24_host(p, pMultiplier, pILocComponent, pJLocComponent);        // vignette adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
@@ -613,7 +613,7 @@ RppStatus vignette_f32_f32_host_tensor(Rpp32f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    __m256 p[1];
+                    __m256 p[2];
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);                                  // simd loads
                     compute_vignette_8_host(p, pMultiplier, pILocComponent, pJLocComponent);   // vignette adjustment
                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);                                // simd stores
@@ -1189,7 +1189,7 @@ RppStatus vignette_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    __m256 p[3];
+                    __m256 p[6];
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_vignette_24_host(p, pMultiplier, pILocComponent, pJLocComponent);                 // vignette adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
@@ -1244,7 +1244,7 @@ RppStatus vignette_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    __m256 p[1];
+                    __m256 p[2];
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, p);                               // simd loads
                     compute_vignette_8_host(p, pMultiplier, pILocComponent, pJLocComponent);   // vignette adjustment
                     rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);                             // simd stores
