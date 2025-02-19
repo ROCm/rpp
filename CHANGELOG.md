@@ -20,7 +20,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 * All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * AMD Clang is now the default CXX and C compiler
-* AMD RPP can now pass CPU/HOST build with g++ (#517)
+* AMD RPP can now pass HOST (CPU) build with g++ (#517)
 * Test Suite - ENUMs for all augmentations to enhance test suite readability (#499)
 * Test suite - Error code detection and display (#483)
 * HALF - Restructure half.hpp and hip_fp16.h includes (#459)
