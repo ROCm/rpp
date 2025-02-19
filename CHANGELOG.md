@@ -7,7 +7,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Added
 
 * RPP Tensor Gaussian Filter support on HOST (CPU) backend. (#478)
-* RPP Fog augmentation on HOST and HIP (#446)
+* RPP Fog augmentation on HOST (CPU) and HIP backends. (#446)
 * RPP Rain augmentation on HOST and HIP (#463)
 * RPP Warp Perspective on HOST and HIP (#451)
 * RPP Tensor Bitwise-XOR support on HOST and HIP (#464)
