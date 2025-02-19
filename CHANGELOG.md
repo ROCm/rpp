@@ -35,7 +35,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * CXX Compiler: Fixed HOST (CPU) g++ issues. (#517)
 * Deprecation fix for "'sprintf' is deprecated" warning (#512)
 * Test suite build fix - Lock to specific 'nifti_clib' commit (#506)
-* docs - fix broken img links of pixelate and renamed jitter image (#461)
+* Fixed broken image links for pixelate and jitter (#461)
 * Bugfix - Log Tensor (#479)
 
 ## RPP 1.9.1 for ROCm 6.3.0
