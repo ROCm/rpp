@@ -11,7 +11,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * RPP Rain augmentation on HOST(CPU) and HIP backends. (#463)
 * RPP Warp Perspective on HOST (CPU) and HIP backends. (#451)
 * RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
-* RPP Threshold on HOST and HIP (#456)
+* RPP Threshold on HOST (CPU) and HIP backends. (#456)
 * RPP Tensor Box Filter support on HOST (#425)
 * RPP Audio Support HIP - Spectrogram (#433)
 * RPP Audio Support HIP - Mel Filter Bank (#421)
