@@ -32,7 +32,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Resolved issues
 
-* CXX Compiler:G++ -- Update the code to fix HOST issues for g++ (#517)
+* CXX Compiler: Fixed HOST (CPU) g++ issues. (#517)
 * Deprecation fix for "'sprintf' is deprecated" warning (#512)
 * Test suite build fix - Lock to specific 'nifti_clib' commit (#506)
 * docs - fix broken img links of pixelate and renamed jitter image (#461)
