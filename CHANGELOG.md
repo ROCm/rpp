@@ -21,9 +21,9 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * AMD Clang is now the default CXX and C compiler
 * AMD RPP can now pass HOST (CPU) build with g++ (#517)
-* Test Suite - ENUMs for all augmentations to enhance test suite readability (#499)
-* Test suite - Error code detection and display (#483)
-* HALF - Restructure half.hpp and hip_fp16.h includes (#459)
+* Test Suite case numbers have been replaced with ENUMs for all augmentations to enhance test suite readability (#499)
+* Test suite updated to return error codes from RPP API and display them (#483)
+* Internal to RPP working - Restructure half.hpp and hip_fp16.h includes in one common header (#459)
 
 ### Removed
 
@@ -33,10 +33,10 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Resolved issues
 
 * CXX Compiler: Fixed HOST (CPU) g++ issues. (#517)
-* Deprecation fix for "'sprintf' is deprecated" warning (#512)
-* Test suite build fix - Lock to specific 'nifti_clib' commit (#506)
+* Deprecation warning fixed for the "'sprintf' is deprecated" warning. (#512)
+* Test suite build fix - RPP Test Suite Pre-requisite instructions updated to lock to a specific 'nifti_clib' commit as stated in ReadME - https://github.com/ROCm/rpp/tree/develop/utilities/test_suite#prerequisites (#506)
 * Fixed broken image links for pixelate and jitter (#461)
-* Bugfix - Log Tensor (#479)
+* Internal to RPP working - Bugfix for Log Tensor in stride updation in log_recursive function (#479)
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
