@@ -13,17 +13,22 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
 * RPP Threshold on HOST (CPU) and HIP backends. (#456)
 * RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
-* RPP Spectrogram and Mel Filter Bank Audio Support to the HIP backend (#433)
-* RPP Audio Support HIP - Mel Filter Bank (#421)
+* RPP Audio Support for Spectrogram on HIP backend. (#433)
+* RPP Audio Support for Mel Filter Bank on HIP backend. (#421)
 
 ### Changed
 
-* All handle creation and destruction APIs have been consolidated `rppCreate`, for handle initializatio, and `rppDestroy`,  for handle destruction (#513)
+* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * AMD Clang is now the default CXX and C compiler
 * AMD RPP can now pass CPU/HOST build with g++ (#517)
 * Test Suite - ENUMs for all augmentations to enhance test suite readability (#499)
 * Test suite - Error code detection and display (#483)
 * HALF - Restructure half.hpp and hip_fp16.h includes (#459)
+
+### Removed
+
+* Older versions of RPP handle creation inlcuding `rppCreateWithBatchSize()`, `rppCreateWithStream()`, and `rppCreateWithStreamAndBatchSize()` are now removed and replaced with `rppCreate()`.
+* Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
 
 ### Resolved issues
 
