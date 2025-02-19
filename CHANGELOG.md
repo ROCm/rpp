@@ -13,7 +13,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
 * RPP Threshold on HOST (CPU) and HIP backends. (#456)
 * RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
-* RPP Audio Support HIP - Spectrogram (#433)
+* RPP Spectrogram and Mel Filter Bank Audio Support to the HIP backend (#433)
 * RPP Audio Support HIP - Mel Filter Bank (#421)
 
 ### Changed
