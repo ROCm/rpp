@@ -2,34 +2,36 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 1.9.10
+## RPP 1.9.10 for ROCm 6.4.0
+
+### Added
+
+* RPP Tensor Gaussian Filter support on HOST (#478)
+* RPP Fog augmentation on HOST and HIP (#446)
+* RPP Rain augmentation on HOST and HIP (#463)
+* RPP Warp Perspective on HOST and HIP (#451)
+* RPP Tensor Bitwise-XOR support on HOST and HIP (#464)
+* RPP Threshold on HOST and HIP (#456)
+* RPP Tensor Box Filter support on HOST (#425)
+* RPP Audio Support HIP - Spectrogram (#433)
+* RPP Audio Support HIP - Mel Filter Bank (#421)
 
 ### Changed
 
-* RPP Tensor Gaussian Filter support on HOST
-* RPP Fog augmentation on HOST and HIP
-* RPP Rain augmentation on HOST and HIP
-* RPP Warp Perspective on HOST and HIP
-* RPP Tensor Bitwise-XOR support on HOST and HIP
-* RPP Threshold on HOST and HIP
-
-## (Unreleased) RPP 1.9.4
-
-### Changed
+* RPP Test Suite - Turbo JPEG Package Installation (#518)
 * AMD Clang is now the default CXX and C compiler
-* RPP Tensor Box Filter support on HOST
+* AMD RPP can now pass CPU/HOST build with g++ (#517)
+* Test Suite - ENUMs for all augmentations to enhance test suite readability (#499)
+* Test suite - Error code detection and display (#483)
+* HALF - Restructure half.hpp and hip_fp16.h includes (#459)
 
-## (Unreleased) RPP 1.9.3
+### Resolved issues
 
-### Changed
-
-* RPP Audio Support HIP - Spectrogram
-
-## (Unreleased) RPP 1.9.2
-
-### Changed
-
-* RPP Audio Support HIP - Mel Filter Bank
+* CXX Compiler:G++ -- Update the code to fix HOST issues for g++ (#517)
+* Deprecation fix for "'sprintf' is deprecated" warning (#512)
+* Test suite build fix - Lock to specific 'nifti_clib' commit (#506)
+* docs - fix broken img links of pixelate and renamed jitter image (#461)
+* Bugfix - Log Tensor (#479)
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
