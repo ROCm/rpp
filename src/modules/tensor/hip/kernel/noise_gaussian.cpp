@@ -1,6 +1,6 @@
 #include "hip_tensor_effects_augmentations.hpp"
 #include "rpp_hip_common_math.hpp"
-#include "rpp_hip_common_random.hpp"
+#include "rpp_hip_random.hpp"
 #include "rng_seed_stream.hpp"
 
 __device__ void gaussian_noise_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)

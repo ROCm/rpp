@@ -1,6 +1,6 @@
 #include "hip_tensor_effects_augmentations.hpp"
 #include "rpp_hip_common_math.hpp"
-#include "rpp_hip_common_random.hpp"
+#include "rpp_hip_random.hpp"
 #include "rpp_hip_interpolation.hpp"
 #include "rng_seed_stream.hpp"
 
