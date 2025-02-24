@@ -1,5 +1,5 @@
 #include "hip_tensor_geometric_augmentations.hpp"
-#include "rpp_hip_common_interpolation.hpp"
+#include "rpp_hip_interpolation.hpp"
 
 __device__ float4 rpp_hip_load4(float *table, uint4 &tableValLoc)
 {
