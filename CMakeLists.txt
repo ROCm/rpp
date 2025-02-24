@@ -285,8 +285,8 @@ if("${BACKEND}" STREQUAL "CPU")
     endforeach(MOD_NAME)
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
@@ -318,7 +318,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/api
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
@@ -348,13 +348,13 @@ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMP
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev
         PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
 
