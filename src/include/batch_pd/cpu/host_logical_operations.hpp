@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_LOGICAL_OPERATIONS_HPP
 #define HOST_LOGICAL_OPERATIONS_HPP
 
-#include "rpp_cpu_common_batchpd.hpp"
+#include "rpp_cpu_batchpd.hpp"
 
 /**************** bitwise_AND ***************/
 

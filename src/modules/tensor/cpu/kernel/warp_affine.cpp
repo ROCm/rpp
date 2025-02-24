@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "warp_affine.hpp"
-#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_geometric.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
 
 /************* warp_affine helpers *************/

@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 #include "gaussian_filter.hpp"
-#include "rpp_cpu_common_filter.hpp"
+#include "rpp_cpu_filter.hpp"
 
 inline void rpp_store_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)
 {

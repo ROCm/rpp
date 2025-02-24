@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_FUSED_FUNCTIONS_H
 #define HOST_FUSED_FUNCTIONS_H
 
-#include "rpp_cpu_common_batchpd.hpp"
+#include "rpp_cpu_batchpd.hpp"
 
 /**************** color_twist ***************/
 

@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "warp_perspective.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
-#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_geometric.hpp"
 
 /************* warp_perspective helpers *************/
 

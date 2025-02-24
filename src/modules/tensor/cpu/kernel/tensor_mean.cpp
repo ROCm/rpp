@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "tensor_mean.hpp"
-#include "rpp_cpu_common_arithmetic.hpp"
+#include "rpp_cpu_arithmetic.hpp"
 
 RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                                   RpptDescPtr srcDescPtr,

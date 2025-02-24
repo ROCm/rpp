@@ -1,5 +1,5 @@
-#ifndef RPP_CPU_COMMON_GEOMETRIC_H
-#define RPP_CPU_COMMON_GEOMETRIC_H
+#ifndef RPP_CPU_GEOMETRIC_H
+#define RPP_CPU_GEOMETRIC_H
 
 inline void compute_offset_i8_1c_avx(__m256 &p)
 {

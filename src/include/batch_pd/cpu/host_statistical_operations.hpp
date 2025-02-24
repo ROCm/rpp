@@ -26,7 +26,7 @@ SOFTWARE.
 #define STATISTICAL_OPERATIONS_HPP
 
 #include <limits>
-#include "rpp_cpu_common_batchpd.hpp"
+#include "rpp_cpu_batchpd.hpp"
 
 /**************** min ***************/
 

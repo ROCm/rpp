@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "resize.hpp"
-#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_geometric.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
 
 inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)

@@ -1,5 +1,5 @@
-#ifndef RPP_CPU_COMMON_ARITHMETIC_H
-#define RPP_CPU_COMMON_ARITHMETIC_H
+#ifndef RPP_CPU_ARITHMETIC_H
+#define RPP_CPU_ARITHMETIC_H
 
 inline void compute_sum_16_host(__m256i *p, __m256i *pSum)
 {

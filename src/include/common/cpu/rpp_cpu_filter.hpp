@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef AMD_RPP_RPP_CPU_COMMON_FILTER_HPP
-#define AMD_RPP_RPP_CPU_COMMON_FILTER_HPP
+#ifndef AMD_RPP_RPP_CPU_FILTER_HPP
+#define AMD_RPP_RPP_CPU_FILTER_HPP
 
 #include "rpp_cpu_simd_load_store.hpp"
 
@@ -1239,4 +1239,4 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-#endif //RPP_CPU_COMMON_FILTER_HPP
+#endif //RPP_CPU_FILTER_HPP

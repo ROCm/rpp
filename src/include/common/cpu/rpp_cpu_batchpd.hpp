@@ -1,5 +1,5 @@
-#ifndef RPP_CPU_COMMON_BATCHPD_H
-#define RPP_CPU_COMMON_BATCHPD_H
+#ifndef RPP_CPU_BATCHPD_H
+#define RPP_CPU_BATCHPD_H
 
 #include <math.h>
 #include <algorithm>

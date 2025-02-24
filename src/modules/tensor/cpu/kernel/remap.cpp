@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "remap.hpp"
-#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_geometric.hpp"
 #include "rpp_cpu_common_interpolation.hpp"
 
 inline void compute_remap_src_loc_sse(Rpp32f *rowRemapTablePtr, Rpp32f *colRemapTablePtr, Rpp32s *locArray, __m128 &pStride, __m128 &pWidthLimit, __m128 &pHeightLimit, const __m128 &pChannel = xmm_p1)
