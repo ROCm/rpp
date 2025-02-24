@@ -1249,6 +1249,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case MEDIAN_FILTER:
+                {
+                    testCaseName = "median_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_median_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case GAUSSIAN_FILTER:
                 {
                     testCaseName = "gaussian_filter";

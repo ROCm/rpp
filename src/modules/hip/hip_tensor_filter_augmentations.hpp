@@ -27,5 +27,6 @@ SOFTWARE.
 
 #include "kernel/box_filter.hpp"
 #include "kernel/gaussian_filter.hpp"
+#include "kernel/median_filter.hpp"
 
 #endif // HIP_TENSOR_FILTER_AUGMENTATIONS_HPP

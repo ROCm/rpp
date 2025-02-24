@@ -63,7 +63,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54":
+            if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
                 for kernelSize in range(3, 10, 2):
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
@@ -104,7 +104,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54":
+            if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
@@ -340,7 +340,7 @@ else:
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
     elif (testType == 1 and profilingOption == "YES"):
-        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
+        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 51, 56, 65, 67, 69]
 
         noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
         if noCaseSupported:
@@ -367,7 +367,7 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == "40" or case == "41" or case == "49" or case == "54":
+                        if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                         elif case == "8":
@@ -422,7 +422,7 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if (CASE_NUM == "40" or CASE_NUM == "41" or CASE_NUM == "49") and TYPE.startswith("Tensor"):
+                        if (CASE_NUM == "40" or CASE_NUM == "41" or CASE_NUM == "49" or CASE_NUM == "51") and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
