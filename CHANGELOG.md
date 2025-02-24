@@ -2,7 +2,22 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.9.11 for ROCm 6.4.0
+## (Unreleased) RPP 2.0.0
+
+### Added
+
+### Changed
+
+* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
+
+### Removed
+
+* Older versions of RPP handle creation inlcuding `rppCreateWithBatchSize()`, `rppCreateWithStream()`, and `rppCreateWithStreamAndBatchSize()` are now removed and replaced with `rppCreate()`.
+* Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
+
+### Resolved issues
+
+## RPP 1.9.10 for ROCm 6.4.0
 
 ### Added
 
@@ -18,17 +33,11 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Changed
 
-* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * AMD Clang is now the default CXX and C compiler
 * AMD RPP can now pass HOST (CPU) build with g++ (#517)
 * Test Suite case numbers have been replaced with ENUMs for all augmentations to enhance test suite readability (#499)
 * Test suite updated to return error codes from RPP API and display them (#483)
 * Internal to RPP working - Restructure half.hpp and hip_fp16.h includes in one common header (#459)
-
-### Removed
-
-* Older versions of RPP handle creation inlcuding `rppCreateWithBatchSize()`, `rppCreateWithStream()`, and `rppCreateWithStreamAndBatchSize()` are now removed and replaced with `rppCreate()`.
-* Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
 
 ### Resolved issues
 
