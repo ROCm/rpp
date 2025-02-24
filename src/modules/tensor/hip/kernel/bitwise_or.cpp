@@ -1,5 +1,5 @@
 #include "hip_tensor_logical_operations.hpp"
-#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_math.hpp"
 
 /* BitwiseOR is logical operation only on U8/I8 types.
    For a Rpp32f precision image (pixel values from 0-1), the BitwiseOR is applied on a 0-255

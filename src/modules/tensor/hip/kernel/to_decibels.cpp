@@ -1,5 +1,5 @@
 #include "hip_tensor_audio_augmentations.hpp"
-#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_math.hpp"
 
 // -------------------- Set 0 - to_decibels device helpers --------------------
 

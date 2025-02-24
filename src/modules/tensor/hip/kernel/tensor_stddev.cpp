@@ -1,5 +1,5 @@
 #include "hip_tensor_statistical_operations.hpp"
-#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_math.hpp"
 #include "reduction.hpp"
 
 // ----------------------- Helper Functions --------------------------

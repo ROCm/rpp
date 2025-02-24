@@ -1,5 +1,5 @@
 #include "hip_tensor_arithmetic_operations.hpp"
-#include "rpp_hip_common_math.hpp"
+#include "rpp_hip_math.hpp"
 
 // -------------------- Set 1 - helper kernels --------------------
 template <typename T>
