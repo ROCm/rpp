@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef CL_DECLATAIONS_H
 #define CL_DECLATAIONS_H
 
-#include "rpp/handle.hpp"
+#include "handle.hpp"
 
 // ===== Utils
 

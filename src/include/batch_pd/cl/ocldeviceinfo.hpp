@@ -31,7 +31,7 @@ SOFTWARE.
 #include <CL/cl.h>
 #endif
 
-#include <rpp/errors.hpp>
+#include "errors.hpp"
 #include <string>
 #include <type_traits>
 

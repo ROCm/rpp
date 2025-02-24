@@ -28,7 +28,7 @@ SOFTWARE.
 #include <fstream>
 #include "filesystem.h"
 
-#include "rpp/manage_ptr.hpp"
+#include "manage_ptr.hpp"
 
 namespace rpp {
 

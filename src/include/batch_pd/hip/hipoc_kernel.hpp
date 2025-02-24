@@ -30,10 +30,10 @@ SOFTWARE.
 #include <vector>
 #include <memory.h>
 
-#include "rpp/errors.hpp"
+#include "errors.hpp"
 #include "hipoc_program.hpp"
-#include "rpp/stringutils.hpp"
-#include "rpp/op_kernel_args.hpp"
+#include "stringutils.hpp"
+#include "op_kernel_args.hpp"
 
 namespace rpp {
 

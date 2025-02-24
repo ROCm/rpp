@@ -38,9 +38,9 @@ SOFTWARE.
 #include <vector>
 
 #include "clhelper.hpp"
-#include "rpp/each_args.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/op_kernel_args.hpp"
+#include "each_args.hpp"
+#include "errors.hpp"
+#include "op_kernel_args.hpp"
 
 namespace rpp {
 

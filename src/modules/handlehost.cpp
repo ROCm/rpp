@@ -27,8 +27,8 @@ SOFTWARE.
 #endif
 
 #include<thread>
-#include "rpp/logger.hpp"
-#include "rpp/handle.hpp"
+#include "logger.hpp"
+#include "handle.hpp"
 
 namespace rpp {
 

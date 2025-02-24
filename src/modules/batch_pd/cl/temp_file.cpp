@@ -25,7 +25,7 @@ SOFTWARE.
 #include <fstream>
 
 #include "temp_file.hpp"
-#include "rpp/errors.hpp"
+#include "errors.hpp"
 
 namespace rpp {
 TempFile::TempFile(const std::string& path_template) : name(path_template), dir("tmp")

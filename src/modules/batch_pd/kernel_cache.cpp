@@ -41,9 +41,9 @@ SOFTWARE.
 #include <iostream>
 #include <iterator>
 
-#include "rpp/errors.hpp"
-#include "rpp/kernel_cache.hpp"
-#include "rpp/logger.hpp"
+#include "errors.hpp"
+#include "kernel_cache.hpp"
+#include "logger.hpp"
 
 #ifdef GPU_SUPPORT
 

@@ -31,8 +31,8 @@ SOFTWARE.
 #include <sstream>
 #include <type_traits>
 
-#include "rpp/each_args.hpp"
-#include "rpp/object.hpp"
+#include "each_args.hpp"
+#include "object.hpp"
 
 // See https://github.com/pfultz2/Cloak/wiki/C-Preprocessor-tricks,-tips,-and-idioms
 #define RPP_PP_CAT(x, y) RPP_PP_PRIMITIVE_CAT(x, y)

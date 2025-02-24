@@ -27,11 +27,11 @@ SOFTWARE.
 #include "filesystem.h"
 #include "rpp.h"
 #include "rpp_version.h"
-#include "rpp/binary_cache.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/env.hpp"
-#include "rpp/stringutils.hpp"
-#include "rpp/md5.hpp"
+#include "binary_cache.hpp"
+#include "errors.hpp"
+#include "env.hpp"
+#include "stringutils.hpp"
+#include "md5.hpp"
 
 namespace rpp {
 

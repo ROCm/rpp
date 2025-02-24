@@ -31,8 +31,8 @@ SOFTWARE.
 #include <tuple>
 
 #include "rpp.h"
-#include "rpp/object.hpp"
-#include "rpp/returns.hpp"
+#include "object.hpp"
+#include "returns.hpp"
 
 namespace rpp {
 

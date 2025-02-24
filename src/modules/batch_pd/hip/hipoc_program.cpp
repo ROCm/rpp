@@ -28,14 +28,14 @@ SOFTWARE.
 #include <hip/hiprtc.h>
 
 #include "hipoc_program.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/gcn_asm_utils.hpp"
-#include "rpp/hip_build_utils.hpp"
-#include "rpp/kernel.hpp"
-#include "rpp/kernel_warnings.hpp"
-#include "rpp/stringutils.hpp"
-#include "rpp/tmp_dir.hpp"
-#include "rpp/write_file.hpp"
+#include "errors.hpp"
+#include "gcn_asm_utils.hpp"
+#include "hip_build_utils.hpp"
+#include "kernel.hpp"
+#include "kernel_warnings.hpp"
+#include "stringutils.hpp"
+#include "tmp_dir.hpp"
+#include "write_file.hpp"
 
 namespace rpp {
 

@@ -28,7 +28,7 @@ SOFTWARE.
 #include <string>
 #include <hip/hip_runtime_api.h>
 #include "filesystem.h"
-#include "rpp/manage_ptr.hpp"
+#include "manage_ptr.hpp"
 
 namespace rpp {
 

@@ -25,8 +25,8 @@ SOFTWARE.
 #include <sstream>
 #include <optional>
 
-#include "rpp/hip_build_utils.hpp"
-#include "rpp/logger.hpp"
+#include "hip_build_utils.hpp"
+#include "logger.hpp"
 
 #define RPP_STRINGIZE_1(...) #__VA_ARGS__
 #define RPP_STRINGIZE(...) RPP_STRINGIZE_1(__VA_ARGS__)

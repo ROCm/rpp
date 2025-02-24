@@ -33,15 +33,15 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rppdefs.h"
-#include "rpp/common.hpp"
-#include "rpp/kernel.hpp"
-#include "rpp/object.hpp"
-#include "rpp/simple_hash.hpp"
-#include "rpp/allocator.hpp"
+#include "common.hpp"
+#include "kernel.hpp"
+#include "object.hpp"
+#include "simple_hash.hpp"
+#include "allocator.hpp"
 
 
 #if RPP_USE_ROCBLAS
-#include <rpp/manage_ptr.hpp>
+#include "manage_ptr.hpp"
 #include <rocblas.h>
 #endif
 

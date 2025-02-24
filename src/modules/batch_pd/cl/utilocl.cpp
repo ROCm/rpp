@@ -24,8 +24,8 @@ SOFTWARE.
 
 #include <cmath>
 
-#include "rpp/kernel_cache.hpp"
-#include "rpp/logger.hpp"
+#include "kernel_cache.hpp"
+#include "logger.hpp"
 
 #define WG_SIZE 256
 #define MAX_ACTIVE_THREADS (64 * 4 * 64)

@@ -30,12 +30,12 @@ SOFTWARE.
 #include <thread>
 #include "ocldeviceinfo.hpp"
 #include "load_file.hpp"
-#include "rpp/device_name.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/logger.hpp"
-#include "rpp/handle.hpp"
-#include "rpp/kernel_cache.hpp"
-#include "rpp/binary_cache.hpp"
+#include "device_name.hpp"
+#include "errors.hpp"
+#include "logger.hpp"
+#include "handle.hpp"
+#include "kernel_cache.hpp"
+#include "binary_cache.hpp"
 
 namespace rpp {
 

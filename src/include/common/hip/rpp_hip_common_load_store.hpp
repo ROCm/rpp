@@ -28,7 +28,7 @@ SOFTWARE.
 #include <hip/hip_runtime.h>
 
 #include "rppdefs.h"
-#include "rpp/handle.hpp"
+#include "handle.hpp"
 #include "rpp_hip_roi_conversion.hpp"
 
 typedef unsigned char uchar;

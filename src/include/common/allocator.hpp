@@ -28,9 +28,9 @@ SOFTWARE.
 #include <cassert>
 
 #include "rpp.h"
-#include "rpp/common.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/manage_ptr.hpp"
+#include "common.hpp"
+#include "errors.hpp"
+#include "manage_ptr.hpp"
 
 #ifdef GPU_SUPPORT
 namespace rpp {

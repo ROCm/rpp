@@ -29,7 +29,7 @@ SOFTWARE.
 #include <string>
 
 #include "rpp.h"
-#include "rpp/manage_ptr.hpp"
+#include "manage_ptr.hpp"
 
 namespace rpp {
 

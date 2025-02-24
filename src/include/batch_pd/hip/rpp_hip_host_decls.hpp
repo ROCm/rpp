@@ -2,7 +2,7 @@
 #define RPP_HIP_HOST_DECLS_H
 
 #include "rpp.h"
-#include "rpp/handle.hpp"
+#include "handle.hpp"
 #include "rpp_hip_common_load_store.hpp"
 
 // advanced_augmentations

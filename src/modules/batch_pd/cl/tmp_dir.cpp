@@ -24,9 +24,9 @@ SOFTWARE.
 
 #include <chrono>
 #include "filesystem.h"
-#include "rpp/tmp_dir.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/logger.hpp"
+#include "tmp_dir.hpp"
+#include "errors.hpp"
+#include "logger.hpp"
 
 namespace rpp {
 

@@ -47,9 +47,9 @@ SOFTWARE.
 #include <vector>
 
 #include "rpp.h"
-#include "rpp/handle.hpp"
-#include "rpp/kernel.hpp"
-#include "rpp/simple_hash.hpp"
+#include "handle.hpp"
+#include "kernel.hpp"
+#include "simple_hash.hpp"
 
 #ifdef GPU_SUPPORT
 

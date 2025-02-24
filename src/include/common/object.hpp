@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef GUARD_RPP_HANDLE_HPP
 #define GUARD_RPP_HANDLE_HPP
 
-#include "rpp/rank.hpp"
+#include "rank.hpp"
 
 #if defined(RPP_USE_CLANG_TIDY)
 #define RPP_OBJECT_CAST reinterpret_cast

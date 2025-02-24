@@ -29,8 +29,8 @@ SOFTWARE.
 #include <sys/syscall.h> /* For SYS_xxx definitions */
 #endif
 
-#include "rpp/env.hpp"
-#include "rpp/logger.hpp"
+#include "env.hpp"
+#include "logger.hpp"
 
 namespace rpp {
 

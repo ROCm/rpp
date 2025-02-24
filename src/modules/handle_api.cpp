@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 #include <cstdio>
-#include "rpp/errors.hpp"
-#include "rpp/handle.hpp"
+#include "errors.hpp"
+#include "handle.hpp"
 
 extern "C" const char* rppGetErrorString(rppStatus_t error)
 {

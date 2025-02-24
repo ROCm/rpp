@@ -30,7 +30,7 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rppdefs.h"
-#include "rpp/handle.hpp"
+#include "handle.hpp"
 
 #ifdef OCL_COMPILE
 #include <CL/cl.h>

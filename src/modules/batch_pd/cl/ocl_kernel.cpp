@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "oclkernel.hpp"
-#include "rpp/logger.hpp"
+#include "logger.hpp"
 
 namespace rpp {
 

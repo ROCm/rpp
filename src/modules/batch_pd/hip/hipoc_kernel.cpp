@@ -28,7 +28,7 @@ SOFTWARE.
 #include <hip/hip_runtime.h>
 
 #include "hipoc_kernel.hpp"
-#include "rpp/errors.hpp"
+#include "errors.hpp"
 #if defined(STATIC)
 #include "hip_kernels.hpp"
 #endif

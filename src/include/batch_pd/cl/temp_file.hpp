@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef GUARD_TEMP_FILE_HPP
 #define GUARD_TEMP_FILE_HPP
 
-#include <rpp/tmp_dir.hpp>
+#include "tmp_dir.hpp"
 
 #include <string>
 

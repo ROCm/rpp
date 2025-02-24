@@ -26,9 +26,9 @@ SOFTWARE.
 #include <map>
 
 #include "rpp_kernels.h"
-#include "rpp/kernel.hpp"
-#include "rpp/stringutils.hpp"
-#include "rpp/errors.hpp"
+#include "kernel.hpp"
+#include "stringutils.hpp"
+#include "errors.hpp"
 
 namespace rpp {
 

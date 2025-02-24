@@ -44,7 +44,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "rpp/md5.hpp"
+#include "md5.hpp"
 
 #define MD5_DIGEST_LENGTH 16
 

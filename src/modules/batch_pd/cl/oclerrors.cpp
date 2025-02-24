@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <rpp/errors.hpp>
+#include "errors.hpp"
 #include <unordered_map>
 
 namespace rpp {

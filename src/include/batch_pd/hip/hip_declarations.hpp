@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_DECLARATIONS_H
 
 #include "rpp.h"
-#include "rpp/handle.hpp"
+#include "handle.hpp"
 #include "rpp_hip_common_load_store.hpp"
 
 // ===== Utils

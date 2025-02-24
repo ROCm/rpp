@@ -22,20 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
+#ifndef GUARD_RPP_COMMON_HPP_
+#define GUARD_RPP_COMMON_HPP_
 
-#include <optional>
+#include "rpp.h"
+#include "manage_ptr.hpp"
 
-#include "rpp/kernel.hpp"
-#include "rpp/tmp_dir.hpp"
-#include "rpp/write_file.hpp"
+#ifdef HIP_COMPILE
+using Data_t        = void*;
+using ConstData_t   = const void*;
+using ManageDataPtr = RPP_MANAGE_PTR(void, hipFree);
+inline Data_t DataCast(void* p) { return p; }
+inline ConstData_t DataCast(const void* p) { return p; }
+#elif defined(OCL_COMPILE)
+using Data_t        = cl_mem;
+using ConstData_t   = Data_t;    // Const doesnt apply to cl_mem
+using ManageDataPtr = RPP_MANAGE_PTR(cl_mem, clReleaseMemObject);
+inline Data_t DataCast(void* p) { return reinterpret_cast<Data_t>(p); }
+inline ConstData_t DataCast(const void* p) { return reinterpret_cast<ConstData_t>(const_cast<void*>(p)); }
+#endif
 
-namespace rpp {
-fs::path HipBuild(std::optional<rpp::TmpDir>& tmp_dir,
-                                 const std::string& filename,
-                                 std::string src,
-                                 std::string params,
-                                 const std::string& dev_name);
-
-void bin_file_to_str(const fs::path& file, std::string& buf);
-} // namespace rpp
+#endif    // GUARD_RPP_COMMON_HPP_

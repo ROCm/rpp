@@ -29,13 +29,13 @@ SOFTWARE.
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
-#include "rpp/env.hpp"
-#include "rpp/errors.hpp"
-#include "rpp/gcn_asm_utils.hpp"
-#include "rpp/manage_ptr.hpp"
-#include "rpp/write_file.hpp"
-#include "rpp/kernel.hpp"
-#include "rpp/logger.hpp"
+#include "env.hpp"
+#include "errors.hpp"
+#include "gcn_asm_utils.hpp"
+#include "manage_ptr.hpp"
+#include "write_file.hpp"
+#include "kernel.hpp"
+#include "logger.hpp"
 
 #ifdef __linux__
 #include "temp_file.hpp"
