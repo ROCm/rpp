@@ -1,5 +1,5 @@
-#ifndef RPP_CPU_COMMON_RANDOM_H
-#define RPP_CPU_COMMON_RANDOM_H
+#ifndef RPP_CPU_RANDOM_H
+#define RPP_CPU_RANDOM_H
 
 #include "rpp_cpu_simd_load_store.hpp"
 #include "rpp_cpu_simd_math.hpp"

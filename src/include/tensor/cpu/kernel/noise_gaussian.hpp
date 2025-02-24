@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "rpp_cpu_common_random.hpp"
+#include "rpp_cpu_random.hpp"
 
 RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RpptDescPtr srcDescPtr,
