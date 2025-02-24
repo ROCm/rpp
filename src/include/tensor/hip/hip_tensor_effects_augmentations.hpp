@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP
 
 #include <hip/hip_runtime.h>
-#include "rpp_hip_common_load_store.hpp"
+#include "rpp_hip_load_store.hpp"
 
 template <typename T, typename U>
 RppStatus hip_exec_erase_tensor(T *srcPtr,

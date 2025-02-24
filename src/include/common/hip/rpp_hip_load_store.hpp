@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPP_HIP_COMMON_H
-#define RPP_HIP_COMMON_H
+#ifndef RPP_HIP_LOAD_STORE_HPP
+#define RPP_HIP_LOAD_STORE_HPP
 
 #include <hip/hip_runtime.h>
 
@@ -1774,4 +1774,4 @@ __global__ void convert_pln3_pkd3_hip_tensor(T *srcPtr,
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-#endif // RPP_HIP_COMMON_H
+#endif // RPP_HIP_LOAD_STORE_HPP

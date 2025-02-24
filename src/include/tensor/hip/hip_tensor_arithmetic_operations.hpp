@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
 #include <hip/hip_runtime.h>
-#include "rpp_hip_common_load_store.hpp"
+#include "rpp_hip_load_store.hpp"
 
 RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
                                      RpptGenericDescPtr srcGenericDescPtr,

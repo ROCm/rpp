@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_advanced_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-#include "rpp_hip_common_load_store.hpp"
+#include "rpp_hip_load_store.hpp"
 #include "hip_declarations.hpp"
 #elif defined(OCL_COMPILE)
 #include "rpp_cl_common.hpp"

@@ -3,7 +3,7 @@
 
 #include "rpp.h"
 #include "handle.hpp"
-#include "rpp_hip_common_load_store.hpp"
+#include "rpp_hip_load_store.hpp"
 
 // advanced_augmentations
 

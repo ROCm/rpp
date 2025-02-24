@@ -26,7 +26,7 @@ SOFTWARE.
 #define HIP_TENSOR_COLOR_AUGMENTATIONS_HPP
 
 #include <hip/hip_runtime.h>
-#include "rpp_hip_common_load_store.hpp"
+#include "rpp_hip_load_store.hpp"
 
 template <typename T>
 RppStatus hip_exec_brightness_tensor(T *srcPtr,
