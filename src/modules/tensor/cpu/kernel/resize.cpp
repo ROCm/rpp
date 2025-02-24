@@ -23,7 +23,7 @@ SOFTWARE.
 */
 #include "resize.hpp"
 #include "rpp_cpu_geometric.hpp"
-#include "rpp_cpu_common_interpolation.hpp"
+#include "rpp_cpu_interpolation.hpp"
 
 inline void set_zeros(__m128 *pVecs, Rpp32s numVecs)
 {

@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "resize_mirror_normalize.hpp"
 #include "rpp_cpu_geometric.hpp"
-#include "rpp_cpu_common_interpolation.hpp"
+#include "rpp_cpu_interpolation.hpp"
 
 inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
