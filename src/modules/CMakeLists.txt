@@ -165,7 +165,7 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/src/include/common/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor/cpu/kernel
-        ${CMAKE_SOURCE_DIR}/src/include/tensor/func_specific
+        ${CMAKE_SOURCE_DIR}/src/include/tensor
         ${INCLUDE_LIST}
 )
 
