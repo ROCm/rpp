@@ -157,7 +157,7 @@ add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/api
         ${ROCM_INC}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu
