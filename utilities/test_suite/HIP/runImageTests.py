@@ -297,12 +297,9 @@ if(testType == 0):
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
-        else:
-            srcPath1 = inFilePath1
-            srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
         if qaMode == 1 and (case != "82" and case != "26"):
             srcPath1 = inFilePath1
@@ -504,7 +501,7 @@ if qaMode and testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
 
 if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
-    print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_hip  ----------------------------------\n")
+    print("\n---------------------------------- Log of function variants      but not run - Tensor_image_hip  ----------------------------------\n")
     for i in range(1,len(errorLog)):
         print(errorLog[i])
     if(errorLog[0]["notExecutedFunctionality"] != 0):
