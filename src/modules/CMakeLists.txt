@@ -25,9 +25,7 @@ SOFTWARE.
 project(modules)
 
 
-file(GLOB RPP_KERNELS tensor/cpu/kernel/*.cpp)
 if( "${BACKEND}" STREQUAL "HIP")
-    file(GLOB RPP_KERNELS tensor/hip/kernel/*.cpp)
     file(GLOB RPP_KERNELS batch_pd/hip/kernel/*.cpp)
 elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB RPP_KERNELS batch_pd/cl/kernel/*.cl)
@@ -57,7 +55,7 @@ function(add_kernels KERNEL_FILES)
         list(APPEND INIT_KERNELS_LIST "    { \"${KEY_NAME}\", std::string(reinterpret_cast<const char*>(${VAR_NAME}), ${VAR_NAME}_SIZE) }")
     endforeach()
     string(REPLACE ";" ",\n" INIT_KERNELS "${INIT_KERNELS_LIST}")
-    configure_file(kernels/kernel.cpp.in ${PROJECT_BINARY_DIR}/kernel.cpp)
+    configure_file(batch_pd/kernel.cpp.in ${PROJECT_BINARY_DIR}/kernel.cpp)
 endfunction()
 
 function(add_kernel_includes KERNEL_FILES)
@@ -75,7 +73,7 @@ function(add_kernel_includes KERNEL_FILES)
         list(APPEND INIT_KERNELS_LIST "    { \"${FILE_NAME}\", std::string(reinterpret_cast<const char*>(${VAR_NAME}), ${VAR_NAME}_SIZE) }")
     endforeach()
     string(REPLACE ";" ",\n" INIT_KERNELS "${INIT_KERNELS_LIST}")
-    configure_file(kernels/kernel_includes.cpp.in ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
+    configure_file(batch_pd/kernel_includes.cpp.in ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
 endfunction()
 
 set(CPPFILES "handle_api.cpp" "handlehost.cpp")
