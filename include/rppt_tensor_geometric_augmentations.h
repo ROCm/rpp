@@ -722,6 +722,8 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiTtype, rppHandle_t rppHandle);
+
 /*! @}
  */
 

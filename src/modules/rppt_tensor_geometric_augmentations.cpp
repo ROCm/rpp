@@ -1580,6 +1580,17 @@ RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr,
                                                       layoutParams,
                                                       rpp::deref(rppHandle));
     }
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        jpeg_compression_distortion_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                        srcDescPtr,
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                        dstDescPtr,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 }
