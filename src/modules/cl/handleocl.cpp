@@ -419,19 +419,9 @@ struct HandleImpl
     }
 };
 
-Handle::Handle(rppAcceleratorQueue_t stream, size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
-    clRetainCommandQueue(stream);
-    impl->queue   = HandleImpl::AqPtr{stream};
-    impl->context = impl->create_context_from_queue();
-
-    this->SetAllocator(nullptr, nullptr, nullptr);
-    impl->PreInitializeBuffer();
-}
-
-Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
-{
     clRetainCommandQueue(stream);
     impl->queue   = HandleImpl::AqPtr{stream};
     impl->context = impl->create_context_from_queue();
@@ -451,81 +441,6 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
     impl->PreInitializeBufferCPU();
 }
 
-Handle::Handle() : impl(new HandleImpl())
-{
-    impl->PreInitializeBuffer();
-
-    // Create an OpenCL context
-    impl->context = impl->create_context();
-
-    // Get the size of device list data
-    cl_uint deviceListSize;
-    if(clGetContextInfo(impl->context.get(),
-                        CL_CONTEXT_NUM_DEVICES,
-                        sizeof(cl_uint),
-                        &deviceListSize,
-                        nullptr) != CL_SUCCESS)
-    {
-        RPP_THROW("Error: Getting Handle Info (device list size, clGetContextInfo)");
-    }
-    if(deviceListSize == 0)
-    {
-        RPP_THROW("Error: No devices found.");
-    }
-
-    // Detect OpenCL devices
-    std::vector<cl_device_id> devices(deviceListSize);
-
-    // Get the device list data
-    if(clGetContextInfo(impl->context.get(),
-                        CL_CONTEXT_DEVICES,
-                        deviceListSize * sizeof(cl_device_id),
-                        devices.data(),
-                        nullptr) != CL_SUCCESS)
-    {
-        RPP_THROW("Error: Getting Handle Info (device list, clGetContextInfo)");
-    }
-
-#ifdef _WIN32
-    // Just using the first device as default
-    impl->device = devices.at(0);
-#else
-    // Pick device based on process id
-    auto pid = ::getpid();
-    assert(pid > 0);
-    impl->device = devices.at(pid % devices.size());
-#endif
-
-#if !RPP_INSTALLABLE
-    // TODO: Store device name in handle
-    std::string deviceName = rpp::GetDeviceInfo<CL_DEVICE_NAME>(impl->device);
-    ParseDevName(deviceName);
-    RPP_LOG_I("Device name: " << deviceName);
-#endif
-
-    // Create an OpenCL command queue
-    cl_int status = 0;
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#endif
-    impl->queue = HandleImpl::AqPtr{clCreateCommandQueue(
-        impl->context.get(), impl->device, CL_QUEUE_PROFILING_ENABLE, &status)};
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-    if(status != CL_SUCCESS)
-    {
-        RPP_THROW("Creating Command Queue. (clCreateCommandQueue)");
-    }
-    this->SetAllocator(nullptr, nullptr, nullptr);
-    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
-    if(impl->numThreads == 0)
-        impl->numThreads = impl->nBatchSize;
-    // RPP_LOG_I(*this);
-}
-
-Handle::Handle(Handle&&) noexcept = default;
 Handle::~Handle()                 = default;
 
 void Handle::SetStream(rppAcceleratorQueue_t streamID) const
