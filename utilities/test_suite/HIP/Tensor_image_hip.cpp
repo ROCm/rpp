@@ -324,7 +324,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, batchSize, 0, stream, backend);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
@@ -1749,7 +1750,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
     if(testType == 1)
     {
         // Display measured times
