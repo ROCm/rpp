@@ -176,6 +176,7 @@ __device__ void median_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *media
         src_f1[i * 16 + 2] = rpp_hip_unpack2(src_ui4.x);
         src_f1[i * 16 + 3] = rpp_hip_unpack3(src_ui4.x);
         src_f1[i * 16 + 4] = rpp_hip_unpack0(src_ui4.y);
+        src_f1[i * 16 + 5] = rpp_hip_unpack1(src_ui4.y);
         src_f1[i * 16 + 6] = rpp_hip_unpack2(src_ui4.y);
         src_f1[i * 16 + 7] = rpp_hip_unpack3(src_ui4.y);
         src_f1[i * 16 + 8] = rpp_hip_unpack0(src_ui4.z);
@@ -681,13 +682,13 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
 // kernelSize = 9
 template <typename T>
 __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                                 uint3 srcStridesNCH,
+                                                 T *dstPtr,
+                                                 uint3 dstStridesNCH,
+                                                 int channelsDst,
+                                                 uint padLength,
+                                                 uint2 tileSize,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
