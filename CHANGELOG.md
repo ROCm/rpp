@@ -5,16 +5,10 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ## (Unreleased) RPP 2.0.0
 
 ### Added
-* RPP Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
 
 ### Changed
 
-* RPP Tensor Gaussian Filter support on HOST
-* RPP Fog augmentation on HOST and HIP
-* RPP Rain augmentation on HOST and HIP
-* RPP Warp Perspective on HOST and HIP
-* RPP Tensor Bitwise-XOR support on HOST and HIP
-* RPP Threshold on HOST and HIP
+* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 
 ### Removed
 
@@ -27,7 +21,15 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Added
 
-## (Unreleased) RPP 1.9.2
+* RPP Tensor Gaussian Filter support on HOST (CPU) backend. (#478)
+* RPP Fog augmentation on HOST (CPU) and HIP backends. (#446)
+* RPP Rain augmentation on HOST(CPU) and HIP backends. (#463)
+* RPP Warp Perspective on HOST (CPU) and HIP backends. (#451)
+* RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
+* RPP Threshold on HOST (CPU) and HIP backends. (#456)
+* RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
+* RPP Audio Support for Spectrogram on HIP backend. (#433)
+* RPP Audio Support for Mel Filter Bank on HIP backend. (#421)
 
 ### Changed
 
