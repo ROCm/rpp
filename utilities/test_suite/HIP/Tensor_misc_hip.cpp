@@ -254,9 +254,6 @@ int main(int argc, char **argv)
             case 3:
             {
                 testCaseName  = "concat";
-                Rpp32u *axis;
-                set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
-
                 startWallTime = omp_get_wtime();
                 rppt_concat_gpu(d_inputF32, d_inputF32Second, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_outputF32, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 break;
@@ -276,28 +273,6 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
     rppDestroyGPU(handle);
-
-    if(DEBUG_MODE)
-    {
-        CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSize * 2 * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-        CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        std::ofstream refFile, refFile1;
-        std::string refFileName;
-        refFileName = func + "_host.csv";
-        refFile1.open("input.csv");
-        refFile.open(refFileName);
-        for (int i = 0; i < oBufferSize * 2; i++)
-        {
-            refFile << *(outputF32 + i) << ",";
-        }
-        for (int i = 0; i < iBufferSize; i++)
-        {
-            refFile1 << *(inputF32 + i) << ",";
-        }
-        refFile.close();
-        refFile1.close();
-    }
 
     // compare outputs if qaMode is true
     if(qaMode)

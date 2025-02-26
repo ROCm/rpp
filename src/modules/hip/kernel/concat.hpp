@@ -95,7 +95,7 @@ __global__ void concat_3d_hip_tensor(T *srcPtr,
                                      uint *src2Strides,
                                      T *dstPtr,
                                      uint *dstStrides,
-                                     uint *dstDims,
+                                     uint *dims,
                                      uint axis,
                                      Rpp32u *roiTensor)
 {
@@ -103,68 +103,29 @@ __global__ void concat_3d_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= dstDims[2] || id_y >= dstDims[1] || id_z >= dstDims[3])
+    if(id_x >= dims[2] || id_y >= dims[1] || id_z >= dims[0])
         return;
 
-    uint *roi = roiTensor;
-    uint begin[3] = {roi[0], roi[1], roi[2]};
-    uint length[3] = {roi[3], roi[4], roi[5]};
+    uint dstIdx = id_z * dstStrides[1] + id_y * dstStrides[2] + id_x;
+    uint srcIdx1 = id_z * srcStrides[1] + id_y * srcStrides[2] + id_x;
+    uint srcIdx2 = id_z * src2Strides[1] + id_y * src2Strides[2] + id_x;
 
-    int numElements = (id_x < length[1]) ? length[1] - id_x : dstDims[2] - id_x;
-
-    uint dstIdx = id_z * (dstStrides[0] / dstStrides[2]) + id_y * (dstStrides[1] / dstStrides[2]) + id_x;
-    d_float8 src_f8;
-    if (axis == 0) // Concatenate along Height
+    d_float8 src_f8, src2_f8;
+    if((dims[2] - id_x) >= 8)
     {
-        if (id_y < length[0])
-        {
-            uint srcIdx1 = (id_z * (srcStrides[0] / srcStrides[2])) + (id_y + begin[0] ) * (srcStrides[1] / srcStrides[2]) + id_x;
-            if (numElements >= 8)
-                rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx1, &src_f8);
-            else
-                for (int i = 0; i < numElements; i++)
-                    dstPtr[dstIdx + i] = srcPtr[srcIdx1 + i];
-        }
-        else
-        {
-            uint srcIdx2 = (id_z  * (src2Strides[0] / src2Strides[2])) + (id_y - length[0] + begin[0]) * (src2Strides[1] / src2Strides[2]) + id_x;
-            if (numElements >= 8)
-                rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-            else
-                for (int i = 0; i < numElements; i++)
-                    dstPtr[dstIdx + i] = srcPtr2[srcIdx2 + i];
-        }
-    }
-    else if (axis == 1) // Concatenate along height
-    {
-        if (id_y < length[1])
-        {
-            uint srcIdx1 = id_z * srcStrides[2] + (id_y + begin[1]) * srcStrides[1] + id_x;
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx1, &src_f8);
-        }
-        else
-        {
-            uint srcIdx2 = id_z * src2Strides[2] + (id_y - length[1] + begin[1]) * src2Strides[1] + id_x;
-            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-        }
-    }
-    else if (axis == 2) // Concatenate along width
-    {
-        if (id_x < length[2])
-        {
-            uint srcIdx1 = id_z * srcStrides[2] + id_y * srcStrides[1] + (id_x + begin[2]);
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx1, &src_f8);
-        }
-        else
-        {
-            uint srcIdx2 = id_z * src2Strides[2] + id_y * src2Strides[1] + (id_x - length[2] + begin[2]);
-            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-        }
-    }
-
-    // Store the results back to the destination tensor
-    if (numElements >= 8)
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx1, &src_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &src_f8);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + srcStrides[2], &src_f8);
+    }
+    else
+    {
+        for(int i = 0; i < (dstStrides[2] - id_x); i++)
+        {
+            dstPtr[dstIdx + i] = srcPtr[srcIdx1 + i];
+            dstPtr[dstIdx + srcStrides[2] + i] = srcPtr2[srcIdx2 + i];
+        }
+    }
 }
 
 template <typename T>
@@ -273,24 +234,62 @@ RppStatus hip_exec_concat_tensor(T *srcPtr,
     }
     else if (numDims == 3)
     {
-        globalThreads_x = dstGenericDescPtr->dims[2];
-        globalThreads_y = dstGenericDescPtr->dims[1];
-        globalThreads_z = dstGenericDescPtr->dims[3];
-
+        if(axis == 0)
+        {
+            srcGenericDescPtr->strides[2] = srcGenericDescPtr->strides[0];
+            srcGenericDescPtr->strides[0] = srcGenericDescPtr->strides[1] = 1;
+            src2GenericDescPtr->strides[2] = src2GenericDescPtr->strides[0];
+            src2GenericDescPtr->strides[0] = src2GenericDescPtr->strides[1] = 1;
+            dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[0];
+            dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
+        }
+        else if(axis == 1)
+        {
+            srcGenericDescPtr->strides[2] = srcGenericDescPtr->strides[1];
+            srcGenericDescPtr->strides[0] = srcGenericDescPtr->strides[1] = 1;
+            src2GenericDescPtr->strides[2] = src2GenericDescPtr->strides[1];
+            src2GenericDescPtr->strides[0] = src2GenericDescPtr->strides[1] = 1;
+            dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[1];
+            dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
+        }
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
+            Rpp32u *roi = roiTensor + batchCount * numDims * 2;
+            Rpp32u *begin = roi;
+            Rpp32u *length = &roi[numDims];
+            Rpp32u *dims = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+            if(axis == 0)
+            {
+                dims[0] = dims[1] = 1;
+                dims[2] = length[0] * length[1] * length[2];
+            }
+            else if(axis == 1)
+            {
+                dims[0] = 1;
+                dims[1] = length[0];
+                dims[2] = length[1] * length[2];
+            }
+            else if(axis == 2)
+            {
+                dims[0] = length[0];
+                dims[1] = length[1];
+                dims[2] = length[2];
+            }
+            globalThreads_x = dims[2];
+            globalThreads_y = dims[1];
+            globalThreads_z = dims[0];
             hipLaunchKernelGGL(concat_3d_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
-                               srcPtr2 + (batchCount * src2GenericDescPtr->strides[0]),
+                               srcPtr + (batchCount * dims[0] * dims[1] * dims[2]),
+                               srcPtr2 + (batchCount * dims[0] * dims[1] * dims[2]),
                                srcGenericDescPtr->strides,
                                src2GenericDescPtr->strides,
-                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                               dstPtr + (batchCount * dims[0] * dims[1] * dims[2] * 2),
                                dstGenericDescPtr->strides,
-                               dstGenericDescPtr->dims,
+                               dims,
                                axis,
                                &roiTensor[batchCount * 6]);
         }

@@ -365,7 +365,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     }
 
     int sampleLength = bufferLength / batchSize;
-    printf("\n sample length %d , ", sampleLength);
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
@@ -381,7 +380,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             else
                 printf("\n index %d output %f ref %f ",j, out[j],ref[j]);
         }
-        printf("\n cnt %d", cnt);
         if (cnt == sampleLength)
             fileMatch++;
     }
