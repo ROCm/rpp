@@ -328,7 +328,7 @@ int main(int argc, char **argv)
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%u", additionalParam);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         strcat(func, "_kSize");
         strcat(func, additionalParam_char);
         strcat(dst, "_kSize");
@@ -776,7 +776,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, 0, stream, backend);
 
     clock_t start, end;
     double gpu_time_used;
@@ -2386,7 +2387,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump
 

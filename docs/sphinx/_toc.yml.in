@@ -5,27 +5,35 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
-- entries:
-  - file: what-is-rpp.rst
-
 
 - caption: Install
   entries:
-  - file: install/install.rst
+  - file: install/rpp-prerequisites.rst
+    title: RPP prerequisites
+  - file: install/rpp-install.rst
     title: Install RPP
+  - file: install/rpp-install-with-installer.rst
+    title: Install RPP with package installer 
+  - file: install/rpp-build-and-install.rst
+    title: Build and install RPP from source  
+  - file: install/rpp-verify-install.rst
+    title: Verify the RPP installation
 
 - caption: Reference
   entries:
-  - file: doxygen/html/globals
-    title: API library
+  - file: reference/rpp-supported-functionalities.rst
+    title: Supported functionalities and variants
+  - file: reference/rpp-api-reference.rst
+    title: RPP API reference
     subtrees:
     - entries:
       - file: doxygen/html/files
-        title: Modules
+        title: RPP header files
+      - file: doxygen/html/group__group__rppdefs
+        title: RPP Common definitions
       - file: doxygen/html/annotated
-        title: Data structures
-      - file: doxygen/html/deprecated
-        title: Deprecated functions
+        title: RPP data structures
+
 
 - caption: About
   entries:

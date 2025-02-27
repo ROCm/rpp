@@ -28,7 +28,7 @@ cmake_minimum_required(VERSION 3.10)
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- rpp-test: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
@@ -39,6 +39,8 @@ if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_CXX_COMPILER clang++)
 endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(rpp-test)
 # make test with CTest
@@ -132,21 +134,21 @@ else()
 
     if(Python3_FOUND)
         if (PANDAS_FOUND EQUAL 0)
-            if(OpenMP_FOUND)
+            if(OpenMP_CXX_FOUND)
                 message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
-                # HOST test set 1 - rpp_qa_tests_tensor_host_all - HOST Tensor-Image QA PASS/FAIL tests
+                # HOST test set 1 - rpp_qa_tests_tensor_image_host_all - HOST Tensor-Image QA PASS/FAIL tests
                 if(TurboJpeg_FOUND)
                     if(OpenCV_FOUND)
                         add_test(
-                            NAME rpp_qa_tests_tensor_host_all
-                            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests.py --qa_mode 1 --batch_size 3
+                            NAME rpp_qa_tests_tensor_image_host_all
+                            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runImageTests.py --qa_mode 1 --batch_size 3
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
                     else()
-                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_host_all' since OpenCV is not found!${ColourReset}")
+                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since OpenCV is not found!${ColourReset}")
                     endif(OpenCV_FOUND)
                 else()
-                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_host_all' since TurboJpeg is not found!${ColourReset}")
+                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since TurboJpeg is not found!${ColourReset}")
                 endif(TurboJpeg_FOUND)
 
                 # HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all - HOST Tensor-Voxel QA PASS/FAIL tests
@@ -198,19 +200,19 @@ else()
                     find_package(HIP QUIET)
                     if(HIP_FOUND)
                         message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
-                        # HIP test set 1 - rpp_qa_tests_tensor_hip_all - HIP Tensor-Image QA PASS/FAIL tests
+                        # HIP test set 1 - rpp_qa_tests_tensor_image_hip_all - HIP Tensor-Image QA PASS/FAIL tests
                         if(TurboJpeg_FOUND)
                             if(OpenCV_FOUND)
                                 add_test(
-                                    NAME rpp_qa_tests_tensor_hip_all
-                                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests.py --qa_mode 1 --batch_size 3
+                                    NAME rpp_qa_tests_tensor_image_hip_all
+                                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runImageTests.py --qa_mode 1 --batch_size 3
                                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                                 )
                             else()
-                                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_hip_all' since OpenCV is not found!${ColourReset}")
+                                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since OpenCV is not found!${ColourReset}")
                             endif(OpenCV_FOUND)
                         else()
-                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_hip_all' since TurboJpeg is not found!${ColourReset}")
+                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since TurboJpeg is not found!${ColourReset}")
                         endif(TurboJpeg_FOUND)
 
                         # HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all - HIP Tensor-Voxel QA PASS/FAIL tests
@@ -257,7 +259,7 @@ else()
                 endif()
             else()
                 message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since OpenMP is not found!${ColourReset}")
-            endif(OpenMP_FOUND)
+            endif(OpenMP_CXX_FOUND)
         else()
             message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Pandas is not found!${ColourReset}")
         endif(PANDAS_FOUND EQUAL 0)

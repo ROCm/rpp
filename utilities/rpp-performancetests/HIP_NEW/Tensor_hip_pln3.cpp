@@ -323,7 +323,7 @@ int main(int argc, char **argv)
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%u", additionalParam);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         strcat(func, "_kSize");
         strcat(func, additionalParam_char);
     }
@@ -761,7 +761,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, 0, stream, backend);
 
     clock_t start, end;
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
@@ -2221,7 +2222,7 @@ int main(int argc, char **argv)
     avg_time_used /= 100;
     cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // Free memory
 

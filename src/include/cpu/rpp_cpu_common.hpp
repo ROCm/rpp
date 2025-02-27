@@ -4214,9 +4214,9 @@ inline void compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
         {
             // Load
-            h1 =  _mm_loadu_si128((__m128i *)srcPtrTempH);
-            h2 =  _mm_loadu_si128((__m128i *)srcPtrTempS);
-            h3 =  _mm_loadu_si128((__m128i *)srcPtrTempV);
+            h1 =  _mm_loadu_ps((float*)srcPtrTempH);
+            h2 =  _mm_loadu_ps((float*)srcPtrTempS);
+            h3 =  _mm_loadu_ps((float*)srcPtrTempV);
 
             h1 = _mm_div_ps(h1, pDiv);
 
@@ -5905,7 +5905,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                         for(int k = 0; k < filter.size; k += filterKernelStride)
                         {
                             // Generate mask to determine the negative indices in the iteration
-                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128 pNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
                             __m128 pInputR[numOutPixels], pInputG[numOutPixels], pInputB[numOutPixels], pCoeffs[numOutPixels];
                             Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
@@ -5916,7 +5916,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
 
                             for(int l = 0; l < numOutPixels; l++)
                             {
-                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                pNegativeIndexMask[l] = _mm_castsi128_ps(_mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pxDstLocInit), xmm_px0));    // Generate mask to determine the negative indices in the iteration
                                 Rpp32s srcx = index[x + l] + k;
 
                                 // Load filterKernelStride(4) consecutive pixels
@@ -5926,9 +5926,9 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));        // Load coefficients
 
                                 // If negative index is present replace the input pixel value with first value in the row
-                                pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pxNegativeIndexMask[l]);
-                                pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pxNegativeIndexMask[l]);
-                                pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pxNegativeIndexMask[l]);
+                                pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pNegativeIndexMask[l]);
+                                pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pNegativeIndexMask[l]);
+                                pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pNegativeIndexMask[l]);
                             }
 
                             // Perform transpose operation to arrange input pixels from different output locations in each vector
@@ -6114,7 +6114,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                         pxIdx[3] = _mm_set1_epi32(index[x + 3]);
                         for(int k = 0; k < filter.size; k += filterKernelStride)
                         {
-                            __m128i pxNegativeIndexMask[numOutPixels];
+                            __m128 pNegativeIndexMask[numOutPixels];
                             __m128i pxKernelIdx = _mm_set1_epi32(k);
                             __m128 pInput[numOutPixels], pCoeffs[numOutPixels];
                             Rpp32s kernelAdd = (k + filterKernelStride) > filter.size ? filterKernelSizeOverStride : filterKernelStride;
@@ -6122,10 +6122,10 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                             set_zeros(pCoeffs, numOutPixels);
                             for(int l = 0; l < numOutPixels; l++)
                             {
-                                pxNegativeIndexMask[l] = _mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pDstLocInit), xmm_px0);    // Generate mask to determine the negative indices in the iteration
+                                pNegativeIndexMask[l] = _mm_castsi128_ps(_mm_cmplt_epi32(_mm_add_epi32(_mm_add_epi32(pxIdx[l], pxKernelIdx), xmm_pxDstLocInit), xmm_px0));    // Generate mask to determine the negative indices in the iteration
                                 rpp_simd_load(rpp_load4_f32_to_f32, &inRowPtr[index[x + l] + k], &pInput[l]);   // Load filterKernelStride(4) consecutive pixels
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));                 // Load coefficients
-                                pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pxNegativeIndexMask[l]);        // If negative index is present replace the pixel value with first value in the row
+                                pInput[l] = _mm_blendv_ps(pInput[l], pFirstVal, pNegativeIndexMask[l]);         // If negative index is present replace the pixel value with first value in the row
                             }
                             _MM_TRANSPOSE4_PS(pInput[0], pInput[1], pInput[2], pInput[3]);  // Perform transpose operation to arrange input pixels from different output locations in each vector
                             for (int l = 0; l < kernelAdd; l++)
@@ -6630,6 +6630,31 @@ inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
     pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
 }
 
+inline void compute_rain_48_host(__m256 *p1, __m256 *p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
+    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+}
+
+inline void compute_rain_32_host(__m256 *p1, __m256 *p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[2], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[3], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+}
+
+inline void compute_rain_24_host(__m256 *p1, __m256 p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+}
+
 // Compute hanning window
 inline RPP_HOST_DEVICE void hann_window(Rpp32f *output, Rpp32s windowSize)
 {
@@ -6664,6 +6689,46 @@ inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s 
             break;
     }
     return loc;
+}
+
+inline void compute_threshold_8_host(__m256 *p, __m256 *pThresholdParams)
+{
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));
+}
+
+inline void compute_threshold_16_host(__m256 *p, __m256 *pThresholdParams)
+{
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));
+    p[1] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[1],_CMP_LE_OQ)));
+}
+
+inline void compute_threshold_24_host(__m256 *p, __m256 *pThresholdParams)
+{
+    __m256 pChannelCheck[3];
+    pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ));
+    pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[3],_CMP_LE_OQ));
+    pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[2], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[2], pThresholdParams[5],_CMP_LE_OQ));
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[1] = p[0];
+    p[2] = p[0];
+}
+
+inline void compute_threshold_48_host(__m256 *p, __m256 *pThresholdParams)
+{
+    __m256 pChannelCheck[3];
+    pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ));
+    pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[2], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[2], pThresholdParams[3],_CMP_LE_OQ));
+    pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[4], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[4], pThresholdParams[5],_CMP_LE_OQ));
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[2] = p[0];
+    p[4] = p[0];
+
+    pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[1],_CMP_LE_OQ));
+    pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[3], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[3], pThresholdParams[3],_CMP_LE_OQ));
+    pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[5], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[5], pThresholdParams[5],_CMP_LE_OQ));
+    p[1] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[3] = p[1];
+    p[5] = p[1];
 }
 
 #endif //RPP_CPU_COMMON_H

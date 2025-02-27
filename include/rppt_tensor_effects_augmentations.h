@@ -58,7 +58,7 @@ extern "C" {
  * \param [in] translateVector translateVector for gridmask calculation = grid X and Y translation lengths in pixels (a single RpptUintVector2D x,y value pair that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -82,7 +82,7 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param [in] translateVector translateVector for gridmask calculation = grid X and Y translation lengths in pixels (a single RpptUintVector2D x,y value pair that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -105,7 +105,7 @@ RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] spatterColor RGB values to use for the spatter augmentation (A single set of 3 Rpp8u values as RpptRGB that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorPtrSrc[i].xywhROI.roiWidth <= 1920 and roiTensorPtrSrc[i].xywhROI.roiHeight <= 1080)
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -128,7 +128,7 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] spatterColor RGB values to use for the spatter augmentation (A single set of 3 Rpp8u values as RpptRGB that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorPtrSrc[i].xywhROI.roiWidth <= 1920 and roiTensorPtrSrc[i].xywhROI.roiHeight <= 1080)
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -153,7 +153,7 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -178,7 +178,7 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPt
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -200,7 +200,7 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -222,7 +222,7 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -245,7 +245,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -268,7 +268,7 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -291,7 +291,7 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in HOST memory, of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -314,7 +314,7 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDes
  * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned/HOST memory, of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -340,7 +340,7 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDesc
  * \param[in] phaseYTensor amplitudeY values for water effect (1D tensor in HOST memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -366,7 +366,7 @@ RppStatus rppt_water_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param[in] phaseYTensor amplitudeY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -390,7 +390,7 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param[in] permutedIndicesTensor Array of batchSize permutation sets (2D tensor in HOST memory, of batchSize * 4. Each set of 4 permutations contains Rpp32u image indices for each region in the respective RICAP-output-image in the batch)
  * \param[in] roiPtrInputCropRegion Array of 4 ROIs (2D tensor in HOST memory, of size 4 * 4-elements per ROI, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -414,7 +414,7 @@ RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param[in] permutedIndicesTensor Array of batchSize permutation sets (2D tensor in pinned/HOST memory, of batchSize * 4. Each set of 4 permutations contains Rpp32u image indices for each region in the respective RICAP-output-image in the batch)
  * \param[in] roiPtrInputCropRegion Array of 4 ROIs (2D tensor in HIP memory, of size 4 * 4-elements per ROI, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -435,7 +435,7 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -457,7 +457,7 @@ RppStatus rppt_vignette_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -478,7 +478,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] kernelSizeTensor kernelsize value for jitter calculation (kernelSize = 3/5/7 for optimal use)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -499,7 +499,7 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * \param [in]  kernelSizeTensor kernelsize value for jitter calculation (kernelSize = 3/5/7 for optimal use)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -521,7 +521,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -543,7 +543,7 @@ RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr src
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -568,7 +568,7 @@ RppStatus rppt_gaussian_noise_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcD
  * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -593,7 +593,7 @@ RppStatus rppt_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -615,7 +615,7 @@ RppStatus rppt_erase_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  *                        For each point and for each image in the batch: 0 < point.x < width, 0 < point.y < height)
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -637,12 +637,66 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  *                        For each point and for each image in the batch: 0 < point.x < width, 0 < point.y < height)
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptChannelOffsets *rgbOffsets, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+/*! \brief Rain augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Rain augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The rain augmentation simulates a rain effect for a batch of RGB (3-channel) / greyscale (1-channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic Rain output when all images in a batch are of similar / same sizes </b> <br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be the same depth as srcPtr.
+ * \image html img640x480.png Sample Input
+ * \image html effects_augmentations_rain_img640x480.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] rainPercentage The percentage of the rain effect to be applied (0 <= rainPercentage <= 100)
+ * \param [in] rainWidth Width of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
+ * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
+ *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
+ * \param [in] alpha An array of alpha blending values in pinned / HIP memory is used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_rain_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f rainPercentage, Rpp32u rainWidth, Rpp32u rainHeight, Rpp32f slantAngle, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! \brief Pixelate augmentation on HOST backend for a NCHW/NHWC layout tensor
@@ -659,7 +713,7 @@ RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] pixelationPercentage 'pixelationPercentage' variable controls how much pixelation is applied to images.(pixelationPercentage value ranges from 0 to 100)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -681,7 +735,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param [in] pixelationPercentage 'pixelationPercentage' variable controls how much pixelation is applied to images.(pixelationPercentage value ranges from 0 to 100)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -704,7 +758,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] grayFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in HOST memory, of size batchSize, with 0 <= grayFactor <= 1 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -727,7 +781,7 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.

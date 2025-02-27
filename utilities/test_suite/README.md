@@ -4,16 +4,6 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
-* OpenMP
-  ```shell
-  sudo apt install libomp-dev
-  ```
-
-* OpenCV Version `3.X`/`4.X`
-  ```shell
-  sudo apt install libopencv-dev
-  ```
-
 * [Turbo JPEG](https://libjpeg-turbo.org/)
   * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
   * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2)
@@ -34,19 +24,25 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo make install
   ```
 
-* Libsndfile
-  ```shell
-  sudo apt-get install libsndfile1-dev
-  ```
-
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
   ```shell
   git clone https://github.com/NIFTI-Imaging/nifti_clib.git
   cd nifti_clib
+  git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788
   mkdir build
   cd build
   cmake ..
   sudo make -j$nproc install
+  ```
+
+* OpenCV Version `3.X`/`4.X`
+  ```shell
+  sudo apt install libopencv-dev
+  ```
+
+* Libsndfile
+  ```shell
+  sudo apt-get install libsndfile1-dev
   ```
 
 * Python3 and Python3 PIP
@@ -54,14 +50,14 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo apt install python3-dev python3-pip
   ```
 
-* Python: Openpyxl
-  ```shell
-  pip install openpyxl
-  ```
-
 * Python: Pandas
   ```shell
-  pip install pandas
+  sudo apt install python3-pandas
+  ```
+
+* Python: Openpyxl
+  ```shell
+  sudo apt install python3-openpyxl
   ```
 
 >[!NOTE]
@@ -91,52 +87,52 @@ The image test suite accepts the following command line arguments:
 ### Running the Tests for HOST Backend (RPP Image Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+python runImageTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type>
 ```
 
 ### Running the Tests for HIP Backend (RPP Image Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
+python runImageTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 ```
 
 ### Modes of operation (Rpp Image Test Suite)
 -   QA mode (Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
-python runTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 1 --batch_size 3
+python runImageTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
 ``` python
-python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
+python runImageTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing images, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 0
+python runImageTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runTests.py --case_start 0 --case_end 91 --test_type 1
+python runImageTests.py --case_start 0 --case_end 91 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
 
 -   To run unittests for case numbers 0, 2, 4
 ``` python
-python runTests.py --case_list 0 2 4 --test_type 0
+python runImageTests.py --case_list 0 2 4 --test_type 0
 ```
 -   To run performance tests for case numbers 0, 2, 4
 ``` python
-python runTests.py --case_list 0 2 4 --test_type 1
+python runImageTests.py --case_list 0 2 4 --test_type 1
 ```
 
 To run performance tests with AMD rocprof kernel profiler for HIP backend variants. This will generate profiler times for HIP backend variants
 ``` python
-python runTests.py --test_type 1 --profiling YES
+python runImageTests.py --test_type 1 --profiling YES
 ```
 
 ### Summary of features (RPP Image Test Suite)

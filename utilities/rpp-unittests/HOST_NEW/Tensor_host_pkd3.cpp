@@ -325,7 +325,7 @@ int main(int argc, char **argv)
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%u", additionalParam);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         strcat(func, "_kSize");
         strcat(func, additionalParam_char);
         strcat(dst, "_kSize");
@@ -615,7 +615,8 @@ int main(int argc, char **argv)
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
-    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, noOfImages, numThreads, nullptr, backend);
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;
@@ -2121,7 +2122,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump
 

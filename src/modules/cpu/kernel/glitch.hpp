@@ -385,7 +385,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     rpp_simd_load(rpp_glitch_load6_f32pkd3_to_f32pkd3_avx, srcPtrChannel, glitchSrcLocArray, p);
-                    _mm256_storeu_si256((__m256i *)(dstPtrTemp), p);
+                    _mm256_storeu_ps(dstPtrTemp, p);
                     dstPtrTemp += 6;
                 }
 #endif

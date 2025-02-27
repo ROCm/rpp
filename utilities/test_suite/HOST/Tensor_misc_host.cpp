@@ -46,8 +46,8 @@ int main(int argc, char **argv)
     string dst = argv[8];
     string scriptPath = argv[9];
     qaMode = (testType == 0);
-    bool axisMaskCase = (testCase == 1 || testCase == 3);
-    bool permOrderCase = (testCase == 0);
+    bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
+    bool permOrderCase = (testCase == TRANSPOSE);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam;
 
@@ -68,14 +68,14 @@ int main(int argc, char **argv)
     if (axisMaskCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%d", axisMask);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%d", axisMask);
         func += "_" + std::to_string(nDim) + "d" + "_axisMask";
         func += additionalParam_char;
     }
     if (permOrderCase)
     {
         char additionalParam_char[2];
-        std::sprintf(additionalParam_char, "%d", permOrder);
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%d", permOrder);
         func += "_" + std::to_string(nDim) + "d" + "_permOrder";
         func += additionalParam_char;
     }
@@ -170,7 +170,8 @@ int main(int argc, char **argv)
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, batchSize, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, batchSize, numThreads, nullptr, backend);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     bool externalMeanStd = true;
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
-            case 0:
+            case TRANSPOSE:
             {
                 testCaseName  = "transpose";
                 Rpp32u permTensor[nDim];
@@ -200,7 +201,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 1:
+            case NORMALIZE:
             {
                 testCaseName  = "normalize";
                 float scale = 1.0;
@@ -235,7 +236,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 2:
+            case LOG:
             {
                 testCaseName  = "log";
 
@@ -308,6 +309,8 @@ int main(int argc, char **argv)
         avgWallTime /= numRuns;
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
+
+    rppDestroy(handle, backend);
 
     free(inputF32);
     free(outputF32);
