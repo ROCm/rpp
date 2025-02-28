@@ -1011,8 +1011,6 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
         int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
         int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
-        printf("\n Image cnt %d Height %d width %d ",imageCnt,height,width);
-
         for(int i = 0; i < height; i++)
         {
             rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
@@ -1022,14 +1020,8 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 1e-4)
-                {
+                if(diff <= 1e-6)
                     matchedIdx++;
-                    // if (imageCnt == 0)
-                    //     printf("\n Image %d height %d width %d output %f Ref %f",imageCnt,i,j,*outVal,*outRefVal);
-                }
-                else
-                    printf("\nMIs Image %d height %d width %d output %f Ref %f",imageCnt,i,j,*outVal,*outRefVal);
             }
         }
         if(matchedIdx == (height * width) && matchedIdx !=0)
@@ -1083,7 +1075,6 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width;
-        printf("\n Image cnt %d Height %d width %d ",imageCnt,height,width);
         int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
@@ -1100,15 +1091,8 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 1e-4)
-                    {
+                    if(diff <= 1e-6)
                         matchedIdx++;
-                        // if (imageCnt == 0)
-                        //     printf("\n Image %d height %d width %d output %f Ref %f Diff %f",imageCnt,i,j,*outVal,*outRefVal,diff);
-                    }
-                    else
-                        printf("\n Mis Image %d height %d width %d output %f Ref %f Diff %f ",imageCnt,i,j,*outVal,*outRefVal,diff);
-
                 }
             }
         }
