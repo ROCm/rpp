@@ -5,7 +5,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ## (Unreleased) RPP 2.0.0
 
 ### Added
-* RPP Bitwise NOT augmentation on HOST (CPU) and HIP backends. (#520)
+* RPP Bitwise NOT/AND/OR augmentations on HOST (CPU) and HIP backends. (#520)
 
 ### Changed
 
