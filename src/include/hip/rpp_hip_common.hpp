@@ -1858,33 +1858,35 @@ __device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_f
     dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
 }
 
-// d_float8 bitwiseAND
+// d_uchar8 bitwiseAND
 
-__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
-        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
-        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
-        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) & (uchar)(src2_f8->f1[3]));
-        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) & (uchar)(src2_f8->f1[4]));
-        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
-        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
-        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
+        dst_uc8->uc1[0] = src1_uc8->uc1[0] & src2_uc8->uc1[0];
+        dst_uc8->uc1[1] = src1_uc8->uc1[1] & src2_uc8->uc1[1];
+        dst_uc8->uc1[2] = src1_uc8->uc1[2] & src2_uc8->uc1[2];
+        dst_uc8->uc1[3] = src1_uc8->uc1[3] & src2_uc8->uc1[3];
+        dst_uc8->uc1[4] = src1_uc8->uc1[4] & src2_uc8->uc1[4];
+        dst_uc8->uc1[5] = src1_uc8->uc1[5] & src2_uc8->uc1[5];
+        dst_uc8->uc1[6] = src1_uc8->uc1[6] & src2_uc8->uc1[6];
+        dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
 }
 
-// d_float8 bitwiseOR
+// d_uchar8 bitwiseOR
 
-__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) | (uchar)(src2_f8->f1[0]));
-        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) | (uchar)(src2_f8->f1[1]));
-        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) | (uchar)(src2_f8->f1[2]));
-        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) | (uchar)(src2_f8->f1[3]));
-        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) | (uchar)(src2_f8->f1[4]));
-        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) | (uchar)(src2_f8->f1[5]));
-        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) | (uchar)(src2_f8->f1[6]));
-        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) | (uchar)(src2_f8->f1[7]));
+        dst_uc8->uc1[0] = src1_uc8->uc1[0] | src2_uc8->uc1[0];
+        dst_uc8->uc1[1] = src1_uc8->uc1[1] | src2_uc8->uc1[1];
+        dst_uc8->uc1[2] = src1_uc8->uc1[2] | src2_uc8->uc1[2];
+        dst_uc8->uc1[3] = src1_uc8->uc1[3] | src2_uc8->uc1[3];
+        dst_uc8->uc1[4] = src1_uc8->uc1[4] | src2_uc8->uc1[4];
+        dst_uc8->uc1[5] = src1_uc8->uc1[5] | src2_uc8->uc1[5];
+        dst_uc8->uc1[6] = src1_uc8->uc1[6] | src2_uc8->uc1[6];
+        dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
+
+// d_uchar8 bitwiseXOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
@@ -1896,6 +1898,20 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[5] = src1_uc8->uc1[5] ^ src2_uc8->uc1[5];
         dst_uc8->uc1[6] = src1_uc8->uc1[6] ^ src2_uc8->uc1[6];
         dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
+}
+
+// d_uchar8 bitwiseNOT
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseNot8(d_uchar8 *src_uc8, d_uchar8 *dst_uc8)
+{
+    dst_uc8->uc1[0] = ~src_uc8->uc1[0];
+    dst_uc8->uc1[1] = ~src_uc8->uc1[1];
+    dst_uc8->uc1[2] = ~src_uc8->uc1[2];
+    dst_uc8->uc1[3] = ~src_uc8->uc1[3];
+    dst_uc8->uc1[4] = ~src_uc8->uc1[4];
+    dst_uc8->uc1[5] = ~src_uc8->uc1[5];
+    dst_uc8->uc1[6] = ~src_uc8->uc1[6];
+    dst_uc8->uc1[7] = ~src_uc8->uc1[7];
 }
 
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
