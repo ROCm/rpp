@@ -62,14 +62,6 @@ inline float GetQualityFactorScale(int quality)
     return q_scale;
 }
 
-constexpr float r1 = 0.9807852804f; // cos(1 / 16.0 * PI) * SQRT2
-constexpr float r2 = 0.9238795325f; // cos(2 / 16.0 * PI) * SQRT2
-constexpr float r3 = 0.8314696123f; // cos(3 / 16.0 * PI) * SQRT2
-constexpr float r5 = 0.5555702330f; // cos(5 / 16.0 * PI) * SQRT2
-constexpr float r6 = 0.3826834324f; // cos(6 / 16.0 * PI) * SQRT2
-constexpr float r7 = 0.1950903220f; // cos(7 / 16.0 * PI) * SQRT2
-constexpr float isqrt2 = 0.7071067812f; // 1.0f / SQRT2
-
 void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __m256& f, __m256& g, __m256& h)
 {
     __m256 ac0145 = _mm256_unpacklo_ps(a, c); // a0 c0 a1 c1 a4 c4 a5 c5
@@ -100,13 +92,13 @@ void transpose_8x8_avx(__m256& a, __m256& b, __m256& c, __m256& d, __m256& e, __
     h = _mm256_permute2f128_ps(abcd37, efgh37, (3 << 4) | 1); //a7 b7 c7 d7 e7 f7 g7 h7
 }
 
-static constexpr float a = 1.387039845322148f;             // sqrt(2) * cos(    pi / 16);
-static constexpr float b = 1.306562964876377f;             // sqrt(2) * cos(    pi /  8);
-static constexpr float c = 1.175875602419359f;             // sqrt(2) * cos(3 * pi / 16);
-static constexpr float d = 0.785694958387102f;             // sqrt(2) * cos(5 * pi / 16);
-static constexpr float e = 0.541196100146197f;             // sqrt(2) * cos(3 * pi /  8);
-static constexpr float f = 0.275899379282943f;             // sqrt(2) * cos(7 * pi / 16);
-static constexpr float norm_factor = 0.3535533905932737f;  // 1 / sqrt(8)
+float a = 1.387039845322148f;             // sqrt(2) * cos(    pi / 16);
+float b = 1.306562964876377f;             // sqrt(2) * cos(    pi /  8);
+float c = 1.175875602419359f;             // sqrt(2) * cos(3 * pi / 16);
+float d = 0.785694958387102f;             // sqrt(2) * cos(5 * pi / 16);
+float e = 0.541196100146197f;             // sqrt(2) * cos(3 * pi /  8);
+float f = 0.275899379282943f;             // sqrt(2) * cos(7 * pi / 16);
+float norm_factor = 0.3535533905932737f;  // 1 / sqrt(8)
 
 void quantize_block(Rpp32f *block, Rpp32f quantTable[8][8], int stride)
 {
@@ -257,7 +249,8 @@ inline void dct_8x8_1d_avx2(__m256 *x) {
     x[0] = _mm256_setr_ps(y0, y1, y2, y3, y4, y5, y6, y7);
 }
 
-inline void dct_inv_8x8_1d_avx2(__m256 *x) {
+inline void dct_inv_8x8_1d_avx2(__m256 *x)
+{
     float x0 = _mm256_cvtss_f32(x[0]);
     float x1 = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(x[0], _mm256_setr_epi32(1,1,1,1,1,1,1,1)));
     float x2 = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(x[0], _mm256_setr_epi32(2,2,2,2,2,2,2,2)));
@@ -290,141 +283,6 @@ inline void dct_inv_8x8_1d_avx2(__m256 *x) {
     float y6 = norm_factor * (tmp8 - tmp10);
 
     x[0] =  _mm256_setr_ps(y0, y1, y2, y3, y4, y5, y6, y7);
-}
-
-void dct_fwd_8x8_1d_avx2(
-    __m256 &s0, __m256 &s1, __m256 &s2, __m256 &s3,
-    __m256 &s4, __m256 &s5, __m256 &s6, __m256 &s7)
-{
-    // Load constants into SIMD registers.
-    const __m256 xr1 = _mm256_set1_ps(r1);
-    const __m256 xr2 = _mm256_set1_ps(r2);
-    const __m256 xr3 = _mm256_set1_ps(r3);
-    const __m256 xr5 = _mm256_set1_ps(r5);
-    const __m256 xr6 = _mm256_set1_ps(r6);
-    const __m256 xr7 = _mm256_set1_ps(r7);
-    const __m256 xisqrt2 = _mm256_set1_ps(isqrt2);
-    const __m256 xhalf   = _mm256_set1_ps(0.5f);
-
-    // First stage: butterfly sums and differences.
-    __m256 t0 = _mm256_add_ps(s0, s7);
-    __m256 t7 = _mm256_sub_ps(s0, s7);
-    __m256 t1 = _mm256_add_ps(s1, s6);
-    __m256 t6 = _mm256_sub_ps(s1, s6);
-    __m256 t2 = _mm256_add_ps(s2, s5);
-    __m256 t5 = _mm256_sub_ps(s2, s5);
-    __m256 t3 = _mm256_add_ps(s3, s4);
-    __m256 t4 = _mm256_sub_ps(s3, s4);
-
-    // Even part (s0, s2, s4, s6)
-    __m256 c0 = _mm256_add_ps(t0, t3);
-    __m256 c3 = _mm256_sub_ps(t0, t3);
-    __m256 c1 = _mm256_add_ps(t1, t2);
-    __m256 c2 = _mm256_sub_ps(t1, t2);
-
-    // For DC terms, forward scaling uses isqrt2*0.5
-    __m256 even_scale_dc = _mm256_set1_ps(isqrt2 * 0.5f);
-    s0 = _mm256_mul_ps(_mm256_add_ps(c0, c1), even_scale_dc);
-    s4 = _mm256_mul_ps(_mm256_sub_ps(c0, c1), even_scale_dc);
-
-    // Other even coefficients are scaled by 0.5
-    __m256 even_scale = xhalf;
-    s2 = _mm256_mul_ps(_mm256_fmadd_ps(c2, xr6, _mm256_mul_ps(c3, xr2)), even_scale);
-    s6 = _mm256_mul_ps(_mm256_fmsub_ps(c3, xr6, _mm256_mul_ps(c2, xr2)), even_scale);
-
-    // Odd part (s1, s3, s5, s7)
-    __m256 odd_scale = xhalf;
-    __m256 c3_odd = _mm256_fmadd_ps(t4, xr3, _mm256_mul_ps(t7, xr5));
-    __m256 c0_odd = _mm256_fmsub_ps(t7, xr3, _mm256_mul_ps(t4, xr5));
-    __m256 c2_odd = _mm256_fmadd_ps(t5, xr1, _mm256_mul_ps(t6, xr7));
-    __m256 c1_odd = _mm256_fmsub_ps(t6, xr1, _mm256_mul_ps(t5, xr7));
-
-    s3 = _mm256_mul_ps(_mm256_sub_ps(c0_odd, c2_odd), odd_scale);
-    s5 = _mm256_mul_ps(_mm256_sub_ps(c3_odd, c1_odd), odd_scale);
-
-    __m256 temp0 = _mm256_mul_ps(_mm256_add_ps(c0_odd, c2_odd), odd_scale);
-    __m256 temp3 = _mm256_mul_ps(_mm256_add_ps(c1_odd, c3_odd), odd_scale);
-    s1 = _mm256_add_ps(temp0, temp3);
-    s7 = _mm256_sub_ps(temp0, temp3);
-}
-
-// Inverse 1D DCT for 8 elements using AVX2
-// This function is intended to invert the transformation done by dct_fwd_8x8_1d_avx2.
-void idct_8x8_1d_avx2(
-    __m256 &s0, __m256 &s1, __m256 &s2, __m256 &s3,
-    __m256 &s4, __m256 &s5, __m256 &s6, __m256 &s7)
-{
-    // Precompute some standard constants.
-    const __m256 sqrt2 = _mm256_set1_ps(std::sqrt(2.0f));
-    const __m256 two   = _mm256_set1_ps(2.0f);
-    const __m256 xr1   = _mm256_set1_ps(r1);
-    const __m256 xr2   = _mm256_set1_ps(r2);
-    const __m256 xr3   = _mm256_set1_ps(r3);
-    const __m256 xr5   = _mm256_set1_ps(r5);
-    const __m256 xr6   = _mm256_set1_ps(r6);
-    const __m256 xr7   = _mm256_set1_ps(r7);
-
-    // Reverse scaling: note that in the forward transform even coefficients were multiplied by 0.5 (or isqrt2*0.5)
-    // and odd coefficients by 0.5. Here we multiply by the reciprocals.
-    __m256 even_scale = _mm256_mul_ps(sqrt2, two); // equals 2*sqrt2
-    __m256 odd_scale  = two;                       // equals 2
-
-    // Process even components.
-    __m256 z0_even = _mm256_add_ps(s0, s4);
-    __m256 z1_even = _mm256_sub_ps(s0, s4);
-    __m256 z4_even = _mm256_mul_ps(_mm256_add_ps(s2, s6), xr6);
-    __m256 z2_even = _mm256_sub_ps(z4_even, _mm256_mul_ps(s6, _mm256_add_ps(xr2, xr6)));
-    __m256 z3_even = _mm256_fmadd_ps(s2, _mm256_sub_ps(xr2, xr6), z4_even);
-
-    __m256 a0 = _mm256_add_ps(z0_even, z3_even);
-    __m256 a3 = _mm256_sub_ps(z0_even, z3_even);
-    __m256 a1 = _mm256_add_ps(z1_even, z2_even);
-    __m256 a2 = _mm256_sub_ps(z1_even, z2_even);
-
-    a0 = _mm256_mul_ps(a0, even_scale);
-    a1 = _mm256_mul_ps(a1, even_scale);
-    a2 = _mm256_mul_ps(a2, even_scale);
-    a3 = _mm256_mul_ps(a3, even_scale);
-
-    // For the odd part, precompute constants to clarify the operations.
-    const __m256 c_neg_r3_r5    = _mm256_set1_ps(-(r3 + r5));      // -(r3 + r5)
-    const __m256 c_neg_r3_plus_r5 = _mm256_set1_ps(-r3 + r5);         // (-r3 + r5)
-    const __m256 c_neg_r3_r1    = _mm256_set1_ps(-(r3 + r1));      // -(r3 + r1)
-    const __m256 c_r7_minus_r3  = _mm256_set1_ps(r7 - r3);          // (r7 - r3)
-    const __m256 c_b0           = _mm256_set1_ps(r1 + r3 - r5 - r7); // used in b0
-    const __m256 c_b1           = _mm256_set1_ps(r1 + r3 + r5 - r7); // used in b1
-    const __m256 c_b2           = _mm256_set1_ps(r1 + r3 - r5 + r7); // used in b2
-    const __m256 c_b3           = _mm256_set1_ps(-r1 + r3 + r5 - r7); // used in b3
-
-    // Process odd components.
-    __m256 z0 = _mm256_add_ps(s1, s7);
-    __m256 z1 = _mm256_add_ps(s3, s5);
-    __m256 z4 = _mm256_mul_ps(_mm256_add_ps(z0, z1), xr3);
-
-    __m256 z2 = _mm256_fmsub_ps(c_neg_r3_r5, _mm256_add_ps(s3, s7), z4);
-    __m256 z3 = _mm256_fmsub_ps(c_neg_r3_plus_r5, _mm256_add_ps(s1, s5), z4);
-    z0 = _mm256_mul_ps(z0, c_r7_minus_r3);
-    z1 = _mm256_mul_ps(z1, c_neg_r3_r1);
-
-    __m256 b3 = _mm256_fmadd_ps(s7, c_b3, _mm256_add_ps(z0, z2));
-    __m256 b2 = _mm256_fmadd_ps(s5, c_b2, _mm256_add_ps(z1, z3));
-    __m256 b1 = _mm256_fmadd_ps(s3, c_b1, _mm256_add_ps(z1, z2));
-    __m256 b0 = _mm256_fmadd_ps(s1, c_b0, _mm256_add_ps(z0, z3));
-
-    b3 = _mm256_mul_ps(b3, odd_scale);
-    b2 = _mm256_mul_ps(b2, odd_scale);
-    b1 = _mm256_mul_ps(b1, odd_scale);
-    b0 = _mm256_mul_ps(b0, odd_scale);
-
-    // Combine even and odd parts.
-    s0 = _mm256_add_ps(a0, b0);
-    s7 = _mm256_sub_ps(a0, b0);
-    s1 = _mm256_add_ps(a1, b1);
-    s6 = _mm256_sub_ps(a1, b1);
-    s2 = _mm256_add_ps(a2, b2);
-    s5 = _mm256_sub_ps(a2, b2);
-    s3 = _mm256_add_ps(a3, b3);
-    s4 = _mm256_sub_ps(a3, b3);
 }
 
 void quantizeBlockAVX2(__m256 *p, float quantTable[8][8])
@@ -793,6 +651,86 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
     }
 }
 
+void process_jpeg_compression_distortion(__m256* pRgb, __m256* pY, __m256* pCb, __m256* pCr,
+                                         float baseLumaTable[8][8], float baseChromaTable[8][8])
+{
+    rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
+    for (int y = 0; y < 4; y++) 
+    {
+        for (int row = 0; row < 8; row++)
+            dct_8x8_1d_avx2(&pY[y * 8 + row]);
+
+        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], 
+                          pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+
+        for (int row = 0; row < 8; row++)
+            dct_8x8_1d_avx2(&pY[y * 8 + row]);
+
+        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], 
+                          pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+
+        quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
+
+        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], 
+                          pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+
+        for (int row = 0; row < 8; row++)
+            dct_inv_8x8_1d_avx2(&pY[y * 8 + row]);
+
+        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], 
+                          pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
+
+        for (int row = 0; row < 8; row++)
+            dct_inv_8x8_1d_avx2(&pY[y * 8 + row]);
+    }
+
+    for (int row = 0; row < 8; row++)
+        dct_8x8_1d_avx2(&pCb[row]);
+
+    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_8x8_1d_avx2(&pCb[row]);
+
+    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+    quantizeBlockAVX2(pCb, baseChromaTable);
+
+    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_inv_8x8_1d_avx2(&pCb[row]);
+
+    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_inv_8x8_1d_avx2(&pCb[row]);
+
+    for (int row = 0; row < 8; row++)
+        dct_8x8_1d_avx2(&pCr[row]);
+
+    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_8x8_1d_avx2(&pCr[row]);
+
+    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+    quantizeBlockAVX2(pCr, baseChromaTable);
+
+    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_inv_8x8_1d_avx2(&pCr[row]);
+
+    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
+
+    for (int row = 0; row < 8; row++)
+        dct_inv_8x8_1d_avx2(&pCr[row]);
+
+    ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
+}
+
 RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                         RpptDescPtr srcDescPtr,
                                                         Rpp8u *dstPtr,
@@ -839,7 +777,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
 
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
             {
-                alignedLength = 0;
                 int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
                 Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
@@ -863,47 +800,7 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
                     }
-                    rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-                    // for(int y = 0; y < 4; y++)
-                    // {
-                    //     for(int row = 0; row < 8; row++)
-                    //         dct_8x8_1d_avx2(pY[y * 8 + row]);
-                    //     transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                    //     for(int row = 0; row < 8; row++)
-                    //         dct_8x8_1d_avx2(pY[y * 8 + row]);
-                    //     quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
-                    //     for(int row = 0; row < 8; row++)
-                    //         dct_inv_8x8_1d_avx2(pY[y * 8 + row]);
-                    //     transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                    //     for(int row = 0; row < 8; row++)
-                    //         dct_inv_8x8_1d_avx2(pY[y * 8 + row]);
-                    // }
-
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_8x8_1d_avx2(pCb[row]);
-                    // transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_8x8_1d_avx2(pCb[row]);
-                    // quantizeBlockAVX2(pCb, baseChromaTable);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_inv_8x8_1d_avx2(pCb[row]);
-                    // transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_inv_8x8_1d_avx2(pCb[row]);
-
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_8x8_1d_avx2(pCr[row]);
-                    // transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_8x8_1d_avx2(pCr[row]);
-                    // quantizeBlockAVX2(pCr, baseChromaTable);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_inv_8x8_1d_avx2(pCr[row]);
-                    // transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_inv_8x8_1d_avx2(pCr[row]);
-
-                    ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
                     for(int row = 0; row < 16; row++)
                     {
                         Rpp8u *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
@@ -940,7 +837,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            alignedLength = 0;
             Rpp32u alignedLength = (bufferLength / 48) * 48;
 
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -967,41 +863,7 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
                         rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
                     }
-                    rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-                    for(int y = 0; y < 4; y++)
-                    {
-                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
-                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                        transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-                    }
-
-                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    quantizeBlockAVX2(pCb, baseChromaTable);
-                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-                    transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-
-                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    quantizeBlockAVX2(pCr, baseChromaTable);
-                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-                    transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-
-                    ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
                     for(int row = 0; row < 16; row++)
                     {
                         Rpp8u *dstPtrTempRow;
@@ -1022,8 +884,129 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp += 48;
                     }
                 }
-                    srcPtrRow += 16 * srcDescPtr->strides.hStride;
-                    dstPtrRow += 16 * dstDescPtr->strides.hStride;
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                alignedLength = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTemp += 48;
+                    }
+                }
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[8], pCr[8];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8u *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
             }
         }
         else if((srcDescPtr->c == 1 ) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1062,8 +1045,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for(int row = 0; row < 8; row++)
                         dct_8x8_1d_avx2(&p[row]);
                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-                    // for(int row = 0; row < 8; row++)
-                    //     dct_8x8_1d_avx2(&p[row]);
                     quantizeBlockAVX2(p, baseLumaTable);
                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
                     for(int row = 0; row < 8; row++)
@@ -1071,7 +1052,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
                     for(int row = 0; row < 8; row++)
                         dct_inv_8x8_1d_avx2(&p[row]);
-                    // transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
 
                     for(int row = 0; row < 8; row++)
                     {
@@ -1151,7 +1131,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
             {
-                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                int colLimit = (i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
                 Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTempR = srcPtrRowR;
                 srcPtrTempG = srcPtrRowG;
@@ -1161,83 +1141,36 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-// #if __AVX2__
-//                     __m256 pRgb[96];
-//                     __m256 pY[32], pCb[32], pCr[32];
-//                     for(int row = 0; row < 16; row++)
-//                     {
-//                         Rpp8u *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
-//                         srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
-//                         srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
-//                         srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
-//                         rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-//                     }
-//                     rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-//                     for(int y = 0; y < 4; y++)
-//                     {
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         for(int row = 0; row < 8; row++)
-//                             dct_8x8_1d_avx2(pY[y * 8 + row]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         for(int row = 0; row < 8; row++)
-//                             dct_8x8_1d_avx2(pY[y * 8 + row]);
-//                         quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
-//                         for(int row = 0; row < 8; row++)
-//                             dct_inv_8x8_1d_avx2(pY[y * 8 + row]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         for(int row = 0; row < 8; row++)
-//                             dct_inv_8x8_1d_avx2(pY[y * 8 + row]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                     }
-
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_8x8_1d_avx2(pCb[row]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_8x8_1d_avx2(pCb[row]);
-
-//                     quantizeBlockAVX2(pCb, baseChromaTable);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_inv_8x8_1d_avx2(pCb[row]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_inv_8x8_1d_avx2(pCb[row]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_8x8_1d_avx2(pCr[row]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_8x8_1d_avx2(pCr[row]);
-//                     quantizeBlockAVX2(pCr, baseChromaTable);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_inv_8x8_1d_avx2(pCr[row]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     for(int row = 0; row < 8; row++)
-//                         dct_inv_8x8_1d_avx2(pCr[row]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-
-//                     ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
-//                     for(int row = 0; row < 16; row++)
-//                     {
-//                         Rpp8u *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
-//                         dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
-//                         dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
-//                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
-//                         rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-//                     }
-//                     dstPtrTempR += vectorIncrementPerChannel;
-//                     dstPtrTempG += vectorIncrementPerChannel;
-//                     dstPtrTempB += vectorIncrementPerChannel;
-//                     srcPtrTempR += vectorIncrementPerChannel;
-//                     srcPtrTempG += vectorIncrementPerChannel;
-//                     srcPtrTempB += vectorIncrementPerChannel;
-//                 }
-// #endif
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_store48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
                 for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
@@ -1273,62 +1206,28 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
-//                 {
-// #if __AVX2__
-//                     __m256 pRgb[96];
-//                     __m256 pY[32], pCb[32], pCr[32];
-//                     for(int row = 0; row < 16; row++)
-//                     {
-//                         Rpp8u *srcPtrTempRow;
-//                         srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
-//                         rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-//                     }
-//                     rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-//                     for(int y = 0; y < 4; y++)
-//                     {
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         dct_fwd_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         quantizeBlockAVX2(&pY[y * 8], baseLumaTable);
-//                         idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         idct_8x8_1d_avx2(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                         transpose_8x8_avx(pY[y * 8], pY[y * 8 + 1], pY[y * 8 + 2], pY[y * 8 + 3], pY[y * 8 + 4], pY[ y * 8 + 5], pY[y * 8 + 6], pY[y * 8 + 7]);
-//                     }
-
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     dct_fwd_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     quantizeBlockAVX2(pCb, baseChromaTable);
-//                     idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     idct_8x8_1d_avx2(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-//                     transpose_8x8_avx(pCb[0], pCb[1], pCb[2], pCb[3], pCb[4], pCb[5], pCb[6], pCb[7]);
-
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     dct_fwd_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     quantizeBlockAVX2(pCr, baseChromaTable);
-//                     idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     idct_8x8_1d_avx2(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-//                     transpose_8x8_avx(pCr[0], pCr[1], pCr[2], pCr[3], pCr[4], pCr[5], pCr[6], pCr[7]);
-
-//                     ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
-//                     for(int row = 0; row < 16; row++)
-//                     {
-//                         Rpp8u *dstPtrTempRow;
-//                         dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
-//                         rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-//                     }
-//                     dstPtrTemp += 48;
-//                     srcPtrTemp += 48;
-//                 }
-// #endif
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTemp += 48;
+                }
+#endif
                 for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
                 {
                     int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
@@ -1343,8 +1242,130 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrRow += 16 * dstDescPtr->strides.hStride;
             }
         }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+            Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                alignedLength = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTemp += 48;
+                    }
+                }
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[8], pCr[8];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp32f *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
         else if((srcDescPtr->c == 1 ) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+            alignedLength = (bufferLength / 8) * 8;
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
@@ -1352,47 +1373,763 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 8)
             {
                 int colLimit = ( i + 8) < roi.xywhROI.roiHeight ? 8 : (roi.xywhROI.roiHeight - i);
-                alignedLength = 0;
                 Rpp32f *srcPtrTemp, *dstPtrTemp;
                 srcPtrTemp = srcPtrRow;
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
-//                 {
-// #if __AVX2__
-//                     __m256 p[8];
-//                     for(int row = 0; row < 8; row++)
-//                     {
-//                         Rpp32f *srcPtrTempRow;
-//                         srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
-//                         rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrTempRow, &p[row]);                                 // simd loads
-//                     }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                {
+#if __AVX2__
+                    __m256 p[8];
+                    for(int row = 0; row < 8; row++)
+                    {
+                        Rpp32f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTempRow, &p[row]);                                 // simd loads
+                        else
+                            p[row] = p[colLimit - 1];
+                        p[row] = _mm256_sub_ps(p[row], avx_p128);
+                    }
 
-//                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     dct_fwd_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     dct_fwd_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    quantizeBlockAVX2(p, baseLumaTable);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
 
-//                     quantizeBlockAVX2(p, baseLumaTable);
-//                     idct_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     idct_8x8_1d_avx2(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-//                     transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-
-//                     for(int row = 0; row < 8; row++)
-//                     {
-//                         Rpp8u *dstPtrTempRow;
-//                         dstPtrTempRow = dstPtrTemp + row * dstDescPtr->strides.hStride;
-//                         rpp_simd_store(rpp_store8_f32pln1_to_u8pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
-//                     }
-// #endif
-//                     dstPtrTemp += 8;
-//                     srcPtrTemp += 8;
-//                 }
+                    for(int row = 0; row < 8; row++)
+                    {
+                        p[row] = _mm256_add_ps(p[row], avx_p128);
+                        p[row] = _mm256_max_ps(avx_p0, _mm256_min_ps(p[row], avx_p255));
+                        Rpp32f *dstPtrTempRow;
+                        dstPtrTempRow = dstPtrTemp + row * dstDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
+                    }
+#endif
+                    dstPtrTemp += 8;
+                    srcPtrTemp += 8;
+                }
                 for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += 8)
                 {
-                    int rowLimit = (alignedLength == 0) ? 8 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    int rowLimit = ((vectorLoopCount + 8) < roi.xywhROI.roiWidth) ? 8 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_pln_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 8)
+                    {
+                        dstPtrTemp += 8;
+                        srcPtrTemp += 8;
+                    }
+                }
+                srcPtrRow += 8 * srcDescPtr->strides.hStride;
+                dstPtrRow += 8 * dstDescPtr->strides.hStride;
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
+
+RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                                          RpptDescPtr srcDescPtr,
+                                                          Rpp16f *dstPtr,
+                                                          RpptDescPtr dstDescPtr,
+                                                          RpptROIPtr roiTensorPtrSrc,
+                                                          RpptRoiType roiType,
+                                                          RppLayoutParams layoutParams,
+                                                          rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp16f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp16f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u alignedLength = (bufferLength / 16) * 16;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
+
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            alignedLength = 0;
+            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = (i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_store48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            alignedLength = 0;
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            Rpp16f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp16f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTemp += 48;
+                    }
+                }
+                    srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                    dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+            Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp16f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                alignedLength = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTemp += 48;
+                    }
+                }
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[8], pCr[8];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp16f *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if((srcDescPtr->c == 1 ) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            alignedLength = (bufferLength / 8) * 8;
+            Rpp16f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 8)
+            {
+                int colLimit = ( i + 8) < roi.xywhROI.roiHeight ? 8 : (roi.xywhROI.roiHeight - i);
+                Rpp16f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                {
+#if __AVX2__
+                    __m256 p[8];
+                    for(int row = 0; row < 8; row++)
+                    {
+                        Rpp16f *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTempRow, &p[row]);                                 // simd loads
+                        else
+                            p[row] = p[colLimit - 1];
+                        p[row] = _mm256_sub_ps(p[row], avx_p128);
+                    }
+
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    quantizeBlockAVX2(p, baseLumaTable);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
+
+                    for(int row = 0; row < 8; row++)
+                    {
+                        p[row] = _mm256_add_ps(p[row], avx_p128);
+                        p[row] = _mm256_max_ps(avx_p0, _mm256_min_ps(p[row], avx_p255));
+                        Rpp16f *dstPtrTempRow;
+                        dstPtrTempRow = dstPtrTemp + row * dstDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
+                    }
+#endif
+                    dstPtrTemp += 8;
+                    srcPtrTemp += 8;
+                }
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += 8)
+                {
+                    int rowLimit = ((vectorLoopCount + 8) < roi.xywhROI.roiWidth) ? 8 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_pln_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 8)
+                    {
+                        dstPtrTemp += 8;
+                        srcPtrTemp += 8;
+                    }
+                }
+                srcPtrRow += 8 * srcDescPtr->strides.hStride;
+                dstPtrRow += 8 * dstDescPtr->strides.hStride;
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
+
+RppStatus jpeg_compression_distortion_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp8s *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams layoutParams,
+                                                        rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(1)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp8s *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp8s *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u alignedLength = (bufferLength / 16) * 16;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * 16 * 16 * 3;
+
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[8], pCr[8];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+
+            Rpp8s *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = ( i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8s *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                alignedLength = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTemp += 48;
+                    }
+                }
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = (bufferLength / 48) * 48;
+            Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = (i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8s *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                alignedLength = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[32], pCr[32];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *dstPtrTempRowR, *dstPtrTempRowG, *dstPtrTempRowB;
+                        dstPtrTempRowR = dstPtrTempR + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowG = dstPtrTempG + row * dstDescPtr->strides.hStride;
+                        dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    srcPtrTemp += 48;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth * 3; vectorLoopCount += 48)
+                {
+                    int rowLimit = (((vectorLoopCount / 3) + 16) < roi.xywhROI.roiWidth) ? 16 : (roi.xywhROI.roiWidth -  vectorLoopCount / 3);
+                    jpeg_compression_distortion_generic(srcPtrTemp, dstPtrTempR, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTemp += 48;
+                    }
+                }
+                srcPtrRow += 16 * srcDescPtr->strides.hStride;
+                dstPtrRowR += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowG += 16 * dstDescPtr->strides.hStride;
+                dstPtrRowB += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 16)
+            {
+                int colLimit = (i + 16) < roi.xywhROI.roiHeight ? 16 : (roi.xywhROI.roiHeight - i);
+                Rpp8s *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pRgb[96];
+                    __m256 pY[32], pCb[8], pCr[8];
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *srcPtrTempRowR, *srcPtrTempRowG, *srcPtrTempRowB;
+                        srcPtrTempRowR = srcPtrTempR + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowG = srcPtrTempG + row * srcDescPtr->strides.hStride;
+                        srcPtrTempRowB = srcPtrTempB + row * srcDescPtr->strides.hStride;
+                        rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    process_jpeg_compression_distortion(pRgb, pY, pCb, pCr, baseLumaTable, baseChromaTable);
+                    for(int row = 0; row < 16; row++)
+                    {
+                        Rpp8s *dstPtrTempRow;
+                        dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
+                    }
+                    dstPtrTemp += 48;
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    int rowLimit = ((vectorLoopCount + 16) < roi.xywhROI.roiWidth) ? 16 : roi.xywhROI.roiWidth - vectorLoopCount;
+                    jpeg_compression_distortion_generic(srcPtrTempR, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
+                    if(rowLimit == 16)
+                    {
+                        dstPtrTemp += 48;
+                        srcPtrTempR += vectorIncrementPerChannel;
+                    }
+                }
+                srcPtrRowR += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowG += 16 * srcDescPtr->strides.hStride;
+                srcPtrRowB += 16 * srcDescPtr->strides.hStride;
+                dstPtrRow += 16 * dstDescPtr->strides.hStride;
+            }
+        }
+        else if((srcDescPtr->c == 1 ) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            alignedLength = (bufferLength / 8) * 8;
+            Rpp8s *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+
+            for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i += 8)
+            {
+                int colLimit = (i + 8) < roi.xywhROI.roiHeight ? 8 : (roi.xywhROI.roiHeight - i);
+                Rpp8s *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                {
+#if __AVX2__
+                    __m256 p[8];
+                    for(int row = 0; row < 8; row++)
+                    {
+                        Rpp8s *srcPtrTempRow;
+                        srcPtrTempRow = srcPtrTemp + row * srcDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_load(rpp_load8_i8_to_f32_avx, srcPtrTempRow, &p[row]);                                 // simd loads
+                        else
+                            p[row] = p[colLimit - 1];
+                        p[row] = _mm256_sub_ps(p[row], avx_p128);
+                    }
+
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    quantizeBlockAVX2(p, baseLumaTable);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
+                    transpose_8x8_avx(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+                    for(int row = 0; row < 8; row++)
+                        dct_inv_8x8_1d_avx2(&p[row]);
+
+                    for(int row = 0; row < 8; row++)
+                    {
+                        p[row] = _mm256_add_ps(p[row], avx_p128);
+                        p[row] = _mm256_max_ps(avx_p0, _mm256_min_ps(p[row], avx_p255));
+                        Rpp8s *dstPtrTempRow;
+                        dstPtrTempRow = dstPtrTemp + row * dstDescPtr->strides.hStride;
+                        if((row + i) < roi.xywhROI.roiHeight)
+                            rpp_simd_store(rpp_store8_f32pln1_to_i8pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
+                    }
+#endif
+                    dstPtrTemp += 8;
+                    srcPtrTemp += 8;
+                }
+                for(; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount += 8)
+                {
+                    int rowLimit = ((vectorLoopCount + 8) < roi.xywhROI.roiWidth) ? 8 : roi.xywhROI.roiWidth - vectorLoopCount;
                     jpeg_compression_distortion_pln_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr);
                     if(rowLimit == 8)
                     {
