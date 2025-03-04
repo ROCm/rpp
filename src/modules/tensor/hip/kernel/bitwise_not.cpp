@@ -1,4 +1,4 @@
-#include "hip_tensor_logical_operations.hpp"
+#include "hip_tensor_bitwise_operations.hpp"
 #include "rpp_hip_math.hpp"
 
 /* BitwiseNOT is logical operation only on U8 types. */
