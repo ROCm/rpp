@@ -1038,4 +1038,4 @@ inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
     return p;
 }
 
-#endif //RPP_CPU_SIMD_MATH_HPP
+#endif // RPP_CPU_SIMD_MATH_HPP

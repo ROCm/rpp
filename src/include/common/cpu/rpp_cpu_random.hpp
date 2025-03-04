@@ -308,4 +308,4 @@ inline float rpp_host_rng_1_gaussian_f32(RpptXorwowStateBoxMuller *xorwowState)
     return xorwowState->boxMullerExtra;
 }
 
-#endif //RPP_CPU_RANDOM_HPP
+#endif // RPP_CPU_RANDOM_HPP

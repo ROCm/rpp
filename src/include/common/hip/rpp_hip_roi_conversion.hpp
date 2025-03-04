@@ -93,4 +93,4 @@ static RppStatus hip_exec_roi_converison_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc
     return RPP_SUCCESS;
 }
 
-#endif //RPP_HIP_ROI_CONVERSION_H
+#endif // RPP_HIP_ROI_CONVERSION_H

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPP_HIP_COMMON_MATH_H
-#define RPP_HIP_COMMON_MATH_H
+#ifndef RPP_HIP_MATH_HPP
+#define RPP_HIP_MATH_HPP
 #define RPP_HIP_MATH_DEPENDENCIES
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
@@ -334,4 +334,4 @@ __device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst
     dst_f8->f1[7] = __logf(src_f8->f1[7]);
 }
 
-#endif
+#endif // RPP_HIP_MATH_HPP

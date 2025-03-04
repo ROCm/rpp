@@ -1238,4 +1238,4 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-#endif //RPP_CPU_FILTER_HPP
+#endif // RPP_CPU_FILTER_HPP

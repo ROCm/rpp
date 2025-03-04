@@ -3677,4 +3677,4 @@ inline void rpp_store8_f32_to_i8_avx(Rpp8s *dstPtrTemp, __m256 pDst)
     _mm_storeu_si64((__m128i*)dstPtrTemp, px3);
 }
 
-#endif //RPP_CPU_SIMD_LOAD_STORE_HPP
+#endif // RPP_CPU_SIMD_LOAD_STORE_HPP

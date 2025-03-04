@@ -248,4 +248,4 @@ inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
     *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
 }
 
-#endif //RPP_CPU_COMMON_HPP
+#endif // RPP_CPU_COMMON_HPP

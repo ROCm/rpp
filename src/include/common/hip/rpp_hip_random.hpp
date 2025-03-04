@@ -174,4 +174,4 @@ __device__ __forceinline__ float rpp_hip_rng_1_inverse_transform_sampling_f32(fl
     return shotNoiseValue;
 }
 
-#endif
+#endif // RPP_HIP_RANDOM_HPP
