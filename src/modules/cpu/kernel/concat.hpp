@@ -43,16 +43,16 @@ void concat_2D_tensor(T *srcPtr1, T *srcPtr2, SIMD_LOAD simdLoad, SIMD_STORE sim
         __m256 pDst;
         for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
         {
-             simdLoad(srcPtrTemp1, &pDst); 
-                if constexpr (std::is_same<T, Rpp8u>::value)
-                    simdStore(dstPtrTemp, pDst);
-                else 
-                    simdStore(dstPtrTemp, &pDst);
-                simdLoad(srcPtrTemp2, &pDst); 
-                if constexpr (std::is_same<T, Rpp8u>::value)
-                    simdStore(dstPtrTemp + strides[2], pDst);
-                else
-                    simdStore(dstPtrTemp + strides[2], &pDst);
+            simdLoad(srcPtrTemp1, &pDst); 
+            if constexpr (std::is_same<T, Rpp8u>::value)
+                simdStore(dstPtrTemp, pDst);
+            else 
+                simdStore(dstPtrTemp, &pDst);
+            simdLoad(srcPtrTemp2, &pDst); 
+            if constexpr (std::is_same<T, Rpp8u>::value)
+                simdStore(dstPtrTemp + strides[1], pDst);
+            else
+                simdStore(dstPtrTemp + strides[1], &pDst);
             srcPtrTemp1 += vectorIncrement;
             srcPtrTemp2 += vectorIncrement;
             dstPtrTemp += vectorIncrement;
@@ -304,7 +304,7 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr,
                                      rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimension.
+    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     Rpp32u maxSize = 1;
@@ -432,7 +432,7 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimension.
+    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     Rpp32u maxSize = 1;
@@ -564,7 +564,7 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr,
                                      rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1; // Ignoring batchSize here to get tensor dimension.
+    Rpp32u tensorDims = srcGenericDescPtr->numDims - 1; // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
