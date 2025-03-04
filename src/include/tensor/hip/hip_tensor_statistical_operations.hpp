@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #ifndef HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
+#define HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 
 #include <hip/hip_runtime.h>
 #include "rpp_hip_load_store.hpp"
