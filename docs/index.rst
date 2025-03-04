@@ -6,30 +6,37 @@
 ROCm Performance Primitives documentation
 ********************************************************************
 
-AMD ROCm Performance Primitives (RPP) is a comprehensive, high-performance computer vision
-library for AMD processors that have HIP, OpenCL, or CPU backends. For more information, refer to
-:doc:`./what-is-rpp`
+AMD ROCm Performance Primitives (RPP) is a high-performance computer vision library for AMD processors that have HIP, OpenCL, or CPU backends.
 
-Our code is open and hosted at `https://github.com/ROCm/rpp <https://github.com/ROCm/rpp>`_.
+RPP provides a way to utilize all the hardware available for training and augmentation.
 
-The RPP documentation is structured as follows:
+.. image:: ./data/rpp_structure_4.png
+  :alt: RPP Functions
+  :width: 200pt
+  :align: center
+
+The RPP public repository is located at `https://github.com/ROCm/rpp <https://github.com/ROCm/rpp>`_.
 
 .. grid:: 2
   :gutter: 3
 
   .. grid-item-card:: Install
 
-    * :doc:`Install RPP <./install/install>`
+    * :doc:`RPP prerequisites <./install/rpp-prerequisites>`
+    * :doc:`Installing RPP <./install/rpp-install>`
+    * :doc:`Installing RPP with the package installer <./install/rpp-install-with-installer>`
+    * :doc:`Building and installing RPP from source <./install/rpp-build-and-install>`
+    * :doc:`Verifying the RPP installation <./install/rpp-verify-install>`
 
   .. grid-item-card:: Reference
 
-    * :doc:`API library <./doxygen/html/globals>`
+    * :doc:`Supported RPP functionalities and variants <./reference/rpp-supported-functionalities>`
+    * RPP API reference
 
-      * :doc:`Modules <./doxygen/html/files>`
-      * :doc:`Data structures <./doxygen/html/annotated>`
-      * :doc:`Deprecated functions <./doxygen/html/deprecated>`
+      * :doc:`RPP header files <./doxygen/html/files>`
+      * :doc:`RPP common definitions <./doxygen/html/group__group__rppdefs>`
+      * :doc:`RPP data structures <./doxygen/html/annotated>`
 
-To contribute to the documentation refer to
-:doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
+To contribute to the documentation refer to :doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
 
 You can find licensing information on the :doc:`Licensing <rocm:about/license>` page.
