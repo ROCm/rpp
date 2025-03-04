@@ -1,7 +1,7 @@
 #include "hip_tensor_logical_operations.hpp"
 #include "rpp_hip_math.hpp"
 
-/* BitwiseXOR is logical operation only on U8/I8 types.*/
+/* BitwiseXOR is logical operation only on U8 types.*/
 
 __device__ void bitwise_xor_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {

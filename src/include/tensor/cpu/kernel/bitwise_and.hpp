@@ -34,33 +34,3 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                         RpptRoiType roiType,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
-
-RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
-                                          Rpp32f *srcPtr2,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp32f *dstPtr,
-                                          RpptDescPtr dstDescPtr,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          RpptRoiType roiType,
-                                          RppLayoutParams layoutParams,
-                                          rpp::Handle& handle);
-
-RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
-                                          Rpp16f *srcPtr2,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp16f *dstPtr,
-                                          RpptDescPtr dstDescPtr,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          RpptRoiType roiType,
-                                          RppLayoutParams layoutParams,
-                                          rpp::Handle& handle);
-
-RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
-                                        Rpp8s *srcPtr2,
-                                        RpptDescPtr srcDescPtr,
-                                        Rpp8s *dstPtr,
-                                        RpptDescPtr dstDescPtr,
-                                        RpptROIPtr roiTensorPtrSrc,
-                                        RpptRoiType roiType,
-                                        RppLayoutParams layoutParams,
-                                        rpp::Handle& handle);

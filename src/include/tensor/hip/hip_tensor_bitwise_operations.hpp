@@ -28,21 +28,27 @@ SOFTWARE.
 #include <hip/hip_runtime.h>
 #include "rpp_hip_load_store.hpp"
 
-template <typename T>
-RppStatus hip_exec_bitwise_and_tensor(T *srcPtr1,
-                                      T *srcPtr2,
+RppStatus hip_exec_bitwise_and_tensor(Rpp8u *srcPtr1,
+                                      Rpp8u *srcPtr2,
                                       RpptDescPtr srcDescPtr,
-                                      T *dstPtr,
+                                      Rpp8u *dstPtr,
                                       RpptDescPtr dstDescPtr,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
-template <typename T>
-RppStatus hip_exec_bitwise_or_tensor(T *srcPtr1,
-                                     T *srcPtr2,
+RppStatus hip_exec_bitwise_not_tensor(Rpp8u *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle)
+
+RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
+                                     Rpp8u *srcPtr2,
                                      RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
+                                     Rpp8u *dstPtr,
                                      RpptDescPtr dstDescPtr,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,

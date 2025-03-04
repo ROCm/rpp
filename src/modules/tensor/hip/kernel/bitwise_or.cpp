@@ -1,37 +1,18 @@
 #include "hip_tensor_logical_operations.hpp"
 #include "rpp_hip_math.hpp"
 
-/* BitwiseOR is logical operation only on U8/I8 types.
-   For a Rpp32f precision image (pixel values from 0-1), the BitwiseOR is applied on a 0-255
-   range-translated approximation, of the original 0-1 decimal-range image.
-   The bitwise operation is applied to the char representation of the raw floating-point data in memory */
+/* BitwiseOR is logical operation only on U8 types. */
 
-template <typename T>
-__device__ void bitwise_or_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+__device__ void bitwise_or_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-    if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
-    {
-        rpp_hip_math_multiply8_const(src1_f8, src1_f8, (float4)255);
-        rpp_hip_math_multiply8_const(src2_f8, src2_f8, (float4)255);
-        rpp_hip_math_bitwiseOr8(src1_f8, src2_f8, dst_f8);
-        rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
-    }
-    else if constexpr (std::is_same<T, signed char>::value)
-    {
-        rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
-        rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
-        rpp_hip_math_bitwiseOr8(src1_f8, src2_f8, dst_f8);
-        rpp_hip_math_subtract8_const(dst_f8, dst_f8, (float4)128);
-    }
-    else
-        rpp_hip_math_bitwiseOr8(src1_f8, src2_f8, dst_f8);
+    rpp_hip_math_bitwiseOr8(src1_uc8, src2_uc8, dst_uc8);
 }
 
-template <typename T>
-__global__ void bitwise_or_pkd_hip_tensor(T *srcPtr1,
-                                          T *srcPtr2,
+
+__global__ void bitwise_or_pkd_hip_tensor(Rpp8u *srcPtr1,
+                                          Rpp8u *srcPtr2,
                                           uint2 srcStridesNH,
-                                          T *dstPtr,
+                                          Rpp8u *dstPtr,
                                           uint2 dstStridesNH,
                                           RpptROIPtr roiTensorPtrSrc)
 {
@@ -47,21 +28,21 @@ __global__ void bitwise_or_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float24 src1_f24, src2_f24, dst_f24;
+    d_uchar24 src1_uc24, src2_uc24, dst_uc24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx, &src1_f24);
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx, &src2_f24);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2]);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_uchar24_pkd3(srcPtr1 + srcIdx, &src1_uc24);
+    rpp_hip_load24_pkd3_and_unpack_to_uchar24_pkd3(srcPtr2 + srcIdx, &src2_uc24);
+    bitwise_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
+    rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_uc24);
 }
 
-template <typename T>
-__global__ void bitwise_or_pln_hip_tensor(T *srcPtr1,
-                                          T *srcPtr2,
+
+__global__ void bitwise_or_pln_hip_tensor(Rpp8u *srcPtr1,
+                                          Rpp8u *srcPtr2,
                                           uint3 srcStridesNCH,
-                                          T *dstPtr,
+                                          Rpp8u *dstPtr,
                                           uint3 dstStridesNCH,
                                           int channelsDst,
                                           RpptROIPtr roiTensorPtrSrc)
@@ -78,38 +59,39 @@ __global__ void bitwise_or_pln_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    d_float8 src1_f8, src2_f8, dst_f8;
+    d_uchar8 src1_uc8, src2_uc8, dst_uc8;
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
 
-    rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
-    rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-    bitwise_or_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+    rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
+    bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
+    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
-        rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-        bitwise_or_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
+        bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
+        rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
-        rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-        bitwise_or_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx, src1Ptr_uc8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx, src2Ptr_uc8);
+        bitwise_or_hip_compute(&src1_uc8, &src2_uc8, &dst_uc8);
+        rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
     }
 }
 
-template <typename T>
-__global__ void bitwise_or_pkd3_pln3_hip_tensor(T *srcPtr1,
-                                                T *srcPtr2,
+__global__ void bitwise_or_pkd3_pln3_hip_tensor(Rpp8u *srcPtr1,
+                                                Rpp8u *srcPtr2,
                                                 uint2 srcStridesNH,
-                                                T *dstPtr,
+                                                Rpp8u *dstPtr,
                                                 uint3 dstStridesNCH,
                                                 RpptROIPtr roiTensorPtrSrc)
 {
@@ -125,21 +107,20 @@ __global__ void bitwise_or_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    d_float24 src1_f24, src2_f24, dst_f24;
+    d_uchar24 src1_uc24, src2_uc24, dst_uc24;
 
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx, &src1_f24);
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx, &src2_f24);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2]);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+    rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr1 + srcIdx, &src1_uc24);
+    rpp_hip_load24_pkd3_and_unpack_to_uchar24_pln3(srcPtr2 + srcIdx, &src2_uc24);
+    bitwise_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
+    rpp_hip_pack_uchar24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_uc24);
 }
 
-template <typename T>
-__global__ void bitwise_or_pln3_pkd3_hip_tensor(T *srcPtr1,
-                                                T *srcPtr2,
+__global__ void bitwise_or_pln3_pkd3_hip_tensor(Rpp8u *srcPtr1,
+                                                Rpp8u *srcPtr2,
                                                 uint3 srcStridesNCH,
-                                                T *dstPtr,
+                                                Rpp8u *dstPtr,
                                                 uint2 dstStridesNH,
                                                 RpptROIPtr roiTensorPtrSrc)
 {
@@ -155,21 +136,20 @@ __global__ void bitwise_or_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float24 src1_f24, src2_f24, dst_f24;
+    d_uchar24 src1_uc24, src2_uc24, dst_uc24;
 
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr1 + srcIdx, srcStridesNCH.y, &src1_f24);
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr2 + srcIdx, srcStridesNCH.y, &src2_f24);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1]);
-    bitwise_or_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2]);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+    rpp_hip_load24_pln3_and_unpack_to_uchar24_pkd3(srcPtr1 + srcIdx, srcStridesNCH.y, &src1_uc24);
+    rpp_hip_load24_pln3_and_unpack_to_uchar24_pkd3(srcPtr2 + srcIdx, srcStridesNCH.y, &src2_uc24);
+    bitwise_or_hip_compute(&src1_uc24.uc8[0], &src2_uc24.uc8[0], &dst_uc24.uc8[0]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[1], &src2_uc24.uc8[1], &dst_uc24.uc8[1]);
+    bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
+    rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_uc24);
 }
 
-template <typename T>
-RppStatus hip_exec_bitwise_or_tensor(T *srcPtr1,
-                                     T *srcPtr2,
+RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
+                                     Rpp8u *srcPtr2,
                                      RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
+                                     Rpp8u *dstPtr,
                                      RpptDescPtr dstDescPtr,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
@@ -246,39 +226,3 @@ RppStatus hip_exec_bitwise_or_tensor(T *srcPtr1,
 
     return RPP_SUCCESS;
 }
-
-template RppStatus hip_exec_bitwise_or_tensor<Rpp8u>(Rpp8u*,
-                                                    Rpp8u*,
-                                                    RpptDescPtr,
-                                                    Rpp8u*,
-                                                    RpptDescPtr,
-                                                    RpptROIPtr,
-                                                    RpptRoiType,
-                                                    rpp::Handle&);
-
-template RppStatus hip_exec_bitwise_or_tensor<half>(half*,
-                                                    half*,
-                                                    RpptDescPtr,
-                                                    half*,
-                                                    RpptDescPtr,
-                                                    RpptROIPtr,
-                                                    RpptRoiType,
-                                                    rpp::Handle&);
-
-template RppStatus hip_exec_bitwise_or_tensor<Rpp32f>(Rpp32f*,
-                                                      Rpp32f*,
-                                                      RpptDescPtr,
-                                                      Rpp32f*,
-                                                      RpptDescPtr,
-                                                      RpptROIPtr,
-                                                      RpptRoiType,
-                                                      rpp::Handle&);
-
-template RppStatus hip_exec_bitwise_or_tensor<Rpp8s>(Rpp8s*,
-                                                     Rpp8s*,
-                                                     RpptDescPtr,
-                                                     Rpp8s*,
-                                                     RpptDescPtr,
-                                                     RpptROIPtr,
-                                                     RpptRoiType,
-                                                     rpp::Handle&);

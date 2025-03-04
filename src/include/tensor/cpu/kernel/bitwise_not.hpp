@@ -25,12 +25,11 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
 
-RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
-                                       Rpp8u *srcPtr2,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8u *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams,
-                                       rpp::Handle& Handle);
+RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& Handle);
