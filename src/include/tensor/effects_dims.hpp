@@ -22,24 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
-#define HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#ifndef RPP_EFFECTS_DEFS_HPP
+#define RPP_EFFECTS_DEFS_HPP
 
-#include "gridmask.hpp"
-#include "spatter.hpp"
-#include "noise_salt_and_pepper.hpp"
-#include "noise_shot.hpp"
-#include "noise_gaussian.hpp"
-#include "non_linear_blend.hpp"
-#include "jitter.hpp"
-#include "glitch.hpp"
-#include "water.hpp"
-#include "ricap.hpp"
-#include "vignette.hpp"
-#include "resize.hpp"  //pixelate dependency
-#include "erase.hpp"
-#include "fog.hpp"
-#include "fog_mask.hpp" //additional dependency for fog
-#include "rain.hpp"
+#include "rppdefs.h"
 
-#endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#define FOG_MAX_HEIGHT 1080
+#define FOG_MAX_WIDTH 1920
+#define FOG_MAX_XDIM 1919
+#define FOG_MAX_YDIM 1079
+
+#define SPATTER_MAX_WIDTH 1920
+#define SPATTER_MAX_HEIGHT 1080
+#define SPATTER_MAX_XDIM 1919
+#define SPATTER_MAX_YDIM 1079
+
+#endif // RPP_EFFECTS_DEFS_HPP

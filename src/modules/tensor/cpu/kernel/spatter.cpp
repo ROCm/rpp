@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include <random>
+#include "spatter_mask.hpp"
 #include "spatter.hpp"
 
 inline void compute_spatter_48_host(__m256 *p, __m256 *pSpatterMaskInv, __m256 *pSpatterMask, __m256 *pSpatterValue)
