@@ -43,7 +43,7 @@ RppStatus hip_exec_bitwise_not_tensor(Rpp8u *srcPtr,
                                       RpptDescPtr dstDescPtr,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
-                                      rpp::Handle& handle)
+                                      rpp::Handle& handle);
 
 RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
                                      Rpp8u *srcPtr2,
