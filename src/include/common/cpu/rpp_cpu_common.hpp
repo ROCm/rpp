@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPP_CPU_COMMON_H
-#define RPP_CPU_COMMON_H
+#ifndef RPP_CPU_COMMON_HPP
+#define RPP_CPU_COMMON_HPP
 
 #include <math.h>
 #include <algorithm>
@@ -248,6 +248,4 @@ inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
     *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
 }
 
-// Helper func for randomization
-//Random code
-#endif //RPP_CPU_COMMON_H
+#endif //RPP_CPU_COMMON_HPP

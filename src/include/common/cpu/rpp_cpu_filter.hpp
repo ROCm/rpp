@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef AMD_RPP_RPP_CPU_FILTER_HPP
-#define AMD_RPP_RPP_CPU_FILTER_HPP
+#ifndef RPP_CPU_FILTER_HPP
+#define RPP_CPU_FILTER_HPP
 
 #include "rpp_cpu_simd_load_store.hpp"
 
@@ -1013,7 +1013,6 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp16f **src
         pRow[k + 4] = avx_p0;
     }
 }
-
 
 // -------------------- Filter load functions for U8 bitdepth --------------------
 

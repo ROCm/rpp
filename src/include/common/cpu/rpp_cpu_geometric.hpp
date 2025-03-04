@@ -1,5 +1,29 @@
-#ifndef RPP_CPU_GEOMETRIC_H
-#define RPP_CPU_GEOMETRIC_H
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#ifndef RPP_CPU_GEOMETRIC_HPP
+#define RPP_CPU_GEOMETRIC_HPP
 
 inline void compute_offset_i8_1c_avx(__m256 &p)
 {
@@ -78,4 +102,4 @@ inline void compute_resize_bilinear_src_loc_and_weights_mirror_avx(__m256 &pDstL
     pxLoc = _mm256_cvtps_epi32(pLoc);
     _mm256_storeu_si256((__m256i *)srcLoc, pxLoc);
 }
-#endif
+#endif // RPP_CPU_GEOMETRIC_HPP

@@ -1,5 +1,29 @@
-#ifndef RPP_CPU_BATCHPD_H
-#define RPP_CPU_BATCHPD_H
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#ifndef RPP_CPU_BATCHPD_HPP
+#define RPP_CPU_BATCHPD_HPP
 
 #include <math.h>
 #include <algorithm>
@@ -151,7 +175,6 @@ template <typename T>
 RppStatus exclusive_OR_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
                               RppiChnFormat chnFormat, Rpp32u channel);
-
 
 // Specific Helper Functions
 
@@ -1746,7 +1769,6 @@ inline void convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, RppiSize
 
             Rpp32u roiRowCount = 0;
 
-
             for(int i = 0; i < srcSize.height; i++)
             {
                 T *srcPtrTemp, *dstPtrTemp;
@@ -1798,7 +1820,6 @@ inline void convolve_image_host_batch(T* srcPtrImage, RppiSize srcSize, RppiSize
         Rpp32u elementsInRow = channel * srcSize.width;
 
         Rpp32u roiRowCount = 0;
-
 
         for(int i = 0; i < srcSize.height; i++)
         {
@@ -2796,7 +2817,6 @@ inline void compute_magnitude_ROI_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
             srcPtr2Channel = srcPtr2 + (c * imageDim);
             dstPtrChannel = dstPtr + (c * imageDim);
 
-
             for(int i = 0; i < srcSize.height; i++)
             {
                 Rpp32f pixel;
@@ -2846,7 +2866,6 @@ inline void compute_magnitude_ROI_host(T* srcPtr1, T* srcPtr2, RppiSize srcSize,
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         Rpp32u elementsInRow = channel * srcSize.width;
-
 
         for(int i = 0; i < srcSize.height; i++)
         {
@@ -3468,5 +3487,4 @@ inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr
     }
 }
 
-
-#endif
+#endif // RPP_CPU_BATCHPD_HPP

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef AMD_RPP_RPP_CPU_SIMD_HPP
-#define AMD_RPP_RPP_CPU_SIMD_HPP
+#ifndef RPP_CPU_SIMD_LOAD_STORE_HPP
+#define RPP_CPU_SIMD_LOAD_STORE_HPP
 
 #include "stdio.h"
 #include "rppdefs.h"
@@ -155,7 +155,6 @@ const __m128i xmm_char_maskB = _mm_setr_epi8(2, 5, 8, 11, 0x80, 0x80, 0x80, 0x80
 const __m128i xmm_pkd_mask = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 0x80, 0x80, 0x80, 0x80);
 const __m128i xmm_store4_pkd_pixels = _mm_setr_epi8(0, 1, 8, 2, 3, 9, 4, 5, 10, 6, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_store8_pkd_pixels = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 23, 15, 14, 22, 13, 12, 21, 11, 10, 20, 9, 8, 19, 7, 6, 18, 5, 4, 17, 3, 2, 16, 1, 0);
-
 
 const __m128i xmm_pxStore4Pkd = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_pxPermPkd = _mm256_setr_epi32(0, 1, 2, 4, 5, 6, 7, 3);
@@ -3678,4 +3677,4 @@ inline void rpp_store8_f32_to_i8_avx(Rpp8s *dstPtrTemp, __m256 pDst)
     _mm_storeu_si64((__m128i*)dstPtrTemp, px3);
 }
 
-#endif //AMD_RPP_RPP_CPU_SIMD_HPP
+#endif //RPP_CPU_SIMD_LOAD_STORE_HPP
