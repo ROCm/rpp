@@ -75,7 +75,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                  RpptRoiType roiType,
                                  rpp::Handle& handle);
 
-// Handle f16/f32
 template <typename T, typename U>
 __global__ void tensor_sum_pln1_hip(T *srcPtr,
                                     uint2 srcStridesNH,
@@ -113,7 +112,6 @@ __global__ void tensor_sum_pln3_hip<Rpp8s, Rpp32s>(Rpp8s *srcPtr,
                                                    Rpp32s *tensorSumArr,
                                                    RpptROIPtr roiTensorPtrSrc);
 
-// Handle f16/f32
 template <typename T, typename U>
 __global__ void tensor_sum_pkd3_hip(T *srcPtr,
                                     uint2 srcStridesNH,
@@ -132,7 +130,6 @@ __global__ void tensor_sum_pkd3_hip<Rpp8s, Rpp32s>(Rpp8s *srcPtr,
                                                    Rpp32s *tensorSumArr,
                                                    RpptROIPtr roiTensorPtrSrc);
 
-// Handle f16/f32 datatype
 template <typename T, typename U>
 RppStatus hip_exec_tensor_sum(T *srcPtr,
                               RpptDescPtr srcDescPtr,
