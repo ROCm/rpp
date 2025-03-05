@@ -39,7 +39,7 @@ __device__ void threshold_hip_rgb_compute(d_float24 *pix_f24, float3 *minRGB_f3,
         float outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? rangeMinMax->y : rangeMinMax->x;
         pix_f24->f8[0].f1[i] = outVal;
         pix_f24->f8[1].f1[i] = outVal;
-        pix_f24->f8[2].f1[i] = outVal; 
+        pix_f24->f8[2].f1[i] = outVal;
     }
 }
 
@@ -79,7 +79,7 @@ __global__ void threshold_pkd_tensor(T *srcPtr,
     d_float24 pix_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);    
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
 template <typename T>

@@ -56,7 +56,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads(); 
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -288,7 +288,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                                      rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads(); 
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -315,7 +315,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
         RpptXorwowStateBoxMuller xorwowState;
-        Rpp32s srcLocArray[8] = {0}; 
+        Rpp32s srcLocArray[8] = {0};
 
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
@@ -340,7 +340,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                
+
                 __m256 pRow = _mm256_set1_ps(dstLocRow);
                 __m256 pCol = avx_pDstLocInit;
                 int vectorLoopCount = 0;
@@ -506,7 +506,7 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                                      rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads(); 
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -533,7 +533,7 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
         RpptXorwowStateBoxMuller xorwowState;
-        Rpp32s srcLocArray[8] = {0}; 
+        Rpp32s srcLocArray[8] = {0};
 
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
@@ -751,7 +751,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads(); 
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -803,7 +803,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                
+
                 __m256 pRow = _mm256_set1_ps(dstLocRow);
                 __m256 pCol = avx_pDstLocInit;
                 int vectorLoopCount = 0;

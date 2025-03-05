@@ -317,6 +317,6 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            outRateTensor,
                            &window);
     }
-    
+
     return RPP_SUCCESS;
 }

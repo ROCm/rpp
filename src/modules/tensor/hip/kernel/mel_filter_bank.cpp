@@ -43,19 +43,19 @@ Before the kernel is launched, Three arrays are precomputed to store the filter 
 
 Compute Intervals:
 For each Mel filter, compute the frequency intervals (start and end FFT bins) that the filter spans. This is based on the Mel scale conversion of frequency ranges and the relationship between FFT bin indices and actual frequencies.
-            interval = ceil(f1 / hzStep), 
+            interval = ceil(f1 / hzStep),
 where hzStep is the frequency of the FFT bins (based on the sample rate and nfft).
 
 Compute Normalization Factors:
 If normalize is enabled, compute normalization factors for each filter. This ensures that each filter captures a normalized energy from its frequency interval.
-            normFactor = 2 / (f2 - f0), 
+            normFactor = 2 / (f2 - f0),
 where f0 and f2 are adjacent frequencies defining the boundaries of the filter.
 
 Compute Filter Weights:
 The weights applied to FFT bins in each interval are precomputed, separated into two phases: weights up and weights down.
 Weights up increase linearly from the start of the interval to the center.
 Weights down decrease linearly from the center of the interval to the end.
-            weightsUp = (f1 - fftBinStart * hzStep) / (f1 - f0), 
+            weightsUp = (f1 - fftBinStart * hzStep) / (f1 - f0),
             weightsDown = (f1 - fIter) * slope,
 Kernel Logic:
 The kernel applies the Mel filter bank transformation to the spectrogram data for each time frame and each Mel filter.
@@ -80,7 +80,7 @@ __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *we
 
     float *srcPtrTemp = srcPtr + fftbin * fftStrides.x + fftStrides.y;
     // Process the first interval of FFT bins, applying the weights up
-    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x)
     {
         float weightUp = 1.0f - weightsDown[fftbin];
         weightUp *= normFactor;
@@ -91,7 +91,7 @@ __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *we
     srcPtrTemp = srcPtr + fftbin * fftStrides.x + fftStrides.y;
 
     // Process the second interval of FFT bins, applying the weights down
-    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x)
     {
         float weightDown = weightsDown[fftbin];
         weightDown *= normFactor;

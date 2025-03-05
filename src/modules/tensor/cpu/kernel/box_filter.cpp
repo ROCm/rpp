@@ -75,7 +75,7 @@ Below steps are followed for getting outputs for the first 0-16 locations in 1st
     Repeat the same process for remaining alignedLength columns and store in output
 3. Process remaining non aligned columns in each row again using raw c code*/
 
-// generic raw c code for box filter 
+// generic raw c code for box filter
 template<typename T>
 inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                       Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
@@ -296,7 +296,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
-    // set the required masks array needed for shuffle operations 
+    // set the required masks array needed for shuffle operations
 #if __AVX2__
     __m128i pxMaskPln[7] = {xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To9, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To13};
     __m128i pxMaskPkd[7] = {xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To13, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To9};
@@ -323,7 +323,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
         Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
 #if __AVX2__
         const __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
-        // set the register order needed for blend operations 
+        // set the register order needed for blend operations
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
             std::fill_n(blendRegisterOrder, 7, 0);
@@ -1576,7 +1576,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
-    // set the required masks array needed for permute operations 
+    // set the required masks array needed for permute operations
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
@@ -1601,7 +1601,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
         Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
         const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
-        // set the register order needed for blend operations 
+        // set the register order needed for blend operations
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
             std::fill_n(blendRegisterOrder, 7, 0);

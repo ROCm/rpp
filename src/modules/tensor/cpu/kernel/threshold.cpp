@@ -297,7 +297,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif 
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixelR, pixelG, pixelB;
@@ -311,7 +311,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 255 : 0;
                     *dstPtrTempR++ = outVal;
                     *dstPtrTempG++ = outVal;
-                    *dstPtrTempB++ = outVal; 
+                    *dstPtrTempB++ = outVal;
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -596,7 +596,7 @@ RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif 
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixelR, pixelG, pixelB;
@@ -610,7 +610,7 @@ RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32f outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f;
                     *dstPtrTempR++ = outVal;
                     *dstPtrTempG++ = outVal;
-                    *dstPtrTempB++ = outVal; 
+                    *dstPtrTempB++ = outVal;
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -895,7 +895,7 @@ RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif 
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixelR, pixelG, pixelB;
@@ -909,7 +909,7 @@ RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
                     Rpp8s outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 127 : -128;
                     *dstPtrTempR++ = outVal;
                     *dstPtrTempG++ = outVal;
-                    *dstPtrTempB++ = outVal; 
+                    *dstPtrTempB++ = outVal;
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -1194,7 +1194,7 @@ RppStatus threshold_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif 
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixelR, pixelG, pixelB;
@@ -1208,7 +1208,7 @@ RppStatus threshold_f16_f16_host_tensor(Rpp16f *srcPtr,
                     Rpp16f outVal = static_cast<Rpp16f>((channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f);
                     *dstPtrTempR++ = outVal;
                     *dstPtrTempG++ = outVal;
-                    *dstPtrTempB++ = outVal; 
+                    *dstPtrTempB++ = outVal;
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;

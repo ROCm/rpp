@@ -38,9 +38,9 @@ Input parameters
 5. reflectPadding
 6. windowFunction
 7. power
-                                      
+
 For input audio sample of length N
-      Spectrogram             TF layout   
+      Spectrogram             TF layout
 (N) --------------->  (numWindows, nfft / 2 + 1)
 
       Spectrogram             FT layout
@@ -54,7 +54,7 @@ Spectrogram output computation is divided into 4 steps as below:
 1. Compute window output. Applies a filter for a chunks of input to get the window output of shape (numWindows, nfft)
 2. Compute sine and cosine factors required (nfft, nfft / 2 + 1)
 3. Do matrix muliplication to get final output of shape (numWindows, nfft / 2 + 1) for the TF layout. For the FT layout is just transposed
-real part      - windowOutput (numWindows, nfft) . cosFactor (nfft, nfft/2 + 1) 
+real part      - windowOutput (numWindows, nfft) . cosFactor (nfft, nfft/2 + 1)
 imaginary part - windowOutput (numWindows, nfft) . sinFactor (nfft, nfft/2 + 1)
 4. Compute final result using the real and imaginary part */
 
@@ -154,13 +154,13 @@ __global__ void compute_coefficients_hip_tensor(float *cosFactor,
         return;
 
     float factor = id_x * ((TWO_PI * id_y) / nfft);
-    int dstIdx = id_x * numBins + id_y; 
+    int dstIdx = id_x * numBins + id_y;
     cosFactor[dstIdx] = cosf(factor);
     sinFactor[dstIdx] = sinf(factor);
 }
 
 /* compute fourier transform on windowed output
-   it internally computes a matrix multiplication of 
+   it internally computes a matrix multiplication of
    - windowOutput of size (numWindows, nfft) with cosFactor of size (nfft, nfft/2 + 1) for real part of output
    - windowOutput of size (numWindows, nfft) with sinFactor of size (nfft, nfft/2 + 1) for imaginary part of output */
 __global__ void fourier_transform_hip_tensor(float *srcPtr,
@@ -224,7 +224,7 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
     if ((id_y < numWindows) && (id_x < numBins))
     {
         float magnitudeSquare = ((realVal * realVal) + (imaginaryVal * imaginaryVal));
-        
+
         /* if vertical is set to true, then get the transposed output index (id_x * dstStrideNH.y + id_y)
            else get the normal output index (id_y * dstStrideNH.y + id_x) */
         int dstIdx = (vertical) ? (id_z * dstStrideNH.x + id_x * dstStrideNH.y + id_y) :
@@ -251,11 +251,11 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 {
     bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
     Rpp32s numBins = (nfft / 2 + 1);
-    
+
     // find the maximum windows required across all inputs in batch and stride required for window output
     Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     uint scratchMemorySize = nfft * ((maxNumWindows * dstDescPtr->n) + (numBins * 2));
-    
+
     // check if scratch memory size required for spectrogram is within the limits
     if (scratchMemorySize > SPECTROGRAM_MAX_SCRATCH_MEMORY)
         return RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE;
@@ -287,7 +287,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
     CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, windowOutputStride * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
-    
+
     // compute the windowOutput for all samples in a batch. Each sample will be of shape (numWindows, nfft)
     Rpp32s globalThreads_x = windowLength;
     Rpp32s globalThreads_y = maxNumWindows;

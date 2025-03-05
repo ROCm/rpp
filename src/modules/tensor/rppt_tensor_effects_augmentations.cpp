@@ -1021,7 +1021,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
     // This function performs pixelation through a two-step resizing process:
     // 1. The image is first resized to a smaller intermediate size using bilinear interpolation.
     // 2. The intermediate image is then resized back to the original size using nearest neighbor interpolation.
-    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back, 
+    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back,
     // resulting in a pixelated effect as the intermediate pixels are repeated in the final image.
 
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1168,13 +1168,13 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
     RpptDesc fogMaskSrcDesc;
     RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
     set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);
-    
+
     // Initialize and set descriptor for resized fog mask
     RpptDesc fogMaskDstDesc;
     RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
     set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
-    // Fill the ROI and dstImageSize values required for resize api call 
+    // Fill the ROI and dstImageSize values required for resize api call
     RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *> (rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
     RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
     for (Rpp32s i = 0; i < 2; i++)
@@ -1185,7 +1185,7 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
     RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
     Rpp32f *resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f *>(internalRoiTensorPtrSrc + 2);
     Rpp32f *resizedFogIntensityMaskPtr = resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
-    
+
     // Resize the mask to the maximum size present in the batch
     rppt_resize_host(&fogMask_1920_1080[0], fogMaskSrcDescPtr, resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
 
@@ -2358,7 +2358,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
     // This function performs pixelation through a two-step resizing process:
     // 1. The image is first resized to a smaller intermediate size using bilinear interpolation.
     // 2. The intermediate image is then resized back to the original size using nearest neighbor interpolation.
-    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back, 
+    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back,
     // resulting in a pixelated effect as the intermediate pixels are repeated in the final image.
 
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -2545,14 +2545,14 @@ RppStatus rppt_fog_gpu(RppPtr_t srcPtr,
     // Initialize and set descriptor for original fog mask
     RpptDesc fogMaskSrcDesc;
     RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
-    set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);  
-    
+    set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);
+
     // Initialize and set descriptor for resized fog mask
     RpptDesc fogMaskDstDesc;
     RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
     set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
-    // Fill the ROI and dstImageSize values required for resize api call 
+    // Fill the ROI and dstImageSize values required for resize api call
     RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
     for (Rpp32s i = 0; i < 2; i++)

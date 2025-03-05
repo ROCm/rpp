@@ -280,7 +280,7 @@ RppStatus hip_exec_fog_tensor(T *srcPtr,
     Rpp32s globalThreads_y = dstDescPtr->h;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
-    // fill the random starting point (x, y) in mask for each image in batch 
+    // fill the random starting point (x, y) in mask for each image in batch
     std::random_device rd;  // Random number engine seed
     std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
     for (Rpp32s i = 0; i < dstDescPtr->n; i++)
