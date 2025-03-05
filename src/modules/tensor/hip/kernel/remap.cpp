@@ -566,4 +566,3 @@ template RppStatus hip_exec_remap_tensor<Rpp32f>(Rpp32f*,
                                                  RpptROIPtr,
                                                  RpptRoiType,
                                                  rpp::Handle&);
-
