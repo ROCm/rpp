@@ -34,4 +34,3 @@ RppStatus bitwise_xor_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                         RpptRoiType roiType,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& Handle);
-
