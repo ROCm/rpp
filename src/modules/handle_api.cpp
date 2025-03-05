@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 #include <cstdio>
-#include "rpp/errors.hpp"
-#include "rpp/handle.hpp"
+#include "errors.hpp"
+#include "handle.hpp"
 
 extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads, void* stream, RppBackend backend)
 {
