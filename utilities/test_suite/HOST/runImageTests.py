@@ -312,12 +312,9 @@ else:
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+        if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
-        else:
-            srcPath1 = inFilePath1
-            srcPath2 = inFilePath2
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
