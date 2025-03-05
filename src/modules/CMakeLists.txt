@@ -169,7 +169,6 @@ target_include_directories( ${PROJECT_NAME}
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/hip
         ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip
         ${CMAKE_SOURCE_DIR}/src/include/common/hip
         ${CMAKE_SOURCE_DIR}/src/include/tensor/hip
