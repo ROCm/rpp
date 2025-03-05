@@ -98,7 +98,6 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
         dstPtr[hipBlockIdx_z] = (T) (partialMin_smem[0]);
 }
 
-
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
 template <typename T>
@@ -305,7 +304,6 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
             minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMinRowPtr_smem[0];
     }
 }
-
 
 // -------------------- Set 2 - Kernel Executors --------------------
 

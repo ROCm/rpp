@@ -8,7 +8,6 @@ __device__ void bitwise_or_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d
     rpp_hip_math_bitwiseOr8(src1_uc8, src2_uc8, dst_uc8);
 }
 
-
 __global__ void bitwise_or_pkd_hip_tensor(Rpp8u *srcPtr1,
                                           Rpp8u *srcPtr2,
                                           uint2 srcStridesNH,
@@ -37,7 +36,6 @@ __global__ void bitwise_or_pkd_hip_tensor(Rpp8u *srcPtr1,
     bitwise_or_hip_compute(&src1_uc24.uc8[2], &src2_uc24.uc8[2], &dst_uc24.uc8[2]);
     rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_uc24);
 }
-
 
 __global__ void bitwise_or_pln_hip_tensor(Rpp8u *srcPtr1,
                                           Rpp8u *srcPtr2,

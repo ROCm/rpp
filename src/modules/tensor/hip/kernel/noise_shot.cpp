@@ -397,7 +397,6 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 template RppStatus hip_exec_shot_noise_tensor<Rpp8u>(Rpp8u*,
                                                      RpptDescPtr,
                                                      Rpp8u*,

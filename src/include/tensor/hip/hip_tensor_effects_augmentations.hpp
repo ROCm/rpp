@@ -182,7 +182,6 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle);
 
-
 template <typename T>
 RppStatus hip_exec_water_tensor(T *srcPtr,
                                 RpptDescPtr srcDescPtr,

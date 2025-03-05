@@ -245,7 +245,6 @@ inline void compute_color_twist_host(RpptFloatRGB *pixel, Rpp32f brightnessParam
     pixel->B = std::fma(bf, brightnessParam, contrastParam);
 }
 
-
 RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
                                         RpptDescPtr srcDescPtr,
                                         Rpp8u *dstPtr,

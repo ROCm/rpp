@@ -56,7 +56,6 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle);
 
-
 RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
                                     RpptDescPtr srcDescPtr,
                                     Rpp8s *dstPtr,

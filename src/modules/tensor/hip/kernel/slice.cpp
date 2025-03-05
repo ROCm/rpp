@@ -27,7 +27,6 @@ __global__ void fill_value_ncdhw_hip_tensor(T *dstPtr,
     }
 }
 
-
 template <typename T>
 __global__ void fill_value_ndhwc_hip_tensor(T *dstPtr,
                                             uint2 dstStridesDH,
@@ -53,7 +52,6 @@ __global__ void fill_value_ndhwc_hip_tensor(T *dstPtr,
     val_f24.f4[5] = val_f24.f4[0];
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
-
 
 template <typename T>
 __global__ void slice_ncdhw_hip_tensor(T *srcPtr,
@@ -84,7 +82,6 @@ __global__ void slice_ncdhw_hip_tensor(T *srcPtr,
         dstIdx += dstStridesCDH.x;
     }
 }
-
 
 template <typename T>
 __global__ void slice_ndhwc_hip_tensor(T *srcPtr,

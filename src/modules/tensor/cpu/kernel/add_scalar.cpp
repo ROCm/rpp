@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "add_scalar.hpp"
 
-
 inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
 {
     p[0] = _mm256_add_ps(p[0], pAddParam[0]);    // add adjustment

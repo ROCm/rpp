@@ -460,7 +460,6 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 template RppStatus hip_exec_warp_perspective_tensor<Rpp8u>(Rpp8u*,
                                                            RpptDescPtr,
                                                            Rpp8u*,

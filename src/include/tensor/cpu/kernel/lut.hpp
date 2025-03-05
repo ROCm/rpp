@@ -43,7 +43,6 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams);
 
-
 RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  Rpp32f *dstPtr,

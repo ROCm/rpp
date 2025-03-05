@@ -65,7 +65,6 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             rpp::Handle& handle);
 
-
 template <typename T>
 RppStatus hip_exec_color_twist_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,

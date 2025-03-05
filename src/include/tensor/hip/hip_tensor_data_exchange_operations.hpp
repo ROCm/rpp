@@ -50,5 +50,4 @@ RppStatus hip_exec_swap_channels_tensor(T *srcPtr,
                                         RpptDescPtr dstDescPtr,
                                         rpp::Handle& handle);
 
-
 #endif // HIP_TENSOR_DATA_EXCHANGE_OPERATIONS_HPP

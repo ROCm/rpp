@@ -261,7 +261,6 @@ template RppStatus hip_exec_magnitude_tensor<half>(half*,
                                                    RpptRoiType,
                                                    rpp::Handle&);
 
-
 template RppStatus hip_exec_magnitude_tensor<Rpp32f>(Rpp32f*,
                                                      Rpp32f*,
                                                      RpptDescPtr,

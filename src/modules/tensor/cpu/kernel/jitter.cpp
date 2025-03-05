@@ -326,7 +326,6 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m256 pWidthLimit = _mm256_set1_ps(roi.xywhROI.roiWidth-1);
         __m256 pBound = _mm256_set1_ps(bound);
 
-
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -544,7 +543,6 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         __m256 pHeightLimit = _mm256_set1_ps(heightLimit);
         __m256 pWidthLimit = _mm256_set1_ps(roi.xywhROI.roiWidth-1);
         __m256 pBound = _mm256_set1_ps(bound);
-
 
         // Jitter with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))

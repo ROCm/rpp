@@ -1995,7 +1995,6 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                     handle);
 
-
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;

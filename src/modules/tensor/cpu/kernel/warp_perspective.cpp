@@ -310,7 +310,6 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                   RpptDescPtr srcDescPtr,
                                                   Rpp32f *dstPtr,

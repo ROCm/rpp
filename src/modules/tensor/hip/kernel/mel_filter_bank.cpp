@@ -15,7 +15,6 @@ normalize flag: Whether to apply normalization to the filter bank.
 melFormula: Choice of Mel scale formula (HTK or Slaney).
 maxFreq and minFreq: Frequency range for the Mel filter banks.
 
-
 Preprocessing:
 Before the kernel is launched, Three arrays are precomputed to store the filter intervals, normalization factors, and weights:
 

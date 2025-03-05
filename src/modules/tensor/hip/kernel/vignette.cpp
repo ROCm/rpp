@@ -305,7 +305,6 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 template RppStatus hip_exec_vignette_tensor<Rpp8u>(Rpp8u*,
                                                    RpptDescPtr,
                                                    Rpp8u*,

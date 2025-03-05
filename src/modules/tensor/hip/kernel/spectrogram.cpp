@@ -34,7 +34,6 @@ real part      - windowOutput (numWindows, nfft) . cosFactor (nfft, nfft/2 + 1)
 imaginary part - windowOutput (numWindows, nfft) . sinFactor (nfft, nfft/2 + 1)
 4. Compute final result using the real and imaginary part */
 
-
 // Compute hanning window
 inline RPP_HOST_DEVICE void hann_window(Rpp32f *output, Rpp32s windowSize)
 {

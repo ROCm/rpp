@@ -1407,7 +1407,6 @@ omp_set_dynamic(0);
     return RPP_SUCCESS;
 }
 
-
 RppStatus remap_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                            RpptDescPtr srcDescPtr,
                                            Rpp8s *dstPtr,

@@ -245,7 +245,6 @@ RppStatus hip_exec_lut_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 template RppStatus hip_exec_lut_tensor<Rpp8u, Rpp8u>(Rpp8u*,
                                                      RpptDescPtr,
                                                      Rpp8u*,

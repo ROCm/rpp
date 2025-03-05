@@ -951,7 +951,6 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-
 template RppStatus hip_exec_resize_tensor<Rpp8u>(Rpp8u*,
                                                  RpptDescPtr,
                                                  Rpp8u*,

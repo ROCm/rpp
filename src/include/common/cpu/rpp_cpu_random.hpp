@@ -72,7 +72,6 @@ inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState 
     }
 }
 
-
 template<Rpp32s STREAM_SIZE>
 inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller(RpptXorwowStateBoxMuller *xorwowInitialState, Rpp32u seed)
 {

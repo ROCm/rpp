@@ -282,7 +282,6 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
         pContrastParams[0] = _mm256_set1_ps(contrastFactor);
         pContrastParams[1] = _mm256_set1_ps(contrastCenter);
 
-
         // contrast with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {

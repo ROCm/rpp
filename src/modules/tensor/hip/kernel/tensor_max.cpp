@@ -98,7 +98,6 @@ __global__ void tensor_max_grid_result_hip(float *srcPtr,
         dstPtr[hipBlockIdx_z] = (T) (partialMax_smem[0]);
 }
 
-
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
 template <typename T>
@@ -295,7 +294,6 @@ __global__ void tensor_max_pln1_hip(T *srcPtr,
             maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
     }
 }
-
 
 // -------------------- Set 2 - Kernel Executors --------------------
 

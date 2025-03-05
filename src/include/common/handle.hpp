@@ -39,7 +39,6 @@ SOFTWARE.
 #include "simple_hash.hpp"
 #include "allocator.hpp"
 
-
 #if RPP_USE_ROCBLAS
 #include "manage_ptr.hpp"
 #include <rocblas.h>

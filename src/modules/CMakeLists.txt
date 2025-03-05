@@ -24,7 +24,6 @@ SOFTWARE.
 
 project(modules)
 
-
 if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS batch_pd/hip/kernel/*.cpp)
 elseif( "${BACKEND}" STREQUAL "OCL")
