@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HIP_TENSOR_LOGICAL_OPERATIONS_HPP
-#define HIP_TENSOR_LOGICAL_OPERATIONS_HPP
+#ifndef HIP_TENSOR_BITWISE_OPERATIONS_HPP
+#define HIP_TENSOR_BITWISE_OPERATIONS_HPP
 
 #include <hip/hip_runtime.h>
 #include "rpp_hip_load_store.hpp"
@@ -63,4 +63,4 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
-#endif // HIP_TENSOR_LOGICAL_OPERATIONS_HPP
+#endif // HIP_TENSOR_BITWISE_OPERATIONS_HPP
