@@ -212,7 +212,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_host")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_host")
 
 # Performance tests
 if (testType == 1):
