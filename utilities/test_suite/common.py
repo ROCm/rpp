@@ -90,8 +90,7 @@ imageAugmentationMap = {
     89: ["tensor_max", "HOST", "HIP"],
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
-    92: ["slice", "HOST", "HIP"],
-    93: ["concat", "HOST", "HIP"]
+    92: ["slice", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
