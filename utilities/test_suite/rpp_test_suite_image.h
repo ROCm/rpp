@@ -100,6 +100,7 @@ std::map<int, string> augmentationMap =
     {61, "magnitude"},
     {63, "phase"},
     {65, "bitwise_and"},
+    {66, "bitwise_not"},
     {67, "bitwise_xor"},
     {68, "bitwise_or"},
     {70, "copy"},
@@ -116,8 +117,7 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"},
-    {93, "concat"}
+    {92, "slice"}
 };
 
 enum Augmentation {
@@ -156,6 +156,7 @@ enum Augmentation {
     MAGNITUDE = 61,
     PHASE = 63,
     BITWISE_AND = 65,
+    BITWISE_NOT = 66,
     BITWISE_XOR = 67,
     BITWISE_OR = 68,
     COPY = 70,
@@ -172,13 +173,12 @@ enum Augmentation {
     TENSOR_MAX = 89,
     TENSOR_MEAN = 90,
     TENSOR_STDDEV = 91,
-    SLICE = 92,
-    CONCAT = 93
+    SLICE = 92
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP, CONCAT};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, REMAP};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER};
-const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR, CONCAT};
+const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
 const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
@@ -499,77 +499,6 @@ inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart,
     tjDestroy(tjInstance);
 }
 
-// sets roi xywh values and dstImg sizes for concat 
-inline void  set_src_and_dst_roi_concat(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, vector<string>::const_iterator imagePathsStartSecond, vector<string>::const_iterator imagePathsEndSecond, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrSrcSecond, RpptROI *roiTensorPtrDst, RpptImagePatchPtr srcImgSizes, RpptImagePatchPtr srcImgSizesSecond, RpptImagePatchPtr dstImgSizes)
-{
-    tjhandle tjInstance = tjInitDecompress();
-    int i = 0;
-    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
-    {
-        const string& imagePath = *imagePathIter;
-        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
-        if (!jpegFile) {
-            std::cerr << "Error opening file: " << imagePath << std::endl;
-            continue;
-        }
-
-        fseek(jpegFile, 0, SEEK_END);
-        long fileSize = ftell(jpegFile);
-        fseek(jpegFile, 0, SEEK_SET);
-
-        std::vector<unsigned char> jpegBuffer(fileSize);
-        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
-        fclose(jpegFile);
-
-        int jpegSubsamp;
-        int width, height;
-        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
-            std::cerr << "Error decompressing file: " << imagePath << std::endl;
-            continue;
-        }
-
-        roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
-        roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
-        srcImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
-        srcImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
-    }
-    tjDestroy(tjInstance);
-    tjInstance = tjInitDecompress();
-    i = 0;
-    for (auto imagePathIter = imagePathsStartSecond; imagePathIter != imagePathsEndSecond; ++imagePathIter, i++)
-    {
-        const string& imagePath = *imagePathIter;
-        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
-        if (!jpegFile) {
-            std::cerr << "Error opening file: " << imagePath << std::endl;
-            continue;
-        }
-
-        fseek(jpegFile, 0, SEEK_END);
-        long fileSize = ftell(jpegFile);
-        fseek(jpegFile, 0, SEEK_SET);
-
-        std::vector<unsigned char> jpegBuffer(fileSize);
-        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
-        fclose(jpegFile);
-
-        int jpegSubsamp;
-        int width, height;
-        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
-            std::cerr << "Error decompressing file: " << imagePath << std::endl;
-            continue;
-        }
-
-        roiTensorPtrSrcSecond[i].xywhROI = {0, 0, width, height};
-        roiTensorPtrDst[i].xywhROI = {0, 0, roiTensorPtrSrc[i].xywhROI.roiWidth + width, roiTensorPtrSrc[i].xywhROI.roiHeight + height};
-        srcImgSizesSecond[i].width = roiTensorPtrSrcSecond[i].xywhROI.roiWidth;
-        srcImgSizesSecond[i].height = roiTensorPtrSrcSecond[i].xywhROI.roiHeight;
-        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
-        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
-    }
-    tjDestroy(tjInstance);
-}
-
 // sets generic descriptor dimensions and strides of src/dst
 inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
 {
@@ -638,32 +567,6 @@ inline void set_generic_descriptor_slice(RpptDescPtr srcDescPtr, RpptGenericDesc
         descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2];
         descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2];
     }
-}
-
-// sets generic descriptor dimensions and strides of src/dst for slice functionality
-inline void set_generic_descriptor_concat(RpptDescPtr srcDescPtr, RpptGenericDescPtr descriptorPtr3D, int batchSize)
-{
-    descriptorPtr3D->offsetInBytes = 0;
-    descriptorPtr3D->dataType = srcDescPtr->dataType;
-    descriptorPtr3D->layout = srcDescPtr->layout;
-    descriptorPtr3D->numDims = 4;
-    descriptorPtr3D->dims[0] = batchSize;
-    if (srcDescPtr->layout == RpptLayout::NHWC)
-    {
-        descriptorPtr3D->dims[1] = srcDescPtr->h;
-        descriptorPtr3D->dims[2] = srcDescPtr->w;
-        descriptorPtr3D->dims[3] = srcDescPtr->c;
-    }
-    else
-    {
-        descriptorPtr3D->dims[1] = srcDescPtr->c;
-        descriptorPtr3D->dims[2] = srcDescPtr->h;
-        descriptorPtr3D->dims[3] = srcDescPtr->w;
-    }
-    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
-    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
-    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
-    descriptorPtr3D->strides[3] = 1;
 }
 
 // sets descriptor dimensions and strides of src/dst
@@ -891,67 +794,6 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
-// converts image data from PLN3 to PKD3
-inline void convert_pln3_to_pkd3_concat(Rpp8u *output, RpptDescPtr descPtr, RpptDescPtr srcPtr, int axisMask)
-{
-    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
-    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
-    memcpy(outputCopy, output, bufferSize * sizeof(Rpp8u));
-
-    Rpp8u *outputCopyTemp;
-    outputCopyTemp = outputCopy + descPtr->offsetInBytes;
-
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(descPtr->n)
-    for (int count = 0; count < descPtr->n; count++)
-    {
-        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-        Rpp8u *outputCopyTempR1, *outputCopyTempG1, *outputCopyTempB1;
-        outputCopyTempR = outputCopyTemp + count * descPtr->strides.nStride;
-        outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
-        outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
-        Rpp8u *outputTemp = output + descPtr->offsetInBytes + count * descPtr->strides.nStride;
-        Rpp8u *outputTemp1;
-
-        if(axisMask == 0)
-        {
-            outputCopyTempR1 = outputCopyTemp + count * descPtr->strides.nStride + srcPtr->strides.nStride;
-            outputCopyTempG1 = outputCopyTempR1 + descPtr->strides.cStride;
-            outputCopyTempB1 = outputCopyTempG1 + descPtr->strides.cStride;
-        }
-
-        for (int i = 0; i < descPtr->h; i++)
-        {
-            for (int j = 0; j < descPtr->w; j++)
-            {
-                *outputTemp = *outputCopyTempR;
-                outputTemp++;
-                outputCopyTempR++;
-                *outputTemp = *outputCopyTempG;
-                outputTemp++;
-                outputCopyTempG++;
-                *outputTemp = *outputCopyTempB;
-                outputTemp++;
-                outputCopyTempB++;
-                if(axisMask == 0)
-                {
-                    *outputTemp = *outputCopyTempR1;
-                    outputTemp++;
-                    outputCopyTempR1++;
-                    *outputTemp = *outputCopyTempG1;
-                    outputTemp++;
-                    outputCopyTempG1++;
-                    *outputTemp = *outputCopyTempB1;
-                    outputTemp++;
-                    outputCopyTempB1++;
-                }
-            }
-        }
-    }
-
-    free(outputCopy);
-}
-
 // converts image data from PKD3 to PLN3
 inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
@@ -1128,103 +970,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     }
 }
 
-// Write a batch of images using the OpenCV library
-inline void write_image_batch_opencv_concat(string outputFolder, Rpp8u *output,RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *srcImgSizes, RpptImagePatch *srcImgSizesSecond, RpptImagePatch *dstImgSizes, int maxImageDump, int axisMask)
-{
-    // create output folder
-    mkdir(outputFolder.c_str(), 0700);
-    outputFolder += "/";
-    static int cnt = 1;
-    static int imageCnt = 0;
-
-    Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-    if(srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0 && srcDescPtr->c == 1)
-        elementsInRowMax = elementsInRowMax / 2; 
-    Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-    for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
-    {
-        Rpp32u height = srcImgSizes[j].height;
-        Rpp32u width = srcImgSizes[j].width;
-        Rpp32u height1 = srcImgSizesSecond[j].height;
-        Rpp32u width1 = srcImgSizesSecond[j].width;
-        Rpp32u elementsInRow = width * srcDescPtr->c;
-        Rpp32u elementsInRow1 = width1 * srcDescPtr->c;
-        Rpp32u outputSize = (height * width * srcDescPtr->c) +  (height1 * width1 * srcDescPtr->c);
-        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
-        Rpp8u *tempOutputRow = tempOutput;
-        Rpp8u *tempOutputRow1 = tempOutput + elementsInRow;
-        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
-        for (int k = 0; k < height; k++)
-        {
-            if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 1) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 2))
-            {
-                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-                memcpy(tempOutputRow1, (outputRow +  (srcDescPtr->w * srcDescPtr->c)), elementsInRow1 * sizeof(Rpp8u));
-                tempOutputRow1 += (elementsInRow + elementsInRow1);
-                tempOutputRow += (elementsInRow + elementsInRow1);
-            }
-            else if((srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0 && srcDescPtr->c == 1))
-            {
-                memcpy(tempOutputRow, outputRow, ((elementsInRow) * sizeof(Rpp8u)));
-                tempOutputRow += elementsInRow;
-                memcpy(tempOutputRow, (outputRow + (dstDescPtr->strides.nStride / 2)), ((elementsInRow) * sizeof(Rpp8u)));
-                tempOutputRow += (elementsInRow);
-            }
-            else if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 2) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 0))
-            {
-                memcpy(tempOutputRow, outputRow, ((elementsInRow + elementsInRow1) * sizeof(Rpp8u)));
-                tempOutputRow += (elementsInRow + elementsInRow1);
-            }
-            else
-            {
-                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-                tempOutputRow += elementsInRow;
-            }
-            outputRow += elementsInRowMax;
-        }
-        outputRow = offsettedOutput + (j * dstDescPtr->strides.nStride) + srcDescPtr->strides.nStride;
-        if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (srcDescPtr->layout == RpptLayout::NCHW &&  axisMask == 1))
-        {
-            for (int k = 0; k < height1; k++)
-            {
-                memcpy(tempOutputRow, outputRow, elementsInRow1 * sizeof(Rpp8u));
-                outputRow += elementsInRowMax;
-                tempOutputRow += elementsInRow;
-            }
-        }
-        string outputImagePath = outputFolder + *(imagesNamesStart + j);
-        Mat matOutputImage, matOutputImageRgb;
-        if (dstDescPtr->c == 1)
-        {
-            if(axisMask == 1)
-                matOutputImage = Mat(height + height1, width, CV_8UC1, tempOutput);
-            else if(axisMask == 2)
-                matOutputImage = Mat(height, width + width1, CV_8UC1, tempOutput);
-        }        
-        else if (dstDescPtr->c == 2)
-            matOutputImage = Mat(height, width + width1 , CV_8UC1, tempOutput);
-        else if (dstDescPtr->c == 3 || dstDescPtr->c == 6)
-        {
-            if((srcDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (srcDescPtr->layout == RpptLayout::NCHW && axisMask == 1))
-                matOutputImageRgb = Mat(height + height1, width, CV_8UC3, tempOutput);
-            else
-                matOutputImageRgb = Mat(height, width + width1, CV_8UC3, tempOutput);
-            cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
-        }
-
-        fs::path pathObj(outputImagePath);
-        if (fs::exists(pathObj))
-        {
-            std::string outPath = outputImagePath.substr(0, outputImagePath.find_last_of('.')) + "_" + to_string(cnt) + outputImagePath.substr(outputImagePath.find_last_of('.'));
-            imwrite(outPath, matOutputImage);
-            cnt++;
-        }
-        else
-            imwrite(outputImagePath, matOutputImage);
-        free(tempOutput);
-    }
-}
-
 // compares the output of PKD3-PKD3 and PLN1-PLN1 variants
 void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -1256,85 +1001,16 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
     }
 }
 
-// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
-void compare_outputs_pkd_and_pln1_concat(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *srcImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int axisMask)
-{
-    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
-    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
-    {
-        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + imageCnt * refOutputSize;
-        int height = srcImgSizes[imageCnt].height;
-        int width = srcImgSizes[imageCnt].width * dstDescPtr->c;
-        if(dstDescPtr->layout == RpptLayout::NCHW && axisMask == 0)
-            width = width / 2;
-        int matchedIdx = 0;
-        int refOutputHstride = refOutputWidth * dstDescPtr->c;
-
-        for(int i = 0; i < height; i++)
-        {
-            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
-            rowTempRef = outputTempRef + i * refOutputHstride;
-            for(int j = 0; j < width; j++)
-            {
-                outVal = rowTemp + j;
-                outRefVal = rowTempRef + j;
-                int diff = abs(*outVal - *outRefVal);
-                if(diff <= CUTOFF)
-                    matchedIdx++;
-            }
-            if((dstDescPtr->layout == RpptLayout::NHWC && axisMask == 1) || (dstDescPtr->layout == RpptLayout::NCHW && axisMask == 2))
-            {
-                rowTemp = outputTemp + (i * dstDescPtr->strides.hStride + dstDescPtr->strides.hStride / 2);
-                rowTempRef = outputTempRef + (i * refOutputHstride + refOutputHstride / 2);
-                for(int j = 0; j < width; j++)
-                {
-                    outVal = rowTemp + j;
-                    outRefVal = rowTempRef + j;
-                    int diff = abs(*outVal - *outRefVal);
-                    if(diff <= CUTOFF)
-                        matchedIdx++;
-                }   
-            }
-        }
-        if((dstDescPtr->layout == RpptLayout::NHWC && axisMask == 0) || (dstDescPtr->layout == RpptLayout::NCHW && axisMask != 2))
-        {
-            outputTemp = output + (imageCnt * dstDescPtr->strides.nStride + dstDescPtr->strides.nStride / 2);
-            outputTempRef = refOutput + (imageCnt * refOutputSize + refOutputSize/2 );
-            for(int i = 0; i < height; i++)
-            {
-                rowTemp = outputTemp + (i * dstDescPtr->strides.hStride);
-                rowTempRef = outputTempRef + (i * refOutputHstride);
-                for(int j = 0; j < width; j++)
-                {
-                    outVal = rowTemp + j;
-                    outRefVal = rowTempRef + j;
-                    int diff = abs(*outVal - *outRefVal);
-                    if(diff <= CUTOFF)
-                        matchedIdx++;
-                }
-            }
-        }
-        int size = 1;
-        if(dstDescPtr->layout == RpptLayout::NCHW)
-            size = height * srcImgSizes[imageCnt].width  * 2;
-        else
-            size = height * srcImgSizes[imageCnt].width  * 3 * 2;
-        if(matchedIdx == size && matchedIdx !=0)
-            fileMatch++;
-    }
-}
-
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
-void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *srcImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + imageCnt * refOutputSize;
-        int height = srcImgSizes[imageCnt].height;
-        int width = srcImgSizes[imageCnt].width;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
         int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
@@ -1361,83 +1037,8 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
     }
 }
 
-// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
-void compare_outputs_pln3_concat(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int axisMask)
-{
-    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempRef1, *outputTempChn, *outputTempRefChn;
-    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
-    {
-        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + imageCnt * refOutputSize;
-        outputTempRef1 = refOutput + imageCnt * refOutputSize +  refOutputSize / 2 ;
-        int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width;
-        int matchedIdx = 0;
-        int refOutputHstride = refOutputWidth * dstDescPtr->c;
-        for(int c = 0; c < dstDescPtr->c; c++)
-        {
-            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
-            outputTempRefChn = outputTempRef + c;
-            for(int i = 0; i < height; i++)
-            {
-                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
-                rowTempRef = outputTempRefChn + i * refOutputHstride;
-                for(int j = 0; j < width; j++)
-                {
-                    outVal = rowTemp + j;
-                    if(axisMask == 0)
-                        outRefVal = rowTempRef + j * 6;
-                    else
-                        outRefVal = rowTempRef + j * 3;
-                        
-                    int diff = abs(*outVal - *outRefVal);
-                    if(diff <= CUTOFF)
-                        matchedIdx++;
-                }
-                if(axisMask == 2)
-                {
-                    rowTemp = outputTempChn + i * dstDescPtr->strides.hStride + dstDescPtr->strides.hStride / 2;
-                    rowTempRef = outputTempRefChn + i * refOutputHstride + refOutputHstride / 2;
-                    for(int j = 0; j < width; j++)
-                    {
-                        outVal = rowTemp + j;
-                        outRefVal = rowTempRef + j * 3;
-                        int diff = abs(*outVal - *outRefVal);
-                        if(diff <= CUTOFF)
-                            matchedIdx++;
-                    }
-                }
-                
-            }
-            if(axisMask == 1)
-            {
-                outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
-                outputTempChn = outputTemp + c * dstDescPtr->strides.cStride + dstDescPtr->strides.cStride / 2;
-                outputTempRefChn = outputTempRef1 + c;
-                for(int i = 0; i < height; i++)
-                {
-                    rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
-                    rowTempRef = outputTempRefChn + i * refOutputHstride;
-                    for(int j = 0; j < width; j++)
-                    {
-                        outVal = rowTemp + j;
-                        outRefVal = rowTempRef + j * 3;
-                        int diff = abs(*outVal - *outRefVal);
-                        if (diff <= CUTOFF)
-                            matchedIdx++;
-                        
-                    }
-                    
-                }
-            }
-        }
-        if(matchedIdx == (height * width * 3 * 2) && matchedIdx !=0)
-            fileMatch++;
-    }
-}
-
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, string axisMaskName, int additionalParam, int testCase, string dst, string scriptPath)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
     string refFile = "";
@@ -1447,15 +1048,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
     }
-    else if (testCase == 93)
-    {
-        refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
-        refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
-        if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 0) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 1))
-            refOutputHeight = refOutputHeight * 2;
-        else if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 1) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 2))
-            refOutputWidth = refOutputWidth * 2;
-    }
     else
     {
         refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
@@ -1463,14 +1055,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
-    if((srcDescPtr->layout == RpptLayout::NHWC &&  additionalParam == 2) || (srcDescPtr->layout == RpptLayout::NCHW &&  additionalParam == 0))
-        binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 2 * 4;
-    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3 ;
-    if(srcDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 2)
-    {
-        pln1RefStride = pln1RefStride * 2;
-        refOutputWidth = refOutputWidth / 2;
-    }
+    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
+
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
@@ -1521,22 +1107,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
     }
-    else if(testCase == 93)
-    {
-        func += "_axisMask" + axisMaskName;
-        if(dstDescPtr->layout == RpptLayout::NCHW && (dstDescPtr->c == 3 || dstDescPtr->c == 6))
-        {
-            Rpp32u axisMask = std::stoi(axisMaskName);
-            if(axisMask == 0)
-                axisMask = 2;
-            else if(axisMask == 1)
-                axisMask = 0;
-            else
-                axisMask = 1;
-            axisMaskName = std::to_string(axisMask);
-        }
-        binFile += "_axisMask" + axisMaskName;
-    }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
 
@@ -1544,26 +1114,11 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     read_bin_file(refFile, binaryContent);
 
     if(dstDescPtr->layout == RpptLayout::NHWC)
-    {
-        if(testCase == 93)
-            compare_outputs_pkd_and_pln1_concat(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, additionalParam);
-        else
-            compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    }
-    else if(dstDescPtr->layout == RpptLayout::NCHW && (dstDescPtr->c == 3 || dstDescPtr->c == 6))
-    {   
-        if (testCase == 93)
-            compare_outputs_pln3_concat(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, additionalParam);
-        else
-            compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    }
+        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-    {
-        if (testCase == 93)
-            compare_outputs_pkd_and_pln1_concat(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch,additionalParam);
-        else 
-            compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    }
+        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1861,54 +1416,6 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
             roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
             shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
             shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
-        }
-    }
-}
-
-// initialize the roi values required for concat
-void init_concat(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor)
-{
-    if(descriptorPtr3D->numDims == 4)
-    {
-        if (descriptorPtr3D->layout == RpptLayout::NCHW)
-        {
-            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
-            {
-                int idx1 = i * 3;
-                int idx2 = i * 6;
-                roiTensor[idx2] = 0;
-                roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.y;
-                roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.xy.x;
-                roiTensor[idx2 + 3] = descriptorPtr3D->dims[1];
-                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiHeight;
-                roiTensor[idx2 + 5] = roiPtrSrc[i].xywhROI.roiWidth;
-            }
-        }
-        else if(descriptorPtr3D->layout == RpptLayout::NHWC)
-        {
-            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
-            {
-                int idx1 = i * 3;
-                int idx2 = i * 6;
-                roiTensor[idx2] = roiPtrSrc[i].xywhROI.xy.y;
-                roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.x;
-                roiTensor[idx2 + 2] = 0;
-                roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiHeight;
-                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiWidth;
-                roiTensor[idx2 + 5] = descriptorPtr3D->dims[3];
-            }
-        }
-    }
-    if(descriptorPtr3D->numDims == 3)
-    {
-        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
-        {
-            int idx1 = i * 2;
-            int idx2 = i * 4;
-            roiTensor[idx2] = roiPtrSrc[i].xywhROI.xy.y;
-            roiTensor[idx2 + 1] = roiPtrSrc[i].xywhROI.xy.x;
-            roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.roiHeight;
-            roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
         }
     }
 }

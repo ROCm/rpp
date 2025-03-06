@@ -4,8 +4,8 @@
 template <typename T>
 __global__ void concat_generic_hip_tensor(T *srcPtr1,
                                           T *srcPtr2,
-                                          uint *srcStrides,
-                                          uint *src2Strides,
+                                          uint *srcTensor1Strides,
+                                          uint *srcTensor2Strides,
                                           T *dstPtr,
                                           uint *dstStrides,
                                           uint axis,
@@ -22,8 +22,8 @@ __global__ void concat_generic_hip_tensor(T *srcPtr1,
     uint *begin = roi;
     uint *length = &roi[numDims];
     uint dstIdx = (id_z * *dstStrides++);
-    uint srcIdx1 = (id_z * *srcStrides++);
-    uint srcIdx2 = (id_z * *src2Strides++);
+    uint srcIdx1 = (id_z * *srcTensor1Strides++);
+    uint srcIdx2 = (id_z * *srcTensor2Strides++);
     uint coords[RPPT_MAX_DIMS];
 
     uint temp = id_x;
@@ -34,28 +34,28 @@ __global__ void concat_generic_hip_tensor(T *srcPtr1,
         if(i < axis)
         {
             dstIdx += coords[i] * dstStrides[i];
-            srcIdx1 += (coords[i] + begin[i]) * srcStrides[i];
-            srcIdx2 += (coords[i] + begin[i]) * src2Strides[i];
+            srcIdx1 += (coords[i] + begin[i]) * srcTensor1Strides[i];
+            srcIdx2 += (coords[i] + begin[i]) * srcTensor2Strides[i];
         }
         else if(i == axis)
         {
             if(coords[i] < length[i])
             {
                 dstIdx += coords[i] * dstStrides[i];
-                srcIdx1 += (coords[i] + begin[i]) * srcStrides[i];
+                srcIdx1 += (coords[i] + begin[i]) * srcTensor1Strides[i];
             }
             else
             {
                 uint shifted_coord = coords[i] - length[i];
                 dstIdx += coords[i] * dstStrides[i];
-                srcIdx2 += (shifted_coord + begin[i]) * src2Strides[i];
+                srcIdx2 += (shifted_coord + begin[i]) * srcTensor2Strides[i];
             }
         }
         else
         {
             dstIdx += coords[i] * dstStrides[i];
-            srcIdx1 += coords[i] * srcStrides[i];
-            srcIdx2 += coords[i] * src2Strides[i];
+            srcIdx1 += coords[i] * srcTensor1Strides[i];
+            srcIdx2 += coords[i] * srcTensor2Strides[i];
         }
     }
 
@@ -96,7 +96,7 @@ __global__ void concat_2d_hip_tensor(T *srcPtr1,
     }
     else
     {
-        for(int i = 0; i < (dstStrides[1] - id_x); i++)
+        for(int i = 0; i < (dims[1] - id_x); i++)
         {
             dstPtr[dstIdx + i] = srcPtr1[srcIdx1 + i];
             dstPtr[dstIdx + srcTensor1Strides[1] + i] = srcPtr2[srcIdx2 + i];
@@ -107,8 +107,8 @@ __global__ void concat_2d_hip_tensor(T *srcPtr1,
 template <typename T>
 __global__ void concat_3d_hip_tensor(T *srcPtr1,
                                      T *srcPtr2,
-                                     uint *srcStrides,
-                                     uint *src2Strides,
+                                     uint *srcTensor1Strides,
+                                     uint *srcTensor2Strides,
                                      T *dstPtr,
                                      uint *dstStrides,
                                      uint *dims,
@@ -122,8 +122,8 @@ __global__ void concat_3d_hip_tensor(T *srcPtr1,
         return;
 
     uint dstIdx = id_z * dstStrides[1] + id_y * dstStrides[2] + id_x;
-    uint srcIdx1 = id_z * srcStrides[1] + id_y * srcStrides[2] + id_x;
-    uint srcIdx2 = id_z * src2Strides[1] + id_y * src2Strides[2] + id_x;
+    uint srcIdx1 = id_z * srcTensor1Strides[1] + id_y * srcTensor1Strides[2] + id_x;
+    uint srcIdx2 = id_z * srcTensor2Strides[1] + id_y * srcTensor2Strides[2] + id_x;
 
     d_float8 src_f8, src2_f8;
     if((dims[2] - id_x) >= 8)
@@ -131,23 +131,23 @@ __global__ void concat_3d_hip_tensor(T *srcPtr1,
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &src_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + srcStrides[2], &src_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + srcTensor1Strides[2], &src_f8);
     }
     else
     {
         for(int i = 0; i < (dstStrides[2] - id_x); i++)
         {
             dstPtr[dstIdx + i] = srcPtr1[srcIdx1 + i];
-            dstPtr[dstIdx + srcStrides[2] + i] = srcPtr2[srcIdx2 + i];
+            dstPtr[dstIdx + srcTensor1Strides[2] + i] = srcPtr2[srcIdx2 + i];
         }
     }
 }
 
 template <typename T>
 RppStatus hip_exec_concat_tensor(T *srcPtr1,
-                                 RpptGenericDescPtr srcGenericDescPtr,
+                                 RpptGenericDescPtr srcPtr1GenericDescPtr,
                                  T *srcPtr2,
-                                 RpptGenericDescPtr src2GenericDescPtr,
+                                 RpptGenericDescPtr srcPtr2GenericDescPtr,
                                  T *dstPtr,
                                  RpptGenericDescPtr dstGenericDescPtr,
                                  Rpp32u axis,
@@ -164,17 +164,17 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
     {
         if(axis == 0)
         {
-            srcGenericDescPtr->strides[1] = srcGenericDescPtr->strides[0];
-            srcGenericDescPtr->strides[0] = 1;
-            src2GenericDescPtr->strides[1] = src2GenericDescPtr->strides[0];
-            src2GenericDescPtr->strides[0] = 1;
+            srcPtr1GenericDescPtr->strides[1] = srcPtr1GenericDescPtr->strides[0];
+            srcPtr1GenericDescPtr->strides[0] = 1;
+            srcPtr2GenericDescPtr->strides[1] = srcPtr2GenericDescPtr->strides[0];
+            srcPtr2GenericDescPtr->strides[0] = 1;
             dstGenericDescPtr->strides[1] = dstGenericDescPtr->strides[0];
             dstGenericDescPtr->strides[0] = 1;
         }
         else if(axis == 1)
         {
-            srcGenericDescPtr->strides[0] = srcGenericDescPtr->strides[2];
-            src2GenericDescPtr->strides[0] = src2GenericDescPtr->strides[2];
+            srcPtr1GenericDescPtr->strides[0] = srcPtr1GenericDescPtr->strides[2];
+            srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[2];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[2];
         }
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
@@ -202,8 +202,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                handle.GetStream(),
                                srcPtr1 + (batchCount * dims[0] * dims[1]),
                                srcPtr2 + (batchCount * dims[0] * dims[1]),
-                               srcGenericDescPtr->strides,
-                               src2GenericDescPtr->strides,
+                               srcPtr1GenericDescPtr->strides,
+                               srcPtr2GenericDescPtr->strides,
                                dstPtr + (batchCount * dims[0] * dims[1] * 2),
                                dstGenericDescPtr->strides,
                                dims,
@@ -214,19 +214,19 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
     {
         if(axis == 0)
         {
-            srcGenericDescPtr->strides[2] = srcGenericDescPtr->strides[0];
-            srcGenericDescPtr->strides[0] = srcGenericDescPtr->strides[1] = 1;
-            src2GenericDescPtr->strides[2] = src2GenericDescPtr->strides[0];
-            src2GenericDescPtr->strides[0] = src2GenericDescPtr->strides[1] = 1;
+            srcPtr1GenericDescPtr->strides[2] = srcPtr1GenericDescPtr->strides[0];
+            srcPtr1GenericDescPtr->strides[0] = srcPtr1GenericDescPtr->strides[1] = 1;
+            srcPtr2GenericDescPtr->strides[2] = srcPtr2GenericDescPtr->strides[0];
+            srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[1] = 1;
             dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[0];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
         }
         else if(axis == 1)
         {
-            srcGenericDescPtr->strides[2] = srcGenericDescPtr->strides[1];
-            srcGenericDescPtr->strides[0] = srcGenericDescPtr->strides[1] = 1;
-            src2GenericDescPtr->strides[2] = src2GenericDescPtr->strides[1];
-            src2GenericDescPtr->strides[0] = src2GenericDescPtr->strides[1] = 1;
+            srcPtr1GenericDescPtr->strides[2] = srcPtr1GenericDescPtr->strides[1];
+            srcPtr1GenericDescPtr->strides[0] = srcPtr1GenericDescPtr->strides[1] = 1;
+            srcPtr2GenericDescPtr->strides[2] = srcPtr2GenericDescPtr->strides[1];
+            srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[1] = 1;
             dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[1];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
         }
@@ -263,8 +263,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                handle.GetStream(),
                                srcPtr1 + (batchCount * dims[0] * dims[1] * dims[2]),
                                srcPtr2 + (batchCount * dims[0] * dims[1] * dims[2]),
-                               srcGenericDescPtr->strides,
-                               src2GenericDescPtr->strides,
+                               srcPtr1GenericDescPtr->strides,
+                               srcPtr2GenericDescPtr->strides,
                                dstPtr + (batchCount * dims[0] * dims[1] * dims[2] * 2),
                                dstGenericDescPtr->strides,
                                dims,
@@ -280,8 +280,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                        handle.GetStream(),
                        srcPtr1,
                        srcPtr2,
-                       srcGenericDescPtr->strides,
-                       src2GenericDescPtr->strides,
+                       srcPtr1GenericDescPtr->strides,
+                       srcPtr2GenericDescPtr->strides,
                        dstPtr,
                        dstGenericDescPtr->strides,
                        axis,

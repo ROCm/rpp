@@ -128,7 +128,6 @@ int main(int argc, char **argv)
         for(int i = 0; i <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
-        // aloocate
     }
     Rpp8u *inputU8 = NULL;
     Rpp8u *outputU8 = NULL;
