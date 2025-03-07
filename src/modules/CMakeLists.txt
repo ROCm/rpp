@@ -102,8 +102,11 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Set compiler flags
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
-    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
-    set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
+    set_source_files_properties(tensor/rppt_tensor_audio_augmentations.cpp tensor/rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/non_silent_region_detection.cpp tensor/cpu/kernel/to_decibels.cpp tensor/cpu/kernel/pre_emphasis_filter.cpp tensor/cpu/kernel/down_mixing.cpp tensor/cpu/kernel/spectrogram.cpp tensor/cpu/kernel/slice.cpp tensor/cpu/kernel/resample.cpp tensor/cpu/kernel/mel_filter_bank.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/hip/kernel/non_silent_region_detection.cpp tensor/hip/kernel/to_decibels.cpp tensor/hip/kernel/pre_emphasis_filter.cpp tensor/hip/kernel/down_mixing.cpp tensor/hip/kernel/spectrogram.cpp tensor/hip/kernel/slice.cpp tensor/hip/kernel/resample.cpp tensor/hip/kernel/mel_filter_bank.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/tensor_sum.cpp tensor/cpu/kernel/tensor_min.cpp tensor/cpu/kernel/tensor_max.cpp tensor/cpu/kernel/tensor_mean.cpp tensor/cpu/kernel/tensor_stddev.cpp tensor/cpu/kernel/normalize.cpp tensor/cpu/kernel/threshold.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/hip/kernel/tensor_sum.cpp tensor/hip/kernel/tensor_min.cpp tensor/hip/kernel/tensor_max.cpp tensor/hip/kernel/tensor_mean.cpp tensor/hip/kernel/tensor_stddev.cpp tensor/hip/kernel/normalize.cpp tensor/hip/kernel/threshold.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -118,8 +121,9 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
-    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
-    set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
+    set_source_files_properties(tensor/rppt_tensor_audio_augmentations.cpp tensor/rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/non_silent_region_detection.cpp tensor/cpu/kernel/to_decibels.cpp tensor/cpu/kernel/pre_emphasis_filter.cpp tensor/cpu/kernel/down_mixing.cpp tensor/cpu/kernel/spectrogram.cpp tensor/cpu/kernel/slice.cpp tensor/cpu/kernel/resample.cpp tensor/cpu/kernel/mel_filter_bank.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/tensor_sum.cpp tensor/cpu/kernel/tensor_min.cpp tensor/cpu/kernel/tensor_max.cpp tensor/cpu/kernel/tensor_mean.cpp tensor/cpu/kernel/tensor_stddev.cpp tensor/cpu/kernel/normalize.cpp tensor/cpu/kernel/threshold.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
@@ -136,8 +140,9 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS})
     message("-- ${Green}HOST kernels added${ColourReset}")
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
-    set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
+    set_source_files_properties(tensor/rppt_tensor_audio_augmentations.cpp tensor/rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/non_silent_region_detection.cpp tensor/cpu/kernel/to_decibels.cpp tensor/cpu/kernel/pre_emphasis_filter.cpp tensor/cpu/kernel/down_mixing.cpp tensor/cpu/kernel/spectrogram.cpp tensor/cpu/kernel/slice.cpp tensor/cpu/kernel/resample.cpp tensor/cpu/kernel/mel_filter_bank.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(tensor/cpu/kernel/tensor_sum.cpp tensor/cpu/kernel/tensor_min.cpp tensor/cpu/kernel/tensor_max.cpp tensor/cpu/kernel/tensor_mean.cpp tensor/cpu/kernel/tensor_stddev.cpp tensor/cpu/kernel/normalize.cpp tensor/cpu/kernel/threshold.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 add_compile_options("-Wno-unused-result")
