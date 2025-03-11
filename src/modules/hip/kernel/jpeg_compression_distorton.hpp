@@ -688,8 +688,9 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     int alignedHeight = ((roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) / 16) * 16;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth)) 
+    if ((id_y >= alignedHeight) || (id_x >= alignedWidth)) {
         return;
+    }
 
     // ROI parameters
     int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
@@ -708,6 +709,12 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
+
+    d_float8 zeroes_f8 = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    *(d_float8*)(src_smem_channel[0]) = zeroes_f8;
+    *(d_float8*)(src_smem_channel[1]) = zeroes_f8;
+    *(d_float8*)(src_smem_channel[2]) = zeroes_f8;
+    __syncthreads();
 
     int srcIdx;
     uint3 dstIdx;
@@ -750,7 +757,8 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     jpeg_compression(srcPtr, dstPtr, src_smem, Ytable, CbCrtable, alignedWidth, hipThreadIdx_y_channel, hipThreadIdx_x8, hipThreadIdx_x4);
     __syncthreads();
 
-    if(id_x < roiWidth && id_y < roiHeight){
+    if(id_x < roiWidth && id_y < roiHeight)
+    {
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.x, (d_float8 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.y, (d_float8 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.z, (d_float8 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
