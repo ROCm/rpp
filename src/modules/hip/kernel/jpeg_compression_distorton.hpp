@@ -143,7 +143,8 @@ __device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
 }
 
 //Quantization
-__device__ inline void quantize(float* value, int* coeff) {
+__device__ inline void quantize(float* value, int* coeff) 
+{
     for (int i = 0; i < 8; i++) 
         value[i] = coeff[i] * roundf(value[i] / (coeff[i]));
 }
@@ -196,7 +197,8 @@ __device__ inline void clamp_range(T *src, float* values)
 }
 
 //Generic clamping
-__device__ inline void clamp_range(float* values) {
+__device__ inline void clamp_range(float* values) 
+{
     for (int j = 0; j < 8; j++)
         values[j] = fminf(fmaxf(values[j], 0), 255);
 }
@@ -444,18 +446,10 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor( T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    d_float8 zeroes_f8 = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    *(d_float8*)(src_smem_channel[0]) = zeroes_f8;
-    *(d_float8*)(src_smem_channel[1]) = zeroes_f8;
-    *(d_float8*)(src_smem_channel[2]) = zeroes_f8;
-    __syncthreads();
-
     uint3 srcIdx,dstIdx;
-
-    // Calculate destination indices first
-    dstIdx.x = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x; 
-    dstIdx.y = dstIdx.x + dstStridesNCH.y; 
-    dstIdx.z = dstIdx.y + dstStridesNCH.y; 
+    dstIdx.x = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    dstIdx.y = dstIdx.x + dstStridesNCH.y;
+    dstIdx.z = dstIdx.y + dstStridesNCH.y;
 
     // Determine actual source coordinates based on ROI bounds
     int srcY = (id_y < roiHeight) ? (id_y + roiY) : (roiHeight - 1 + roiY);
@@ -669,13 +663,13 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor( T *srcPtr,
 
 template <typename T>
 __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
-                                                             uint2 srcStridesNH,
-                                                             T *dstPtr,
-                                                             uint3 dstStridesNCH,
-                                                             RpptROIPtr roiTensorPtrSrc,
-                                                             int *Ytable,
-                                                             int *CbCrtable,
-                                                             float q_scale)
+                                                                  uint2 srcStridesNH,
+                                                                  T *dstPtr,
+                                                                  uint3 dstStridesNCH,
+                                                                  RpptROIPtr roiTensorPtrSrc,
+                                                                  int *Ytable,
+                                                                  int *CbCrtable,
+                                                                  float q_scale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -688,9 +682,8 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     int alignedHeight = ((roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) / 16) * 16;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth)) {
+    if ((id_y >= alignedHeight) || (id_x >= alignedWidth)) 
         return;
-    }
 
     // ROI parameters
     int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
@@ -709,12 +702,6 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
-
-    d_float8 zeroes_f8 = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    *(d_float8*)(src_smem_channel[0]) = zeroes_f8;
-    *(d_float8*)(src_smem_channel[1]) = zeroes_f8;
-    *(d_float8*)(src_smem_channel[2]) = zeroes_f8;
-    __syncthreads();
 
     int srcIdx;
     uint3 dstIdx;
@@ -767,13 +754,13 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
 
 template <typename T>
 __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
-                                                             uint3 srcStridesNCH,
-                                                             T *dstPtr,
-                                                             uint2 dstStridesNH,
-                                                             RpptROIPtr roiTensorPtrSrc,
-                                                             int *Ytable,
-                                                             int *CbCrtable,
-                                                             float q_scale)
+                                                                  uint3 srcStridesNCH,
+                                                                  T *dstPtr,
+                                                                  uint2 dstStridesNH,
+                                                                  RpptROIPtr roiTensorPtrSrc,
+                                                                  int *Ytable,
+                                                                  int *CbCrtable,
+                                                                  float q_scale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -874,14 +861,13 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
 }
 
 template <typename T>
-RppStatus hip_exec_jpeg_compression_distortion(
-    T *srcPtr,
-    RpptDescPtr srcDescPtr,
-    T *dstPtr,
-    RpptDescPtr dstDescPtr,
-    RpptROIPtr roiTensorPtrSrc,
-    RpptRoiType roiType,
-    rpp::Handle& handle)
+RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               T *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -894,9 +880,6 @@ RppStatus hip_exec_jpeg_compression_distortion(
     quality = std::clamp<int>(quality, 1, 100);
     float q_scale = (quality < 50) ? (50.0f / quality) : (2.0f - (2 * quality / 100.0f));
     // Allocate pinned memory
-   
-    // Rpp32s *Ytable = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
-    // Rpp32s *CbCrtable = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     int *Ytable, *CbCrtable;
     hipHostMalloc((void**)&Ytable, 64 * sizeof(int), hipHostMallocMapped);
     hipHostMalloc((void**)&CbCrtable, 64 * sizeof(int), hipHostMallocMapped);
