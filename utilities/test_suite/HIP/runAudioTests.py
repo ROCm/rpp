@@ -256,12 +256,14 @@ for case in caseList:
 
 # print the results of qa tests
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
+
 if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_hip")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_hip")
 
 # Performance tests
 if testType == 1 and profilingOption == "NO":
