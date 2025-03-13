@@ -31,8 +31,6 @@ SOFTWARE.
  * \brief RPP API to create and destroy RPP HOST/GPU handle.
  */
 
-#include <export.h>
-
 #if RPP_BACKEND_OPENCL
 
 #define CL_TARGET_OPENCL_VERSION 220
