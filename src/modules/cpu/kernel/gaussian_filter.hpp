@@ -339,8 +339,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-                                permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
@@ -1093,7 +1093,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)
                         {
                             permute_blend_add_9x9_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
                             permute_blend_add_9x9_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
