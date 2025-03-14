@@ -26,8 +26,6 @@ SOFTWARE.
 #define GUARD_RPP_WRITE_FILE_HPP
 
 #include <fstream>
-#include "filesystem.h"
-
 #include "manage_ptr.hpp"
 
 namespace rpp {

@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include <fstream>
 #include <iostream>
-#include "filesystem.h"
 #include "rpp.h"
 #include "rpp_version.h"
 #include "binary_cache.hpp"

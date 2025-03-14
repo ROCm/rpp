@@ -50,6 +50,9 @@ typedef hipStream_t rppAcceleratorQueue_t;
 
 #endif
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 /*! \brief Construct type name from a struct
  * \ingroup group_rpp
  */

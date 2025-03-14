@@ -26,7 +26,8 @@ SOFTWARE.
 #define GUARD_RPP_TMP_DIR_HPP
 
 #include <string>
-#include "filesystem.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 namespace rpp {
 
