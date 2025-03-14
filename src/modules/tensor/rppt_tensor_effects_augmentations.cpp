@@ -25,7 +25,7 @@ SOFTWARE.
 #include <random>
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
-#include "rppt_api_helpers.h"
+#include "rppt_api_helpers.hpp"
 #include "rppt_tensor_effects_augmentations.h"
 #include "host_tensor_effects_augmentations.hpp"
 

@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPPT_API_HELPERS_H
-#define RPPT_API_HELPERS_H
+#ifndef RPPT_API_HELPERS_HPP
+#define RPPT_API_HELPERS_HPP
 
 #include "rpp.h"
 #include "rppdefs.h"
@@ -42,4 +42,4 @@ inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32
     descPtr->strides = {descPtr->c * descPtr->w * descPtr->h,  1, descPtr->w, 1};
 }
 
-#endif /* RPPT_API_HELPERS_H */
+#endif /* RPPT_API_HELPERS_HPP */
