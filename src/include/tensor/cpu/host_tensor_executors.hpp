@@ -711,7 +711,6 @@ RppStatus gamma_correction_i8_i8_host_tensor(Rpp8s *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle);
 
-
 // -------------------- lut --------------------
 
 RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -749,6 +748,103 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams);
+
+
+/**************************************** DATA EXCHANGE OPERATIONS ****************************************/
+
+// -------------------- copy --------------------
+
+RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8u *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
+RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp16f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8s *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
+// -------------------- swap_channels --------------------
+
+RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp8u *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp32f *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp16f *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp8s *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+// -------------------- color_to_greyscale --------------------
+
+RppStatus color_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp8u *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *channelWeights,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus color_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                                 RpptDescPtr srcDescPtr,
+                                                 Rpp32f *dstPtr,
+                                                 RpptDescPtr dstDescPtr,
+                                                 Rpp32f *channelWeights,
+                                                 RppLayoutParams layoutParams,
+                                                 rpp::Handle& handle);
+
+RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                                 RpptDescPtr srcDescPtr,
+                                                 Rpp16f *dstPtr,
+                                                 RpptDescPtr dstDescPtr,
+                                                 Rpp32f *channelWeights,
+                                                 RppLayoutParams layoutParams,
+                                                 rpp::Handle& handle);
+
+RppStatus color_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp8s *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *channelWeights,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 

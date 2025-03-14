@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_data_exchange_operations.hpp"
+#include "hip_tensor_executors.hpp"
 
 __device__ void color_to_greyscale_hip_compute(uchar *srcPtr, d_float24 *src_f24, d_float8 *dst_f8, d_float12 *channelWeights_f12)
 {
