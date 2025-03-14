@@ -2403,4 +2403,254 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                                                         RppLayoutParams srcLayoutParams,
                                                         rpp::Handle& handle);
 
+/**************************************** STATISTICAL OPERATIONS ****************************************/
+
+// -------------------- normalize --------------------
+
+RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32u axisMask,
+                                        Rpp32f *meanTensorPtr,
+                                        Rpp32f *stdDevTensorPtr,
+                                        Rpp8u computeMeanStddev,
+                                        Rpp32f scale,
+                                        Rpp32f shift,
+                                        Rpp32u *roiTensor,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+template<typename T1, typename T2>
+RppStatus normalize_generic_host_tensor(T1 *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        T2 *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32u axisMask,
+                                        Rpp32f *meanTensorPtr,
+                                        Rpp32f *stdDevTensorPtr,
+                                        Rpp8u computeMeanStddev,
+                                        Rpp32f scale,
+                                        Rpp32f shift,
+                                        Rpp32u *roiTensor,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+
+// -------------------- tensor_sum --------------------
+
+RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp64u *tensorSumArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams);
+
+RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorSumArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorSumArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp64s *tensorSumArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams);
+
+// -------------------- tensor_min --------------------
+
+RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8u *minArr,
+                                Rpp32u minArrLength,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
+RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *minArr,
+                                  Rpp32u minArrLength,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp16f *minArr,
+                                  Rpp32u minArrLength,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8s *minArr,
+                                Rpp32u minArrLength,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
+// -------------------- tensor_max --------------------
+
+RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8u *maxArr,
+                                Rpp32u maxArrLength,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
+RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *maxArr,
+                                  Rpp32u maxArrLength,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp16f *maxArr,
+                                  Rpp32u maxArrLength,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams);
+
+RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8s *maxArr,
+                                Rpp32u maxArrLength,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
+// -------------------- tensor_mean --------------------
+
+RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorMeanArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorMeanArr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorMeanArr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorMeanArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+// -------------------- tensor_stddev --------------------
+
+RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+// -------------------- threshold --------------------
+
+RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *minTensor,
+                                      Rpp32f *maxTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *minTensor,
+                                        Rpp32f *maxTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8s *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *minTensor,
+                                      Rpp32f *maxTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus threshold_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp16f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *minTensor,
+                                        Rpp32f *maxTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
 #endif // HOST_TENSOR_EXECUTORS_HPP

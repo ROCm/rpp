@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "tensor_min.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void reduce_min_32_host(__m256i *pMin, __m128i *result)
 {

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "tensor_mean.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_arithmetic.hpp"
 
 RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
