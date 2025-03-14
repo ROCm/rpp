@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "hip_tensor_statistical_operations.hpp"
-#include "reduction.hpp"
+#include "kernel_dims.hpp"
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 __global__ void tensor_sum_grid_result_hip(Rpp32u *srcPtr,

@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "hip_tensor_statistical_operations.hpp"
 #include "rpp_hip_math.hpp"
-#include "reduction.hpp"
+#include "kernel_dims.hpp"
 
 // ----------------------- Helper Functions --------------------------
 

@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "rppdefs.h"
 #include "rpp_cpu_common.hpp"
-#include "effects_dims.hpp"
+#include "kernel_dims.hpp"
 
 RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                                 RpptDescPtr srcDescPtr,

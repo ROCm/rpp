@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "hip_tensor_statistical_operations.hpp"
-#include "reduction.hpp"
+#include "kernel_dims.hpp"
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 template <typename T>
