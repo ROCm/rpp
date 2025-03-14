@@ -233,6 +233,109 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
+/**************************************** COLOR AUGMENTATIONS ****************************************/
+
+// -------------------- brightness --------------------
+
+template <typename T>
+RppStatus hip_exec_brightness_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- blend --------------------
+
+template <typename T>
+RppStatus hip_exec_blend_tensor(T *srcPtr1,
+                                T *srcPtr2,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+// -------------------- color_cast --------------------
+
+template <typename T>
+RppStatus hip_exec_color_cast_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- color_temperature --------------------
+
+template <typename T>
+RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            rpp::Handle& handle);
+
+// -------------------- color_twist --------------------
+
+template <typename T>
+RppStatus hip_exec_color_twist_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- contrast --------------------
+
+template <typename T>
+RppStatus hip_exec_contrast_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
+// -------------------- exposure --------------------
+
+template <typename T>
+RppStatus hip_exec_exposure_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
+// -------------------- gamma_correction --------------------
+
+template <typename T>
+RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
+// -------------------- lut --------------------
+
+template <typename T, typename U>
+RppStatus hip_exec_lut_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              U *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              U *lutPtr,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle);
+
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
 // -------------------- erase --------------------

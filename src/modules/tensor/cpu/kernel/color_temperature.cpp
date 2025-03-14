@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "color_temperature.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void compute_color_temperature_48_host(__m256 *p, __m256 pAdj)
 {

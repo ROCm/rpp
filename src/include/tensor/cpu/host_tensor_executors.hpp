@@ -295,6 +295,461 @@ RppStatus bitwise_xor_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& Handle);
 
+/**************************************** COLOR AUGMENTATIONS ****************************************/
+
+// -------------------- brightness --------------------
+
+RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *alphaTensor,
+                                       Rpp32f *betaTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *alphaTensor,
+                                         Rpp32f *betaTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *alphaTensor,
+                                         Rpp32f *betaTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8s *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *alphaTensor,
+                                       Rpp32f *betaTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+// -------------------- blend --------------------
+
+RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
+                                  Rpp8u *srcPtr2,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp8u *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32f *alphaTensor,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
+                                    Rpp32f *srcPtr2,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32f *alphaTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
+                                    Rpp16f *srcPtr2,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp16f *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32f *alphaTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
+                                  Rpp8s *srcPtr2,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp8s *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32f *alphaTensor,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+// -------------------- color_cast --------------------
+
+RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRGB *rgbTensor,
+                                       Rpp32f *alphaTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptRGB *rgbTensor,
+                                         Rpp32f *alphaTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptRGB *rgbTensor,
+                                         Rpp32f *alphaTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8s *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRGB *rgbTensor,
+                                       Rpp32f *alphaTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+// -------------------- color_temperature --------------------
+
+RppStatus color_temperature_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp8u *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32s *adjustmentValueTensor,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams layoutParams);
+
+RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                Rpp32f *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32s *adjustmentValueTensor,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                RppLayoutParams layoutParams);
+
+RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                Rpp16f *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32s *adjustmentValueTensor,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                RppLayoutParams layoutParams);
+
+RppStatus color_temperature_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp8s *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32s *adjustmentValueTensor,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams layoutParams);
+
+// -------------------- color_twist --------------------
+
+RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *brightnessTensor,
+                                        Rpp32f *contrastTensor,
+                                        Rpp32f *hueTensor,
+                                        Rpp32f *saturationTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus color_twist_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp32f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f *brightnessTensor,
+                                          Rpp32f *contrastTensor,
+                                          Rpp32f *hueTensor,
+                                          Rpp32f *saturationTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp16f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f *brightnessTensor,
+                                          Rpp32f *contrastTensor,
+                                          Rpp32f *hueTensor,
+                                          Rpp32f *saturationTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8s *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *brightnessTensor,
+                                        Rpp32f *contrastTensor,
+                                        Rpp32f *hueTensor,
+                                        Rpp32f *saturationTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+// -------------------- color_jitter --------------------
+
+RppStatus color_jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp8u *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *brightnessTensor,
+                                         Rpp32f *contrastTensor,
+                                         Rpp32f *hueTensor,
+                                         Rpp32f *saturationTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus color_jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *brightnessTensor,
+                                           Rpp32f *contrastTensor,
+                                           Rpp32f *hueTensor,
+                                           Rpp32f *saturationTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams layoutParams,
+                                           rpp::Handle& handle);
+
+RppStatus color_jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp16f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *brightnessTensor,
+                                           Rpp32f *contrastTensor,
+                                           Rpp32f *hueTensor,
+                                           Rpp32f *saturationTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams layoutParams,
+                                           rpp::Handle& handle);
+
+RppStatus color_jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp8s *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32f *brightnessTensor,
+                                         Rpp32f *contrastTensor,
+                                         Rpp32f *hueTensor,
+                                         Rpp32f *saturationTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+// -------------------- contrast --------------------
+
+RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *contrastFactorTensor,
+                                     Rpp32f *contrastCenterTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *contrastFactorTensor,
+                                       Rpp32f *contrastCenterTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp16f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *contrastFactorTensor,
+                                       Rpp32f *contrastCenterTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus contrast_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8s *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *contrastFactorTensor,
+                                     Rpp32f *contrastCenterTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+// -------------------- exposure --------------------
+
+RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *exposureFactorTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus exposure_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *exposureFactorTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus exposure_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp16f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *exposureFactorTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus exposure_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8s *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *exposureFactorTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+// -------------------- gamma_correction --------------------
+
+RppStatus gamma_correction_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *gammaTensor,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
+RppStatus gamma_correction_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *gammaTensor,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus gamma_correction_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp16f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *gammaTensor,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus gamma_correction_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8s *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *gammaTensor,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
+
+// -------------------- lut --------------------
+
+RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8u *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp8u *lutPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
+RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp16f *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp16f *lutPtr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams);
+
+RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp32f *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *lutPtr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams);
+
+RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                Rpp8s *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp8s *lutPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RppLayoutParams layoutParams);
+
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
 // -------------------- gridmask --------------------
