@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "lens_correction.hpp"
+#include "host_tensor_executors.hpp"
 
 // Compute Inverse matrix (3x3)
 inline void get_inverse(float *mat, float *invMat)

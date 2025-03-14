@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "non_linear_blend.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 // -------------------- non_linear_blend host helpers --------------------

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "pre_emphasis_filter.hpp"
+#include "host_tensor_executors.hpp"
 
 RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           RpptDescPtr srcDescPtr,

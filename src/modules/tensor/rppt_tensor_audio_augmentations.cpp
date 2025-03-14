@@ -27,9 +27,9 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_audio_augmentations.h"
-#include "host_tensor_audio_augmentations.hpp"
+#include "host_tensor_executors.hpp"
 #ifdef HIP_COMPILE
-#include "hip_tensor_audio_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** non_silent_region_detection ********************/

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_effects_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include <random>
 #include "kernel_dims.hpp"
 #include "spatter_mask.hpp"

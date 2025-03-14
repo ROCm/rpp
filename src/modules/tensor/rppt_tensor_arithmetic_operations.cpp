@@ -25,10 +25,10 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_arithmetic_operations.h"
-#include "host_tensor_arithmetic_operations.hpp"
+#include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip_tensor_arithmetic_operations.hpp"
+    #include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** fused_multiply_add_scalar ********************/

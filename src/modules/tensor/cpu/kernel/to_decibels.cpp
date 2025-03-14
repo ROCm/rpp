@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "to_decibels.hpp"
+#include "host_tensor_executors.hpp"
 
 RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,

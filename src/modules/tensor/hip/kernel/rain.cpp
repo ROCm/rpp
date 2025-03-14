@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_effects_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include <random>
 
 // Constants to represent the rain intensity for different data types

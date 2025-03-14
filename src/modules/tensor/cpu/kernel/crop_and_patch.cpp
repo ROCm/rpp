@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "crop_and_patch.hpp"
+#include "host_tensor_executors.hpp"
 
 RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                            Rpp8u *srcPtr2,

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "fog.hpp"
+#include "host_tensor_executors.hpp"
 #include <random>
 #include "rpp_cpu_simd_math.hpp"
 

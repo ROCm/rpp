@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "glitch.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void compute_src_loc(int row , int col, Rpp32s *locArray, RpptDescPtr srcDescPtr, RpptChannelOffsets *rgbOffsets, RpptROI roi, int batchCount, int channelValue)
 {

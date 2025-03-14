@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_effects_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_interpolation.hpp"
 
 __device__ void water_roi_and_srclocs_hip_compute(int id_x, int id_y, float4 *amplX_f4, float4 *amplY_f4,

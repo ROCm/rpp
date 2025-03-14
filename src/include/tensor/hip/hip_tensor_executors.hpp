@@ -188,4 +188,390 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
 #endif // AUDIO_SUPPORT
 
+/**************************************** EFFECTS AUGMENTATIONS ****************************************/
+
+// -------------------- erase --------------------
+
+template <typename T, typename U>
+RppStatus hip_exec_erase_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptRoiLtrb *anchorBoxInfoTensor,
+                                U *colorsTensor,
+                                Rpp32u *numBoxesTensor,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+// -------------------- fog --------------------
+
+template <typename T>
+RppStatus hip_exec_fog_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32f *d_fogAlphaMaskPtr,
+                              Rpp32f *d_fogIntensityMaskPtr,
+                              Rpp32f *intensityFactor,
+                              Rpp32f *greyFactor,
+                              Rpp32u *maskLocOffsetX,
+                              Rpp32u *maskLocOffsetY,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle);
+
+// -------------------- noise_gaussian --------------------
+
+template <typename T>
+RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
+                                               RpptGenericDescPtr srcGenericDescPtr,
+                                               T *dstPtr,
+                                               RpptGenericDescPtr dstGenericDescPtr,
+                                               RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                               Rpp32f *meanTensor,
+                                               Rpp32f *stdDevTensor,
+                                               RpptROI3DPtr roiGenericPtrSrc,
+                                               rpp::Handle& handle);
+
+// -------------------- glitch --------------------
+
+template <typename T>
+RppStatus hip_exec_glitch_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RpptChannelOffsets *rgbOffsets,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
+
+// -------------------- gridmask --------------------
+
+template <typename T>
+RppStatus hip_exec_gridmask_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u tileWidth,
+                                   Rpp32f gridRatio,
+                                   Rpp32f gridAngle,
+                                   RpptUintVector2D translateVector,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
+// -------------------- jitter --------------------
+
+template <typename T>
+RppStatus hip_exec_jitter_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 uint *kernelSizeTensor,
+                                 RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
+
+// -------------------- non_linear_blend --------------------
+
+template <typename T>
+RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
+                                           T *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
+// -------------------- rain --------------------
+
+template <typename T>
+RppStatus hip_exec_rain_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f rainPercentage,
+                               Rpp32u rainWidth,
+                               Rpp32u rainHeight,
+                               Rpp32f slantAngle,
+                               Rpp32f *alpha,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
+
+// -------------------- ricap --------------------
+
+template <typename T>
+RppStatus hip_exec_ricap_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32u *permutationTensor,
+                                RpptROIPtr roiPtrInputCropRegion,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+// -------------------- noise_salt_and_pepper --------------------
+
+template <typename T>
+RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                T *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                RpptXorwowState *xorwowInitialStatePtr,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rpp::Handle& handle);
+
+// -------------------- noise_shot --------------------
+
+template <typename T>
+RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- spatter --------------------
+
+template <typename T>
+RppStatus hip_exec_spatter_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  RpptRGB spatterColor,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rpp::Handle& handle);
+
+// -------------------- vignette --------------------
+
+template <typename T>
+RppStatus hip_exec_vignette_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   Rpp32f *vignetteIntensityTensor,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
+
+// -------------------- water --------------------
+
+template <typename T>
+RppStatus hip_exec_water_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+/**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
+
+// -------------------- crop --------------------
+
+template <typename T>
+RppStatus hip_exec_crop_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
+
+// -------------------- crop_and_patch --------------------
+
+template <typename T>
+RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
+                                         T *srcPtr2,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptROIPtr cropTensorPtr,
+                                         RpptROIPtr patchTensorPtr,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle);
+
+// -------------------- crop_mirror_normalize --------------------
+
+template <typename T, typename U>
+RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                U *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rpp::Handle& handle);
+
+// -------------------- flip --------------------
+
+template <typename T>
+RppStatus hip_exec_flip_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
+                                     RpptGenericDescPtr srcGenericDescPtr,
+                                     T *dstPtr,
+                                     RpptGenericDescPtr dstGenericDescPtr,
+                                     RpptROI3DPtr roiGenericPtrSrc,
+                                     Rpp32u *horizontalTensor,
+                                     Rpp32u *verticalTensor,
+                                     Rpp32u *depthTensor,
+                                     RpptRoi3DType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- remap --------------------
+
+template <typename T>
+RppStatus hip_exec_remap_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32f *rowRemapTable,
+                                Rpp32f *colRemapTable,
+                                RpptDescPtr remapTableDescPtr,
+                                RpptInterpolationType interpolationType,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+// -------------------- resize --------------------
+
+template <typename T>
+RppStatus hip_exec_resize_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RpptImagePatchPtr dstImgSize,
+                                 RpptInterpolationType interpolationType,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
+
+// -------------------- resize_crop_mirror --------------------
+
+template <typename T>
+RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             T *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             RpptImagePatchPtr dstImgSizes,
+                                             RpptInterpolationType interpolationType,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             rpp::Handle& handle);
+
+// -------------------- resize_mirror_normalize --------------------
+
+template <typename T, typename U>
+RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
+                                                  RpptDescPtr srcDescPtr,
+                                                  U *dstPtr,
+                                                  RpptDescPtr dstDescPtr,
+                                                  RpptImagePatchPtr dstImgSizes,
+                                                  RpptInterpolationType interpolationType,
+                                                  RpptROIPtr roiTensorPtrSrc,
+                                                  RpptRoiType roiType,
+                                                  rpp::Handle& handle);
+
+// -------------------- lens_correction --------------------
+
+RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
+                                          Rpp32f *rowRemapTable,
+                                          Rpp32f *colRemapTable,
+                                          RpptDescPtr remapTableDescPtr,
+                                          Rpp32f *cameraMatrix,
+                                          Rpp32f *distanceCoeffs,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
+// -------------------- phase --------------------
+
+template <typename T>
+RppStatus hip_exec_phase_tensor(T *srcPtr1,
+                                T *srcPtr2,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
+// -------------------- slice --------------------
+
+template <typename T>
+RppStatus hip_exec_slice_tensor(T *srcPtr,
+                                RpptGenericDescPtr srcGenericDescPtr,
+                                T *dstPtr,
+                                RpptGenericDescPtr dstGenericDescPtr,
+                                Rpp32s *anchorTensor,
+                                Rpp32s *shapeTensor,
+                                T *fillValue,
+                                bool enablePadding,
+                                Rpp32u *roiTensor,
+                                rpp::Handle& handle);
+
+// -------------------- transpose --------------------
+
+template <typename T>
+RppStatus hip_exec_transpose_tensor(T *srcPtr,
+                                    RpptGenericDescPtr srcGenericDescPtr,
+                                    T *dstPtr,
+                                    RpptGenericDescPtr dstGenericDescPtr,
+                                    Rpp32u *permTensor,
+                                    Rpp32u *roiTensor,
+                                    rpp::Handle& handle);
+
+// -------------------- warp_affine --------------------
+
+template <typename T>
+RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *affineTensor,
+                                      RpptInterpolationType interpolationType,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
+// -------------------- warp_perspective --------------------
+
+template <typename T>
+RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *perspectiveTensor,
+                                           RpptInterpolationType interpolationType,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 #endif // HIP_TENSOR_EXECUTORS_HPP

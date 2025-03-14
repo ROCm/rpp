@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "fused_multiply_add_scalar.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void rpp_host_math_fmadd8(__m256 *p, __m256 *pFmaddParams)
 {
