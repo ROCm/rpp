@@ -28,24 +28,6 @@ SOFTWARE.
 #include <hip/hip_runtime.h>
 #include "rpp_hip_load_store.hpp"
 
-template <typename T>
-RppStatus hip_exec_dilate_tensor(T *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 T *dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32u kernelSize,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 rpp::Handle& handle);
 
-template <typename T>
-RppStatus hip_exec_erode_tensor(T *srcPtr,
-                                RpptDescPtr srcDescPtr,
-                                T *dstPtr,
-                                RpptDescPtr dstDescPtr,
-                                Rpp32u kernelSize,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rpp::Handle& handle);
 
 #endif // HIP_TENSOR_MORPHOLOGICAL_OPERATIONS_HPP

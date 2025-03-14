@@ -778,4 +778,26 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle);
 
+/**************************************** MORPHOLOGICAL OPERATIONS ****************************************/
+
+template <typename T>
+RppStatus hip_exec_dilate_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_erode_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32u kernelSize,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rpp::Handle& handle);
+
 #endif // HIP_TENSOR_EXECUTORS_HPP

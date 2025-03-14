@@ -27,7 +27,7 @@ SOFTWARE.
 #include "rppt_tensor_morphological_operations.h"
 
 #ifdef HIP_COMPILE
-#include "hip_tensor_morphological_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /********************************************************************************************************************/
