@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_tensor_data_exchange_operations.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip_tensor_executors.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** copy ********************/
