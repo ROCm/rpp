@@ -188,6 +188,51 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
 #endif // AUDIO_SUPPORT
 
+/**************************************** BITWISE OPERATIONS ****************************************/
+
+// -------------------- bitwise_and --------------------
+
+RppStatus hip_exec_bitwise_and_tensor(Rpp8u *srcPtr1,
+                                      Rpp8u *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
+// -------------------- bitwise_not --------------------
+
+RppStatus hip_exec_bitwise_not_tensor(Rpp8u *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
+// -------------------- bitwise_or --------------------
+
+RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
+                                     Rpp8u *srcPtr2,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- bitwise_xor --------------------
+
+RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
+                                      Rpp8u *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp8u *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
 // -------------------- erase --------------------

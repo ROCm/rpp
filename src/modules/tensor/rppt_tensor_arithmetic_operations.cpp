@@ -28,7 +28,7 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip_tensor_executors.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** fused_multiply_add_scalar ********************/

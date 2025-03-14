@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "bitwise_xor.hpp"
+#include "host_tensor_executors.hpp"
 
 /* bitwiseXOR is logical operation only on U8 types.*/
 

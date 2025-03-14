@@ -246,6 +246,55 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
 
 #endif // AUDIO_SUPPORT
 
+/**************************************** BITWISE OPERATIONS ****************************************/
+
+// -------------------- bitwise_and --------------------
+
+RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
+                                        Rpp8u *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+// -------------------- bitwise_not --------------------
+
+RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& Handle);
+
+// -------------------- bitwise_or --------------------
+
+RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
+                                       Rpp8u *srcPtr2,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& Handle);
+
+// -------------------- bitwise_xor --------------------
+
+RppStatus bitwise_xor_u8_u8_host_tensor(Rpp8u *srcPtr1,
+                                        Rpp8u *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& Handle);
+
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
 // -------------------- gridmask --------------------
