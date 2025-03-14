@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_arithmetic_operations.hpp"
+#include "hip_tensor_executors.hpp"
 
 __device__ void fmaf_scalar_hip_compute(d_float8 *val_f8, float2 *fmaddParams_f2)
 {
