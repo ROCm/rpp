@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_color_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 
 __device__ void brightness_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *alpha_f4, float4 *beta_f4)
 {

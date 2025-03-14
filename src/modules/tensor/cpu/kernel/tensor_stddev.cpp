@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "tensor_stddev.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
 {

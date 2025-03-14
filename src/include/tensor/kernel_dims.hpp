@@ -22,15 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#ifndef RPP_KERNEL_DIMS_HPP
+#define RPP_KERNEL_DIMS_HPP
 
-RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                              RpptGenericDescPtr srcGenericDescPtr,
-                                              Rpp32f *dstPtr,
-                                              RpptGenericDescPtr dstGenericDescPtr,
-                                              Rpp32f *mulTensor,
-                                              RpptROI3DPtr roiGenericPtrSrc,
-                                              RpptRoi3DType roiType,
-                                              RppLayoutParams layoutParams,
-                                              rpp::Handle& handle);
+#include "rppdefs.h"
+
+#define FOG_MAX_HEIGHT 1080
+#define FOG_MAX_WIDTH 1920
+#define FOG_MAX_XDIM 1919
+#define FOG_MAX_YDIM 1079
+
+#define REDUCTION_MAX_WIDTH 3840
+#define REDUCTION_MAX_HEIGHT 2160
+#define REDUCTION_MAX_XDIM 3839
+#define REDUCTION_MAX_YDIM 2159
+
+#define SPATTER_MAX_WIDTH 1920
+#define SPATTER_MAX_HEIGHT 1080
+#define SPATTER_MAX_XDIM 1919
+#define SPATTER_MAX_YDIM 1079
+
+#endif // RPP_KERNEL_DIMS_HPP

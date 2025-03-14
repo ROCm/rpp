@@ -25,11 +25,11 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
-#include "reduction.hpp"
-#include "host_tensor_statistical_operations.hpp"
+#include "kernel_dims.hpp"
+#include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip_tensor_statistical_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** tensor_sum ********************/

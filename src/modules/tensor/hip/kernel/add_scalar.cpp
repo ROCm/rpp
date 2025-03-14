@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_arithmetic_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
 __global__ void add_scalar_ncdhw_hip_tensor(float *srcPtr,

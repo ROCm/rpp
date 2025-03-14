@@ -1,4 +1,4 @@
-#include "hip_tensor_bitwise_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
 /* BitwiseAND is logical operation only on U8 types. */

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "spectrogram.hpp"
+#include "host_tensor_executors.hpp"
 #include "ffts.h"
 #include "ffts_attributes.h"
 #include <complex>

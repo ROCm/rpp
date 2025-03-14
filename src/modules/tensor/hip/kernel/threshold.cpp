@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_statistical_operations.hpp"
+#include "hip_tensor_executors.hpp"
 
 __device__ void threshold_hip_rgb_compute(d_float24 *pix_f24, float3 *minRGB_f3, float3 *maxRGB_f3, float2 *rangeMinMax)
 {

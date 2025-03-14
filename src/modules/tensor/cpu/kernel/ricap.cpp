@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "ricap.hpp"
+#include "host_tensor_executors.hpp"
 
     // RICAP output image profile as per "Data Augmentation using Random Image Cropping and Patching for Deep CNNs" available at https://arxiv.org/pdf/1811.09030.pdf
     // |------img-roi-1------|------img-roi-2------|

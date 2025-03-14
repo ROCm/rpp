@@ -22,15 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#ifndef API_HELPERS_HPP
+#define API_HELPERS_HPP
 
-RppStatus resample_host_tensor(Rpp32f *srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               Rpp32f *dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               Rpp32f *inRateTensor,
-                               Rpp32f *outRateTensor,
-                               Rpp32s *srcDimsTensor,
-                               RpptResamplingWindow &window,
-                               rpp::Handle& handle);
+#include "rpp.h"
+#include "rppdefs.h"
+
+// sets descriptor dimensions and strides for descriptor used for fog augmentation
+inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32s maxHeight, Rpp32s maxWidth, Rpp32s numChannels)
+{
+    descPtr->numDims = 4;
+    descPtr->offsetInBytes = 0;
+    descPtr->dataType = RpptDataType::F32;  
+    descPtr->layout = RpptLayout::NCHW;
+    descPtr->n = batchSize;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = numChannels;
+    descPtr->strides = {descPtr->c * descPtr->w * descPtr->h,  1, descPtr->w, 1};
+}
+
+#endif /* API_HELPERS_HPP */

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_geometric_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 
 template <typename T>
 __global__ void fill_value_ncdhw_hip_tensor(T *dstPtr,

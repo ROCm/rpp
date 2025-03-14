@@ -25,10 +25,10 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_data_exchange_operations.h"
-#include "host_tensor_data_exchange_operations.hpp"
+#include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
-    #include "hip_tensor_data_exchange_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 /******************** copy ********************/

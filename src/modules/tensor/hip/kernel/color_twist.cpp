@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_color_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
 __device__ void color_twist_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB, float4 *colorTwistParams_f4)

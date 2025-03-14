@@ -25,10 +25,10 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_geometric_augmentations.h"
-#include "host_tensor_geometric_augmentations.hpp"
+#include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
-#include "hip_tensor_geometric_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
 
 #if __APPLE__

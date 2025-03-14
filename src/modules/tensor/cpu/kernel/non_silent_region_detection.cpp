@@ -83,7 +83,7 @@ the entire MMS buffer and compare these values with the calculated cutoff value
       data compute length with the formulae, length = ending index - beginning index + 1
 */
 
-#include "non_silent_region_detection.hpp"
+#include "host_tensor_executors.hpp"
 
 Rpp32f getSquare(Rpp32f &value)
 {

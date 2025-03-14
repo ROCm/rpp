@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_audio_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 
 /* Spectrogram kernel working overview
 1D Input -> 2D Output

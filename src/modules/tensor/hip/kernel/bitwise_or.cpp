@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_bitwise_operations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
 /* BitwiseOR is logical operation only on U8 types. */

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_morphological_operations.hpp"
+#include "hip_tensor_executors.hpp"
 
 // -------------------- Set 0 - erode device helpers --------------------
 

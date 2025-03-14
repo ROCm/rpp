@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_audio_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 
 /*
 This kernel transforms the 2D spectrogram output into a Mel-scaled output based on the number of filters (numFilter) and applies optional normalization.

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "down_mixing.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,

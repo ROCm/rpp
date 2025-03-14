@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_geometric_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_interpolation.hpp"
 
 // -------------------- Set 0 - warp_perspective device helpers --------------------

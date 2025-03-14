@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "color_cast.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void compute_color_cast_48_host(__m128 *p, __m128 pMul, __m128 *pAdd)
 {

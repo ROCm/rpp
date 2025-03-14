@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "hip_tensor_geometric_augmentations.hpp"
+#include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
 // -------------------- Set 0 - lens_correction device helpers --------------------

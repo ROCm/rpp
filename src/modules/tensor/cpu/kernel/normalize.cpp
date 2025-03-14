@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "normalize.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 // Recursive reduction helper function to compute difference of input with mean and squares them up

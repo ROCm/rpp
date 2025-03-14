@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "noise_salt_and_pepper.hpp"
+#include "host_tensor_executors.hpp"
+#include "rpp_cpu_random.hpp"
 
 inline void compute_salt_and_pepper_noise_params_initialize_4_host_sse(Rpp32f &noiseProbability, Rpp32f &saltProbability, Rpp32f salt, Rpp32f pepper, __m128 *pSaltAndPepperNoiseParams)
 {

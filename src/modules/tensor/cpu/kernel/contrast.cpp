@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "contrast.hpp"
+#include "host_tensor_executors.hpp"
 
 inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
 {

@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "noise_shot.hpp"
+#include "host_tensor_executors.hpp"
+#include "rpp_cpu_random.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
 inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
