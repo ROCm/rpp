@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "gaussian_filter.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
 inline void rpp_store_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)

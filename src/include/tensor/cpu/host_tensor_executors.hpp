@@ -1529,6 +1529,59 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
+/**************************************** FILTER AUGMENTATIONS ****************************************/
+
+// -------------------- gaussian_filter --------------------
+
+template<typename T>
+RppStatus gaussian_filter_host_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *stdDevTensor,
+                                      Rpp32u kernelSize,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+template<typename T>
+RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              T *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32f *stdDevTensor,
+                                              Rpp32u kernelSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams layoutParams,
+                                              rpp::Handle& handle);
+
+// -------------------- box_filter --------------------
+
+template<typename T>
+RppStatus box_filter_char_host_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32u kernelSize,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus box_filter_float_host_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32u kernelSize,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
 // -------------------- crop --------------------

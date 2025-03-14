@@ -562,6 +562,32 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
 
+/**************************************** FILTER AUGMENTATIONS ****************************************/
+
+// -------------------- box_filter --------------------
+
+template <typename T>
+RppStatus hip_exec_box_filter_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u kernelSize,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+// -------------------- gaussian_filter --------------------
+
+template <typename T>
+RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32u kernelSize,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
 // -------------------- crop --------------------

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "box_filter.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
 /* box filter algorithm explanation for U8 PLN1 3x3 kernel size variant
