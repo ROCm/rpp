@@ -728,6 +728,8 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
  *          It introduces artifacts seen in lossy JPEG compression by converting the image to the frequency domain using the Discrete Cosine Transform (DCT),
  *          applying quantization, and then reconstructing the image using the inverse DCT (IDCT).
  *          This process introduces compression-related distortions similar to those in JPEG images.
+ * \image html img150x150.png Sample Input
+ * \image html geometric_augmentations_jpeg_compression_distortion_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr source tensor in HOST memory
