@@ -734,6 +734,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr source tensor in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] qualityTensor JPEG quality factor that controls the amount of distortion (0 < quality < 100).
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -742,7 +743,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
  * \retval RPP_ERROR* Unsuccessful completion.
  * \ingroup group_tensor_geometric
  */
-RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiTtype, rppHandle_t rppHandle);
+RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *qualityTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiTtype, rppHandle_t rppHandle);
 
 /*! @}
  */

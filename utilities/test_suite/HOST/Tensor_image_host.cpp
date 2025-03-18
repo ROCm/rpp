@@ -1634,10 +1634,14 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "jpeg_compression_distortion";
 
+                    Rpp32s qualityTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        qualityTensor[i] = 50;
+
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, qualityTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
