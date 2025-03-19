@@ -22,21 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-<<<<<<< HEAD:src/modules/hip/hip_tensor_bitwise_operations.hpp
-#ifndef HIP_TENSOR_BITWISE_OPERATIONS_HPP
-#define HIP_TENSOR_BITWISE_OPERATIONS_HPP
-=======
 #ifndef HOST_TENSOR_BITWISE_OPERATIONS_HPP
 #define HOST_TENSOR_BITWISE_OPERATIONS_HPP
->>>>>>> 2ce35e0b... RPP Tensor Support - Bitwise NOT, Bitwise AND, Bitwise OR (#520):src/modules/cpu/host_tensor_bitwise_operations.hpp
 
 #include "kernel/bitwise_and.hpp"
 #include "kernel/bitwise_not.hpp"
 #include "kernel/bitwise_or.hpp"
 #include "kernel/bitwise_xor.hpp"
 
-<<<<<<< HEAD:src/modules/hip/hip_tensor_bitwise_operations.hpp
-#endif // HIP_TENSOR_BITWISE_OPERATIONS_HPP
-=======
 #endif // HOST_TENSOR_BITWISE_OPERATIONS_HPP
->>>>>>> 2ce35e0b... RPP Tensor Support - Bitwise NOT, Bitwise AND, Bitwise OR (#520):src/modules/cpu/host_tensor_bitwise_operations.hpp
