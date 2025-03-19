@@ -130,8 +130,7 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
-    rppCreate(&handle, batchSize, 0, stream, backend);
+    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
@@ -215,15 +214,6 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 3:
-            {
-                testCaseName  = "log1p";
-
-                startWallTime = omp_get_wtime();
-                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
-
-                break;
-            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
@@ -238,7 +228,7 @@ int main(int argc, char **argv)
         minWallTime = std::min(minWallTime, wallTime);
         avgWallTime += wallTime;
     }
-    rppDestroy(handle,backend);
+    rppDestroyGPU(handle);
 
     // compare outputs if qaMode is true
     if(qaMode)
