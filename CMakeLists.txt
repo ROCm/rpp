@@ -42,7 +42,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # RPP Version
-set(VERSION "1.9.10")
+set(VERSION "2.0.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -202,7 +202,21 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
 
     # Set supported GPU Targets
-    set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx1200;gfx1201")
+    if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
+        find_package(ROCmCMakeBuildTools QUIET)
+        if(NOT ROCmCMakeBuildTools_FOUND)
+            find_package(ROCM QUIET)
+        endif()
+        include(ROCMCheckTargetIds OPTIONAL RESULT_VARIABLE HAS_ROCM_CHECK_TARGET_IDS)
+
+        set(OPTIONAL_GPU_TARGETS "gfx950;gfx1200;gfx1201")
+        if(HAS_ROCM_CHECK_TARGET_IDS)
+            rocm_check_target_ids(OPTIONAL_GPU_TARGETS_AVAILABLE TARGETS ${OPTIONAL_GPU_TARGETS})
+        else() # if we don't have rocm_check_target_ids, just assume the targets are available
+            set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
+        endif()
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
+    endif()
 
     # Set AMD GPU_TARGETS
     if((AMDGPU_TARGETS OR DEFINED ENV{AMDGPU_TARGETS}) AND (NOT GPU_TARGETS))
@@ -285,15 +299,15 @@ if("${BACKEND}" STREQUAL "CPU")
     endforeach(MOD_NAME)
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
     SET(SIMD_ENABLE "1")
 endif()
 
-add_library(${PROJECT_NAME} SHARED include/rpp.h $<TARGET_OBJECTS:modules>)
+add_library(${PROJECT_NAME} SHARED api/rpp.h $<TARGET_OBJECTS:modules>)
 if("${SIMD_ENABLE}" STREQUAL "1")
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=1)
     message("-- ${Green}${PROJECT_NAME} set to build with ENABLE_SIMD_INTRINSICS${ColourReset}")
@@ -309,7 +323,7 @@ target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/libs/third_party/ffts/libffts.a)
+    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/third_party/ffts/lib/libffts.a)
     message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
 else()
     message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
@@ -318,7 +332,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/api
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
@@ -348,13 +363,13 @@ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMP
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev
         PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
 
@@ -395,7 +410,7 @@ set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
 set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
 set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
 set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip, python3-pandas, python3-openpyxl") # TBD: OpenCV & libsnd packages missing on RPM
+set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: pandas, openpyxl, OpenCV & libsnd packages missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")

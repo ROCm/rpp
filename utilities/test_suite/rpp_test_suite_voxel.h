@@ -30,7 +30,6 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <time.h>
-#include <filesystem.h>
 #include <omp.h>
 #include <fstream>
 #include <unistd.h>
