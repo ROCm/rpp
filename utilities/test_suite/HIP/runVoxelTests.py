@@ -350,13 +350,14 @@ elif (testType == 1 and profilingOption == "YES"):
 
 # print the results of qa tests
 nonQACaseList = ['6'] # Add cases present in supportedCaseList, but without QA support
+supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_voxel_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(voxelAugmentationMap.keys()), nonQACaseList, "Tensor_voxel_hip")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_hip")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0): # Unit tests
