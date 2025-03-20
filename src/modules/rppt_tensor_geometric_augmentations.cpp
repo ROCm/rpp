@@ -1599,16 +1599,16 @@ RppStatus rppt_concat_host(RppPtr_t srcPtr1,
     if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
         concat_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
-                                   static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
-                                   srcPtr1GenericDescPtr,
-                                   srcPtr2GenericDescPtr,
-                                   static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
-                                   dstGenericDescPtr,
-                                   axisMask,
-                                   srcPtr1roiTensor,
-                                   srcPtr2roiTensor,
-                                   layoutParams,
-                                   rpp::deref(rppHandle));
+                                 static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                 srcPtr1GenericDescPtr,
+                                 srcPtr2GenericDescPtr,
+                                 static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                 dstGenericDescPtr,
+                                 axisMask,
+                                 srcPtr1roiTensor,
+                                 srcPtr2roiTensor,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
     {
