@@ -721,18 +721,24 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
  */
 RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
-RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Transpose Generic augmentation on HIP backend
- * \details The transpose augmentation performs an input-permutation based transpose on a generic ND Tensor.
+/*!
+ * \brief JPEG Compression Distortion on the HIP backend
+ * \details This function simulates JPEG compression distortion on an image tensor in hip memory.
+ *          It introduces artifacts seen in lossy JPEG compression by converting the image to the frequency domain using the Discrete Cosine Transform (DCT),
+ *          applying quantization, and then reconstructing the image using the inverse DCT (IDCT).
+ *          This process introduces compression-related distortions similar to those in JPEG images.
+ * \image html img150x150.png Sample Input
+ * \image html geometric_augmentations_jpeg_compression_distortion_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr source tensor in HIP memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] permTensor permutation tensor for transpose operation in pinned memory
- * \param [in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] qualityTensor JPEG quality factor that controls the amount of distortion (0 < quality < 100).
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
