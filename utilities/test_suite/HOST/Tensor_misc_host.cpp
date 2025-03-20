@@ -112,7 +112,7 @@ int main(int argc, char **argv)
         for(int i = 0; i < bufferSize; i++)
             inputF32[i] = static_cast<float>(std::rand() % 255);
     }
-    
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
