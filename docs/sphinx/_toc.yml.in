@@ -23,6 +23,8 @@ subtrees:
   entries:
   - file: reference/rpp-supported-functionalities.rst
     title: Supported functionalities and variants
+  - file: reference/rpp-supported-func-and-var-examples.rst
+    title: Functionality and variant example outputs
   - file: reference/rpp-api-reference.rst
     title: RPP API reference
     subtrees:
