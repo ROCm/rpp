@@ -1,5 +1,5 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+#include "hip_tensor_executors.hpp"
+#include "rpp_hip_math.hpp"
 
 // -------------------- Set 1 - helper kernels --------------------
 template <typename T>
