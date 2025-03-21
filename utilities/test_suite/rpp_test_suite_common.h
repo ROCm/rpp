@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include <dirent.h>
-#include <filesystem.h>
 #include <omp.h>
 #include <iostream>
 #include <string>

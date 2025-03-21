@@ -11,6 +11,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 * All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
+* TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
 
 ### Removed
 
