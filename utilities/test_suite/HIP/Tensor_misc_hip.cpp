@@ -91,9 +91,9 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
 
     // set dims and compute strides
-    int bitDepth = 2, offSetInBytes = 0;
+    int bitDepth = 6, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     Rpp32u bufferSize = 1;
@@ -102,13 +102,15 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
+    Rpp16s *inputI16 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
 
-    void *d_inputF32, *d_outputF32;
+    void *d_inputF32, *d_inputI16, *d_outputF32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
-
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputI16, bufferSize * sizeof(Rpp16s)));
     // read input data
     if(qaMode)
         read_data(inputF32, nDim, 0, scriptPath, funcName);
@@ -119,8 +121,13 @@ int main(int argc, char **argv)
             inputF32[i] = static_cast<float>((std::rand() % 255));
     }
 
+    for(int i = 0; i < bufferSize; i++){
+        inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+    }
+
     // copy data from HOST to HIP
     CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, bufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     Rpp32u *permTensor = nullptr;
@@ -213,6 +220,13 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_log_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
 
+                break;
+            }
+            case 3:
+            {
+                testCaseName  = "log1p";
+                startWallTime = omp_get_wtime();
+                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
                 break;
             }
             default:
