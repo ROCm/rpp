@@ -840,6 +840,12 @@ static inline __m128 log_ps(__m128 x)
     return x;
 }
 
+inline void compute_log_16_host(__m256 *p)
+{
+    p[0] = log_ps(p[0]);    // log compute
+    p[1] = log_ps(p[1]);    // log compute
+}
+
 inline Rpp32f rpp_hsum_ps(__m128 x)
 {
     __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0

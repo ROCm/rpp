@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#include "host_tensor_executors.hpp"
+#include "rpp_cpu_simd_math.hpp"
 
 // 1 pixel log1p helper functions
 // Also negative values are converted to positive by taking absolute of inputs
