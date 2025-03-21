@@ -448,6 +448,7 @@ __device__ __forceinline__ float rpp_hip_unpack3(int src)
 {
     return (float)(schar)((src >> 24) & 0xFF);
 }
+
 // Un-Packing from I16s
 
 __device__ __forceinline__ float rpp_hip_unpack0_(int src)
