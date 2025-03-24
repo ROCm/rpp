@@ -22,9 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
-#include "rpp_cpu_common.hpp"
+#include "host_tensor_executors.hpp"
+#include "rpp_cpu_simd_math.hpp"
 #include <algorithm> // for std::clamp
 
 Rpp32s BLOCK_SIZE = 8;
