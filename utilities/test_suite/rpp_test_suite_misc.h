@@ -41,7 +41,8 @@ std::map<int, string> augmentationMiscMap =
 enum Augmentation {
     TRANSPOSE = 0,
     NORMALIZE = 1,
-    LOG = 2
+    LOG = 2,
+    LOG1P = 3
 };
 
 // Compute strides given Generic Tensor
@@ -161,8 +162,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        //roiTensor[lengthIndex + j] = std::rand() % 10;
-                        roiTensor[lengthIndex + j] = 1920;  // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = std::rand() % 10; // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
@@ -394,8 +394,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             {
                 if(abs(out[j] - ref[j]) < 1e-4)
                     cnt++;
-                else
-                    printf("\n OP %f Exp %f",out[j],ref[j]);
             }
         }
         if (cnt == sampleLength)

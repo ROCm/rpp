@@ -89,8 +89,10 @@ int main(int argc, char **argv)
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
-    int bitDepth = 6, offSetInBytes = 0;
+    int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    if( testCase == LOG1P)
+        set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
@@ -101,7 +103,6 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp16s *inputI16 = NULL;
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
 
@@ -114,10 +115,12 @@ int main(int argc, char **argv)
         for(int i = 0; i < bufferSize; i++)
             inputF32[i] = static_cast<float>(std::rand() % 255);
     }
-
-
-    for(int i = 0; i < bufferSize; i++)
-        inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+    if(testCase == LOG1P)
+    {
+        inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
+        for(int i = 0; i < bufferSize; i++)
+            inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+    }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -233,7 +236,8 @@ int main(int argc, char **argv)
     }
 
     rppDestroy(handle, backend);
-
+    
+    free(inputI16);
     free(inputF32);
     free(outputF32);
     free(roiTensor);

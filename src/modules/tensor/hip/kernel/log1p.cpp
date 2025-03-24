@@ -54,7 +54,7 @@ __global__ void log1p_2d_hip_tensor(Rpp16s *srcPtr,
     uint width = roi[3];
 
     if (id_x >= width || id_y >= height)
-    return;
+        return;
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + beginY) * srcStridesNH.y) + id_x + beginX;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
@@ -174,10 +174,3 @@ RppStatus hip_exec_log1p_generic_tensor(Rpp16s *srcPtr,
 
     return RPP_SUCCESS;
 }
-
-RppStatus hip_exec_log1p_generic_tensor(Rpp16s*,
-                                        RpptGenericDescPtr,
-                                        Rpp32f*,
-                                        RpptGenericDescPtr,
-                                        uint*,
-                                        rpp::Handle&);

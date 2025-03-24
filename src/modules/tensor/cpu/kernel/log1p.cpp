@@ -58,7 +58,6 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
-    const __m256 one_vec =  _mm256_set1_ps(1.0f);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -84,11 +83,11 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
             {
                 __m256 p[2];
 
-                rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtr1, p);    // simd loads
-                p[0] = _mm256_add_ps(p[0], one_vec);
-                p[1] = _mm256_add_ps(p[1], one_vec);
-                compute_log_16_host(p);  // log compute
-                rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtr1, p);    // simd stores
+                rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtr1, p);   // simd loads
+                p[0] = _mm256_add_ps(p[0], avx_p1);
+                p[1] = _mm256_add_ps(p[1], avx_p1);
+                compute_log_16_host(p);  
+                rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtr1, p); // simd stores
                 srcPtr1 += vectorIncrement;
                 dstPtr1 += vectorIncrement;
             }
@@ -109,20 +108,20 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                 Rpp32f *dstPtrTemp = dstPtr1;
         
                 int vectorLoopCount = 0;
-        #if __AVX2__
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[2];
-        
+
                     rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
-                    p[0] = _mm256_add_ps(p[0], one_vec);
-                    p[1] = _mm256_add_ps(p[1], one_vec);
+                    p[0] = _mm256_add_ps(p[0], avx_p1);
+                    p[1] = _mm256_add_ps(p[1], avx_p1);
                     compute_log_16_host(p); 
                     rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
-        #endif
+#endif
                 for (; vectorLoopCount < length[1]; vectorLoopCount++)  
                 {
                     compute_log1p(srcPtrTemp, dstPtrTemp);
@@ -141,27 +140,27 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                 Rpp16s *srcPtrTemp = srcPtr1;
                 Rpp32f *dstPtrTemp = dstPtr1;
 
-                    int vectorLoopCount = 0;
+                int vectorLoopCount = 0;
 #if __AVX2__
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                    {
-                        __m256 p[2];
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+                __m256 p[2];
 
-                        rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm256_add_ps(p[0], one_vec);
-                        p[1] = _mm256_add_ps(p[1], one_vec);
-                        compute_log_16_host(p);  // log compute
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
-                        srcPtrTemp += vectorIncrement;
-                        dstPtrTemp += vectorIncrement;
-                    }
+                    rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
+                    p[0] = _mm256_add_ps(p[0], avx_p1);
+                    p[1] = _mm256_add_ps(p[1], avx_p1);
+                    compute_log_16_host(p);  // log compute
+                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                }
 #endif
-                    for (; vectorLoopCount < length[0] * length[1]; vectorLoopCount++)
-                    {
-                        compute_log1p(srcPtrTemp, dstPtrTemp);
-                        srcPtrTemp++;
-                        dstPtrTemp++;
-                    }
+                for (; vectorLoopCount < length[0] * length[1]; vectorLoopCount++)
+                {
+                    compute_log1p(srcPtrTemp, dstPtrTemp);
+                    srcPtrTemp++;
+                    dstPtrTemp++;
+                }
 
                 srcPtr1 += length[0] * length[1];
                 dstPtr1 += length[0] * length[1];
@@ -187,20 +186,20 @@ RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
                         __m256 p[2];
 
                         rpp_simd_load(rpp_load16_i16_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm256_add_ps(p[0], one_vec);
-                        p[1] = _mm256_add_ps(p[1], one_vec);
+                        p[0] = _mm256_add_ps(p[0], avx_p1);
+                        p[1] = _mm256_add_ps(p[1], avx_p1);
                         compute_log_16_host(p);  // log compute
                         rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
 #endif
-                        for (; vectorLoopCount < length[0]*length[1]; vectorLoopCount++)
-                        {
-                            compute_log1p(srcPtrTemp, dstPtrTemp);
-                            srcPtrTemp++;
-                            dstPtrTemp++;
-                        }
+                    for (; vectorLoopCount < length[0]*length[1]; vectorLoopCount++)
+                    {
+                        compute_log1p(srcPtrTemp, dstPtrTemp);
+                        srcPtrTemp++;
+                        dstPtrTemp++;
+                    }
 
                     srcPtrCol += length[0] * length[1];
                     dstPtrCol += length[0] * length[1];
