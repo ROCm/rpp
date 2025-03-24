@@ -29,7 +29,6 @@ SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "filesystem.h"
 #include "rpp.h"
 #include "rpp_test_suite_common.h"
 #include <sys/types.h>
