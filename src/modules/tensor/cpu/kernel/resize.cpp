@@ -259,7 +259,6 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                                 pCoeffs[l] = _mm_loadu_ps(&(coeffs[coeffIdx + ((l + k) * 4)]));        // Load coefficients
 
                                 // If negative index is present replace the input pixel value with first value in the row
-
                                 pInputR[l] = _mm_blendv_ps(pInputR[l], pFirstValR, pNegativeIndexMask[l]);
                                 pInputG[l] = _mm_blendv_ps(pInputG[l], pFirstValG, pNegativeIndexMask[l]);
                                 pInputB[l] = _mm_blendv_ps(pInputB[l], pFirstValB, pNegativeIndexMask[l]);
