@@ -2722,7 +2722,8 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-//********jpeg_compression_distrtion************/
+//********jpeg_compression_distortion************/
+
 RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                RppPtr_t dstPtr,

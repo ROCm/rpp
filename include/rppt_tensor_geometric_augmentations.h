@@ -744,7 +744,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
  * \retval RPP_ERROR* Unsuccessful completion.
  * \ingroup group_tensor_geometric
  */
-RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr,RpptROIPtr roiTensorPtrSrc,RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}
