@@ -245,6 +245,10 @@ __device__ __forceinline__ float4 rpp_hip_pixel_check_0to1(float4 src_f4)
                        fminf(fmaxf(src_f4.w, 0), 1));
 }
 
+__device__ __forceinline__ float rpp_hip_pixel_check_0to1(float src_f1)
+{
+    return fminf(fmaxf(src_f1, 0), 1);
+}
 // d_float8 pixel check for 0-255 range
 
 __device__ __forceinline__ void rpp_hip_pixel_check_0to255(d_float8 *pix_f8)
