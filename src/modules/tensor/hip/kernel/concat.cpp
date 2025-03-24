@@ -1,5 +1,4 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+#include "hip_tensor_executors.hpp"
 
 template <typename T>
 __global__ void concat_generic_hip_tensor(T *srcPtr1,
@@ -291,3 +290,44 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
 
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_concat_tensor<Rpp8u>(Rpp8u*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp8u*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp8u*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp32u,
+                                                 Rpp32u*,
+                                                 rpp::Handle&);
+
+template RppStatus hip_exec_concat_tensor<half>(half*,
+                                                RpptGenericDescPtr,
+                                                half*,
+                                                RpptGenericDescPtr,
+                                                half*,
+                                                RpptGenericDescPtr,
+                                                Rpp32u,
+                                                Rpp32u*,
+                                                rpp::Handle&);
+
+template RppStatus hip_exec_concat_tensor<Rpp32f>(Rpp32f*,
+                                                  RpptGenericDescPtr,
+                                                  Rpp32f*,
+                                                  RpptGenericDescPtr,
+                                                  Rpp32f*,
+                                                  RpptGenericDescPtr,
+                                                  Rpp32u,
+                                                  Rpp32u*,
+                                                  rpp::Handle&);
+
+template RppStatus hip_exec_concat_tensor<Rpp8s>(Rpp8s*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp8s*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp8s*,
+                                                 RpptGenericDescPtr,
+                                                 Rpp32u,
+                                                 Rpp32u*,
+                                                 rpp::Handle&);
+       

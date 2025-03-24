@@ -16,15 +16,14 @@ copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR O
+THER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
-#include "rpp_cpu_common.hpp"
+#include "host_tensor_executors.hpp"
 
 // Computes concatenation for 2D tensors (Supports Rpp32f and Rpp8u)
 template <typename T, typename SIMD_LOAD, typename SIMD_STORE>
@@ -596,3 +595,27 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
 
     return RPP_SUCCESS;
 }
+
+template RppStatus concat_generic_host_tensor<Rpp16f, Rpp16f>(Rpp16f*,
+                                                              Rpp16f*,
+                                                              RpptGenericDescPtr,
+                                                              RpptGenericDescPtr,
+                                                              Rpp16f*,
+                                                              RpptGenericDescPtr,
+                                                              Rpp32u,
+                                                              Rpp32u*,
+                                                              Rpp32u*,
+                                                              RppLayoutParams,
+                                                              rpp::Handle&);
+
+template RppStatus concat_generic_host_tensor<Rpp8s, Rpp8s>(Rpp8s*,
+                                                            Rpp8s*,
+                                                            RpptGenericDescPtr,
+                                                            RpptGenericDescPtr,
+                                                            Rpp8s*,
+                                                            RpptGenericDescPtr,
+                                                            Rpp32u,
+                                                            Rpp32u*,
+                                                            Rpp32u*,
+                                                            RppLayoutParams,
+                                                            rpp::Handle&);
