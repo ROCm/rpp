@@ -2003,7 +2003,7 @@ inline void rpp_load16_i8_to_f32_avx(Rpp8s *srcPtr, __m256 *p)
     p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask08To11), _mm_shuffle_epi8(px, xmm_pxMask12To15)));    /* Contains pixels 09-16 */
 }
 
-inline void rpp_load16_abs_i16_to_f32_avx(Rpp16s *srcPtr, __m256 *p)
+inline void rpp_load16_i16_to_f32_avx(Rpp16s *srcPtr, __m256 *p)
 {
     __m256i px =  _mm256_loadu_si256((__m256i *)srcPtr);  
 

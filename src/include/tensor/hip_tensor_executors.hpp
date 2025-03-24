@@ -63,10 +63,9 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
 
 // -------------------- log1p --------------------
 
-template <typename T, typename U>
-RppStatus hip_exec_log1p_generic_tensor(T *srcPtr,
+RppStatus hip_exec_log1p_generic_tensor(Rpp16s *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
-                                        U *dstPtr,
+                                        Rpp32f *dstPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,
                                         uint *roiTensor,
                                         rpp::Handle& handle);

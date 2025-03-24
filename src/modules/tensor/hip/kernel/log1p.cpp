@@ -2,22 +2,19 @@
 #include "rpp_hip_math.hpp"
 
 // -------------------- Set 1 - helper kernels --------------------
-template <typename T>
-__device__ void log1p_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
+__device__ void log1p_hip_compute(Rpp16s *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
 {
-    if constexpr (std::is_same<T, schar>::value)
-        rpp_hip_math_add8_const(src_f8, src_f8, (float4)128);
+    // Apply absolute value to each element
     for(int i = 0; i < 8; i++)
         src_f8->f1[i] =  fabsf(src_f8->f1[i]);
+
     rpp_hip_math_add8_const(src_f8, src_f8, (float4)1);
     rpp_hip_math_log1p(src_f8, dst_f8);
 }
-
 // -------------------- Set 2 - log1p kernels --------------------
-template <typename T, typename U>
-__global__ void log1p_1d_hip_tensor(T *srcPtr,
+__global__ void log1p_1d_hip_tensor(Rpp16s *srcPtr,
                                     uint srcStrides,
-                                    U *dstPtr,
+                                    Rpp32f *dstPtr,
                                     uint dstStrides,
                                     uint *roiTensor)
 {
@@ -40,10 +37,9 @@ __global__ void log1p_1d_hip_tensor(T *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
-template <typename T, typename U>
-__global__ void log1p_2d_hip_tensor(T *srcPtr,
+__global__ void log1p_2d_hip_tensor(Rpp16s *srcPtr,
                                     uint2 srcStridesNH,
-                                    U *dstPtr,
+                                    Rpp32f *dstPtr,
                                     uint2 dstStridesNH,
                                     uint *roiTensor)
 {
@@ -58,7 +54,7 @@ __global__ void log1p_2d_hip_tensor(T *srcPtr,
     uint width = roi[3];
 
     if (id_x >= width || id_y >= height)
-        return;
+    return;
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + beginY) * srcStridesNH.y) + id_x + beginX;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
@@ -69,12 +65,11 @@ __global__ void log1p_2d_hip_tensor(T *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
-template <typename T, typename U>
-__global__ void log1p_nd_hip_tensor(T *srcPtr,
+__global__ void log1p_nd_hip_tensor(Rpp16s *srcPtr,
                                     uint *srcStrides,
                                     uint *srcDims,
                                     uint numDims,
-                                    U *dstPtr,
+                                    Rpp32f *dstPtr,
                                     uint *dstStrides,
                                     Rpp32u *roiTensor)
 {
@@ -111,10 +106,9 @@ __global__ void log1p_nd_hip_tensor(T *srcPtr,
 }
 
 // -------------------- Set 3 - executor kernels --------------------
-template <typename T, typename U>
-RppStatus hip_exec_log1p_generic_tensor(T *srcPtr,
+RppStatus hip_exec_log1p_generic_tensor(Rpp16s *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
-                                        U *dstPtr,
+                                        Rpp32f *dstPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,
                                         uint *roiTensor,
                                         rpp::Handle& handle)
@@ -181,37 +175,9 @@ RppStatus hip_exec_log1p_generic_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-template RppStatus hip_exec_log1p_generic_tensor<Rpp8u, Rpp32f>(Rpp8u*,
-                                                                RpptGenericDescPtr,
-                                                                Rpp32f*,
-                                                                RpptGenericDescPtr,
-                                                                uint*,
-                                                                rpp::Handle&);
-
-template RppStatus hip_exec_log1p_generic_tensor<half, half>(half*,
-                                                             RpptGenericDescPtr,
-                                                             half*,
-                                                             RpptGenericDescPtr,
-                                                             uint*,
-                                                             rpp::Handle&);
-
-template RppStatus hip_exec_log1p_generic_tensor<Rpp32f, Rpp32f>(Rpp32f*,
-                                                                 RpptGenericDescPtr,
-                                                                 Rpp32f*,
-                                                                 RpptGenericDescPtr,
-                                                                 uint*,
-                                                                 rpp::Handle&);
-
-template RppStatus hip_exec_log1p_generic_tensor<Rpp8s, Rpp32f>(Rpp8s*,
-                                                                RpptGenericDescPtr,
-                                                                Rpp32f*,
-                                                                RpptGenericDescPtr,
-                                                                uint*,
-                                                                rpp::Handle&);
-
-template RppStatus hip_exec_log1p_generic_tensor<Rpp16s, Rpp32f>(Rpp16s*,
-                                                                 RpptGenericDescPtr,
-                                                                 Rpp32f*,
-                                                                 RpptGenericDescPtr,
-                                                                 uint*,
-                                                                 rpp::Handle&);
+RppStatus hip_exec_log1p_generic_tensor(Rpp16s*,
+                                        RpptGenericDescPtr,
+                                        Rpp32f*,
+                                        RpptGenericDescPtr,
+                                        uint*,
+                                        rpp::Handle&);
