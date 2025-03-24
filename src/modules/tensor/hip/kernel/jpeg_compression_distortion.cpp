@@ -1,4 +1,29 @@
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include "hip_tensor_executors.hpp"
+#include "rpp_hip_math.hpp"
 
 // DCT Constants
 __device__ const float dctA = 1.387039845322148f;
@@ -30,12 +55,12 @@ __device__ inline void y_hip_compute(T *src , d_float8 *r_f8, d_float8 *g_f8, d_
     const float4 yG_f4 = (float4)0.587f;
     const float4 yB_f4 = (float4)0.114f;
 
-    //  RGB to Y conversion
+    // RGB to Y conversion
     y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
     y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
 }
 
-//Downsampling and computing Cb and Cr
+// Downsampling and computing Cb and Cr
 __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2_f8, d_float8 *g1_f8, d_float8 *g2_f8, d_float8 *b1_f8, d_float8 *b2_f8, float4 *cb_f4, float4 *cr_f4)
 {
     // Vertical downsampling
@@ -107,7 +132,7 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
     vec[7] = normCoeff * (dctF * temp4 + dctD * temp5 + dctC * temp6 + dctA * temp7);
 }
 
-//Inverse 1D DCT
+// Inverse 1D DCT
 __device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
 {
     int val = 128.0f * add_128;
@@ -143,7 +168,7 @@ __device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
     vec[6] = fmaf(normCoeff, (temp8 - temp10), val);
 }
 
-//Quantization
+// Quantization
 __device__ inline void quantize(float* value, int* coeff)
 {
     for (int i = 0; i < 8; i++)
@@ -183,7 +208,7 @@ __device__ inline void Upsample_and_RGB_hip_compute(float4 Cb_f4, float4 Cr_f4, 
     *((d_float8*)Ch3_f8) = B_f8;
 }
 
-//Clamping based on the bitDepth
+// Clamping based on the bitDepth
 template <typename T>
 __device__ inline void clamp_range(T *src, float* values)
 {
@@ -197,7 +222,7 @@ __device__ inline void clamp_range(T *src, float* values)
         values[j] = fminf(fmaxf(values[j], low), high);
 }
 
-//Generic clamping
+// Generic clamping
 __device__ inline void clamp_range(float* values)
 {
     for (int j = 0; j < 8; j++)
@@ -210,8 +235,8 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
                                                             T *dstPtr,
                                                             uint2 dstStridesNH,
                                                             RpptROIPtr roiTensorPtrSrc,
-                                                            int *Ytable,
-                                                            int *CbCrtable,
+                                                            int *tableY,
+                                                            int *tableCbCr,
                                                             float qScale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -293,7 +318,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
         downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
         // Store Y and downsampled CbCr
         *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        //Storing Cr below Cb (8 x 64)
+        // Storing Cr below Cb (8 x 64)
         *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
     }
 
@@ -331,9 +356,9 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    //Quantization on each layer of Y Cb Cr
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);
+    // Quantization on each layer of Y Cb Cr
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 
     //----INVERSE STEPS---
@@ -357,7 +382,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     // 1D row wise IDCT for Y Cb and Cr channels
-    //Adding back 128 as part of INV DCT
+    // Adding back 128 as part of INV DCT
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
     __syncthreads();
@@ -397,8 +422,8 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
                                                             T *dstPtr,
                                                             uint3 dstStridesNCH,
                                                             RpptROIPtr roiTensorPtrSrc,
-                                                            int *Ytable,
-                                                            int *CbCrtable,
+                                                            int *tableY,
+                                                            int *tableCbCr,
                                                             float qScale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -506,7 +531,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
         downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
         // Store Y and downsampled CbCr
         *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        //Storing Cr below Cb (8 x 64)
+        // Storing Cr below Cb (8 x 64)
         *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
     }
 
@@ -544,9 +569,9 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    //Quantization on each layer of Y Cb Cr
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);
+    // Quantization on each layer of Y Cb Cr
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 
     //----INVERSE STEPS---
@@ -570,7 +595,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     // 1D row wise IDCT for Y Cb and Cr channels
-    //Adding back 128 as part of INV DCT
+    // Adding back 128 as part of INV DCT
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
     __syncthreads();
@@ -614,7 +639,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
                                                             T *dstPtr,
                                                             uint3 dstStridesNCH,
                                                             RpptROIPtr roiTensorPtrSrc,
-                                                            int *Ytable,
+                                                            int *tableY,
                                                             float qScale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -693,7 +718,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], true);
     __syncthreads();
 
-    //Fwd DCT
+    // Fwd DCT
     int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
     // Process all 128 columns
     if (col < 128 && col < alignedWidth)
@@ -712,13 +737,13 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    //Quantization
-    quantize(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
+    // Quantization
+    quantize(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 
     //----INVERSE STEPS---
     // Process all 128 columns
-    //Adding back 128 as part of DCT
+    // Adding back 128 as part of DCT
     if (col < 128 && col < alignedWidth)
     {
         // Load column into temporary array
@@ -757,8 +782,8 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
                                                                   T *dstPtr,
                                                                   uint3 dstStridesNCH,
                                                                   RpptROIPtr roiTensorPtrSrc,
-                                                                  int *Ytable,
-                                                                  int *CbCrtable,
+                                                                  int *tableY,
+                                                                  int *tableCbCr,
                                                                   float qScale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -842,7 +867,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
         downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
         // Store Y and downsampled CbCr
         *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        //Storing Cr below Cb (8 x 64)
+        // Storing Cr below Cb (8 x 64)
         *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
     }
 
@@ -880,9 +905,9 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     }
     __syncthreads();
 
-    //Quantization on each layer of Y Cb Cr
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);
+    // Quantization on each layer of Y Cb Cr
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 
     //----INVERSE STEPS---
@@ -906,7 +931,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     __syncthreads();
 
     // 1D row wise IDCT for Y Cb and Cr channels
-    //Adding back 128 as part of INV DCT
+    // Adding back 128 as part of INV DCT
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
     __syncthreads();
@@ -950,8 +975,8 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
                                                                   T *dstPtr,
                                                                   uint2 dstStridesNH,
                                                                   RpptROIPtr roiTensorPtrSrc,
-                                                                  int *Ytable,
-                                                                  int *CbCrtable,
+                                                                  int *tableY,
+                                                                  int *tableCbCr,
                                                                   float qScale)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -1074,7 +1099,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
         downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],(d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
         // Store Y and downsampled CbCr
         *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        //Storing Cr below Cb (8 x 64)
+        // Storing Cr below Cb (8 x 64)
         *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
     }
 
@@ -1112,9 +1137,9 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
     }
     __syncthreads();
 
-    //Quantization on each layer of Y Cb Cr
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &Ytable[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &CbCrtable[(hipThreadIdx_y % 8) * 8]);
+    // Quantization on each layer of Y Cb Cr
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
     __syncthreads();
 
     //----INVERSE STEPS---
@@ -1138,7 +1163,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
     __syncthreads();
 
     // 1D row wise IDCT for Y Cb and Cr channels
-    //Adding back 128 as part of INV DCT
+    // Adding back 128 as part of INV DCT
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
     __syncthreads();
@@ -1192,11 +1217,11 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
     quality = std::clamp<int>(quality, 1, 100);
     float qScale = (quality < 50) ? (50.0f / quality) : (2.0f - (2 * quality / 100.0f));
     // Allocate pinned memory
-    Rpp32s *Ytable = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
-    Rpp32s *CbCrtable = Ytable + 64;
+    Rpp32s *tableY = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    Rpp32s *tableCbCr = tableY + 64;
 
     // Initialize and modify the tables
-    int YtableInit[64] = {
+    int tableYInit[64] = {
         16, 11, 10, 16, 24, 40, 51, 61,
         12, 12, 14, 19, 26, 58, 60, 55,
         14, 13, 16, 24, 40, 57, 69, 56,
@@ -1207,7 +1232,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
         72, 92, 95, 98, 112, 100, 103, 99
     };
 
-    int CbCrtableInit[64] = {
+    int tableCbCrInit[64] = {
         17, 18, 24, 47, 99, 99, 99, 99,
         18, 21, 26, 66, 99, 99, 99, 99,
         24, 26, 56, 99, 99, 99, 99, 99,
@@ -1221,8 +1246,8 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
     // Populate pinned memory with scaled and clamped values
     for (int i = 0; i < 64; i++)
     {
-        Ytable[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * YtableInit[i], 0.0f, 255.0f)), 1);
-        CbCrtable[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * CbCrtableInit[i], 0.0f, 255.0f)), 1);
+        tableY[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * tableYInit[i], 0.0f, 255.0f)), 1);
+        tableCbCr[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * tableCbCrInit[i], 0.0f, 255.0f)), 1);
     }
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -1237,8 +1262,8 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
-                           Ytable,
-                           CbCrtable,
+                           tableY,
+                           tableCbCr,
                            qScale);
     }
 
@@ -1254,8 +1279,8 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
-                           Ytable,
-                           CbCrtable,
+                           tableY,
+                           tableCbCr,
                            qScale);
     }
 
@@ -1271,7 +1296,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
-                           Ytable,
+                           tableY,
                            qScale);
     }
 
@@ -1287,8 +1312,8 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
-                           Ytable,
-                           CbCrtable,
+                           tableY,
+                           tableCbCr,
                            qScale);
     }
 
@@ -1304,9 +1329,41 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
-                           Ytable,
-                           CbCrtable,
+                           tableY,
+                           tableCbCr,
                            qScale);
     }
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_jpeg_compression_distortion<Rpp8u>(Rpp8u*,
+                                                               RpptDescPtr,
+                                                               Rpp8u*,
+                                                               RpptDescPtr,
+                                                               RpptROIPtr,
+                                                               RpptRoiType,
+                                                               rpp::Handle&);
+
+template RppStatus hip_exec_jpeg_compression_distortion<Rpp32f>(Rpp32f*,
+                                                                RpptDescPtr,
+                                                                Rpp32f*,
+                                                                RpptDescPtr,
+                                                                RpptROIPtr,
+                                                                RpptRoiType,
+                                                                rpp::Handle&);
+
+template RppStatus hip_exec_jpeg_compression_distortion<half>(half*,
+                                                              RpptDescPtr,
+                                                              half*,
+                                                              RpptDescPtr,
+                                                              RpptROIPtr,
+                                                              RpptRoiType,
+                                                              rpp::Handle&);
+
+template RppStatus hip_exec_jpeg_compression_distortion<Rpp8s>(Rpp8s*,
+                                                               RpptDescPtr,
+                                                               Rpp8s*,
+                                                               RpptDescPtr,
+                                                               RpptROIPtr,
+                                                               RpptRoiType,
+                                                               rpp::Handle&);
