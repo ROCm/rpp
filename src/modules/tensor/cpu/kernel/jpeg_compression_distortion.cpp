@@ -69,6 +69,12 @@ inline Rpp32f get_quality_factor(Rpp32s quality)
     return qualityFactor;
 }
 
+void upsample_avx2(__m256 input, __m256 *p)
+{
+    p[0] = _mm256_unpacklo_ps(input, input); // [0 0 1 1 2 2 3 3]
+    p[1] = _mm256_unpackhi_ps(input, input); // [4 4 5 5 6 6 7 7]
+}
+
 void transpose_8x8_avx(__m256* p)
 {
     __m256 temp[16];
@@ -617,21 +623,25 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
 
     for (Rpp32s i = 0; i < 8; i++)
     {
-        __m256 cb = pCb[i];
-        __m256 cr = pCr[i];
+        __m256 cb[2];
+        upsample_avx2(pCb[i], &cb[0]);
+        __m256 cr[2];
+        upsample_avx2(pCr[i], &cr[0]);
         for(Rpp32s j = 0; j < 4; j++)
         {
             Rpp32s idxY = 2 * i + (j / 2) + ((j & 1) ? 16 : 0);
             Rpp32s idxRGB = i * 12 + (j / 2) * 6 + (j % 2);
+            __m256 curCb = cb[j % 2];
+            __m256 curCr = cr[j % 2];
 
             pY[idxY] = _mm256_add_ps(pY[idxY], avx_p128);
             pY[idxY] = _mm256_min_ps(_mm256_max_ps(pY[idxY], avx_p0), avx_p255);
-            __m256 pR = _mm256_fmadd_ps(pCoeffRCr, cr, pY[idxY]);
+            __m256 pR = _mm256_fmadd_ps(pCoeffRCr, curCr, pY[idxY]);
 
-            __m256 pG = _mm256_fmadd_ps(pCoeffGCr, cr, 
-                            _mm256_fmadd_ps(pCoeffGCb, cb, pY[idxY]));
+            __m256 pG = _mm256_fmadd_ps(pCoeffGCr, curCr, 
+                            _mm256_fmadd_ps(pCoeffGCb, curCb, pY[idxY]));
 
-            __m256 pB = _mm256_fmadd_ps(pCoeffBCb, cb, pY[idxY]);
+            __m256 pB = _mm256_fmadd_ps(pCoeffBCb, curCb, pY[idxY]);
 
             pR = _mm256_max_ps(avx_p0, _mm256_min_ps(pR, avx_p255));
             pG = _mm256_max_ps(avx_p0, _mm256_min_ps(pG, avx_p255));
