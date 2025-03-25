@@ -330,4 +330,3 @@ template RppStatus hip_exec_concat_tensor<Rpp8s>(Rpp8s*,
                                                  Rpp32u,
                                                  Rpp32u*,
                                                  rpp::Handle&);
-       
