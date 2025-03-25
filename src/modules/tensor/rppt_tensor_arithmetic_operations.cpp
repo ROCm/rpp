@@ -312,9 +312,9 @@ RppStatus rppt_log1p_host(RppPtr_t srcPtr,
                           Rpp32u *roiTensor,
                           rppHandle_t rppHandle)
 {
-    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if (srcGenericDescPtr->dataType != RpptDataType::I16) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         log1p_i16_f32_host_tensor(static_cast<Rpp16s *>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                   srcGenericDescPtr,
@@ -582,16 +582,16 @@ RppStatus rppt_log_gpu(RppPtr_t srcPtr,
 }
 
 RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
-                       RpptGenericDescPtr srcGenericDescPtr,
-                       RppPtr_t dstPtr,
-                       RpptGenericDescPtr dstGenericDescPtr,
-                       Rpp32u *roiTensor,
-                       rppHandle_t rppHandle)
+                         RpptGenericDescPtr srcGenericDescPtr,
+                         RppPtr_t dstPtr,
+                         RpptGenericDescPtr dstGenericDescPtr,
+                         Rpp32u *roiTensor,
+                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if (srcGenericDescPtr->dataType != RpptDataType::I16) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         hip_exec_log1p_i16_f32_tensor(static_cast<Rpp16s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                       srcGenericDescPtr,

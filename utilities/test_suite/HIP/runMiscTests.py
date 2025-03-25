@@ -221,7 +221,6 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HIP" in values]
-print(supportedCaseList)
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
