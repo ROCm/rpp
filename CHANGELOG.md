@@ -5,8 +5,8 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ## (Unreleased) RPP 2.0.0
 
 ### Added
-* RPP Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
-* RPP Concat on HOST (CPU) and HIP backends. (#530)
+* Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
 
 ### Changed
 
