@@ -192,7 +192,7 @@ RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                         dstPtrTemp += vectorIncrement;
                     }
 #endif
-                    for (; vectorLoopCount < length[0]*length[1]; vectorLoopCount++)
+                    for (; vectorLoopCount < length[0] * length[1]; vectorLoopCount++)
                     {
                         compute_log1p(srcPtrTemp, dstPtrTemp);
                         srcPtrTemp++;
