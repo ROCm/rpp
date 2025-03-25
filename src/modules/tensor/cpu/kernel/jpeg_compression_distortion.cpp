@@ -36,7 +36,7 @@ const Rpp32f dctCoeff5 = 0.541196100146197f;  // sqrt(2) * cos(3 * pi / 8)
 const Rpp32f dctCoeff6 = 0.275899379282943f;  // sqrt(2) * cos(7 * pi / 16)
 const Rpp32f dctNormFactor = 0.3535533905932737f; // 1 / sqrt(8)
 
-alignas(64) const Rpp32f chromaQuantTable[64] = {
+alignas(32) const Rpp32f chromaQuantTable[64] = {
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
     24, 26, 56, 99, 99, 99, 99, 99,
@@ -47,7 +47,7 @@ alignas(64) const Rpp32f chromaQuantTable[64] = {
     99, 99, 99, 99, 99, 99, 99, 99
 };
 
-alignas(64) const Rpp32f lumaQuantTable[64] = {
+alignas(32) const Rpp32f lumaQuantTable[64] = {
     16, 11, 10, 16, 24, 40, 51, 61,
     12, 12, 14, 19, 26, 58, 60, 55,
     14, 13, 16, 24, 40, 57, 69, 56,
@@ -79,32 +79,32 @@ void transpose_8x8_avx(__m256* p)
 {
     __m256 temp[16];
 
-    temp[0] = _mm256_unpacklo_ps(p[0], p[2]); 
-    temp[1] = _mm256_unpackhi_ps(p[0], p[2]); 
-    temp[2] = _mm256_unpacklo_ps(p[1], p[3]); 
-    temp[3] = _mm256_unpackhi_ps(p[1], p[3]); 
-    temp[4] = _mm256_unpacklo_ps(p[4], p[6]); 
-    temp[5] = _mm256_unpackhi_ps(p[4], p[6]); 
-    temp[6] = _mm256_unpacklo_ps(p[5], p[7]); 
-    temp[7] = _mm256_unpackhi_ps(p[5], p[7]); 
+    temp[0] = _mm256_unpacklo_ps(p[0], p[2]);
+    temp[1] = _mm256_unpackhi_ps(p[0], p[2]);
+    temp[2] = _mm256_unpacklo_ps(p[1], p[3]);
+    temp[3] = _mm256_unpackhi_ps(p[1], p[3]);
+    temp[4] = _mm256_unpacklo_ps(p[4], p[6]);
+    temp[5] = _mm256_unpackhi_ps(p[4], p[6]);
+    temp[6] = _mm256_unpacklo_ps(p[5], p[7]);
+    temp[7] = _mm256_unpackhi_ps(p[5], p[7]);
 
-    temp[8]  = _mm256_unpacklo_ps(temp[0], temp[2]); 
-    temp[9]  = _mm256_unpackhi_ps(temp[0], temp[2]); 
-    temp[10] = _mm256_unpacklo_ps(temp[1], temp[3]); 
-    temp[11] = _mm256_unpackhi_ps(temp[1], temp[3]); 
-    temp[12] = _mm256_unpacklo_ps(temp[4], temp[6]); 
-    temp[13] = _mm256_unpackhi_ps(temp[4], temp[6]); 
-    temp[14] = _mm256_unpacklo_ps(temp[5], temp[7]); 
-    temp[15] = _mm256_unpackhi_ps(temp[5], temp[7]); 
+    temp[8]  = _mm256_unpacklo_ps(temp[0], temp[2]);
+    temp[9]  = _mm256_unpackhi_ps(temp[0], temp[2]);
+    temp[10] = _mm256_unpacklo_ps(temp[1], temp[3]);
+    temp[11] = _mm256_unpackhi_ps(temp[1], temp[3]);
+    temp[12] = _mm256_unpacklo_ps(temp[4], temp[6]);
+    temp[13] = _mm256_unpackhi_ps(temp[4], temp[6]);
+    temp[14] = _mm256_unpacklo_ps(temp[5], temp[7]);
+    temp[15] = _mm256_unpackhi_ps(temp[5], temp[7]);
 
-    p[0] = _mm256_permute2f128_ps(temp[8], temp[12], (2 << 4) | 0); 
-    p[4] = _mm256_permute2f128_ps(temp[8], temp[12], (3 << 4) | 1); 
-    p[1] = _mm256_permute2f128_ps(temp[9], temp[13], (2 << 4) | 0); 
-    p[5] = _mm256_permute2f128_ps(temp[9], temp[13], (3 << 4) | 1); 
-    p[2] = _mm256_permute2f128_ps(temp[10], temp[14], (2 << 4) | 0); 
-    p[6] = _mm256_permute2f128_ps(temp[10], temp[14], (3 << 4) | 1); 
-    p[3] = _mm256_permute2f128_ps(temp[11], temp[15], (2 << 4) | 0); 
-    p[7] = _mm256_permute2f128_ps(temp[11], temp[15], (3 << 4) | 1); 
+    p[0] = _mm256_permute2f128_ps(temp[8], temp[12], (2 << 4) | 0);
+    p[4] = _mm256_permute2f128_ps(temp[8], temp[12], (3 << 4) | 1);
+    p[1] = _mm256_permute2f128_ps(temp[9], temp[13], (2 << 4) | 0);
+    p[5] = _mm256_permute2f128_ps(temp[9], temp[13], (3 << 4) | 1);
+    p[2] = _mm256_permute2f128_ps(temp[10], temp[14], (2 << 4) | 0);
+    p[6] = _mm256_permute2f128_ps(temp[10], temp[14], (3 << 4) | 1);
+    p[3] = _mm256_permute2f128_ps(temp[11], temp[15], (2 << 4) | 0);
+    p[7] = _mm256_permute2f128_ps(temp[11], temp[15], (3 << 4) | 1);
 }
 
 void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp32s qualityParam)
@@ -288,24 +288,39 @@ inline void dct_inv_8x8_1d_avx2(__m256 *pVecDct)
     x[1] = dctNormFactor * (temp[8] + temp[10]);
     x[5] = dctNormFactor * (temp[9] - temp[11]);
     x[2] = dctNormFactor * (temp[9] + temp[11]);
-    x[6] = dctNormFactor * (temp[8] - temp[11]);
+    x[6] = dctNormFactor * (temp[8] - temp[10]);
 
     pVecDct[0] =  _mm256_setr_ps(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]);
 }
 
-void quantize_block_avx2(__m256 *p, const Rpp32f *quantTable, Rpp32s qualityParam)
+inline __m256 accurate_quant_round(__m256 val, __m256 quant)
 {
-    Rpp32f qualityFactor = get_quality_factor(qualityParam);
-    __m256 pQualityFactor = _mm256_set1_ps(qualityFactor);
-    for (Rpp32s i = 0; i < 8; i++)
-    {
-        __m256 quantRow = _mm256_loadu_ps(&quantTable[i * 8]); // Load 8 values from the 1D array
-        quantRow = _mm256_mul_ps(quantRow, pQualityFactor);
-        quantRow = _mm256_max_ps(avx_p1, _mm256_min_ps(quantRow, avx_p255));
+    alignas(32) float val_arr[8], quant_arr[8];
+    _mm256_store_ps(val_arr, val);
+    _mm256_store_ps(quant_arr, quant);
 
-        p[i] = _mm256_div_ps(p[i], quantRow);   // Element-wise division
-        p[i] = roundf_avx2(p[i]);               // Round the values
-        p[i] = _mm256_mul_ps(p[i], quantRow);   // Multiply back with quantized coefficients
+    float result_arr[8];
+    for (int i = 0; i < 8; i++)
+    {
+        float quotient = val_arr[i] / quant_arr[i];
+        float rounded = std::round(quotient);
+        result_arr[i] = rounded * quant_arr[i];
+    }
+    return _mm256_setr_ps(result_arr[0], result_arr[1], result_arr[2], result_arr[3],
+                          result_arr[4], result_arr[5], result_arr[6], result_arr[7]);
+}
+
+inline void quantize_block_avx2(__m256 *p, const float *quantTable, int qualityParam)
+{
+    float qualityFactor = get_quality_factor(qualityParam);
+    __m256 pQualityFactor = _mm256_set1_ps(qualityFactor);
+
+    for (int i = 0; i < 8; i++) {
+        __m256 quantRow = _mm256_loadu_ps(&quantTable[i * 8]);
+        quantRow = _mm256_mul_ps(quantRow, pQualityFactor);
+        quantRow = _mm256_max_ps(_mm256_set1_ps(1.0f),
+                     _mm256_min_ps(quantRow, _mm256_set1_ps(255.0f)));
+        p[i] = accurate_quant_round(p[i], quantRow);
     }
 }
 
@@ -638,7 +653,7 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
             pY[idxY] = _mm256_min_ps(_mm256_max_ps(pY[idxY], avx_p0), avx_p255);
             __m256 pR = _mm256_fmadd_ps(pCoeffRCr, curCr, pY[idxY]);
 
-            __m256 pG = _mm256_fmadd_ps(pCoeffGCr, curCr, 
+            __m256 pG = _mm256_fmadd_ps(pCoeffGCr, curCr,
                             _mm256_fmadd_ps(pCoeffGCb, curCb, pY[idxY]));
 
             __m256 pB = _mm256_fmadd_ps(pCoeffBCb, curCb, pY[idxY]);
@@ -659,56 +674,56 @@ void process_jpeg_compression_distortion(__m256* pRgb, __m256* pY, __m256* pCb, 
                                          const Rpp32f *lumaQuantTable, const Rpp32f *chromaQuantTable, Rpp32s qualityParam)
 {
     rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
-    for (Rpp32s idxY = 0; idxY < 32; idxY += 8) 
-    {
-        for (Rpp32s row = 0; row < 8; row++)
-            dct_8x8_1d_avx2(&pY[idxY + row]);
-        transpose_8x8_avx(&pY[idxY]);
-        for (Rpp32s row = 0; row < 8; row++)
-            dct_8x8_1d_avx2(&pY[idxY + row]);
-        transpose_8x8_avx(&pY[idxY]);
+    // for (Rpp32s idxY = 0; idxY < 32; idxY += 8)
+    // {
+    //     for (Rpp32s row = 0; row < 8; row++)
+    //         dct_8x8_1d_avx2(&pY[idxY + row]);
+    //     transpose_8x8_avx(&pY[idxY]);
+    //     for (Rpp32s row = 0; row < 8; row++)
+    //         dct_8x8_1d_avx2(&pY[idxY + row]);
+    //     transpose_8x8_avx(&pY[idxY]);
 
-        quantize_block_avx2(&pY[idxY], lumaQuantTable, qualityParam);
+    //     quantize_block_avx2(&pY[idxY], lumaQuantTable, qualityParam);
 
-        transpose_8x8_avx(&pY[idxY]);
-        for (Rpp32s row = 0; row < 8; row++)
-            dct_inv_8x8_1d_avx2(&pY[idxY + row]);
-        transpose_8x8_avx(&pY[idxY]);
-        for (Rpp32s row = 0; row < 8; row++)
-            dct_inv_8x8_1d_avx2(&pY[idxY + row]);
-    }
+    //     transpose_8x8_avx(&pY[idxY]);
+    //     for (Rpp32s row = 0; row < 8; row++)
+    //         dct_inv_8x8_1d_avx2(&pY[idxY + row]);
+    //     transpose_8x8_avx(&pY[idxY]);
+    //     for (Rpp32s row = 0; row < 8; row++)
+    //         dct_inv_8x8_1d_avx2(&pY[idxY + row]);
+    // }
 
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_8x8_1d_avx2(&pCb[row]);
-    transpose_8x8_avx(&pCb[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_8x8_1d_avx2(&pCb[row]);
-    transpose_8x8_avx(&pCb[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_8x8_1d_avx2(&pCb[row]);
+    // transpose_8x8_avx(&pCb[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_8x8_1d_avx2(&pCb[row]);
+    // transpose_8x8_avx(&pCb[0]);
 
-    quantize_block_avx2(pCb, chromaQuantTable, qualityParam);
+    // quantize_block_avx2(pCb, chromaQuantTable, qualityParam);
 
-    transpose_8x8_avx(&pCb[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d_avx2(&pCb[row]);
-    transpose_8x8_avx(&pCb[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d_avx2(&pCb[row]);
+    // transpose_8x8_avx(&pCb[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_inv_8x8_1d_avx2(&pCb[row]);
+    // transpose_8x8_avx(&pCb[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_inv_8x8_1d_avx2(&pCb[row]);
 
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_8x8_1d_avx2(&pCr[row]);
-    transpose_8x8_avx(&pCr[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_8x8_1d_avx2(&pCr[row]);
-    transpose_8x8_avx(&pCr[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_8x8_1d_avx2(&pCr[row]);
+    // transpose_8x8_avx(&pCr[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_8x8_1d_avx2(&pCr[row]);
+    // transpose_8x8_avx(&pCr[0]);
 
-    quantize_block_avx2(pCr, chromaQuantTable, qualityParam);
+    // quantize_block_avx2(pCr, chromaQuantTable, qualityParam);
 
-    transpose_8x8_avx(&pCr[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d_avx2(&pCr[row]);
-    transpose_8x8_avx(&pCr[0]);
-    for (Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d_avx2(&pCr[row]);
+    // transpose_8x8_avx(&pCr[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_inv_8x8_1d_avx2(&pCr[row]);
+    // transpose_8x8_avx(&pCr[0]);
+    // for (Rpp32s row = 0; row < 8; row++)
+    //     dct_inv_8x8_1d_avx2(&pCr[row]);
 
     ycbcr_to_rgb_subsampled(pY, pCb, pCr, pRgb);
 }
