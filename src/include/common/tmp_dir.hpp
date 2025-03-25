@@ -26,8 +26,13 @@ SOFTWARE.
 #define GUARD_RPP_TMP_DIR_HPP
 
 #include <string>
+#if __cplusplus >= 201703L && __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 namespace rpp {
 
