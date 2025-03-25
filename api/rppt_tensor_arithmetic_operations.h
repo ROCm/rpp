@@ -311,7 +311,7 @@ RppStatus rppt_log1p_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
 #ifdef GPU_SUPPORT
 /*! \brief Log1p operation on HIP backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
- *          Supports u8->f32, i8->f32,i16->f32, f16->f16 and f32->f32 datatypes.
+ *          Supports i16->f32
  *          Uses Absolute of input for log1p computation to avoid undefined result.
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
