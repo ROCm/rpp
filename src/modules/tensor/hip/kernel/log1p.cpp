@@ -11,6 +11,7 @@ __device__ void log1p_hip_compute(Rpp16s *srcPtr, d_float8 *src_f8, d_float8 *ds
     rpp_hip_math_add8_const(src_f8, src_f8, (float4)1);
     rpp_hip_math_log1p(src_f8, dst_f8);
 }
+
 // -------------------- Set 2 - log1p kernels --------------------
 __global__ void log1p_1d_hip_tensor(Rpp16s *srcPtr,
                                     uint srcStrides,

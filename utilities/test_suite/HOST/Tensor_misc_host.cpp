@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     dstDescriptorPtrND = &dstDescriptor;
     int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
-    if( testCase == LOG1P)
+    if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
@@ -236,9 +236,10 @@ int main(int argc, char **argv)
     }
 
     rppDestroy(handle, backend);
-    
-    free(inputI16);
+
     free(inputF32);
+    if(testCase == LOG1P)
+        free(inputI16);
     free(outputF32);
     free(roiTensor);
     if(meanTensor != nullptr)

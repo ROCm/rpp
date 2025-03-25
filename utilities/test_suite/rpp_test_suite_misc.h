@@ -84,9 +84,9 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
 // Read data from Bin file
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
-    if(nDim != 2 && nDim != 3 && nDim != 4)
+    if(nDim != 2 && nDim != 3)
     {
-        if(nDim != 4 || testCase != "log") {
+        if(nDim != 4 || (testCase != "log" && testCase != "log1p")) {
             std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
             exit(0);
         }
@@ -162,7 +162,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     for(int j = 0; j < nDim; j++)
                     {
                         roiTensor[startIndex + j] = 0;
-                        roiTensor[lengthIndex + j] = std::rand() % 10; // limiting max value in a dimension to 10 for testing purposes
+                        roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
                 break;
@@ -390,11 +390,8 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
 
-            if(!invalid_comparision )
-            {
-                if(abs(out[j] - ref[j]) < 1e-4)
-                    cnt++;
-            }
+            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
+                cnt++;
         }
         if (cnt == sampleLength)
             fileMatch++;

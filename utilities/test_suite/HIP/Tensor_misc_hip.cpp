@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     // set dims and compute strides
     int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
-    if( testCase == LOG1P)
+    if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
@@ -129,7 +129,6 @@ int main(int argc, char **argv)
             inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
         CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, bufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        free(inputI16);
     }
 
     // copy data from HOST to HIP
@@ -270,12 +269,15 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
+    if(testCase == LOG1P)
+        free(inputI16);
     free(outputF32);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipFree(d_inputF32));
-    CHECK_RETURN_STATUS(hipFree(d_inputI16));
+    if(testCase == LOG1P)
+        CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
