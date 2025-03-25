@@ -107,7 +107,7 @@ __global__ void log1p_nd_hip_tensor(Rpp16s *srcPtr,
 }
 
 // -------------------- Set 3 - executor kernels --------------------
-RppStatus hip_exec_log1p_generic_tensor(Rpp16s *srcPtr,
+RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
                                         Rpp32f *dstPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,

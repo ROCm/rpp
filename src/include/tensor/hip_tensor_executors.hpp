@@ -63,7 +63,7 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
 
 // -------------------- log1p --------------------
 
-RppStatus hip_exec_log1p_generic_tensor(Rpp16s *srcPtr,
+RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
                                         Rpp32f *dstPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,

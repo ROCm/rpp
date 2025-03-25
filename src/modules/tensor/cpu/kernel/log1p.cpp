@@ -49,7 +49,7 @@ void log1p_recursive(Rpp16s *src, Rpp32u *srcStrides, Rpp32f *dst, Rpp32u *dstSt
 }
 
 //log(1+x) or log1p(x) for input I16 and output F32
-RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
+RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                                     RpptGenericDescPtr srcGenericDescPtr,
                                     Rpp32f *dstPtr,
                                     RpptGenericDescPtr dstGenericDescPtr,

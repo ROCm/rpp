@@ -87,7 +87,7 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
 
 // -------------------- log1p --------------------
 
-RppStatus log1p_generic_host_tensor(Rpp16s *srcPtr,
+RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                                     RpptGenericDescPtr srcGenericDescPtr,
                                     Rpp32f *dstPtr,
                                     RpptGenericDescPtr dstGenericDescPtr,
