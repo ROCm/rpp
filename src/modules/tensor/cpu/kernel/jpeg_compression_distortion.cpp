@@ -36,6 +36,35 @@ const Rpp32f dctCoeff5 = 0.541196100146197f;  // sqrt(2) * cos(3 * pi / 8)
 const Rpp32f dctCoeff6 = 0.275899379282943f;  // sqrt(2) * cos(7 * pi / 16)
 const Rpp32f dctNormFactor = 0.3535533905932737f; // 1 / sqrt(8)
 
+// Coefficients for Y channel
+const __m256 pCoeffYR = _mm256_set1_ps(0.299f);
+const __m256 pCoeffYG = _mm256_set1_ps(0.587f);
+const __m256 pCoeffYB = _mm256_set1_ps(0.114f);
+
+// Coefficients for Cb channel
+const __m256 pCoeffCbR = _mm256_set1_ps(-0.168736f);
+const __m256 pCoeffCbG = _mm256_set1_ps(-0.331264f);
+const __m256 pCoeffCbB = _mm256_set1_ps(0.5f);
+
+// Coefficients for Cr channel
+const __m256 pCoeffCrR = _mm256_set1_ps(0.5f);
+const __m256 pCoeffCrG = _mm256_set1_ps(-0.418688f);
+const __m256 pCoeffCrB = _mm256_set1_ps(-0.081312f);
+
+// Coefficients for YCbCr to RGB conversion
+const __m256 pCoeffRY = avx_p1;
+const __m256 pCoeffRCr = _mm256_set1_ps(1.402f);
+
+const __m256 pCoeffGY = avx_p1;
+const __m256 pCoeffGCb = _mm256_set1_ps(-0.344136f);
+const __m256 pCoeffGCr = _mm256_set1_ps(-0.714136f);
+
+const __m256 pCoeffBY = avx_p1;
+const __m256 pCoeffBCb = _mm256_set1_ps(1.772f);
+
+const __m256i pxMask = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
+const __m256 pQuarterFactor = _mm256_set1_ps(0.25f);
+
 alignas(32) const Rpp32f chromaQuantTable[64] = {
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
@@ -114,9 +143,10 @@ void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp3
     for (Rpp32s row = 0; row < 8; row++)
     {
         Rpp32s rowIdx = row * stride;
+        Rpp32s rowQuantIdx = row * 8;
         for (Rpp32s col = 0; col < 8; col++)
         {
-            Rpp32f qCoeff = quantTable[row * 8 + col] * qualityFactor; // Directly accessing 1D array
+            Rpp32f qCoeff = quantTable[rowQuantIdx + col] * qualityFactor; // Directly accessing 1D array
             qCoeff = std::clamp(qCoeff, 1.0f, 255.0f);
             block[rowIdx + col] = qCoeff * roundf(block[rowIdx + col] / qCoeff);
         }
@@ -205,18 +235,19 @@ void dct_inv_8x8_1d(Rpp32f *data)
         data[i * stride] = x[i];
 }
 
+// computes DCT
 inline void dct_8x8_1d_avx2(__m256 *pVecDct)
 {
     // Extract each lane from x.
     Rpp32f x[8], temp[12];
     x[0] = _mm256_cvtss_f32(pVecDct[0]);
-    x[1] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(1, 1, 1, 1, 1, 1, 1, 1)));
-    x[2] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(2, 2, 2, 2, 2, 2, 2, 2)));
-    x[3] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(3, 3, 3, 3, 3, 3, 3, 3)));
-    x[4] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(4, 4, 4, 4, 4, 4, 4, 4)));
-    x[5] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(5, 5, 5, 5, 5, 5, 5, 5)));
-    x[6] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(6, 6, 6, 6, 6, 6, 6, 6)));
-    x[7] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(7, 7, 7, 7, 7, 7 ,7 ,7)));
+    x[1] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px1));
+    x[2] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px2));
+    x[3] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px3));
+    x[4] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px4));
+    x[5] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px5));
+    x[6] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px6));
+    x[7] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px7));
 
     temp[0]  = x[0] + x[7];
     temp[1]  = x[1] + x[6];
@@ -246,18 +277,19 @@ inline void dct_8x8_1d_avx2(__m256 *pVecDct)
     pVecDct[0] = _mm256_setr_ps(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]);
 }
 
+// computes inverse dct
 inline void dct_inv_8x8_1d_avx2(__m256 *pVecDct)
 {
     // Extract each lane from x.
     Rpp32f x[8], temp[12];
     x[0] = _mm256_cvtss_f32(pVecDct[0]);
-    x[1] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(1, 1, 1, 1, 1, 1, 1, 1)));
-    x[2] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(2, 2, 2, 2, 2, 2, 2, 2)));
-    x[3] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(3, 3, 3, 3, 3, 3, 3, 3)));
-    x[4] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(4, 4, 4, 4, 4, 4, 4, 4)));
-    x[5] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(5, 5, 5, 5, 5, 5, 5, 5)));
-    x[6] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(6, 6, 6, 6, 6, 6, 6, 6)));
-    x[7] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(7, 7, 7, 7, 7, 7, 7, 7)));
+    x[1] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px1));
+    x[2] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px2));
+    x[3] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px3));
+    x[4] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px4));
+    x[5] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px5));
+    x[6] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px6));
+    x[7] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], avx_px7));
 
     temp[0] = (x[0] + x[4]);
     temp[1] = (dctCoeff2 * x[2]) + (dctCoeff5 * x[6]);
@@ -286,21 +318,22 @@ inline void dct_inv_8x8_1d_avx2(__m256 *pVecDct)
 
 inline __m256 accurate_quant_round(__m256 val, __m256 quant)
 {
-    alignas(32) float val_arr[8], quant_arr[8];
-    _mm256_store_ps(val_arr, val);
-    _mm256_store_ps(quant_arr, quant);
+    alignas(32) float valArr[8], quantArr[8];
+    _mm256_store_ps(valArr, val);
+    _mm256_store_ps(quantArr, quant);
 
-    float result_arr[8];
+    float result[8];
     for (int i = 0; i < 8; i++)
     {
-        float quotient = val_arr[i] / quant_arr[i];
+        float quotient = valArr[i] / quantArr[i];
         float rounded = std::round(quotient);
-        result_arr[i] = rounded * quant_arr[i];
+        result[i] = rounded * quantArr[i];
     }
-    return _mm256_setr_ps(result_arr[0], result_arr[1], result_arr[2], result_arr[3],
-                          result_arr[4], result_arr[5], result_arr[6], result_arr[7]);
+    return _mm256_setr_ps(result[0], result[1], result[2], result[3],
+                          result[4], result[5], result[6], result[7]);
 }
 
+// Applies quantization
 inline void quantize_block_avx2(__m256 *p, const float *quantTable, int qualityParam)
 {
     float qualityFactor = get_quality_factor(qualityParam);
@@ -309,8 +342,8 @@ inline void quantize_block_avx2(__m256 *p, const float *quantTable, int qualityP
     for (int i = 0; i < 8; i++) {
         __m256 quantRow = _mm256_loadu_ps(&quantTable[i * 8]);
         quantRow = _mm256_mul_ps(quantRow, pQualityFactor);
-        quantRow = _mm256_max_ps(_mm256_set1_ps(1.0f),
-                     _mm256_min_ps(quantRow, _mm256_set1_ps(255.0f)));
+        quantRow = _mm256_max_ps(avx_p1,
+                     _mm256_min_ps(quantRow, avx_p255));
         p[i] = accurate_quant_round(p[i], quantRow);
     }
 }
@@ -402,27 +435,30 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
     // Process 8x8 chroma blocks (mapping 4:2:0 chroma to 16x16 Y pixels)
     for (Rpp32s row = 0; row < 8; row++)
     {
+        Rpp32s rowCbCrIdx = row * 8;
+        Rpp32s rowIdx = row * 2;
         for (Rpp32s col = 0; col < 8; col++)
         {
             // Get chroma values for this 2x2 block
-            Rpp32s cbcrIdx = row * 8 + col;
+            Rpp32s cbcrIdx = rowCbCrIdx + col;
+            Rpp32s colIdx = col * 2;
             Rpp32f currCb = cb[cbcrIdx];
             Rpp32f currCr = cr[cbcrIdx];
 
             // Process 2x2 Y pixels for each Cb/Cr pair
-            for (Rpp32s sub_row = 0; sub_row < 2; sub_row++)
+            for (Rpp32s subRow = 0; subRow < 2; subRow++)
             {
-                for (Rpp32s sub_col = 0; sub_col < 2; sub_col++)
+                for (Rpp32s subCol = 0; subCol < 2; subCol++)
                 {
-                    Rpp32s y_idx = (row * 2 + sub_row) * 16 + (col * 2 + sub_col);
-                    Rpp32s dstIdx = (row * 2 + sub_row) * hStride + (col * 2 + sub_col) * wStride;
+                    Rpp32s yIdx = (rowIdx + subRow) * 16 + (colIdx + subCol);
+                    Rpp32s dstIdx = (rowIdx + subRow) * hStride + (colIdx + subCol) * wStride;
 
                     // Prevent out-of-bounds access
-                    if ((row * 2 + sub_row) >= colLimit || (col * 2 + sub_col) >= rowLimit)
+                    if ((rowIdx + subRow) >= colLimit || (colIdx + subCol) >= rowLimit)
                         continue;
 
                     // Convert YCbCr to RGB
-                    Rpp32f yVal = y[y_idx] + 128.0f;
+                    Rpp32f yVal = y[yIdx] + 128.0f;
                     yVal = std::clamp(yVal, 0.0f, 255.0f);
                     Rpp32f r = yVal + 1.402f * currCr;
                     Rpp32f g = yVal - 0.344136f * currCb - 0.714136f * currCr;
@@ -469,38 +505,38 @@ inline void jpeg_compression_distortion_generic(T *srcPtr, T *dstPtr, Rpp32f *sc
         for (Rpp32s blockCol = 0; blockCol < 16; blockCol += 8)
         {
             Rpp32f *block = y + blockRow * 16 + blockCol;
-            for(Rpp32s row = 0; row < 8; row++)
-                dct_fwd_8x8_1d<1>(block + row * 16);  // Row-wise DCT (stride = 1)
+            for(Rpp32s row = 0; row < 128; row += 16)
+                dct_fwd_8x8_1d<1>(block + row);  // Row-wise DCT (stride = 1)
             for(Rpp32s row = 0; row < 8; row++)
                 dct_fwd_8x8_1d<16>(block + row); // Column-wise DCT (stride = 16)
             quantize_block(block, lumaQuantTable, 16, qualityParam);
             for(Rpp32s row = 0; row < 8; row++)
                 dct_inv_8x8_1d<16>(block + row);
-            for(Rpp32s row = 0; row < 8; row++)
-                dct_inv_8x8_1d<1>(block + row * 16);
+            for(Rpp32s row = 0; row < 128; row += 16)
+                dct_inv_8x8_1d<1>(block + row);
         }
     }
 
     // Apply DCT for Cb and Cr channels (8x8 each)
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_fwd_8x8_1d<1>(cb + row * 8);  // Row-wise DCT (stride = 1)
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_fwd_8x8_1d<1>(cb + row);  // Row-wise DCT (stride = 1)
     for(Rpp32s row = 0; row < 8; row++)
         dct_fwd_8x8_1d<8>(cb + row);  // Column-wise DCT (stride = 8)
     quantize_block(cb, chromaQuantTable, 8, qualityParam);
     for(Rpp32s row = 0; row < 8; row++)
         dct_inv_8x8_1d<8>(cb + row);
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d<1>(cb + row * 8);
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_inv_8x8_1d<1>(cb + row);
 
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_fwd_8x8_1d<1>(cr + row * 8);  // Row-wise DCT (stride = 1)
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_fwd_8x8_1d<1>(cr + row);  // Row-wise DCT (stride = 1)
     for(Rpp32s row = 0; row < 8; row++)
         dct_fwd_8x8_1d<8>(cr + row);  // Column-wise DCT (stride = 8)
     quantize_block(cr, chromaQuantTable, 8, qualityParam);
     for(Rpp32s row = 0; row < 8; row++)
         dct_inv_8x8_1d<8>(cr + row);
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d<1>(cr + row * 8);
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_inv_8x8_1d<1>(cr + row);
 
     // Convert YCbCr back to RGB
     ycbcr_to_rgb_generic(dstPtr, rowLimit, colLimit, y, cb, cr, dstDescPtr);
@@ -536,23 +572,25 @@ inline void jpeg_compression_distortion_pln_generic(T *srcPtr, T *dstPtr, Rpp32f
     }
 
     // Apply DCT for Cb and Cr channels (8x8 each)
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_fwd_8x8_1d<1>(blockData + row * 8);  // Row-wise DCT (stride = 1)
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_fwd_8x8_1d<1>(blockData + row);  // Row-wise DCT (stride = 1)
     for(Rpp32s row = 0; row < 8; row++)
         dct_fwd_8x8_1d<8>(blockData + row);  // Column-wise DCT (stride = 8)
     quantize_block(blockData, lumaQuantTable, 8, qualityParam);
     for(Rpp32s row = 0; row < 8; row++)
         dct_inv_8x8_1d<8>(blockData + row);
-    for(Rpp32s row = 0; row < 8; row++)
-        dct_inv_8x8_1d<1>(blockData + row * 8);
+    for(Rpp32s row = 0; row < 64; row += 8)
+        dct_inv_8x8_1d<1>(blockData + row);
 
     // Store the processed block back to dstPtr with boundary checks and type conversion
     for (Rpp32s row = 0; row < colLimit; row++)
     {
+        Rpp32s rowIdx = row * 8;
+        Rpp32s rowDstIdx = row * dstDescPtr->strides.hStride;
         for (Rpp32s col = 0; col < rowLimit; col++)
         {
-            Rpp32s idx = row * dstDescPtr->strides.hStride + col;
-            Rpp32f value = std::clamp((blockData[row * 8 + col] + 128.0f), 0.0f, 255.0f);
+            Rpp32s idx = rowDstIdx + col;
+            Rpp32f value = std::clamp((blockData[rowIdx + col] + 128.0f), 0.0f, 255.0f);
 
             if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
                 dstPtr[idx] = static_cast<T>(value / 255.0f);
@@ -564,27 +602,10 @@ inline void jpeg_compression_distortion_pln_generic(T *srcPtr, T *dstPtr, Rpp32f
     }
 }
 
+// convert rgb to ycbcr buffer
 inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m256 *pCr)
 {
     __m256 pRavg[16], pGavg[16], pBavg[16];
-    // Coefficients for Y channel
-    __m256 pCoeffYR = _mm256_set1_ps(0.299f);
-    __m256 pCoeffYG = _mm256_set1_ps(0.587f);
-    __m256 pCoeffYB = _mm256_set1_ps(0.114f);
-
-    // Coefficients for Cb channel
-    __m256 pCoeffCbR = _mm256_set1_ps(-0.168736f);
-    __m256 pCoeffCbG = _mm256_set1_ps(-0.331264f);
-    __m256 pCoeffCbB = _mm256_set1_ps(0.5f);
-
-    // Coefficients for Cr channel
-    __m256 pCoeffCrR = _mm256_set1_ps(0.5f);
-    __m256 pCoeffCrG = _mm256_set1_ps(-0.418688f);
-    __m256 pCoeffCrB = _mm256_set1_ps(-0.081312f);
-    __m256 offset = _mm256_set1_ps(128.0f);
-    __m256i pxMask = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
-    __m256 pQuarterFactor = _mm256_set1_ps(0.25f);
-
     for(int idxY = 0, idxRGB = 0; idxY < 16; idxY++, idxRGB += 6)
     {
         // Compute Y
@@ -610,8 +631,8 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
         pRavg[i] = _mm256_mul_ps(_mm256_add_ps(pRavg[i], pRavg[i + 1]), pQuarterFactor);
         pGavg[i] = _mm256_mul_ps(_mm256_add_ps(pGavg[i], pGavg[i + 1]), pQuarterFactor);
         pBavg[i] = _mm256_mul_ps(_mm256_add_ps(pBavg[i], pBavg[i + 1]), pQuarterFactor);
-        pCb[chromaIdx] = _mm256_fmadd_ps(pBavg[i], pCoeffCbB, _mm256_fmadd_ps(pGavg[i], pCoeffCbG, _mm256_fmadd_ps(pRavg[i], pCoeffCbR, offset)));
-        pCr[chromaIdx] = _mm256_fmadd_ps(pBavg[i], pCoeffCrB, _mm256_fmadd_ps(pGavg[i], pCoeffCrG, _mm256_fmadd_ps(pRavg[i], pCoeffCrR, offset)));
+        pCb[chromaIdx] = _mm256_fmadd_ps(pBavg[i], pCoeffCbB, _mm256_fmadd_ps(pGavg[i], pCoeffCbG, _mm256_fmadd_ps(pRavg[i], pCoeffCbR, avx_p128)));
+        pCr[chromaIdx] = _mm256_fmadd_ps(pBavg[i], pCoeffCrB, _mm256_fmadd_ps(pGavg[i], pCoeffCrG, _mm256_fmadd_ps(pRavg[i], pCoeffCrR, avx_p128)));
         pCb[chromaIdx] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCb[chromaIdx], avx_p255));
         pCr[chromaIdx] = _mm256_max_ps(avx_p0, _mm256_min_ps(pCr[chromaIdx], avx_p255));
         pCb[chromaIdx] = _mm256_sub_ps(pCb[chromaIdx], avx_p128);
@@ -619,21 +640,9 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
     }
 }
 
+// convert ycbcr buffer to rgb buffer
 inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256* pRgb)
 {
-    // Coefficients for YCbCr to RGB conversion
-    const __m256 pCoeffRY= _mm256_set1_ps(1.0f);
-    const __m256 pCoeffRCr = _mm256_set1_ps(1.402f);
-
-    const __m256 pCoeffGY = _mm256_set1_ps(1.0f);
-    const __m256 pCoeffGCb = _mm256_set1_ps(-0.344136f);
-    const __m256 pCoeffGCr = _mm256_set1_ps(-0.714136f);
-
-    const __m256 pCoeffBY = _mm256_set1_ps(1.0f);
-    const __m256 pCoeffBCb = _mm256_set1_ps(1.772f);
-
-    const __m256 offset = _mm256_set1_ps(128.0f);
-
     for (Rpp32s i = 0; i < 8; i++)
     {
         __m256 cb[2];
@@ -668,6 +677,7 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
     }
 }
 
+// process JPEG compression by applying DCT, quantization, and inverse DCT to YCbCr image data.
 void process_jpeg_compression_distortion(__m256* pRgb, __m256* pY, __m256* pCb, __m256* pCr,
                                          const Rpp32f *lumaQuantTable, const Rpp32f *chromaQuantTable, Rpp32s qualityParam)
 {
