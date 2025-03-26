@@ -113,12 +113,12 @@ void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp3
     Rpp32f qualityFactor = get_quality_factor(qualityParam);
     for (Rpp32s row = 0; row < 8; row++)
     {
+        Rpp32s rowIdx = row * stride;
         for (Rpp32s col = 0; col < 8; col++)
         {
-            Rpp32s idx = row * stride + col;
-            Rpp32f Qcoeff = quantTable[row * 8 + col] * qualityFactor; // Directly accessing 1D array
-            Qcoeff = std::clamp(Qcoeff, 1.0f, 255.0f);
-            block[idx] = Qcoeff * roundf(block[idx] / Qcoeff);
+            Rpp32f qCoeff = quantTable[row * 8 + col] * qualityFactor; // Directly accessing 1D array
+            qCoeff = std::clamp(qCoeff, 1.0f, 255.0f);
+            block[rowIdx + col] = qCoeff * roundf(block[rowIdx + col] / qCoeff);
         }
     }
 }
@@ -126,98 +126,87 @@ void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp3
 template <Rpp32s stride>
 void dct_fwd_8x8_1d(Rpp32f* data)
 {
-  Rpp32f x0 = data[0 * stride];
-  Rpp32f x1 = data[1 * stride];
-  Rpp32f x2 = data[2 * stride];
-  Rpp32f x3 = data[3 * stride];
-  Rpp32f x4 = data[4 * stride];
-  Rpp32f x5 = data[5 * stride];
-  Rpp32f x6 = data[6 * stride];
-  Rpp32f x7 = data[7 * stride];
+    Rpp32f x[8], temp[12];
+    // Load data into x
+    for (int i = 0; i < 8; i++)
+        x[i] = data[i * stride];
 
-  Rpp32f tmp0 = x0 + x7;
-  Rpp32f tmp1 = x1 + x6;
-  Rpp32f tmp2 = x2 + x5;
-  Rpp32f tmp3 = x3 + x4;
-
-  Rpp32f tmp4 = x0 - x7;
-  Rpp32f tmp5 = x6 - x1;
-  Rpp32f tmp6 = x2 - x5;
-  Rpp32f tmp7 = x4 - x3;
-
-  Rpp32f tmp8 = tmp0 + tmp3;
-  Rpp32f tmp9 = tmp0 - tmp3;
-  Rpp32f tmp10 = tmp1 + tmp2;
-  Rpp32f tmp11 = tmp1 - tmp2;
-
-  x0 = dctNormFactor * (tmp8 + tmp10);
-  x2 = dctNormFactor * (dctCoeff2 * tmp9 + dctCoeff5 * tmp11);
-  x4 = dctNormFactor * (tmp8 - tmp10);
-  x6 = dctNormFactor * (dctCoeff5 * tmp9 - dctCoeff2 * tmp11);
-
-  x1 = dctNormFactor * (dctCoeff1 * tmp4 - dctCoeff3 * tmp5 + dctCoeff4 * tmp6 - dctCoeff6 * tmp7);
-  x3 = dctNormFactor * (dctCoeff3 * tmp4 + dctCoeff6 * tmp5 - dctCoeff1 * tmp6 + dctCoeff4 * tmp7);
-  x5 = dctNormFactor * (dctCoeff4 * tmp4 + dctCoeff1 * tmp5 + dctCoeff6 * tmp6 - dctCoeff3 * tmp7);
-  x7 = dctNormFactor * (dctCoeff6 * tmp4 + dctCoeff4 * tmp5 + dctCoeff3 * tmp6 + dctCoeff1 * tmp7);
-
-  data[0 * stride] = x0;
-  data[1 * stride] = x1;
-  data[2 * stride] = x2;
-  data[3 * stride] = x3;
-  data[4 * stride] = x4;
-  data[5 * stride] = x5;
-  data[6 * stride] = x6;
-  data[7 * stride] = x7;
+    // Compute intermediate values
+    temp[0] = x[0] + x[7];
+    temp[1] = x[1] + x[6];
+    temp[2] = x[2] + x[5];
+    temp[3] = x[3] + x[4];
+    
+    temp[4] = x[0] - x[7];
+    temp[5] = x[6] - x[1];
+    temp[6] = x[2] - x[5];
+    temp[7] = x[4] - x[3];
+    
+    temp[8] = temp[0] + temp[3];
+    temp[9] = temp[0] - temp[3];
+    temp[10] = temp[1] + temp[2];
+    temp[11] = temp[1] - temp[2];
+    
+    // Apply DCT normalization and coefficients
+    x[0] = dctNormFactor * (temp[8] + temp[10]);
+    x[2] = dctNormFactor * ((dctCoeff2 * temp[9]) + (dctCoeff5 * temp[11]));
+    x[4] = dctNormFactor * (temp[8] - temp[10]);
+    x[6] = dctNormFactor * ((dctCoeff5 * temp[9]) - (dctCoeff2 * temp[11]));
+    
+    x[1] = dctNormFactor * ((dctCoeff1 * temp[4]) - (dctCoeff3 * temp[5]) + (dctCoeff4 * temp[6]) - (dctCoeff6 * temp[7]));
+    x[3] = dctNormFactor * ((dctCoeff3 * temp[4]) + (dctCoeff6 * temp[5]) - (dctCoeff1 * temp[6]) + (dctCoeff4 * temp[7]));
+    x[5] = dctNormFactor * ((dctCoeff4 * temp[4]) + (dctCoeff1 * temp[5]) + (dctCoeff6 * temp[6]) - (dctCoeff3 * temp[7]));
+    x[7] = dctNormFactor * ((dctCoeff6 * temp[4]) + (dctCoeff4 * temp[5]) + (dctCoeff3 * temp[6]) + (dctCoeff1 * temp[7]));
+    
+    // Store results back into data
+    for (int i = 0; i < 8; i++)
+        data[i * stride] = x[i];
 }
 
 template <Rpp32s stride>
-void dct_inv_8x8_1d(Rpp32f *data) {
-  Rpp32f x0 = data[0 * stride];
-  Rpp32f x1 = data[1 * stride];
-  Rpp32f x2 = data[2 * stride];
-  Rpp32f x3 = data[3 * stride];
-  Rpp32f x4 = data[4 * stride];
-  Rpp32f x5 = data[5 * stride];
-  Rpp32f x6 = data[6 * stride];
-  Rpp32f x7 = data[7 * stride];
+void dct_inv_8x8_1d(Rpp32f *data)
+{
+    Rpp32f x[8], temp[12];
 
-  Rpp32f tmp0 = x0 + x4;
-  Rpp32f tmp1 = dctCoeff2 * x2 + dctCoeff5 * x6;
+    // Load data into x[]
+    for (int i = 0; i < 8; i++)
+        x[i] = data[i * stride];
+    
+    // Compute intermediate values
+    temp[0] = x[0] + x[4];
+    temp[1] = dctCoeff2 * x[2] + dctCoeff5 * x[6];
 
-  Rpp32f tmp2 = tmp0 + tmp1;
-  Rpp32f tmp3 = tmp0 - tmp1;
-  Rpp32f tmp4 = dctCoeff6 * x7 + dctCoeff1 * x1 + dctCoeff3 * x3 + dctCoeff4 * x5;
-  Rpp32f tmp5 = dctCoeff1 * x7 - dctCoeff6 * x1 + dctCoeff4 * x3 - dctCoeff3 * x5;
+    temp[2] = temp[0] + temp[1];
+    temp[3] = temp[0] - temp[1];
+    temp[4] = dctCoeff6 * x[7] + dctCoeff1 * x[1] + dctCoeff3 * x[3] + dctCoeff4 * x[5];
+    temp[5] = dctCoeff1 * x[7] - dctCoeff6 * x[1] + dctCoeff4 * x[3] - dctCoeff3 * x[5];
 
-  Rpp32f tmp6 = x0 - x4;
-  Rpp32f tmp7 = dctCoeff5 * x2 - dctCoeff2 * x6;
+    temp[6] = x[0] - x[4];
+    temp[7] = dctCoeff5 * x[2] - dctCoeff2 * x[6];
 
-  Rpp32f tmp8 = tmp6 + tmp7;
-  Rpp32f tmp9 = tmp6 - tmp7;
-  Rpp32f tmp10 = dctCoeff3 * x1 - dctCoeff4 * x7 - dctCoeff6 * x3 - dctCoeff1 * x5;
-  Rpp32f tmp11 = dctCoeff4 * x1 + dctCoeff3 * x7 - dctCoeff1 * x3 + dctCoeff6 * x5;
+    temp[8] = temp[6] + temp[7];
+    temp[9] = temp[6] - temp[7];
+    temp[10] = dctCoeff3 * x[1] - dctCoeff4 * x[7] - dctCoeff6 * x[3] - dctCoeff1 * x[5];
+    temp[11] = dctCoeff4 * x[1] + dctCoeff3 * x[7] - dctCoeff1 * x[3] + dctCoeff6 * x[5];
 
-  x0 = dctNormFactor * (tmp2 + tmp4);
-  x7 = dctNormFactor * (tmp2 - tmp4);
-  x4 = dctNormFactor * (tmp3 + tmp5);
-  x3 = dctNormFactor * (tmp3 - tmp5);
+    // Apply DCT normalization
+    x[0] = dctNormFactor * (temp[2] + temp[4]);
+    x[7] = dctNormFactor * (temp[2] - temp[4]);
+    x[4] = dctNormFactor * (temp[3] + temp[5]);
+    x[3] = dctNormFactor * (temp[3] - temp[5]);
+    
+    x[1] = dctNormFactor * (temp[8] + temp[10]);
+    x[5] = dctNormFactor * (temp[9] - temp[11]);
+    x[2] = dctNormFactor * (temp[9] + temp[11]);
+    x[6] = dctNormFactor * (temp[8] - temp[10]);
 
-  x1 = dctNormFactor * (tmp8 + tmp10);
-  x5 = dctNormFactor * (tmp9 - tmp11);
-  x2 = dctNormFactor * (tmp9 + tmp11);
-  x6 = dctNormFactor * (tmp8 - tmp10);
-
-  data[0 * stride] = x0;
-  data[1 * stride] = x1;
-  data[2 * stride] = x2;
-  data[3 * stride] = x3;
-  data[4 * stride] = x4;
-  data[5 * stride] = x5;
-  data[6 * stride] = x6;
-  data[7 * stride] = x7;
+    // Store results back into data
+    for (int i = 0; i < 8; i++)
+        data[i * stride] = x[i];
 }
 
-inline void dct_8x8_1d_avx2(__m256 *pVecDct) {
+inline void dct_8x8_1d_avx2(__m256 *pVecDct)
+{
     // Extract each lane from x.
     Rpp32f x[8], temp[12];
     x[0] = _mm256_cvtss_f32(pVecDct[0]);
@@ -244,21 +233,22 @@ inline void dct_8x8_1d_avx2(__m256 *pVecDct) {
     temp[10] = temp[1] + temp[2];
     temp[11] = temp[1] - temp[2];
 
-    x[0] = dctNormFactor * (temp[8] + temp[10]);
-    x[2] = dctNormFactor * (dctCoeff2 * temp[9] + dctCoeff5 * temp[11]);
-    x[4] = dctNormFactor * (temp[8] - temp[10]);
-    x[6] = dctNormFactor * (dctCoeff5 * temp[9] - dctCoeff2 * temp[11]);
+    x[0] = dctNormFactor * ((temp[8] + temp[10]));
+    x[2] = dctNormFactor * ((dctCoeff2 * temp[9]) + (dctCoeff5 * temp[11]));
+    x[4] = dctNormFactor * ((temp[8] - temp[10]));
+    x[6] = dctNormFactor * ((dctCoeff5 * temp[9]) - (dctCoeff2 * temp[11]));
 
-    x[1] = dctNormFactor * (dctCoeff1 * temp[4] - dctCoeff3 * temp[5] + dctCoeff4 * temp[6] - dctCoeff6 * temp[7]);
-    x[3] = dctNormFactor * (dctCoeff3 * temp[4] + dctCoeff6 * temp[5] - dctCoeff1 * temp[6] + dctCoeff4 * temp[7]);
-    x[5] = dctNormFactor * (dctCoeff4 * temp[4] + dctCoeff1 * temp[5] + dctCoeff6 * temp[6] - dctCoeff3 * temp[7]);
-    x[7] = dctNormFactor * (dctCoeff6 * temp[4] + dctCoeff4 * temp[5] + dctCoeff3 * temp[6] + dctCoeff1 * temp[7]);
+    x[1] = dctNormFactor * ((dctCoeff1 * temp[4]) - (dctCoeff3 * temp[5]) + (dctCoeff4 * temp[6]) - (dctCoeff6 * temp[7]));
+    x[3] = dctNormFactor * ((dctCoeff3 * temp[4]) + (dctCoeff6 * temp[5]) - (dctCoeff1 * temp[6]) + (dctCoeff4 * temp[7]));
+    x[5] = dctNormFactor * ((dctCoeff4 * temp[4]) + (dctCoeff1 * temp[5]) + (dctCoeff6 * temp[6]) - (dctCoeff3 * temp[7]));
+    x[7] = dctNormFactor * ((dctCoeff6 * temp[4]) + (dctCoeff4 * temp[5]) + (dctCoeff3 * temp[6]) + (dctCoeff1 * temp[7]));
 
     pVecDct[0] = _mm256_setr_ps(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7]);
 }
 
 inline void dct_inv_8x8_1d_avx2(__m256 *pVecDct)
 {
+    // Extract each lane from x.
     Rpp32f x[8], temp[12];
     x[0] = _mm256_cvtss_f32(pVecDct[0]);
     x[1] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(1, 1, 1, 1, 1, 1, 1, 1)));
@@ -269,18 +259,18 @@ inline void dct_inv_8x8_1d_avx2(__m256 *pVecDct)
     x[6] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(6, 6, 6, 6, 6, 6, 6, 6)));
     x[7] = _mm256_cvtss_f32(_mm256_permutevar8x32_ps(pVecDct[0], _mm256_setr_epi32(7, 7, 7, 7, 7, 7, 7, 7)));
 
-    temp[0] = x[0] + x[4];
-    temp[1] = dctCoeff2 * x[2] + dctCoeff5 * x[6];
-    temp[2] = temp[0] + temp[1];
-    temp[3] = temp[0] - temp[1];
-    temp[4] = dctCoeff6 * x[7] + dctCoeff1 * x[1] + dctCoeff3 * x[3] + dctCoeff4 * x[5];
-    temp[5] = dctCoeff1 * x[7] - dctCoeff6 * x[1] + dctCoeff4 * x[3] - dctCoeff3 * x[5];
-    temp[6] = x[0] - x[4];
-    temp[7] = dctCoeff5 * x[2] - dctCoeff2 * x[6];
-    temp[8] = temp[6] + temp[7];
-    temp[9] = temp[6] - temp[7];
-    temp[10] = dctCoeff3 * x[1] - dctCoeff4 * x[7] - dctCoeff6 * x[3] - dctCoeff1 * x[5];
-    temp[11] = dctCoeff4 * x[1] + dctCoeff3 * x[7] - dctCoeff1 * x[3] + dctCoeff6 * x[5];
+    temp[0] = (x[0] + x[4]);
+    temp[1] = (dctCoeff2 * x[2]) + (dctCoeff5 * x[6]);
+    temp[2] = (temp[0] + temp[1]);
+    temp[3] = (temp[0] - temp[1]);
+    temp[4] = (dctCoeff6 * x[7]) + (dctCoeff1 * x[1]) + (dctCoeff3 * x[3]) + (dctCoeff4 * x[5]);
+    temp[5] = (dctCoeff1 * x[7]) - (dctCoeff6 * x[1]) + (dctCoeff4 * x[3]) - (dctCoeff3 * x[5]);
+    temp[6] = (x[0] - x[4]);
+    temp[7] = (dctCoeff5 * x[2]) - (dctCoeff2 * x[6]);
+    temp[8] = (temp[6] + temp[7]);
+    temp[9] = (temp[6] - temp[7]);
+    temp[10] = (dctCoeff3 * x[1]) - (dctCoeff4 * x[7]) - (dctCoeff6 * x[3]) - (dctCoeff1 * x[5]);
+    temp[11] = (dctCoeff4 * x[1]) + (dctCoeff3 * x[7]) - (dctCoeff1 * x[3]) + (dctCoeff6 * x[5]);
 
     x[0] = dctNormFactor * (temp[2] + temp[4]);
     x[7] = dctNormFactor * (temp[2] - temp[4]);
@@ -339,37 +329,40 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
     // Process Y component and padding
     for (Rpp32s row = 0; row < 16; row++)
     {
+        Rpp32s rowIdx = row * hStride;
+        Rpp32s rowRgbIdx = row * 16;
         for (Rpp32s col = 0; col < 16; col++)
         {
+            Rpp32s rgbIdx = rowRgbIdx + col;
             if (row < colLimit && col < rowLimit)
             {
-                Rpp32s idx = row * hStride + col * wStride;
+                Rpp32s idx = rowIdx + col * wStride;
                 if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
                 {
-                    r[row * 16 + col] = static_cast<Rpp32f>(srcPtrR[idx]) * 255.0f;
-                    g[row * 16 + col] = static_cast<Rpp32f>(srcPtrG[idx]) * 255.0f;
-                    b[row * 16 + col] = static_cast<Rpp32f>(srcPtrB[idx]) * 255.0f;
+                    r[rgbIdx] = static_cast<Rpp32f>(srcPtrR[idx]) * 255.0f;
+                    g[rgbIdx] = static_cast<Rpp32f>(srcPtrG[idx]) * 255.0f;
+                    b[rgbIdx] = static_cast<Rpp32f>(srcPtrB[idx]) * 255.0f;
                 }
                 else if constexpr (std::is_same<T, Rpp8s>::value)
                 {
-                    r[row * 16 + col] = static_cast<Rpp32f>(srcPtrR[idx]) + 128.0f;
-                    g[row * 16 + col] = static_cast<Rpp32f>(srcPtrG[idx]) + 128.0f;
-                    b[row * 16 + col] = static_cast<Rpp32f>(srcPtrB[idx]) + 128.0f;
+                    r[rgbIdx] = static_cast<Rpp32f>(srcPtrR[idx]) + 128.0f;
+                    g[rgbIdx] = static_cast<Rpp32f>(srcPtrG[idx]) + 128.0f;
+                    b[rgbIdx] = static_cast<Rpp32f>(srcPtrB[idx]) + 128.0f;
                 }
                 else
                 {
-                    r[row * 16 + col] = static_cast<Rpp32f>(srcPtrR[idx]);
-                    g[row * 16 + col] = static_cast<Rpp32f>(srcPtrG[idx]);
-                    b[row * 16 + col] = static_cast<Rpp32f>(srcPtrB[idx]);
+                    r[rgbIdx] = static_cast<Rpp32f>(srcPtrR[idx]);
+                    g[rgbIdx] = static_cast<Rpp32f>(srcPtrG[idx]);
+                    b[rgbIdx] = static_cast<Rpp32f>(srcPtrB[idx]);
                 }
-                y[row * 16 + col] = std::clamp(((0.299f * r[row * 16 + col]) + (0.587f * g[row * 16 + col]) + (0.114f * b[row * 16 + col])), 0.0f, 255.0f) - 128.0f;
+                y[rgbIdx] = std::clamp(((0.299f * r[rgbIdx]) + (0.587f * g[rgbIdx]) + (0.114f * b[rgbIdx])), 0.0f, 255.0f) - 128.0f;
             }
             else
             {
-                r[row * 16 + col] = r[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
-                g[row * 16 + col] = g[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
-                b[row * 16 + col] = b[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
-                y[row * 16 + col] = y[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
+                r[rgbIdx] = r[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
+                g[rgbIdx] = g[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
+                b[rgbIdx] = b[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
+                y[rgbIdx] = y[(std::min(row, colLimit - 1)) * 16 + std::min(col, rowLimit - 1)];
             }
         }
     }
@@ -520,21 +513,24 @@ inline void jpeg_compression_distortion_pln_generic(T *srcPtr, T *dstPtr, Rpp32f
     // Load 8x8 block with boundary handling and type conversion
     for (Rpp32s row = 0; row < 8; row++)
     {
+        Rpp32s rowIdx = row * 8;
+        Rpp32s srcIdx = row * srcDescPtr->strides.hStride;
         for (Rpp32s col = 0; col < 8; col++)
         {
+            Rpp32s blockIdx = rowIdx + col;
             if (row < colLimit && col < rowLimit)
             {
-                Rpp32s idx = row * srcDescPtr->strides.hStride + col;
+                Rpp32s idx = srcIdx + col;
                 if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
-                    blockData[row * 8 + col] = (static_cast<Rpp32f>(srcPtr[idx]) * 255.0f) - 128.0f;
+                    blockData[blockIdx] = (static_cast<Rpp32f>(srcPtr[idx]) * 255.0f) - 128.0f;
                 else if constexpr (std::is_same<T, Rpp8s>::value)
-                    blockData[row * 8 + col] = static_cast<Rpp32f>(srcPtr[idx]);
+                    blockData[blockIdx] = static_cast<Rpp32f>(srcPtr[idx]);
                 else
-                    blockData[row * 8 + col] = static_cast<Rpp32f>(srcPtr[idx]) - 128.0f;
+                    blockData[blockIdx] = static_cast<Rpp32f>(srcPtr[idx]) - 128.0f;
             }
             else
             {
-                blockData[row * 8 + col] = blockData[(std::min(row, colLimit - 1)) * 8 + std::min(col, rowLimit - 1)];
+                blockData[blockIdx] = blockData[(std::min(row, colLimit - 1)) * 8 + std::min(col, rowLimit - 1)];
             }
         }
     }
