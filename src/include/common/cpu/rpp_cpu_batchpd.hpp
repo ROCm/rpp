@@ -2544,9 +2544,9 @@ inline void compute_hsv_to_rgb_host(T* srcPtr, RppiSize srcSize, U* dstPtr,
         for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
         {
             // Load
-            h1 =  _mm_loadu_si128((__m128i *)srcPtrTempH);
-            h2 =  _mm_loadu_si128((__m128i *)srcPtrTempS);
-            h3 =  _mm_loadu_si128((__m128i *)srcPtrTempV);
+            h1 =  _mm_loadu_ps((float*)srcPtrTempH);
+            h2 =  _mm_loadu_ps((float*)srcPtrTempS);
+            h3 =  _mm_loadu_ps((float*)srcPtrTempV);
 
             h1 = _mm_div_ps(h1, pDiv);
 
