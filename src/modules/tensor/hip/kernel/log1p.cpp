@@ -139,13 +139,14 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                                         rpp::Handle& handle)
 {
     Rpp32u numDims = srcGenericDescPtr->numDims - 1; // exclude batchsize from input dims
+    int globalThreads_x, globalThreads_y, globalThreads_z;
     // based on number of dimensions call the corresponding kernel
     if (numDims == 1)
     {
         // NW
-        int globalThreads_x = dstGenericDescPtr->dims[1];
-        int globalThreads_y = 1;
-        int globalThreads_z = dstGenericDescPtr->dims[0];
+        globalThreads_x = dstGenericDescPtr->dims[1];
+        globalThreads_y = 1;
+        globalThreads_z = dstGenericDescPtr->dims[0];
 
         hipLaunchKernelGGL(log1p_1d_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -161,9 +162,9 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
     else if (numDims == 2)
     {
         // NHW
-        int globalThreads_x = dstGenericDescPtr->dims[2];
-        int globalThreads_y = dstGenericDescPtr->dims[1];
-        int globalThreads_z = dstGenericDescPtr->dims[0];
+        globalThreads_x = dstGenericDescPtr->dims[2];
+        globalThreads_y = dstGenericDescPtr->dims[1];
+        globalThreads_z = dstGenericDescPtr->dims[0];
 
         hipLaunchKernelGGL(log1p_2d_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -179,9 +180,9 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
     else
     {
         // interpret the input as 1D tensor
-        int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
-        int globalThreads_y = 1;
-        int globalThreads_z = dstGenericDescPtr->dims[0];
+        globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
+        globalThreads_y = 1;
+        globalThreads_z = dstGenericDescPtr->dims[0];
 
         hipLaunchKernelGGL(log1p_nd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
