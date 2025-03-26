@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 3:
+            case LOG1P:
             {
                 testCaseName  = "log1p";
                 startWallTime = omp_get_wtime();

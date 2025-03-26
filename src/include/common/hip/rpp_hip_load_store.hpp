@@ -461,7 +461,6 @@ __device__ __forceinline__ float rpp_hip_unpack2_(int src)
     return (float)((short)((src >> 16) & 0xFFFF)); 
 }
 
-
 __device__ __forceinline__ float4 rpp_hip_unpack_from_i8(int src)
 {
     return make_float4(rpp_hip_unpack0(src), rpp_hip_unpack1(src), rpp_hip_unpack2(src), rpp_hip_unpack3(src));
