@@ -369,8 +369,8 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
     {
         for (Rpp32s col = 0; col < 16; col += 2)
         {
-            Rpp32s id1 = row * 16 + col;
-            Rpp32s id2 = row * 16 + col + 1;
+            Rpp32s id1 = (row * 16) + col;
+            Rpp32s id2 = (row * 16) + col + 1;
             Rpp32s id3 = (row + 1) * 16 + col;
             Rpp32s id4 = (row + 1) * 16 + col + 1;
 
