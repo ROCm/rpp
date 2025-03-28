@@ -130,7 +130,7 @@ __global__ void log1p_nd_hip_tensor(Rpp16s *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
-// -------------------- Set 3 - executor kernels --------------------
+// -------------------- Set 3 - kernel executor --------------------
 RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                                         RpptGenericDescPtr srcGenericDescPtr,
                                         Rpp32f *dstPtr,

@@ -2073,11 +2073,11 @@ inline void rpp_load16_i16_to_f32_abs_avx(Rpp16s *srcPtr, __m256 *p)
 {
     __m256i px =  _mm256_loadu_si256((__m256i *)srcPtr);
 
-    //Extracting 16 bits from the px and converting from 16 bit int to 32 bit int
+    // Extracting 16 bits from the px and converting from 16 bit int to 32 bit int
     __m256i px0 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 0));
     __m256i px1 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 1));
 
-    //Taking absolute values for i32
+    // Taking absolute values for i32
     __m256i abs_px0 = _mm256_abs_epi32(px0);
     __m256i abs_px1 = _mm256_abs_epi32(px1);
 

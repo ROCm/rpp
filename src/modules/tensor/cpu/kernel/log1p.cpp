@@ -135,7 +135,7 @@ RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
         }
         else if (nDim == 3)
         {
-            alignedLength = length[0] * length[1] & ~15;
+            alignedLength = (length[0] * length[1]) & ~15;
             for (int i = 0; i < length[2]; i++)
             {
                 Rpp16s *srcPtrTemp = srcPtr1;
@@ -162,13 +162,13 @@ RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                     srcPtrTemp++;
                     dstPtrTemp++;
                 }
-                srcPtr1 += length[0] * length[1];
-                dstPtr1 += length[0] * length[1];
+                srcPtr1 += (length[0] * length[1]);
+                dstPtr1 += (length[0] * length[1]);
             }
         }
         else if (nDim == 4)
         {
-            alignedLength = length[0] * length[1] & ~15;
+            alignedLength = (length[0] * length[1]) & ~15;
             for (int i = 0; i < length[3]; i++)
             {
                 Rpp16s *srcPtrCol = srcPtr1;
@@ -177,7 +177,7 @@ RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                 {
                     Rpp16s *srcPtrTemp = srcPtrCol;
                     Rpp32f *dstPtrTemp = dstPtrCol;
-                        int vectorLoopCount = 0;
+                    int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
@@ -198,11 +198,11 @@ RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
-                    srcPtrCol += length[0] * length[1];
-                    dstPtrCol += length[0] * length[1];
+                    srcPtrCol += (length[0] * length[1]);
+                    dstPtrCol += (length[0] * length[1]);
                 }
-                srcPtr1 += length[0] * length[1] * length[2];
-                dstPtr1 += length[0] * length[1] * length[2];
+                srcPtr1 += (length[0] * length[1] * length[2]);
+                dstPtr1 += (length[0] * length[1] * length[2]);
             }
 
         }

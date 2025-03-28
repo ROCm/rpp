@@ -293,7 +293,7 @@ RppStatus rppt_log_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rp
 #endif // GPU_SUPPORT
 
 /*! \brief Log1p operation on HOST backend
- * \details Computes Log1p to base e(natural log1p) of the input for a given ND Tensor.
+ * \details Computes Log1p i.e (log(1 + x)) of the input for a given ND Tensor.
  *          Supports i16->f32 datatype.
  *          Uses Absolute of input for log1p computation to avoid undefined result.
  * \param [in] srcPtr source tensor in HOST memory
