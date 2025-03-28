@@ -144,7 +144,7 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
     if (numDims == 1)
     {
         // NW
-        globalThreads_x = dstGenericDescPtr->dims[1];
+        globalThreads_x = (dstGenericDescPtr->dims[1] + 7) >> 3;
         globalThreads_y = 1;
         globalThreads_z = dstGenericDescPtr->dims[0];
 
@@ -162,7 +162,7 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
     else if (numDims == 2)
     {
         // NHW
-        globalThreads_x = dstGenericDescPtr->dims[2];
+        globalThreads_x = (dstGenericDescPtr->dims[2] + 7) >> 3;
         globalThreads_y = dstGenericDescPtr->dims[1];
         globalThreads_z = dstGenericDescPtr->dims[0];
 
