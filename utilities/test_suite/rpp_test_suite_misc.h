@@ -34,13 +34,15 @@ std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
     {1, "normalize"},
-    {2, "log"}
+    {2, "log"},
+    {3, "log1p"}
 };
 
 enum Augmentation {
     TRANSPOSE = 0,
     NORMALIZE = 1,
-    LOG = 2
+    LOG = 2,
+    LOG1P = 3
 };
 
 // Compute strides given Generic Tensor
@@ -84,7 +86,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, st
 {
     if(nDim != 2 && nDim != 3)
     {
-        if(nDim != 4 || testCase != "log") {
+        if(nDim != 4 || (testCase != "log" && testCase != "log1p")) {
             std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
             exit(0);
         }
@@ -229,6 +231,8 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
         descriptorPtr3D->dataType = RpptDataType::F32;
     else if (bitDepth == 5)
         descriptorPtr3D->dataType = RpptDataType::I8;
+    else if (bitDepth == 6)
+        descriptorPtr3D->dataType = RpptDataType::I16;
     descriptorPtr3D->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
         descriptorPtr3D->dims[i] = roiTensor[nDim + i - 1];
