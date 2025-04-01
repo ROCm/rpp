@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -227,4 +227,3 @@ if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     if(errorLog[0]["notExecutedFunctionality"] != 0):
         print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_audio_host were not executed since these sub-variants are not currently supported in RPP.\n")
     print("-----------------------------------------------------------------------------------------------")
-

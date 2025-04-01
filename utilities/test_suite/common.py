@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -137,7 +137,7 @@ def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():
         return str(case)
-    
+
     # Otherwise, treat it as a case name and find the corresponding number
     for caseNum, info in map.items():
         if case.lower() == info[0].lower():

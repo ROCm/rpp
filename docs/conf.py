@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@ left_nav_title = f"RPP {version_number} documentation"
 # for PDF output on Read the Docs
 project = "RPP documentation"
 author = "Advanced Micro Devices, Inc."
-copyright = "Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc."
+copyright = "Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc."
 version = version_number
 release = version_number
 
