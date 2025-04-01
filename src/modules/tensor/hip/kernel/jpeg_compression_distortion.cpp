@@ -102,9 +102,9 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
 // DCT forward 1D implementation
 __device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
 {
-    int val = -128.0f * sub_128;
+    int val = (-128.0f * sub_128);
     float inp[8];
-    for(int i = 0; i < 8 ; i ++)
+    for(int i = 0; i < 8; i ++)
        inp[i] = vec[i] + val;
 
     float temp0 = inp[0] + inp[7];
@@ -122,40 +122,40 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
     float temp11 = temp1 - temp2;
 
     vec[0] = normCoeff * (temp8 + temp10);
-    vec[2] = normCoeff * (dctB * temp9 + dctE * temp11);
+    vec[2] = normCoeff * ((dctB * temp9) + (dctE * temp11));
     vec[4] = normCoeff * (temp8 - temp10);
-    vec[6] = normCoeff * (dctE * temp9 - dctB * temp11);
+    vec[6] = normCoeff * ((dctE * temp9) - (dctB * temp11));
 
-    vec[1] = normCoeff * (dctA * temp4 - dctC * temp5 + dctD * temp6 - dctF * temp7);
-    vec[3] = normCoeff * (dctC * temp4 + dctF * temp5 - dctA * temp6 + dctD * temp7);
-    vec[5] = normCoeff * (dctD * temp4 + dctA * temp5 + dctF * temp6 - dctC * temp7);
-    vec[7] = normCoeff * (dctF * temp4 + dctD * temp5 + dctC * temp6 + dctA * temp7);
+    vec[1] = normCoeff * ((dctA * temp4) - (dctC * temp5) + (dctD * temp6) - (dctF * temp7));
+    vec[3] = normCoeff * ((dctC * temp4) + (dctF * temp5) - (dctA * temp6) + (dctD * temp7));
+    vec[5] = normCoeff * ((dctD * temp4) + (dctA * temp5) + (dctF * temp6) - (dctC * temp7));
+    vec[7] = normCoeff * ((dctF * temp4) + (dctD * temp5) + (dctC * temp6) + (dctA * temp7));
 }
 
 // Inverse 1D DCT
 __device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
 {
-    int val = 128.0f * add_128;
+    int val = (128.0f * add_128);
 
     float inp[8];
-    for(int i = 0; i < 8 ; i ++)
-       inp[i] = vec[i] ;
+    for(int i = 0; i < 8; i ++)
+       inp[i] = vec[i];
 
-    float temp0 =inp[0] +inp[4];
-    float temp1 = dctB *inp[2] + dctE *inp[6];
+    float temp0 = inp[0] +inp[4];
+    float temp1 = dctB * inp[2] + dctE * inp[6];
 
     float temp2 = temp0 + temp1;
     float temp3 = temp0 - temp1;
-    float temp4 = dctF *inp[7] + dctA *inp[1] + dctC *inp[3] + dctD *inp[5];
-    float temp5 = dctA *inp[7] - dctF *inp[1] + dctD *inp[3] - dctC *inp[5];
+    float temp4 = (dctF * inp[7]) + (dctA * inp[1]) + (dctC * inp[3]) + (dctD * inp[5]);
+    float temp5 = (dctA * inp[7]) - (dctF * inp[1]) + (dctD * inp[3]) - (dctC * inp[5]);
 
-    float temp6 =inp[0] -inp[4];
-    float temp7 = dctE *inp[2] - dctB *inp[6];
+    float temp6 = inp[0] -inp[4];
+    float temp7 = (dctE * inp[2]) - (dctB * inp[6]);
 
     float temp8 = temp6 + temp7;
     float temp9 = temp6 - temp7;
-    float temp10 = dctC *inp[1] - dctD *inp[7] - dctF *inp[3] - dctA *inp[5];
-    float temp11 = dctD *inp[1] + dctC *inp[7] - dctA *inp[3] + dctF *inp[5];
+    float temp10 = (dctC * inp[1]) - (dctD * inp[7]) - (dctF * inp[3]) - (dctA * inp[5]);
+    float temp11 = (dctD * inp[1]) + (dctC * inp[7]) - (dctA * inp[3]) + (dctF * inp[5]);
 
     vec[0] = fmaf(normCoeff, (temp2 + temp4), val);
     vec[7] = fmaf(normCoeff, (temp2 - temp4), val);
@@ -171,7 +171,7 @@ __device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
 // Quantization
 __device__ inline void quantize(float* value, int* coeff)
 {
-    for (int i = 0; i < 8; i++)
+    for(int i = 0; i < 8; i++)
         value[i] = coeff[i] * roundf(value[i] / (coeff[i]));
 }
 
@@ -193,14 +193,14 @@ __device__ inline void upsample_and_RGB_hip_compute(float4 Cb_f4, float4 Cr_f4, 
     Cr_f8.f4[1] = make_float4(Cr_f4.z, Cr_f4.z, Cr_f4.w, Cr_f4.w);
 
     // Now use the offset-adjusted values in the conversion
-    R_f8.f4[0] = y_f8.f4[0] + (float4)1.402f * Cr_f8.f4[0];
-    R_f8.f4[1] = y_f8.f4[1] + (float4)1.402f * Cr_f8.f4[1];
+    R_f8.f4[0] = y_f8.f4[0] + ((float4)1.402f * Cr_f8.f4[0]);
+    R_f8.f4[1] = y_f8.f4[1] + ((float4)1.402f * Cr_f8.f4[1]);
 
-    G_f8.f4[0] = y_f8.f4[0] - (float4)0.344136285f * Cb_f8.f4[0] - (float4)0.714136285f * Cr_f8.f4[0];
-    G_f8.f4[1] = y_f8.f4[1] - (float4)0.344136285f * Cb_f8.f4[1] - (float4)0.714136285f * Cr_f8.f4[1];
+    G_f8.f4[0] = y_f8.f4[0] - ((float4)0.344136285f * Cb_f8.f4[0]) - ((float4)0.714136285f * Cr_f8.f4[0]);
+    G_f8.f4[1] = y_f8.f4[1] - ((float4)0.344136285f * Cb_f8.f4[1]) - ((float4)0.714136285f * Cr_f8.f4[1]);
 
-    B_f8.f4[0] = y_f8.f4[0] + (float4)1.772f * Cb_f8.f4[0];
-    B_f8.f4[1] = y_f8.f4[1] + (float4)1.772f * Cb_f8.f4[1];
+    B_f8.f4[0] = y_f8.f4[0] + ((float4)1.772f * Cb_f8.f4[0]);
+    B_f8.f4[1] = y_f8.f4[1] + ((float4)1.772f * Cb_f8.f4[1]);
 
     // Write back the results
     *((d_float8*)Ch1_f8) = R_f8;
@@ -213,19 +213,19 @@ template <typename T>
 __device__ inline void clamp_range(T *src, float* values)
 {
     int low = 0, high = 255;
-    if constexpr (std::is_same<T, schar>::value)
+    if constexpr(std::is_same<T, schar>::value)
         low = -128, high = 127;
-    else if constexpr (std::is_same<T, float>::value  || std::is_same<T, half>::value)
+    else if constexpr(std::is_same<T, float>::value  || std::is_same<T, half>::value)
         low = 0, high = 1;
 
-    for (int j = 0; j < 8; j++)
+    for(int j = 0; j < 8; j++)
         values[j] = fminf(fmaxf(values[j], low), high);
 }
 
 // Generic clamping
 __device__ inline void clamp_range(float* values)
 {
-    for (int j = 0; j < 8; j++)
+    for(int j = 0; j < 8; j++)
         values[j] = fminf(fmaxf(values[j], 0), 255);
 }
 
@@ -250,7 +250,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth))
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
         return;
 
     // ROI parameters
@@ -272,43 +272,44 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
     int srcIdx;
-    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3 ;
+    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     // Check if we need special handling for image edges
-    if (id_y < roiHeight)
+    if(id_y < roiHeight)
         srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
     else  // All out-of-bounds threads use the last valid row
         srcIdx = (id_z * srcStridesNH.x) + ((roiHeight - 1 + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
 
     bool isEdge = ((id_x + 8) > roiWidth) && (id_x < alignedWidth);
-    if (!isEdge)
+    if(!isEdge)
         rpp_hip_load24_pkd3_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         int validPixels = roiWidth - id_x;
         // Load valid pixels (only if id_x is within valid range)
-        if (validPixels > 0)
+        if(validPixels > 0)
         {
-            for (int i = 0; i < validPixels; i++)
+           for(int i = 0, idx = srcIdx; i < validPixels; i++, idx += 3)
             {
-                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx + (i * 3)];
-                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx + (i * 3) + 1];
-                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx + (i * 3) + 2];
+                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[idx];
+                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[idx + 1];
+                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[idx + 2];
             }
         }
         // Pad 16 pixels by duplicating the last valid pixel
-        for (int i = validPixels; i < min(validPixels + 16, 8); i++)
+        int lastValidIdx = srcIdx + ((validPixels - 1) * 3);
+        for(int i = validPixels; i < min(validPixels + 16, 8); i++)
         {
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx + ((validPixels - 1) * 3)];
-            src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx + ((validPixels - 1) * 3) + 1];
-            src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx + ((validPixels - 1) * 3) + 2];
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx];
+            src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 1];
+            src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 2];
         }
     }
     __syncthreads();
 
     d_float8 y_f8;
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8],&y_f8);
+    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8], &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
@@ -336,14 +337,14 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     // 1D column wise FWD DCT for Y Cb and Cr channels
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
+    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_fwd_8x8_1d(&colVec[0], false);
@@ -351,7 +352,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
         dct_fwd_8x8_1d(&colVec[16], false);
         dct_fwd_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -368,7 +369,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_inv_8x8_1d(&colVec[0], false);
@@ -376,7 +377,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
         dct_inv_8x8_1d(&colVec[16], false);
         dct_inv_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -393,7 +394,7 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
 
     // Vertical Upsampling
     float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y/2;
+    cbcrY = hipThreadIdx_y / 2;
     cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
     cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
     __syncthreads();
@@ -437,7 +438,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth))
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
         return;
 
     // ROI parameters
@@ -472,8 +473,8 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
 
     // Horizontal loading with proper padding to 16-pixel multiples
-    bool isEdge = (id_x + 8 > roiWidth);
-    if (!isEdge)
+    bool isEdge = ((id_x + 8) > roiWidth);
+    if(!isEdge)
     {
         // Load 8 pixels at once for each channel
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.x, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
@@ -484,17 +485,17 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     {
         // Edge case: Need to pad horizontally
         int validPixels = (id_x < roiWidth) ? (roiWidth - id_x) : 0;
-        if (validPixels > 0)
+        if(validPixels > 0)
         {
             // Load valid pixels for each channel separately
-            for (int i = 0; i < validPixels; i++)
+           for(int i = 0; i < validPixels; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + i];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + i];
                 src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + i];
             }
             // Pad remaining pixels in the block by duplicating the last valid pixel for each channel
-            for (int i = validPixels; i < 8; i++)
+           for(int i = validPixels; i < 8; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + validPixels - 1];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + validPixels - 1];
@@ -509,7 +510,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
             srcIdx.y = srcIdx.x + srcStridesNCH.y;
             srcIdx.z = srcIdx.y + srcStridesNCH.y;
             // Duplicate the last valid pixel across the entire 8-pixel block
-            for (int i = 0; i < 8; i++)
+           for(int i = 0; i < 8; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y];
@@ -521,7 +522,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
 
     d_float8 y_f8;
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8],&y_f8);
+    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8], &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
@@ -549,14 +550,14 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     // 1D column wise FWD DCT for Y Cb and Cr channels
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
+    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_fwd_8x8_1d(&colVec[0],  false);
@@ -564,7 +565,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
         dct_fwd_8x8_1d(&colVec[16], false);
         dct_fwd_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -576,12 +577,12 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
 
     //----INVERSE STEPS---
     // 1D column wise IDCT for Y Cb and Cr channels
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_inv_8x8_1d(&colVec[0],  false);
@@ -589,7 +590,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
         dct_inv_8x8_1d(&colVec[16], false);
         dct_inv_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -606,7 +607,7 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
 
     // Vertical Upsampling
     float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y/2;
+    cbcrY = hipThreadIdx_y / 2;
     cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
     cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
     __syncthreads();
@@ -653,7 +654,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth))
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
         return;
 
     // ROI parameters
@@ -674,14 +675,14 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     // Determine actual source coordinates based on ROI bounds
-    int srcY = (id_y < roiHeight) ? (id_y + roiY) : (roiHeight - 1 + roiY);
+    int srcY = (id_y < roiHeight) ? (id_y + roiY) : ((roiHeight - 1) + roiY);
 
     int srcX = id_x + roiX;
     srcIdx = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
 
     // Horizontal loading with proper padding to 16-pixel multiples
-    bool isEdge = (id_x + 8 > roiWidth);
-    if (!isEdge)
+    bool isEdge = ((id_x + 8) > roiWidth);
+    if(!isEdge)
     {
         // Load 8 pixels at once for each channel
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
@@ -691,14 +692,14 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
         // Edge case: Need to pad horizontally
         int validPixels = (id_x < roiWidth) ? (roiWidth - id_x) : 0;
 
-        if (validPixels > 0)
+        if(validPixels > 0)
         {
             // Load valid pixels for each channel separately
-            for (int i = 0; i < validPixels; i++)
+           for(int i = 0; i < validPixels; i++)
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[srcIdx + i];
 
             // Pad remaining pixels in the block by duplicating the last valid pixel for each channel
-            for (int i = validPixels; i < 8; i++)
+           for(int i = validPixels; i < 8; i++)
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[srcIdx + validPixels - 1];
         }
         else
@@ -707,7 +708,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
             int srcX = (roiWidth - 1) + roiX; // Last valid pixel in the row
             srcIdx = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
             // Duplicate the last valid pixel across the entire 8-pixel block
-            for (int i = 0; i < 8; i++)
+           for(int i = 0; i < 8; i++)
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[srcIdx];
         }
     }
@@ -719,20 +720,20 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     __syncthreads();
 
     // Fwd DCT
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
+    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[16];
 
-        for (int i = 0; i < 16; i++)
+       for(int i = 0; i < 16; i++)
             colVec[i] = src_smem[i][col];
 
         dct_fwd_8x8_1d(&colVec[0], false);
         dct_fwd_8x8_1d(&colVec[8], false);
 
-        for (int i = 0; i < 16; i++)
+       for(int i = 0; i < 16; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -744,18 +745,18 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     //----INVERSE STEPS---
     // Process all 128 columns
     // Adding back 128 as part of DCT
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[16];
 
-        for (int i = 0; i < 16; i++)
+       for(int i = 0; i < 16; i++)
             colVec[i] = src_smem[i][col];
 
         dct_inv_8x8_1d(&colVec[0], false);
         dct_inv_8x8_1d(&colVec[8], false);
 
-        for (int i = 0; i < 16; i++)
+       for(int i = 0; i < 16; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -797,7 +798,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth))
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
         return;
 
     // ROI parameters
@@ -825,21 +826,21 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     dstIdx.z = dstIdx.y + dstStridesNCH.y;
 
     // Check if we need special handling for image edges
-    if (id_y < roiHeight)
+    if(id_y < roiHeight)
         srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
     else  // All out-of-bounds threads use the last valid row
         srcIdx = (id_z * srcStridesNH.x) + ((roiHeight - 1 + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
 
     bool isEdge = ((id_x + 8) > roiWidth) && (id_x < alignedWidth);
-    if (!isEdge)
+    if(!isEdge)
         rpp_hip_load24_pkd3_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         int validPixels = roiWidth - id_x;
         // Load valid pixels (only if id_x is within valid range)
-        if (validPixels > 0)
+        if(validPixels > 0)
         {
-            for (int i = 0, idx = srcIdx; i < validPixels; i++, idx += 3)
+           for(int i = 0, idx = srcIdx; i < validPixels; i++, idx += 3)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[idx];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[idx + 1];
@@ -848,7 +849,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
         }
         // Pad 16 pixels by duplicating the last valid pixel
         int lastValidIdx = srcIdx + ((validPixels - 1) * 3);
-        for (int i = validPixels; i < min(validPixels + 16, 8); i++)
+       for(int i = validPixels; i < min(validPixels + 16, 8); i++)
         {
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx];
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 1];
@@ -886,14 +887,14 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     __syncthreads();
 
     // 1D column wise FWD DCT for Y Cb and Cr channels
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
+    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_fwd_8x8_1d(&colVec[0],  false);
@@ -901,7 +902,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
         dct_fwd_8x8_1d(&colVec[16], false);
         dct_fwd_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -913,12 +914,12 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
 
     //----INVERSE STEPS---
     // 1D column wise IDCT for Y Cb and Cr channels
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_inv_8x8_1d(&colVec[0],  false);
@@ -926,7 +927,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
         dct_inv_8x8_1d(&colVec[16], false);
         dct_inv_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -943,7 +944,7 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
 
     // Vertical Upsampling
     float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y/2;
+    cbcrY = hipThreadIdx_y / 2;
     cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
     cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
     __syncthreads();
@@ -991,7 +992,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
 
     // Boundary checks
-    if ((id_y >= alignedHeight) || (id_x >= alignedWidth))
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
         return;
 
     // ROI parameters
@@ -1016,20 +1017,20 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
 
     // Check if we need special handling for image edges
     int id_y_clamped;
-    id_y_clamped = id_y < roiHeight ? id_y : roiHeight - 1;
+    id_y_clamped = (id_y < roiHeight) ? id_y : (roiHeight - 1);
 
     srcIdx.x = (id_z * srcStridesNCH.x) +((id_y_clamped + roiY) * srcStridesNCH.z) +(id_x + roiX);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
 
-    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3 ;
+    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
 
     // Determine actual source coordinates based on ROI bounds
     int srcY = (id_y < roiHeight) ? (id_y + roiY) : (roiHeight - 1 + roiY);
 
     // Horizontal loading with proper padding to 16-pixel multiples
     bool isEdge = (id_x + 8 > roiWidth);
-    if (!isEdge)
+    if(!isEdge)
     {
         // Normal case: The entire 8-pixel block fits within the ROI
         int srcX = id_x + roiX;
@@ -1047,7 +1048,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
         // Edge case: Need to pad horizontally
         int validPixels = (id_x < roiWidth) ? (roiWidth - id_x) : 0;
 
-        if (validPixels > 0)
+        if(validPixels > 0)
         {
             // Load valid pixels and pad the rest
             int srcX = id_x + roiX;
@@ -1056,14 +1057,14 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
             srcIdx.z = srcIdx.y + srcStridesNCH.y;
 
             // Load valid pixels for each channel separately
-            for (int i = 0; i < validPixels; i++)
+           for(int i = 0; i < validPixels; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + i];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + i];
                 src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + i];
             }
             // Pad remaining pixels in the block by duplicating the last valid pixel for each channel
-            for (int i = validPixels; i < 8; i++)
+           for(int i = validPixels; i < 8; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + validPixels - 1];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + validPixels - 1];
@@ -1078,7 +1079,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
             srcIdx.y = srcIdx.x + srcStridesNCH.y;
             srcIdx.z = srcIdx.y + srcStridesNCH.y;
             // Duplicate the last valid pixel across the entire 8-pixel block
-            for (int i = 0; i < 8; i++)
+           for(int i = 0; i < 8; i++)
             {
                 src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x];
                 src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y];
@@ -1118,14 +1119,14 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
     __syncthreads();
 
     // 1D column wise FWD DCT for Y Cb and Cr channels
-    int col = hipThreadIdx_x * 16 + hipThreadIdx_y;
+    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_fwd_8x8_1d(&colVec[0],  false);
@@ -1133,7 +1134,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
         dct_fwd_8x8_1d(&colVec[16], false);
         dct_fwd_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -1145,12 +1146,12 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
 
     //----INVERSE STEPS---
     // 1D column wise IDCT for Y Cb and Cr channels
-    if ((col < 128) && (col < alignedWidth))
+    if((col < 128) && (col < alignedWidth))
     {
         // Load column into temporary array
         float colVec[32];
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             colVec[i] = src_smem[i][col];
 
         dct_inv_8x8_1d(&colVec[0],  false);
@@ -1158,7 +1159,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
         dct_inv_8x8_1d(&colVec[16], false);
         dct_inv_8x8_1d(&colVec[24], false);
 
-        for (int i = 0; i < 32; i++)
+       for(int i = 0; i < 32; i++)
             src_smem[i][col] = colVec[i];
     }
     __syncthreads();
@@ -1175,7 +1176,7 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
 
     // Vertical Upsampling
     float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y/2;
+    cbcrY = hipThreadIdx_y / 2;
     cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
     cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
     __syncthreads();
@@ -1207,7 +1208,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                                                RpptRoiType roiType,
                                                rpp::Handle& handle)
 {
-    if (roiType == RpptRoiType::LTRB)
+    if(roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
@@ -1245,16 +1246,16 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
     };
 
     // Populate pinned memory with scaled and clamped values
-    for (int i = 0; i < 64; i++)
+   for(int i = 0; i < 64; i++)
     {
-        tableY[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * tableYInit[i], 0.0f, 255.0f)), 1);
-        tableCbCr[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp(qScale * tableCbCrInit[i], 0.0f, 255.0f)), 1);
+        tableY[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp((qScale * tableYInit[i]), 0.0f, 255.0f)), 1);
+        tableCbCr[i] = std::max<uint8_t>(static_cast<uint8_t>(std::clamp((qScale * tableCbCrInit[i]), 0.0f, 255.0f)), 1);
     }
 
-    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    if((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         hipLaunchKernelGGL(jpeg_compression_distortion_pkd3_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
@@ -1268,11 +1269,11 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            qScale);
     }
 
-    if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 3))
+    if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 3))
     {
         hipLaunchKernelGGL(jpeg_compression_distortion_pln3_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/16), ceil((float)globalThreads_y/16), ceil((float)globalThreads_z/1)),
-                           dim3(16, 16, 1),
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -1285,10 +1286,10 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            qScale);
     }
 
-    if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
+    if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
     {
         hipLaunchKernelGGL(jpeg_compression_distortion_pln1_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
@@ -1301,10 +1302,10 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            qScale);
     }
 
-    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+    if((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         hipLaunchKernelGGL(jpeg_compression_distortion_pkd3_pln3_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
@@ -1318,10 +1319,10 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            qScale);
     }
 
-    if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+    if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         hipLaunchKernelGGL(jpeg_compression_distortion_pln3_pkd3_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
