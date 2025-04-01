@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1083,13 +1083,13 @@ inline void rpp_glitch_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p, 
 {
     __m128 p128[8];
     Rpp32f *srcPtrTemp = srcPtr + srcLocs[0];
-    p[0] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9), 
+    p[0] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9),
                          *(srcPtrTemp + 12), *(srcPtrTemp + 15), *(srcPtrTemp + 18), *(srcPtrTemp + 21));
     srcPtrTemp = srcPtr + srcLocs[1];
-    p[1] = _mm256_setr_ps(*(srcPtrTemp + 1), *(srcPtrTemp + 4), *(srcPtrTemp + 7), *(srcPtrTemp + 10), 
+    p[1] = _mm256_setr_ps(*(srcPtrTemp + 1), *(srcPtrTemp + 4), *(srcPtrTemp + 7), *(srcPtrTemp + 10),
                          *(srcPtrTemp + 13), *(srcPtrTemp + 16), *(srcPtrTemp + 19), *(srcPtrTemp + 22));
     srcPtrTemp = srcPtr + srcLocs[2];
-    p[2] = _mm256_setr_ps(*(srcPtrTemp + 2), *(srcPtrTemp + 5), *(srcPtrTemp + 8), *(srcPtrTemp + 11), 
+    p[2] = _mm256_setr_ps(*(srcPtrTemp + 2), *(srcPtrTemp + 5), *(srcPtrTemp + 8), *(srcPtrTemp + 11),
                          *(srcPtrTemp + 14), *(srcPtrTemp + 17), *(srcPtrTemp + 20), *(srcPtrTemp + 23));
 }
 
@@ -1137,7 +1137,7 @@ inline void rpp_glitch_load30_i8pkd3_to_i8pkd3_avx(Rpp8s *srcPtr, int * srcLocs,
 
 inline void rpp_glitch_load6_f32pkd3_to_f32pkd3_avx(Rpp32f *srcPtr, int * srcLocs, __m256 &p)
 {
-    p =_mm256_setr_ps(*(srcPtr + srcLocs[0]), *(srcPtr + srcLocs[1] + 1), *(srcPtr + srcLocs[2] + 2), *(srcPtr + srcLocs[0] + 3), 
+    p =_mm256_setr_ps(*(srcPtr + srcLocs[0]), *(srcPtr + srcLocs[1] + 1), *(srcPtr + srcLocs[2] + 2), *(srcPtr + srcLocs[0] + 3),
                       *(srcPtr + srcLocs[1] + 4), *(srcPtr + srcLocs[2] + 5), 0.0f, 0.0f);
 }
 
@@ -3139,8 +3139,8 @@ inline void rpp_resize_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, _
 template<typename T>
 inline void rpp_resize_nn_extract_pkd3_avx(T *srcRowPtrsForInterp, Rpp32s *loc, __m256i &p)
 {
-    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[0] + 1), *(srcRowPtrsForInterp + loc[0] + 2), 
-                         *(srcRowPtrsForInterp + loc[1]), *(srcRowPtrsForInterp + loc[1] + 1), *(srcRowPtrsForInterp + loc[1] + 2), 
+    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[0] + 1), *(srcRowPtrsForInterp + loc[0] + 2),
+                         *(srcRowPtrsForInterp + loc[1]), *(srcRowPtrsForInterp + loc[1] + 1), *(srcRowPtrsForInterp + loc[1] + 2),
                          *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[2] + 1), *(srcRowPtrsForInterp + loc[2] + 2),
                          *(srcRowPtrsForInterp + loc[3]), *(srcRowPtrsForInterp + loc[3] + 1), *(srcRowPtrsForInterp + loc[3] + 2),
                          *(srcRowPtrsForInterp + loc[4]), *(srcRowPtrsForInterp + loc[4] + 1), *(srcRowPtrsForInterp + loc[4] + 2),
@@ -3165,7 +3165,7 @@ inline void rpp_resize_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, _
 template<typename T>
 inline void rpp_resize_nn_extract_pln1_avx(T *srcRowPtrsForInterp, Rpp32s *loc, __m256i &p)
 {
-    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[1]), 
+    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[1]),
                          *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[3]),
                          *(srcRowPtrsForInterp + loc[4]), *(srcRowPtrsForInterp + loc[5]),
                          *(srcRowPtrsForInterp + loc[6]), *(srcRowPtrsForInterp + loc[7]),
