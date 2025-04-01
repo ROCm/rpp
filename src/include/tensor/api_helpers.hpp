@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32
 {
     descPtr->numDims = 4;
     descPtr->offsetInBytes = 0;
-    descPtr->dataType = RpptDataType::F32;  
+    descPtr->dataType = RpptDataType::F32;
     descPtr->layout = RpptLayout::NCHW;
     descPtr->n = batchSize;
     descPtr->h = maxHeight;
