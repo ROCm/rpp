@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -99,7 +99,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             print(output.strip())
             output_str = output.decode('utf-8')
             logFile.write(output_str)
-        
+
         log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
         print("------------------------------------------------------------------------------------------")
 

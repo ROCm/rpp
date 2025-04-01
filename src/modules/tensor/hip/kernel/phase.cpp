@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -327,4 +327,3 @@ template RppStatus hip_exec_phase_tensor<Rpp8s>(Rpp8s*,
                                                 RpptROIPtr,
                                                 RpptRoiType,
                                                 rpp::Handle&);
-
