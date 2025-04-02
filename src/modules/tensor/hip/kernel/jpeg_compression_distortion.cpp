@@ -34,28 +34,85 @@ __device__ const float dctE = 0.541196100146197f;
 __device__ const float dctF = 0.275899379282943f;
 __device__ const float normCoeff = 0.3535533905932737f;
 
-// Computing Y from R G B
-template <typename T>
-__device__ inline void y_hip_compute(T *src , d_float8 *r_f8, d_float8 *g_f8, d_float8 *b_f8, d_float8 *y_f8)
+__device__ const float4 yR_f4 = (float4)0.299f;
+__device__ const float4 yG_f4 = (float4)0.587f;
+__device__ const float4 yB_f4 = (float4)0.114f;
+__device__ const float4 maxVal255_f4 = (float4)255.0f;
+__device__ const float4 maxVal128_f4 = (float4)128.0f;
+
+// Clamping for signed char (schar)
+__device__ inline void clamp_range(schar *src, float* values)
 {
-    if constexpr (std::is_same<T, float>::value || std::is_same<T, half>::value)
-    {
-        rpp_hip_math_multiply8_const(r_f8, r_f8, (float4)255.0f);
-        rpp_hip_math_multiply8_const(g_f8, g_f8, (float4)255.0f);
-        rpp_hip_math_multiply8_const(b_f8, b_f8, (float4)255.0f);
-    }
-    else if constexpr (std::is_same<T, schar>::value)
-    {
-        rpp_hip_math_add8_const(r_f8, r_f8, (float4)128.0f);
-        rpp_hip_math_add8_const(g_f8, g_f8, (float4)128.0f);
-        rpp_hip_math_add8_const(b_f8, b_f8, (float4)128.0f);
-    }
+    int low = -128, high = 127;
+    for (int j = 0; j < 8; j++)
+        values[j] = fminf(fmaxf(values[j], low), high);
+}
 
-    const float4 yR_f4 = (float4)0.299f;
-    const float4 yG_f4 = (float4)0.587f;
-    const float4 yB_f4 = (float4)0.114f;
+// Clamping for float
+__device__ inline void clamp_range(float *src, float* values)
+{
+    float low = 0.0f, high = 1.0f;
+    for (int j = 0; j < 8; j++)
+        values[j] = fminf(fmaxf(values[j], low), high);
+}
 
-    // RGB to Y conversion
+// Clamping for half
+__device__ inline void clamp_range(half *src, float* values)
+{
+    float low = 0.0f, high = 1.0f;
+    for (int j = 0; j < 8; j++)
+        values[j] = fminf(fmaxf(values[j], low), high);
+}
+
+// Clamping for unsigned char (uchar)
+__device__ inline void clamp_range(uchar *src, float* values)
+{
+    int low = 0, high = 255;
+    for (int j = 0; j < 8; j++)
+        values[j] = fminf(fmaxf(values[j], low), high);
+}
+
+// Generic clamping when no specific type is provided (default to 0-255)
+__device__ inline void clamp_range(float* values)
+{
+    for (int j = 0; j < 8; j++)
+        values[j] = fminf(fmaxf(values[j], 0.0f), 255.0f);
+}
+
+// Computing Y from R G B
+__device__ inline void y_hip_compute(float* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+{
+    rpp_hip_math_multiply8_const(r_f8, r_f8, maxVal255_f4);
+    rpp_hip_math_multiply8_const(g_f8, g_f8, maxVal255_f4);
+    rpp_hip_math_multiply8_const(b_f8, b_f8, maxVal255_f4);
+
+    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
+    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+}
+
+__device__ inline void y_hip_compute(half* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+{
+    rpp_hip_math_multiply8_const(r_f8, r_f8, maxVal255_f4);
+    rpp_hip_math_multiply8_const(g_f8, g_f8, maxVal255_f4);
+    rpp_hip_math_multiply8_const(b_f8, b_f8, maxVal255_f4);
+
+    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
+    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+}
+
+__device__ inline void y_hip_compute(schar* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+{
+    rpp_hip_math_add8_const(r_f8, r_f8, maxVal128_f4);
+    rpp_hip_math_add8_const(g_f8, g_f8, maxVal128_f4);
+    rpp_hip_math_add8_const(b_f8, b_f8, maxVal128_f4);
+
+    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
+    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+}
+
+__device__ inline void y_hip_compute(uchar* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+{
+    // No scaling needed for uchar
     y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
     y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
 }
@@ -100,13 +157,29 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
 }
 
 // DCT forward 1D implementation
-__device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
+__device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
 {
-    int val = (-128.0f * sub_128);
-    float inp[8];
-    for(int i = 0; i < 8; i ++)
-       inp[i] = vec[i] + val;
+    int val = (-128.0f * offset128);
+    float4 val4 = make_float4(val, val, val, val);
 
+    // Load data into float4 vectors
+    float4 vec4_0 = *(float4*)&vec[0];
+    float4 vec4_1 = *(float4*)&vec[4];
+
+    // Perform the vectorized addition
+    float4 inp4_0 = vec4_0 + val4;
+    float4 inp4_1 = vec4_1 + val4;
+
+    // Store results back
+    *(float4*)&vec[0] = inp4_0;
+    *(float4*)&vec[4] = inp4_1;
+
+    // Extract scalar values
+    float inp[8];
+    inp[0] = inp4_0.x; inp[1] = inp4_0.y; inp[2] = inp4_0.z; inp[3] = inp4_0.w;
+    inp[4] = inp4_1.x; inp[5] = inp4_1.y; inp[6] = inp4_1.z; inp[7] = inp4_1.w;
+
+    // Compute intermediate sums and differences
     float temp0 = inp[0] + inp[7];
     float temp1 = inp[1] + inp[6];
     float temp2 = inp[2] + inp[5];
@@ -121,6 +194,7 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
     float temp10 = temp1 + temp2;
     float temp11 = temp1 - temp2;
 
+    // Apply DCT transformation
     vec[0] = normCoeff * (temp8 + temp10);
     vec[2] = normCoeff * ((dctB * temp9) + (dctE * temp11));
     vec[4] = normCoeff * (temp8 - temp10);
@@ -133,9 +207,9 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool sub_128)
 }
 
 // Inverse 1D DCT
-__device__ inline void dct_inv_8x8_1d(float *vec, bool add_128)
+__device__ inline void dct_inv_8x8_1d(float *vec, bool offset128)
 {
-    int val = (128.0f * add_128);
+    int val = (128.0f * offset128);
 
     float inp[8];
     for(int i = 0; i < 8; i ++)
@@ -176,57 +250,36 @@ __device__ inline void quantize(float* value, int* coeff)
 }
 
 // Horizontal Upsampling and Color conversion to RGB
-__device__ inline void upsample_and_RGB_hip_compute(float4 Cb_f4, float4 Cr_f4, d_float8 *Ch1_f8, d_float8* Ch2_f8, d_float8 *Ch3_f8)
+__device__ inline void upsample_and_RGB_hip_compute(float4 cb_f4, float4 cr_f4, d_float8 *ch1_f8, d_float8* ch2_f8, d_float8 *ch3_f8)
 {
-    d_float8 Cb_f8, Cr_f8, R_f8 , G_f8, B_f8;
+    d_float8 cb_f8, cr_f8, r_f8 , g_f8, b_f8;
     // Copy Y values
-    d_float8 y_f8 = *((d_float8*)Ch1_f8);
+    d_float8 y_f8 = *((d_float8*)ch1_f8);
 
-    // Subtract 128 from Cb_f4 and Cr_f4 before expanding
-    Cb_f4 = Cb_f4 - (float4)128.0f;
-    Cr_f4 = Cr_f4 - (float4)128.0f;
+    // Subtract 128 from cb_f4 and Cr_f4 before expanding
+    cb_f4 = cb_f4 - (float4)128.0f;
+    cr_f4 = cr_f4 - (float4)128.0f;
 
     // Expand each value
-    Cb_f8.f4[0] = make_float4(Cb_f4.x, Cb_f4.x, Cb_f4.y, Cb_f4.y);
-    Cb_f8.f4[1] = make_float4(Cb_f4.z, Cb_f4.z, Cb_f4.w, Cb_f4.w);
-    Cr_f8.f4[0] = make_float4(Cr_f4.x, Cr_f4.x, Cr_f4.y, Cr_f4.y);
-    Cr_f8.f4[1] = make_float4(Cr_f4.z, Cr_f4.z, Cr_f4.w, Cr_f4.w);
+    cb_f8.f4[0] = make_float4(cb_f4.x, cb_f4.x, cb_f4.y, cb_f4.y);
+    cb_f8.f4[1] = make_float4(cb_f4.z, cb_f4.z, cb_f4.w, cb_f4.w);
+    cr_f8.f4[0] = make_float4(cr_f4.x, cr_f4.x, cr_f4.y, cr_f4.y);
+    cr_f8.f4[1] = make_float4(cr_f4.z, cr_f4.z, cr_f4.w, cr_f4.w);
 
     // Now use the offset-adjusted values in the conversion
-    R_f8.f4[0] = y_f8.f4[0] + ((float4)1.402f * Cr_f8.f4[0]);
-    R_f8.f4[1] = y_f8.f4[1] + ((float4)1.402f * Cr_f8.f4[1]);
+    r_f8.f4[0] = y_f8.f4[0] + ((float4)1.402f * cr_f8.f4[0]);
+    r_f8.f4[1] = y_f8.f4[1] + ((float4)1.402f * cr_f8.f4[1]);
 
-    G_f8.f4[0] = y_f8.f4[0] - ((float4)0.344136285f * Cb_f8.f4[0]) - ((float4)0.714136285f * Cr_f8.f4[0]);
-    G_f8.f4[1] = y_f8.f4[1] - ((float4)0.344136285f * Cb_f8.f4[1]) - ((float4)0.714136285f * Cr_f8.f4[1]);
+    g_f8.f4[0] = y_f8.f4[0] - ((float4)0.344136285f * cb_f8.f4[0]) - ((float4)0.714136285f * cr_f8.f4[0]);
+    g_f8.f4[1] = y_f8.f4[1] - ((float4)0.344136285f * cb_f8.f4[1]) - ((float4)0.714136285f * cr_f8.f4[1]);
 
-    B_f8.f4[0] = y_f8.f4[0] + ((float4)1.772f * Cb_f8.f4[0]);
-    B_f8.f4[1] = y_f8.f4[1] + ((float4)1.772f * Cb_f8.f4[1]);
+    b_f8.f4[0] = y_f8.f4[0] + ((float4)1.772f * cb_f8.f4[0]);
+    b_f8.f4[1] = y_f8.f4[1] + ((float4)1.772f * cb_f8.f4[1]);
 
     // Write back the results
-    *((d_float8*)Ch1_f8) = R_f8;
-    *((d_float8*)Ch2_f8) = G_f8;
-    *((d_float8*)Ch3_f8) = B_f8;
-}
-
-// Clamping based on the bitDepth
-template <typename T>
-__device__ inline void clamp_range(T *src, float* values)
-{
-    int low = 0, high = 255;
-    if constexpr(std::is_same<T, schar>::value)
-        low = -128, high = 127;
-    else if constexpr(std::is_same<T, float>::value  || std::is_same<T, half>::value)
-        low = 0, high = 1;
-
-    for(int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], low), high);
-}
-
-// Generic clamping
-__device__ inline void clamp_range(float* values)
-{
-    for(int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], 0), 255);
+    *((d_float8*)ch1_f8) = r_f8;
+    *((d_float8*)ch2_f8) = g_f8;
+    *((d_float8*)ch3_f8) = b_f8;
 }
 
 template <typename T>
