@@ -6,7 +6,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Added
 * RPP Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
-* log1p (log (1 + x)) tensor augmentation support on HOST (CPU) and HIP backends. (#534)
+* `log1p`, defined as `log (1 + x)`, tensor augmentation support on HOST (CPU) and HIP backends.
 
 ### Changed
 
