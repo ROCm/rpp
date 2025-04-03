@@ -722,9 +722,6 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! @}
- */
-
 /*! \brief Warp perspective augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The warp perspective performs perspective transformations for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
@@ -768,6 +765,49 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
  */
 RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *perspectiveTensor, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! \brief Concat Generic augmentation on HOST backend
+ * \details Concatenates two 2D, 3D or ND tensors in HOST memory along a specified axis.
+ * It is optimized for 2D and 3D tensors, ensuring that all dimensions except the concatenation axis must match.
+ * \param [in] srcPtr1 source tensor memory in HOST memory
+ * \param [in] srcPtr2 source tensor memory in HOST memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] axisMask axis along which concat needs to be done
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_concat_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32u *srcPtr1roiTensor, Rpp32u *srcPtr2roiTensor, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Concat Generic augmentation on HIP backend
+ * \details Concatenates two 2D, 3D or ND tensors in HIP memory along a specified axis.
+ * It is optimized for 2D and 3D tensors, ensuring that all dimensions except the concatenation axis must match.
+ * \param [in] srcPtr1 source tensor memory in HIP memory
+ * \param [in] srcPtr2 source tensor memory in HIP memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] axis axis along which concat needs to be done
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_concat_gpu(RppPtr_t srcPtr, RppPtr_t srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axis, Rpp32u *srcPtr1roiTensor, Rpp32u *srcPtr2roiTensor, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

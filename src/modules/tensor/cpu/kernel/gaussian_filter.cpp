@@ -670,7 +670,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8s>::value)
                                 rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp8u>::value)
-                                rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                                rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
@@ -725,7 +725,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8s>::value)
                             rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
-                            rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                            rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
@@ -923,7 +923,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8s>::value)
                                 rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp8u>::value)
-                                rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                                rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
@@ -978,7 +978,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8s>::value)
                             rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
-                            rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                            rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
