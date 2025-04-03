@@ -85,6 +85,15 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
                                   Rpp32u *roiTensor,
                                   rpp::Handle& handle);
 
+// -------------------- log1p --------------------
+
+RppStatus log1p_i16_f32_host_tensor(Rpp16s *srcPtr,
+                                    RpptGenericDescPtr srcGenericDescPtr,
+                                    Rpp32f *dstPtr,
+                                    RpptGenericDescPtr dstGenericDescPtr,
+                                    Rpp32u *roiTensor,
+                                    rpp::Handle& handle);
+
 // -------------------- magnitude --------------------
 
 RppStatus magnitude_u8_u8_host_tensor(Rpp8u *srcPtr1,

@@ -91,6 +91,8 @@ int main(int argc, char **argv)
     dstDescriptorPtrND = &dstDescriptor;
     int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    if(testCase == LOG1P)
+        set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
@@ -99,6 +101,7 @@ int main(int argc, char **argv)
         bufferSize *= srcDescriptorPtrND->dims[i];
 
     // allocate memory for input / output
+    Rpp16s *inputI16 = NULL;
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
@@ -111,6 +114,12 @@ int main(int argc, char **argv)
         std::srand(0);
         for(int i = 0; i < bufferSize; i++)
             inputF32[i] = static_cast<float>(std::rand() % 255);
+    }
+    if(testCase == LOG1P)
+    {
+        inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
+        for(int i = 0; i < bufferSize; i++)
+            inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -192,6 +201,13 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case LOG1P:
+            {
+                testCaseName  = "log1p";
+                startWallTime = omp_get_wtime();
+                rppt_log1p_host(inputI16, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, roiTensor, handle);
+                break;
+            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
@@ -222,6 +238,8 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     free(inputF32);
+    if(testCase == LOG1P)
+        free(inputI16);
     free(outputF32);
     free(roiTensor);
     if(meanTensor != nullptr)

@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 2
+caseMax = 3
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output

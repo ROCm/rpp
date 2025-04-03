@@ -407,7 +407,8 @@ typedef enum
     U8,
     F32,
     F16,
-    I8
+    I8,
+    I16
 } RpptDataType;
 
 /*! \brief RPPT Tensor layout type enum

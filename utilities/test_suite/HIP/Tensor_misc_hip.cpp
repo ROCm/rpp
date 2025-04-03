@@ -93,6 +93,8 @@ int main(int argc, char **argv)
     // set dims and compute strides
     int bitDepth = 2, offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    if(testCase == LOG1P)
+        set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
@@ -102,10 +104,11 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
+    Rpp16s *inputI16 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
 
-    void *d_inputF32, *d_outputF32;
+    void *d_inputF32, *d_inputI16, *d_outputF32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
 
@@ -117,6 +120,15 @@ int main(int argc, char **argv)
         std::srand(0);
         for(int i = 0; i < bufferSize; i++)
             inputF32[i] = static_cast<float>((std::rand() % 255));
+    }
+    if(testCase == LOG1P)
+    {
+        inputI16 = static_cast<Rpp16s *>(calloc(bufferSize, sizeof(Rpp16s)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputI16, bufferSize * sizeof(Rpp16s)));
+        for(int i = 0; i < bufferSize; i++)
+            inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+        CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, bufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
     }
 
     // copy data from HOST to HIP
@@ -215,6 +227,13 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case LOG1P:
+            {
+                testCaseName  = "log1p";
+                startWallTime = omp_get_wtime();
+                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
+                break;
+            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
@@ -250,11 +269,15 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
+    if(testCase == LOG1P)
+        free(inputI16);
     free(outputF32);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipFree(d_inputF32));
+    if(testCase == LOG1P)
+        CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
