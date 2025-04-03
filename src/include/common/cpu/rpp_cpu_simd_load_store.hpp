@@ -273,6 +273,18 @@ inline void rpp_mm256_print_ps(__m256 vPrintArray)
     }
 }
 
+inline __m256 rpp_pixel_check_0to1_avx(__m256 p)
+{
+    p = _mm256_min_ps(_mm256_max_ps(p, avx_p0), avx_p1);
+    return p;
+}
+
+inline __m128 rpp_pixel_check_0to1_sse(__m128 p)
+{
+    p = _mm_min_ps(_mm_max_ps(p, xmm_p0), xmm_p1);
+    return p;
+}
+
 inline void rpp_saturate64_0to1_avx(__m256 *p)
 {
     p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
