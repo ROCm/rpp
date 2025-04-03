@@ -26,13 +26,9 @@ SOFTWARE.
 #include "rpp_hip_math.hpp"
 
 // DCT Constants
-__device__ const float dctA = 1.387039845322148f;
-__device__ const float dctB = 1.306562964876377f;
-__device__ const float dctC = 1.175875602419359f;
-__device__ const float dctD = 0.785694958387102f;
-__device__ const float dctE = 0.541196100146197f;
-__device__ const float dctF = 0.275899379282943f;
 __device__ const float normCoeff = 0.3535533905932737f;
+__device__ const float4 dctACDF = {1.387039845322148f, 1.175875602419359f, 0.785694958387102f, 0.275899379282943f};
+__device__ const float2 dctBE = {1.306562964876377f, 0.541196100146197f};
 
 __device__ const float4 yR_f4 = (float4)0.299f;
 __device__ const float4 yG_f4 = (float4)0.587f;
@@ -160,76 +156,57 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
 __device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
 {
     int val = (-128.0f * offset128);
-    float4 val4 = make_float4(val, val, val, val);
+    float4 val4 = (float4)val;
 
     // Load data into float4 vectors
-    float4 vec4_0 = *(float4*)&vec[0];
-    float4 vec4_1 = *(float4*)&vec[4];
+    float4 vec1_f4 = *(float4*)&vec[0];
+    float4 vec2_f4 = *(float4*)&vec[4];
 
     // Perform the vectorized addition
-    float4 inp4_0 = vec4_0 + val4;
-    float4 inp4_1 = vec4_1 + val4;
+    float4 inp1_f4 = vec1_f4 + val4;
+    float4 inp2_f4 = vec2_f4 + val4;
 
-    // Store results back
-    *(float4*)&vec[0] = inp4_0;
-    *(float4*)&vec[4] = inp4_1;
-
-    // Extract scalar values
-    float inp[8];
-    inp[0] = inp4_0.x; inp[1] = inp4_0.y; inp[2] = inp4_0.z; inp[3] = inp4_0.w;
-    inp[4] = inp4_1.x; inp[5] = inp4_1.y; inp[6] = inp4_1.z; inp[7] = inp4_1.w;
-
-    // Compute intermediate sums and differences
-    float temp0 = inp[0] + inp[7];
-    float temp1 = inp[1] + inp[6];
-    float temp2 = inp[2] + inp[5];
-    float temp3 = inp[3] + inp[4];
-    float temp4 = inp[0] - inp[7];
-    float temp5 = inp[6] - inp[1];
-    float temp6 = inp[2] - inp[5];
-    float temp7 = inp[4] - inp[3];
-
-    float temp8 = temp0 + temp3;
-    float temp9 = temp0 - temp3;
-    float temp10 = temp1 + temp2;
-    float temp11 = temp1 - temp2;
+    float4 temp1_f4 = make_float4(inp1_f4.x + inp2_f4.w, inp1_f4.y + inp2_f4.z, inp1_f4.z + inp2_f4.y, inp1_f4.w + inp2_f4.x);
+    float4 temp2_f4 = make_float4(inp1_f4.x - inp2_f4.w, inp2_f4.z - inp1_f4.y, inp1_f4.z - inp2_f4.y, inp2_f4.x - inp1_f4.w);
+    float2 temp3_f2 = make_float2(temp1_f4.x + temp1_f4.w, temp1_f4.y + temp1_f4.z);
 
     // Apply DCT transformation
-    vec[0] = normCoeff * (temp8 + temp10);
-    vec[2] = normCoeff * ((dctB * temp9) + (dctE * temp11));
-    vec[4] = normCoeff * (temp8 - temp10);
-    vec[6] = normCoeff * ((dctE * temp9) - (dctB * temp11));
+    vec[0] = normCoeff * (temp3_f2.x + temp3_f2.y);
+    vec[2] = normCoeff * ((dctBE.x * (temp1_f4.x - temp1_f4.w)) + (dctBE.y * (temp1_f4.y - temp1_f4.z)));
+    vec[4] = normCoeff * (temp3_f2.x - temp3_f2.y);
+    vec[6] = normCoeff * ((dctBE.y * (temp1_f4.x - temp1_f4.w)) - (dctBE.x * (temp1_f4.y - temp1_f4.z)));
 
-    vec[1] = normCoeff * ((dctA * temp4) - (dctC * temp5) + (dctD * temp6) - (dctF * temp7));
-    vec[3] = normCoeff * ((dctC * temp4) + (dctF * temp5) - (dctA * temp6) + (dctD * temp7));
-    vec[5] = normCoeff * ((dctD * temp4) + (dctA * temp5) + (dctF * temp6) - (dctC * temp7));
-    vec[7] = normCoeff * ((dctF * temp4) + (dctD * temp5) + (dctC * temp6) + (dctA * temp7));
+    vec[1] = normCoeff * ((dctACDF.x * temp2_f4.x) - (dctACDF.y * temp2_f4.y) + (dctACDF.z * temp2_f4.z) - (dctACDF.w * temp2_f4.w));
+    vec[3] = normCoeff * ((dctACDF.y * temp2_f4.x) + (dctACDF.w * temp2_f4.y) - (dctACDF.x * temp2_f4.z) + (dctACDF.z * temp2_f4.w));
+    vec[5] = normCoeff * ((dctACDF.z * temp2_f4.x) + (dctACDF.x * temp2_f4.y) + (dctACDF.w * temp2_f4.z) - (dctACDF.y * temp2_f4.w));
+    vec[7] = normCoeff * ((dctACDF.w * temp2_f4.x) + (dctACDF.z * temp2_f4.y) + (dctACDF.y * temp2_f4.z) + (dctACDF.x * temp2_f4.w));
 }
 
 // Inverse 1D DCT
 __device__ inline void dct_inv_8x8_1d(float *vec, bool offset128)
 {
     int val = (128.0f * offset128);
+    float4 val4 = (float4)val;
 
-    float inp[8];
-    for(int i = 0; i < 8; i ++)
-       inp[i] = vec[i];
+    // Load data into float4 vectors
+    float4 vec1_f4 = *(float4*)&vec[0];
+    float4 vec2_f4 = *(float4*)&vec[4];
 
-    float temp0 = inp[0] +inp[4];
-    float temp1 = dctB * inp[2] + dctE * inp[6];
+    float temp0 = vec1_f4.x + vec2_f4.x;
+    float temp1 = dctBE.x * vec1_f4.z + dctBE.y * vec2_f4.z;
 
     float temp2 = temp0 + temp1;
     float temp3 = temp0 - temp1;
-    float temp4 = (dctF * inp[7]) + (dctA * inp[1]) + (dctC * inp[3]) + (dctD * inp[5]);
-    float temp5 = (dctA * inp[7]) - (dctF * inp[1]) + (dctD * inp[3]) - (dctC * inp[5]);
+    float temp4 = (dctACDF.w * vec2_f4.w) + (dctACDF.x * vec1_f4.y) + (dctACDF.y * vec1_f4.w) + (dctACDF.z * vec2_f4.y);
+    float temp5 = (dctACDF.x * vec2_f4.w) - (dctACDF.w * vec1_f4.y) + (dctACDF.z * vec1_f4.w) - (dctACDF.y * vec2_f4.y);
 
-    float temp6 = inp[0] -inp[4];
-    float temp7 = (dctE * inp[2]) - (dctB * inp[6]);
+    float temp6 = vec1_f4.x -vec2_f4.x;
+    float temp7 = (dctBE.y * vec1_f4.z) - (dctBE.x * vec2_f4.z);
 
     float temp8 = temp6 + temp7;
     float temp9 = temp6 - temp7;
-    float temp10 = (dctC * inp[1]) - (dctD * inp[7]) - (dctF * inp[3]) - (dctA * inp[5]);
-    float temp11 = (dctD * inp[1]) + (dctC * inp[7]) - (dctA * inp[3]) + (dctF * inp[5]);
+    float temp10 = (dctACDF.y * vec1_f4.y) - (dctACDF.z * vec2_f4.w) - (dctACDF.w * vec1_f4.w) - (dctACDF.x * vec2_f4.y);
+    float temp11 = (dctACDF.z * vec1_f4.y) + (dctACDF.y * vec2_f4.w) - (dctACDF.x * vec1_f4.w) + (dctACDF.w * vec2_f4.y);
 
     vec[0] = fmaf(normCoeff, (temp2 + temp4), val);
     vec[7] = fmaf(normCoeff, (temp2 - temp4), val);
