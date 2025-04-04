@@ -75,6 +75,7 @@ imageAugmentationMap = {
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
     65: ["bitwise_and", "HOST", "HIP"],
+    66: ["bitwise_not", "HOST", "HIP"],
     67: ["bitwise_xor", "HOST", "HIP"],
     68: ["bitwise_or", "HOST", "HIP"],
     70: ["copy", "HOST", "HIP"],
@@ -127,7 +128,7 @@ ImageAugmentationGroupMap = {
     "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
     "filter_augmentations" : [49, 54, 51],
     "arithmetic_operations" : [61],
-    "logical_operations" : [65, 67, 68],
+    "logical_operations" : [65, 66, 67, 68],
     "data_exchange_operations" : [70, 85, 86],
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
