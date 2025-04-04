@@ -39,33 +39,29 @@ __device__ const float4 maxVal128_f4 = (float4)128.0f;
 // Clamping for signed char (schar)
 __device__ inline void clamp_range(schar *src, float* values)
 {
-    int low = -128, high = 127;
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], low), high);
+        values[j] = fminf(fmaxf(values[j], -128), 127);
 }
 
 // Clamping for float
 __device__ inline void clamp_range(float *src, float* values)
 {
-    float low = 0.0f, high = 1.0f;
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], low), high);
+        values[j] = fminf(fmaxf(values[j], 0.0f), 1.0f);
 }
 
 // Clamping for half
 __device__ inline void clamp_range(half *src, float* values)
 {
-    float low = 0.0f, high = 1.0f;
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], low), high);
+        values[j] = fminf(fmaxf(values[j], 0.0f), 1.0f);
 }
 
 // Clamping for unsigned char (uchar)
 __device__ inline void clamp_range(uchar *src, float* values)
 {
-    int low = 0, high = 255;
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], low), high);
+        values[j] = fminf(fmaxf(values[j], 0), 255);
 }
 
 // Generic clamping when no specific type is provided (default to 0-255)
@@ -76,41 +72,35 @@ __device__ inline void clamp_range(float* values)
 }
 
 // Computing Y from R G B
-__device__ inline void y_hip_compute(float* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+__device__ inline void y_hip_compute(float* src, d_float24 rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_multiply8_const(r_f8, r_f8, maxVal255_f4);
-    rpp_hip_math_multiply8_const(g_f8, g_f8, maxVal255_f4);
-    rpp_hip_math_multiply8_const(b_f8, b_f8, maxVal255_f4);
+    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal255_f4);
 
-    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
-    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
+    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
 }
 
-__device__ inline void y_hip_compute(half* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+__device__ inline void y_hip_compute(half* src, d_float24 rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_multiply8_const(r_f8, r_f8, maxVal255_f4);
-    rpp_hip_math_multiply8_const(g_f8, g_f8, maxVal255_f4);
-    rpp_hip_math_multiply8_const(b_f8, b_f8, maxVal255_f4);
+    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal255_f4);
 
-    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
-    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
+    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
 }
 
-__device__ inline void y_hip_compute(schar* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+__device__ inline void y_hip_compute(schar* src, d_float24 rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_add8_const(r_f8, r_f8, maxVal128_f4);
-    rpp_hip_math_add8_const(g_f8, g_f8, maxVal128_f4);
-    rpp_hip_math_add8_const(b_f8, b_f8, maxVal128_f4);
+    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal128_f4);
 
-    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
-    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
+    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
 }
 
-__device__ inline void y_hip_compute(uchar* src, d_float8* r_f8, d_float8* g_f8, d_float8* b_f8, d_float8* y_f8)
+__device__ inline void y_hip_compute(uchar* src, d_float24 rgb_f24, d_float8* y_f8)
 {
     // No scaling needed for uchar
-    y_f8->f4[0] = r_f8->f4[0] * yR_f4 + g_f8->f4[0] * yG_f4 + b_f8->f4[0] * yB_f4;
-    y_f8->f4[1] = r_f8->f4[1] * yR_f4 + g_f8->f4[1] * yG_f4 + b_f8->f4[1] * yB_f4;
+    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
+    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
 }
 
 // Downsampling and computing Cb and Cr
@@ -118,38 +108,42 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
 {
     // Vertical downsampling
     d_float8 avgR_f8, avgG_f8, avgB_f8;
-    avgR_f8.f4[0] = (r1_f8->f4[0] + r2_f8->f4[0]) * (float4)0.5f;
-    avgR_f8.f4[1] = (r1_f8->f4[1] + r2_f8->f4[1]) * (float4)0.5f;
-    avgG_f8.f4[0] = (g1_f8->f4[0] + g2_f8->f4[0]) * (float4)0.5f;
-    avgG_f8.f4[1] = (g1_f8->f4[1] + g2_f8->f4[1]) * (float4)0.5f;
-    avgB_f8.f4[0] = (b1_f8->f4[0] + b2_f8->f4[0]) * (float4)0.5f;
-    avgB_f8.f4[1] = (b1_f8->f4[1] + b2_f8->f4[1]) * (float4)0.5f;
+    avgR_f8.f4[0] = (r1_f8->f4[0] + r2_f8->f4[0]);
+    avgR_f8.f4[1] = (r1_f8->f4[1] + r2_f8->f4[1]);
+    avgG_f8.f4[0] = (g1_f8->f4[0] + g2_f8->f4[0]);
+    avgG_f8.f4[1] = (g1_f8->f4[1] + g2_f8->f4[1]);
+    avgB_f8.f4[0] = (b1_f8->f4[0] + b2_f8->f4[0]);
+    avgB_f8.f4[1] = (b1_f8->f4[1] + b2_f8->f4[1]);
 
     // Horizontal downsampling
     float4 avgR_f4 = make_float4(
-        (avgR_f8.f4[0].x + avgR_f8.f4[0].y) * 0.5f,
-        (avgR_f8.f4[0].z + avgR_f8.f4[0].w) * 0.5f,
-        (avgR_f8.f4[1].x + avgR_f8.f4[1].y) * 0.5f,
-        (avgR_f8.f4[1].z + avgR_f8.f4[1].w) * 0.5f
+        (avgR_f8.f4[0].x + avgR_f8.f4[0].y),
+        (avgR_f8.f4[0].z + avgR_f8.f4[0].w),
+        (avgR_f8.f4[1].x + avgR_f8.f4[1].y),
+        (avgR_f8.f4[1].z + avgR_f8.f4[1].w)
     );
 
     float4 avgG_f4 = make_float4(
-        (avgG_f8.f4[0].x + avgG_f8.f4[0].y) * 0.5f,
-        (avgG_f8.f4[0].z + avgG_f8.f4[0].w) * 0.5f,
-        (avgG_f8.f4[1].x + avgG_f8.f4[1].y) * 0.5f,
-        (avgG_f8.f4[1].z + avgG_f8.f4[1].w) * 0.5f
+        (avgG_f8.f4[0].x + avgG_f8.f4[0].y),
+        (avgG_f8.f4[0].z + avgG_f8.f4[0].w),
+        (avgG_f8.f4[1].x + avgG_f8.f4[1].y),
+        (avgG_f8.f4[1].z + avgG_f8.f4[1].w)
     );
 
     float4 avgB_f4 = make_float4(
-        (avgB_f8.f4[0].x + avgB_f8.f4[0].y) * 0.5f,
-        (avgB_f8.f4[0].z + avgB_f8.f4[0].w) * 0.5f,
-        (avgB_f8.f4[1].x + avgB_f8.f4[1].y) * 0.5f,
-        (avgB_f8.f4[1].z + avgB_f8.f4[1].w) * 0.5f
+        (avgB_f8.f4[0].x + avgB_f8.f4[0].y),
+        (avgB_f8.f4[0].z + avgB_f8.f4[0].w),
+        (avgB_f8.f4[1].x + avgB_f8.f4[1].y),
+        (avgB_f8.f4[1].z + avgB_f8.f4[1].w)
     );
 
+    avgR_f4 = avgR_f4 * (float4)0.25;
+    avgG_f4 = avgG_f4 * (float4)0.25;
+    avgB_f4 = avgB_f4 * (float4)0.25;
+
     // Convert to CbCr
-    *cb_f4 = avgR_f4 * (float4)-0.168736f + avgG_f4 * (float4)-0.331264f + avgB_f4 * (float4)0.500000f + (float4)128.0f;
-    *cr_f4 = avgR_f4 * (float4)0.500000f  + avgG_f4 * (float4)-0.418688f + avgB_f4 * (float4)-0.081312f + (float4)128.0f;
+    *cb_f4 = (avgR_f4 * (float4)-0.168736f) + (avgG_f4 * (float4)-0.331264f) + (avgB_f4 * (float4)0.500000f) + maxVal128_f4;
+    *cr_f4 = (avgR_f4 * (float4)0.500000f)  + (avgG_f4 * (float4)-0.418688f) + (avgB_f4 * (float4)-0.081312f) + maxVal128_f4;
 }
 
 // DCT forward 1D implementation
@@ -170,16 +164,21 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
     float4 temp2_f4 = make_float4(inp1_f4.x - inp2_f4.w, inp2_f4.z - inp1_f4.y, inp1_f4.z - inp2_f4.y, inp2_f4.x - inp1_f4.w);
     float2 temp3_f2 = make_float2(temp1_f4.x + temp1_f4.w, temp1_f4.y + temp1_f4.z);
 
-    // Apply DCT transformation
-    vec[0] = normCoeff * (temp3_f2.x + temp3_f2.y);
-    vec[2] = normCoeff * ((dctBE.x * (temp1_f4.x - temp1_f4.w)) + (dctBE.y * (temp1_f4.y - temp1_f4.z)));
-    vec[4] = normCoeff * (temp3_f2.x - temp3_f2.y);
-    vec[6] = normCoeff * ((dctBE.y * (temp1_f4.x - temp1_f4.w)) - (dctBE.x * (temp1_f4.y - temp1_f4.z)));
+    float4 temp4_f4, temp5_f4;
 
-    vec[1] = normCoeff * ((dctACDF.x * temp2_f4.x) - (dctACDF.y * temp2_f4.y) + (dctACDF.z * temp2_f4.z) - (dctACDF.w * temp2_f4.w));
-    vec[3] = normCoeff * ((dctACDF.y * temp2_f4.x) + (dctACDF.w * temp2_f4.y) - (dctACDF.x * temp2_f4.z) + (dctACDF.z * temp2_f4.w));
-    vec[5] = normCoeff * ((dctACDF.z * temp2_f4.x) + (dctACDF.x * temp2_f4.y) + (dctACDF.w * temp2_f4.z) - (dctACDF.y * temp2_f4.w));
-    vec[7] = normCoeff * ((dctACDF.w * temp2_f4.x) + (dctACDF.z * temp2_f4.y) + (dctACDF.y * temp2_f4.z) + (dctACDF.x * temp2_f4.w));
+    // Apply DCT transformation
+    temp4_f4.x = temp3_f2.x + temp3_f2.y;
+    temp5_f4.x = temp3_f2.x - temp3_f2.y;
+    temp4_f4.z = fmaf(dctBE.x, (temp1_f4.x - temp1_f4.w), dctBE.y * (temp1_f4.y - temp1_f4.z));
+    temp5_f4.z = fmaf(dctBE.y, (temp1_f4.x - temp1_f4.w), -dctBE.x * (temp1_f4.y - temp1_f4.z));
+
+    temp4_f4.y = fmaf(dctACDF.x, temp2_f4.x, fmaf(-dctACDF.y, temp2_f4.y, fmaf(dctACDF.z, temp2_f4.z, -dctACDF.w * temp2_f4.w)));
+    temp4_f4.w = fmaf(dctACDF.y, temp2_f4.x, fmaf(dctACDF.w, temp2_f4.y, fmaf(-dctACDF.x, temp2_f4.z, dctACDF.z * temp2_f4.w)));
+    temp5_f4.y = fmaf(dctACDF.z, temp2_f4.x, fmaf(dctACDF.x, temp2_f4.y, fmaf(dctACDF.w, temp2_f4.z, -dctACDF.y * temp2_f4.w)));
+    temp5_f4.w = fmaf(dctACDF.w, temp2_f4.x, fmaf(dctACDF.z, temp2_f4.y, fmaf(dctACDF.y, temp2_f4.z, dctACDF.x * temp2_f4.w)));
+
+    *(float4*)&vec[0] = (temp4_f4 * (float4)normCoeff);  // stores to vec[0] through vec[3]
+    *(float4*)&vec[4] = (temp5_f4 * (float4)normCoeff);;  // stores to vec[4] through vec[7]
 }
 
 // Inverse 1D DCT
@@ -338,8 +337,12 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     d_float8 y_f8;
+    d_float24 rgb_f24;
+    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
+    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
+    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8], &y_f8);
+    y_hip_compute(srcPtr, rgb_f24, &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
@@ -551,8 +554,12 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     __syncthreads();
 
     d_float8 y_f8;
+    d_float24 rgb_f24;
+    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
+    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
+    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8], &y_f8);
+    y_hip_compute(srcPtr, rgb_f24, &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
@@ -888,8 +895,12 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
     }
     __syncthreads();
     d_float8 y_f8;
+    d_float24 rgb_f24;
+    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
+    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
+    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8],&y_f8);
+    y_hip_compute(srcPtr, rgb_f24, &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
@@ -1120,8 +1131,12 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
     __syncthreads();
 
     d_float8 y_f8;
+    d_float24 rgb_f24;
+    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
+    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
+    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
     int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8],&y_f8);
+    y_hip_compute(srcPtr, rgb_f24, &y_f8);
     __syncthreads();
 
     if(hipThreadIdx_y < 8)
