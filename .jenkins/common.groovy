@@ -52,12 +52,37 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
 def runTestCommand (platform, project) {
 
+    String packageManager = 'apt -y'
+
+    if (platform.jenkinsLabel.contains('rhel')) {
+        packageManager = 'yum -y'
+    }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        packageManager = 'zypper -n'
+    }
+
     def command = """#!/usr/bin/env bash
                 set -x
                 cd ${project.paths.project_build_prefix}/build
                 mkdir -p test && cd test
                 cmake /opt/rocm/share/rpp/test
                 ctest -VV
+                echo code coverage
+                cd ../
+                mkdir -p coverage && cd coverage
+                cmake -D BACKEND=CPU -D CMAKE_BUILD_TYPE=Debug -D CMAKE_CXX_COMPILER=/usr/bin/clang++ -D CMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
+                make -j\$(nproc)
+                sudo make install
+                export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rpp-%p.profraw\"
+                echo \$LLVM_PROFILE_FILE
+                make test
+                llvm-profdata merge -sparse rawdata/*.profraw -o rpp.profdata
+                llvm-cov export -object lib/librpp.so --instr-profile=rpp.profdata --format=lcov > coverage.info
+                sudo ${packageManager} install lcov
+                lcov --list coverage.info
+                curl -Os https://uploader.codecov.io/latest/linux/codecov
+                chmod +x codecov
+                ./codecov -v -U \$http_proxy -t ${CODECOV_TOKEN} --file coverage.info --name rpp --sha ${commitSha}
                 """
 
     platform.runCommand(this, command)
