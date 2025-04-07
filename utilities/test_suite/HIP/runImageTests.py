@@ -63,7 +63,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
+            if case == "40" or case == "41" or case == "49" or case == "51" or case == "54":
                 for kernelSize in range(3, 10, 2):
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
@@ -104,7 +104,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
+            if case == "40" or case == "41" or case == "49" or case == "51" or case == "54":
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
@@ -360,7 +360,7 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == "40" or case == "41" or case == "49" or case == "54" or case == "51":
+                        if case == "40" or case == "41" or case == "49" or case == "51" or case == "54":
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                         elif case == "8":

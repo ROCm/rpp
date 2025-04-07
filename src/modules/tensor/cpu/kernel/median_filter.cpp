@@ -24,6 +24,37 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 
+/* median filter algorithm explanation for U8 PLN1 3x3 kernel size variant
+Let’s consider a 3x32 image input:
+
+x  x  x  x  x  x  x  x  x  x  ..  x  x
+x  1  2  3  4  5  6  7  8  9  .. 32  x
+x  1  2  3  4  5  6  7  8  9  .. 32  x
+x  1  2  3  4  5  6  7  8  9  .. 32  x
+x  x  x  x  x  x  x  x  x  x  ..  x  x
+
+padLength = 1 (kernelSize / 2)
+
+Below steps are followed for computing each output pixel in the ROI:
+1. For each pixel location (i, j), collect a 3x3 neighborhood of pixels centered at (i, j)
+   - Apply nearest-neighbor padding at borders
+   - Extract values into a temporary array of 9 elements
+
+2. Sort the 9 values:
+   e.g., for 3x3 window: [2, 4, 3, 1, 5, 6, 3, 7, 2] → sorted → [1, 2, 2, 3, 3, 4, 5, 6, 7]
+
+3. Pick the median (middle) value:
+   - median = element at index 4 (zero-based), i.e., value 3 in the above example
+
+4. Assign this median to the output pixel at (i, j)
+
+This process is repeated for each pixel in the ROI.
+- For single-channel (PLN1), apply per pixel.
+- For multi-channel, median is computed independently per channel.
+
+Note: Unlike box filter, there is no arithmetic averaging or SIMD optimization here due to sorting-based computation.
+*/
+
 // handle nearest-neighbor padding
 template<typename T>
 inline void apply_nn_padding(T *srcPtrTemp, T *blockData, int kernelSize, int rowIdx, int colIdx, int height, int width, int channels,  RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
@@ -95,23 +126,17 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        int height = roi.xywhROI.roiHeight;
-        int width = roi.xywhROI.roiWidth;
-        int channels = srcDescPtr->c;
-
         if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            for(int c = 0; c < channels; c++)
+            for(int c = 0; c < srcDescPtr->c; c++)
             {
-                T *dstPtrRow;
-                dstPtrRow = dstPtrChannel;
-                for(int i = 0; i < height; i++)
+                T *dstPtrRow = dstPtrChannel;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
-                    T *dstPtrTemp;
-                    dstPtrTemp = dstPtrRow;
-                    for(int j = 0; j < width; j++)
+                    T *dstPtrTemp = dstPtrRow;
+                    for(int j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
-                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, height, width, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -122,15 +147,13 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            T *dstPtrRow;
-            dstPtrRow = dstPtrChannel;
-            for (int i = 0; i < height; i++)
+            T *dstPtrRow = dstPtrChannel;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                T *dstPtrTemp;
-                dstPtrTemp = dstPtrRow;
-                for (int j = 0; j < width; j++)
+                T *dstPtrTemp = dstPtrRow;
+                for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
-                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, height, width, channels, srcDescPtr, dstDescPtr);
+                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, srcDescPtr->c, srcDescPtr, dstDescPtr);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -138,18 +161,17 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            T *dstPtrRow;
-            dstPtrRow = dstPtrChannel;
-            for (int i = 0; i < height; i++)
+            T *dstPtrRow = dstPtrChannel;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 T *dstPtrTemp = dstPtrRow;
-                for (int j = 0; j < width; j++)
+                for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
                     T *dstPtrTempChn = dstPtrTemp;
                     T *srcPtrTempChn = srcPtrChannel;
-                    for (int c = 0; c < channels; c++)
+                    for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSize, height, width, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn++;
                     }
@@ -160,16 +182,15 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            for (int c = 0; c < channels; c++)
+            for (int c = 0; c < srcDescPtr->c; c++)
             {
-                T *dstPtrRow;
-                dstPtrRow = dstPtrChannel;
-                for (int i = 0; i < height; i++)
+                T *dstPtrRow = dstPtrChannel;
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     T *dstPtrTemp = dstPtrRow;
-                    for (int j = 0; j < width; j++)
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
-                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, height, width, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp ++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
