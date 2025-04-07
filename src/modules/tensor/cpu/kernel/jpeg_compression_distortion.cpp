@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,7 @@ void dct_inv_8x8_1d_core(T *x)
     temp[3] = temp[0] - temp[1];
     temp[4] = (dctCoeff6 * x[7]) + (dctCoeff1 * x[1]) + (dctCoeff3 * x[3]) + (dctCoeff4 * x[5]);
     temp[5] = (dctCoeff1 * x[7]) - (dctCoeff6 * x[1]) + (dctCoeff4 * x[3]) - (dctCoeff3 * x[5]);
-    
+
     temp[6] = x[0] - x[4];
     temp[7] = (dctCoeff5 * x[2]) - (dctCoeff2 * x[6]);
     temp[8] = temp[6] + temp[7];
@@ -1162,7 +1162,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1180,7 +1180,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
                         }
@@ -1239,7 +1239,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1255,7 +1255,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);
                         }
@@ -1309,7 +1309,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f32pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1327,7 +1327,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f32pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);
                         }
@@ -1385,7 +1385,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f32pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1401,7 +1401,7 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);
                         }
@@ -1585,7 +1585,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f16pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1603,7 +1603,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f16pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
                         }
@@ -1662,7 +1662,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f16pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1678,7 +1678,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
                         }
@@ -1732,7 +1732,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f16pkd3_to_f32pln3_avx, srcPtrTempRow, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1750,7 +1750,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTempRowB = dstPtrTempB + row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f16pln3_avx, dstPtrTempRowR, dstPtrTempRowG, dstPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
                         }
@@ -1808,7 +1808,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
                             rpp_simd_load(rpp_load48_f16pln3_to_f32pln3_avx, srcPtrTempRowR, srcPtrTempRowG, srcPtrTempRowB, &pRgb[row * 6]);                                 // simd loads
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p255);  // Scale up
                         }
                         else
@@ -1824,7 +1824,7 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
                         dstPtrTempRow= dstPtrTemp+ row * dstDescPtr->strides.hStride;
                         if((row + i) < roi.xywhROI.roiHeight)
                         {
-                            for (int col = 0; col < 6; col++) 
+                            for (int col = 0; col < 6; col++)
                                 pRgb[row * 6 + col] = _mm256_mul_ps(pRgb[row * 6 + col], avx_p1op255);  // Scale down
                             rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTempRow, &pRgb[row * 6]);                                 // simd loads
                         }
