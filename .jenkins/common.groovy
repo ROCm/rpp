@@ -52,12 +52,15 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 def runTestCommand (platform, project) {
 
     String packageManager = 'apt -y'
-
+    String openmpPackage = 'libomp-dev'
+    
     if (platform.jenkinsLabel.contains('rhel')) {
         packageManager = 'yum -y'
+        openmpPackage = 'libomp-devel'
     }
     else if (platform.jenkinsLabel.contains('sles')) {
         packageManager = 'zypper -n'
+        openmpPackage = 'libomp-devel'
     }
 
     String commitSha
@@ -73,6 +76,7 @@ def runTestCommand (platform, project) {
                     cmake /opt/rocm/share/rpp/test
                     ctest -VV
                     echo code coverage
+                    sudo ${packageManager} install ${openmpPackage}
                     cd ../
                     mkdir -p coverage && cd coverage
                     cmake -D BACKEND=CPU -D CMAKE_BUILD_TYPE=Debug -D CMAKE_CXX_COMPILER=/usr/bin/clang++ -D CMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
