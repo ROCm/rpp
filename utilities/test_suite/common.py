@@ -70,7 +70,7 @@ imageAugmentationMap = {
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
-    51: ["median_filter", "HIP"],
+    51: ["median_filter", "HOST", "HIP"],
     54: ["gaussian_filter", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],

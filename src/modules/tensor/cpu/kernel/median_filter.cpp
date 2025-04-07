@@ -1,7 +1,28 @@
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
-#include "rpp_cpu_filter.hpp"
-#include <algorithm>
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#include "host_tensor_executors.hpp"
 
 // handle nearest-neighbor padding
 template<typename T>
@@ -19,7 +40,7 @@ inline void apply_nn_padding(T *srcPtrTemp, T *blockData, int kernelSize, int ro
 
             Rpp32u srcIdx = row * srcDescPtr->strides.hStride + col * srcDescPtr->strides.wStride;
             for (int ch = 0; ch < channels; ch++)
-                blockData[index++] = srcPtrTemp[srcIdx];
+                blockData[index++] = srcPtrTemp[srcIdx + ch];
         }
     }
 }
@@ -101,7 +122,6 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            // Rpp32u widthPkd = width * channels;
             T *dstPtrRow;
             dstPtrRow = dstPtrChannel;
             for (int i = 0; i < height; i++)
@@ -143,20 +163,61 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
             for (int c = 0; c < channels; c++)
             {
                 T *dstPtrRow;
-                dstPtrRow = dstPtrChannel + c;
+                dstPtrRow = dstPtrChannel;
                 for (int i = 0; i < height; i++)
                 {
                     T *dstPtrTemp = dstPtrRow;
                     for (int j = 0; j < width; j++)
                     {
                         median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, height, width, 1, srcDescPtr, dstDescPtr);
-                        dstPtrTemp += 3;
+                        dstPtrTemp ++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
                 srcPtrChannel += srcDescPtr->strides.cStride;
+                dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
     }
     return RPP_SUCCESS;
 }
+
+template RppStatus median_filter_generic_host_tensor<Rpp8u>(Rpp8u*,
+                                                            RpptDescPtr,
+                                                            Rpp8u*,
+                                                            RpptDescPtr,
+                                                            Rpp32u,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            RppLayoutParams,
+                                                            rpp::Handle&);
+
+template RppStatus median_filter_generic_host_tensor<Rpp8s>(Rpp8s*,
+                                                            RpptDescPtr,
+                                                            Rpp8s*,
+                                                            RpptDescPtr,
+                                                            Rpp32u,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            RppLayoutParams,
+                                                            rpp::Handle&);
+
+template RppStatus median_filter_generic_host_tensor<Rpp32f>(Rpp32f*,
+                                                             RpptDescPtr,
+                                                             Rpp32f*,
+                                                             RpptDescPtr,
+                                                             Rpp32u,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             RppLayoutParams,
+                                                             rpp::Handle&);
+
+template RppStatus median_filter_generic_host_tensor<Rpp16f>(Rpp16f*,
+                                                             RpptDescPtr,
+                                                             Rpp16f*,
+                                                             RpptDescPtr,
+                                                             Rpp32u,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             RppLayoutParams,
+                                                             rpp::Handle&);
