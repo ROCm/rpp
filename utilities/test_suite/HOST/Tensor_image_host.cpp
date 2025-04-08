@@ -1769,8 +1769,8 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
+                if(qaFlag && (inputBitDepth == 0 || inputBitDepth == 2) && (!(randomOutputCase) && !(nonQACase)))
+                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
