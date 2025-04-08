@@ -1002,6 +1002,36 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
     }
 }
 
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
+                Rpp32f diff = abs(*outVal - *outRefVal);
+                if(diff <= 1e-6)
+                    matchedIdx++;
+            }
+        }
+        if(matchedIdx == (height * width) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
 void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -1038,8 +1068,43 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
     }
 }
 
-template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
+// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j * 3;
+                    Rpp32f diff = abs(*outVal - *outRefVal);
+                    if(diff <= 1e-6)
+                        matchedIdx++;
+                }
+            }
+        }
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
+inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
     string refFile = "";
@@ -1058,7 +1123,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
-    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+    string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
         func += dataType[srcDescPtr->dataType];
@@ -1110,16 +1175,32 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
+    if(dstDescPtr->dataType == RpptDataType::U8)
+    {
+        Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+        read_bin_file(refFile, binaryContent);
 
-    Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
-    read_bin_file(refFile, binaryContent);
-
-    if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
     else
-        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    {
+        Rpp32f* binaryContent = (Rpp32f *)malloc(binOutputSize * sizeof(Rpp32f));
+        read_bin_file(refFile, binaryContent);
+
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
 
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1142,7 +1223,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
-    free(binaryContent);
 }
 
 // compares reduction type functions outputs

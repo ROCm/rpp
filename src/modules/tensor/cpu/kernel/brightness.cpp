@@ -52,9 +52,9 @@ inline void compute_brightness_48_host(__m128 *p, __m128 *pBrightnessParams)
 
 inline void compute_brightness_24_host(__m256 *p, __m256 *pBrightnessParams)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[1] = _mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-    p[2] = _mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[1] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[1], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
+    p[2] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[2], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_brightness_24_host(__m128 *p, __m128 *pBrightnessParams)
@@ -90,7 +90,7 @@ inline void compute_brightness_12_host(__m128 *p, __m128 *pBrightnessParams)
 
 inline void compute_brightness_8_host(__m256 *p, __m256 *pBrightnessParams)
 {
-    p[0] = _mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
+    p[0] = rpp_pixel_check_0to1_avx(_mm256_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]));    // brightness adjustment
 }
 
 inline void compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
