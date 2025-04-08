@@ -72,35 +72,35 @@ __device__ inline void clamp_range(float* values)
 }
 
 // Computing Y from R G B
-__device__ inline void y_hip_compute(float* src, d_float24 rgb_f24, d_float8* y_f8)
+__device__ inline void y_hip_compute(float* src, d_float24 *rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal255_f4);
+    rpp_hip_math_multiply24_const(rgb_f24, rgb_f24, maxVal255_f4);
 
-    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
-    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
+    y_f8->f4[0] = (rgb_f24[0].f8[0].f4[0] * yR_f4) + (rgb_f24[0].f8[1].f4[0] * yG_f4) + (rgb_f24[0].f8[2].f4[0] * yB_f4);
+    y_f8->f4[1] = (rgb_f24[0].f8[0].f4[1] * yR_f4) + (rgb_f24[0].f8[1].f4[1] * yG_f4) + (rgb_f24[0].f8[2].f4[1] * yB_f4);
 }
 
-__device__ inline void y_hip_compute(half* src, d_float24 rgb_f24, d_float8* y_f8)
+__device__ inline void y_hip_compute(half* src, d_float24 *rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal255_f4);
+    rpp_hip_math_multiply24_const(rgb_f24, rgb_f24, maxVal255_f4);
 
-    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
-    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
+    y_f8->f4[0] = (rgb_f24[0].f8[0].f4[0] * yR_f4) + (rgb_f24[0].f8[1].f4[0] * yG_f4) + (rgb_f24[0].f8[2].f4[0] * yB_f4);
+    y_f8->f4[1] = (rgb_f24[0].f8[0].f4[1] * yR_f4) + (rgb_f24[0].f8[1].f4[1] * yG_f4) + (rgb_f24[0].f8[2].f4[1] * yB_f4);
 }
 
-__device__ inline void y_hip_compute(schar* src, d_float24 rgb_f24, d_float8* y_f8)
+__device__ inline void y_hip_compute(schar* src, d_float24 *rgb_f24, d_float8* y_f8)
 {
-    rpp_hip_math_multiply24_const(&rgb_f24, &rgb_f24, maxVal128_f4);
+    rpp_hip_math_add24_const(rgb_f24, rgb_f24, maxVal128_f4);
 
-    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
-    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
+    y_f8->f4[0] = (rgb_f24[0].f8[0].f4[0] * yR_f4) + (rgb_f24[0].f8[1].f4[0] * yG_f4) + (rgb_f24[0].f8[2].f4[0] * yB_f4);
+    y_f8->f4[1] = (rgb_f24[0].f8[0].f4[1] * yR_f4) + (rgb_f24[0].f8[1].f4[1] * yG_f4) + (rgb_f24[0].f8[2].f4[1] * yB_f4);
 }
 
-__device__ inline void y_hip_compute(uchar* src, d_float24 rgb_f24, d_float8* y_f8)
+__device__ inline void y_hip_compute(uchar* src, d_float24 *rgb_f24, d_float8* y_f8)
 {
     // No scaling needed for uchar
-    y_f8->f4[0] = rgb_f24.f8[0].f4[0] * yR_f4 + rgb_f24.f8[1].f4[0] * yG_f4 + rgb_f24.f8[2].f4[0] * yB_f4;
-    y_f8->f4[1] = rgb_f24.f8[0].f4[1] * yR_f4 + rgb_f24.f8[1].f4[1] * yG_f4 + rgb_f24.f8[2].f4[1] * yB_f4;
+    y_f8->f4[0] = (rgb_f24[0].f8[0].f4[0] * yR_f4) + (rgb_f24[0].f8[1].f4[0] * yG_f4) + (rgb_f24[0].f8[2].f4[0] * yB_f4);
+    y_f8->f4[1] = (rgb_f24[0].f8[0].f4[1] * yR_f4) + (rgb_f24[0].f8[1].f4[1] * yG_f4) + (rgb_f24[0].f8[2].f4[1] * yB_f4);
 }
 
 // Downsampling and computing Cb and Cr
@@ -137,13 +137,8 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
         (avgB_f8.f4[1].z + avgB_f8.f4[1].w)
     );
 
-    avgR_f4 = avgR_f4 * (float4)0.25;
-    avgG_f4 = avgG_f4 * (float4)0.25;
-    avgB_f4 = avgB_f4 * (float4)0.25;
-
-    // Convert to CbCr
-    *cb_f4 = (avgR_f4 * (float4)-0.168736f) + (avgG_f4 * (float4)-0.331264f) + (avgB_f4 * (float4)0.500000f) + maxVal128_f4;
-    *cr_f4 = (avgR_f4 * (float4)0.500000f)  + (avgG_f4 * (float4)-0.418688f) + (avgB_f4 * (float4)-0.081312f) + maxVal128_f4;
+    *cb_f4 = (avgR_f4 * (float4)-0.042184f) + (avgG_f4 * (float4)-0.082816f) + (avgB_f4 * (float4)0.125000f) + maxVal128_f4;
+    *cr_f4 = (avgR_f4 * (float4)0.125000f)  + (avgG_f4 * (float4)-0.104672f) + (avgB_f4 * (float4)-0.020328f) + maxVal128_f4;
 }
 
 // DCT forward 1D implementation
@@ -191,21 +186,21 @@ __device__ inline void dct_inv_8x8_1d(float *vec, bool offset128)
     float4 vec1_f4 = *(float4*)&vec[0];
     float4 vec2_f4 = *(float4*)&vec[4];
 
-    float temp0 = vec1_f4.x + vec2_f4.x;
-    float temp1 = dctBE.x * vec1_f4.z + dctBE.y * vec2_f4.z;
+    float temp0  = vec1_f4.x + vec2_f4.x;
+    float temp1  = fmaf(dctBE.x, vec1_f4.z, (dctBE.y * vec2_f4.z));
+    float temp2  = temp0 + temp1;
+    float temp3  = temp0 - temp1;
 
-    float temp2 = temp0 + temp1;
-    float temp3 = temp0 - temp1;
-    float temp4 = (dctACDF.w * vec2_f4.w) + (dctACDF.x * vec1_f4.y) + (dctACDF.y * vec1_f4.w) + (dctACDF.z * vec2_f4.y);
-    float temp5 = (dctACDF.x * vec2_f4.w) - (dctACDF.w * vec1_f4.y) + (dctACDF.z * vec1_f4.w) - (dctACDF.y * vec2_f4.y);
+    float temp4  = fmaf(dctACDF.w, vec2_f4.w, fmaf(dctACDF.x, vec1_f4.y, fmaf(dctACDF.y, vec1_f4.w, (dctACDF.z * vec2_f4.y))));
+    float temp5  = fmaf(dctACDF.x, vec2_f4.w,fmaf(-dctACDF.w, vec1_f4.y, fmaf(dctACDF.z, vec1_f4.w, (-dctACDF.y * vec2_f4.y))));
 
-    float temp6 = vec1_f4.x -vec2_f4.x;
-    float temp7 = (dctBE.y * vec1_f4.z) - (dctBE.x * vec2_f4.z);
+    float temp6  = vec1_f4.x - vec2_f4.x;
+    float temp7  = fmaf(dctBE.y, vec1_f4.z, (-dctBE.x * vec2_f4.z));
 
-    float temp8 = temp6 + temp7;
-    float temp9 = temp6 - temp7;
-    float temp10 = (dctACDF.y * vec1_f4.y) - (dctACDF.z * vec2_f4.w) - (dctACDF.w * vec1_f4.w) - (dctACDF.x * vec2_f4.y);
-    float temp11 = (dctACDF.z * vec1_f4.y) + (dctACDF.y * vec2_f4.w) - (dctACDF.x * vec1_f4.w) + (dctACDF.w * vec2_f4.y);
+    float temp8  = temp6 + temp7;
+    float temp9  = temp6 - temp7;
+    float temp10 = fmaf(dctACDF.y, vec1_f4.y, fmaf(-dctACDF.z, vec2_f4.w, fmaf(-dctACDF.w, vec1_f4.w, (-dctACDF.x * vec2_f4.y))));
+    float temp11 = fmaf(dctACDF.z, vec1_f4.y, fmaf(dctACDF.y, vec2_f4.w, fmaf(-dctACDF.x, vec1_f4.w, (dctACDF.w * vec2_f4.y))));
 
     vec[0] = fmaf(normCoeff, (temp2 + temp4), val);
     vec[7] = fmaf(normCoeff, (temp2 - temp4), val);
@@ -256,6 +251,120 @@ __device__ inline void upsample_and_RGB_hip_compute(float4 cb_f4, float4 cr_f4, 
     *((d_float8*)ch1_f8) = r_f8;
     *((d_float8*)ch2_f8) = g_f8;
     *((d_float8*)ch3_f8) = b_f8;
+}
+
+template <typename T>
+__device__ __forceinline__ void process_jpeg_distortion(float src_smem[48][128], int hipThreadIdx_x8, int hipThreadIdx_x4, int localThreadIdx_y,
+                                                        int alignedWidth, int3 hipThreadIdx_y_channel, int* tableY, int* tableCbCr, T* srcPtr, T* dstPtr)
+{
+    // ----------- Step 1: RGB to YCbCr Conversion -----------
+    d_float8 y_f8;
+    d_float24 rgb_f24;
+    rgb_f24.f8[0] = *((d_float8*)&src_smem[localThreadIdx_y][hipThreadIdx_x8]);
+    rgb_f24.f8[1] = *((d_float8*)&src_smem[localThreadIdx_y + 16][hipThreadIdx_x8]);
+    rgb_f24.f8[2] = *((d_float8*)&src_smem[localThreadIdx_y + 32][hipThreadIdx_x8]);
+
+    int cbcrY = localThreadIdx_y * 2;
+    y_hip_compute(srcPtr, &rgb_f24, &y_f8);
+    __syncthreads();
+
+    // ----------- Step 2: Downsample CbCr -----------
+    if (localThreadIdx_y < 8)
+    {
+        float4 cb_f4, cr_f4;
+        downsample_cbcr_hip_compute(
+            (d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],
+            (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],
+            (d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],
+            (d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],
+            (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],
+            (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],
+            &cb_f4, &cr_f4);
+
+        *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
+        *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
+    }
+
+    *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = y_f8;
+    __syncthreads();
+
+    // ----------- Step 3: Clamp + Forward DCT -----------
+    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+    __syncthreads();
+
+    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
+    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
+    __syncthreads();
+
+    // ----------- Step4 Column-wise DCT -----------
+    int col = ((hipThreadIdx_x8 / 8) * 16) + localThreadIdx_y;
+    if ((col < 128) && (col < alignedWidth))
+    {
+        float colVec[32];
+        for(int i = 0; i < 32; i++) colVec[i] = src_smem[i][col];
+
+        dct_fwd_8x8_1d(&colVec[0], false);
+        dct_fwd_8x8_1d(&colVec[8], false);
+        dct_fwd_8x8_1d(&colVec[16], false);
+        dct_fwd_8x8_1d(&colVec[24], false);
+
+        for(int i = 0; i < 32; i++) src_smem[i][col] = colVec[i];
+    }
+    __syncthreads();
+
+    // ----------- Step 5: Quantization -----------
+    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(localThreadIdx_y % 8) * 8]);
+    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(localThreadIdx_y % 8) * 8]);
+    __syncthreads();
+
+    // ----------- Step 6: Inverse DCT -----------
+    if ((col < 128) && (col < alignedWidth))
+    {
+        float colVec[32];
+        #pragma unroll
+        for(int i = 0; i < 32; i++) colVec[i] = src_smem[i][col];
+
+        dct_inv_8x8_1d(&colVec[0], false);
+        dct_inv_8x8_1d(&colVec[8], false);
+        dct_inv_8x8_1d(&colVec[16], false);
+        dct_inv_8x8_1d(&colVec[24], false);
+
+        #pragma unroll
+        for(int i = 0; i < 32; i++) src_smem[i][col] = colVec[i];
+    }
+    __syncthreads();
+
+    // ----------- Step 7: Row-wise IDCT -----------
+    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
+    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
+    __syncthreads();
+
+    // ----------- Step 8: Clamp & Upsample -----------
+    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+    __syncthreads();
+
+    float4 cb_f4, cr_f4;
+    cbcrY = localThreadIdx_y / 2;
+    cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
+    cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
+    __syncthreads();
+
+    upsample_and_RGB_hip_compute(cb_f4, cr_f4,
+        (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8],
+        (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8],
+        (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
+    __syncthreads();
+
+    // ----------- Step 9: Final Clamp -----------
+    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
+
+    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
 }
 
 template <typename T>
@@ -337,110 +446,11 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    // ----------- Step 2: RGB to YCbCr Conversion -----------
-    d_float8 y_f8;
-    d_float24 rgb_f24;
-    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
-    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
+    // Perform JPEG compression distortion on the shared memory block:
+    // Includes RGB to YCbCr conversion, chroma downsampling, DCT, quantization, inverse DCT, upsampling, and final RGB reconstruction.
+    process_jpeg_distortion(src_smem, hipThreadIdx_x8, hipThreadIdx_x4, hipThreadIdx_y, alignedWidth,
+                            hipThreadIdx_y_channel, tableY, tableCbCr, srcPtr, dstPtr);
 
-    int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, rgb_f24, &y_f8);
-    __syncthreads();
-
-    // ----------- Step 3: Downsample CbCr -----------
-    if (hipThreadIdx_y < 8)
-    {
-        float4 cb_f4, cr_f4;
-        downsample_cbcr_hip_compute(
-            (d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],
-            (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],
-            (d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8],
-            (d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8],
-            (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],
-            (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],
-            &cb_f4, &cr_f4);
-
-        *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
-    }
-
-    *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = y_f8;
-    __syncthreads();
-
-    // ----------- Step 4: Clamp + Forward DCT -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step5 Column-wise DCT -----------
-    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
-    if ((col < 128) && (col < alignedWidth))
-    {
-        float colVec[32];
-        for(int i = 0; i < 32; i++) colVec[i] = src_smem[i][col];
-
-        dct_fwd_8x8_1d(&colVec[0], false);
-        dct_fwd_8x8_1d(&colVec[8], false);
-        dct_fwd_8x8_1d(&colVec[16], false);
-        dct_fwd_8x8_1d(&colVec[24], false);
-
-        for(int i = 0; i < 32; i++) src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // ----------- Step 6: Quantization -----------
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
-    __syncthreads();
-
-    // ----------- Step 7: Inverse DCT -----------
-    if((col < 128) && (col < alignedWidth))
-    {
-        float colVec[32];
-        for(int i = 0; i < 32; i++) colVec[i] = src_smem[i][col];
-
-        dct_inv_8x8_1d(&colVec[0], false);
-        dct_inv_8x8_1d(&colVec[8], false);
-        dct_inv_8x8_1d(&colVec[16], false);
-        dct_inv_8x8_1d(&colVec[24], false);
-
-        for(int i = 0; i < 32; i++) src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step 8: Clamp & Upsample -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Vertical Upsampling
-    float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y / 2;
-    cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
-    cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
-    __syncthreads();
-
-    // Convert back to RGB
-    upsample_and_RGB_hip_compute(cb_f4, cr_f4, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // ----------- Step 9: Final Clamp & Store -----------
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     __syncthreads();
 
     if((id_x < roiWidth) && (id_y < roiHeight))
@@ -551,118 +561,11 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    // ----------- Step 2: RGB to YCbCr Conversion -----------
-    d_float8 y_f8;
-    d_float24 rgb_f24;
-    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
-    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
-    int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, rgb_f24, &y_f8);
-    __syncthreads();
+    // Perform JPEG compression distortion on the shared memory block:
+    // Includes RGB to YCbCr conversion, chroma downsampling, DCT, quantization, inverse DCT, upsampling, and final RGB reconstruction.
+    process_jpeg_distortion(src_smem, hipThreadIdx_x8, hipThreadIdx_x4, hipThreadIdx_y, alignedWidth,
+                            hipThreadIdx_y_channel, tableY, tableCbCr, srcPtr, dstPtr);
 
-    // ----------- Step 3: Downsample CbCr -----------
-    if(hipThreadIdx_y < 8)
-    {
-        float4 cb_f4, cr_f4;
-        // Downsample RGB and convert to CbCr
-        downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
-        // Store Y and downsampled CbCr
-        *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        // Storing Cr below Cb (8 x 64)
-        *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
-    }
-
-    *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = y_f8;
-    __syncthreads();
-
-    // ----------- Step 4: Clamp + Forward DCT -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Doing -128 as part of DCT,
-    // 1D row wise FWD DCT for Y Cb and Cr channels
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step5 Column-wise DCT -----------
-    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
-    // Process all 128 columns
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_fwd_8x8_1d(&colVec[0],  false);
-        dct_fwd_8x8_1d(&colVec[8],  false);
-        dct_fwd_8x8_1d(&colVec[16], false);
-        dct_fwd_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // ----------- Step 6: Quantization -----------
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
-    __syncthreads();
-
-    // ----------- Step 7: Inverse DCT -----------
-    // 1D column wise IDCT for Y Cb and Cr channels
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_inv_8x8_1d(&colVec[0],  false);
-        dct_inv_8x8_1d(&colVec[8],  false);
-        dct_inv_8x8_1d(&colVec[16], false);
-        dct_inv_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // 1D row wise IDCT for Y Cb and Cr channels
-    // Adding back 128 as part of INV DCT
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step 8: Clamp & Upsample -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Vertical Upsampling
-    float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y / 2;
-    cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
-    cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
-    __syncthreads();
-
-    // YCbCr to RGB
-    upsample_and_RGB_hip_compute(cb_f4, cr_f4, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // ----------- Step 9: Final Clamp & Store -----------
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     __syncthreads();
 
     if((id_x < roiWidth) && (id_y < roiHeight))
@@ -671,6 +574,233 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.y, (d_float8 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.z, (d_float8 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     }
+}
+
+template <typename T>
+__global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
+                                                                  uint2 srcStridesNH,
+                                                                  T *dstPtr,
+                                                                  uint3 dstStridesNCH,
+                                                                  RpptROIPtr roiTensorPtrSrc,
+                                                                  int *tableY,
+                                                                  int *tableCbCr,
+                                                                  float qScale)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    int hipThreadIdx_x8 = hipThreadIdx_x * 8;
+    int hipThreadIdx_x4 = hipThreadIdx_x * 4;
+
+    int alignedWidth = (roiTensorPtrSrc[id_z].xywhROI.roiWidth + 15) & ~15;
+    int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
+
+    // Boundary checks
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
+        return;
+
+    // ROI parameters
+    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
+    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
+    int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
+    int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
+
+    // Shared memory declaration
+    __shared__ float src_smem[48][128];  // Assuming 48 rows (aligned height for 3 channels)
+    int3 hipThreadIdx_y_channel;
+    hipThreadIdx_y_channel.x = hipThreadIdx_y;
+    hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
+    hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
+
+    float *src_smem_channel[3];
+    src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
+    src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
+    src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
+
+    // ----------- Step 1: Load from Global Memory to Shared Memory -----------
+    int srcIdx;
+    uint3 dstIdx;
+    dstIdx.x = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    dstIdx.y = dstIdx.x + dstStridesNCH.y;
+    dstIdx.z = dstIdx.y + dstStridesNCH.y;
+
+    // Check if we need special handling for image edges
+    if(id_y < roiHeight)
+        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
+    else  // All out-of-bounds threads use the last valid row
+        srcIdx = (id_z * srcStridesNH.x) + ((roiHeight - 1 + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
+
+    bool isEdge = ((id_x + 8) > roiWidth) && (id_x < alignedWidth);
+    if(!isEdge)
+        rpp_hip_load24_pkd3_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
+    else
+    {
+        int validPixels = roiWidth - id_x;
+        // Load valid pixels (only if id_x is within valid range)
+        if(validPixels > 0)
+        {
+           for(int i = 0, idx = srcIdx; i < validPixels; i++, idx += 3)
+            {
+                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[idx];
+                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[idx + 1];
+                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[idx + 2];
+            }
+        }
+        // Pad 16 pixels by duplicating the last valid pixel
+        int lastValidIdx = srcIdx + ((validPixels - 1) * 3);
+       for(int i = validPixels; i < min(validPixels + 16, 8); i++)
+        {
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx];
+            src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 1];
+            src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 2];
+        }
+    }
+    __syncthreads();
+
+    // Perform JPEG compression distortion on the shared memory block:
+    // Includes RGB to YCbCr conversion, chroma downsampling, DCT, quantization, inverse DCT, upsampling, and final RGB reconstruction.
+    process_jpeg_distortion(src_smem, hipThreadIdx_x8, hipThreadIdx_x4, hipThreadIdx_y, alignedWidth,
+        hipThreadIdx_y_channel, tableY, tableCbCr, srcPtr, dstPtr);
+
+    __syncthreads();
+
+    if((id_x < roiWidth) && (id_y < roiHeight))
+    {
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.x, (d_float8 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.y, (d_float8 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.z, (d_float8 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
+    }
+}
+
+template <typename T>
+__global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
+                                                                  uint3 srcStridesNCH,
+                                                                  T *dstPtr,
+                                                                  uint2 dstStridesNH,
+                                                                  RpptROIPtr roiTensorPtrSrc,
+                                                                  int *tableY,
+                                                                  int *tableCbCr,
+                                                                  float qScale)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    int hipThreadIdx_x8 = hipThreadIdx_x * 8;
+    int hipThreadIdx_x4 = hipThreadIdx_x * 4;
+
+    int alignedWidth = (roiTensorPtrSrc[id_z].xywhROI.roiWidth + 15) & ~15;
+    int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
+
+    // Boundary checks
+    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
+        return;
+
+    // ROI parameters
+    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
+    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
+    int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
+    int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
+
+    // Shared memory declaration
+    __shared__ float src_smem[48][128];  // Assuming 48 rows (aligned height for 3 channels)
+    int3 hipThreadIdx_y_channel;
+    hipThreadIdx_y_channel.x = hipThreadIdx_y;
+    hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
+    hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
+
+    float *src_smem_channel[3];
+    src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
+    src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
+    src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
+
+    // ----------- Step 1: Load from Global Memory to Shared Memory -----------
+    uint3 srcIdx;
+
+    // Check if we need special handling for image edges
+    int id_y_clamped;
+    id_y_clamped = (id_y < roiHeight) ? id_y : (roiHeight - 1);
+
+    srcIdx.x = (id_z * srcStridesNCH.x) +((id_y_clamped + roiY) * srcStridesNCH.z) +(id_x + roiX);
+    srcIdx.y = srcIdx.x + srcStridesNCH.y;
+    srcIdx.z = srcIdx.y + srcStridesNCH.y;
+
+    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
+
+    // Determine actual source coordinates based on ROI bounds
+    int srcY = (id_y < roiHeight) ? (id_y + roiY) : (roiHeight - 1 + roiY);
+
+    // Horizontal loading with proper padding to 16-pixel multiples
+    bool isEdge = (id_x + 8 > roiWidth);
+    if(!isEdge)
+    {
+        // Normal case: The entire 8-pixel block fits within the ROI
+        int srcX = id_x + roiX;
+        srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
+        srcIdx.y = srcIdx.x + srcStridesNCH.y;
+        srcIdx.z = srcIdx.y + srcStridesNCH.y;
+
+        // Load 8 pixels at once for each channel
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.x, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.y, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.z, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
+    }
+    else
+    {
+        // Edge case: Need to pad horizontally
+        int validPixels = (id_x < roiWidth) ? (roiWidth - id_x) : 0;
+
+        if(validPixels > 0)
+        {
+            // Load valid pixels and pad the rest
+            int srcX = id_x + roiX;
+            srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
+            srcIdx.y = srcIdx.x + srcStridesNCH.y;
+            srcIdx.z = srcIdx.y + srcStridesNCH.y;
+
+            // Load valid pixels for each channel separately
+           for(int i = 0; i < validPixels; i++)
+            {
+                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + i];
+                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + i];
+                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + i];
+            }
+            // Pad remaining pixels in the block by duplicating the last valid pixel for each channel
+           for(int i = validPixels; i < 8; i++)
+            {
+                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + validPixels - 1];
+                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + validPixels - 1];
+                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + validPixels - 1];
+            }
+        }
+        else
+        {
+            // Completely outside ROI width but within aligned width - duplicate last pixel of the row
+            int srcX = (roiWidth - 1) + roiX; // Last valid pixel in the row
+            srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
+            srcIdx.y = srcIdx.x + srcStridesNCH.y;
+            srcIdx.z = srcIdx.y + srcStridesNCH.y;
+            // Duplicate the last valid pixel across the entire 8-pixel block
+           for(int i = 0; i < 8; i++)
+            {
+                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x];
+                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y];
+                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z];
+            }
+        }
+    }
+    __syncthreads();
+
+    // Perform JPEG compression distortion on the shared memory block:
+    // Includes RGB to YCbCr conversion, chroma downsampling, DCT, quantization, inverse DCT, upsampling, and final RGB reconstruction.
+    process_jpeg_distortion(src_smem, hipThreadIdx_x8, hipThreadIdx_x4, hipThreadIdx_y, alignedWidth,
+        hipThreadIdx_y_channel, tableY, tableCbCr, srcPtr, dstPtr);
+
+    __syncthreads();
+
+    if((id_x < roiWidth) && (id_y < roiHeight))
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, src_smem_channel);
 }
 
 template <typename T>
@@ -816,448 +946,6 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
 
     if((id_x < roiWidth) && (id_y < roiHeight))
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, (d_float8 *)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-}
-
-template <typename T>
-__global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
-                                                                  uint2 srcStridesNH,
-                                                                  T *dstPtr,
-                                                                  uint3 dstStridesNCH,
-                                                                  RpptROIPtr roiTensorPtrSrc,
-                                                                  int *tableY,
-                                                                  int *tableCbCr,
-                                                                  float qScale)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    int hipThreadIdx_x8 = hipThreadIdx_x * 8;
-    int hipThreadIdx_x4 = hipThreadIdx_x * 4;
-
-    int alignedWidth = (roiTensorPtrSrc[id_z].xywhROI.roiWidth + 15) & ~15;
-    int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
-
-    // Boundary checks
-    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
-        return;
-
-    // ROI parameters
-    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
-    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-    int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-
-    // Shared memory declaration
-    __shared__ float src_smem[48][128];  // Assuming 48 rows (aligned height for 3 channels)
-    int3 hipThreadIdx_y_channel;
-    hipThreadIdx_y_channel.x = hipThreadIdx_y;
-    hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
-    hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
-
-    float *src_smem_channel[3];
-    src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
-    src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
-    src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
-
-    // ----------- Step 1: Load from Global Memory to Shared Memory -----------
-    int srcIdx;
-    uint3 dstIdx;
-    dstIdx.x = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    dstIdx.y = dstIdx.x + dstStridesNCH.y;
-    dstIdx.z = dstIdx.y + dstStridesNCH.y;
-
-    // Check if we need special handling for image edges
-    if(id_y < roiHeight)
-        srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
-    else  // All out-of-bounds threads use the last valid row
-        srcIdx = (id_z * srcStridesNH.x) + ((roiHeight - 1 + roiY) * srcStridesNH.y) + ((id_x + roiX) * 3);
-
-    bool isEdge = ((id_x + 8) > roiWidth) && (id_x < alignedWidth);
-    if(!isEdge)
-        rpp_hip_load24_pkd3_to_float24_pln3(srcPtr + srcIdx, src_smem_channel);
-    else
-    {
-        int validPixels = roiWidth - id_x;
-        // Load valid pixels (only if id_x is within valid range)
-        if(validPixels > 0)
-        {
-           for(int i = 0, idx = srcIdx; i < validPixels; i++, idx += 3)
-            {
-                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[idx];
-                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[idx + 1];
-                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[idx + 2];
-            }
-        }
-        // Pad 16 pixels by duplicating the last valid pixel
-        int lastValidIdx = srcIdx + ((validPixels - 1) * 3);
-       for(int i = validPixels; i < min(validPixels + 16, 8); i++)
-        {
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx];
-            src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 1];
-            src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[lastValidIdx + 2];
-        }
-    }
-    __syncthreads();
-
-    // ----------- Step 2: RGB to YCbCr Conversion -----------
-    d_float8 y_f8;
-    d_float24 rgb_f24;
-    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
-    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
-    int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, rgb_f24, &y_f8);
-    __syncthreads();
-
-    // ----------- Step 3: Downsample CbCr -----------
-    if(hipThreadIdx_y < 8)
-    {
-        float4 cb_f4, cr_f4;
-        // Downsample RGB and convert to CbCr
-        downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
-        // Store Y and downsampled CbCr
-        *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        // Storing Cr below Cb (8 x 64)
-        *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
-    }
-
-    *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = y_f8;
-    __syncthreads();
-
-    // ----------- Step 4: Clamp + Forward DCT -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Doing -128 as part of DCT,
-    // 1D row wise FWD DCT for Y Cb and Cr channels
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // // ----------- Step5 Column-wise DCT -----------
-    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
-    // Process all 128 columns
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_fwd_8x8_1d(&colVec[0],  false);
-        dct_fwd_8x8_1d(&colVec[8],  false);
-        dct_fwd_8x8_1d(&colVec[16], false);
-        dct_fwd_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // ----------- Step 6: Quantization -----------
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
-    __syncthreads();
-
-    // ----------- Step 7: Inverse DCT -----------
-    // 1D column wise IDCT for Y Cb and Cr channels
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_inv_8x8_1d(&colVec[0],  false);
-        dct_inv_8x8_1d(&colVec[8],  false);
-        dct_inv_8x8_1d(&colVec[16], false);
-        dct_inv_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // 1D row wise IDCT for Y Cb and Cr channels
-    // Adding back 128 as part of INV DCT
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step 8: Clamp & Upsample -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Vertical Upsampling
-    float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y / 2;
-    cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
-    cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
-    __syncthreads();
-
-    // YCbCr to RGB
-    upsample_and_RGB_hip_compute(cb_f4, cr_f4, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Clamp values and store results
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-
-    // ----------- Step 9: Final Clamp & Store -----------
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    if((id_x < roiWidth) && (id_y < roiHeight))
-    {
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.x, (d_float8 *)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.y, (d_float8 *)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx.z, (d_float8 *)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    }
-}
-
-template <typename T>
-__global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
-                                                                  uint3 srcStridesNCH,
-                                                                  T *dstPtr,
-                                                                  uint2 dstStridesNH,
-                                                                  RpptROIPtr roiTensorPtrSrc,
-                                                                  int *tableY,
-                                                                  int *tableCbCr,
-                                                                  float qScale)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    int hipThreadIdx_x8 = hipThreadIdx_x * 8;
-    int hipThreadIdx_x4 = hipThreadIdx_x * 4;
-
-    int alignedWidth = (roiTensorPtrSrc[id_z].xywhROI.roiWidth + 15) & ~15;
-    int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
-
-    // Boundary checks
-    if((id_y >= alignedHeight) || (id_x >= alignedWidth))
-        return;
-
-    // ROI parameters
-    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
-    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
-    int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-    int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-
-    // Shared memory declaration
-    __shared__ float src_smem[48][128];  // Assuming 48 rows (aligned height for 3 channels)
-    int3 hipThreadIdx_y_channel;
-    hipThreadIdx_y_channel.x = hipThreadIdx_y;
-    hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
-    hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
-
-    float *src_smem_channel[3];
-    src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
-    src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
-    src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
-
-    // ----------- Step 1: Load from Global Memory to Shared Memory -----------
-    uint3 srcIdx;
-
-    // Check if we need special handling for image edges
-    int id_y_clamped;
-    id_y_clamped = (id_y < roiHeight) ? id_y : (roiHeight - 1);
-
-    srcIdx.x = (id_z * srcStridesNCH.x) +((id_y_clamped + roiY) * srcStridesNCH.z) +(id_x + roiX);
-    srcIdx.y = srcIdx.x + srcStridesNCH.y;
-    srcIdx.z = srcIdx.y + srcStridesNCH.y;
-
-    int dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
-
-    // Determine actual source coordinates based on ROI bounds
-    int srcY = (id_y < roiHeight) ? (id_y + roiY) : (roiHeight - 1 + roiY);
-
-    // Horizontal loading with proper padding to 16-pixel multiples
-    bool isEdge = (id_x + 8 > roiWidth);
-    if(!isEdge)
-    {
-        // Normal case: The entire 8-pixel block fits within the ROI
-        int srcX = id_x + roiX;
-        srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
-        srcIdx.y = srcIdx.x + srcStridesNCH.y;
-        srcIdx.z = srcIdx.y + srcStridesNCH.y;
-
-        // Load 8 pixels at once for each channel
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.x, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.y, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx.z, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    }
-    else
-    {
-        // Edge case: Need to pad horizontally
-        int validPixels = (id_x < roiWidth) ? (roiWidth - id_x) : 0;
-
-        if(validPixels > 0)
-        {
-            // Load valid pixels and pad the rest
-            int srcX = id_x + roiX;
-            srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
-            srcIdx.y = srcIdx.x + srcStridesNCH.y;
-            srcIdx.z = srcIdx.y + srcStridesNCH.y;
-
-            // Load valid pixels for each channel separately
-           for(int i = 0; i < validPixels; i++)
-            {
-                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + i];
-                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + i];
-                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + i];
-            }
-            // Pad remaining pixels in the block by duplicating the last valid pixel for each channel
-           for(int i = validPixels; i < 8; i++)
-            {
-                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x + validPixels - 1];
-                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y + validPixels - 1];
-                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z + validPixels - 1];
-            }
-        }
-        else
-        {
-            // Completely outside ROI width but within aligned width - duplicate last pixel of the row
-            int srcX = (roiWidth - 1) + roiX; // Last valid pixel in the row
-            srcIdx.x = (id_z * srcStridesNCH.x) + (srcY * srcStridesNCH.z) + srcX;
-            srcIdx.y = srcIdx.x + srcStridesNCH.y;
-            srcIdx.z = srcIdx.y + srcStridesNCH.y;
-            // Duplicate the last valid pixel across the entire 8-pixel block
-           for(int i = 0; i < 8; i++)
-            {
-                src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[srcIdx.x];
-                src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[srcIdx.y];
-                src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[srcIdx.z];
-            }
-        }
-    }
-    __syncthreads();
-
-    // ----------- Step 2: RGB to YCbCr Conversion -----------
-    d_float8 y_f8;
-    d_float24 rgb_f24;
-    rgb_f24.f8[0] = *((d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-    rgb_f24.f8[1] = *((d_float8*)&src_smem[hipThreadIdx_y + 16][hipThreadIdx_x8]);
-    rgb_f24.f8[2] = *((d_float8*)&src_smem[hipThreadIdx_y + 32][hipThreadIdx_x8]);
-    int cbcrY = hipThreadIdx_y * 2;
-    y_hip_compute(srcPtr, rgb_f24, &y_f8);
-    __syncthreads();
-
-    // ----------- Step 3: Downsample CbCr -----------
-    if(hipThreadIdx_y < 8)
-    {
-        float4 cb_f4, cr_f4;
-        // Downsample RGB and convert to CbCr
-        downsample_cbcr_hip_compute((d_float8*)&src_smem[cbcrY][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 16][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 17][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8], (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],&cb_f4, &cr_f4);
-        // Store Y and downsampled CbCr
-        *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
-        // Storing Cr below Cb (8 x 64)
-        *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
-    }
-
-    *(d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = y_f8;
-    __syncthreads();
-
-    // ----------- Step 4: Clamp + Forward DCT -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Doing -128 as part of DCT,
-    // 1D row wise FWD DCT for Y Cb and Cr channels
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step5 Column-wise DCT -----------
-    int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
-    // Process all 128 columns
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_fwd_8x8_1d(&colVec[0],  false);
-        dct_fwd_8x8_1d(&colVec[8],  false);
-        dct_fwd_8x8_1d(&colVec[16], false);
-        dct_fwd_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // ----------- Step 6: Quantization -----------
-    quantize(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &tableY[(hipThreadIdx_y % 8) * 8]);
-    quantize(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &tableCbCr[(hipThreadIdx_y % 8) * 8]);
-    __syncthreads();
-
-    // ----------- Step 7: Inverse DCT -----------r Y Cb and Cr channels
-    if((col < 128) && (col < alignedWidth))
-    {
-        // Load column into temporary array
-        float colVec[32];
-
-       for(int i = 0; i < 32; i++)
-            colVec[i] = src_smem[i][col];
-
-        dct_inv_8x8_1d(&colVec[0],  false);
-        dct_inv_8x8_1d(&colVec[8],  false);
-        dct_inv_8x8_1d(&colVec[16], false);
-        dct_inv_8x8_1d(&colVec[24], false);
-
-       for(int i = 0; i < 32; i++)
-            src_smem[i][col] = colVec[i];
-    }
-    __syncthreads();
-
-    // 1D row wise IDCT for Y Cb and Cr channels
-    // Adding back 128 as part of INV DCT
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], true);
-    dct_inv_8x8_1d(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], true);
-    __syncthreads();
-
-    // ----------- Step 8: Clamp & Upsample -----------
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Vertical Upsampling
-    float4 cb_f4, cr_f4;
-    cbcrY = hipThreadIdx_y / 2;
-    cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
-    cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
-    __syncthreads();
-
-    // YCbCr to RGB
-    upsample_and_RGB_hip_compute(cb_f4, cr_f4, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    // Clamp values and store results
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    rpp_hip_adjust_range(dstPtr, (d_float8*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-
-    // ----------- Step 9: Final Clamp & Store -----------
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
-    clamp_range(srcPtr, (float*)&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
-    __syncthreads();
-
-    if((id_x < roiWidth) && (id_y < roiHeight))
-        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, src_smem_channel);
 }
 
 template <typename T>
