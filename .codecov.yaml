@@ -14,7 +14,7 @@ coverage:
   precision: 2      # Number of decimal places, between 0 and 5
 
 comment: # this is a top-level key
-  layout: " diff, files"
+  layout: "diff, files"
   behavior: default
   require_changes: true        # learn more in the Requiring Changes section below
   require_base: true           # [true :: must have a base report to post]
