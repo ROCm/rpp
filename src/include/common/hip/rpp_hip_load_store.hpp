@@ -1233,6 +1233,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
     *(d_half24 *)dstPtr = dst_h24;
 }
 
+// U8 stores with layout toggle PLN3 to PKD3 (24 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar *dstPtr, float **dstPtr_f24)
 {
@@ -1249,6 +1250,8 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar
     dstPtr_u32[4] = rpp_hip_pack(make_float4(srcPtrG_f8->f4[1].y, srcPtrB_f8->f4[1].y, srcPtrR_f8->f4[1].z, srcPtrG_f8->f4[1].z));
     dstPtr_u32[5] = rpp_hip_pack(make_float4(srcPtrB_f8->f4[1].z, srcPtrR_f8->f4[1].w, srcPtrG_f8->f4[1].w, srcPtrB_f8->f4[1].w));
 }
+
+// I8 stores with layout toggle PLN3 to PKD3 (24 I8 pixels)
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar *dstPtr, float **srcPtrs_uc8)
 {
@@ -1269,6 +1272,8 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar
 
     *(d_uint6_s *)dstPtr = *(d_uint6_s *)&dst_ui6;
 }
+
+// F16 stores with layout toggle PLN3 to PKD3 (24 F16 pixels)
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half *dstPtr, float **srcPtrs_uc8)
 {
@@ -1296,6 +1301,8 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
     *(d_half24 *)dstPtr = dst_h24;
 }
 
+// F32 stores with layout toggle PLN3 to PKD3 (24 F32 pixels)
+
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float *dstPtr, float **srcPtrs_uc8)
 {
     d_float8 *srcPtrR_f8, *srcPtrG_f8, *srcPtrB_f8;
@@ -1314,6 +1321,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float
 
     *(d_float24_s *)dstPtr = *(d_float24_s *)&dst_f24;
 }
+
 // U8 stores with layout toggle PKD3 to PLN3 (24 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint increment, d_float24 *dstPtr_f24)
@@ -1493,6 +1501,8 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(float *srcPtr
     srcPtrB_uc8->uc4[1] = make_uchar4(srcPtr_uc24->uc1[14], srcPtr_uc24->uc1[17], srcPtr_uc24->uc1[20], srcPtr_uc24->uc1[23]);    // write B04-B07
 }
 
+//F32 loads with layout toggle PKD3 to PLN3 (24 F32 pixels)
+
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(float *srcPtr, float **srcPtrs_f8)
 {
     d_float24 src_f24;
@@ -1512,6 +1522,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(float *srcPt
 }
 
 //U8 loads with layout toggle PKD3 to PLN3 (24 U8 pixels)
+
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPtr, float **srcPtrs_f8)
 {
     d_uchar24 src_uc24;
@@ -1538,7 +1549,8 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
                                    src_uc24.uc1[20] , src_uc24.uc1[23] );    // write B04-B07
 }
 
-// For signed char implementation
+//I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
+
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPtr, float **srcPtrs_f24) 
 {
     d_schar24_s *src_sc24_s = (d_schar24_s *)srcPtr;
@@ -1556,7 +1568,8 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(schar *srcPt
     srcPtrB_f8->f4[1] = make_float4(src_sc24_s->sc8[1].sc1[6], src_sc24_s->sc8[2].sc1[1], src_sc24_s->sc8[2].sc1[4], src_sc24_s->sc8[2].sc1[7]);
 }
 
-// For half precision implementation
+//F16 loads with layout toggle PKD3 to PLN3 (24 F16 pixels)
+
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(half *srcPtr, float **srcPtrs_f24)
 {
     d_half24 *src_h24 = (d_half24 *)srcPtr; 
