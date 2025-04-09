@@ -6,6 +6,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Added
 * Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
 * JPEG Compression Distortion augmentation on HOST (CPU) backend. (#531)
 
 ### Changed
