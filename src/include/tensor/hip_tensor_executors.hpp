@@ -953,4 +953,15 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                     RpptRoiType roiType,
                                     rpp::Handle& handle);
 
+// -------------------- jpeg_compression distortion --------------------
+
+template <typename T>
+RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               T *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               rpp::Handle& handle);
+
 #endif // HIP_TENSOR_EXECUTORS_HPP
