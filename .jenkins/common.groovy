@@ -9,7 +9,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String enableAudioTesting = 'echo audio-tests-not-supported'
     String enableVoxelTesting = 'echo voxel-tests-not-supported'
 
-    else if (platform.jenkinsLabel.contains('ubuntu')) {
+    if (platform.jenkinsLabel.contains('ubuntu')) {
         enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
         enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
