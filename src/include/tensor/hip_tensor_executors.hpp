@@ -962,4 +962,17 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                     RpptRoiType roiType,
                                     rpp::Handle& handle);
 
+// -------------------- concat --------------------
+
+template <typename T>
+RppStatus hip_exec_concat_tensor(T *srcPtr1,
+                                RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                T *srcPtr2,
+                                RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                T *dstPtr,
+                                RpptGenericDescPtr dstGenericDescPtr,
+                                Rpp32u axis,
+                                Rpp32u *srcPtr1roiTensor,
+                                rpp::Handle& handle);
+
 #endif // HIP_TENSOR_EXECUTORS_HPP

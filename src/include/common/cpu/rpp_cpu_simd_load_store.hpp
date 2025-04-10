@@ -3684,9 +3684,9 @@ inline void rpp_store12_float_pkd_pln(Rpp8s **dstPtrTempChannels, __m128 *pDst)
     }
 }
 
-inline void rpp_store8_f32_to_u8_avx(Rpp8u *dstPtrTemp, __m256 pDst)
+inline void rpp_store8_f32_to_u8_avx(Rpp8u *dstPtrTemp, __m256 *pDst)
 {
-    __m256i px1 = _mm256_cvtps_epi32(pDst);
+    __m256i px1 = _mm256_cvtps_epi32(pDst[0]);
     // Pack int32 values to uint16
     __m128i px2 = _mm_packus_epi32(_mm256_castsi256_si128(px1), _mm256_extracti128_si256(px1, 1));
     // Pack uint16 values to uint8
