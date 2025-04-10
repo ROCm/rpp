@@ -85,6 +85,10 @@ def runTestCommand (platform, project) {
                     export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rpp-%p.profraw\"
                     echo \$LLVM_PROFILE_FILE
                     make test
+                    python /opt/rocm/share/rpp/test/HOST/runImageTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HOST/runVoxelTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HOST/runAudioTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HOST/runMiscTests.py --test_type 1
                     llvm-profdata merge -sparse rawdata/*.profraw -o rpp.profdata
                     llvm-cov export -object lib/librpp.so --instr-profile=rpp.profdata --format=lcov > coverage.info
                     sudo ${packageManager} install lcov
