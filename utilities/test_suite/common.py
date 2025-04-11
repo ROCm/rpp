@@ -119,8 +119,8 @@ miscAugmentationMap  = {
     0: ["transpose","HOST", "HIP"],
     1: ["normalize", "HOST", "HIP"],
     2: ["log", "HOST", "HIP"],
-    3: ["concat", "HOST", "HIP"]
-
+    3: ["concat","HOST","HIP"],
+    4: ["log1p", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {

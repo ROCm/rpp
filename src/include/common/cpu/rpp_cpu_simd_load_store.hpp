@@ -2081,6 +2081,23 @@ inline void rpp_load16_i8_to_i32_avx(Rpp8s *srcPtr, __m256i *p)
     p[1] = _mm256_cvtepi8_epi32(_mm_shuffle_epi8(px, xmm_pxMask08To15));    /* Contains pixels 09-16 */
 }
 
+inline void rpp_load16_i16_to_f32_abs_avx(Rpp16s *srcPtr, __m256 *p)
+{
+    __m256i px =  _mm256_loadu_si256((__m256i *)srcPtr);
+
+    // Extracting 16 bits from the px and converting from 16 bit int to 32 bit int
+    __m256i px0 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 0));
+    __m256i px1 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 1));
+
+    // Taking absolute values for i32
+    __m256i abs_px0 = _mm256_abs_epi32(px0);
+    __m256i abs_px1 = _mm256_abs_epi32(px1);
+
+    // Convert 32 bit int to 32 bit floats
+    p[0] = _mm256_cvtepi32_ps(abs_px0);
+    p[1] = _mm256_cvtepi32_ps(abs_px1);
+}
+
 template <typename FuncType, typename... ArgTypes>
 inline void rpp_simd_load(FuncType &&rpp_simd_load_routine, ArgTypes&&... args)
 {
