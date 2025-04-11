@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 4
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -71,7 +71,6 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         print("\n")
         bitDepths = range(7)
         for bitDepth in bitDepths:
-            print("\n bitDepth", bitDepth)
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite

@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 4
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -228,7 +228,7 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
+supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HIP" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
