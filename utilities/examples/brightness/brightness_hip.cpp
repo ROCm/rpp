@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,6 @@ SOFTWARE.
 #include <omp.h>
 #include <hip/hip_fp16.h>
 #include <fstream>
-
-typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
@@ -315,7 +313,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, noOfImages, 0, stream, backend);
 
     //parameters for brightness node
     Rpp32f alpha[images];
@@ -406,7 +405,7 @@ int main(int argc, char **argv)
         if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
             convert_pln3_to_pkd3(outputu8, dstDescPtr);
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // OpenCV dump (if testType is unit test and QA mode is not set)
     write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);

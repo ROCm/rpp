@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -70,10 +70,11 @@ imageAugmentationMap = {
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
-    54: ["gaussian_filter", "HIP"],
+    54: ["gaussian_filter", "HIP", "HOST"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
     65: ["bitwise_and", "HOST", "HIP"],
+    66: ["bitwise_not", "HOST", "HIP"],
     67: ["bitwise_xor", "HOST", "HIP"],
     68: ["bitwise_or", "HOST", "HIP"],
     70: ["copy", "HOST", "HIP"],
@@ -117,7 +118,9 @@ voxelAugmentationMap = {
 miscAugmentationMap  = {
     0: ["transpose","HOST", "HIP"],
     1: ["normalize", "HOST", "HIP"],
-    2: ["log", "HOST", "HIP"]
+    2: ["log", "HOST", "HIP"],
+    3: ["concat", "HOST", "HIP"]
+
 }
 
 ImageAugmentationGroupMap = {
@@ -126,7 +129,7 @@ ImageAugmentationGroupMap = {
     "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
     "filter_augmentations" : [49, 54],
     "arithmetic_operations" : [61],
-    "logical_operations" : [65, 67, 68],
+    "logical_operations" : [65, 66, 67, 68],
     "data_exchange_operations" : [70, 85, 86],
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
@@ -135,7 +138,7 @@ def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():
         return str(case)
-    
+
     # Otherwise, treat it as a case name and find the corresponding number
     for caseNum, info in map.items():
         if case.lower() == info[0].lower():

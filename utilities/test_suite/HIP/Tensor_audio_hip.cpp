@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -179,7 +179,8 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, batchSize, 0, stream, backend);
 
     int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength,
                                      windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
 
                     // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
@@ -411,7 +412,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // performance test mode
     if (testType == 1)
@@ -452,6 +453,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
     if (outRateTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
-        
+
     return 0;
 }

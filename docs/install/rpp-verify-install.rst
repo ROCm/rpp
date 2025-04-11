@@ -1,6 +1,6 @@
 .. meta::
-  :description: Installing ROCm Performance Primitives 
-  :keywords: rpp, ROCm Performance Primitives, ROCm, documentation, installing, package installer
+  :description: Verifying ROCm Performance Primitives installations 
+  :keywords: rpp, ROCm Performance Primitives, ROCm, documentation, installing, verifuing
 
 ********************************************************************
 Verifying the ROCm Performance Primitives installation

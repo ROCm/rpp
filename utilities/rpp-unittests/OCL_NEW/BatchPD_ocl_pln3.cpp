@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -857,7 +857,8 @@ int main(int argc, char **argv)
 
     rppHandle_t handle;
 
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
+    RppBackend backend = RppBackend::RPP_OCL_BACKEND;
+    rppCreate(&handle, noOfImages, 0, theQueue, backend);
 
     clock_t start, end;
     double gpu_time_used;
@@ -3498,7 +3499,7 @@ int main(int argc, char **argv)
         free(outputCopy);
     }
 
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     mkdir(dst, 0700);
     strcat(dst, "/");

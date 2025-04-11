@@ -27,7 +27,6 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
     
-
     def command = """#!/usr/bin/env bash
                 set -x
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
@@ -52,15 +51,51 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
 def runTestCommand (platform, project) {
 
-    def command = """#!/usr/bin/env bash
-                set -x
-                cd ${project.paths.project_build_prefix}/build
-                mkdir -p test && cd test
-                cmake /opt/rocm/share/rpp/test
-                ctest -VV
-                """
+    String packageManager = 'apt -y'
+    String openmpPackage = 'libomp-dev'
+    
+    if (platform.jenkinsLabel.contains('rhel')) {
+        packageManager = 'yum -y'
+        openmpPackage = 'libomp-devel'
+    }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        packageManager = 'zypper -n'
+        openmpPackage = 'libomp-devel'
+    }
 
-    platform.runCommand(this, command)
+    String commitSha
+    String repoUrl
+    (commitSha, repoUrl) = util.getGitHubCommitInformation(project.paths.project_src_prefix)
+
+    withCredentials([string(credentialsId: "mathlibs-codecov-token-rpp", variable: 'CODECOV_TOKEN')])
+    {
+        def command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build
+                    mkdir -p test && cd test
+                    cmake /opt/rocm/share/rpp/test
+                    ctest -VV
+                    echo code coverage
+                    sudo ${packageManager} install ${openmpPackage}
+                    cd ../
+                    mkdir -p coverage && cd coverage
+                    cmake -D BACKEND=CPU -D CMAKE_BUILD_TYPE=Debug -D CMAKE_CXX_COMPILER=/usr/bin/clang++ -D CMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
+                    make -j\$(nproc)
+                    sudo make install
+                    export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rpp-%p.profraw\"
+                    echo \$LLVM_PROFILE_FILE
+                    make test
+                    llvm-profdata merge -sparse rawdata/*.profraw -o rpp.profdata
+                    llvm-cov export -object lib/librpp.so --instr-profile=rpp.profdata --format=lcov > coverage.info
+                    sudo ${packageManager} install lcov
+                    lcov --list coverage.info
+                    curl -Os https://uploader.codecov.io/latest/linux/codecov
+                    chmod +x codecov
+                    ./codecov -v -U \$http_proxy -t ${CODECOV_TOKEN} --file coverage.info --name rpp --sha ${commitSha}
+                    """
+
+        platform.runCommand(this, command)
+    }
 // Unit tests - TBD
 }
 
