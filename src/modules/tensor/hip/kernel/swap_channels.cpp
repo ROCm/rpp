@@ -42,23 +42,21 @@ __device__ void swap_channels_hip_compute(d_float24 *pix_f24, uint * permTensor)
 
 template <typename T>
 __global__ void swap_channels_pkd_hip_tensor(T *srcPtr,
-                                         uint2 srcStridesNH,
-                                         T *dstPtr,
-                                         uint2 dstStridesNH,
-                                         uint2 maxDim,
-                                         uint *permTensor)
+                                             uint2 srcStridesNH,
+                                             T *dstPtr,
+                                             uint2 dstStridesNH,
+                                             uint2 maxDim,
+                                             uint *permTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= maxDim.y) || (id_x >= maxDim.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + (id_x * 3);
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
 
     d_float24 pix_f24;
 
@@ -69,14 +67,18 @@ __global__ void swap_channels_pkd_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void swap_channels_pln_hip_tensor(T *srcPtr,
-                                         uint3 srcStridesNCH,
-                                         T *dstPtr,
-                                         uint3 dstStridesNCH,
-                                         uint2 maxDim,
-                                         uint *permTensor)
+                                             uint3 srcStridesNCH,
+                                             T *dstPtr,
+                                             uint3 dstStridesNCH,
+                                             uint2 maxDim,
+                                             uint *permTensor)
 {
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= maxDim.y) || (id_x >= maxDim.x))
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x) + (id_y * srcStridesNCH.z) + id_x;
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -90,20 +92,18 @@ __global__ void swap_channels_pln_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void swap_channels_pkd3_pln3_hip_tensor(T *srcPtr,
-                                               uint2 srcStridesNH,
-                                               T *dstPtr,
-                                               uint3 dstStridesNCH,
-                                               uint2 maxDim,
-                                               uint *permTensor)
+                                                   uint2 srcStridesNH,
+                                                   T *dstPtr,
+                                                   uint3 dstStridesNCH,
+                                                   uint2 maxDim,
+                                                   uint *permTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= maxDim.y) || (id_x >= maxDim.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + (id_x * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -117,23 +117,21 @@ __global__ void swap_channels_pkd3_pln3_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void swap_channels_pln3_pkd3_hip_tensor(T *srcPtr,
-                                               uint3 srcStridesNCH,
-                                               T *dstPtr,
-                                               uint2 dstStridesNH,
-                                               uint2 maxDim,
-                                               uint *permTensor)
+                                                   uint3 srcStridesNCH,
+                                                   T *dstPtr,
+                                                   uint2 dstStridesNH,
+                                                   uint2 maxDim,
+                                                   uint *permTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= maxDim.y) || (id_x >= maxDim.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x) + (id_y * srcStridesNCH.z) + id_x;
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
 
     d_float24 pix_f24;
 
@@ -220,25 +218,29 @@ RppStatus hip_exec_swap_channels_tensor(T *srcPtr,
 }
 
 template RppStatus hip_exec_swap_channels_tensor<Rpp8u>(Rpp8u*,
-                                        RpptDescPtr,
-                                        Rpp8u*,
-                                        RpptDescPtr,
-                                        rpp::Handle&);
+                                                        RpptDescPtr,
+                                                        Rpp8u*,
+                                                        RpptDescPtr,
+                                                        Rpp32u*,
+                                                        rpp::Handle&);
 
 template RppStatus hip_exec_swap_channels_tensor<half>(half*,
-                                        RpptDescPtr,
-                                        half*,
-                                        RpptDescPtr,
-                                        rpp::Handle&);
+                                                       RpptDescPtr,
+                                                       half*,
+                                                       RpptDescPtr,
+                                                       Rpp32u*,
+                                                       rpp::Handle&);
 
 template RppStatus hip_exec_swap_channels_tensor<Rpp32f>(Rpp32f*,
-                                        RpptDescPtr,
-                                        Rpp32f*,
-                                        RpptDescPtr,
-                                        rpp::Handle&);
+                                                         RpptDescPtr,
+                                                         Rpp32f*,
+                                                         RpptDescPtr,
+                                                         Rpp32u*,
+                                                         rpp::Handle&);
 
 template RppStatus hip_exec_swap_channels_tensor<Rpp8s>(Rpp8s*,
-                                        RpptDescPtr,
-                                        Rpp8s*,
-                                        RpptDescPtr,
-                                        rpp::Handle&);
+                                                        RpptDescPtr,
+                                                        Rpp8s*,
+                                                        RpptDescPtr,
+                                                        Rpp32u*,
+                                                        rpp::Handle&);

@@ -33,13 +33,15 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                                           rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
+
+    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u count = 0;
-        for(Rpp32u i = 0 ;i < 3; i++)
+        for(Rpp32u i = 0; i < 3; i++)
         {
             if(permTensor[i] != i)
-                count += 1;
+                count++;
         }
         if(count == 3)
         {
@@ -52,6 +54,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
             permTensor[2] = permTensorTemp[2];
         }
     }
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -66,7 +69,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
-        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrImage;
@@ -111,7 +114,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
 
         // Swap Channels with fused output-layout toggle (NCHW -> NHWC)
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrImage;
@@ -130,7 +133,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp[permTensor[0]], srcPtrTemp[permTensor[1]], srcPtrTemp[permTensor[2]], p);    // simd loads with channel swap
@@ -157,7 +160,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
 
         // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrImage;
@@ -201,7 +204,7 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
 
         // Swap Channels without fused output-layout toggle (NCHW -> NCHW)
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrImage;
@@ -265,13 +268,15 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
                                             rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
+
+    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u count = 0;
-        for(Rpp32u i = 0 ;i < 3; i++)
+        for(Rpp32u i = 0; i < 3; i++)
         {
             if(permTensor[i] != i)
-                count += 1;
+                count++;
         }
         if(count == 3)
         {
@@ -496,10 +501,12 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
                                             rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
+
+    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u count = 0;
-        for(Rpp32u i = 0 ;i < 3; i++)
+        for(Rpp32u i = 0; i < 3; i++)
         {
             if(permTensor[i] != i)
                 count += 1;
@@ -728,13 +735,15 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
                                           rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
+
+    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u count = 0;
-        for(Rpp32u i = 0 ;i < 3; i++)
+        for(Rpp32u i = 0; i < 3; i++)
         {
             if(permTensor[i] != i)
-                count += 1;
+                count++;
         }
         if(count == 3)
         {

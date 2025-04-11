@@ -364,6 +364,7 @@ RppStatus hip_exec_swap_channels_tensor(T *srcPtr,
                                         RpptDescPtr srcDescPtr,
                                         T *dstPtr,
                                         RpptDescPtr dstDescPtr,
+                                        Rpp32u *permTensor,
                                         rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/

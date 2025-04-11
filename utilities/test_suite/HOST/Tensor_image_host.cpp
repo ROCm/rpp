@@ -1507,6 +1507,7 @@ int main(int argc, char **argv)
                 case SWAP_CHANNELS:
                 {
                     testCaseName = "swap_channels";
+
                     Rpp32u permTensor[3];
                     fill_perm_values(permTensor, qaFlag, additionalParam);
 

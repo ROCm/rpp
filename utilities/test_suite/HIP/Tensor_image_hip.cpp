@@ -1485,6 +1485,7 @@ int main(int argc, char **argv)
                 case SWAP_CHANNELS:
                 {
                     testCaseName = "swap_channels";
+
                     Rpp32u *permTensor = nullptr;
                     CHECK_RETURN_STATUS(hipHostMalloc(&permTensor, 3 * sizeof(Rpp32u)));
                     fill_perm_values(permTensor, qaFlag, additionalParam);
