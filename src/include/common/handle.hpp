@@ -100,6 +100,7 @@ struct Handle : rppHandle
     float GetKernelTime() const;
     bool IsProfilingEnabled() const;
 
+#ifdef RPP_LEGACY_SUPPORT
     // Kernel related
     KernelInvoke AddKernel(const std::string& algorithm,
                            const std::string& network_config,
@@ -119,6 +120,7 @@ struct Handle : rppHandle
     KernelInvoke Run(Kernel k);
     const std::vector<Kernel>& GetKernelsImpl(const std::string& algorithm, const std::string& network_config);
     Program LoadProgram(const std::string& program_name, std::string params, bool is_kernel_str, const std::string& kernel_src);
+#endif
     void Finish() const;
     void Flush() const;
 

@@ -31,13 +31,16 @@ SOFTWARE.
 #include "errors.hpp"
 #include "logger.hpp"
 #include "handle.hpp"
+#ifdef RPP_LEGACY_SUPPORT
 #include "kernel_cache.hpp"
 #include "binary_cache.hpp"
+#endif
 
 namespace rpp {
 
 // Get current context
 // We leak resources for now as there is no hipCtxRetain API
+
 hipCtx_t get_ctx()
 {
     hipInit(0);
@@ -48,6 +51,7 @@ hipCtx_t get_ctx()
     return ctx;
 }
 
+
 std::size_t GetAvailableMemory()
 {
     size_t free, total;
@@ -56,6 +60,7 @@ std::size_t GetAvailableMemory()
         RPP_THROW_HIP_STATUS(status, "Failed getting available memory");
     return free;
 }
+
 
 void* default_allocator(void*, size_t sz)
 {
@@ -72,10 +77,12 @@ void* default_allocator(void*, size_t sz)
     return result;
 }
 
+
 void default_deallocator(void*, void* mem)
 {
     CHECK_RETURN_STATUS(hipFree(mem));
 }
+
 
 int get_device_id() // Get random device
 {
@@ -85,6 +92,7 @@ int get_device_id() // Get random device
         RPP_THROW("No device");
     return device;
 }
+
 
 void set_ctx(hipCtx_t ctx)
 {
@@ -101,7 +109,9 @@ struct HandleImpl
     StreamPtr stream = nullptr;
     int device = -1;
     Allocator allocator{};
+#ifdef RPP_LEGACY_SUPPORT
     KernelCache cache;
+#endif
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
@@ -115,17 +125,20 @@ struct HandleImpl
         return StreamPtr{s, null_deleter{}};
     }
 
+
     void elapsed_time(hipEvent_t start, hipEvent_t stop)
     {
         if(enable_profiling)
             hipEventElapsedTime(&this->profiling_result, start, stop);
     }
 
+
     std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
     {
         return std::bind(
             &HandleImpl::elapsed_time, this, std::placeholders::_1, std::placeholders::_2);
     }
+
 
     void set_ctx()
     {
@@ -135,6 +148,7 @@ struct HandleImpl
         if(this->device != get_device_id())
             RPP_THROW("Running handle on wrong device");
     }
+
 
     void PreInitializeBufferCPU()
     {
@@ -163,6 +177,7 @@ struct HandleImpl
         this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
         this->initHandle->mem.mcpu.scratchBufferHost = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
+
 
     void PreInitializeBuffer()
     {
@@ -340,31 +355,37 @@ void Handle::rpp_destroy_object_host()
     free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
 }
 
+
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
 }
+
 
 Rpp32u Handle::GetNumThreads() const
 {
     return this->impl->numThreads;
 }
 
+
 void Handle::SetBatchSize(size_t bSize) const
 {
     this->impl->nBatchSize = bSize;
 }
+
 
 rppAcceleratorQueue_t Handle::GetStream() const
 {
     return impl->stream.get();
 }
 
+
 InitHandle* Handle::GetInitHandle() const
 {
     return impl->initHandle;
 }
 
+// Needed in Handle constructor
 void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const
 {
     this->impl->allocator.allocator = allocator == nullptr ? default_allocator : allocator;
@@ -392,6 +413,8 @@ float Handle::GetKernelTime() const
     return this->impl->profiling_result;
 }
 
+#ifdef RPP_LEGACY_SUPPORT
+// Batch PD dependency is there
 KernelInvoke Handle::AddKernel(const std::string& algorithm,
                                const std::string& network_config,
                                const std::string& program_name,
@@ -463,6 +486,7 @@ Program Handle::LoadProgram(const std::string& program_name,
         return HIPOCProgram{program_name, cache_file};
     }
 }
+#endif
 
 void Handle::Finish() const
 {

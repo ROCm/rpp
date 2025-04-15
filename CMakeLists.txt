@@ -65,6 +65,10 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
+
+# RPP_LEGACY_SUPPORT - default = OFF
+option(RPP_LEGACY_SUPPORT     "Build RPP with Legacy Support"       OFF)
+
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 
@@ -148,6 +152,10 @@ if (RPP_AUDIO_SUPPORT)
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
 endif()
 
+if (RPP_LEGACY_SUPPORT)
+    add_definitions(-DRPP_LEGACY_SUPPORT)        # For compile flags in RPP
+endif()
+
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
@@ -215,7 +223,7 @@ if("${BACKEND}" STREQUAL "HIP")
         else() # if we don't have rocm_check_target_ids, just assume the targets are available
             set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
         endif()
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
+        set(DEFAULT_GPU_TARGETS "gfx90a")
     endif()
 
     # Set AMD GPU_TARGETS
