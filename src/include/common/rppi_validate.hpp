@@ -63,6 +63,7 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     return layoutParams;
 }
 
+#ifdef RPP_LEGACY_SUPPORT
 inline void copy_host_maxSrcSize(RppiSize maxSrcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -91,9 +92,11 @@ inline void copy_host_roi(RppiROI roiPoints, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mcpu.roiPoints[i].y = roiPoints.y;
     }
 }
+#endif
 
 #ifdef GPU_SUPPORT
 
+#ifdef RPP_LEGACY_SUPPORT
 inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -156,6 +159,7 @@ inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.y, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.y, 0, NULL, NULL);
 #endif // backend
 }
+#endif
 
 inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramIndex)
 {
@@ -240,6 +244,7 @@ inline void copy_param_RpptRGB(RpptRGB *param, rpp::Handle& handle)
 #endif // backend
 }
 
+#ifdef RPP_LEGACY_SUPPORT
 inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -334,6 +339,7 @@ inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif // backend
 }
 
+#endif
 #endif // GPU_SUPPORT
 
 inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPtr, RpptRoiType type)
