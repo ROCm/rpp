@@ -167,9 +167,10 @@ message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIS
 add_compile_options("-Wno-unused-result")
 
 # Kernels and includes additions
-
-add_kernels("${RPP_KERNELS}")
-add_kernel_includes("${RPP_KERNEL_INCLUDES}")
+if(RPP_LEGACY_SUPPORT)
+    add_kernels("${RPP_KERNELS}")
+    add_kernel_includes("${RPP_KERNEL_INCLUDES}")
+endif()
 
 # Add library
 add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
