@@ -486,7 +486,6 @@ Program Handle::LoadProgram(const std::string& program_name,
         return HIPOCProgram{program_name, cache_file};
     }
 }
-#endif
 
 void Handle::Finish() const
 {
@@ -499,6 +498,7 @@ void Handle::Finish() const
 }
 
 void Handle::Flush() const {}
+#endif
 
 bool Handle::IsProfilingEnabled() const
 {
@@ -566,6 +566,7 @@ std::size_t Handle::GetMaxComputeUnits()
     return result;
 }
 
+#ifdef RPP_LEGACY_SUPPORT
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
     this->Finish();
@@ -602,5 +603,6 @@ shared<ConstData_t> Handle::CreateSubBuffer(ConstData_t data, std::size_t offset
     auto cdata = reinterpret_cast<const char*>(data);
     return {cdata + offset, null_deleter{}};
 }
+#endif
 
 } // namespace rpp

@@ -34,10 +34,12 @@ SOFTWARE.
 #include "rpp.h"
 #include "rppdefs.h"
 #include "common.hpp"
-#include "kernel.hpp"
 #include "object.hpp"
-#include "simple_hash.hpp"
 #include "allocator.hpp"
+#ifdef RPP_LEGACY_SUPPORT
+#include "kernel.hpp"
+#include "simple_hash.hpp"
+#endif
 
 #if RPP_USE_ROCBLAS
 #include "manage_ptr.hpp"
@@ -135,6 +137,7 @@ struct Handle : rppHandle
     std::string GetDeviceName();
     std::ostream& Print(std::ostream& os) const;
     void Copy(ConstData_t src, Data_t dest, std::size_t size);
+#ifdef RPP_LEGACY_SUPPORT
     Allocator::ManageDataPtr Create(std::size_t sz);
     Allocator::ManageDataPtr& WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
@@ -166,6 +169,7 @@ struct Handle : rppHandle
         this->ReadTo(result.data(), ddata, sz * sizeof(T));
         return result;
     }
+#endif
 
     std::string GetDbBasename()
     {
