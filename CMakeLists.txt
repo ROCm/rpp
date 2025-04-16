@@ -110,6 +110,10 @@ else()
     endif()
 endif()
 
+if("${BACKEND}" STREQUAL "OCL" AND NOT RPP_LEGACY_SUPPORT)
+    message(FATAL_ERROR "Backend cannot be OCL when Legacy Support is Disabled")
+endif()
+
 message("-- ${BoldBlue}AMD ROCm Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
