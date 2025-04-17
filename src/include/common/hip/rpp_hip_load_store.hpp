@@ -82,6 +82,7 @@ typedef struct { schar sc1[3];                                                  
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
+#ifdef RPP_LEGACY_SUPPORT
 enum class RPPTensorDataType
 {
     U8 = 0,
@@ -114,6 +115,7 @@ struct RPPTensorFunctionMetaData
             _out_format = _in_format;
     }
 };
+#endif
 
 #define LOCAL_THREADS_X                 16                  // default rpp hip thread launch config - local threads x = 16
 #define LOCAL_THREADS_Y                 16                  // default rpp hip thread launch config - local threads y = 16
@@ -154,6 +156,7 @@ dst = make_int4(floorf(src.x), floorf(src.y), floorf(src.z), floorf(src.w));
 
 /******************** HOST FUNCTIONS ********************/
 
+#ifdef RPP_LEGACY_SUPPORT
 inline int getplnpkdind(RppiChnFormat &format)
 {
     return format == RPPI_CHN_PLANAR ? 1 : 3;
@@ -180,6 +183,7 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
         kernel[i] /= sum;
     }
 }
+#endif
 
 // Retrieve Min and Max given a datatype
 

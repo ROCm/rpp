@@ -45,7 +45,7 @@ __device__ __forceinline__ void rpp_hip_load8_glitch(T *srcPtr, uint2 srcStrideC
     rpp_hip_load1_glitch(srcPtr, srcStrideCH, srcX_f8->f1[7], srcY_f8->f1[7], &(dst_f8->f1[7]), channels);
 }
 
-__device__ void check_locs(d_float8 &xLocVals, d_float8 &yLocVals, RppiPoint offset, RpptROI roiTensorPtrSrc)
+__device__ void check_locs(d_float8 &xLocVals, d_float8 &yLocVals, RpptPoint offset, RpptROI roiTensorPtrSrc)
 {
     for(int i = 0; i < 8; i++)
     {

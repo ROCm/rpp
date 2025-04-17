@@ -127,7 +127,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
         std::uniform_int_distribution<> distribX(0, srcDescPtr->w - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, srcDescPtr->h - roi.xywhROI.roiHeight);
 
-        RppiPoint maskLoc;
+        RpptPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -508,7 +508,7 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
         std::uniform_int_distribution<> distribX(0, srcDescPtr->w - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, srcDescPtr->h - roi.xywhROI.roiHeight);
 
-        RppiPoint maskLoc;
+        RpptPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -900,7 +900,7 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
         std::uniform_int_distribution<> distribX(0, srcDescPtr->w - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, srcDescPtr->h - roi.xywhROI.roiHeight);
 
-        RppiPoint maskLoc;
+        RpptPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -1292,7 +1292,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
         std::uniform_int_distribution<> distribX(0, srcDescPtr->w - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, srcDescPtr->h - roi.xywhROI.roiHeight);
 
-        RppiPoint maskLoc;
+        RpptPoint maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 

@@ -84,7 +84,9 @@ typedef rppHandle_t RppHandle_t;    // Create typedef for RppHandle_t
 #endif
 
 #include "rppdefs.h"
+#ifdef RPP_LEGACY_SUPPORT
 #include "rppi.h"
+#endif
 #include "rppt.h"
 #include "rpp_version.h"
 
