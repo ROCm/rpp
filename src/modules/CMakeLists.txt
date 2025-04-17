@@ -30,15 +30,17 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB RPP_KERNELS batch_pd/cl/kernel/*.cl)
 endif()
 
-list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
-message("-- ${Green}${PROJECT_NAME} -- Adding custom commands to rpp_kernels${ColourReset}")
-add_custom_command(
-    OUTPUT ${PROJECT_BINARY_DIR}/rpp_kernels.h
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    DEPENDS addkernels ${RPP_KERNELS} ${RPP_KERNEL_INCLUDES}
-    COMMAND ${WINE_CMD} $<TARGET_FILE:addkernels> -guard GUARD_RPP_KERNELS_HPP_ -target ${PROJECT_BINARY_DIR}/rpp_kernels.h -source ${RPP_KERNELS}
-    COMMENT "Inlining RPP kernels"
-    )
+if(RPP_LEGACY_SUPPORT)
+    list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
+    message("-- ${Green}${PROJECT_NAME} -- Adding custom commands to rpp_kernels${ColourReset}")
+    add_custom_command(
+        OUTPUT ${PROJECT_BINARY_DIR}/rpp_kernels.h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS addkernels ${RPP_KERNELS} ${RPP_KERNEL_INCLUDES}
+        COMMAND ${WINE_CMD} $<TARGET_FILE:addkernels> -guard GUARD_RPP_KERNELS_HPP_ -target ${PROJECT_BINARY_DIR}/rpp_kernels.h -source ${RPP_KERNELS}
+        COMMENT "Inlining RPP kernels"
+        )
+endif()
 
 function(add_kernels KERNEL_FILES)
     set(INIT_KERNELS_LIST)
@@ -137,7 +139,9 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    if(RPP_LEGACY_SUPPORT)
+        list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    endif()
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
     # Add OpenCL kernels
@@ -183,7 +187,7 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu
+        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu>
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/common/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor
@@ -193,7 +197,7 @@ target_include_directories( ${PROJECT_NAME}
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip
+        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip>
         ${CMAKE_SOURCE_DIR}/src/include/common/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
