@@ -40,7 +40,6 @@ namespace rpp {
 
 // Get current context
 // We leak resources for now as there is no hipCtxRetain API
-
 hipCtx_t get_ctx()
 {
     hipInit(0);
@@ -252,7 +251,6 @@ Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new Handle
     impl->PreInitializeBuffer();
     RPP_LOG_I(*this);
 }
-
 
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
