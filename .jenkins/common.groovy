@@ -68,6 +68,7 @@ def runTestCommand (platform, project) {
                     mkdir -p test && cd test
                     export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rpp-%p.profraw\"
                     echo \$LLVM_PROFILE_FILE
+                    sudo ldconfig
                     cmake /opt/rocm/share/rpp/test
                     ctest -VV
                     python /opt/rocm/share/rpp/test/HOST/runImageTests.py --test_type 0 --qa_mode 0
