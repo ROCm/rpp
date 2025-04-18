@@ -102,7 +102,6 @@ set(CPPFILES "handle_api.cpp" "handlehost.cpp")
 file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${TENSOR_CPPFILES})
-
 if(RPP_LEGACY_SUPPORT)
     file(GLOB BATCH_PD_CPPFILES "batch_pd/*.cpp" )
     list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
