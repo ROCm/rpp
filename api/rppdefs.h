@@ -480,7 +480,7 @@ typedef struct
 {
     int x;
     int y;
-} RpptPoint;
+} RpptPoint2D;
 
 /*! \brief RPPT Image 3D point type struct
  * \ingroup group_rppdefs
@@ -497,7 +497,7 @@ typedef struct
  */
 typedef struct
 {
-    RpptPoint lt, rb;    // Left-Top point and Right-Bottom point
+    RpptPoint2D lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
 
@@ -506,9 +506,9 @@ typedef struct
  */
 typedef struct
 {
-    RpptPoint r;
-    RpptPoint g;
-    RpptPoint b;
+    RpptPoint2D r;
+    RpptPoint2D g;
+    RpptPoint2D b;
 } RpptChannelOffsets;
 
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
@@ -525,7 +525,7 @@ typedef struct
  */
 typedef struct
 {
-    RpptPoint xy;
+    RpptPoint2D xy;
     int roiWidth, roiHeight;
 
 } RpptRoiXywh;

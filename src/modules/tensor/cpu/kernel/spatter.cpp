@@ -132,7 +132,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
-        RpptPoint maskLoc;
+        RpptPoint2D maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -486,7 +486,7 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
-        RpptPoint maskLoc;
+        RpptPoint2D maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -848,7 +848,7 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
-        RpptPoint maskLoc;
+        RpptPoint2D maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
@@ -1241,7 +1241,7 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roi.xywhROI.roiWidth);
         std::uniform_int_distribution<> distribY(0, SPATTER_MAX_HEIGHT - roi.xywhROI.roiHeight);
 
-        RpptPoint maskLoc;
+        RpptPoint2D maskLoc;
         maskLoc.x = distribX(gen);
         maskLoc.y = distribY(gen);
 
