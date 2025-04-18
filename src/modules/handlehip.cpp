@@ -29,7 +29,6 @@ SOFTWARE.
 #include <thread>
 #include "device_name.hpp"
 #include "errors.hpp"
-#include "logger.hpp"
 #include "handle.hpp"
 #ifdef RPP_LEGACY_SUPPORT
 #include "kernel_cache.hpp"
@@ -249,7 +248,6 @@ Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new Handle
 
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
-    RPP_LOG_I(*this);
 }
 
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
@@ -377,6 +375,7 @@ void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction
     this->impl->allocator.context = allocatorContext;
 }
 
+#ifdef RPP_LEGACY_SUPPORT
 void Handle::EnableProfiling(bool enable)
 {
     this->impl->enable_profiling = enable;
@@ -397,7 +396,6 @@ float Handle::GetKernelTime() const
     return this->impl->profiling_result;
 }
 
-#ifdef RPP_LEGACY_SUPPORT
 // Batch PD dependency is there
 KernelInvoke Handle::AddKernel(const std::string& algorithm,
                                const std::string& network_config,
@@ -482,12 +480,12 @@ void Handle::Finish() const
 }
 
 void Handle::Flush() const {}
-#endif
 
 bool Handle::IsProfilingEnabled() const
 {
     return this->impl->enable_profiling;
 }
+#endif
 
 std::size_t Handle::GetLocalMemorySize()
 {
@@ -519,11 +517,6 @@ std::string Handle::GetDeviceName()
     return name;
 }
 
-std::ostream& Handle::Print(std::ostream& os) const
-{
-    return os;
-}
-
 // No HIP API that could return maximum memory allocation size for a single object.
 std::size_t Handle::GetMaxMemoryAllocSize()
 {
@@ -551,6 +544,11 @@ std::size_t Handle::GetMaxComputeUnits()
 }
 
 #ifdef RPP_LEGACY_SUPPORT
+std::ostream& Handle::Print(std::ostream& os) const
+{
+    return os;
+}
+
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
     this->Finish();

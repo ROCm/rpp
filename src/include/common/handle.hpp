@@ -95,6 +95,7 @@ struct Handle : rppHandle
     rppAcceleratorQueue_t GetStream() const;
     void SetStream(rppAcceleratorQueue_t streamID) const;
 
+#ifdef RPP_LEGACY_SUPPORT
     // Profiling and timing related
     void EnableProfiling(bool enable = true);
     void ResetKernelTime();
@@ -102,7 +103,6 @@ struct Handle : rppHandle
     float GetKernelTime() const;
     bool IsProfilingEnabled() const;
 
-#ifdef RPP_LEGACY_SUPPORT
     // Kernel related
     KernelInvoke AddKernel(const std::string& algorithm,
                            const std::string& network_config,
@@ -122,9 +122,9 @@ struct Handle : rppHandle
     KernelInvoke Run(Kernel k);
     const std::vector<Kernel>& GetKernelsImpl(const std::string& algorithm, const std::string& network_config);
     Program LoadProgram(const std::string& program_name, std::string params, bool is_kernel_str, const std::string& kernel_src);
-#endif
     void Finish() const;
     void Flush() const;
+#endif
 
     // Memory related
     std::size_t GetLocalMemorySize();
@@ -135,9 +135,9 @@ struct Handle : rppHandle
 
     // Other
     std::string GetDeviceName();
+#ifdef RPP_LEGACY_SUPPORT
     std::ostream& Print(std::ostream& os) const;
     void Copy(ConstData_t src, Data_t dest, std::size_t size);
-#ifdef RPP_LEGACY_SUPPORT
     Allocator::ManageDataPtr Create(std::size_t sz);
     Allocator::ManageDataPtr& WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz);
     void ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz);
@@ -169,16 +169,17 @@ struct Handle : rppHandle
         this->ReadTo(result.data(), ddata, sz * sizeof(T));
         return result;
     }
-#endif
 
     std::string GetDbBasename()
     {
         return GetDeviceName() + "_" + std::to_string(GetMaxComputeUnits());
     }
+#endif
 
     std::unique_ptr<HandleImpl> impl;
 };
 
+#ifdef RPP_LEGACY_SUPPORT
 inline std::ostream& operator<<(std::ostream& os, const Handle& handle) { return handle.Print(os); }
 
 struct AutoEnableProfiling
@@ -199,6 +200,7 @@ struct AutoEnableProfiling
     Handle& h;
     bool prev_state;
 };
+#endif
 
 #endif // GPU_SUPPORT
 
