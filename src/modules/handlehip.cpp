@@ -367,7 +367,6 @@ InitHandle* Handle::GetInitHandle() const
     return impl->initHandle;
 }
 
-// Needed in Handle constructor
 void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext) const
 {
     this->impl->allocator.allocator = allocator == nullptr ? default_allocator : allocator;
@@ -396,7 +395,6 @@ float Handle::GetKernelTime() const
     return this->impl->profiling_result;
 }
 
-// Batch PD dependency is there
 KernelInvoke Handle::AddKernel(const std::string& algorithm,
                                const std::string& network_config,
                                const std::string& program_name,
