@@ -98,7 +98,7 @@ function(add_fma_property)
                                 PROPERTIES COMPILE_FLAGS -mno-fma)
 endfunction()
 
-set(CPPFILES "handle_api.cpp" "handlehost.cpp")
+set(CPPFILES "handle_api.cpp" "handle_host.cpp")
 file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${TENSOR_CPPFILES})
@@ -117,7 +117,7 @@ endif()
 
 if( "${BACKEND}" STREQUAL "HIP")
     # Add HIP kernels
-    set(MOD_HIP_CPP "handlehip.cpp")
+    set(MOD_HIP_CPP "handle_hip.cpp")
     set(MOD_HIP_ERRORS_CPP "hiperrors.cpp")
     file(GLOB MOD_HIP_CPP_TENSOR_KERNELS "tensor/hip/kernel/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
