@@ -102,6 +102,8 @@ int main(int argc, char **argv)
     // set dims and compute strides
     int offSetInBytes = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    if(testCase == LOG1P)
+        set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
     if(testCase == CONCAT)
@@ -128,6 +130,7 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
+    Rpp16s *inputI16 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     outputF32 = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
     if(testCase == CONCAT)
@@ -139,7 +142,7 @@ int main(int argc, char **argv)
     }
 
     void *input, *inputSecond, *output;
-    void *d_input, *d_inputSecond, *d_output;
+    void *d_input, *d_inputSecond, *d_inputI16, *d_output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
     output = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
@@ -165,6 +168,16 @@ int main(int argc, char **argv)
             for(int i = 0; i < iBufferSizeSecond; i++)
                 inputF32Second[i] = static_cast<float>((std::rand() % 255));
         }
+    }
+
+    if(testCase == LOG1P)
+    {
+        inputI16 = static_cast<Rpp16s *>(calloc(iBufferSize, sizeof(Rpp16s)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputI16, iBufferSize * sizeof(Rpp16s)));
+        for(int i = 0; i < iBufferSize; i++)
+            inputI16[i] = static_cast<Rpp16s>(inputF32[i]);
+        CHECK_RETURN_STATUS(hipMemcpy(d_inputI16, inputI16, iBufferSize * sizeof(Rpp16s), hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
     }
 
     // Convert inputs to correponding bit depth specified by user
@@ -278,7 +291,7 @@ int main(int argc, char **argv)
 
                 break;
             }
-            case 3:
+            case CONCAT:
             {
                 testCaseName  = "concat";
                 startWallTime = omp_get_wtime();
@@ -286,6 +299,15 @@ int main(int argc, char **argv)
                     rppt_concat_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
+
+                break;
+            }
+            case LOG1P:
+            {
+                testCaseName  = "log1p";
+
+                startWallTime = omp_get_wtime();
+                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle);
 
                 break;
             }
@@ -331,10 +353,14 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
+    if(testCase == LOG1P)
+        free(inputI16);
     free(outputF32);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
+    if(testCase == LOG1P)
+        CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_input));
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(meanTensor != nullptr)
