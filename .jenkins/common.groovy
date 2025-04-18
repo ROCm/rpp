@@ -75,6 +75,10 @@ def runTestCommand (platform, project) {
                     python /opt/rocm/share/rpp/test/HOST/runVoxelTests.py --test_type 0 --qa_mode 0
                     python /opt/rocm/share/rpp/test/HOST/runAudioTests.py --test_type 1
                     python /opt/rocm/share/rpp/test/HOST/runMiscTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HIP/runImageTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HIP/runVoxelTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HIP/runAudioTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HIP/runMiscTests.py --test_type 1
                     sudo ${packageManager} install lcov ${toolsPackage}
                     ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rpp.profdata
                     ${llvmLocation}/llvm-cov export -object ../release/lib/librpp.so --instr-profile=rpp.profdata --format=lcov > coverage.info
