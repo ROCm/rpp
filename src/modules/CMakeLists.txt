@@ -118,7 +118,6 @@ endif()
 if( "${BACKEND}" STREQUAL "HIP")
     # Add HIP kernels
     set(MOD_HIP_CPP "handle_hip.cpp")
-    set(MOD_HIP_ERRORS_CPP "hiperrors.cpp")
     file(GLOB MOD_HIP_CPP_TENSOR_KERNELS "tensor/hip/kernel/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_ERRORS_CPP} ${MOD_HIP_CPP_TENSOR_KERNELS} ${MOD_HOST_CPP_TENSOR_KERNELS})
