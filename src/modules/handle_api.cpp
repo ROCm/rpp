@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,24 +23,24 @@ SOFTWARE.
 */
 
 #include <cstdio>
-#include "rpp/errors.hpp"
-#include "rpp/handle.hpp"
+#include "errors.hpp"
+#include "handle.hpp"
 
 extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads, void* stream, RppBackend backend)
 {
     if(backend == RppBackend::RPP_HOST_BACKEND)
         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
-#if GPU_SUPPORT  
+#if GPU_SUPPORT
     else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
     {
-            return rpp::try_([&] { 
-            rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(stream)); 
+            return rpp::try_([&] {
+            rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(stream));
         });
     }
 #endif // GPU_SUPPORT
     else
         return rppStatusNotImplemented;
-   
+
 }
 
 extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
@@ -55,7 +55,7 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
         return rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
     }
 #endif // GPU_SUPPORT
-    else 
+    else
         return rppStatusNotImplemented;
 }
 

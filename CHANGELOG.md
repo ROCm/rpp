@@ -5,12 +5,15 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ## (Unreleased) RPP 2.0.0
 
 ### Added
-* RPP Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
+* `log1p`, defined as `log (1 + x)`, tensor augmentation support on HOST (CPU) and HIP backends.
 
 ### Changed
 
 * All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
+* TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
 
 ### Removed
 

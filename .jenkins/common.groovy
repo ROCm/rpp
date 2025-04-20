@@ -6,28 +6,18 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
-    String backend = 'HIP'
-    String enableSCL = 'echo build-rpp'
     String enableAudioTesting = 'echo audio-tests-not-supported'
     String enableVoxelTesting = 'echo voxel-tests-not-supported'
 
-    if (platform.jenkinsLabel.contains('centos')) {
-        backend = 'CPU'
-        enableSCL = 'source scl_source enable llvm-toolset-7'
-    }
-    else if (platform.jenkinsLabel.contains('ubuntu')) {
+    if (platform.jenkinsLabel.contains('ubuntu')) {
         enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
         enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
-        if (platform.jenkinsLabel.contains('ubuntu20')) {
-            backend = 'OCL'
-        }
     }
     else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install -y libsndfile-devel'
         enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
     
-
     def command = """#!/usr/bin/env bash
                 set -x
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
@@ -37,10 +27,9 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                ${enableSCL}
                 ${enableAudioTesting}
                 ${enableVoxelTesting}
-                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
+                cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" ../..
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
@@ -52,15 +41,57 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
 def runTestCommand (platform, project) {
 
-    def command = """#!/usr/bin/env bash
-                set -x
-                cd ${project.paths.project_build_prefix}/build
-                mkdir -p test && cd test
-                cmake /opt/rocm/share/rpp/test
-                ctest -VV
-                """
+    String packageManager = 'apt -y'
+    String toolsPackage = 'llvm-amdgpu-dev'
+    String llvmLocation = '/opt/amdgpu/lib/x86_64-linux-gnu/llvm-20.1/bin'
+    
+    if (platform.jenkinsLabel.contains('rhel')) {
+        packageManager = 'yum -y'
+        toolsPackage = 'llvm-amdgpu-devel'
+        llvmLocation = '/opt/amdgpu/lib64/llvm-20.1/bin'
+    }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        packageManager = 'zypper -n'
+        toolsPackage = 'llvm-amdgpu-devel'
+        llvmLocation = '/opt/amdgpu/lib64/llvm-20.1/bin'
+    }
 
-    platform.runCommand(this, command)
+    String commitSha
+    String repoUrl
+    (commitSha, repoUrl) = util.getGitHubCommitInformation(project.paths.project_src_prefix)
+
+    withCredentials([string(credentialsId: "mathlibs-codecov-token-rpp", variable: 'CODECOV_TOKEN')])
+    {
+        def command = """#!/usr/bin/env bash
+                    set -x
+                    cd ${project.paths.project_build_prefix}/build
+                    mkdir -p test && cd test
+                    export LLVM_PROFILE_FILE=\"\$(pwd)/rawdata/rpp-%p.profraw\"
+                    echo \$LLVM_PROFILE_FILE
+                    sudo ldconfig
+                    cmake /opt/rocm/share/rpp/test
+                    ctest -VV
+                    python /opt/rocm/share/rpp/test/HOST/runImageTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HOST/runVoxelTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HOST/runAudioTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HOST/runMiscTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HIP/runImageTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HIP/runVoxelTests.py --test_type 0 --qa_mode 0
+                    python /opt/rocm/share/rpp/test/HIP/runAudioTests.py --test_type 1
+                    python /opt/rocm/share/rpp/test/HIP/runMiscTests.py --test_type 1
+                    sudo ${packageManager} install lcov ${toolsPackage}
+                    ${llvmLocation}/llvm-profdata merge -sparse rawdata/*.profraw -o rpp.profdata
+                    ${llvmLocation}/llvm-cov export -object ../release/lib/librpp.so --instr-profile=rpp.profdata --format=lcov > coverage.info
+                    lcov --remove coverage.info '/opt/*' --output-file coverage.info
+                    lcov --list coverage.info
+                    lcov --summary  coverage.info
+                    curl -Os https://uploader.codecov.io/latest/linux/codecov
+                    chmod +x codecov
+                    ./codecov -v -U \$http_proxy -t ${CODECOV_TOKEN} --file coverage.info --name rpp --sha ${commitSha}
+                    """
+
+        platform.runCommand(this, command)
+    }
 // Unit tests - TBD
 }
 

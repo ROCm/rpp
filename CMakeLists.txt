@@ -1,7 +1,7 @@
 #[[
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -299,15 +299,15 @@ if("${BACKEND}" STREQUAL "CPU")
     endforeach(MOD_NAME)
 endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/include/rpp_backend.h")
-configure_file("${PROJECT_SOURCE_DIR}/include/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
     SET(SIMD_ENABLE "1")
 endif()
 
-add_library(${PROJECT_NAME} SHARED include/rpp.h $<TARGET_OBJECTS:modules>)
+add_library(${PROJECT_NAME} SHARED api/rpp.h $<TARGET_OBJECTS:modules>)
 if("${SIMD_ENABLE}" STREQUAL "1")
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=1)
     message("-- ${Green}${PROJECT_NAME} set to build with ENABLE_SIMD_INTRINSICS${ColourReset}")
@@ -323,7 +323,7 @@ target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/libs/third_party/ffts/libffts.a)
+    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/third_party/ffts/lib/libffts.a)
     message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
 else()
     message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
@@ -332,7 +332,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/api
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
@@ -362,13 +363,13 @@ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMP
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev
         PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_audio_augmentations_support.h
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
 
