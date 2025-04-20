@@ -1,0 +1,473 @@
+diff --git a/src/include/cpu/rpp_cpu_common.hpp b/src/include/cpu/rpp_cpu_common.hpp
+index af9b7feb..3a5b0123 100644
+--- a/src/include/cpu/rpp_cpu_common.hpp
++++ b/src/include/cpu/rpp_cpu_common.hpp
+@@ -6220,6 +6220,13 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
+     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
+ }
+ 
++inline void compute_sum_24_host_ps(__m256 *p, __m256 *pSumR, __m256 *pSumG, __m256 *pSumB)
++{
++    pSumR[0] = _mm256_add_ps(_mm256_add_ps(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
++    pSumG[0] = _mm256_add_ps(_mm256_add_ps(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
++    pSumB[0] = _mm256_add_ps(_mm256_add_ps(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
++}
++
+ inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
+ {
+     __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+diff --git a/src/include/cpu/rpp_cpu_simd.hpp b/src/include/cpu/rpp_cpu_simd.hpp
+index b5f43118..136dccba 100644
+--- a/src/include/cpu/rpp_cpu_simd.hpp
++++ b/src/include/cpu/rpp_cpu_simd.hpp
+@@ -1854,6 +1854,17 @@ inline void rpp_load8_f32_to_f64_avx(Rpp32f *srcPtr, __m256d *p)
+     p[1] = _mm256_cvtps_pd(px128[1]);
+ }
+ 
++// inline void rpp_load8_f16_to_f32_avx(Rpp16f *srcPtr, __m256 *p)
++// {
++//     __m128 px128[2];
++//     __m256 px;
++//     px = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
++//     px128[0] = _mm256_castps256_ps128(px);
++//     px128[1] = _mm256_extractf128_ps(px, 1);
++//     p[0] = _mm256_cvtps_pd(px128[0]);
++//     p[1] = _mm256_cvtps_pd(px128[1]);
++// }
++
+ inline void rpp_store8_u32_to_u32_avx(Rpp32u *dstPtr, __m256i *p)
+ {
+     _mm256_store_si256((__m256i *)dstPtr, p[0]);
+diff --git a/src/modules/cpu/kernel/swap_channels.hpp b/src/modules/cpu/kernel/swap_channels.hpp
+index 19f840aa..64a15906 100644
+--- a/src/modules/cpu/kernel/swap_channels.hpp
++++ b/src/modules/cpu/kernel/swap_channels.hpp
+@@ -233,7 +233,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+ {
+     Rpp32u numThreads = handle.GetNumThreads();
+     omp_set_dynamic(0);
+-#pragma omp parallel for num_threads(1)
++#pragma omp parallel for num_threads(numThreads)
+     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+     {
+         Rpp32f *srcPtrImage, *dstPtrImage;
+@@ -242,6 +242,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+ 
+         Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
+         Rpp32u alignedLength = (bufferLength / 12) * 12;
++        // alignedLength -= 12;
+ 
+         // Swap Channels (RGB<->BGR) with fused output-layout toggle (NHWC -> NCHW)
+         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+@@ -343,7 +344,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+         {
+             Rpp32f *srcPtrRow, *dstPtrRow;
+-            
++            // alignedLength -= 12;
+             srcPtrRow = srcPtrImage;
+             dstPtrRow = dstPtrImage;
+ 
+@@ -366,10 +367,6 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+                     p[1] = rpp_pixel_check_0to1_sse(p[1]);
+                     p[2] = rpp_pixel_check_0to1_sse(p[2]);
+                     p[3] = rpp_pixel_check_0to1_sse(p[3]);
+-                    if(i==0 && vectorLoopCount == 0){
+-                        printf("\np[0]:");
+-                        rpp_mm_print_ps(p[0]);
+-                    }
+                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
+                     srcPtrTemp += 12;
+                     dstPtrTemp += 12;
+diff --git a/src/modules/cpu/kernel/tensor_max.hpp b/src/modules/cpu/kernel/tensor_max.hpp
+index 0380f4ef..3406cc64 100644
+--- a/src/modules/cpu/kernel/tensor_max.hpp
++++ b/src/modules/cpu/kernel/tensor_max.hpp
+@@ -479,13 +479,13 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                 {
+-                    Rpp32f srcPtrTemp_ps[8];
+-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
+-                    {
+-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+-                    }
++                    // Rpp32f srcPtrTemp_ps[8];
++                    // for(int cnt = 0; cnt < vectorIncrement; cnt++)
++                    // {
++                    //     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
++                    // }
+                     __m256 p1;
+-                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, &p1);
++                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, &p1);
+                     compute_max_float8_host(&p1, &pMax);
+ 
+                     srcPtrTemp += vectorIncrement;
+@@ -504,6 +504,7 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+             max = std::max(std::max(resultAvx[0], resultAvx[1]), max);
+ #endif
+             maxArr[batchCount] = (Rpp16f)max;
++            printf("Batch %d - minArr: %f\n", batchCount, (float)maxArr[batchCount]);
+         }
+ 
+         // Tensor max 3 channel (NCHW)
+@@ -533,15 +534,15 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                 {
+-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
+-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+-                    {
+-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
+-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
+-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
+-                    }
++                    // Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
++                    // for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
++                    // {
++                    //     srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
++                    //     srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
++                    //     srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
++                    // }
+                     __m256 p[3];
+-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
++                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                     compute_max_float24_host(p, &pMaxR, &pMaxG, &pMaxB);
+ 
+                     srcPtrTempR += vectorIncrementPerChannel;
+@@ -574,6 +575,7 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+ 			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+ 			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+ 			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
++            printf("Batch %d - minArr (R: %f, G: %f, B: %f, C: %f)\n", batchCount, maxR, maxG, maxB, maxC);
+         }
+ 
+         // Tensor max 3 channel (NHWC)
+@@ -604,13 +606,13 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                     {
+-                        Rpp32f srcPtrTemp_ps[24];
+-                        for(int cnt = 0; cnt < vectorIncrement; cnt++)
+-                        {
+-                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+-                        }
++                        // Rpp32f srcPtrTemp_ps[24];
++                        // for(int cnt = 0; cnt < vectorIncrement; cnt++)
++                        // {
++                        //     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
++                        // }
+                         __m256 p[3];
+-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);
++                        rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                         compute_max_float24_host(p, &pMaxR, &pMaxG, &pMaxB);
+ 
+                         srcPtrTemp += vectorIncrement;
+@@ -640,6 +642,8 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
+ 			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+ 			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+ 			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
++            printf("Batch %d - minArr (R: %f, G: %f, B: %f, C: %f)\n", batchCount, maxR, maxG, maxB, maxC);
++
+         }
+     }
+     return RPP_SUCCESS;
+diff --git a/src/modules/cpu/kernel/tensor_mean.hpp b/src/modules/cpu/kernel/tensor_mean.hpp
+index 9536e258..1ac07413 100644
+--- a/src/modules/cpu/kernel/tensor_mean.hpp
++++ b/src/modules/cpu/kernel/tensor_mean.hpp
+@@ -498,6 +498,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
+ #endif
+             mean = static_cast<Rpp32f>(sum / totalPixelsPerChannel);
+             tensorMeanArr[batchCount] = mean;
++            printf("Batch %d - Mean: %f\n", batchCount, tensorMeanArr[batchCount]);
+         }
+ 
+         // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
+@@ -571,6 +572,8 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
+             tensorMeanArr[idx + 1] = meanG;
+             tensorMeanArr[idx + 2] = meanB;
+             tensorMeanArr[idx + 3] = mean;
++            printf("Batch %d - MeanR: %f, MeanG: %f, MeanB: %f, Overall Mean: %f\n",
++                batchCount, tensorMeanArr[idx], tensorMeanArr[idx + 1], tensorMeanArr[idx + 2], tensorMeanArr[idx + 3]);
+         }
+ 
+         // Tensor Mean without fused output-layout toggle (NHWC)
+@@ -633,6 +636,8 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
+             tensorMeanArr[idx + 1] = meanG;
+             tensorMeanArr[idx + 2] = meanB;
+             tensorMeanArr[idx + 3] = mean;
++            printf("Batch %d - MeanR: %f, MeanG: %f, MeanB: %f, Overall Mean: %f\n",
++                batchCount, tensorMeanArr[idx], tensorMeanArr[idx + 1], tensorMeanArr[idx + 2], tensorMeanArr[idx + 3]);     
+         }
+     }
+ 
+diff --git a/src/modules/cpu/kernel/tensor_min.hpp b/src/modules/cpu/kernel/tensor_min.hpp
+index 15b9b77b..b648e87a 100644
+--- a/src/modules/cpu/kernel/tensor_min.hpp
++++ b/src/modules/cpu/kernel/tensor_min.hpp
+@@ -436,7 +436,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+ 
+     omp_set_dynamic(0);
+-#pragma omp parallel for num_threads(srcDescPtr->n)
++#pragma omp parallel for num_threads(1) //srcDescPtr->n
+     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+     {
+         RpptROI roi;
+@@ -477,13 +477,13 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                 {
+-                    Rpp32f srcPtrTemp_ps[8];
+-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
+-                    {
+-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+-                    }
++                    // Rpp32f srcPtrTemp_ps[8];
++                    // for(int cnt = 0; cnt < vectorIncrement; cnt++)
++                    // {
++                    //     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
++                    // }
+                     __m256 p1;
+-                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, &p1);
++                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, &p1);
+                     compute_min_float8_host(&p1, &pMin);
+ 
+                     srcPtrTemp += vectorIncrement;
+@@ -503,6 +503,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+             min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
+ #endif
+             minArr[batchCount] = (Rpp16f) min;
++            printf("Batch %d - minArr: %f\n", batchCount, (float)minArr[batchCount]);
+         }
+ 
+         // Tensor min 3 channel (NCHW)
+@@ -532,15 +533,15 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                 {
+-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
+-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+-                    {
+-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
+-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
+-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
+-                    }
++                    // Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
++                    // for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
++                    // {
++                    //     srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
++                    //     srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
++                    //     srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
++                    // }
+                     __m256 p[3];
+-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
++                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                     compute_min_float24_host(p, &pMinR, &pMinG, &pMinB);
+ 
+                     srcPtrTempR += vectorIncrementPerChannel;
+@@ -562,7 +563,6 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+             __m256 result;
+             reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+             rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+-
+             minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+             minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+             minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
+@@ -572,6 +572,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+ 			minArr[minArrIndex + 1] = (Rpp16f) minG;
+ 			minArr[minArrIndex + 2] = (Rpp16f) minB;
+ 			minArr[minArrIndex + 3] = (Rpp16f) minC;
++            printf("Batch %d - minArr (R: %f, G: %f, B: %f, C: %f)\n", batchCount, minR, minG, minB, minC);
+         }
+ 
+         // Tensor min 3 channel (NHWC)
+@@ -602,13 +603,13 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                     {
+-                        Rpp32f srcPtrTemp_ps[24];
+-                        for(int cnt = 0; cnt < vectorIncrement; cnt++)
+-                        {
+-                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+-                        }
++                        // Rpp32f srcPtrTemp_ps[24];
++                        // for(int cnt = 0; cnt < vectorIncrement; cnt++)
++                        // {
++                        //     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
++                        // }
+                         __m256 p[3];
+-                        rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);
++                        rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);
+                         compute_min_float24_host(p, &pMinR, &pMinG, &pMinB);
+ 
+                         srcPtrTemp += vectorIncrement;
+@@ -628,7 +629,6 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+                 __m256 result;
+                 reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+                 rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+-
+                 minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+                 minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+                 minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
+@@ -639,6 +639,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
+ 			minArr[minArrIndex + 1] = (Rpp16f) minG;
+ 			minArr[minArrIndex + 2] = (Rpp16f) minB;
+ 			minArr[minArrIndex + 3] = (Rpp16f) minC;
++            printf("Batch %d - minArr (R: %f, G: %f, B: %f, C: %f)\n", batchCount, minR, minG, minB, minC);
+         }
+     }
+     return RPP_SUCCESS;
+diff --git a/src/modules/cpu/kernel/tensor_stddev.hpp b/src/modules/cpu/kernel/tensor_stddev.hpp
+index 2f64e93a..bdf4b6fd 100644
+--- a/src/modules/cpu/kernel/tensor_stddev.hpp
++++ b/src/modules/cpu/kernel/tensor_stddev.hpp
+@@ -628,6 +628,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
+ #endif
+             stddev = sqrt(var / totalPixelsPerChannel) * 255;
+             tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
++            printf("Batch %d - Stddev: %f\n", batchCount, tensorStddevArr[batchCount]);
+         }
+ 
+         // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
+@@ -732,6 +733,8 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
+             tensorStddevArr[idx + 1] = stddevG;
+             tensorStddevArr[idx + 2] = stddevB;
+             tensorStddevArr[idx + 3] = stddevImage;
++            printf("Batch %d - StddevR: %f, StddevG: %f, StddevB: %f, Overall Stddev: %f\n",
++                batchCount, tensorStddevArr[idx], tensorStddevArr[idx + 1], tensorStddevArr[idx + 2], tensorStddevArr[idx + 3]);     
+         }
+ 
+         // Tensor Stddev without fused output-layout toggle (NHWC)
+@@ -823,6 +826,8 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
+             tensorStddevArr[idx + 1] = stddevG;
+             tensorStddevArr[idx + 2] = stddevB;
+             tensorStddevArr[idx + 3] = stddevImage;
++            printf("Batch %d - StddevR: %f, StddevG: %f, StddevB: %f, Overall Stddev: %f\n",
++                batchCount, tensorStddevArr[idx], tensorStddevArr[idx + 1], tensorStddevArr[idx + 2], tensorStddevArr[idx + 3]);     
+         }
+     }
+ 
+diff --git a/src/modules/cpu/kernel/tensor_sum.hpp b/src/modules/cpu/kernel/tensor_sum.hpp
+index 72eef2b7..d993a77a 100644
+--- a/src/modules/cpu/kernel/tensor_sum.hpp
++++ b/src/modules/cpu/kernel/tensor_sum.hpp
+@@ -463,11 +463,11 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+ #if __AVX2__
+                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                 {
+-                    Rpp32f srcPtrTemp_ps[8];
+-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
+-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+-                    __m256d p1[2];
+-                    rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp_ps, p1);
++                    // Rpp32f srcPtrTemp_ps[8];
++                    // for(int cnt = 0; cnt < vectorIncrement; cnt++)
++                    //     srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
++                    // __m256d p1[2];
++                    rpp_simd_load(rpp_load8_f16_to_f64_avx, srcPtrTemp, p1);
+                     compute_sum_8_host(p1, &psum);
+                     srcPtrTemp += vectorIncrement;
+                 }
+@@ -483,6 +483,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
+ #endif
+             tensorSumArr[batchCount] = (Rpp32f)sum;
++            printf("Batch %d - Sum: %f\n", batchCount, tensorSumArr[batchCount]);
+         }
+ 
+         // Tensor Sum with fused output-layout toggle (NCHW)
+@@ -552,6 +553,9 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+             tensorSumArr[index + 1] = (Rpp32f)sumG;
+             tensorSumArr[index + 2] = (Rpp32f)sumB;
+             tensorSumArr[index + 3] = (Rpp32f)sum;
++            printf("Batch %d - SumR: %f, SumG: %f, SumB: %f, Overall Sum: %f\n",
++                batchCount, tensorSumArr[index], tensorSumArr[index + 1], tensorSumArr[index + 2], tensorSumArr[index + 3]);
++     
+         }
+ 
+         // Tensor Sum with fused output-layout toggle (NHWC)
+@@ -610,6 +614,8 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+             tensorSumArr[index + 1] = (Rpp32f)sumG;
+             tensorSumArr[index + 2] = (Rpp32f)sumB;
+             tensorSumArr[index + 3] = (Rpp32f)sum;
++            printf("Batch %d - SumR: %f, SumG: %f, SumB: %f, Overall Sum: %f\n",
++                batchCount, tensorSumArr[index], tensorSumArr[index + 1], tensorSumArr[index + 2], tensorSumArr[index + 3]);
+         }
+     }
+ 
+diff --git a/utilities/test_suite/HOST/runImageTests.py b/utilities/test_suite/HOST/runImageTests.py
+index fd2bf331..36965229 100755
+--- a/utilities/test_suite/HOST/runImageTests.py
++++ b/utilities/test_suite/HOST/runImageTests.py
+@@ -37,6 +37,7 @@ ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
+ lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
+ qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+ perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
++PerfFile = scriptPath + "/../TEST_IMAGES/performance_test"
+ outFolderPath = os.getcwd()
+ buildFolderPath = os.getcwd()
+ caseMin = 0
+@@ -89,23 +90,24 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
+ 
+             print("------------------------------------------------------------------------------------------")
+ 
+-def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
++def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile):
+     if qaMode == 1:
+         with open(loggingFolder + "/BatchPD_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+-            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
++            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, PerfFile, PerfFile, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+             read_from_subprocess_and_write_to_log(process, logFile)
+             log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
+     with open(loggingFolder + "/Tensor_image_host" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+         logFile.write("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
+-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
++        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", PerfFile, PerfFile, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+         read_from_subprocess_and_write_to_log(process, logFile)
+         log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
+         
+-def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
++def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile):
+     print("\n")
+     bitDepths = range(7)
+     if qaMode:
+         bitDepths = [0]
++    bitDepths = [2]
+     for bitDepth in bitDepths:
+         for outputFormatToggle in range(2):
+             # There is no layout toggle for PLN1 case, so skip this case
+@@ -113,19 +115,19 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
+                 continue
+             if case == "49" or case == "54":
+                 for kernelSize in range(3, 10, 2):
+-                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
++                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile)
+             elif case == "8":
+                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
+                 for noiseType in range(3):
+-                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
++                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile)
+                     print("")
+             elif case == "21" or case == "23" or case == "24" or case == "28" or case == "79":
+                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                 for interpolationType in range(6):
+-                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
++                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile)
+                     print("")
+             else:
+-                run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
++                run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList,PerfFile)
+             print("------------------------------------------------------------------------------------------\n")
+ 
+ # Parse and validate command-line arguments for the RPP test suite
+@@ -322,7 +324,7 @@ else:
+             srcPath2 = inFilePath2
+         for layout in range(3):
+             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+-            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
++            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList, PerfFile)
+ 
+ # print the results of qa tests
+ nonQACaseList = ['6', '8', '10', '11', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
