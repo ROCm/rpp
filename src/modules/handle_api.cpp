@@ -86,7 +86,7 @@ extern "C" rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction 
     return rpp::try_([&] { rpp::deref(handle).SetAllocator(allocator, deallocator, allocatorContext); });
 }
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 extern "C" rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time)
 {
     return rpp::try_([&] { rpp::deref(time) = rpp::deref(handle).GetKernelTime(); });

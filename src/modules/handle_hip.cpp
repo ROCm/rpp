@@ -30,7 +30,7 @@ SOFTWARE.
 #include "device_name.hpp"
 #include "errors.hpp"
 #include "handle.hpp"
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 #include "kernel_cache.hpp"
 #include "binary_cache.hpp"
 #endif
@@ -102,7 +102,7 @@ struct HandleImpl
     StreamPtr stream = nullptr;
     int device = -1;
     Allocator allocator{};
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
     KernelCache cache;
 #endif
     bool enable_profiling = false;
@@ -374,7 +374,7 @@ void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction
     this->impl->allocator.context = allocatorContext;
 }
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 void Handle::EnableProfiling(bool enable)
 {
     this->impl->enable_profiling = enable;
@@ -541,7 +541,7 @@ std::size_t Handle::GetMaxComputeUnits()
     return result;
 }
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 std::ostream& Handle::Print(std::ostream& os) const
 {
     return os;

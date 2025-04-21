@@ -157,7 +157,7 @@ if (RPP_AUDIO_SUPPORT)
 endif()
 
 if (RPP_LEGACY_SUPPORT)
-    add_definitions(-DRPP_LEGACY_SUPPORT)        # For compile flags in RPP
+    add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
 endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")

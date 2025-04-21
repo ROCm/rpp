@@ -74,7 +74,7 @@ if (OpenCV_FOUND)
     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
-    add_definitions(-DRPP_LEGACY_SUPPORT)
+    add_definitions(-DLEGACY_SUPPORT)
     add_executable(BatchPD_host_pkd3 BatchPD_host_pkd3.cpp)
     add_executable(BatchPD_host_pln1 BatchPD_host_pln1.cpp)
     add_executable(BatchPD_host_pln3 BatchPD_host_pln3.cpp)

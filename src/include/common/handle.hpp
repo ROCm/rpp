@@ -36,7 +36,7 @@ SOFTWARE.
 #include "common.hpp"
 #include "object.hpp"
 #include "allocator.hpp"
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 #include "kernel.hpp"
 #include "simple_hash.hpp"
 #endif
@@ -95,7 +95,7 @@ struct Handle : rppHandle
     rppAcceleratorQueue_t GetStream() const;
     void SetStream(rppAcceleratorQueue_t streamID) const;
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
     // Profiling and timing related
     void EnableProfiling(bool enable = true);
     void ResetKernelTime();
@@ -135,7 +135,7 @@ struct Handle : rppHandle
 
     // Other
     std::string GetDeviceName();
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
     std::ostream& Print(std::ostream& os) const;
     void Copy(ConstData_t src, Data_t dest, std::size_t size);
     Allocator::ManageDataPtr Create(std::size_t sz);
@@ -179,7 +179,7 @@ struct Handle : rppHandle
     std::unique_ptr<HandleImpl> impl;
 };
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 inline std::ostream& operator<<(std::ostream& os, const Handle& handle) { return handle.Print(os); }
 
 struct AutoEnableProfiling

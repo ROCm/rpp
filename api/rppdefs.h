@@ -197,7 +197,7 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 /*! \brief RPP Operations type enum
  * \ingroup group_rppdefs
  */
@@ -284,7 +284,7 @@ typedef struct
 
 /******************** RPPI typedefs ********************/
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 /*! \brief RPPI Image color convert mode type enum
  * \ingroup group_rppdefs
  */

@@ -63,7 +63,7 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     return layoutParams;
 }
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 inline void copy_host_maxSrcSize(RppiSize maxSrcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -96,7 +96,7 @@ inline void copy_host_roi(RppiROI roiPoints, rpp::Handle& handle)
 
 #ifdef GPU_SUPPORT
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -244,7 +244,7 @@ inline void copy_param_RpptRGB(RpptRGB *param, rpp::Handle& handle)
 #endif // backend
 }
 
-#ifdef RPP_LEGACY_SUPPORT
+#ifdef LEGACY_SUPPORT
 inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
