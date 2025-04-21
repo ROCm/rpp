@@ -816,7 +816,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr, RppPtr_t srcPtr2, RpptGenericDescPtr 
  * \image html geometric_augmentations_jpeg_compression_distortion_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr source tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] qualityTensor JPEG quality factor that controls the amount of distortion (0 < quality < 100).
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
