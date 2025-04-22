@@ -381,6 +381,7 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u alignedLength = ((bufferLength - 1) / 24) * 24;
             Rpp32f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrImage;
             dstPtrRow = dstPtrImage;
