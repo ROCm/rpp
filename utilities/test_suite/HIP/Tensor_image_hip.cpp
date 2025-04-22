@@ -1496,6 +1496,8 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
+                    CHECK_RETURN_STATUS(hipHostFree(permTensor));
+
                     break;
                 }
                 case COLOR_TO_GREYSCALE:

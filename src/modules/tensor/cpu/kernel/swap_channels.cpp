@@ -24,6 +24,28 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 
+// Adjust permutation tensor for NHWC - NCHW layout conversion
+inline void adjust_perm_tensor_pkd3_to_pln3(Rpp32u* permTensor)
+{
+    Rpp32u count = 0;
+    for(Rpp32u i = 0; i < 3; i++)
+    {
+        if(permTensor[i] != i)
+            count++;
+    }
+
+    if(count == 3)
+    {
+        Rpp32u permTensorTemp[3];
+        permTensorTemp[0] = permTensor[permTensor[0]];
+        permTensorTemp[1] = permTensor[permTensor[1]];
+        permTensorTemp[2] = permTensor[permTensor[2]];
+        permTensor[0] = permTensorTemp[0];
+        permTensor[1] = permTensorTemp[1];
+        permTensor[2] = permTensorTemp[2];
+    }
+}
+
 RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           Rpp8u *dstPtr,
@@ -34,26 +56,8 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 {
     Rpp32u numThreads = handle.GetNumThreads();
 
-    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u count = 0;
-        for(Rpp32u i = 0; i < 3; i++)
-        {
-            if(permTensor[i] != i)
-                count++;
-        }
-        if(count == 3)
-        {
-            Rpp32u permTensorTemp[3];
-            permTensorTemp[0] = permTensor[permTensor[0]];
-            permTensorTemp[1] = permTensor[permTensor[1]];
-            permTensorTemp[2] = permTensor[permTensor[2]];
-            permTensor[0] = permTensorTemp[0];
-            permTensor[1] = permTensorTemp[1];
-            permTensor[2] = permTensorTemp[2];
-        }
-    }
+        adjust_perm_tensor_pkd3_to_pln3(permTensor);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -64,9 +68,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
-        Rpp32u alignedLength = (bufferLength / 48) * 48;
-        Rpp32u vectorIncrement = 48;
-        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32u alignedLength = (bufferLength / 96) * 96;
+        Rpp32u vectorIncrement = 96;
+        Rpp32u vectorIncrementPerChannel = 32;
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -89,9 +93,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[6], pSwap[6];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTemp[permTensor[0]], dstPtrTemp[permTensor[1]], dstPtrTemp[permTensor[2]], p);    // simd stores with channel swap
+                    __m256i p[6], pSwap[6];
+                    rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);    // simd loads
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTemp[permTensor[0]], dstPtrTemp[permTensor[1]], dstPtrTemp[permTensor[2]], p);    // simd stores with channel swap
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp[0] += vectorIncrementPerChannel;
                     dstPtrTemp[1] += vectorIncrementPerChannel;
@@ -135,9 +139,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                 for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp[permTensor[0]], srcPtrTemp[permTensor[1]], srcPtrTemp[permTensor[2]], p);    // simd loads with channel swap
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtrTemp[permTensor[0]], srcPtrTemp[permTensor[1]], srcPtrTemp[permTensor[2]], p);    // simd loads with channel swap
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
                     srcPtrTemp[permTensor[0]] += vectorIncrementPerChannel;
                     srcPtrTemp[permTensor[1]] += vectorIncrementPerChannel;
                     srcPtrTemp[permTensor[2]] += vectorIncrementPerChannel;
@@ -176,15 +180,12 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[6], pSwap[6];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    pSwap[0] = p[permTensor[0] * 2];         // channel swap
-                    pSwap[1] = p[permTensor[0] * 2 + 1];     // channel swap
-                    pSwap[2] = p[permTensor[1] * 2];         // channel swap
-                    pSwap[3] = p[permTensor[1] * 2 + 1];     // channel swap
-                    pSwap[4] = p[permTensor[2] * 2];         // channel swap
-                    pSwap[5] = p[permTensor[2] * 2 + 1];     // channel swap
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, pSwap);    // simd stores
+                    __m256i p[3], pSwap[3];
+                    rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);    // simd loads
+                    pSwap[0] = p[permTensor[0]];
+                    pSwap[1] = p[permTensor[1]];
+                    pSwap[2] = p[permTensor[2]];
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, pSwap);    // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -228,9 +229,9 @@ RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTemp[permTensor[0]], srcPtrTemp[permTensor[1]], srcPtrTemp[permTensor[2]], p);    // simd loads with channel swap
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtrTemp[permTensor[0]], srcPtrTemp[permTensor[1]], srcPtrTemp[permTensor[2]], p);    // simd loads with channel swap
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
                     srcPtrTemp[permTensor[0]] += vectorIncrementPerChannel;
                     srcPtrTemp[permTensor[1]] += vectorIncrementPerChannel;
                     srcPtrTemp[permTensor[2]] += vectorIncrementPerChannel;
@@ -269,26 +270,9 @@ RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
 {
     Rpp32u numThreads = handle.GetNumThreads();
 
-    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u count = 0;
-        for(Rpp32u i = 0; i < 3; i++)
-        {
-            if(permTensor[i] != i)
-                count++;
-        }
-        if(count == 3)
-        {
-            Rpp32u permTensorTemp[3];
-            permTensorTemp[0] = permTensor[permTensor[0]];
-            permTensorTemp[1] = permTensor[permTensor[1]];
-            permTensorTemp[2] = permTensor[permTensor[2]];
-            permTensor[0] = permTensorTemp[0];
-            permTensor[1] = permTensorTemp[1];
-            permTensor[2] = permTensorTemp[2];
-        }
-    }
+        adjust_perm_tensor_pkd3_to_pln3(permTensor);
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -502,26 +486,9 @@ RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
 {
     Rpp32u numThreads = handle.GetNumThreads();
 
-    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u count = 0;
-        for(Rpp32u i = 0; i < 3; i++)
-        {
-            if(permTensor[i] != i)
-                count += 1;
-        }
-        if(count == 3)
-        {
-            Rpp32u permTensorTemp[3];
-            permTensorTemp[0] = permTensor[permTensor[0]];
-            permTensorTemp[1] = permTensor[permTensor[1]];
-            permTensorTemp[2] = permTensor[permTensor[2]];
-            permTensor[0] = permTensorTemp[0];
-            permTensor[1] = permTensorTemp[1];
-            permTensor[2] = permTensorTemp[2];
-        }
-    }
+        adjust_perm_tensor_pkd3_to_pln3(permTensor);
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -736,26 +703,9 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
 {
     Rpp32u numThreads = handle.GetNumThreads();
 
-    // Adjust permutation tensor for NHWC - NCHW layout conversion
     if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u count = 0;
-        for(Rpp32u i = 0; i < 3; i++)
-        {
-            if(permTensor[i] != i)
-                count++;
-        }
-        if(count == 3)
-        {
-            Rpp32u permTensorTemp[3];
-            permTensorTemp[0] = permTensor[permTensor[0]];
-            permTensorTemp[1] = permTensor[permTensor[1]];
-            permTensorTemp[2] = permTensor[permTensor[2]];
-            permTensor[0] = permTensorTemp[0];
-            permTensor[1] = permTensorTemp[1];
-            permTensor[2] = permTensorTemp[2];
-        }
-    }
+        adjust_perm_tensor_pkd3_to_pln3(permTensor);
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -864,6 +814,14 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Swap Channels without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u permIdx[6] = {
+                permTensor[0] * 2,
+                permTensor[0] * 2 + 1,
+                permTensor[1] * 2,
+                permTensor[1] * 2 + 1,
+                permTensor[2] * 2,
+                permTensor[2] * 2 + 1
+            };
             Rpp8s *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrImage;
             dstPtrRow = dstPtrImage;
@@ -880,12 +838,12 @@ RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m256 p[6], pSwap[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    pSwap[0] = p[permTensor[0] * 2];         // channel swap
-                    pSwap[1] = p[permTensor[0] * 2 + 1];     // channel swap
-                    pSwap[2] = p[permTensor[1] * 2];         // channel swap
-                    pSwap[3] = p[permTensor[1] * 2 + 1];     // channel swap
-                    pSwap[4] = p[permTensor[2] * 2];         // channel swap
-                    pSwap[5] = p[permTensor[2] * 2 + 1];     // channel swap
+                    pSwap[0] = p[permIdx[0]];
+                    pSwap[1] = p[permIdx[1]];
+                    pSwap[2] = p[permIdx[2]];
+                    pSwap[3] = p[permIdx[3]];
+                    pSwap[4] = p[permIdx[4]];
+                    pSwap[5] = p[permIdx[5]];
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, pSwap);    // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
