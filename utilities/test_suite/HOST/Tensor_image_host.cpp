@@ -215,6 +215,13 @@ int main(int argc, char **argv)
         func += "_kernelSize";
         func += additionalParam_char;
     }
+    else if(testCase == SWAP_CHANNELS)
+    {
+        char additionalParam_char[2];
+        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
+        func += "_permOrder";
+        func += additionalParam_char;
+    }
 
     if(!qaFlag)
     {
@@ -1501,10 +1508,13 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "swap_channels";
 
+                    Rpp32u permTensor[3];
+                    fill_perm_values(permTensor, qaFlag, additionalParam);
+
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
+                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, permTensor, handle);
                     else
                         missingFuncFlag = 1;
 
