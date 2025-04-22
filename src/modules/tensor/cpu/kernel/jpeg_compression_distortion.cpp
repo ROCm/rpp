@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
-#include <algorithm> // for std::clamp
 
 Rpp32s BLOCK_SIZE = 8;
 
@@ -98,14 +97,14 @@ inline Rpp32f get_quality_factor(Rpp32s quality)
     return qualityFactor;
 }
 
-void upsample_avx2(__m256 input, __m256 *p)
+inline void upsample_avx2(__m256 input, __m256 *p)
 {
     // Unpack and duplicate values to achieve upsampling
     p[0] = _mm256_permutevar8x32_ps(input, _mm256_setr_epi32(0, 0, 1, 1, 2, 2, 3, 3));
     p[1] = _mm256_permutevar8x32_ps(input, _mm256_setr_epi32(4, 4, 5, 5, 6, 6, 7, 7));
 }
 
-void transpose_8x8_avx(__m256* p)
+inline void transpose_8x8_avx(__m256* p)
 {
     __m256 temp[16];
 
@@ -137,7 +136,7 @@ void transpose_8x8_avx(__m256* p)
     p[7] = _mm256_permute2f128_ps(temp[11], temp[15], (3 << 4) | 1);
 }
 
-void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp32s qualityParam)
+inline void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp32s qualityParam)
 {
     Rpp32f qualityFactor = get_quality_factor(qualityParam);
     for (Rpp32s row = 0; row < 8; row++)
@@ -147,14 +146,14 @@ void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s stride, Rpp3
         for (Rpp32s col = 0; col < 8; col++)
         {
             Rpp32f qCoeff = quantTable[rowQuantIdx + col] * qualityFactor; // Directly accessing 1D array
-            qCoeff = std::clamp(qCoeff, 1.0f, 255.0f);
+            qCoeff = (qCoeff < 1.0f) ? 1.0f : ((qCoeff > 255.0f) ? 255.0f : qCoeff);
             block[rowIdx + col] = qCoeff * roundf(block[rowIdx + col] / qCoeff);
         }
     }
 }
 
 template <typename T>
-void dct_8x8_1d_core(T *x)
+inline void dct_8x8_1d_core(T *x)
 {
     T temp[12];
 
@@ -185,7 +184,7 @@ void dct_8x8_1d_core(T *x)
 }
 
 template <typename T>
-void dct_inv_8x8_1d_core(T *x)
+inline void dct_inv_8x8_1d_core(T *x)
 {
     T temp[12];
 
@@ -215,7 +214,7 @@ void dct_inv_8x8_1d_core(T *x)
 }
 
 template <Rpp32s stride>
-void dct_fwd_8x8_1d(Rpp32f* data)
+inline void dct_fwd_8x8_1d(Rpp32f* data)
 {
     Rpp32f x[8];
 
@@ -248,7 +247,7 @@ inline void dct_8x8_1d_avx2(__m256 *pVecDct)
 }
 
 template <Rpp32s stride>
-void dct_inv_8x8_1d(Rpp32f *data)
+inline void dct_inv_8x8_1d(Rpp32f *data)
 {
     Rpp32f x[8];
 
@@ -322,7 +321,7 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
     Rpp32s wStride = srcDescPtr->strides.wStride;
     Rpp32s hStride = srcDescPtr->strides.hStride;
 
-    Rpp32f r[256], g[256], b[256];
+    Rpp32f r[256], g[256], b[256], val;
     // Process Y component and padding
     for (Rpp32s row = 0; row < 16; row++)
     {
@@ -352,7 +351,9 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
                     g[rgbIdx] = static_cast<Rpp32f>(srcPtrG[idx]);
                     b[rgbIdx] = static_cast<Rpp32f>(srcPtrB[idx]);
                 }
-                y[rgbIdx] = std::clamp(((0.299f * r[rgbIdx]) + (0.587f * g[rgbIdx]) + (0.114f * b[rgbIdx])), 0.0f, 255.0f) - 128.0f;
+                val = (0.299f * r[rgbIdx]) + (0.587f * g[rgbIdx]) + (0.114f * b[rgbIdx]);
+                val = (val < 0.0f) ? 0.0f : ((val > 255.0f) ? 255.0f : val);
+                y[rgbIdx] = val - 128.0f;
             }
             else
             {
@@ -380,8 +381,11 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
 
             // Convert to Cb/Cr
             Rpp32s chromaIdx = (row / 2) * 8 + (col / 2);
-            cb[chromaIdx] = std::clamp(((-0.168736f * avgR) - (0.331264f * avgG) + (0.5f * avgB) + 128.0f), 0.0f, 255.0f) - 128.0f;
-            cr[chromaIdx] = std::clamp(((0.5f * avgR) - (0.418688f * avgG) - (0.081312f * avgB) + 128.0f), 0.0f, 255.0f) - 128.0f;
+            Rpp32f cbValue = (-0.168736f * avgR) - (0.331264f * avgG) + (0.5f * avgB) + 128.0f;
+            cb[chromaIdx] = (cbValue < 0.0f) ? 0.0f : (cbValue > 255.0f) ? 255.0f : cbValue - 128.0f;
+
+            Rpp32f crValue = (0.5f * avgR) - (0.418688f * avgG) - (0.081312f * avgB) + 128.0f;
+            cr[chromaIdx] = (crValue < 0.0f) ? 0.0f : (crValue > 255.0f) ? 255.0f : crValue - 128.0f;
         }
     }
 }
@@ -412,6 +416,7 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
             // Process 2x2 Y pixels for each Cb/Cr pair
             for (Rpp32s subRow = 0; subRow < 2; subRow++)
             {
+                #pragma unroll
                 for (Rpp32s subCol = 0; subCol < 2; subCol++)
                 {
                     Rpp32s yIdx = (rowIdx + subRow) * 16 + (colIdx + subCol);
@@ -423,7 +428,7 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
 
                     // Convert YCbCr to RGB
                     Rpp32f yVal = y[yIdx] + 128.0f;
-                    yVal = std::clamp(yVal, 0.0f, 255.0f);
+                    yVal = (yVal < 0.0f) ? 0.0f : (yVal > 255.0f) ? 255.0f : yVal;
                     Rpp32f r = yVal + 1.402f * currCr;
                     Rpp32f g = yVal - 0.344136f * currCb - 0.714136f * currCr;
                     Rpp32f b = yVal + 1.772f * currCb;
@@ -431,21 +436,27 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
                     // Corrected mapping to dstPtr using strides
                     if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
                     {
-                        dstPtrR[dstIdx] = static_cast<T>(std::clamp((r / 255.0f), 0.0f, 1.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(std::clamp((g / 255.0f), 0.0f, 1.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(std::clamp((b / 255.0f), 0.0f, 1.0f));
+                        r *= ONE_OVER_255;
+                        g *= ONE_OVER_255;
+                        b *= ONE_OVER_255;
+                        dstPtrR[dstIdx] = static_cast<T>((r < 0.0f) ? 0.0f : (r > 1.0f) ? 1.0f : r);
+                        dstPtrG[dstIdx] = static_cast<T>((g < 0.0f) ? 0.0f : (g > 1.0f) ? 1.0f : g);
+                        dstPtrB[dstIdx] = static_cast<T>((b < 0.0f) ? 0.0f : (b > 1.0f) ? 1.0f : b);
                     }
                     else if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        dstPtrR[dstIdx] = static_cast<T>(std::clamp((r - 128.0f), -128.0f, 127.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(std::clamp((g - 128.0f), -128.0f, 127.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(std::clamp((b - 128.0f), -128.0f, 127.0f));
+                        r -= 128;
+                        g -= 128;
+                        b -= 128;
+                        dstPtrR[dstIdx] = static_cast<T>((r < -128.0f) ? -128.0f : ((r > 127.0f) ? 127.0f : r));
+                        dstPtrG[dstIdx] = static_cast<T>((g < -128.0f) ? -128.0f : ((g > 127.0f) ? 127.0f : g));
+                        dstPtrB[dstIdx] = static_cast<T>((b < -128.0f) ? -128.0f : ((b > 127.0f) ? 127.0f : b));
                     }
                     else
                     {
-                        dstPtrR[dstIdx] = static_cast<T>(std::clamp(r, 0.0f, 255.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(std::clamp(g, 0.0f, 255.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(std::clamp(b, 0.0f, 255.0f));
+                        dstPtrR[dstIdx] = static_cast<T>((r < 0.0f) ? 0.0f : ((r > 255.0f) ? 255.0f : r));
+                        dstPtrG[dstIdx] = static_cast<T>((g < 0.0f) ? 0.0f : ((g > 255.0f) ? 255.0f : g));
+                        dstPtrB[dstIdx] = static_cast<T>((b < 0.0f) ? 0.0f : ((b > 255.0f) ? 255.0f : b));
                     }
                 }
             }
@@ -554,10 +565,11 @@ inline void jpeg_compression_distortion_pln1_generic(T *srcPtr, T *dstPtr, Rpp32
         for (Rpp32s col = 0; col < rowLimit; col++)
         {
             Rpp32s idx = rowDstIdx + col;
-            Rpp32f value = std::clamp((blockData[rowIdx + col] + 128.0f), 0.0f, 255.0f);
+            Rpp32f value = blockData[rowIdx + col] + 128.0f;
+            value = (value < 0.0f) ? 0.0f : ((value > 255.0f) ? 255.0f : value);
 
             if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
-                dstPtr[idx] = static_cast<T>(value / 255.0f);
+                dstPtr[idx] = static_cast<T>(value * ONE_OVER_255);
             else if constexpr (std::is_same<T, Rpp8s>::value)
                 dstPtr[idx] = static_cast<T>(value - 128.0f);
             else
@@ -615,8 +627,8 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
         upsample_avx2(pCr[i], &cr[0]);
         for(Rpp32s j = 0; j < 4; j++)
         {
-            Rpp32s idxY = 2 * i + (j / 2) + ((j & 1) ? 16 : 0);
-            Rpp32s idxRGB = i * 12 + (j / 2) * 6 + (j % 2);
+            Rpp32s idxY = (i << 1) + (j >> 1) + ((j & 1) << 4);
+            Rpp32s idxRGB = i * 12 + ((j >> 1) * 6) + (j & 1);
             __m256 curCb = cb[j % 2];
             __m256 curCr = cr[j % 2];
 
@@ -642,8 +654,8 @@ inline void ycbcr_to_rgb_subsampled(__m256* pY, __m256* pCb, __m256* pCr, __m256
 }
 
 // process JPEG compression by applying DCT, quantization, and inverse DCT to YCbCr image data.
-void process_jpeg_compression_distortion(__m256* pRgb, __m256* pY, __m256* pCb, __m256* pCr,
-                                         const Rpp32f *lumaQuantTable, const Rpp32f *chromaQuantTable, Rpp32s qualityParam)
+inline void process_jpeg_compression_distortion(__m256* pRgb, __m256* pY, __m256* pCb, __m256* pCr,
+                                                const Rpp32f *lumaQuantTable, const Rpp32f *chromaQuantTable, Rpp32s qualityParam)
 {
     rgb_to_ycbcr_subsampled(pRgb, pY, pCb, pCr);
     for (Rpp32s idxY = 0; idxY < 32; idxY += 8)
