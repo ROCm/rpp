@@ -65,6 +65,10 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
+
+# RPP_LEGACY_SUPPORT - default = OFF
+option(RPP_LEGACY_SUPPORT     "Build RPP with Legacy Support"       OFF)
+
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 
@@ -104,6 +108,10 @@ else()
         message("-- ${Yellow}Warning: ${PROJECT_NAME} default backend will be enforced${ColourReset}")
         set(BACKEND "HIP")
     endif()
+endif()
+
+if("${BACKEND}" STREQUAL "OCL" AND NOT RPP_LEGACY_SUPPORT)
+    message(FATAL_ERROR "Backend cannot be OCL when Legacy Support is Disabled")
 endif()
 
 message("-- ${BoldBlue}AMD ROCm Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
@@ -146,6 +154,11 @@ include_directories(${HALF_INCLUDE_DIRS})
 if (RPP_AUDIO_SUPPORT)
     add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
+endif()
+
+if (RPP_LEGACY_SUPPORT)
+    add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
+    set(RPP_LEGACY_SUPPORT 1)                # For cmakedefine01 in rpp_legacy_support.h.in
 endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
@@ -301,6 +314,7 @@ endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_legacy_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
@@ -370,6 +384,9 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
 install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+        COMPONENT dev)
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
 

@@ -29,10 +29,11 @@ SOFTWARE.
 #include <thread>
 #include "device_name.hpp"
 #include "errors.hpp"
-#include "logger.hpp"
 #include "handle.hpp"
+#ifdef LEGACY_SUPPORT
 #include "kernel_cache.hpp"
 #include "binary_cache.hpp"
+#endif
 
 namespace rpp {
 
@@ -101,7 +102,9 @@ struct HandleImpl
     StreamPtr stream = nullptr;
     int device = -1;
     Allocator allocator{};
+#ifdef LEGACY_SUPPORT
     KernelCache cache;
+#endif
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
@@ -245,7 +248,6 @@ Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new Handle
 
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
-    RPP_LOG_I(*this);
 }
 
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
@@ -372,6 +374,7 @@ void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction
     this->impl->allocator.context = allocatorContext;
 }
 
+#ifdef LEGACY_SUPPORT
 void Handle::EnableProfiling(bool enable)
 {
     this->impl->enable_profiling = enable;
@@ -480,6 +483,7 @@ bool Handle::IsProfilingEnabled() const
 {
     return this->impl->enable_profiling;
 }
+#endif
 
 std::size_t Handle::GetLocalMemorySize()
 {
@@ -511,11 +515,6 @@ std::string Handle::GetDeviceName()
     return name;
 }
 
-std::ostream& Handle::Print(std::ostream& os) const
-{
-    return os;
-}
-
 // No HIP API that could return maximum memory allocation size for a single object.
 std::size_t Handle::GetMaxMemoryAllocSize()
 {
@@ -540,6 +539,12 @@ std::size_t Handle::GetMaxComputeUnits()
         RPP_THROW_HIP_STATUS(status);
 
     return result;
+}
+
+#ifdef LEGACY_SUPPORT
+std::ostream& Handle::Print(std::ostream& os) const
+{
+    return os;
 }
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
@@ -578,5 +583,6 @@ shared<ConstData_t> Handle::CreateSubBuffer(ConstData_t data, std::size_t offset
     auto cdata = reinterpret_cast<const char*>(data);
     return {cdata + offset, null_deleter{}};
 }
+#endif
 
 } // namespace rpp
