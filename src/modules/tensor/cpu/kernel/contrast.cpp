@@ -306,10 +306,8 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_contrast_24_host(p, pContrastParams);  // contrast adjustment
-                    // Boundary checks for f32
-                    p[0] = rpp_pixel_check_0to1_avx(p[0]);
-                    p[1] = rpp_pixel_check_0to1_avx(p[1]);
-                    p[2] = rpp_pixel_check_0to1_avx(p[2]);
+                    //Boundary checks for f32
+                    rpp_pixel_check_0to1(p, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += vectorIncrement;
@@ -359,10 +357,8 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_contrast_24_host(p, pContrastParams);  // contrast adjustment
-                    // Boundary checks for f32
-                    p[0] = rpp_pixel_check_0to1_avx(p[0]);
-                    p[1] = rpp_pixel_check_0to1_avx(p[1]);
-                    p[2] = rpp_pixel_check_0to1_avx(p[2]);
+                    //Boundary checks for f32
+                    rpp_pixel_check_0to1(p, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -411,8 +407,8 @@ RppStatus contrast_f32_f32_host_tensor(Rpp32f *srcPtr,
                         __m256 p[1];
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_contrast_8_host(p, pContrastParams);  // contrast adjustment
-                        // Boundary checks for f32
-                        p[0] = rpp_pixel_check_0to1_avx(p[0]);
+                        //Boundary checks for f32
+                        rpp_pixel_check_0to1(p, 1);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
@@ -509,9 +505,8 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
                     compute_contrast_24_host(p, pContrastParams);  // contrast adjustment
-                    p[0] = rpp_pixel_check_0to1_avx(p[0]);
-                    p[1] = rpp_pixel_check_0to1_avx(p[1]);
-                    p[2] = rpp_pixel_check_0to1_avx(p[2]);
+                    //Boundary checks for f16
+                    rpp_pixel_check_0to1(p, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -577,9 +572,8 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
                     compute_contrast_24_host(p, pContrastParams);  // contrast adjustment
-                    p[0] = rpp_pixel_check_0to1_avx(p[0]);
-                    p[1] = rpp_pixel_check_0to1_avx(p[1]);
-                    p[2] = rpp_pixel_check_0to1_avx(p[2]);
+                    //Boundary checks for f16
+                    rpp_pixel_check_0to1(p, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -635,8 +629,8 @@ RppStatus contrast_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads
                         compute_contrast_8_host(p, pContrastParams);  // contrast adjustment
-                        // Boundary checks for f32
-                        p[0] = rpp_pixel_check_0to1_avx(p[0]);
+                        //Boundary checks for f16
+                        rpp_pixel_check_0to1(p, 1);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
 
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
