@@ -818,7 +818,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr, RppPtr_t srcPtr2, RpptGenericDescPtr 
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] qualityTensor JPEG quality factor that controls the amount of distortion (0 < quality < 100).
+ * \param [in] qualityTensor JPEG quality factor controlling the level of compression. Valid range is 1 to 99 (inclusive).
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
