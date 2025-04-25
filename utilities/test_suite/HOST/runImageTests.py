@@ -39,8 +39,8 @@ qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 93
+caseMin = min(imageAugmentationMap.keys())
+caseMax = max(imageAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
