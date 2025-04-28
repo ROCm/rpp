@@ -84,7 +84,7 @@ imageAugmentationMap = {
     82: ["ricap", "HOST", "HIP"],
     83: ["gridmask", "HOST", "HIP"],
     84: ["spatter", "HOST", "HIP"],
-    85: ["swap_channels", "HOST", "HIP"],
+    85: ["channel_permute", "HOST", "HIP"],
     86: ["color_to_greyscale", "HOST", "HIP"],
     87: ["tensor_sum", "HOST", "HIP"],
     88: ["tensor_min", "HOST", "HIP"],
