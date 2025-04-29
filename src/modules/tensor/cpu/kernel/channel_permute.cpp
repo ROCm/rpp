@@ -60,7 +60,7 @@ RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             Rpp8u *dstPtr,
                                             RpptDescPtr dstDescPtr,
-                                            Rpp32u *permutationIndexes,
+                                            Rpp32u *permutationsList ,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle)
 {
@@ -81,7 +81,7 @@ RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         // fill permutationTensor with swap pattern
         Rpp32u permutationTensor[3];
-        memcpy(permutationTensor, swapPatterns[permutationIndexes[batchCount]], 3 * sizeof(Rpp32u));
+        memcpy(permutationTensor, swapPatterns[permutationsList [batchCount]], 3 * sizeof(Rpp32u));
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -276,7 +276,7 @@ RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp32f *dstPtr,
                                               RpptDescPtr dstDescPtr,
-                                              Rpp32u *permutationIndexes,
+                                              Rpp32u *permutationsList ,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
@@ -297,7 +297,7 @@ RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         // fill permutationTensor with swap pattern
         Rpp32u permutationTensor[3];
-        memcpy(permutationTensor, swapPatterns[permutationIndexes[batchCount]], 3 * sizeof(Rpp32u));
+        memcpy(permutationTensor, swapPatterns[permutationsList [batchCount]], 3 * sizeof(Rpp32u));
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -495,7 +495,7 @@ RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp16f *dstPtr,
                                               RpptDescPtr dstDescPtr,
-                                              Rpp32u *permutationIndexes,
+                                              Rpp32u *permutationsList ,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
@@ -516,7 +516,7 @@ RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         // fill permutationTensor with swap pattern
         Rpp32u permutationTensor[3];
-        memcpy(permutationTensor, swapPatterns[permutationIndexes[batchCount]], 3 * sizeof(Rpp32u));
+        memcpy(permutationTensor, swapPatterns[permutationsList [batchCount]], 3 * sizeof(Rpp32u));
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -714,7 +714,7 @@ RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             Rpp8s *dstPtr,
                                             RpptDescPtr dstDescPtr,
-                                            Rpp32u *permutationIndexes,
+                                            Rpp32u *permutationsList ,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle)
 {
@@ -735,7 +735,7 @@ RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         // fill permutationTensor with swap pattern
         Rpp32u permutationTensor[3];
-        memcpy(permutationTensor, swapPatterns[permutationIndexes[batchCount]], 3 * sizeof(Rpp32u));
+        memcpy(permutationTensor, swapPatterns[permutationsList [batchCount]], 3 * sizeof(Rpp32u));
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))

@@ -454,9 +454,9 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
     }
 
-    Rpp32u *permutationIndexes;
+    Rpp32u *permutationsList ;
     if(testCase == CHANNEL_PERMUTE)
-        CHECK_RETURN_STATUS(hipHostMalloc(&permutationIndexes, batchSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&permutationsList , batchSize * sizeof(Rpp32u)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1495,11 +1495,11 @@ int main(int argc, char **argv)
                     testCaseName = "channel_permute";
 
                     for (i = 0; i < batchSize; i++)
-                        permutationIndexes[i] = permutationIdx;
+                        permutationsList [i] = permutationIdx;
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationIndexes, handle);
+                        rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationsList , handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1845,7 +1845,7 @@ int main(int argc, char **argv)
     if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostFree(kernelSizeTensor));
     if(testCase == CHANNEL_PERMUTE)
-        CHECK_RETURN_STATUS(hipHostFree(permutationIndexes));
+        CHECK_RETURN_STATUS(hipHostFree(permutationsList ));
     free(input);
     free(input_second);
     free(output);

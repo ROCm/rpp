@@ -90,7 +90,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
                                     RpptDescPtr srcDescPtr,
                                     RppPtr_t dstPtr,
                                     RpptDescPtr dstDescPtr,
-                                    Rpp32u *permutationIndexes,
+                                    Rpp32u *permutationsList ,
                                     rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -101,7 +101,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                           dstDescPtr,
-                                          permutationIndexes,
+                                          permutationsList ,
                                           layoutParams,
                                           rpp::deref(rppHandle));
     }
@@ -111,7 +111,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
                                             srcDescPtr,
                                             (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                             dstDescPtr,
-                                            permutationIndexes,
+                                            permutationsList ,
                                             layoutParams,
                                             rpp::deref(rppHandle));
     }
@@ -121,7 +121,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
                                             srcDescPtr,
                                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                             dstDescPtr,
-                                            permutationIndexes,
+                                            permutationsList ,
                                             layoutParams,
                                             rpp::deref(rppHandle));
     }
@@ -131,7 +131,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                           dstDescPtr,
-                                          permutationIndexes,
+                                          permutationsList ,
                                           layoutParams,
                                           rpp::deref(rppHandle));
     }
@@ -279,7 +279,7 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   Rpp32u *permutationIndexes,
+                                   Rpp32u *permutationsList ,
                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
@@ -290,7 +290,7 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        permutationIndexes,
+                                        permutationsList ,
                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
@@ -299,7 +299,7 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
-                                        permutationIndexes,
+                                        permutationsList ,
                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
@@ -308,7 +308,7 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
-                                        permutationIndexes,
+                                        permutationsList ,
                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
@@ -317,7 +317,7 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        permutationIndexes,
+                                        permutationsList ,
                                         rpp::deref(rppHandle));
     }
 

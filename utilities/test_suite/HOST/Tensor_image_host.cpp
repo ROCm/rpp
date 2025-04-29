@@ -1511,14 +1511,14 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "channel_permute";
 
-                    Rpp32u permutationIndexes[batchSize];
+                    Rpp32u permutationsList [batchSize];
                     for (i = 0; i < batchSize; i++)
-                        permutationIndexes[i] = permutationIdx;
+                        permutationsList [i] = permutationIdx;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_channel_permute_host(input, srcDescPtr, output, dstDescPtr, permutationIndexes, handle);
+                        rppt_channel_permute_host(input, srcDescPtr, output, dstDescPtr, permutationsList , handle);
                     else
                         missingFuncFlag = 1;
 
