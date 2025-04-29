@@ -791,39 +791,39 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
-// -------------------- swap_channels --------------------
+// -------------------- channel_permute --------------------
 
-RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp8u *dstPtr,
-                                          RpptDescPtr dstDescPtr,
-                                          Rpp32u *permTensor,
-                                          RppLayoutParams layoutParams,
-                                          rpp::Handle& handle);
-
-RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
+RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RpptDescPtr srcDescPtr,
-                                            Rpp32f *dstPtr,
+                                            Rpp8u *dstPtr,
                                             RpptDescPtr dstDescPtr,
-                                            Rpp32u *permTensor,
+                                            Rpp32u *permutationsList ,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
 
-RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
+RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp32f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u *permutationsList ,
+                                              RppLayoutParams layoutParams,
+                                              rpp::Handle& handle);
+
+RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp16f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u *permutationsList ,
+                                              RppLayoutParams layoutParams,
+                                              rpp::Handle& handle);
+
+RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RpptDescPtr srcDescPtr,
-                                            Rpp16f *dstPtr,
+                                            Rpp8s *dstPtr,
                                             RpptDescPtr dstDescPtr,
-                                            Rpp32u *permTensor,
+                                            Rpp32u *permutationsList ,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
-
-RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp8s *dstPtr,
-                                          RpptDescPtr dstDescPtr,
-                                          Rpp32u *permTensor,
-                                          RppLayoutParams layoutParams,
-                                          rpp::Handle& handle);
 
 // -------------------- color_to_greyscale --------------------
 
