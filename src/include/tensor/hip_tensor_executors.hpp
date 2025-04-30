@@ -976,4 +976,15 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                 Rpp32u *srcPtr1roiTensor,
                                 rpp::Handle& handle);
 
+// -------------------- jpeg_compression distortion --------------------
+
+template <typename T>
+RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               T *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               rpp::Handle& handle);
+
 #endif // HIP_TENSOR_EXECUTORS_HPP
