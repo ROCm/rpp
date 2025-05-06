@@ -385,16 +385,16 @@ inline void rgb_to_ycbcr_generic(T *srcPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
         for (Rpp32s col = 0; col < 16; col += 2)
         {
             Rpp32s id1 = (row * 16) + col;
-            Rpp32s id2 = (row * 16) + col + 1;
+            Rpp32s id2 = id1 + 1;
             Rpp32s id3 = (row + 1) * 16 + col;
-            Rpp32s id4 = (row + 1) * 16 + col + 1;
+            Rpp32s id4 = id3 + 1;
 
-            Rpp32f avgR = (r[id1] + r[id2] + r[id3] + r[id4]) / 4.0f;
-            Rpp32f avgG = (g[id1] + g[id2] + g[id3] + g[id4]) / 4.0f;
-            Rpp32f avgB = (b[id1] + b[id2] + b[id3] + b[id4]) / 4.0f;
+            Rpp32f avgR = (r[id1] + r[id2] + r[id3] + r[id4]) * 0.25f;
+            Rpp32f avgG = (g[id1] + g[id2] + g[id3] + g[id4]) * 0.25f;
+            Rpp32f avgB = (b[id1] + b[id2] + b[id3] + b[id4]) * 0.25f;
 
             // Convert to Cb/Cr and center around 0
-            Rpp32s chromaIdx = (row / 2) * 8 + (col / 2);
+            Rpp32s chromaIdx = (row >> 1) * 8 + (col >> 1);
             Rpp32f cbValue = (-0.168736f * avgR) - (0.331264f * avgG) + (0.5f * avgB) + 128.0f;
             cb[chromaIdx] = clamp(cbValue, 0.0f, 255.0f) - 128.0f;
 
@@ -419,12 +419,12 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
     for (Rpp32s row = 0; row < 8; row++)
     {
         Rpp32s blockRowOffset = row * 8;
-        Rpp32s rowIdx = row * 2;
+        Rpp32s rowIdx = row << 1;
         for (Rpp32s col = 0; col < 8; col++)
         {
             // Get chroma values for this 2x2 block
             Rpp32s cbcrIdx = blockRowOffset + col;
-            Rpp32s colIdx = col * 2;
+            Rpp32s colIdx = col << 1;
             Rpp32f currCb = cb[cbcrIdx];
             Rpp32f currCr = cr[cbcrIdx];
 
@@ -443,35 +443,32 @@ inline void ycbcr_to_rgb_generic(T *dstPtr, Rpp32s rowLimit, Rpp32s colLimit, Rp
 
                     // Convert YCbCr to RGB
                     Rpp32f yVal = y[yIdx] + 128.0f;
-                    yVal = clamp(yVal, 0.0f, 255.0f);
                     Rpp32f r = yVal + 1.402f * currCr;
                     Rpp32f g = yVal - 0.344136f * currCb - 0.714136f * currCr;
                     Rpp32f b = yVal + 1.772f * currCb;
 
+                    r = clamp(r, 0.0f, 255.0f);
+                    g = clamp(g, 0.0f, 255.0f);
+                    b = clamp(b, 0.0f, 255.0f);
+
                     // Corrected mapping to dstPtr using strides
                     if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
                     {
-                        r *= ONE_OVER_255;
-                        g *= ONE_OVER_255;
-                        b *= ONE_OVER_255;
-                        dstPtrR[dstIdx] = static_cast<T>(clamp(r, 0.0f, 1.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(clamp(g, 0.0f, 1.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(clamp(b, 0.0f, 1.0f));
+                        dstPtrR[dstIdx] = static_cast<T>(r * ONE_OVER_255);
+                        dstPtrG[dstIdx] = static_cast<T>(g * ONE_OVER_255);
+                        dstPtrB[dstIdx] = static_cast<T>(b * ONE_OVER_255);
                     }
                     else if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        r -= 128;
-                        g -= 128;
-                        b -= 128;
-                        dstPtrR[dstIdx] = static_cast<T>(clamp(r, -128.0f, 127.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(clamp(g, -128.0f, 127.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(clamp(b, -128.0f, 127.0f));
+                        dstPtrR[dstIdx] = static_cast<T>(r - 128);
+                        dstPtrG[dstIdx] = static_cast<T>(g - 128);
+                        dstPtrB[dstIdx] = static_cast<T>(b - 128);
                     }
                     else
                     {
-                        dstPtrR[dstIdx] = static_cast<T>(clamp(r, 0.0f, 255.0f));
-                        dstPtrG[dstIdx] = static_cast<T>(clamp(g, 0.0f, 255.0f));
-                        dstPtrB[dstIdx] = static_cast<T>(clamp(b, 0.0f, 255.0f));
+                        dstPtrR[dstIdx] = static_cast<T>(r);
+                        dstPtrG[dstIdx] = static_cast<T>(g);
+                        dstPtrB[dstIdx] = static_cast<T>(b);
                     }
                 }
             }
@@ -633,7 +630,7 @@ inline void rgb_to_ycbcr_subsampled(__m256 *pRgb, __m256 *pY, __m256 *pCb, __m25
     }
     for (Rpp32s i = 0; i < 16; i += 2)
     {
-        Rpp32s chromaIdx = i / 2;
+        Rpp32s chromaIdx = i >> 1;
         pRavg[i] = _mm256_mul_ps(_mm256_add_ps(pRavg[i], pRavg[i + 1]), pQuarterFactor);
         pGavg[i] = _mm256_mul_ps(_mm256_add_ps(pGavg[i], pGavg[i + 1]), pQuarterFactor);
         pBavg[i] = _mm256_mul_ps(_mm256_add_ps(pBavg[i], pBavg[i + 1]), pQuarterFactor);
