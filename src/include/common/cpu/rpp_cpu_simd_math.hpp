@@ -1041,18 +1041,4 @@ inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
     return p;
 }
 
-// Function to round away from zero (matches C++ roundf behavior)
-inline __m256 roundf_avx2(__m256 p)
-{
-    //Extract the sign bit (0x80000000) from each element
-    __m256 sign = _mm256_and_ps(p, _mm256_set1_ps(-0.0f));
-    // Compute the absolute value of each element by clearing the sign bit
-    __m256 abs_x = _mm256_andnot_ps(sign, p);
-    // Add 0.5 to each absolute value to handle rounding away from zero
-    __m256 half = _mm256_set1_ps(0.5f);
-    __m256 abs_plus_half = _mm256_add_ps(abs_x, half);
-    __m256 truncated = _mm256_round_ps(abs_plus_half, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);    // Truncate each adjusted absolute value towards zero using _MM_FROUND_TO_ZERO
-    return _mm256_or_ps(truncated, sign);    // Restore the original sign to the truncated values
-}
-
 #endif // RPP_CPU_SIMD_MATH_HPP
