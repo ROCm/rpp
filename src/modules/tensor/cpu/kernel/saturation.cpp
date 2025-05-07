@@ -891,8 +891,8 @@ RppStatus saturation_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 psaturationParam[1];
-        psaturationParam[0] = _mm_set1_ps(saturationParam);
+        __m128 pSaturationParam[1];
+        pSaturationParam[0] = _mm_set1_ps(saturationParam);
 #endif
 
         // Color Twist with fused output-layout toggle (NHWC -> NCHW)

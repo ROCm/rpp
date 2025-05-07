@@ -584,15 +584,15 @@ RppStatus hue_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        __m256 pHueParams[1];
-        pHueParams[0] = _mm256_set1_ps(hueParam);
+        __m256 pHueParam[1];
+        pHueParam[0] = _mm256_set1_ps(hueParam);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 pHueParams[1];
-        pHueParams[0] = _mm_set1_ps(hueParam);
+        __m128 pHueParam[1];
+        pHueParam[0] = _mm_set1_ps(hueParam);
 #endif
 
         // Color Twist with fused output-layout toggle (NHWC -> NCHW)
@@ -618,12 +618,12 @@ RppStatus hue_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[8];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -678,12 +678,12 @@ RppStatus hue_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -734,12 +734,12 @@ RppStatus hue_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -792,12 +792,12 @@ RppStatus hue_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -878,15 +878,15 @@ RppStatus hue_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        __m256 pHueParams[1];
-        pHueParams[0] = _mm256_set1_ps(hueParam);
+        __m256 pHueParam[1];
+        pHueParam[0] = _mm256_set1_ps(hueParam);
 #else
         Rpp32u alignedLength = (bufferLength / 12) * 12;
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
 
-        __m128 pHueParams[1];
-        pHueParams[0] = _mm_set1_ps(hueParam);
+        __m128 pHueParam[1];
+        pHueParam[0] = _mm_set1_ps(hueParam);
 #endif
 
         // Color Twist with fused output-layout toggle (NHWC -> NCHW)
@@ -916,12 +916,12 @@ RppStatus hue_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #else
                     __m128 p[8];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -990,12 +990,12 @@ RppStatus hue_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -1052,12 +1052,12 @@ RppStatus hue_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -1120,12 +1120,12 @@ RppStatus hue_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_hue_24_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    compute_hue_12_host(p[0], p[1], p[2], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[1], p[2], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
@@ -1211,11 +1211,11 @@ RppStatus hue_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 
 #if __AVX2__
-        __m256 pHueParams[1];
-        pHueParams[0] = _mm256_set1_ps(hueParam);
+        __m256 pHueParam[1];
+        pHueParam[0] = _mm256_set1_ps(hueParam);
 #else
-        __m128 pHueParams[1];
-        pHueParams[0] = _mm_set1_ps(hueParam);
+        __m128 pHueParam[1];
+        pHueParam[0] = _mm_set1_ps(hueParam);
 #endif
 
         // Color Twist with fused output-layout toggle (NHWC -> NCHW)
@@ -1242,17 +1242,17 @@ RppStatus hue_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
-                    compute_hue_24_host(p[0], p[2], p[4], pHueParams);    // hue adjustment
-                    compute_hue_24_host(p[1], p[3], p[5], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
+                    compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48, p);    // simd normalize
-                    compute_hue_12_host(p[0], p[4], p[8], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[1], p[5], p[9], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[2], p[6], p[10], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[3], p[7], p[11], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[3], p[7], p[11], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -1308,17 +1308,17 @@ RppStatus hue_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
-                    compute_hue_24_host(p[0], p[2], p[4], pHueParams);    // hue adjustment
-                    compute_hue_24_host(p[1], p[3], p[5], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
+                    compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48, p);    // simd normalize
-                    compute_hue_12_host(p[0], p[4], p[8], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[1], p[5], p[9], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[2], p[6], p[10], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[3], p[7], p[11], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[3], p[7], p[11], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -1370,17 +1370,17 @@ RppStatus hue_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
-                    compute_hue_24_host(p[0], p[2], p[4], pHueParams);    // hue adjustment
-                    compute_hue_24_host(p[1], p[3], p[5], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
+                    compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48, p);    // simd normalize
-                    compute_hue_12_host(p[0], p[4], p[8], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[1], p[5], p[9], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[2], p[6], p[10], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[3], p[7], p[11], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[3], p[7], p[11], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -1434,17 +1434,17 @@ RppStatus hue_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
-                    compute_hue_24_host(p[0], p[2], p[4], pHueParams);    // hue adjustment
-                    compute_hue_24_host(p[1], p[3], p[5], pHueParams);    // hue adjustment
+                    compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
+                    compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     // rpp_simd_load(rpp_normalize48, p);    // simd normalize
-                    compute_hue_12_host(p[0], p[4], p[8], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[1], p[5], p[9], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[2], p[6], p[10], pHueParams);    // hue adjustment
-                    compute_hue_12_host(p[3], p[7], p[11], pHueParams);    // hue adjustment
+                    compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
+                    compute_hue_12_host(p[3], p[7], p[11], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
