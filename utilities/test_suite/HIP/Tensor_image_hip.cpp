@@ -185,8 +185,6 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
-    Rpp32u  permutationIdx;
-
     if (kernelSizeCase)
     {
         func += "_kernelSize";
@@ -211,7 +209,6 @@ int main(int argc, char **argv)
             std::cerr << "Error: permutationIdx out of valid range (0 to 5). Received: " << additionalParam << std::endl;
             exit(0);
         }
-        permutationIdx = additionalParam;
         func += "_permOrder";
         func += std::to_string(additionalParam);
     }
@@ -453,10 +450,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
     }
-
-    Rpp32u *permutationsList ;
-    if(testCase == CHANNEL_PERMUTE)
-        CHECK_RETURN_STATUS(hipHostMalloc(&permutationsList , batchSize * sizeof(Rpp32u)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1494,14 +1487,18 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "channel_permute";
 
-                    for (i = 0; i < batchSize; i++)
-                        permutationsList [i] = permutationIdx;
+                    Rpp32u *permutationTensor = nullptr;
+                    CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
+                    for(int i = 0; i < batchSize; i++)
+                        fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationsList , handle);
+                        rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
+
+                    CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
 
                     break;
                 }
@@ -1844,8 +1841,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostFree(kernelSizeTensor));
-    if(testCase == CHANNEL_PERMUTE)
-        CHECK_RETURN_STATUS(hipHostFree(permutationsList ));
     free(input);
     free(input_second);
     free(output);

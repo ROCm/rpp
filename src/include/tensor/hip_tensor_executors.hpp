@@ -364,7 +364,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
-                                          Rpp32u *permutationsList ,
+                                          Rpp32u *permutationTensor,
                                           rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
