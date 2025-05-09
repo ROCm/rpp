@@ -69,6 +69,7 @@ RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
 
+        // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
         Rpp32u *permutationOrder = &permutationTensor[batchCount * 3];
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
@@ -283,6 +284,7 @@ RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
+        // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
         Rpp32u *permutationOrder = &permutationTensor[batchCount * 3];
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
@@ -500,6 +502,7 @@ RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
+        // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
         Rpp32u *permutationOrder = &permutationTensor[batchCount * 3];
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)
@@ -717,6 +720,7 @@ RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
+        // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
         Rpp32u *permutationOrder = &permutationTensor[batchCount * 3];
 
         // Swap Channels with fused output-layout toggle (NHWC -> NCHW)

@@ -79,8 +79,8 @@ RppStatus rppt_copy_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 #endif // GPU_SUPPORT
 
 /*! \brief Channel permute operation on HOST backend for a NCHW/NHWC layout tensor
- * \details The channel permute operation runs 6 channel swap permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
- * for a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details This function performs one of six possible channel permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
+ * for an image in a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -89,7 +89,7 @@ RppStatus rppt_copy_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] permutationTensor permutation tensor for swap channels operation in HOST memory used to swap the channels of the input image. The tensor size is 3 × BatchSize, and each value satisfies: 0 ≤ permutationTensor[i] ≤ 2.
+ * \param [in] permutationTensor A tensor in HOST memory specifying the channel permutation for each image. Size: 3 × srcDescPtr->n. Each value must satisfy: 0 ≤ permutationTensor[i] ≤ 2.
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -99,8 +99,8 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 
 #ifdef GPU_SUPPORT
 /*! \brief Channel permute operation on HIP backend for a NCHW/NHWC layout tensor
- * \details The channel permute operation runs 6 channel swap permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
- * for a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details This function performs one of six possible channel permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
+ * for an image in a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -109,7 +109,7 @@ RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] permutation tensor for swap channels operation in pinned / HIP memory used to swap the channels of the input image. The tensor size is 3 × BatchSize, and each value satisfies: 0 ≤ permutationTensor[i] ≤ 2.
+ * \param [in] permutation A tensor in HIP / Pinned memory specifying the channel permutation for each image. Size: 3 × srcDescPtr->n. Each value must satisfy: 0 ≤ permutationTensor[i] ≤ 2.
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.

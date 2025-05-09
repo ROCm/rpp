@@ -24,15 +24,15 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-__device__ void channel_permute_hip_compute(d_float24 *pix_f24, uint * permutationTensor)
+__device__ void channel_permute_hip_compute(d_float24 *pix_f24, uint3  permutationTensor)
 {
     // Temporary structure to hold swapped values
     d_float24 pixSwap_f24;
 
     // Reorder channels based on permutationTensor
-    pixSwap_f24.f8[0] = pix_f24->f8[permutationTensor[0]]; // Map R
-    pixSwap_f24.f8[1] = pix_f24->f8[permutationTensor[1]]; // Map G
-    pixSwap_f24.f8[2] = pix_f24->f8[permutationTensor[2]]; // Map B
+    pixSwap_f24.f8[0] = pix_f24->f8[permutationTensor.x]; // Map R
+    pixSwap_f24.f8[1] = pix_f24->f8[permutationTensor.y]; // Map G
+    pixSwap_f24.f8[2] = pix_f24->f8[permutationTensor.z]; // Map B
 
     // Write back the swapped values to pix_f24
     pix_f24->f8[0] = pixSwap_f24.f8[0]; // Write R
@@ -60,7 +60,8 @@ __global__ void channel_permute_pkd_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    uint *permutationOrder = &permutationTensor[id_z * 3];
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     channel_permute_hip_compute(&pix_f24, permutationOrder);
@@ -87,7 +88,8 @@ __global__ void channel_permute_pln_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    uint *permutationOrder = &permutationTensor[id_z * 3];
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     channel_permute_hip_compute(&pix_f24, permutationOrder);
@@ -114,7 +116,8 @@ __global__ void channel_permute_pkd3_pln3_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    uint *permutationOrder = &permutationTensor[id_z * 3];
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
     channel_permute_hip_compute(&pix_f24, permutationOrder);
@@ -141,7 +144,8 @@ __global__ void channel_permute_pln3_pkd3_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    uint *permutationOrder = &permutationTensor[id_z * 3];
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
     channel_permute_hip_compute(&pix_f24, permutationOrder);
