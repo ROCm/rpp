@@ -379,7 +379,7 @@ RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                     compute_color_24_to_greyscale_8_host(p, pChannelWeights);            // color_to_greyscale adjustment
                     rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);        // simd stores
 #else
-                    Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[4];
+                    Rpp32f srcPtrTemp_ps[13], dstPtrTemp_ps[4];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
 
