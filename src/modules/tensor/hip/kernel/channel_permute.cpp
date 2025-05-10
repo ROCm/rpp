@@ -24,24 +24,15 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-__device__ const uint d_swapPatterns[6][3] = {
-    {0, 1, 2},
-    {0, 2, 1},
-    {1, 0, 2},
-    {1, 2, 0},
-    {2, 0, 1},
-    {2, 1, 0}
-};
-
-__device__ void channel_permute_hip_compute(d_float24 *pix_f24, const uint * permutationTensor)
+__device__ void channel_permute_hip_compute(d_float24 *pix_f24, uint3  permutationTensor)
 {
     // Temporary structure to hold swapped values
     d_float24 pixSwap_f24;
 
     // Reorder channels based on permutationTensor
-    pixSwap_f24.f8[0] = pix_f24->f8[permutationTensor[0]]; // Map R
-    pixSwap_f24.f8[1] = pix_f24->f8[permutationTensor[1]]; // Map G
-    pixSwap_f24.f8[2] = pix_f24->f8[permutationTensor[2]]; // Map B
+    pixSwap_f24.f8[0] = pix_f24->f8[permutationTensor.x]; // Map R
+    pixSwap_f24.f8[1] = pix_f24->f8[permutationTensor.y]; // Map G
+    pixSwap_f24.f8[2] = pix_f24->f8[permutationTensor.z]; // Map B
 
     // Write back the swapped values to pix_f24
     pix_f24->f8[0] = pixSwap_f24.f8[0]; // Write R
@@ -55,7 +46,7 @@ __global__ void channel_permute_pkd_hip_tensor(T *srcPtr,
                                                T *dstPtr,
                                                uint2 dstStridesNH,
                                                uint2 maxDim,
-                                               uint *permutationsList )
+                                               uint *permutationTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -69,21 +60,11 @@ __global__ void channel_permute_pkd_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    // fill permutationTensor with swap pattern
-    __shared__ uint permutationTensor[3];
-
-    if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0 && hipThreadIdx_z == 0)
-    {
-        const uint* perm = d_swapPatterns[permutationsList [blockIdx.z]];
-        permutationTensor[0] = perm[0];
-        permutationTensor[1] = perm[1];
-        permutationTensor[2] = perm[2];
-    }
-
-    __syncthreads();
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    channel_permute_hip_compute(&pix_f24, permutationTensor);
+    channel_permute_hip_compute(&pix_f24, permutationOrder);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
@@ -93,9 +74,9 @@ __global__ void channel_permute_pln_hip_tensor(T *srcPtr,
                                                T *dstPtr,
                                                uint3 dstStridesNCH,
                                                uint2 maxDim,
-                                               uint *permutationsList )
+                                               uint *permutationTensor)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x   + hipThreadIdx_x) * 8;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -107,21 +88,11 @@ __global__ void channel_permute_pln_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    // fill permutationTensor with swap pattern
-    __shared__ uint permutationTensor[3];
-
-    if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0 && hipThreadIdx_z == 0)
-    {
-        const uint* perm = d_swapPatterns[permutationsList [blockIdx.z]];
-        permutationTensor[0] = perm[0];
-        permutationTensor[1] = perm[1];
-        permutationTensor[2] = perm[2];
-    }
-
-    __syncthreads();
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
-    channel_permute_hip_compute(&pix_f24, permutationTensor);
+    channel_permute_hip_compute(&pix_f24, permutationOrder);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -131,7 +102,7 @@ __global__ void channel_permute_pkd3_pln3_hip_tensor(T *srcPtr,
                                                      T *dstPtr,
                                                      uint3 dstStridesNCH,
                                                      uint2 maxDim,
-                                                     uint *permutationsList )
+                                                     uint *permutationTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -145,21 +116,11 @@ __global__ void channel_permute_pkd3_pln3_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    // fill permutationTensor with swap pattern
-    __shared__ uint permutationTensor[3];
-
-    if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0 && hipThreadIdx_z == 0)
-    {
-        const uint* perm = d_swapPatterns[permutationsList [blockIdx.z]];
-        permutationTensor[0] = perm[0];
-        permutationTensor[1] = perm[1];
-        permutationTensor[2] = perm[2];
-    }
-
-    __syncthreads();
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    channel_permute_hip_compute(&pix_f24, permutationTensor);
+    channel_permute_hip_compute(&pix_f24, permutationOrder);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -169,7 +130,7 @@ __global__ void channel_permute_pln3_pkd3_hip_tensor(T *srcPtr,
                                                      T *dstPtr,
                                                      uint2 dstStridesNH,
                                                      uint2 maxDim,
-                                                     uint *permutationsList )
+                                                     uint *permutationTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -183,21 +144,11 @@ __global__ void channel_permute_pln3_pkd3_hip_tensor(T *srcPtr,
 
     d_float24 pix_f24;
 
-    // fill permutationTensor with swap pattern
-    __shared__ uint permutationTensor[3];
-
-    if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0 && hipThreadIdx_z == 0)
-    {
-        const uint* perm = d_swapPatterns[permutationsList [blockIdx.z]];
-        permutationTensor[0] = perm[0];
-        permutationTensor[1] = perm[1];
-        permutationTensor[2] = perm[2];
-    }
-
-    __syncthreads();
+    // Load the 3-channel permutation order (e.g., {0, 2, 1} for R-B-G) for the current image in the batch
+    uint3 permutationOrder = ((uint3*)permutationTensor)[id_z];
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
-    channel_permute_hip_compute(&pix_f24, permutationTensor);
+    channel_permute_hip_compute(&pix_f24, permutationOrder);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
@@ -206,7 +157,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
-                                          Rpp32u *permutationsList ,
+                                          Rpp32u *permutationTensor,
                                           rpp::Handle& handle)
 {
     if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -228,7 +179,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h),
-                               permutationsList );
+                               permutationTensor);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -242,7 +193,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h),
-                               permutationsList );
+                               permutationTensor);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -256,7 +207,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h),
-                               permutationsList );
+                               permutationTensor);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -271,7 +222,7 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h),
-                               permutationsList );
+                               permutationTensor);
         }
     }
 
