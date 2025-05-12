@@ -304,15 +304,6 @@ typedef enum
     RPPI_HIGH
 } RppiFuzzyLevel;
 
-/*! \brief RPPI Image channel format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_CHN_PLANAR,
-    RPPI_CHN_PACKED
-} RppiChnFormat;
-
 /*! \brief RPP Image axis type enum
  * \ingroup group_rppdefs
  */
@@ -365,6 +356,15 @@ typedef struct
     int height;
 } RppiRect;
 #endif
+
+/*! \brief RPPI Image channel format type enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RPPI_CHN_PLANAR,
+    RPPI_CHN_PACKED
+} RppiChnFormat;
 
 /*! \brief RPPI Image size(Width/Height dimensions) type struct
  * \ingroup group_rppdefs

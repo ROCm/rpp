@@ -99,14 +99,19 @@ function(add_fma_property)
 endfunction()
 
 set(CPPFILES "handle_api.cpp" "handle_host.cpp")
+# Addition of Tensor Outer API CPP files
 file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${TENSOR_CPPFILES})
+# Addition of BatchPD Outer API CPP files based on RPP_LEGACY_SUPPORT enablement
 if(RPP_LEGACY_SUPPORT)
     file(GLOB BATCH_PD_CPPFILES "batch_pd/*.cpp" )
     list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
     list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel.cpp)
     list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
+else()
+    file(GLOB BATCH_PD_CPPFILES "legacy_dep/*.cpp" )
+    list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
 endif()
 
 if("${TIME_INFO}" STREQUAL "1")
@@ -121,10 +126,15 @@ if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB MOD_HIP_CPP_TENSOR_KERNELS "tensor/hip/kernel/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_ERRORS_CPP} ${MOD_HIP_CPP_TENSOR_KERNELS} ${MOD_HOST_CPP_TENSOR_KERNELS})
+    # Add individual BatchPD kernel cpp files based on RPP_LEGACY_SUPPORT flag enablement
     if(RPP_LEGACY_SUPPORT)
         file(GLOB MOD_HIP_CPP_BATCHPD_FILES "batch_pd/hip/*.cpp" )
         file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "batch_pd/hip/kernel/*.cpp" )
         list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_FILES} ${MOD_HIP_CPP_BATCHPD_KERNELS})
+    else()
+        file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "legacy_dep/hip/kernel/*.cpp" )
+        file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
+        list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
     endif()
     message("-- ${Green}HIP kernels added${ColourReset}")
 
@@ -161,6 +171,11 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS})
+    # Add individual BatchPD kernel cpp files based on LEGACY_SUPPORT flag enablement
+    if(NOT RPP_LEGACY_SUPPORT)
+        file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
+        list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
+    endif()
     message("-- ${Green}HOST kernels added${ColourReset}")
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
     add_fma_property()
@@ -186,6 +201,7 @@ target_include_directories( ${PROJECT_NAME}
         ${ROCM_INC}
     PRIVATE
         $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu>
+        $<$<NOT:$<BOOL:${RPP_LEGACY_SUPPORT}>>:${CMAKE_SOURCE_DIR}/src/include/legacy_dep> # Adds include folder based on RPP_LEGACY_SUPPORT enablement
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/common/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor

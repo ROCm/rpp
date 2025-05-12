@@ -22,36 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
-
-/*!
- * \file
- * \brief RPP Tensor Operations
- * \defgroup group_rppt RPP Tensor Operations
- * \brief The header includes all files containing RPP Tensor Operations
- */
-
 #include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "handle.hpp"
+#include "rpp_hip_load_store.hpp"
 
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_data_exchange_operations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
-#include "rppt_tensor_arithmetic_operations.h"
-#include "rppt_tensor_statistical_operations.h"
-#include "rppt_tensor_audio_augmentations.h"
-#include "rppt_tensor_bitwise_operations.h"
-#ifndef LEGACY_SUPPORT
-#include "rppi_legacy_augmentations.h"  // To be removed once legacy augmentations are supported with tensor API
-#endif
+// -------------------- fisheye --------------------
 
-#ifdef __cplusplus
-}
-#endif
-#endif // RPPT_H
+RppStatus fisheye_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+
+// -------------------- snow --------------------
+
+RppStatus snow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+
+// -------------------- hueRGB --------------------
+
+RppStatus hueRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+
+// -------------------- saturationRGB --------------------
+
+RppStatus saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
