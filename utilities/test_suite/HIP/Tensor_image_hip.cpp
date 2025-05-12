@@ -1099,6 +1099,42 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case HUE:
+                {
+                    testCaseName = "hue";
+
+                    Rpp32f hue[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        hue[i] = 60.0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_hue_gpu(d_input, srcDescPtr, d_output, dstDescPtr, hue, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SATURATION:
+                {
+                    testCaseName = "saturation";
+
+                    Rpp32f saturation[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        saturation[i] = 5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_saturation_gpu(d_input, srcDescPtr, d_output, dstDescPtr, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case CROP:
                 {
                     testCaseName = "crop";

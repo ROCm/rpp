@@ -289,6 +289,28 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             rpp::Handle& handle);
 
+// -------------------- hue --------------------
+
+template <typename T>
+RppStatus hip_exec_hue_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle);
+                                     
+// -------------------- saturation --------------------
+
+template <typename T>
+RppStatus hip_exec_saturation_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);                                     
+
 // -------------------- color_twist --------------------
 
 template <typename T>

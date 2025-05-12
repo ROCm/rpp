@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
+#include "hue_sat.h"
 #include "rpp_cpu_simd_math.hpp"
 
 inline void compute_hue_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pHueParam)
@@ -169,68 +170,17 @@ inline void compute_hue_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m
 
 inline void compute_hue_host(RpptFloatRGB *pixel, Rpp32f hueParam)
 {
-    // RGB to HSV
-
-    Rpp32f hue, sat, v, add;
-    Rpp32f rf, gf, bf, cmax, cmin, delta;
-    rf = pixel->R;
-    gf = pixel->G;
-    bf = pixel->B;
-    cmax = RPPMAX3(rf, gf, bf);
-    cmin = RPPMIN3(rf, gf, bf);
-    delta = cmax - cmin;
-    hue = 0.0f;
-    sat = 0.0f;
-    add = 0.0f;
-    if ((delta != 0) && (cmax != 0))
-    {
-        sat = delta / cmax;
-        if (cmax == rf)
-        {
-            hue = gf - bf;
-            add = 0.0f;
-        }
-        else if (cmax == gf)
-        {
-            hue = bf - rf;
-            add = 2.0f;
-        }
-        else
-        {
-            hue = rf - gf;
-            add = 4.0f;
-        }
-        hue /= delta;
-    }
-    v = cmax;
+    // Convert RBG to HSV
+    Rpp32f hue, sat, val;
+    RGB_to_HSV(pixel, hue, sat, val);
 
     // Modify Hue
-
-    hue += hueParam + add;
+    hue += hueParam - 2.0f;
     if (hue >= 6.0f) hue -= 6.0f;
     if (hue < 0) hue += 6.0f;
 
-    // HSV to RGB 
-
-    Rpp32s hueIntegerPart = (Rpp32s) hue;
-    Rpp32f hueFractionPart = hue - hueIntegerPart;
-    Rpp32f vsat = v * sat;
-    Rpp32f vsatf = vsat * hueFractionPart;
-    Rpp32f p = v - vsat;
-    Rpp32f q = v - vsatf;
-    Rpp32f t = v - vsat + vsatf;
-    switch (hueIntegerPart)
-    {
-        case 0: rf = t; gf = p; bf = v; break;
-        case 1: rf = v; gf = p; bf = q; break;
-        case 2: rf = v; gf = t; bf = p; break;
-        case 3: rf = q; gf = v; bf = p; break;
-        case 4: rf = p; gf = v; bf = t; break;
-        case 5: rf = p; gf = q; bf = v; break;
-    }
-    pixel->R = rf;
-    pixel->G = gf;
-    pixel->B = bf;
+    // Convert HSV to RGB
+    HSV_to_RGB(hue, sat, val, pixel);
 }
 
 RppStatus hue_u8_u8_host_tensor(Rpp8u *srcPtr,
