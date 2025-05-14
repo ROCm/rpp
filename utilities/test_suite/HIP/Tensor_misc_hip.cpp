@@ -138,7 +138,7 @@ int main(int argc, char **argv)
         for(int i = 0; i <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
+        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
 
     void *input, *inputSecond, *output;
