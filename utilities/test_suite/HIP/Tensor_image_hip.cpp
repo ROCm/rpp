@@ -187,10 +187,8 @@ int main(int argc, char **argv)
     std::string noiseTypeName = "";
     if (kernelSizeCase)
     {
-        char additionalParam_char[2];
-        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         func += "_kernelSize";
-        func += additionalParam_char;
+        func += std::to_string(additionalParam);
     }
     else if (interpolationTypeCase)
     {
@@ -203,6 +201,16 @@ int main(int argc, char **argv)
         noiseTypeName = get_noise_type(additionalParam);
         func += "_noiseType";
         func += noiseTypeName.c_str();
+    }
+    else if (testCase == CHANNEL_PERMUTE)
+    {
+        if (additionalParam < 0 || additionalParam > 5)
+        {
+            std::cerr << "Error: permutationIdx out of valid range (0 to 5). Received: " << additionalParam << std::endl;
+            exit(0);
+        }
+        func += "_permOrder";
+        func += std::to_string(additionalParam);
     }
 
     if(!qaFlag)
@@ -1475,15 +1483,22 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case SWAP_CHANNELS:
+                case CHANNEL_PERMUTE:
                 {
-                    testCaseName = "swap_channels";
+                    testCaseName = "channel_permute";
+
+                    Rpp32u *permutationTensor = nullptr;
+                    CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
+                    for(int i = 0; i < batchSize; i++)
+                        fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                        rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
+
+                    CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
 
                     break;
                 }
