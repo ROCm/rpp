@@ -109,7 +109,7 @@ std::map<int, string> augmentationMap =
     {82, "ricap"},
     {83, "gridmask"},
     {84, "spatter"},
-    {85, "swap_channels"},
+    {85, "channel_permute"},
     {86, "color_to_greyscale"},
     {87, "tensor_sum"},
     {88, "tensor_min"},
@@ -166,7 +166,7 @@ enum Augmentation {
     RICAP = 82,
     GRIDMASK = 83,
     SPATTER = 84,
-    SWAP_CHANNELS = 85,
+    CHANNEL_PERMUTE = 85,
     COLOR_TO_GREYSCALE = 86,
     TENSOR_SUM = 87,
     TENSOR_MIN = 88,
@@ -177,7 +177,7 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, GAUSSIAN_FILTER, REMAP};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -1173,6 +1173,11 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
     }
+    else if(testCase == CHANNEL_PERMUTE)
+    {
+        func += "_permOrder" + std::to_string(additionalParam);
+        binFile += "_permOrder" + std::to_string(additionalParam);
+    }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
     if(dstDescPtr->dataType == RpptDataType::U8)
@@ -1594,4 +1599,19 @@ void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *
     tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
     tableDescPtr->strides.hStride = srcDescPtr->w;
     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+}
+
+// fill the permutation values used for transpose
+void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
+{
+    Rpp8u mapping[][3] = {
+        {0, 1, 2}, // axisMask 0 → R, G, B
+        {0, 2, 1}, // axisMask 1 → R, B, G
+        {1, 0, 2}, // axisMask 2 → G, R, B
+        {1, 2, 0}, // axisMask 3 → G, B, R
+        {2, 0, 1}, // axisMask 4 → B, R, G
+        {2, 1, 0}  // axisMask 5 → B, G, R
+    };
+    for(int i = 0; i < 3; i++)
+        permTensor[i] = mapping[permOrder][i];
 }
