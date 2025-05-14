@@ -339,8 +339,6 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     p1[0] = _mm_fmadd_ps(_mm_sub_ps(p1[0], p2[0]), pMul, p2[0]);    // alpha-blending adjustment
                     p1[1] = _mm_fmadd_ps(_mm_sub_ps(p1[1], p2[1]), pMul, p2[1]);    // alpha-blending adjustment
                     p1[2] = _mm_fmadd_ps(_mm_sub_ps(p1[2], p2[2]), pMul, p2[2]);    // alpha-blending adjustment
-                    //boundary checks for f32
-                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += 12;
@@ -405,8 +403,6 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     p1[0] = _mm_fmadd_ps(_mm_sub_ps(p1[0], p2[0]), pMul, p2[0]);    // alpha-blending adjustment
                     p1[1] = _mm_fmadd_ps(_mm_sub_ps(p1[1], p2[1]), pMul, p2[1]);    // alpha-blending adjustment
                     p1[2] = _mm_fmadd_ps(_mm_sub_ps(p1[2], p2[2]), pMul, p2[2]);    // alpha-blending adjustment
-                    //boundary checks for f32
-                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += 4;
@@ -469,8 +465,6 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         rpp_simd_load(rpp_load4_f32_to_f32, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load4_f32_to_f32, srcPtr2Temp, p2);    // simd loads
                         p1[0] = _mm_fmadd_ps(_mm_sub_ps(p1[0], p2[0]), pMul, p2[0]);    // alpha-blending adjustment
-                        //boundary checks for f32
-                        rpp_pixel_check_0to1(p1, 1);
                         rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += 4;

@@ -167,17 +167,37 @@ const __m256i avx_pxMaskR = _mm256_setr_epi8(0, 0x80, 0x80, 3, 0x80, 0x80, 6, 0x
 const __m256i avx_pxMaskG = _mm256_setr_epi8(0x80, 1, 0x80, 0x80, 4, 0x80, 0x80, 7, 0x80, 0x80, 10, 0x80, 0x80, 13, 0x80, 0x80, 16, 0x80, 0x80, 19, 0x80, 0x80, 22, 0x80, 0x80, 25, 0x80, 0x80, 28, 0x80, 0x80, 0x80);
 const __m256i avx_pxMaskB = _mm256_setr_epi8(0x80, 0x80, 2, 0x80, 0x80, 5, 0x80, 0x80, 8, 0x80, 0x80, 11, 0x80, 0x80, 14, 0x80, 0x80, 17, 0x80, 0x80, 20, 0x80, 0x80, 23, 0x80, 0x80, 26, 0x80, 0x80, 29, 0x80, 0x80);
 
+// Union for handling 128-bit SIMD data (SSE).
+union RppSIMD128
+{
+    __m128i  m128iVal;
+    __m128   m128Val;
+    char     i8[16];
+    short    i16[8];
+    int      i32[4];
+    float    f32[4];
+};
+
+// Union for handling 256-bit SIMD data (AVX).
+union RppSIMD256
+{
+    __m256i  m256iVal;
+    __m256   m256Val;
+    unsigned char u8[32];
+    short    i16[16];
+    int      i32[8];
+    float    f32[8];
+};
+
 // Print helpers
 
-inline void rpp_mm_print_epi8(__m128i vPrintArray)
+inline void rpp_mm_print_epi8(__m128i *v)
 {
-    char printArray[16];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 16; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 16; ++i)
+        printf("%d ", u.i8[i]);
 }
 
 inline void rpp_storeu_si32(void *__p,
@@ -196,81 +216,68 @@ inline void rpp_storeu_si64(void *__p,
   ((struct __storeu_si64 *)__p)->__v = ((__v2di)__b)[0];
 }
 
-inline void rpp_mm_print_epi32(__m128i vPrintArray)
+inline void rpp_mm_print_epi16(__m128i *v)
 {
-    int printArray[4];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%hd ", u.i16[i]);
 }
 
-inline void rpp_mm_print_epi16(__m128i vPrintArray)
+inline void rpp_mm_print_epi32(__m128i *v)
 {
-    unsigned short int printArray[8];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%hu ", printArray[ct]);
-    }
+    for (int i = 0; i < 4; ++i)
+        printf("%d ", u.i32[i]);
 }
 
-inline void rpp_mm_print_ps(__m128 vPrintArray)
+inline void rpp_mm_print_ps(__m128 *v)
 {
-    float printArray[4];
-    _mm_storeu_ps(printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128Val = v[0];
     printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%0.6f ", printArray[ct]);
-    }
+    for (int i = 0; i < 4; ++i)
+        printf("%0.6f ", u.f32[i]);
 }
 
-inline void rpp_mm256_print_epi8(__m256i vPrintArray)
+
+inline void rpp_mm256_print_epi8(__m256i *v)
 {
-    unsigned char printArray[32];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 32; ct++)
-    {
-        printf("%d ", (unsigned char)printArray[ct]);
-    }
+    for (int i = 0; i < 32; ++i)
+        printf("%u ", u.u8[i]);
 }
 
-inline void rpp_mm256_print_epi32(__m256i vPrintArray)
+inline void rpp_mm256_print_epi16(__m256i *v)
 {
-    int printArray[8];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 16; ++i)
+        printf("%hd ", u.i16[i]);
 }
 
-inline void rpp_mm256_print_epi16(__m256i vPrintArray)
+inline void rpp_mm256_print_epi32(__m256i *v)
 {
-    unsigned short int printArray[8];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 16; ct++)
-    {
-        printf("%hu ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%d ", u.i32[i]);
 }
 
-inline void rpp_mm256_print_ps(__m256 vPrintArray)
+inline void rpp_mm256_print_ps(__m256 *v)
 {
-    float printArray[8];
-    _mm256_storeu_ps(printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256Val = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%0.6f ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%0.6f ", u.f32[i]);
 }
 
 inline void rpp_pixel_check_0to1(__m256 *p, Rpp32s numVectors)
