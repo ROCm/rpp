@@ -131,8 +131,8 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
     Rpp16s *inputI16 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
-    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
+    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
     if(testCase == CONCAT)
     {
         for(int i = 0; i <= nDim; i++)
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
     }
 
     // Convert inputs to correponding bit depth specified by user
-    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeInBytes, srcDescriptorPtrND, testCase);
+    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
 
     // copy data from HOST to HIP
     CHECK_RETURN_STATUS(hipMemcpy(d_input, input, iBufferSizeInBytes, hipMemcpyHostToDevice));
@@ -353,9 +353,15 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
+    if(testCase ==  CONCAT)
+        free(inputF32Second);
     if(testCase == LOG1P)
         free(inputI16);
     free(outputF32);
+    free(input);
+    if(testCase ==  CONCAT)
+        free(inputSecond);
+    free(output);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
@@ -363,6 +369,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_input));
     CHECK_RETURN_STATUS(hipFree(d_output));
+    if(testCase == CONCAT)
+        CHECK_RETURN_STATUS(hipFree(d_inputSecond));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
     if(stdDevTensor != nullptr)

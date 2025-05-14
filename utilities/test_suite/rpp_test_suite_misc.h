@@ -375,9 +375,9 @@ inline size_t get_size_of_data_type(RpptDataType dataType)
 }
 
 // Convert input from F32 to corresponding bit depth specified by user
-inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, void *output, void *outputSecond,
-                                   Rpp32s outputBitDepth, Rpp64u ioBufferSize, Rpp64u outputBufferSize,
-                                   RpptGenericDescPtr srcGenericDescPtr, Rpp32s testCase)
+inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, void *output, void *outputSecond,Rpp32s outputBitDepth,
+                                   Rpp64u ioBufferSize, Rpp64u ioBufferSizeSecond, Rpp64u outputBufferSize, Rpp64u outputBufferSizeSecond,
+                                   RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcDescriptorPtrNDSecond, Rpp32s testCase)
 {
     if (outputBitDepth == 0 || outputBitDepth == 3 || outputBitDepth == 4) // U8 case
     {
@@ -387,8 +387,8 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
 
         if (testCase == CONCAT)
         {
-            Rpp8u *outputU8Second = static_cast<Rpp8u *>(outputSecond) + srcGenericDescPtr->offsetInBytes;
-            for (Rpp32s i = 0; i < ioBufferSize; i++)
+            Rpp8u *outputU8Second = static_cast<Rpp8u *>(outputSecond) + srcDescriptorPtrNDSecond->offsetInBytes;
+            for (Rpp32s i = 0; i < ioBufferSizeSecond; i++)
                 outputU8Second[i] = static_cast<Rpp8u>(std::clamp(std::round(inputF32Second[i]), 0.0f, 255.0f));
         }
     }
@@ -400,8 +400,8 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
 
         if (testCase == CONCAT)
         {
-            Rpp16f *outputF16Second = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(outputSecond) + srcGenericDescPtr->offsetInBytes);
-            for (Rpp32s i = 0; i < ioBufferSize; i++)
+            Rpp16f *outputF16Second = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(outputSecond) + srcDescriptorPtrNDSecond->offsetInBytes);
+            for (Rpp32s i = 0; i < ioBufferSizeSecond; i++)
                 outputF16Second[i] = static_cast<Rpp16f>(std::clamp(inputF32Second[i], -65504.0f, 65504.0f));
         }
     }
@@ -409,7 +409,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     {
         memcpy(output, inputF32, outputBufferSize);
         if (testCase == CONCAT)
-            memcpy(outputSecond, inputF32Second, outputBufferSize);
+            memcpy(outputSecond, inputF32Second, outputBufferSizeSecond);
     }
     else if (outputBitDepth == 5) // I8 case
     {
@@ -419,8 +419,8 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
 
         if (testCase == CONCAT)
         {
-            Rpp8s *outputI8Second = static_cast<Rpp8s *>(outputSecond) + srcGenericDescPtr->offsetInBytes;
-            for (int i = 0; i < ioBufferSize; i++)
+            Rpp8s *outputI8Second = static_cast<Rpp8s *>(outputSecond) + srcDescriptorPtrNDSecond->offsetInBytes;
+            for (int i = 0; i < ioBufferSizeSecond; i++)
                 outputI8Second[i] = static_cast<Rpp8s>(std::clamp(std::round(inputF32Second[i]) - 128, -128.0f, 127.0f));
         }
     }
