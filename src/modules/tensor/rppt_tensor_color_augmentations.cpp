@@ -330,7 +330,15 @@ RppStatus rppt_hue_host(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
+    if (srcDescPtr->c != 3)
+    {
+        return RPP_ERROR_INVALID_CHANNELS;
+    }
+    
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -395,7 +403,14 @@ RppStatus rppt_saturation_host(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
+    if (srcDescPtr->c != 3)
+    {
+        return RPP_ERROR_INVALID_CHANNELS;
+    }
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1090,6 +1105,9 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
 
     Rpp32u paramIndex = 0;
     copy_param_float(hueTensor, rpp::deref(rppHandle), paramIndex++);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1158,6 +1176,9 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
 
     Rpp32u paramIndex = 0;
     copy_param_float(saturationTensor, rpp::deref(rppHandle), paramIndex++);
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

@@ -23,149 +23,39 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
-#include "hue_sat.h"
+#include "rpp_cpu_hue_sat.h"
 #include "rpp_cpu_simd_math.hpp"
 
 inline void compute_hue_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pHueParam)
 {
-    __m256 pA, pH, pS, pV, pDelta, pAdd, pIntH;
-    __m256 pMask[4];
-    __m256i pxIntH;
+    __m256 pH, pS, pV;
 
-    // RGB to HSV
-    pV = _mm256_max_ps(pVecR, _mm256_max_ps(pVecG, pVecB));                                                            // cmax = RPPMAX3(rf, gf, bf);
-    pS = _mm256_min_ps(pVecR, _mm256_min_ps(pVecG, pVecB));                                                            // cmin = RPPMIN3(rf, gf, bf);
-    pDelta = _mm256_sub_ps(pV, pS);                                                                                    // delta = cmax - cmin;
-    pH = avx_p0;                                                                                                       // hue = 0.0f;
-    pS = avx_p0;                                                                                                       // sat = 0.0f;
-    pAdd = avx_p0;                                                                                                     // add = 0.0f;
-    pMask[0] = _mm256_and_ps(_mm256_cmp_ps(pDelta, avx_p0, _CMP_NEQ_OQ), _mm256_cmp_ps(pV, avx_p0, _CMP_NEQ_OQ));      // if ((delta != 0) && (cmax != 0)) {
-    pS = _mm256_div_ps(_mm256_and_ps(pMask[0], pDelta), pV);                                                           //     sat = delta / cmax;
-    pMask[1] = _mm256_cmp_ps(pV, pVecR, _CMP_EQ_OQ);                                                                   //     Temporarily store cmax == rf comparison
-    pMask[2] = _mm256_and_ps(pMask[0], pMask[1]);                                                                      //     if (cmax == rf)
-    pH = _mm256_and_ps(pMask[2], _mm256_sub_ps(pVecG, pVecB));                                                         //         hue = gf - bf;
-    pAdd = _mm256_and_ps(pMask[2], avx_p0);                                                                            //         add = 0.0f;
-    pMask[3] = _mm256_cmp_ps(pV, pVecG, _CMP_EQ_OQ);                                                                   //     Temporarily store cmax == gf comparison
-    pMask[2] = _mm256_andnot_ps(pMask[1], pMask[3]);                                                                   //     else if (cmax == gf)
-    pH = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pH), _mm256_and_ps(pMask[2], _mm256_sub_ps(pVecB, pVecR)));           //         hue = bf - rf;
-    pAdd = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pAdd), _mm256_and_ps(pMask[2], avx_p2));                            //         add = 2.0f;
-    pMask[3] = _mm256_andnot_ps(pMask[3], _mm256_andnot_ps(pMask[1], pMask[0]));                                       //     else
-    pH = _mm256_or_ps(_mm256_andnot_ps(pMask[3], pH), _mm256_and_ps(pMask[3], _mm256_sub_ps(pVecR, pVecG)));           //         hue = rf - gf;
-    pAdd = _mm256_or_ps(_mm256_andnot_ps(pMask[3], pAdd), _mm256_and_ps(pMask[3], avx_p4));                            //         add = 4.0f;
-    pH = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pH), _mm256_and_ps(pMask[0], _mm256_div_ps(pH, pDelta)));             //     hue /= delta; }
+    // Convert RGB to HSV
+    RGB_to_HSV_avx(pVecR, pVecG, pVecB, pH, pS, pV);
 
     // Modify Hue and Saturation
-    pH = _mm256_add_ps(pH, _mm256_add_ps(pHueParam[0], pAdd));                                                         // hue += hueParam + add;
+    pH = _mm256_add_ps(pH, pHueParam[0] - avx_p2);                                                         // hue += hueParam + add;
     pH = _mm256_sub_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p6, _CMP_GE_OQ), avx_p6));                              // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm256_add_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p0, _CMP_LT_OQ), avx_p6));                              // if (hue < 0) hue += 6.0f;
 
-    // HSV to RGB with brightness/contrast adjustment
-    pIntH = _mm256_floor_ps(pH);                                                                                       // Rpp32s hueIntegerPart = (Rpp32s) hue;
-    pxIntH = _mm256_cvtps_epi32(pIntH);                                                                                // Convert to epi32
-    pH = _mm256_sub_ps(pH, pIntH);                                                                                     // Rpp32f hueFractionPart = hue - hueIntegerPart;
-    pS = _mm256_mul_ps(pV, pS);                                                                                        // Rpp32f vsat = v * sat;
-    pAdd = _mm256_mul_ps(pS, pH);                                                                                      // Rpp32f vsatf = vsat * hueFractionPart;
-    pA = _mm256_sub_ps(pV, pS);                                                                                        // Rpp32f p = v - vsat;
-    pH = _mm256_sub_ps(pV, pAdd);                                                                                      // Rpp32f q = v - vsatf;
-    pS = _mm256_add_ps(pA, pAdd);                                                                                      // Rpp32f t = v - vsat + vsatf;
-    pVecR = avx_p0;                                                                                                    // Reset dstPtrR
-    pVecG = avx_p0;                                                                                                    // Reset dstPtrG
-    pVecB = avx_p0;                                                                                                    // Reset dstPtrB
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px0));                                               // switch (hueIntegerPart) {case 0:
-    pVecR = _mm256_and_ps(pMask[0], pS);                                                                               //     rf = t;
-    pVecG = _mm256_and_ps(pMask[0], pA);                                                                               //     gf = p;
-    pVecB = _mm256_and_ps(pMask[0], pV);                                                                               //     bf = v; break;
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px1));                                               // case 1:
-    pVecR = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecR), _mm256_and_ps(pMask[0], pV));                              //     rf = v;
-    pVecG = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecG), _mm256_and_ps(pMask[0], pA));                              //     gf = p;
-    pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pH));                              //     bf = q; break;
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px2));                                               // case 2:
-    pVecR = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecR), _mm256_and_ps(pMask[0], pV));                              //     rf = v;
-    pVecG = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecG), _mm256_and_ps(pMask[0], pS));                              //     gf = t;
-    pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pA));                              //     bf = p; break;
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px3));                                               // case 3:
-    pVecR = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecR), _mm256_and_ps(pMask[0], pH));                              //     rf = q;
-    pVecG = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecG), _mm256_and_ps(pMask[0], pV));                              //     gf = v;
-    pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pA));                              //     bf = p; break;
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px4));                                               // case 4:
-    pVecR = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecR), _mm256_and_ps(pMask[0], pA));                              //     rf = p;
-    pVecG = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecG), _mm256_and_ps(pMask[0], pV));                              //     gf = v;
-    pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pS));                              //     bf = t; break;
-    pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px5));                                               // case 5:
-    pVecR = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecR), _mm256_and_ps(pMask[0], pA));                              //     rf = p;
-    pVecG = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecG), _mm256_and_ps(pMask[0], pH));                              //     gf = q;
-    pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pV));                              //     bf = v; break;}
+    // Convert HSV to RGB 
+    HSV_to_RGB_avx(pVecR, pVecG, pVecB, pH, pS, pV);
 }
 
 inline void compute_hue_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 *pHueParam)
 {
-    __m128 pA, pH, pS, pV, pDelta, pAdd, pIntH;
-    __m128 pMask[4];
-    __m128i pxIntH;
+    __m128 pH, pS, pV;
 
-    // RGB to HSV
-    pV = _mm_max_ps(pVecR, _mm_max_ps(pVecG, pVecB));                                                               // cmax = RPPMAX3(rf, gf, bf);
-    pS = _mm_min_ps(pVecR, _mm_min_ps(pVecG, pVecB));                                                               // cmin = RPPMIN3(rf, gf, bf);
-    pDelta = _mm_sub_ps(pV, pS);                                                                                    // delta = cmax - cmin;
-    pH = xmm_p0;                                                                                                    // hue = 0.0f;
-    pS = xmm_p0;                                                                                                    // sat = 0.0f;
-    pAdd = xmm_p0;                                                                                                  // add = 0.0f;
-    pMask[0] = _mm_and_ps(_mm_cmpneq_ps(pDelta, xmm_p0), _mm_cmpneq_ps(pV, xmm_p0));                                // if ((delta != 0) && (cmax != 0)) {
-    pS = _mm_div_ps(_mm_and_ps(pMask[0], pDelta), pV);                                                              //     sat = delta / cmax;
-    pMask[1] = _mm_cmpeq_ps(pV, pVecR);                                                                             //     Temporarily store cmax == rf comparison
-    pMask[2] = _mm_and_ps(pMask[0], pMask[1]);                                                                      //     if (cmax == rf)
-    pH = _mm_and_ps(pMask[2], _mm_sub_ps(pVecG, pVecB));                                                            //         hue = gf - bf;
-    pAdd = _mm_and_ps(pMask[2], xmm_p0);                                                                            //         add = 0.0f;
-    pMask[3] = _mm_cmpeq_ps(pV, pVecG);                                                                             //     Temporarily store cmax == gf comparison
-    pMask[2] = _mm_andnot_ps(pMask[1], pMask[3]);                                                                   //     else if (cmax == gf)
-    pH = _mm_or_ps(_mm_andnot_ps(pMask[2], pH), _mm_and_ps(pMask[2], _mm_sub_ps(pVecB, pVecR)));                    //         hue = bf - rf;
-    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[2], pAdd), _mm_and_ps(pMask[2], xmm_p2));                                  //         add = 2.0f;
-    pMask[3] = _mm_andnot_ps(pMask[3], _mm_andnot_ps(pMask[1], pMask[0]));                                          //     else
-    pH = _mm_or_ps(_mm_andnot_ps(pMask[3], pH), _mm_and_ps(pMask[3], _mm_sub_ps(pVecR, pVecG)));                    //         hue = rf - gf;
-    pAdd = _mm_or_ps(_mm_andnot_ps(pMask[3], pAdd), _mm_and_ps(pMask[3], xmm_p4));                                  //         add = 4.0f;
-    pH = _mm_or_ps(_mm_andnot_ps(pMask[0], pH), _mm_and_ps(pMask[0], _mm_div_ps(pH, pDelta)));                      //     hue /= delta; }
-
+    // Convert RGB to HSV
+    RGB_to_HSV_sse(pVecR, pVecG, pVecB, pH, pS, pV);
+    
     // Modify Hue and Saturation
-    pH = _mm_add_ps(pH, _mm_add_ps(pHueParam[0], pAdd));                                                            // hue += hueParam + add;
+    pH = _mm_add_ps(pH, pHueParam[0] - xmm_p2);                                                                              // hue += hueParam ;
     pH = _mm_sub_ps(pH, _mm_and_ps(_mm_cmpge_ps(pH, xmm_p6), xmm_p6));                                              // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm_add_ps(pH, _mm_and_ps(_mm_cmplt_ps(pH, xmm_p0), xmm_p6));                                              // if (hue < 0) hue += 6.0f;
 
-    // HSV to RGB with brightness/contrast adjustment
-    pIntH = _mm_floor_ps(pH);                                                                                       // Rpp32s hueIntegerPart = (Rpp32s) hue;
-    pxIntH = _mm_cvtps_epi32(pIntH);                                                                                // Convert to epi32
-    pH = _mm_sub_ps(pH, pIntH);                                                                                     // Rpp32f hueFractionPart = hue - hueIntegerPart;
-    pS = _mm_mul_ps(pV, pS);                                                                                        // Rpp32f vsat = v * sat;
-    pAdd = _mm_mul_ps(pS, pH);                                                                                      // Rpp32f vsatf = vsat * hueFractionPart;
-    pA = _mm_sub_ps(pV, pS);                                                                                        // Rpp32f p = v - vsat;
-    pH = _mm_sub_ps(pV, pAdd);                                                                                      // Rpp32f q = v - vsatf;
-    pS = _mm_add_ps(pA, pAdd);                                                                                      // Rpp32f t = v - vsat + vsatf;
-    pVecR = xmm_p0;                                                                                                 // Reset dstPtrR
-    pVecG = xmm_p0;                                                                                                 // Reset dstPtrG
-    pVecB = xmm_p0;                                                                                                 // Reset dstPtrB
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px0));                                                  // switch (hueIntegerPart) {case 0:
-    pVecR = _mm_and_ps(pMask[0], pS);                                                                               //     rf = t;
-    pVecG = _mm_and_ps(pMask[0], pA);                                                                               //     gf = p;
-    pVecB = _mm_and_ps(pMask[0], pV);                                                                               //     bf = v; break;
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px1));                                                  // case 1:
-    pVecR = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecR), _mm_and_ps(pMask[0], pV));                                    //     rf = v;
-    pVecG = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecG), _mm_and_ps(pMask[0], pA));                                    //     gf = p;
-    pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pH));                                    //     bf = q; break;
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px2));                                                  // case 2:
-    pVecR = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecR), _mm_and_ps(pMask[0], pV));                                    //     rf = v;
-    pVecG = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecG), _mm_and_ps(pMask[0], pS));                                    //     gf = t;
-    pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pA));                                    //     bf = p; break;
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px3));                                                  // case 3:
-    pVecR = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecR), _mm_and_ps(pMask[0], pH));                                    //     rf = q;
-    pVecG = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecG), _mm_and_ps(pMask[0], pV));                                    //     gf = v;
-    pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pA));                                    //     bf = p; break;
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px4));                                                  // case 4:
-    pVecR = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecR), _mm_and_ps(pMask[0], pA));                                    //     rf = p;
-    pVecG = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecG), _mm_and_ps(pMask[0], pV));                                    //     gf = v;
-    pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pS));                                    //     bf = t; break;
-    pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px5));                                                  // case 5:
-    pVecR = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecR), _mm_and_ps(pMask[0], pA));                                    //     rf = p;
-    pVecG = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecG), _mm_and_ps(pMask[0], pH));                                    //     gf = q;
-    pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pV));                                    //     bf = v; break;}
+    // Convert HSV to RGB
+    HSV_to_RGB_sse(pVecR, pVecG, pVecB, pH, pS, pV);
 }
 
 inline void compute_hue_host(RpptFloatRGB *pixel, Rpp32f hueParam)
@@ -174,7 +64,7 @@ inline void compute_hue_host(RpptFloatRGB *pixel, Rpp32f hueParam)
     Rpp32f hue, sat, val;
     RGB_to_HSV(pixel, hue, sat, val);
 
-    // Modify Hue
+    // Apply hue adjustment
     hue += hueParam - 2.0f;
     if (hue >= 6.0f) hue -= 6.0f;
     if (hue < 0) hue += 6.0f;
@@ -251,14 +141,12 @@ RppStatus hue_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
                     compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
                     compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48, p);    // simd normalize
                     compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
@@ -317,14 +205,12 @@ RppStatus hue_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
                     compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
                     compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48, p);    // simd normalize
                     compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
@@ -379,14 +265,12 @@ RppStatus hue_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
                     compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
                     compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48, p);    // simd normalize
                     compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment
@@ -443,14 +327,12 @@ RppStatus hue_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48_avx, p);    // simd normalize
                     compute_hue_24_host(p[0], p[2], p[4], pHueParam);    // hue adjustment
                     compute_hue_24_host(p[1], p[3], p[5], pHueParam);    // hue adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    // rpp_simd_load(rpp_normalize48, p);    // simd normalize
                     compute_hue_12_host(p[0], p[4], p[8], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[1], p[5], p[9], pHueParam);    // hue adjustment
                     compute_hue_12_host(p[2], p[6], p[10], pHueParam);    // hue adjustment

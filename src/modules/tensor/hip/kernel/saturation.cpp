@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "hip_tensor_executors.hpp"
-#include "hue_sat.h"
+#include "rpp_hip_hue_sat.h"
 #include "rpp_hip_math.hpp"
 
 __device__ void saturation_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB, float *saturationParam)
@@ -72,10 +72,8 @@ __device__ void saturation_hip_compute(half *srcPtr, d_float24 *pix_f24, float *
 }
 __device__ void saturation_hip_compute(schar *srcPtr, d_float24 *pix_f24, float *saturationParam)
 {
-    float4 i8Offset_f4 = (float4) 128.0f;
     saturation_8RGB_hip_compute(pix_f24, saturationParam);
     rpp_hip_pixel_check_0to255(pix_f24);
-    rpp_hip_math_subtract24_const(pix_f24, pix_f24, i8Offset_f4);
 }
 
 template <typename T>

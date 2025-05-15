@@ -174,14 +174,14 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDes
 RppStatus rppt_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Color Twist augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details The color twist augmentation does a fused modification of brightness, contrast, hue and saturation on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+/*! \brief Hue augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The Hue augmentation does a modification of hue on a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html color_augmentations_hue_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] hueTensor hue modification parameter for hue calculation (1D tensor in HOST memory, of size batchSize with 0 <= hueTensor[i] <= 359 for each image in batch)
@@ -195,14 +195,14 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
 RppStatus rppt_hue_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *hueTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Color Twist augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The color twist augmentation does a fused modification of brightness, contrast, hue and saturation on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+/*! \brief Hue augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The hue augmentation does a modification of hue on a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html color_augmentations_hue_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] hueTensor hue modification parameter for hue calculation (1D tensor in pinned/HOST memory, of size batchSize with 0 <= hueTensor[i] <= 359 for each image in batch)
@@ -216,14 +216,14 @@ RppStatus rppt_hue_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 RppStatus rppt_hue_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *hueTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Color Twist augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details The color twist augmentation does a fused modification of brightness, contrast, hue and saturation on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+/*! \brief Saturation augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The Saturation augmentation does a modification of saturation on a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html color_augmentations_saturation_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] saturationTensor saturation modification parameter for saturation calculation (1D tensor in HOST memory, of size batchSize with saturationTensor[i] >= 0 for each image in batch)
@@ -237,14 +237,14 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
 RppStatus rppt_saturation_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *saturationTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Color Twist augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The color twist augmentation does a fused modification of brightness, contrast, hue and saturation on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+/*! \brief Saturation augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The Saturation augmentation does a modification of saturation on a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html color_augmentations_saturation_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] saturationTensor saturation modification parameter for saturation calculation (1D tensor in pinned/HOST memory, of size batchSize with saturationTensor[i] >= 0 for each image in batch)

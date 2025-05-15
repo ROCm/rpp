@@ -1105,9 +1105,7 @@ int main(int argc, char **argv)
 
                     Rpp32f hue[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         hue[i] = 60.0;
-                    }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1123,9 +1121,7 @@ int main(int argc, char **argv)
 
                     Rpp32f saturation[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         saturation[i] = 5;
-                    }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
