@@ -529,7 +529,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
+                        increment_row_ptrs(dstPtrTempChannels, 3, 8);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -542,7 +542,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -835,7 +835,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 18);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 6);
+                        increment_row_ptrs(dstPtrTempChannels, 3, 6);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -848,7 +848,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -1221,7 +1221,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                        increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -1234,7 +1234,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
             }
         }
@@ -1770,7 +1770,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                        increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -1783,7 +1783,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
