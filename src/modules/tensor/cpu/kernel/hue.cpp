@@ -34,7 +34,7 @@ inline void compute_hue_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m
     RGB_to_HSV_avx(pVecR, pVecG, pVecB, pH, pS, pV);
 
     // Modify Hue and Saturation
-    pH = _mm256_add_ps(pH, pHueParam[0] - avx_p2);                                                         // hue += hueParam + add;
+    pH = _mm256_add_ps(pH, pHueParam[0]);                                                         // hue += hueParam + add;
     pH = _mm256_sub_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p6, _CMP_GE_OQ), avx_p6));                              // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm256_add_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p0, _CMP_LT_OQ), avx_p6));                              // if (hue < 0) hue += 6.0f;
 
@@ -50,7 +50,7 @@ inline void compute_hue_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m
     RGB_to_HSV_sse(pVecR, pVecG, pVecB, pH, pS, pV);
     
     // Modify Hue and Saturation
-    pH = _mm_add_ps(pH, pHueParam[0] - xmm_p2);                                                                              // hue += hueParam ;
+    pH = _mm_add_ps(pH, pHueParam[0]);                                                                              // hue += hueParam ;
     pH = _mm_sub_ps(pH, _mm_and_ps(_mm_cmpge_ps(pH, xmm_p6), xmm_p6));                                              // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm_add_ps(pH, _mm_and_ps(_mm_cmplt_ps(pH, xmm_p0), xmm_p6));                                              // if (hue < 0) hue += 6.0f;
 
@@ -65,7 +65,7 @@ inline void compute_hue_host(RpptFloatRGB *pixel, Rpp32f hueParam)
     RGB_to_HSV(pixel, hue, sat, val);
 
     // Apply hue adjustment
-    hue += hueParam - 2.0f;
+    hue += hueParam;
     if (hue >= 6.0f) hue -= 6.0f;
     if (hue < 0) hue += 6.0f;
 

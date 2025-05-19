@@ -33,7 +33,7 @@ __device__ void hue_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB
     RGB_to_HSV_hip(pixelR, pixelG, pixelB, hue, sat, val);
 
     // Apply hue adjustment
-    hue += *hueParam - 2.0f;
+    hue += *hueParam;
         
     // Normalize hue to 0-6 range
     if (hue < 0) hue += 6.0f;

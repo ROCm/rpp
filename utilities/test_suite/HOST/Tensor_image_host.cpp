@@ -1753,19 +1753,12 @@ int main(int argc, char **argv)
                 convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                if (DEBUG_MODE && iterCount == 0)
+                if(DEBUG_MODE && iterCount == 0)
                 {
                     std::ofstream refFile;
                     refFile.open(func + ".csv");
-
-                    refFile << std::fixed << std::setprecision(6);
-
                     for (int i = 0; i < oBufferSize; i++)
-                    {
-                        // refFile << static_cast<int>(*(outputu8 + i)) << ",";
-                        refFile << *(reinterpret_cast<float *>(output) + i) << ",";
-                    }
-
+                        refFile << static_cast<int>(*(outputu8 + i)) << ",";
                     refFile.close();
                 }
 
