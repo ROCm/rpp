@@ -37,8 +37,8 @@ dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 6
+caseMin = min(voxelAugmentationMap.keys())
+caseMax = max(voxelAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 def get_log_file_list(preserveOutput):
