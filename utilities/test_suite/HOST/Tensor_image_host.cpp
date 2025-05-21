@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
+        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
