@@ -158,7 +158,6 @@ endif()
 
 if (RPP_LEGACY_SUPPORT)
     add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
-    set(RPP_LEGACY_SUPPORT 1)                # For cmakedefine01 in rpp_legacy_support.h.in
 endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
