@@ -119,7 +119,8 @@ std::map<int, string> augmentationMap =
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
     {92, "slice"},
-    {93, "jpeg_compression_distortion"}
+    {93, "jpeg_compression_distortion"},
+    {94, "emboss"}
 };
 
 enum Augmentation {
@@ -178,11 +179,12 @@ enum Augmentation {
     TENSOR_MEAN = 90,
     TENSOR_STDDEV = 91,
     SLICE = 92,
-    JPEG_COMPRESSION_DISTORTION = 93
+    JPEG_COMPRESSION_DISTORTION = 93,
+    EMBOSS = 94
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, GAUSSIAN_FILTER, REMAP};
-const unordered_set<int> kernelSizeCases = {BOX_FILTER, GAUSSIAN_FILTER};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, GAUSSIAN_FILTER, REMAP, EMBOSS};
+const unordered_set<int> kernelSizeCases = {BOX_FILTER, GAUSSIAN_FILTER, EMBOSS};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
 const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};

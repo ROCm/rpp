@@ -84,7 +84,7 @@ int main(int argc, char **argv)
             cout << "\ndst = " << argv[3];
         cout << "\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = " << argv[4];
         cout << "\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = " << argv[5];
-        cout << "\ncase number (0:91) = " << argv[6];
+        cout << "\ncase number (0:94) = " << argv[6];
         cout << "\nnumber of times to run = " << argv[8];
         cout << "\ntest type - (0 = unit tests / 1 = performance tests) = " << argv[9];
         cout << "\nlayout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1) = " << argv[10];
@@ -1275,6 +1275,27 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_gaussian_filter_host(input, srcDescPtr, output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case EMBOSS:
+                {
+                    testCaseName = "emboss";
+
+                    Rpp32f strength[batchSize];
+                    Rpp32f bias[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        strength[i] = 2.0f;
+                        bias[i] = 128.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_emboss_host(input, srcDescPtr, output, dstDescPtr, strength, bias, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

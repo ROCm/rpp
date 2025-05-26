@@ -83,10 +83,28 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
             for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
                 accum += static_cast<Rpp32f>(srcPtrTemp[i][k]) * filterTensor[i * kernelSize + j];
     }
+    // accum += 0.0f;
 
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
         accum = nearbyintf(accum);
     saturate_pixel(accum, dstPtrTemp);
+}
+
+template<typename T>
+inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
+{
+    Rpp32f temp[kernelSize * kernelSize];
+    for (int i = 0; i < kernelSize; i++)
+    {
+        for (int j = 0; j < kernelSize; j++)
+        {
+            temp[(kernelSize - 1 - i) * kernelSize + (kernelSize - 1 - j)] = filterTensor[i * kernelSize + j];
+        }
+    }
+    for (int i = 0; i < kernelSize * kernelSize; i++)
+    {
+        filterTensor[i] = temp[i];
+    }
 }
 
 // process padLength number of columns in each row
@@ -330,7 +348,10 @@ inline void permute_blend_add_3x3(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m2
     pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
     pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask1), pxMask[roatateMask1]), pFilter[1]);
     pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask2), pxMask[roatateMask2]), pFilter[2]);
+      // Add bias (128.0f)
+    __m256 bias = _mm256_set1_ps(0.0f);
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+    pDst = _mm256_add_ps(pDst, bias);  // Add bias to final result
 }
 
 inline void permute_blend_add_5x5_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
