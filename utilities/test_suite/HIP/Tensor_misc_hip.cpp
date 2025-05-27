@@ -353,13 +353,13 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
-    if(testCase ==  CONCAT)
+    if(testCase == CONCAT)
         free(inputF32Second);
     if(testCase == LOG1P)
         free(inputI16);
     free(outputF32);
     free(input);
-    if(testCase ==  CONCAT)
+    if(testCase == CONCAT)
         free(inputSecond);
     free(output);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
