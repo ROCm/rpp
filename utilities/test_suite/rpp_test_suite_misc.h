@@ -375,7 +375,7 @@ inline size_t get_size_of_data_type(RpptDataType dataType)
 }
 
 // Convert input from F32 to corresponding bit depth specified by user
-inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, void *output, void *outputSecond,Rpp32s outputBitDepth,
+inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, void *output, void *outputSecond, Rpp32s outputBitDepth,
                                    Rpp64u ioBufferSize, Rpp64u ioBufferSizeSecond, Rpp64u outputBufferSize, Rpp64u outputBufferSizeSecond,
                                    RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcDescriptorPtrNDSecond, Rpp32s testCase)
 {
