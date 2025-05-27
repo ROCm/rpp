@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -334,10 +334,10 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDesc
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param[in] amplitudeXTensor amplitudeX values for water effect (1D tensor in HOST memory, of size batchSize)
  * \param[in] amplitudeYTensor amplitudeY values for water effect (1D tensor in HOST memory, of size batchSize)
- * \param[in] freqXTensor freqX values for water effect (1D tensor in HOST memory, of size batchSize)
- * \param[in] freqYTensor freqY values for water effect (1D tensor in HOST memory, of size batchSize)
- * \param[in] phaseXTensor amplitudeY values for water effect (1D tensor in HOST memory, of size batchSize)
- * \param[in] phaseYTensor amplitudeY values for water effect (1D tensor in HOST memory, of size batchSize)
+ * \param[in] frequencyXTensor frequencyX values for water effect (1D tensor in HOST memory, of size batchSize)
+ * \param[in] frequencyYTensor frequencyY values for water effect (1D tensor in HOST memory, of size batchSize)
+ * \param[in] phaseXTensor phaseX values for water effect (1D tensor in HOST memory, of size batchSize)
+ * \param[in] phaseYTensor phaseY values for water effect (1D tensor in HOST memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -360,10 +360,10 @@ RppStatus rppt_water_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param[in] amplitudeXTensor amplitudeX values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
  * \param[in] amplitudeYTensor amplitudeY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
- * \param[in] freqXTensor freqX values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
- * \param[in] freqYTensor freqY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
- * \param[in] phaseXTensor amplitudeY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
- * \param[in] phaseYTensor amplitudeY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param[in] frequencyXTensor frequencyX values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param[in] frequencyXTensor frequencyY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param[in] phaseXTensor phaseX values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param[in] phaseYTensor phaseY values for water effect (1D tensor in pinned/HOST memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,12 +32,6 @@ inline void compute_log(Rpp8u *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std
 inline void compute_log(Rpp8s *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(*src + 128); }
 inline void compute_log(Rpp16f *src, Rpp16f *dst) { *dst = (!*src) ? log(std::nextafter(0.0f, 1.0f)) : log(abs(*src)); }
 inline void compute_log(Rpp32f *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(abs(*src)); }
-
-inline void compute_log_16_host(__m256 *p)
-{
-    p[0] = log_ps(p[0]);    // log compute
-    p[1] = log_ps(p[1]);    // log compute
-}
 
 // Computes ND log recursively
 template<typename T1, typename T2>

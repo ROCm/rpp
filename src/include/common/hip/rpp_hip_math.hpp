@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -332,6 +332,18 @@ __device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst
     dst_f8->f1[5] = __logf(src_f8->f1[5]);
     dst_f8->f1[6] = __logf(src_f8->f1[6]);
     dst_f8->f1[7] = __logf(src_f8->f1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_log1p(d_float8 *src_f8, d_float8 *dst_f8)
+{
+    dst_f8->f1[0] = __logf((src_f8->f1[0]));
+    dst_f8->f1[1] = __logf((src_f8->f1[1]));
+    dst_f8->f1[2] = __logf((src_f8->f1[2]));
+    dst_f8->f1[3] = __logf((src_f8->f1[3]));
+    dst_f8->f1[4] = __logf((src_f8->f1[4]));
+    dst_f8->f1[5] = __logf((src_f8->f1[5]));
+    dst_f8->f1[6] = __logf((src_f8->f1[6]));
+    dst_f8->f1[7] = __logf((src_f8->f1[7]));
 }
 
 #endif // RPP_HIP_MATH_HPP

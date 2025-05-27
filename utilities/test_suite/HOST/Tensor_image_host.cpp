@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -210,10 +210,18 @@ int main(int argc, char **argv)
     }
     else if (kernelSizeCase)
     {
-        char additionalParam_char[2];
-        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         func += "_kernelSize";
-        func += additionalParam_char;
+        func += std::to_string(additionalParam);
+    }
+    else if (testCase == CHANNEL_PERMUTE)
+    {
+        if (additionalParam < 0 || additionalParam > 5)
+        {
+            std::cerr << "Error: permutationIdx out of valid range (0 to 5). Received: " << additionalParam << std::endl;
+            exit(0);
+        }
+        func += "_permOrder";
+        func += std::to_string(additionalParam);
     }
 
     if(!qaFlag)
@@ -1511,14 +1519,18 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case SWAP_CHANNELS:
+                case CHANNEL_PERMUTE:
                 {
-                    testCaseName = "swap_channels";
+                    testCaseName = "channel_permute";
+
+                    Rpp32u permutationTensor[batchSize * 3];
+                    for (i = 0; i < batchSize; i++)
+                        fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
+                        rppt_channel_permute_host(input, srcDescPtr, output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1783,8 +1795,8 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
+                if(qaFlag && (inputBitDepth == 0 || inputBitDepth == 2) && (!(randomOutputCase) && !(nonQACase)))
+                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -110,14 +110,15 @@ std::map<int, string> augmentationMap =
     {82, "ricap"},
     {83, "gridmask"},
     {84, "spatter"},
-    {85, "swap_channels"},
+    {85, "channel_permute"},
     {86, "color_to_greyscale"},
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"}
+    {92, "slice"},
+    {93, "jpeg_compression_distortion"}
 };
 
 enum Augmentation {
@@ -167,17 +168,18 @@ enum Augmentation {
     RICAP = 82,
     GRIDMASK = 83,
     SPATTER = 84,
-    SWAP_CHANNELS = 85,
+    CHANNEL_PERMUTE = 85,
     COLOR_TO_GREYSCALE = 86,
     TENSOR_SUM = 87,
     TENSOR_MIN = 88,
     TENSOR_MAX = 89,
     TENSOR_MEAN = 90,
     TENSOR_STDDEV = 91,
-    SLICE = 92
+    SLICE = 92,
+    JPEG_COMPRESSION_DISTORTION = 93
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, MEDIAN_FILTER, REMAP};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
 const unordered_set<int> kernelSizeCases = {BOX_FILTER, GAUSSIAN_FILTER, MEDIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -1002,6 +1004,36 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
     }
 }
 
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
+                Rpp32f diff = abs(*outVal - *outRefVal);
+                if(diff <= 1e-6)
+                    matchedIdx++;
+            }
+        }
+        if(matchedIdx == (height * width) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
 void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -1038,8 +1070,43 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
     }
 }
 
-template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
+// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j * 3;
+                    Rpp32f diff = abs(*outVal - *outRefVal);
+                    if(diff <= 1e-6)
+                        matchedIdx++;
+                }
+            }
+        }
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
+inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
     string refFile = "";
@@ -1058,7 +1125,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
-    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+    string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
         func += dataType[srcDescPtr->dataType];
@@ -1108,18 +1175,39 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
     }
+    else if(testCase == CHANNEL_PERMUTE)
+    {
+        func += "_permOrder" + std::to_string(additionalParam);
+        binFile += "_permOrder" + std::to_string(additionalParam);
+    }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
+    if(dstDescPtr->dataType == RpptDataType::U8)
+    {
+        Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+        read_bin_file(refFile, binaryContent);
 
-    Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
-    read_bin_file(refFile, binaryContent);
-
-    if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
     else
-        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    {
+        Rpp32f* binaryContent = (Rpp32f *)malloc(binOutputSize * sizeof(Rpp32f));
+        read_bin_file(refFile, binaryContent);
+
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
 
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1142,7 +1230,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
-    free(binaryContent);
 }
 
 // compares reduction type functions outputs
@@ -1514,4 +1601,19 @@ void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *
     tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
     tableDescPtr->strides.hStride = srcDescPtr->w;
     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+}
+
+// fill the permutation values used for transpose
+void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
+{
+    Rpp8u mapping[][3] = {
+        {0, 1, 2}, // axisMask 0 → R, G, B
+        {0, 2, 1}, // axisMask 1 → R, B, G
+        {1, 0, 2}, // axisMask 2 → G, R, B
+        {1, 2, 0}, // axisMask 3 → G, B, R
+        {2, 0, 1}, // axisMask 4 → B, R, G
+        {2, 1, 0}  // axisMask 5 → B, G, R
+    };
+    for(int i = 0; i < 3; i++)
+        permTensor[i] = mapping[permOrder][i];
 }

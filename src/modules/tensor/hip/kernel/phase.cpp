@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,14 +38,14 @@ __device__ void phase_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *sr
 
 __device__ void phase_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57;
-    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57;
-    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57;
-    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57;
-    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57;
-    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57;
-    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57;
-    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57;
+    dst_f8->f1[0] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57);
+    dst_f8->f1[1] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57);
+    dst_f8->f1[2] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57);
+    dst_f8->f1[3] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57);
+    dst_f8->f1[4] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57);
+    dst_f8->f1[5] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57);
+    dst_f8->f1[6] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57);
+    dst_f8->f1[7] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57);
 }
 
 __device__ void phase_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
@@ -62,14 +62,14 @@ __device__ void phase_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_floa
 
 __device__ void phase_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57;
-    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57;
-    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57;
-    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57;
-    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57;
-    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57;
-    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57;
-    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57;
+    dst_f8->f1[0] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57);
+    dst_f8->f1[1] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57);
+    dst_f8->f1[2] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57);
+    dst_f8->f1[3] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57);
+    dst_f8->f1[4] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57);
+    dst_f8->f1[5] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57);
+    dst_f8->f1[6] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57);
+    dst_f8->f1[7] = rpp_hip_pixel_check_0to1(atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57);
 }
 
 template <typename T>
@@ -327,4 +327,3 @@ template RppStatus hip_exec_phase_tensor<Rpp8s>(Rpp8s*,
                                                 RpptROIPtr,
                                                 RpptRoiType,
                                                 rpp::Handle&);
-

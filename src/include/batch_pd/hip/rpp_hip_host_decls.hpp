@@ -1,3 +1,9 @@
+/*
+Copyright © Advanced Micro Devices, Inc., or its affiliates.
+ 
+SPDX-License-Identifier:  MIT License
+*/
+
 #ifndef RPP_HIP_HOST_DECLS_H
 #define RPP_HIP_HOST_DECLS_H
 

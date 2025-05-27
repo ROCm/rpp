@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -164,7 +164,11 @@ typedef enum
     /*! \brief Number of src dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_SRC_DIMS          = -23,
     /*! \brief Number of dst dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DST_DIMS          = -24
+    RPP_ERROR_INVALID_DST_DIMS          = -24,
+    /*! \brief Length in some dimensions are invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_DIM_LENGTHS       = -25,
+    /*! \brief The specified axis is invalid or out of range. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_AXIS              = -26
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums
@@ -407,7 +411,8 @@ typedef enum
     U8,
     F32,
     F16,
-    I8
+    I8,
+    I16
 } RpptDataType;
 
 /*! \brief RPPT Tensor layout type enum

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -85,14 +85,15 @@ imageAugmentationMap = {
     82: ["ricap", "HOST", "HIP"],
     83: ["gridmask", "HOST", "HIP"],
     84: ["spatter", "HOST", "HIP"],
-    85: ["swap_channels", "HOST", "HIP"],
+    85: ["channel_permute", "HOST", "HIP"],
     86: ["color_to_greyscale", "HOST", "HIP"],
     87: ["tensor_sum", "HOST", "HIP"],
     88: ["tensor_min", "HOST", "HIP"],
     89: ["tensor_max", "HOST", "HIP"],
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
-    92: ["slice", "HOST", "HIP"]
+    92: ["slice", "HOST", "HIP"],
+    93: ["jpeg_compression_distortion","HIP"],
 }
 
 audioAugmentationMap = {
@@ -119,7 +120,9 @@ voxelAugmentationMap = {
 miscAugmentationMap  = {
     0: ["transpose","HOST", "HIP"],
     1: ["normalize", "HOST", "HIP"],
-    2: ["log", "HOST", "HIP"]
+    2: ["log", "HOST", "HIP"],
+    3: ["concat","HOST","HIP"],
+    4: ["log1p", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {
@@ -137,7 +140,7 @@ def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():
         return str(case)
-    
+
     # Otherwise, treat it as a case name and find the corresponding number
     for caseNum, info in map.items():
         if case.lower() == info[0].lower():

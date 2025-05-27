@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -271,6 +271,18 @@ inline void rpp_mm256_print_ps(__m256 vPrintArray)
     {
         printf("%0.6f ", printArray[ct]);
     }
+}
+
+inline __m256 rpp_pixel_check_0to1_avx(__m256 p)
+{
+    p = _mm256_min_ps(_mm256_max_ps(p, avx_p0), avx_p1);
+    return p;
+}
+
+inline __m128 rpp_pixel_check_0to1_sse(__m128 p)
+{
+    p = _mm_min_ps(_mm_max_ps(p, xmm_p0), xmm_p1);
+    return p;
 }
 
 inline void rpp_saturate64_0to1_avx(__m256 *p)
@@ -1083,13 +1095,13 @@ inline void rpp_glitch_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p, 
 {
     __m128 p128[8];
     Rpp32f *srcPtrTemp = srcPtr + srcLocs[0];
-    p[0] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9), 
+    p[0] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9),
                          *(srcPtrTemp + 12), *(srcPtrTemp + 15), *(srcPtrTemp + 18), *(srcPtrTemp + 21));
     srcPtrTemp = srcPtr + srcLocs[1];
-    p[1] = _mm256_setr_ps(*(srcPtrTemp + 1), *(srcPtrTemp + 4), *(srcPtrTemp + 7), *(srcPtrTemp + 10), 
+    p[1] = _mm256_setr_ps(*(srcPtrTemp + 1), *(srcPtrTemp + 4), *(srcPtrTemp + 7), *(srcPtrTemp + 10),
                          *(srcPtrTemp + 13), *(srcPtrTemp + 16), *(srcPtrTemp + 19), *(srcPtrTemp + 22));
     srcPtrTemp = srcPtr + srcLocs[2];
-    p[2] = _mm256_setr_ps(*(srcPtrTemp + 2), *(srcPtrTemp + 5), *(srcPtrTemp + 8), *(srcPtrTemp + 11), 
+    p[2] = _mm256_setr_ps(*(srcPtrTemp + 2), *(srcPtrTemp + 5), *(srcPtrTemp + 8), *(srcPtrTemp + 11),
                          *(srcPtrTemp + 14), *(srcPtrTemp + 17), *(srcPtrTemp + 20), *(srcPtrTemp + 23));
 }
 
@@ -1137,7 +1149,7 @@ inline void rpp_glitch_load30_i8pkd3_to_i8pkd3_avx(Rpp8s *srcPtr, int * srcLocs,
 
 inline void rpp_glitch_load6_f32pkd3_to_f32pkd3_avx(Rpp32f *srcPtr, int * srcLocs, __m256 &p)
 {
-    p =_mm256_setr_ps(*(srcPtr + srcLocs[0]), *(srcPtr + srcLocs[1] + 1), *(srcPtr + srcLocs[2] + 2), *(srcPtr + srcLocs[0] + 3), 
+    p =_mm256_setr_ps(*(srcPtr + srcLocs[0]), *(srcPtr + srcLocs[1] + 1), *(srcPtr + srcLocs[2] + 2), *(srcPtr + srcLocs[0] + 3),
                       *(srcPtr + srcLocs[1] + 4), *(srcPtr + srcLocs[2] + 5), 0.0f, 0.0f);
 }
 
@@ -2067,6 +2079,23 @@ inline void rpp_load16_i8_to_i32_avx(Rpp8s *srcPtr, __m256i *p)
     px = _mm_loadu_si128((__m128i *)srcPtr);
     p[0] = _mm256_cvtepi8_epi32(px);    /* Contains pixels 01-08 */
     p[1] = _mm256_cvtepi8_epi32(_mm_shuffle_epi8(px, xmm_pxMask08To15));    /* Contains pixels 09-16 */
+}
+
+inline void rpp_load16_i16_to_f32_abs_avx(Rpp16s *srcPtr, __m256 *p)
+{
+    __m256i px =  _mm256_loadu_si256((__m256i *)srcPtr);
+
+    // Extracting 16 bits from the px and converting from 16 bit int to 32 bit int
+    __m256i px0 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 0));
+    __m256i px1 = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(px, 1));
+
+    // Taking absolute values for i32
+    __m256i abs_px0 = _mm256_abs_epi32(px0);
+    __m256i abs_px1 = _mm256_abs_epi32(px1);
+
+    // Convert 32 bit int to 32 bit floats
+    p[0] = _mm256_cvtepi32_ps(abs_px0);
+    p[1] = _mm256_cvtepi32_ps(abs_px1);
 }
 
 template <typename FuncType, typename... ArgTypes>
@@ -3122,8 +3151,8 @@ inline void rpp_resize_nn_load_u8pkd3(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, _
 template<typename T>
 inline void rpp_resize_nn_extract_pkd3_avx(T *srcRowPtrsForInterp, Rpp32s *loc, __m256i &p)
 {
-    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[0] + 1), *(srcRowPtrsForInterp + loc[0] + 2), 
-                         *(srcRowPtrsForInterp + loc[1]), *(srcRowPtrsForInterp + loc[1] + 1), *(srcRowPtrsForInterp + loc[1] + 2), 
+    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[0] + 1), *(srcRowPtrsForInterp + loc[0] + 2),
+                         *(srcRowPtrsForInterp + loc[1]), *(srcRowPtrsForInterp + loc[1] + 1), *(srcRowPtrsForInterp + loc[1] + 2),
                          *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[2] + 1), *(srcRowPtrsForInterp + loc[2] + 2),
                          *(srcRowPtrsForInterp + loc[3]), *(srcRowPtrsForInterp + loc[3] + 1), *(srcRowPtrsForInterp + loc[3] + 2),
                          *(srcRowPtrsForInterp + loc[4]), *(srcRowPtrsForInterp + loc[4] + 1), *(srcRowPtrsForInterp + loc[4] + 2),
@@ -3148,7 +3177,7 @@ inline void rpp_resize_nn_load_u8pln1(Rpp8u *srcRowPtrsForInterp, Rpp32s *loc, _
 template<typename T>
 inline void rpp_resize_nn_extract_pln1_avx(T *srcRowPtrsForInterp, Rpp32s *loc, __m256i &p)
 {
-    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[1]), 
+    p = _mm256_setr_epi8(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[1]),
                          *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[3]),
                          *(srcRowPtrsForInterp + loc[4]), *(srcRowPtrsForInterp + loc[5]),
                          *(srcRowPtrsForInterp + loc[6]), *(srcRowPtrsForInterp + loc[7]),
@@ -3655,9 +3684,9 @@ inline void rpp_store12_float_pkd_pln(Rpp8s **dstPtrTempChannels, __m128 *pDst)
     }
 }
 
-inline void rpp_store8_f32_to_u8_avx(Rpp8u *dstPtrTemp, __m256 pDst)
+inline void rpp_store8_f32_to_u8_avx(Rpp8u *dstPtrTemp, __m256 *pDst)
 {
-    __m256i px1 = _mm256_cvtps_epi32(pDst);
+    __m256i px1 = _mm256_cvtps_epi32(pDst[0]);
     // Pack int32 values to uint16
     __m128i px2 = _mm_packus_epi32(_mm256_castsi256_si128(px1), _mm256_extracti128_si256(px1, 1));
     // Pack uint16 values to uint8

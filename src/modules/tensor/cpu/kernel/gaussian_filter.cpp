@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -670,7 +670,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8s>::value)
                                 rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp8u>::value)
-                                rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                                rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
@@ -725,7 +725,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8s>::value)
                             rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
-                            rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                            rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
@@ -923,7 +923,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8s>::value)
                                 rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp8u>::value)
-                                rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                                rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
@@ -978,7 +978,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8s>::value)
                             rpp_store8_f32_to_i8_avx(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
-                            rpp_store8_f32_to_u8_avx(dstPtrTemp, pDst);
+                            rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
