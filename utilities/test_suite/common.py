@@ -95,6 +95,7 @@ imageAugmentationMap = {
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
     93: ["jpeg_compression_distortion","HIP"],
+    94: ["emboss","HOST","HIP"],
 }
 
 audioAugmentationMap = {
@@ -130,7 +131,7 @@ ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
     "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84],
     "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
-    "filter_augmentations" : [49, 54],
+    "filter_augmentations" : [49, 54, 94],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 66, 67, 68],
     "data_exchange_operations" : [70, 85, 86],

@@ -94,10 +94,10 @@ RppStatus emboss_host_tensor(T *srcPtr,
     Rpp32u numThreads = handle.GetNumThreads();
 
     // set the required masks array needed for shuffle operations
-// #if __AVX2__
-//     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
-//     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
-// #endif
+#if __AVX2__
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+#endif
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -122,12 +122,12 @@ RppStatus emboss_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
         create_emboss_kernel_host(filterTensor, strength[batchCount]);
-// #if __AVX2__
-//         int size = 3 * 3;
-//         __m256 pFilter[size];
-//         for (int i = 0; i < size; i++)
-//             pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-// #endif
+#if __AVX2__
+        int size = 3 * 3;
+        __m256 pFilter[size];
+        for (int i = 0; i < size; i++)
+            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
+#endif
         T *srcPtrRow[3], *dstPtrRow;
         for (int i = 0; i < 3; i++)
             srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -157,30 +157,33 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                     process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, 3, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                     dstPtrTemp += padLength;
-// #if __AVX2__
-//                     // process alignedLength number of columns in each row
-//                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
-//                     {
-//                         __m256 pRow[6], pDst[2];
-//                         rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
-//                         pDst[0] = avx_p0;
-//                         pDst[1] = avx_p0;
-//                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
-//                         {
-//                             permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-//                             permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
-//                         }
-
-//                         rpp_store_filter_3x3_host(dstPtrTemp, pDst);
-//                         increment_row_ptrs(srcPtrTemp, 3, 14);
-//                         dstPtrTemp += 14;
-//                     }
-// #endif
+#if __AVX2__
+                    // process alignedLength number of columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                    {
+                        __m256 pRow[6], pDst[2];
+                        rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        pDst[0] = avx_p0;
+                        pDst[1] = avx_p0;
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
+                        {
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                        }
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
+                            pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
+                        }
+                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                        increment_row_ptrs(srcPtrTemp, 3, 14);
+                        dstPtrTemp += 14;
+                    }
+#endif
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, 3, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         increment_row_ptrs(srcPtrTemp, 3, 1);
                         dstPtrTemp++;
                     }
@@ -209,31 +212,34 @@ RppStatus emboss_host_tensor(T *srcPtr,
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                 process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, 3, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                 dstPtrTemp += padLength * 3;
-// #if __AVX2__
-//                 // process remaining columns in each row
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
-//                 {
-//                     __m256 pRow[9], pDst[2];
-//                     rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+#if __AVX2__
+                // process remaining columns in each row
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                {
+                    __m256 pRow[9], pDst[2];
+                    rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
 
-//                     pDst[0] = avx_p0;
-//                     pDst[1] = avx_p0;
-//                     for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
-//                     {
-//                         permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
-//                         permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
-//                     }
-
-//                     increment_row_ptrs(srcPtrTemp, 3, 16);
-//                     rpp_store_filter_3x3_host(dstPtrTemp, pDst);
-//                     dstPtrTemp += 16;
-//                 }
-// #endif
+                    pDst[0] = avx_p0;
+                    pDst[1] = avx_p0;
+                    for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                    {
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                    }
+                    if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
+                            pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
+                        }
+                    increment_row_ptrs(srcPtrTemp, 3, 16);
+                    rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                    dstPtrTemp += 16;
+                }
+#endif
                 vectorLoopCount += padLength * 3;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-                    *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                     increment_row_ptrs(srcPtrTemp, 3, 1);
                     dstPtrTemp++;
                 }
@@ -260,33 +266,36 @@ RppStatus emboss_host_tensor(T *srcPtr,
                 Rpp32s rowKernelLoopLimit = 3;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                 process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, 3, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-// #if __AVX2__
-//                 // process remaining columns in each row
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
-//                 {
-//                     __m256 pRow[9], pDst[2];
-//                     rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
-
-//                     pDst[0] = avx_p0;
-//                     pDst[1] = avx_p0;
-//                     for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
-//                     {
-//                         permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
-//                         permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
-//                     }
-//                     __m128 pDstPln[3];
-//                     rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
-//                     rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
-//                     increment_row_ptrs(srcPtrTemp, 3, 12);
-//                     increment_row_ptrs(dstPtrTempChannels, 3, 4);
-//                 }
-// #endif
+#if __AVX2__
+                // process remaining columns in each row
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                {
+                    __m256 pRow[9], pDst[2];
+                    rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                    pDst[0] = avx_p0;
+                    pDst[1] = avx_p0;
+                    for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                    {
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                    }
+                    if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
+                            pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
+                        }
+                    __m128 pDstPln[3];
+                    rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
+                    rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
+                    increment_row_ptrs(srcPtrTemp, 3, 12);
+                    increment_row_ptrs(dstPtrTempChannels, 3, 4);
+                }
+#endif
                 vectorLoopCount += padLength * 3;
                 for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                 {
                     int channel = c % 3;
                     convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-                    *dstPtrTempChannels[channel] += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                     increment_row_ptrs(srcPtrTemp, 3, 1);
                     dstPtrTempChannels[channel]++;
                 }
@@ -322,48 +331,52 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         dstPtrTemp++;
                     }
                 }
-// #if __AVX2__
-//                 // process alignedLength number of columns in each row
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
-//                 {
-//                     __m256 pResult[6];
-//                     for (int c = 0; c < 3; c++)
-//                     {
-//                         int channelStride = c * 2;
-//                         __m256 pRow[6];
-//                         rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
-//                         pResult[channelStride] = avx_p0;
-//                         pResult[channelStride + 1] = avx_p0;
-//                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
-//                         {
-//                             permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-//                             permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
-//                         }
-//                         increment_row_ptrs(srcPtrTemp[c], 3, 14);
-//                     }
-//                     // convert result from pln to pkd format and store in output buffer
-//                     if constexpr (std::is_same<T, Rpp32f>::value)
-//                         rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResult);
-//                     else if constexpr (std::is_same<T, Rpp16f>::value)
-//                         rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResult);
-//                     else if constexpr (std::is_same<T, Rpp8u>::value)
-//                         rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResult);
-//                     else if constexpr (std::is_same<T, Rpp8s>::value)
-//                         rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, pResult);
-//                     dstPtrTemp += 42;
-//                 }
-// #endif
+#if __AVX2__
+                // process alignedLength number of columns in each row
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                {
+                    __m256 pResult[6];
+                    for (int c = 0; c < 3; c++)
+                    {
+                        int channelStride = c * 2;
+                        __m256 pRow[6];
+                        rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                        pResult[channelStride] = avx_p0;
+                        pResult[channelStride + 1] = avx_p0;
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
+                        {
+                            permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                        }
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            pResult[channelStride] = rpp_pixel_check_0to1_avx(pResult[channelStride]);
+                            pResult[channelStride + 1] = rpp_pixel_check_0to1_avx(pResult[channelStride + 1]);
+                        }
+                        increment_row_ptrs(srcPtrTemp[c], 3, 14);
+                    }
+                    
+                    // convert result from pln to pkd format and store in output buffer
+                    if constexpr (std::is_same<T, Rpp32f>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp16f>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp8u>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp8s>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, pResult);
+                    dstPtrTemp += 42;
+                }
+#endif
                 vectorLoopCount += padLength;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     for (int c = 0; c < 3; c++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         increment_row_ptrs(srcPtrTemp[c], 3, 1);
                         dstPtrTemp++;
                     }
@@ -448,7 +461,6 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         increment_row_ptrs(srcPtrTemp, 3, 1);
                         dstPtrTemp++;
                     }
@@ -480,7 +492,6 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-                    *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                     increment_row_ptrs(srcPtrTemp, 3, 1);
                     dstPtrTemp++;
                 }
@@ -513,7 +524,6 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         dstPtrTemp++;
                     }
                 }
@@ -524,7 +534,6 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
                         convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, 3,  padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-                        *dstPtrTemp += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                         increment_row_ptrs(srcPtrTemp[c], 3, 1);
                         dstPtrTemp++;
                     }
@@ -557,7 +566,6 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
                 {
                     int channel = vectorLoopCount % 3;
                     convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, 3, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-                    *dstPtrTempChannels[channel] += static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(biasParam)));
                     increment_row_ptrs(srcPtrTemp, 3, 1);
                     dstPtrTempChannels[channel]++;
                 }
