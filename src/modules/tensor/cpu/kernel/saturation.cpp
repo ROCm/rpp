@@ -120,7 +120,7 @@ RppStatus saturation_u8_u8_host_tensor(Rpp8u *srcPtr,
         pSaturationParam[0] = _mm_set1_ps(saturationParam);
 #endif
 
-        // Color Twist with fused output-layout toggle (NHWC -> NCHW)
+        // Saturation with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -184,7 +184,7 @@ RppStatus saturation_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Color Twist with fused output-layout toggle (NCHW -> NHWC)
+        // Saturation with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -248,7 +248,7 @@ RppStatus saturation_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NHWC -> NHWC)
+        // Saturation without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -302,7 +302,7 @@ RppStatus saturation_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NCHW -> NCHW)
+        // Saturation without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -429,7 +429,7 @@ RppStatus saturation_f32_f32_host_tensor(Rpp32f *srcPtr,
         pSaturationParam[0] = _mm_set1_ps(saturationParam);
 #endif
 
-        // Color Twist with fused output-layout toggle (NHWC -> NCHW)
+        // Saturation with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -489,7 +489,7 @@ RppStatus saturation_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Color Twist with fused output-layout toggle (NCHW -> NHWC)
+        // Saturation with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -549,7 +549,7 @@ RppStatus saturation_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NHWC -> NHWC)
+        // Saturation without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRow, *dstPtrRow;
@@ -599,7 +599,7 @@ RppStatus saturation_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NCHW -> NCHW)
+        // Saturation without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -723,7 +723,7 @@ RppStatus saturation_f16_f16_host_tensor(Rpp16f *srcPtr,
         pSaturationParam[0] = _mm_set1_ps(saturationParam);
 #endif
 
-        // Color Twist with fused output-layout toggle (NHWC -> NCHW)
+        // Saturation with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -793,7 +793,7 @@ RppStatus saturation_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Color Twist with fused output-layout toggle (NCHW -> NHWC)
+        // Saturation with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -863,7 +863,7 @@ RppStatus saturation_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NHWC -> NHWC)
+        // Saturation without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRow, *dstPtrRow;
@@ -919,7 +919,7 @@ RppStatus saturation_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NCHW -> NCHW)
+        // Saturation without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1052,7 +1052,7 @@ RppStatus saturation_i8_i8_host_tensor(Rpp8s *srcPtr,
         pSaturationParam[0] = _mm_set1_ps(saturationParam);
 #endif
 
-        // Color Twist with fused output-layout toggle (NHWC -> NCHW)
+        // Saturation with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1116,7 +1116,7 @@ RppStatus saturation_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Color Twist with fused output-layout toggle (NCHW -> NHWC)
+        // Saturation with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -1180,7 +1180,7 @@ RppStatus saturation_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NHWC -> NHWC)
+        // Saturation without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRow, *dstPtrRow;
@@ -1234,7 +1234,7 @@ RppStatus saturation_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Color Twist without fused output-layout toggle (NCHW -> NCHW)
+        // Saturation without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
