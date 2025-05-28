@@ -57,7 +57,7 @@ Note: Unlike box filter, there is no arithmetic averaging or SIMD optimization h
 
 // handle nearest-neighbor padding
 template<typename T>
-inline void apply_nn_padding(T *srcPtrTemp, T *blockData, Rpp32s kernelSize, Rpp32s padLength, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s height, Rpp32s width, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void apply_nn_padding(T *srcPtrTemp, T *blockData, Rpp32s padLength, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s height, Rpp32s width, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     Rpp32s index = 0;
 
@@ -81,15 +81,13 @@ inline void apply_nn_padding(T *srcPtrTemp, T *blockData, Rpp32s kernelSize, Rpp
 
 // Generic median filter implementation
 template<typename T>
-inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s kernelSize, Rpp32s height, Rpp32s width, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s kernelSizeSquared, Rpp32s padLength, Rpp32s height, Rpp32s width, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    Rpp32s kernelSizeSquared = kernelSize * kernelSize;
-
-    // Temporary buffer to hold kernel window data for all channels
+   // Temporary buffer to hold kernel window data for all channels
     T blockData[kernelSizeSquared * channels];
 
     // Fill blockData with padded values from the source image
-    apply_nn_padding(srcPtrTemp, blockData, kernelSize, kernelSize / 2, rowIdx, colIdx, height, width, channels, srcDescPtr, dstDescPtr);
+    apply_nn_padding(srcPtrTemp, blockData, padLength, rowIdx, colIdx, height, width, channels, srcDescPtr, dstDescPtr);
 
     for (Rpp32s ch = 0; ch < channels; ch++)
     {
@@ -139,6 +137,9 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+        Rpp32s kernelSizeSquared = kernelSize * kernelSize;
+        Rpp32s padLength = kernelSize / 2;
+
         if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             for(Rpp32s c = 0; c < srcDescPtr->c; c++)
@@ -149,7 +150,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     T *dstPtrTemp = dstPtrRow;
                     for(Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
-                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -166,7 +167,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                 T *dstPtrTemp = dstPtrRow;
                 for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
-                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, srcDescPtr->c, srcDescPtr, dstDescPtr);
+                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, srcDescPtr->c, srcDescPtr, dstDescPtr);
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -184,7 +185,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     T *srcPtrTempChn = srcPtrChannel;
                     for (Rpp32s c = 0; c < srcDescPtr->c; c++)
                     {
-                        median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn++;
                     }
@@ -203,7 +204,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     T *dstPtrTemp = dstPtrRow;
                     for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
-                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSize, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
+                        median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp ++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
