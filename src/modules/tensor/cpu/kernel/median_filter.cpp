@@ -55,12 +55,15 @@ This process is repeated for each pixel in the ROI.
 Note: Unlike box filter, there is no arithmetic averaging or SIMD optimization here due to sorting-based computation.
 */
 
-// handle nearest-neighbor padding
+// Generic median filter implementation
 template<typename T>
-inline void apply_nn_padding(T *srcPtrTemp, T *blockData, Rpp32s padLength, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s kernelSizeSquared, Rpp32s padLength, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
+   // Temporary buffer to hold kernel window data for all channels
+    T blockData[kernelSizeSquared * channels];
     Rpp32s index = 0;
 
+    // Fill blockData with padded values from the source image using nearest neighbhor padding
     for (Rpp32s i = -padLength; i <= padLength; i++)
     {
         for (Rpp32s j = -padLength; j <= padLength; j++)
@@ -77,17 +80,6 @@ inline void apply_nn_padding(T *srcPtrTemp, T *blockData, Rpp32s padLength, Rpp3
                 blockData[index++] = srcPtrTemp[srcIdx + ch];
         }
     }
-}
-
-// Generic median filter implementation
-template<typename T>
-inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s rowIdx, Rpp32s colIdx, Rpp32s kernelSizeSquared, Rpp32s padLength, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s channels, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
-{
-   // Temporary buffer to hold kernel window data for all channels
-    T blockData[kernelSizeSquared * channels];
-
-    // Fill blockData with padded values from the source image
-    apply_nn_padding(srcPtrTemp, blockData, padLength, rowIdx, colIdx, heightLimit, widthLimit, channels, srcDescPtr, dstDescPtr);
 
     for (Rpp32s ch = 0; ch < channels; ch++)
     {
