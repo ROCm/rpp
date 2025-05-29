@@ -78,11 +78,11 @@ __device__ void hue_hip_compute(schar *srcPtr, d_float24 *pix_f24, float *huePar
 
 template <typename T>
 __global__ void hue_pkd_hip_tensor(T *srcPtr,
-                                       uint2 srcStridesNH,
-                                       T *dstPtr,
-                                       uint2 dstStridesNH,
-                                       float *hueTensor,
-                                       RpptROIPtr roiTensorPtrSrc)
+                                   uint2 srcStridesNH,
+                                   T *dstPtr,
+                                   uint2 dstStridesNH,
+                                   float *hueTensor,
+                                   RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -107,11 +107,11 @@ __global__ void hue_pkd_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void hue_pln_hip_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint3 dstStridesNCH,
-                                      float *hueTensor,
-                                      RpptROIPtr roiTensorPtrSrc)
+                                   uint3 srcStridesNCH,
+                                   T *dstPtr,
+                                   uint3 dstStridesNCH,
+                                   float *hueTensor,
+                                   RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -136,11 +136,11 @@ __global__ void hue_pln_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void hue_pkd3_pln3_hip_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            float *hueTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                         uint2 srcStridesNH,
+                                         T *dstPtr,
+                                         uint3 dstStridesNCH,
+                                         float *hueTensor,
+                                         RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -154,9 +154,7 @@ __global__ void hue_pkd3_pln3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    // float hueParam = hueTensor[id_z];
     float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
-
 
     d_float24 pix_f24;
 
@@ -167,11 +165,11 @@ __global__ void hue_pkd3_pln3_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void hue_pln3_pkd3_hip_tensor(T *srcPtr,
-                                            uint3 srcStridesNCH,
-                                            T *dstPtr,
-                                            uint2 dstStridesNH,
-                                            float *hueTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                         uint3 srcStridesNCH,
+                                         T *dstPtr,
+                                         uint2 dstStridesNH,
+                                         float *hueTensor,
+                                         RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -185,9 +183,7 @@ __global__ void hue_pln3_pkd3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    // float hueParam = hueTensor[id_z];
     float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
-
 
     d_float24 pix_f24;
 
@@ -198,12 +194,13 @@ __global__ void hue_pln3_pkd3_hip_tensor(T *srcPtr,
 
 template <typename T>
 RppStatus hip_exec_hue_tensor(T *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rpp::Handle& handle)
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32f *hueTensor,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -226,7 +223,7 @@ RppStatus hip_exec_hue_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               hueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -240,7 +237,7 @@ RppStatus hip_exec_hue_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               hueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -254,7 +251,7 @@ RppStatus hip_exec_hue_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               hueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -269,7 +266,7 @@ RppStatus hip_exec_hue_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               hueTensor,
                                roiTensorPtrSrc);
         }
     }
@@ -278,33 +275,37 @@ RppStatus hip_exec_hue_tensor(T *srcPtr,
 }
 
 template RppStatus hip_exec_hue_tensor<Rpp8u>(Rpp8u*,
-                                                      RpptDescPtr,
-                                                      Rpp8u*,
-                                                      RpptDescPtr,
-                                                      RpptROIPtr,
-                                                      RpptRoiType,
-                                                      rpp::Handle&);
+                                              RpptDescPtr,
+                                              Rpp8u*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);
 
 template RppStatus hip_exec_hue_tensor<half>(half*,
-                                                     RpptDescPtr,
-                                                     half*,
-                                                     RpptDescPtr,
-                                                     RpptROIPtr,
-                                                     RpptRoiType,
-                                                     rpp::Handle&);
+                                             RpptDescPtr,
+                                             half*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             rpp::Handle&);
 
 template RppStatus hip_exec_hue_tensor<Rpp32f>(Rpp32f*,
-                                                       RpptDescPtr,
-                                                       Rpp32f*,
-                                                       RpptDescPtr,
-                                                       RpptROIPtr,
-                                                       RpptRoiType,
-                                                       rpp::Handle&);
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
 
 template RppStatus hip_exec_hue_tensor<Rpp8s>(Rpp8s*,
-                                                      RpptDescPtr,
-                                                      Rpp8s*,
-                                                      RpptDescPtr,
-                                                      RpptROIPtr,
-                                                      RpptRoiType,
-                                                      rpp::Handle&);
+                                              RpptDescPtr,
+                                              Rpp8s*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);

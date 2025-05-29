@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "rpp_cpu_common.hpp"
 
+// Converts HSV to RGB color space using SSE vectorization, processes 4 pixels simultaneously
 inline void HSV_to_RGB_sse(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 pH, __m128 pS, __m128 pV)
 {
     __m128 pMask[4], pIntH, pA, pAdd; 
@@ -66,6 +67,7 @@ inline void HSV_to_RGB_sse(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 p
     pVecB = _mm_or_ps(_mm_andnot_ps(pMask[0], pVecB), _mm_and_ps(pMask[0], pH));                                    //     bf = q; break;}
 }
 
+// Converts RGB to HSV color space using SSE vectorization, processes 4 pixels simultaneously
 inline void RGB_to_HSV_sse(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 &pH, __m128 &pS, __m128 &pV)
 {
     __m128 pMask[4], pDelta, pAdd;
@@ -93,7 +95,7 @@ inline void RGB_to_HSV_sse(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 &
     pH = _mm_add_ps(pH, pAdd);                                                                                      //     hue += add;
 }
 
-
+// Converts HSV to RGB color space using AVX vectorization, processes 8 pixels simultaneously
 inline void HSV_to_RGB_avx(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pH, __m256 &pS, __m256 &pV)
 {
 
@@ -137,6 +139,7 @@ inline void HSV_to_RGB_avx(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &
     pVecB = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pVecB), _mm256_and_ps(pMask[0], pH));                              //     bf = q; break;}
 }
 
+// Converts RGB to HSV color space using AVX vectorization, processes 8 pixels simultaneously
 inline void RGB_to_HSV_avx(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pH, __m256 &pS, __m256 &pV)
 {
     __m256 pMask[4], pDelta, pAdd;
@@ -162,21 +165,26 @@ inline void RGB_to_HSV_avx(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &
     pAdd = _mm256_or_ps(_mm256_andnot_ps(pMask[3], pAdd), _mm256_and_ps(pMask[3], avx_p4));                            //         add = 4.0f;
     pH = _mm256_or_ps(_mm256_andnot_ps(pMask[0], pH), _mm256_and_ps(pMask[0], _mm256_div_ps(pH, pDelta)));             //     hue /= delta; }}
     pH = _mm256_add_ps(pH, pAdd);                                                                                      //     hue += add;
- 
 }
+
+// Converts RGB to HSV color space for a single pixel (scalar version)
 inline void RGB_to_HSV(RpptFloatRGB *pixel, Rpp32f &hue, Rpp32f &sat, Rpp32f &val)
 {
+    // Find maximum and minimum values among RGB components
     Rpp32f rf = pixel->R, gf = pixel->G, bf = pixel->B;
     Rpp32f cmax = RPPMAX3(rf, gf, bf);
     Rpp32f cmin = RPPMIN3(rf, gf, bf);
     Rpp32f delta = cmax - cmin;
 
+    // Initialize HSV values
     hue = 0.0f;
     sat = 0.0f;
     val = cmax;
 
+    // Calculate saturation and hue if delta is not zero and max value is not zero
     if ((delta != 0) && (cmax != 0)) {
         sat = delta / cmax;
+        // Calculate hue based on which RGB component is maximum
         if (cmax == rf)
         {
             hue = (gf - bf) / delta;
@@ -191,14 +199,17 @@ inline void RGB_to_HSV(RpptFloatRGB *pixel, Rpp32f &hue, Rpp32f &sat, Rpp32f &va
     }
 }
 
+// Converts HSV to RGB color space for a single pixel (scalar version)
 inline void HSV_to_RGB(Rpp32f hue, Rpp32f sat, Rpp32f val, RpptFloatRGB *pixel)
 {
+    // Calculate intermediate values for RGB conversion
     Rpp32s hueIntegerPart = (Rpp32s)hue;
     Rpp32f f = hue - hueIntegerPart;
     Rpp32f p = val * (1.0f - sat);
     Rpp32f q = val * (1.0f - sat * f);
     Rpp32f t = val * (1.0f - sat * (1.0f - f));
 
+    // Assign RGB values based on hue section (0-5)
     switch (hueIntegerPart) {
         case 0: pixel->R = val; pixel->G = t; pixel->B = p; break;
         case 1: pixel->R = q; pixel->G = val; pixel->B = p; break;
