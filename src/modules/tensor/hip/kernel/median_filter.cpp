@@ -24,71 +24,96 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-// -------------------- median_filter device helper --------------------
-template <int kernelSize>
-__device__ void median_filter_row_hip_compute(uchar *srcPtr, d_float8 *median_f8)
+// -------------------- median_filter device helpers --------------------
+
+template<int kernelSize>
+__device__ float compute_median(float *window)
 {
-    const int paddedKernelWidth = kernelSize + 7; // padded row size for aligned memory access
-    const int uint32LoadCountPerRow = (kernelSize + 10) / 4; // Number of 32-bit loads required to read each row
-    const int windowSize = kernelSize * kernelSize; // Total number of pixels in the filter window
-    const int medianIndex = (windowSize - 1) / 2; // Index of the median value in the sorted list
-    const int sortSteps = medianIndex + 1; // Number of steps required for partial sort to find the median
-
-    float src[kernelSize * paddedKernelWidth], medianVals[8];
-
-    // Load and unpack image data into float using bitwise operations
-    for (int i = 0; i < kernelSize; ++i)
+    constexpr int windowSize = kernelSize * kernelSize;
+    constexpr int medianIndex = (windowSize - 1) / 2;
+    if constexpr (kernelSize == 3)
     {
-        uchar *rowPtr = srcPtr + i * SMEM_LENGTH_X; // Pointer to the start of the current row
-        uint32_t *uintPtr = (uint32_t *)rowPtr;
+        // Sorting network for 3x3 (9 elements) median
+        #define SWAP(i, j) if (window[i] > window[j]) { float tmp = window[i]; window[i] = window[j]; window[j] = tmp; }
 
-        // Read the row in 32-bit chunks and unpack 4 uchar values from each
-        for (int j = 0; j < uint32LoadCountPerRow; ++j)
-        {
-            uint32_t val = uintPtr[j];
-            for (int k = 0; k < 4; ++k)
-            {
-                int posInRow = j * 4 + k;
-                if (posInRow >= paddedKernelWidth)
-                    break;
-                src[i * paddedKernelWidth + posInRow] = (float)((val >> (k * 8)) & 0xFF); // Extract byte and convert to float
-            }
-        }
+        SWAP(1, 2); SWAP(4, 5); SWAP(7, 8); SWAP(0, 1);
+        SWAP(3, 4); SWAP(6, 7); SWAP(1, 2); SWAP(4, 5);
+        SWAP(7, 8); SWAP(0, 3); SWAP(5, 8); SWAP(4, 7);
+        SWAP(3, 6); SWAP(1, 4); SWAP(2, 5);SWAP(4, 7);
+        SWAP(4, 2); SWAP(6, 4); SWAP(4, 2);
+
+        #undef SWAP
+
+        return window[medianIndex];  // Median index is 4 for 9 elements
     }
-
-    // Perform median filtering for 8 separate output pixels
-    for (int filter = 0; filter < 8; ++filter)
+    else
     {
-        float window[windowSize];
-        const int offsetX = filter; // Column offset for the current filter output
+        // Partial selection sort for median - sufficient to find median without full sorting
+        int sortSteps = medianIndex + 1;
 
-        // Extract window values from the padded source buffer
-        for (int i = 0; i < windowSize; ++i)
-        {
-            int row = i / kernelSize;
-            int col = i % kernelSize;
-            window[i] = src[row * paddedKernelWidth + offsetX + col];
-        }
-
-        // Partial selection sort to find the median value in the window
         for (int i = 0; i < sortSteps; ++i)
         {
             int minIdx = i;
             for (int j = i + 1; j < windowSize; ++j)
-                minIdx = (window[j] < window[minIdx]) ? j : minIdx;
-
+            {
+                if (window[j] < window[minIdx])
+                    minIdx = j;
+            }
+            // Swap i-th and minIdx element
             float temp = window[i];
             window[i] = window[minIdx];
             window[minIdx] = temp;
         }
 
-        // Store the median result for the current filter
-        medianVals[filter] = window[medianIndex];
+        return window[medianIndex];
+    }
+}
+
+template <int kernelSize>
+__device__ void median_filter_row_hip_compute(uchar *srcPtr, d_float8 *median_f8)
+{
+    const int paddedKernelWidth = kernelSize + 7; // padded row size for aligned memory access
+    const int uint32LoadCountPerRow = (kernelSize + 10) / 4; // Number of 32-bit loads required to read each row
+    const int windowSize = kernelSize * kernelSize;
+
+    float src[kernelSize * paddedKernelWidth];
+
+    // Load and unpack image data from shared memory into float array
+    for (int i = 0; i < kernelSize; ++i)
+    {
+        // uint32 pointer to the start of the current row in shared memory (SMEM_LENGTH_X assumed defined)
+        uint32_t *srcPtrRowUint = (uint32_t *)(srcPtr + i * SMEM_LENGTH_X);
+
+        for (int j = 0; j < uint32LoadCountPerRow; ++j)
+        {
+            uint32_t val = srcPtrRowUint[j];
+            // Unpack 4 bytes from each 32-bit int
+            #pragma unroll
+            for (int k = 0; k < 4; ++k)
+            {
+                int posInRow = (j << 2) + k; // same as j*4 + k, but faster with shift
+                if (posInRow >= paddedKernelWidth)
+                    break;
+                src[i * paddedKernelWidth + posInRow] = float((val >> (k << 3)) & 0xFF);
+            }
+        }
     }
 
-    // Store the 8 median values as two float4 vectors
-    median_f8->f4[0] = make_float4(medianVals[0], medianVals[1], medianVals[2], medianVals[3]);
-    median_f8->f4[1] = make_float4(medianVals[4], medianVals[5], medianVals[6], medianVals[7]);
+    // Compute median for 8 different filter positions on this row
+    for (int filter = 0; filter < 8; ++filter)
+    {
+        float window[windowSize];
+        const int offsetX = filter; // offset in columns for this pixel's filter window
+
+        // Extract the window from src buffer with padding offset
+        for (int i = 0; i < windowSize; ++i)
+            window[i] = src[(i / kernelSize) * paddedKernelWidth + offsetX + (i % kernelSize)];
+
+        // Calculate median using templated function (uses sort network for 3x3, partial selection for others)
+        float medianVal = compute_median<kernelSize>(window);
+        // Store median results into output struct (d_float8 assumed to have f1[8] float array)
+        median_f8->f1[filter] = medianVal;
+    }
 }
 
 template <typename T>
@@ -139,7 +164,6 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
                                 min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
                                 min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
