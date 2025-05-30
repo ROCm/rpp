@@ -30,7 +30,7 @@ SOFTWARE.
 template <typename T>
 inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, RpptDescPtr srcDescPtr, Rpp32f &srcY, Rpp32f &srcX, RpptROI* roiLTRB, T *dst)
 {
-    RppiPoint srcLT, srcRB;
+    RpptPoint2D srcLT, srcRB;
     Rpp32f weightParams[4], bilinearCoeffs[4];
     Rpp32s srcLoc[4];
     srcLT.y = (Rpp32s) srcY;                                    // Bilinear LT point y value
