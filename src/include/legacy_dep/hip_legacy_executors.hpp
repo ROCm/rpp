@@ -22,15 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <hip/hip_runtime_api.h>
+#include "rpp.h"
+#include "handle.hpp"
+#include "rpp_hip_load_store.hpp"
 
-#include "errors.hpp"
+// -------------------- fisheye --------------------
 
-namespace rpp {
+RppStatus fisheye_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
 
-std::string HIPErrorMessage(int error, const std::string& msg)
-{
-    return msg + " " + hipGetErrorString(static_cast<hipError_t>(error));
-}
+// -------------------- snow --------------------
 
-} // namespace rpp
+RppStatus snow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+
+// -------------------- hueRGB --------------------
+
+RppStatus hueRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
+
+// -------------------- saturationRGB --------------------
+
+RppStatus saturationRGB_hip_batch(Rpp8u* srcPtr, Rpp8u* dstPtr, rpp::Handle& handle, RppiChnFormat chnFormat, unsigned int channel);
