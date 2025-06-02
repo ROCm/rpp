@@ -22,19 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+// Converts RGB color values to HSV colorspace
 __device__ void RGB_to_HSV_hip(float *pixelR, float *pixelG, float *pixelB, float &hue, float &sat, float &val)
 {
+    // Find maximum and minimum values among RGB components
     float cmax = fmaxf(fmaxf(*pixelR, *pixelG), *pixelB);
     float cmin = fminf(fminf(*pixelR, *pixelG), *pixelB);
     float delta = cmax - cmin;
 
+    // Initialize HSV values
     hue = 0.0f;
     sat = 0.0f;
     val = cmax;
 
+    // Calculate saturation and hue if delta is not zero and max value is not zero
     if ((delta != 0) && (cmax != 0))
     {
         sat = delta / cmax;   
+        // Calculate hue based on which RGB component is maximum
         if (cmax == *pixelR)
             hue = (*pixelG - *pixelB) / delta;
         else if (cmax == *pixelG)
@@ -44,12 +49,15 @@ __device__ void RGB_to_HSV_hip(float *pixelR, float *pixelG, float *pixelB, floa
     }
 }
 
+// Converts HSV color values back to RGB colorspace
 __device__ void HSV_to_RGB_hip(float hue, float sat, float val, float *pixelR, float *pixelG, float *pixelB)
 {
+    // Calculate intermediate values for RGB conversion
     float p = val * (1.0f - sat);
     float q = val * (1.0f - (sat * (hue - floor(hue))));
     float t = val * (1.0f - (sat * (1.0f - (hue - floor(hue)))));
 
+    // Assign RGB values based on hue section (0-5)
     switch ((int)hue)
     {
         case 0: *pixelR = val; *pixelG = t;   *pixelB = p;   break;

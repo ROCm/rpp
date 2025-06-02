@@ -330,12 +330,8 @@ RppStatus rppt_hue_host(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
-    if (srcDescPtr->c != 3)
-    {
-        return RPP_ERROR_INVALID_CHANNELS;
-    }
-    
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -403,11 +399,8 @@ RppStatus rppt_saturation_host(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-    if (srcDescPtr->c != 3)
-    {
-        return RPP_ERROR_INVALID_CHANNELS;
-    }
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1098,13 +1091,7 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcDescPtr->c != 3)
-    {
-        return RPP_ERROR_INVALID_CHANNELS;
-    }
-
-    Rpp32u paramIndex = 0;
-    copy_param_float(hueTensor, rpp::deref(rppHandle), paramIndex++);
+    if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1115,6 +1102,7 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                             srcDescPtr,
                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                             dstDescPtr,
+                            hueTensor,
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
@@ -1125,6 +1113,7 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                             srcDescPtr,
                             (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                             dstDescPtr,
+                            hueTensor,
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
@@ -1135,6 +1124,7 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                             srcDescPtr,
                             (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                             dstDescPtr,
+                            hueTensor,
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
@@ -1145,6 +1135,7 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                             srcDescPtr,
                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                             dstDescPtr,
+                            hueTensor,
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
@@ -1155,7 +1146,6 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
-
 
 /******************** saturation ********************/
 
@@ -1169,13 +1159,7 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                               rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcDescPtr->c != 3)
-    {
-        return RPP_ERROR_INVALID_CHANNELS;
-    }
-
-    Rpp32u paramIndex = 0;
-    copy_param_float(saturationTensor, rpp::deref(rppHandle), paramIndex++);
+    if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1186,6 +1170,7 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   saturationTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1196,6 +1181,7 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   saturationTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1206,6 +1192,7 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   saturationTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1216,6 +1203,7 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   saturationTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));

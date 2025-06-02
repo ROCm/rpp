@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
@@ -435,6 +435,14 @@ int main(int argc, char **argv)
     Rpp32f *alpha = nullptr;
     if(testCase == RAIN)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *hue = nullptr;
+    if(testCase == HUE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&hue, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *saturation = nullptr;
+    if(testCase == SATURATION)
+        CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
     if(testCase == THRESHOLD)
@@ -1103,7 +1111,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "hue";
 
-                    Rpp32f hue[batchSize];
                     for (i = 0; i < batchSize; i++)
                         hue[i] = 60.0;
 
@@ -1119,7 +1126,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "saturation";
 
-                    Rpp32f saturation[batchSize];
                     for (i = 0; i < batchSize; i++)
                         saturation[i] = 5;
 
@@ -1882,6 +1888,10 @@ int main(int argc, char **argv)
     if(testCase == PIXELATE)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
     if(alpha != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(hue != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(saturation != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
     if (minTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));

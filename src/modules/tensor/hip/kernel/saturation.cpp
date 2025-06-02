@@ -78,11 +78,11 @@ __device__ void saturation_hip_compute(schar *srcPtr, d_float24 *pix_f24, float 
 
 template <typename T>
 __global__ void saturation_pkd_hip_tensor(T *srcPtr,
-                                       uint2 srcStridesNH,
-                                       T *dstPtr,
-                                       uint2 dstStridesNH,
-                                       float *saturationTensor,
-                                       RpptROIPtr roiTensorPtrSrc)
+                                          uint2 srcStridesNH,
+                                          T *dstPtr,
+                                          uint2 dstStridesNH,
+                                          float *saturationTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -107,11 +107,11 @@ __global__ void saturation_pkd_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void saturation_pln_hip_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint3 dstStridesNCH,
-                                      float *saturationTensor,
-                                      RpptROIPtr roiTensorPtrSrc)
+                                          uint3 srcStridesNCH,
+                                          T *dstPtr,
+                                          uint3 dstStridesNCH,
+                                          float *saturationTensor,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -136,11 +136,11 @@ __global__ void saturation_pln_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void saturation_pkd3_pln3_hip_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            float *saturationTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                                uint2 srcStridesNH,
+                                                T *dstPtr,
+                                                uint3 dstStridesNCH,
+                                                float *saturationTensor,
+                                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -165,11 +165,11 @@ __global__ void saturation_pkd3_pln3_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void saturation_pln3_pkd3_hip_tensor(T *srcPtr,
-                                            uint3 srcStridesNCH,
-                                            T *dstPtr,
-                                            uint2 dstStridesNH,
-                                            float *saturationTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                                uint3 srcStridesNCH,
+                                                T *dstPtr,
+                                                uint2 dstStridesNH,
+                                                float *saturationTensor,
+                                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -197,6 +197,7 @@ RppStatus hip_exec_saturation_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
+                                     Rpp32f *saturationTensor,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle)
@@ -222,7 +223,7 @@ RppStatus hip_exec_saturation_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -236,7 +237,7 @@ RppStatus hip_exec_saturation_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -250,7 +251,7 @@ RppStatus hip_exec_saturation_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -265,7 +266,7 @@ RppStatus hip_exec_saturation_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
     }
@@ -277,6 +278,7 @@ template RppStatus hip_exec_saturation_tensor<Rpp8u>(Rpp8u*,
                                                      RpptDescPtr,
                                                      Rpp8u*,
                                                      RpptDescPtr,
+                                                     Rpp32f*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
                                                      rpp::Handle&);
@@ -285,6 +287,7 @@ template RppStatus hip_exec_saturation_tensor<half>(half*,
                                                     RpptDescPtr,
                                                     half*,
                                                     RpptDescPtr,
+                                                    Rpp32f*,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     rpp::Handle&);
@@ -293,6 +296,7 @@ template RppStatus hip_exec_saturation_tensor<Rpp32f>(Rpp32f*,
                                                       RpptDescPtr,
                                                       Rpp32f*,
                                                       RpptDescPtr,
+                                                      Rpp32f*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       rpp::Handle&);
@@ -301,6 +305,7 @@ template RppStatus hip_exec_saturation_tensor<Rpp8s>(Rpp8s*,
                                                      RpptDescPtr,
                                                      Rpp8s*,
                                                      RpptDescPtr,
+                                                     Rpp32f*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
                                                      rpp::Handle&);
