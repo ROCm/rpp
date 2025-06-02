@@ -443,6 +443,14 @@ int main(int argc, char **argv)
     Rpp32f *saturation = nullptr;
     if(testCase == SATURATION)
         CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(Rpp32f)));
+    
+    Rpp32f *strength = nullptr;
+    Rpp32f *bias = nullptr;
+    if(testCase == EMBOSS)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&strength, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&bias, batchSize * sizeof(Rpp32f)));
+    }
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
     if(testCase == THRESHOLD)
@@ -1307,6 +1315,25 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case EMBOSS:
+                {
+                    testCaseName = "emboss";
+                    Rpp32u kernelSize = additionalParam;
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        strength[i] = 2.0f;
+                        bias[i] = 0.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_emboss_gpu(d_input, srcDescPtr, d_output, dstDescPtr, strength, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case MAGNITUDE:
                 {
                     testCaseName = "magnitude";
@@ -1893,6 +1920,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
     if(saturation != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(strength != null && bias != null){
+        CHECK_RETURN_STATUS(hipHostFree(&strength));
+        CHECK_RETURN_STATUS(hipHostFree(&bias));
+    }
     if (minTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
