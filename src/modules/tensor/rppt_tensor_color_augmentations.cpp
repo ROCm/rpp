@@ -1091,7 +1091,6 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-
     if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1160,7 +1159,6 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                               rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-
     if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;

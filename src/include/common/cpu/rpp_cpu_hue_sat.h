@@ -98,7 +98,6 @@ inline void RGB_to_HSV_sse(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 &
 // Converts HSV to RGB color space using AVX vectorization, processes 8 pixels simultaneously
 inline void HSV_to_RGB_avx(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pH, __m256 &pS, __m256 &pV)
 {
-
     __m256 pMask[4], pIntH, pA, pAdd; 
     __m256i pxIntH;
     // HSV to RGB with brightness/contrast adjustment
