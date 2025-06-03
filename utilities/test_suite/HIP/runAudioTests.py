@@ -35,8 +35,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 7
+caseMin = min(audioAugmentationMap.keys())
+caseMax = max(audioAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -245,7 +245,7 @@ if noCaseSupported:
 
 for case in caseList:
     if "--input_path" not in sys.argv:
-        if case == "3":
+        if audioAugmentationMap[int(case)][0] == "down_mixing":
             srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
         else:
             srcPath = inFilePath
