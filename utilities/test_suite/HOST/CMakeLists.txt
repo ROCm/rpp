@@ -155,6 +155,10 @@ else()
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
+                if(NOT APPLE)
+                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+                endif()
+
                 if(OpenMP_CXX_FOUND)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
