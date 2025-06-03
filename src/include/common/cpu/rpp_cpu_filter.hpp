@@ -90,7 +90,6 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
     saturate_pixel(accum, dstPtrTemp);
 }
 
-template<typename T>
 inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
 {
     Rpp32f temp[kernelSize * kernelSize];

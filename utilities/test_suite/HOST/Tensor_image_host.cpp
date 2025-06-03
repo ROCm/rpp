@@ -1283,19 +1283,20 @@ int main(int argc, char **argv)
                 case EMBOSS:
                 {
                     testCaseName = "emboss";
+                    Rpp32u kernelSize = additionalParam;
 
                     Rpp32f strength[batchSize];
                     Rpp32f bias[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
-                        strength[i] = 2.0f;
-                        bias[i] = 128.0f;
+                        strength[i] = 1.0f;
+                        bias[i] = 0.0f;
                     }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_emboss_host(input, srcDescPtr, output, dstDescPtr, strength, bias, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_emboss_host(input, srcDescPtr, output, dstDescPtr, strength, bias, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
