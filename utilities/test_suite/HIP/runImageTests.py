@@ -428,7 +428,7 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if imageAugmentationMap[int(CASE_NUM)][0] in {"erode", "dilate", "box_filter, gaussian_filter"} and TYPE.startswith("Tensor"):
+                        if imageAugmentationMap[int(CASE_NUM)][0] in {"erode", "dilate", "box_filter", "gaussian_filter"} and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
