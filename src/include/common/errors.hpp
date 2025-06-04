@@ -34,6 +34,10 @@ SOFTWARE.
 #include "object.hpp"
 #include "returns.hpp"
 
+#if defined (HIP_COMPILE)
+#include <hip/hip_runtime_api.h>
+#endif
+
 namespace rpp {
 
 struct Exception : std::exception
@@ -55,7 +59,14 @@ struct Exception : std::exception
 };
 
 std::string OpenCLErrorMessage(int error, const std::string& msg = "");
-std::string HIPErrorMessage(int error, const std::string& msg = "");
+
+inline std::string HIPErrorMessage(int error, const std::string& msg = "")
+{
+#if defined (HIP_COMPILE)
+    return msg + " " + hipGetErrorString(static_cast<hipError_t>(error));
+#endif
+    return msg;
+}
 
 #define RPP_THROW(...)                                                    \
     do                                                                       \
