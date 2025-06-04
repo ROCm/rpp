@@ -1809,11 +1809,11 @@ __global__ void create_emboss_kernel_5x5(float *filterTensor,
 
     // Example 5x5 Emboss kernel (diagonal edge emphasis)
     const float baseKernel[25] = {
-        -4, -3, -2, -1,  0,
+        -3, -3, -2, -1,  0,
         -3, -2, -1,  0,  1,
-        -2, -1,  0,  1,  2,
+        -2, -1,  1,  1,  2,
         -1,  0,  1,  2,  3,
-         0,  1,  2,  3,  4
+         0,  1,  2,  3,  3
     };
 
     // Apply strength scaling
@@ -1834,13 +1834,13 @@ __global__ void create_emboss_kernel_7x7(float *filterTensor,
 
     // Sample 7x7 Emboss Kernel (top-left to bottom-right edge detection)
     const float baseKernel[49] = {
-        -6, -5, -4, -3, -2, -1,  0,
-        -5, -4, -3, -2, -1,  0,  1,
+        -4, -5, -4, -3, -2, -1,  0,
+        -5, -3, -3, -2, -1,  0,  1,
         -4, -3, -2, -1,  0,  1,  2,
-        -3, -2, -1,  0,  1,  2,  3,
+        -3, -2, -1,  1,  1,  2,  3,
         -2, -1,  0,  1,  2,  3,  4,
-        -1,  0,  1,  2,  3,  4,  5,
-         0,  1,  2,  3,  4,  5,  6
+        -1,  0,  1,  2,  3,  3,  5,
+         0,  1,  2,  3,  4,  5,  4
     };
 
     // Apply strength
@@ -1861,15 +1861,15 @@ __global__ void create_emboss_kernel_9x9(float *filterTensor,
 
     // A sample 9x9 Emboss kernel (diagonal edge detection, symmetric from top-left to bottom-right)
     const float baseKernel[81] = {
-        -8, -7, -6, -5, -4, -3, -2, -1,  0,
-        -7, -6, -5, -4, -3, -2, -1,  0,  1,
-        -6, -5, -4, -3, -2, -1,  0,  1,  2,
+        -5, -7, -6, -5, -4, -3, -2, -1,  0,
+        -7, -4, -5, -4, -3, -2, -1,  0,  1,
+        -6, -5, -3, -3, -2, -1,  0,  1,  2,
         -5, -4, -3, -2, -1,  0,  1,  2,  3,
         -4, -3, -2, -1,  0,  1,  2,  3,  4,
         -3, -2, -1,  0,  1,  2,  3,  4,  5,
-        -2, -1,  0,  1,  2,  3,  4,  5,  6,
-        -1,  0,  1,  2,  3,  4,  5,  6,  7,
-         0,  1,  2,  3,  4,  5,  6,  7,  8
+        -2, -1,  0,  1,  2,  3,  3,  5,  6,
+        -1,  0,  1,  2,  3,  4,  5,  4,  7,
+         0,  1,  2,  3,  4,  5,  6,  7,  5
     };
 
     // Apply strength scaling
