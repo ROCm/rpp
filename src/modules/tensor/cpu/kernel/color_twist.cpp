@@ -1204,6 +1204,7 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
                         srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
                     }
+
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
                     compute_color_twist_12_host(p[0], p[1], p[2], pColorTwistParams);    // color_twist adjustment
