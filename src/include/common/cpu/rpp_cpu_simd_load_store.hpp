@@ -122,6 +122,8 @@ const __m256i avx_px2 = _mm256_set1_epi32(2);
 const __m256i avx_px3 = _mm256_set1_epi32(3);
 const __m256i avx_px4 = _mm256_set1_epi32(4);
 const __m256i avx_px5 = _mm256_set1_epi32(5);
+const __m256i avx_px6 = _mm256_set1_epi32(6);
+const __m256i avx_px7 = _mm256_set1_epi32(7);
 const __m256i avx_pxConvertI8 = _mm256_set1_epi8((char)128);
 const __m256 avx_pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
 
@@ -167,17 +169,37 @@ const __m256i avx_pxMaskR = _mm256_setr_epi8(0, 0x80, 0x80, 3, 0x80, 0x80, 6, 0x
 const __m256i avx_pxMaskG = _mm256_setr_epi8(0x80, 1, 0x80, 0x80, 4, 0x80, 0x80, 7, 0x80, 0x80, 10, 0x80, 0x80, 13, 0x80, 0x80, 16, 0x80, 0x80, 19, 0x80, 0x80, 22, 0x80, 0x80, 25, 0x80, 0x80, 28, 0x80, 0x80, 0x80);
 const __m256i avx_pxMaskB = _mm256_setr_epi8(0x80, 0x80, 2, 0x80, 0x80, 5, 0x80, 0x80, 8, 0x80, 0x80, 11, 0x80, 0x80, 14, 0x80, 0x80, 17, 0x80, 0x80, 20, 0x80, 0x80, 23, 0x80, 0x80, 26, 0x80, 0x80, 29, 0x80, 0x80);
 
+// Union for handling 128-bit SIMD data (SSE).
+union RppSIMD128
+{
+    __m128i  m128iVal;
+    __m128   m128Val;
+    char     i8[16];
+    short    i16[8];
+    int      i32[4];
+    float    f32[4];
+};
+
+// Union for handling 256-bit SIMD data (AVX).
+union RppSIMD256
+{
+    __m256i  m256iVal;
+    __m256   m256Val;
+    unsigned char u8[32];
+    short    i16[16];
+    int      i32[8];
+    float    f32[8];
+};
+
 // Print helpers
 
-inline void rpp_mm_print_epi8(__m128i vPrintArray)
+inline void rpp_mm_print_epi8(__m128i *v)
 {
-    char printArray[16];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 16; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 16; ++i)
+        printf("%d ", u.i8[i]);
 }
 
 inline void rpp_storeu_si32(void *__p,
@@ -196,93 +218,80 @@ inline void rpp_storeu_si64(void *__p,
   ((struct __storeu_si64 *)__p)->__v = ((__v2di)__b)[0];
 }
 
-inline void rpp_mm_print_epi32(__m128i vPrintArray)
+inline void rpp_mm_print_epi16(__m128i *v)
 {
-    int printArray[4];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%hd ", u.i16[i]);
 }
 
-inline void rpp_mm_print_epi16(__m128i vPrintArray)
+inline void rpp_mm_print_epi32(__m128i *v)
 {
-    unsigned short int printArray[8];
-    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%hu ", printArray[ct]);
-    }
+    for (int i = 0; i < 4; ++i)
+        printf("%d ", u.i32[i]);
 }
 
-inline void rpp_mm_print_ps(__m128 vPrintArray)
+inline void rpp_mm_print_ps(__m128 *v)
 {
-    float printArray[4];
-    _mm_storeu_ps(printArray, vPrintArray);
+    RppSIMD128 u;
+    u.m128Val = v[0];
     printf("\n");
-    for (int ct = 0; ct < 4; ct++)
-    {
-        printf("%0.6f ", printArray[ct]);
-    }
+    for (int i = 0; i < 4; ++i)
+        printf("%0.6f ", u.f32[i]);
 }
 
-inline void rpp_mm256_print_epi8(__m256i vPrintArray)
+
+inline void rpp_mm256_print_epi8(__m256i *v)
 {
-    unsigned char printArray[32];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 32; ct++)
-    {
-        printf("%d ", (unsigned char)printArray[ct]);
-    }
+    for (int i = 0; i < 32; ++i)
+        printf("%u ", u.u8[i]);
 }
 
-inline void rpp_mm256_print_epi32(__m256i vPrintArray)
+inline void rpp_mm256_print_epi16(__m256i *v)
 {
-    int printArray[8];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%d ", printArray[ct]);
-    }
+    for (int i = 0; i < 16; ++i)
+        printf("%hd ", u.i16[i]);
 }
 
-inline void rpp_mm256_print_epi16(__m256i vPrintArray)
+inline void rpp_mm256_print_epi32(__m256i *v)
 {
-    unsigned short int printArray[8];
-    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256iVal = v[0];
     printf("\n");
-    for (int ct = 0; ct < 16; ct++)
-    {
-        printf("%hu ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%d ", u.i32[i]);
 }
 
-inline void rpp_mm256_print_ps(__m256 vPrintArray)
+inline void rpp_mm256_print_ps(__m256 *v)
 {
-    float printArray[8];
-    _mm256_storeu_ps(printArray, vPrintArray);
+    RppSIMD256 u;
+    u.m256Val = v[0];
     printf("\n");
-    for (int ct = 0; ct < 8; ct++)
-    {
-        printf("%0.6f ", printArray[ct]);
-    }
+    for (int i = 0; i < 8; ++i)
+        printf("%0.6f ", u.f32[i]);
 }
 
-inline __m256 rpp_pixel_check_0to1_avx(__m256 p)
+inline void rpp_pixel_check_0to1(__m256 *p, Rpp32s numVectors)
 {
-    p = _mm256_min_ps(_mm256_max_ps(p, avx_p0), avx_p1);
-    return p;
+    for (int i = 0; i < numVectors; i++)
+        p[i] = _mm256_min_ps(_mm256_max_ps(p[i], avx_p0), avx_p1);
 }
 
-inline __m128 rpp_pixel_check_0to1_sse(__m128 p)
+inline void rpp_pixel_check_0to1(__m128 *p, Rpp32s numVectors)
 {
-    p = _mm_min_ps(_mm_max_ps(p, xmm_p0), xmm_p1);
-    return p;
+    for (int i = 0; i < numVectors; i++)
+        p[i] = _mm_min_ps(_mm_max_ps(p[i], xmm_p0), xmm_p1);
 }
 
 inline void rpp_saturate64_0to1_avx(__m256 *p)
@@ -1591,6 +1600,37 @@ inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_setr_m128(p128[2], p128[6]);
 }
 
+inline void rpp_load48_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
+{
+    __m128 p128[16];
+    p128[0] = _mm_loadu_ps(srcPtr);
+    p128[1] = _mm_loadu_ps(srcPtr + 3);
+    p128[2] = _mm_loadu_ps(srcPtr + 6);
+    p128[3] = _mm_loadu_ps(srcPtr + 9);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    p128[4] = _mm_loadu_ps(srcPtr + 12);
+    p128[5] = _mm_loadu_ps(srcPtr + 15);
+    p128[6] = _mm_loadu_ps(srcPtr + 18);
+    p128[7] = _mm_loadu_ps(srcPtr + 21);
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+    p128[8] = _mm_loadu_ps(srcPtr + 24);
+    p128[9] = _mm_loadu_ps(srcPtr + 27);
+    p128[10] = _mm_loadu_ps(srcPtr + 30);
+    p128[11] = _mm_loadu_ps(srcPtr + 33);
+    _MM_TRANSPOSE4_PS(p128[8], p128[9], p128[10], p128[11]);
+    p128[12] = _mm_loadu_ps(srcPtr + 36);
+    p128[13] = _mm_loadu_ps(srcPtr + 39);
+    p128[14] = _mm_loadu_ps(srcPtr + 42);
+    p128[15] = _mm_loadu_ps(srcPtr + 45);
+    _MM_TRANSPOSE4_PS(p128[12], p128[13], p128[14], p128[15]);
+    p[0] = _mm256_setr_m128(p128[0], p128[4]);
+    p[1] = _mm256_setr_m128(p128[8], p128[12]);
+    p[2] = _mm256_setr_m128(p128[1], p128[5]);
+    p[3] = _mm256_setr_m128(p128[9], p128[13]);
+    p[4] = _mm256_setr_m128(p128[2], p128[6]);
+    p[5] = _mm256_setr_m128(p128[10], p128[14]);
+}
+
 inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
@@ -1607,6 +1647,37 @@ inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
     p[0] = _mm256_setr_m128(p128[0], p128[4]);
     p[1] = _mm256_setr_m128(p128[1], p128[5]);
     p[2] = _mm256_setr_m128(p128[2], p128[6]);
+}
+
+inline void rpp_load48_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
+{
+    __m128 p128[16];
+    p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
+    p128[1] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 3))));
+    p128[2] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 6))));
+    p128[3] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 9))));
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    p128[4] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 12))));
+    p128[5] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 15))));
+    p128[6] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 18))));
+    p128[7] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 21))));
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+    p128[8] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 24))));
+    p128[9] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 27))));
+    p128[10] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 30))));
+    p128[11] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 33))));
+    _MM_TRANSPOSE4_PS(p128[8], p128[9], p128[10], p128[11]);
+    p128[12] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 36))));
+    p128[13] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 39))));
+    p128[14] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 42))));
+    p128[15] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 45))));
+    _MM_TRANSPOSE4_PS(p128[12], p128[13], p128[14], p128[15]);
+    p[0] = _mm256_setr_m128(p128[0], p128[4]);
+    p[1] = _mm256_setr_m128(p128[8], p128[12]);
+    p[2] = _mm256_setr_m128(p128[1], p128[5]);
+    p[3] = _mm256_setr_m128(p128[9], p128[13]);
+    p[4] = _mm256_setr_m128(p128[2], p128[6]);
+    p[5] = _mm256_setr_m128(p128[10], p128[14]);
 }
 
 inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
@@ -1667,11 +1738,31 @@ inline void rpp_load24_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, 
     p[2] = _mm256_loadu_ps(srcPtrB);
 }
 
+inline void rpp_load48_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
+{
+    p[0] = _mm256_loadu_ps(srcPtrR);
+    p[1] = _mm256_loadu_ps(srcPtrR + 8);
+    p[2] = _mm256_loadu_ps(srcPtrG);
+    p[3] = _mm256_loadu_ps(srcPtrG + 8);
+    p[4] = _mm256_loadu_ps(srcPtrB);
+    p[5] = _mm256_loadu_ps(srcPtrB + 8);
+}
+
 inline void rpp_load24_f16pln3_to_f32pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
 {
     p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
     p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
     p[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB))));
+}
+
+inline void rpp_load48_f16pln3_to_f32pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
+{
+    p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
+    p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR + 8))));
+    p[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
+    p[3] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG + 8))));
+    p[4] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB))));
+    p[5] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB + 8))));
 }
 
 inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
