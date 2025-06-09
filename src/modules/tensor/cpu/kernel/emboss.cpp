@@ -106,16 +106,16 @@ inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kerne
 
 template<typename T>
 RppStatus emboss_host_tensor(T *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      T *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      Rpp32f *strength,
-                                      Rpp32f *bias,
-                                      Rpp32u kernelSize,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle)
+                             RpptDescPtr srcDescPtr,
+                             T *dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *strength,
+                             Rpp32f *bias,
+                             Rpp32u kernelSize,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             RppLayoutParams layoutParams,
+                             rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();

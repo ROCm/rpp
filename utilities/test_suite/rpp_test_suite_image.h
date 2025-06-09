@@ -1174,7 +1174,7 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == BOX_FILTER || testCase == GAUSSIAN_FILTER)
+    else if(testCase == BOX_FILTER || testCase == GAUSSIAN_FILTER || testCase == EMBOSS)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
