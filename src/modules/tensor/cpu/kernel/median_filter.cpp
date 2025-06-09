@@ -63,7 +63,7 @@ inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s ro
     T blockData[kernelSizeSquared * channels];
     Rpp32s index = 0;
 
-    // Fill blockData with padded values from the source image using nearest neighbhor padding
+    // Fill blockData with padded values from the source image using nearest neighbor padding
     for (Rpp32s i = -padLength; i <= padLength; i++)
     {
         for (Rpp32s j = -padLength; j <= padLength; j++)
