@@ -76,7 +76,7 @@ std::map<string, std::vector<double>> audioCutOff =
     {"down_mixing", {1e-20, 1e-6}},
     {"spectrogram", {1e-20, 1e-3}},
     {"slice",  {1e-20, 1e-20}},
-    {"resample", {1e-7, 1e-20}},
+    {"resample", {1e-7, 1e-6}},
     {"mel_filter_bank", {1e-20, 1e-5}}
 };
 
