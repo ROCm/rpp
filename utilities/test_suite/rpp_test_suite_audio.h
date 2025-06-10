@@ -68,7 +68,7 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
     {"sample3", {0, 34160}}
 };
 
-// Cutoff values for audio HIP kernels
+// Cutoff values for audio kernels listed for HOST backend followed by HIP
 std::map<string, std::vector<double>> audioCutOff =
 {
     {"to_decibels", {1e-20, 1e-6}},
