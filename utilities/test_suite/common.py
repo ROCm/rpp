@@ -129,7 +129,7 @@ miscAugmentationMap  = {
 ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
     "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84],
-    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
+    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
     "filter_augmentations" : [40, 41, 49, 54],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 66, 67, 68],
