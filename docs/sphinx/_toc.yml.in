@@ -13,14 +13,16 @@ subtrees:
   - file: install/rpp-install.rst
     title: Install RPP
   - file: install/rpp-install-with-installer.rst
-    title: Install RPP with package installer 
+    title: Install RPP with package installer
   - file: install/rpp-build-and-install.rst
-    title: Build and install RPP from source  
+    title: Build and install RPP from source
   - file: install/rpp-verify-install.rst
     title: Verify the RPP installation
 
 - caption: Reference
   entries:
+  - file: reference/rpp-env-variables.rst
+    title: Environment variables
   - file: reference/rpp-supported-functionalities.rst
     title: Supported functionalities and variants
   - file: reference/rpp-supported-func-and-var-examples.rst
