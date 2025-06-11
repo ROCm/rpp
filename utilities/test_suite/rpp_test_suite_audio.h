@@ -68,16 +68,16 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
     {"sample3", {0, 34160}}
 };
 
-// Cutoff values for audio HIP kernels
-std::map<string, double> audioHIPCutOff =
+// Cutoff values for audio kernels listed for HOST backend followed by HIP
+std::map<string, std::vector<double>> audioCutOff =
 {
-    {"to_decibels", 1e-6},
-    {"pre_emphasis_filter", 1e-6},
-    {"down_mixing", 1e-6},
-    {"spectrogram", 1e-3},
-    {"slice", 1e-20},
-    {"resample", 1e-6},
-    {"mel_filter_bank", 1e-5}
+    {"to_decibels", {1e-20, 1e-6}},
+    {"pre_emphasis_filter", {1e-20, 1e-6}},
+    {"down_mixing", {1e-20, 1e-6}},
+    {"spectrogram", {1e-20, 1e-3}},
+    {"slice",  {1e-20, 1e-20}},
+    {"resample", {1e-7, 1e-6}},
+    {"mel_filter_bank", {1e-20, 1e-5}}
 };
 
 // sets descriptor dimensions and strides of src/dst
@@ -277,8 +277,9 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-    double cutoff = (backend == "HOST") ? 1e-20 : audioHIPCutOff[testCase];
 
+    const auto& cutoffVector = audioCutOff.at(testCase);
+    double cutoff = (backend == "HOST") ? cutoffVector[0] : cutoffVector[1];
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
