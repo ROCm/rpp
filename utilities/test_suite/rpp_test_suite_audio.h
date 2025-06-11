@@ -277,8 +277,9 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-    double cutoff = (backend == "HOST") ? audioCutOff[testCase][0] : audioCutOff[testCase][1];
 
+    const auto& cutoffVector = audioCutOff.at(testCase);
+    double cutoff = (backend == "HOST") ? cutoffVector[0] : cutoffVector[1];
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
