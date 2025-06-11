@@ -69,7 +69,7 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 };
 
 // Cutoff values for audio kernels listed for HOST backend followed by HIP
-std::map<string, std::vector<double>> audioCutOff =
+static const std::map<string, std::vector<double>> audioCutOff =
 {
     {"to_decibels", {1e-20, 1e-6}},
     {"pre_emphasis_filter", {1e-20, 1e-6}},
@@ -278,7 +278,13 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         return;
     }
 
-    const auto& cutoffVector = audioCutOff.at(testCase);
+    auto mapIterator = audioCutOff.find(testCase);
+    if (mapIterator == audioCutOff.end())
+    {
+        std::cout << "\nError: Test case '" << testCase << "' not found in audioCutOff map.\n";
+        return;
+    }
+    const auto& cutoffVector = mapIterator->second;
     double cutoff = (backend == "HOST") ? cutoffVector[0] : cutoffVector[1];
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
