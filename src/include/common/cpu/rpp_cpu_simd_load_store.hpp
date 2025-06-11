@@ -1758,9 +1758,9 @@ inline void rpp_load24_f16pln3_to_f64pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, 
 {
     __m128 px128[6];
     __m256 px[3];
-    px[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
-    px[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
-    px[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB))));
+    px[0] = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i *>(srcPtrR)));
+    px[1] = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i *>(srcPtrG)));
+    px[2] = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i *>(srcPtrB)));
     px128[0] = _mm256_castps256_ps128(px[0]);
     px128[1] = _mm256_extractf128_ps(px[0], 1);
     px128[2] = _mm256_castps256_ps128(px[1]);
@@ -1858,7 +1858,7 @@ inline void rpp_load8_f16_to_f64_avx(Rpp16f *srcPtr, __m256d *p)
 {
     __m128 px128[2];
     __m256 px;
-    px = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
+    px = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i *>(srcPtr)));
     px128[0] = _mm256_castps256_ps128(px);
     px128[1] = _mm256_extractf128_ps(px, 1);
     p[0] = _mm256_cvtps_pd(px128[0]);
