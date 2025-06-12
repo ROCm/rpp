@@ -1,3 +1,26 @@
+/*
+MIT License
+
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #pragma OPENCL EXTENSION cl_amd_media_ops : enable
 #pragma OPENCL EXTENSION cl_amd_media_ops2 : enable
@@ -25,7 +48,7 @@ __kernel void glitch_batch(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-  
+
   output[dst_pix_idx] = input[src_pix_idx];
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
@@ -36,15 +59,15 @@ __kernel void glitch_batch(
   // R
   x_r = (id_x + x_offset_r[id_z]);
   y_r = (id_y + y_offset_r[id_z]);
- 
+
   // G
   x_g = (id_x + x_offset_g[id_z]);
   y_g = (id_y + y_offset_g[id_z]);
- 
+
   // B
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
-  
+
   // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
@@ -55,7 +78,7 @@ __kernel void glitch_batch(
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
   }
-    
+
   // G
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
@@ -102,7 +125,7 @@ __kernel void glitch_batch_fp16(
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * in_plnpkdind;
   unsigned long dst_pix_idx =
       batch_index[id_z] + (id_x + id_y * max_width[id_z]) * out_plnpkdind;
-  
+
   output[dst_pix_idx] = input[src_pix_idx];
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
@@ -113,15 +136,15 @@ __kernel void glitch_batch_fp16(
   // R
   x_r = (id_x + x_offset_r[id_z]);
   y_r = (id_y + y_offset_r[id_z]);
- 
+
   // G
   x_g = (id_x + x_offset_g[id_z]);
   y_g = (id_y + y_offset_g[id_z]);
- 
+
   // B
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
-  
+
   // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
@@ -132,7 +155,7 @@ __kernel void glitch_batch_fp16(
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
   }
-    
+
   // G
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
@@ -184,22 +207,22 @@ __kernel void glitch_batch_fp32(
   output[dst_pix_idx] = input[src_pix_idx];
   output[dst_pix_idx + dstinc[id_z]] = input[src_pix_idx + inc[id_z]];
   output[dst_pix_idx + dstinc[id_z] + dstinc[id_z]] = input[src_pix_idx + inc[id_z] + inc[id_z]];
-  
+
   float R, G, B;
   R = B = G = 0;
   int x_r, x_g, x_b, y_r, y_g, y_b;
   // R
   x_r = (id_x + x_offset_r[id_z]);
   y_r = (id_y + y_offset_r[id_z]);
- 
+
   // G
   x_g = (id_x + x_offset_g[id_z]);
   y_g = (id_y + y_offset_g[id_z]);
- 
+
   // B
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
-  
+
   // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
       (x_r >= xroi_begin[id_z]) && (x_r <= xroi_end[id_z]))
@@ -210,7 +233,7 @@ __kernel void glitch_batch_fp32(
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
   }
-    
+
   // G
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
@@ -268,15 +291,15 @@ __kernel void glitch_batch_int8(
   // R
   x_r = (id_x + x_offset_r[id_z]);
   y_r = (id_y + y_offset_r[id_z]);
- 
+
   // G
   x_g = (id_x + x_offset_g[id_z]);
   y_g = (id_y + y_offset_g[id_z]);
- 
+
   // B
   x_b = (id_x + x_offset_b[id_z]);
   y_b = (id_y + y_offset_b[id_z]);
-  
+
 
   // R
   if ((y_r >= yroi_begin[id_z]) && (y_r <= yroi_end[id_z]) &&
@@ -288,7 +311,7 @@ __kernel void glitch_batch_int8(
     output[dst_pix_idx] = R;
     dst_pix_idx += dstinc[id_z];
   }
-    
+
   // G
   if ((y_g >= yroi_begin[id_z]) && (y_g <= yroi_end[id_z]) &&
       (x_g >= xroi_begin[id_z]) && (x_g <= xroi_end[id_z]))
