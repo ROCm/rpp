@@ -176,15 +176,6 @@ StatusMap = {
     -24: "RPP_ERROR_INVALID_DST_DIMS",
 }
 
-# Check for the OS match with RHEL8
-def detect_rhel8():
-    if os.path.exists("/etc/os-release"):
-        with open("/etc/os-release") as f:
-            data = f.read()
-            if "Red Hat" in data and 'VERSION_ID="8' in data:
-                return True
-    return False
-
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
