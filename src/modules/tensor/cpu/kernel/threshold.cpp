@@ -128,7 +128,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -427,7 +427,7 @@ RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -726,7 +726,7 @@ RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -1025,7 +1025,7 @@ RppStatus threshold_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads

@@ -144,7 +144,6 @@ numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 outFilePath = " "
-is_rhel8 = detect_rhel8()
 
 # Override testType to 0 if testType is 1 and qaMode is 1
 if testType == 1 and qaMode == 1:
@@ -201,9 +200,6 @@ for case in caseList:
             srcPath = inFilePath
 
     if int(case) not in audioAugmentationMap:
-        continue
-    if is_rhel8 and int(case) in (4, 6):
-        print(audioAugmentationMap[int(case)][0] + " HOST is not supported on RHEL 8 OS")
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
