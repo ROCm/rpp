@@ -61,23 +61,28 @@ inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s ro
 {
    // Temporary buffer to hold kernel window data for all channels
     T blockData[kernelSizeSquared * channels];
-    Rpp32s index = 0;
+    Rpp32s index = 0, medianIndex = kernelSizeSquared / 2;
 
     // Fill blockData with padded values from the source image using nearest neighbor padding
     for (Rpp32s i = -padLength; i <= padLength; i++)
     {
+        Rpp32s row = std::max(0, std::min(rowIdx + i, heightLimit));
         for (Rpp32s j = -padLength; j <= padLength; j++)
         {
             // Clamp the row and column to image boundaries (nearest-neighbor padding)
-            Rpp32s row = std::max(0, std::min(rowIdx + i, heightLimit));
             Rpp32s col = std::max(0, std::min(colIdx + j, widthLimit));
 
             // Compute the index for the pixel in the input tensor
             Rpp32u srcIdx = row * srcDescPtr->strides.hStride + col * srcDescPtr->strides.wStride;
 
             // Copy pixel values for all channels
-            for (Rpp32s ch = 0; ch < channels; ch++)
-                blockData[index++] = srcPtrTemp[srcIdx + ch];
+            if (channels == 3)
+            {
+                memcpy(&blockData[index], &srcPtrTemp[srcIdx], 3);
+                index += 3;
+            }
+            else if (channels == 1)
+                blockData[index++] = srcPtrTemp[srcIdx];
         }
     }
 
@@ -91,10 +96,9 @@ inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s ro
             channelBlock[i] = blockData[i * channels + ch];
 
         // Sort the data to compute median
-        std::sort(channelBlock, channelBlock + kernelSizeSquared);
-
+        std::nth_element(channelBlock, channelBlock + medianIndex, channelBlock + kernelSizeSquared);
         // Assign the median value to the destination tensor
-        dstPtrTemp[ch] = channelBlock[kernelSizeSquared / 2];
+        dstPtrTemp[ch] = channelBlock[medianIndex];
     }
 }
 
