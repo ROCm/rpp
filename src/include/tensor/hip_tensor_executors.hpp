@@ -390,14 +390,15 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
                                RpptDescPtr dstDescPtr,
                                rpp::Handle& handle);
 
-// -------------------- swap_channels --------------------
+// -------------------- channel_permute --------------------
 
 template <typename T>
-RppStatus hip_exec_swap_channels_tensor(T *srcPtr,
-                                        RpptDescPtr srcDescPtr,
-                                        T *dstPtr,
-                                        RpptDescPtr dstDescPtr,
-                                        rpp::Handle& handle);
+RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32u *permutationTensor,
+                                          rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 

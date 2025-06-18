@@ -39,8 +39,8 @@ lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 93
+caseMin = min(imageAugmentationMap.keys())
+caseMax = max(imageAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -63,25 +63,32 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54":
+            if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "gaussian_filter"}:
                 for kernelSize in range(3, 10, 2):
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
-            elif case == "8":
+            elif imageAugmentationMap[int(case)][0] == "noise":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
-            elif case == "21" or case == "23" or case == "24" or case == "28" or case == "79":
+            elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "remap", "warp_perspective"}:
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
-                if case == '28' or case =='79':
+                if imageAugmentationMap[int(case)][0] in {"warp_perspective", "remap"}:
                     interpolationRange = 2
                 for interpolationType in range(interpolationRange):
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
+            elif imageAugmentationMap[int(case)][0] == "channel_permute":
+                swapOrderRange = 6
+                # Run all 6 channel swap permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R) by varying swapOrder (0 to 5)
+                for swapOrder in range(swapOrderRange):
+                    print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(swapOrder))
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(swapOrder), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
             else:
                 print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout))
@@ -104,19 +111,25 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49" or case == "54":
+            if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "gaussian_filter"}:
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
-            elif case == "8":
+            elif imageAugmentationMap[int(case)][0] == "noise":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
-            elif case == "21" or case == "23" or case == "24" or case == "79":
+            elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "remap", "warp_perspective"}:
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
+            elif imageAugmentationMap[int(case)][0] == "channel_permute":
+                swapOrderRange = 6
+                # Run all variants of swap channel functions with additional argument of swapOrder (0 - 5)
+                for swapOrder in range(swapOrderRange):
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, swapOrder, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
@@ -294,14 +307,17 @@ if(testType == 0):
     for case in caseList:
         if int(case) not in imageAugmentationMap:
             continue
-        if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        if case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
+        else:
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and (case != "82" and case != "26"):
+        if qaMode == 1 and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
@@ -324,12 +340,15 @@ else:
         for case in caseList:
             if int(case) not in imageAugmentationMap:
                 continue
-            if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+            if imageAugmentationMap[int(case)][0] == "ricap" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
-            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+            if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
+            else:
+                srcPath1 = inFilePath1
+                srcPath2 = inFilePath2
             for layout in range(3):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
@@ -344,12 +363,15 @@ else:
         for case in caseList:
             if int(case) not in imageAugmentationMap:
                 continue
-            if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+            if imageAugmentationMap[int(case)][0] == "ricap" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
-            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+            if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
+            else:
+                srcPath1 = inFilePath1
+                srcPath2 = inFilePath2
             for layout in range(3):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
@@ -360,14 +382,14 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == "40" or case == "41" or case == "49" or case == "54":
+                        if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "gaussian_filter"}:
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        elif case == "8":
+                        elif imageAugmentationMap[int(case)][0] == "noise":
                             # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                             for noiseType in range(3):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, "_noiseType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        elif case == "21" or case == "23" or case == "24" or case == "28" or case == "79":
+                        elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "warp_perspective", "remap"}:
                             # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                             for interpolationType in range(6):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, "_interpolationType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
@@ -415,7 +437,7 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if (CASE_NUM == "40" or CASE_NUM == "41" or CASE_NUM == "49") and TYPE.startswith("Tensor"):
+                        if imageAugmentationMap[int(CASE_NUM)][0] in {"erode", "dilate", "box_filter", "gaussian_filter"} and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
@@ -425,7 +447,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == "24" or CASE_NUM == "21" or CASE_NUM == "23" or CASE_NUM == "28" or CASE_NUM == "79") and TYPE.startswith("Tensor"):
+                        elif imageAugmentationMap[int(CASE_NUM)][0] in {"warp_affine", "resize", "rotate", "warp_perspective", "remap"} and TYPE.startswith("Tensor"):
                             INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                             # Loop through extra param interpolationType
                             for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
@@ -435,7 +457,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == "8") and TYPE.startswith("Tensor"):
+                        elif imageAugmentationMap[int(CASE_NUM)][0] == "noise" and TYPE.startswith("Tensor"):
                             NOISETYPE_LIST = [0, 1, 2]
                             # Loop through extra param noiseType
                             for NOISETYPE in NOISETYPE_LIST:

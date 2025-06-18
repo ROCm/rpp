@@ -104,24 +104,24 @@ int main(int argc, char **argv)
         if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
-            return -1;
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else if (outputFormatToggle != 0)
         {
             cout << "\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-            return -1;
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
     {
         cout << "\ntest case " << testCase << " don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-        return -1;
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
     else if (reductionTypeCase && outputFormatToggle != 0)
     {
         cout << "\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-        return -1;
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
     else if(batchSize > MAX_BATCH_SIZE)
     {
@@ -210,10 +210,18 @@ int main(int argc, char **argv)
     }
     else if (kernelSizeCase)
     {
-        char additionalParam_char[2];
-        std::snprintf(additionalParam_char, sizeof(additionalParam_char), "%u", additionalParam);
         func += "_kernelSize";
-        func += additionalParam_char;
+        func += std::to_string(additionalParam);
+    }
+    else if (testCase == CHANNEL_PERMUTE)
+    {
+        if (additionalParam < 0 || additionalParam > 5)
+        {
+            std::cerr << "Error: permutationIdx out of valid range (0 to 5). Received: " << additionalParam << std::endl;
+            exit(0);
+        }
+        func += "_permOrder";
+        func += std::to_string(additionalParam);
     }
 
     if(!qaFlag)
@@ -1531,14 +1539,18 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case SWAP_CHANNELS:
+                case CHANNEL_PERMUTE:
                 {
-                    testCaseName = "swap_channels";
+                    testCaseName = "channel_permute";
+
+                    Rpp32u permutationTensor[batchSize * 3];
+                    for (i = 0; i < batchSize; i++)
+                        fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
+                        rppt_channel_permute_host(input, srcDescPtr, output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1659,6 +1671,23 @@ int main(int argc, char **argv)
 
                     if((inputBitDepth == 0 || inputBitDepth == 2) && srcDescPtr->layout == dstDescPtr->layout)
                         rppt_slice_host(input, descriptorPtr3D, output, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case JPEG_COMPRESSION_DISTORTION:
+                {
+                    testCaseName = "jpeg_compression_distortion";
+
+                    Rpp32s qualityTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        qualityTensor[i] = 50;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, qualityTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

@@ -2,19 +2,23 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 2.0.0
+## RPP 2.0.0 for ROCm 7.0.0
 
 ### Added
 * Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
 * Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
 * JPEG Compression Distortion augmentation on HIP backend. (#538)
 * `log1p`, defined as `log (1 + x)`, tensor augmentation support on HOST (CPU) and HIP backends.
+* JPEG Compression Distortion augmentation on HOST (CPU) backend. (#531)
 
 ### Changed
 
 * All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
 * RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
 * TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
+* Changed API of swap_channels augmentation to be called channel_permute, which now accepts one new argument, "permutationTensor" (pointer to a unsigned int tensor) that provides the permutation order to swap the RGB channels of each input image in the batch in any order. (#547)
+  * Old API - `RppStatus rppt_swap_channels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle);`
+  * New API - `RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor , rppHandle_t rppHandle);`
 
 ### Removed
 
@@ -22,6 +26,8 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
 
 ### Resolved issues
+
+* Test package - debian packages will install required dependencies
 
 ## RPP 1.9.10 for ROCm 6.4.0
 

@@ -875,35 +875,39 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
-// -------------------- swap_channels --------------------
+// -------------------- channel_permute --------------------
 
-RppStatus swap_channels_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                    RpptDescPtr srcDescPtr,
-                                    Rpp8u *dstPtr,
-                                    RpptDescPtr dstDescPtr,
-                                    RppLayoutParams layoutParams,
-                                    rpp::Handle& handle);
+RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8u *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32u *permutationTensor,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle);
 
-RppStatus swap_channels_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      Rpp32f *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle);
+RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp32f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u *permutationTensor,
+                                              RppLayoutParams layoutParams,
+                                              rpp::Handle& handle);
 
-RppStatus swap_channels_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      Rpp16f *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle);
+RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp16f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u *permutationTensor,
+                                              RppLayoutParams layoutParams,
+                                              rpp::Handle& handle);
 
-RppStatus swap_channels_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                    RpptDescPtr srcDescPtr,
-                                    Rpp8s *dstPtr,
-                                    RpptDescPtr dstDescPtr,
-                                    RppLayoutParams layoutParams,
-                                    rpp::Handle& handle);
+RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8s *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32u *permutationTensor,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle);
 
 // -------------------- color_to_greyscale --------------------
 
@@ -2785,5 +2789,46 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle);
 
+// -------------------- jpeg_compression_distortion --------------------
+
+RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp8u *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        Rpp32s *qualityTensor,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams layoutParams,
+                                                        rpp::Handle& handle);
+
+RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                                          RpptDescPtr srcDescPtr,
+                                                          Rpp32f *dstPtr,
+                                                          RpptDescPtr dstDescPtr,
+                                                          Rpp32s *qualityTensor,
+                                                          RpptROIPtr roiTensorPtrSrc,
+                                                          RpptRoiType roiType,
+                                                          RppLayoutParams layoutParams,
+                                                          rpp::Handle& handle);
+
+RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                                          RpptDescPtr srcDescPtr,
+                                                          Rpp16f *dstPtr,
+                                                          RpptDescPtr dstDescPtr,
+                                                          Rpp32s *qualityTensor,
+                                                          RpptROIPtr roiTensorPtrSrc,
+                                                          RpptRoiType roiType,
+                                                          RppLayoutParams layoutParams,
+                                                          rpp::Handle& handle);
+
+RppStatus jpeg_compression_distortion_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp8s *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        Rpp32s *qualityTensor,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams layoutParams,
+                                                        rpp::Handle& handle);
 
 #endif // HOST_TENSOR_EXECUTORS_HPP
