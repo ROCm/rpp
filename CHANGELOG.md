@@ -2,7 +2,7 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 2.0.0
+## RPP 2.0.0 for ROCm 7.0.0
 
 ### Added
 * Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
@@ -26,6 +26,8 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
 
 ### Resolved issues
+
+* Test package - debian packages will install required dependencies
 
 ## RPP 1.9.10 for ROCm 6.4.0
 

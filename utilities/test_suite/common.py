@@ -130,7 +130,7 @@ miscAugmentationMap  = {
 ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
     "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84],
-    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92],
+    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
     "filter_augmentations" : [49, 51, 54],
     "morphological_operations" : [40, 41],
     "arithmetic_operations" : [61],
@@ -177,15 +177,6 @@ StatusMap = {
     -23: "RPP_ERROR_INVALID_SRC_DIMS",
     -24: "RPP_ERROR_INVALID_DST_DIMS",
 }
-
-# Check for the OS match with RHEL8
-def detect_rhel8():
-    if os.path.exists("/etc/os-release"):
-        with open("/etc/os-release") as f:
-            data = f.read()
-            if "Red Hat" in data and 'VERSION_ID="8' in data:
-                return True
-    return False
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
