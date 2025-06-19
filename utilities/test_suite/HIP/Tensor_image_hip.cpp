@@ -105,24 +105,24 @@ int main(int argc, char **argv)
         if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
-            return -1;
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else if (outputFormatToggle != 0)
         {
             cout << "\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-            return -1;
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
     {
         cout << "\ntest case " << testCase << " don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-        return -1;
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
     else if (reductionTypeCase && outputFormatToggle != 0)
     {
         cout << "\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
-        return -1;
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
     else if(batchSize > MAX_BATCH_SIZE)
     {

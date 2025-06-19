@@ -879,7 +879,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTemp += srcPtrIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
-                    srcPtrTemp -= hFlipFactorPerChannel;
+                    srcPtrTemp += hFlipFactorPerChannel;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTemp);

@@ -867,7 +867,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pCosFactor, pDummy, pSrcX, pSrcY;
-                    __m256i pRow[3];
+                    __m256i pRow[4];
                     sincos_ps(_mm256_fmadd_ps(pWaterParams[3], pDstX, pWaterParams[5]), &pDummy, &pCosFactor);
                     compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray);
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad);
@@ -882,6 +882,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                     Rpp32f srcX, srcY, cosFactor;
                     dstX = vectorLoopCount;
                     cosFactor = std::cos((freqY * dstX) + phaseY);
+                    compute_water_src_loc(dstY, dstX, srcY, srcX, amplY, amplX, sinFactor, cosFactor, &roiLTRB);
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
                     dstPtrTemp += 3;
                 }
@@ -977,9 +978,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstX = vectorLoopCount;
                     cosFactor = std::cos((freqY * dstX) + phaseY);
                     compute_water_src_loc(dstY, dstX, srcY, srcX, amplY, amplX, sinFactor, cosFactor, &roiLTRB);
-
-                    for(int i = 0; i < srcDescPtr->c; i++)
-                        compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
