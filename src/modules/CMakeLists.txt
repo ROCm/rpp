@@ -99,7 +99,7 @@ function(remove_audio_augmentations SOURCE_LIST BACKEND)
         "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/resample.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/mel_filter_bank.cpp"
     )
-    set(${SOURCE_LIST} "${${SOURCE_LIST}}" PARENT_SCOPE)
+    set(${SOURCE_LIST} ${${SOURCE_LIST}} PARENT_SCOPE)
 endfunction()
 
 function(add_fma_property)
