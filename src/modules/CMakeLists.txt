@@ -185,6 +185,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB MOD_CL_CPP "batch_pd/cl/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS} ${MOD_CL_CPP})
+    # Remove audio augmentations from the list of files to be compiled
     if(NOT RPP_AUDIO_SUPPORT)
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
     endif()
