@@ -335,7 +335,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/api
-        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include
+        $<$<BOOL:${RPP_AUDIO_SUPPORT}>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include>
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
