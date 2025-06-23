@@ -53,9 +53,10 @@ __device__ void RGB_to_HSV_hip(float *pixelR, float *pixelG, float *pixelB, floa
 __device__ void HSV_to_RGB_hip(float hue, float sat, float val, float *pixelR, float *pixelG, float *pixelB)
 {
     // Calculate intermediate values for RGB conversion
+    float hueFraction = hue - floor(hue);
     float p = val * (1.0f - sat);
-    float q = val * (1.0f - (sat * (hue - floor(hue))));
-    float t = val * (1.0f - (sat * (1.0f - (hue - floor(hue)))));
+    float q = val * (1.0f - (sat * hueFraction));
+    float t = val * (1.0f - (sat * (1.0f - hueFraction)));
 
     // Assign RGB values based on hue section (0-5)
     switch ((int)hue)
