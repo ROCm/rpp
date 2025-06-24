@@ -26,53 +26,61 @@ SOFTWARE.
 #include "rpp_cpu_rgb_hsv_conversion.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
+#if __AVX2__
+
 inline void compute_saturation_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pSaturationParam)
 {
-    __m256 pH, pS, pV;
-
     // Convert RGB to HSV
-    RGB_to_HSV_avx(pVecR, pVecG, pVecB, pH, pS, pV);
+    __m256 pH, pS, pV, pAdd;
+    rgb_to_hsv(pVecR, pVecG, pVecB, pH, pS, pV, pAdd);
 
     // Modify Saturation
+    pH = _mm256_add_ps(pH, pAdd);                                                                                   // hue += add;
     pH = _mm256_sub_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p6, _CMP_GE_OQ), avx_p6));                           // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm256_add_ps(pH, _mm256_and_ps(_mm256_cmp_ps(pH, avx_p0, _CMP_LT_OQ), avx_p6));                           // if (hue < 0) hue += 6.0f;
     pS = _mm256_mul_ps(pS, pSaturationParam[0]);                                                                    // sat *= saturationParam;
     pS = _mm256_max_ps(avx_p0, _mm256_min_ps(avx_p1, pS));                                                          // sat = std::max(0.0f, std::min(1.0f, sat));
 
     // Convert HSV to RGB 
-    HSV_to_RGB_avx(pVecR, pVecG, pVecB, pH, pS, pV);
+    hsv_to_rgb(pVecR, pVecG, pVecB, pH, pS, pV, pAdd);
 }
+
+#else
 
 inline void compute_saturation_12_host(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 *pSaturationParam)
 {
-    __m128 pH, pS, pV;
-
     // Convert RGB to HSV
-    RGB_to_HSV_sse(pVecR, pVecG, pVecB, pH, pS, pV);
+    __m128 pH, pS, pV, pAdd;
+    rgb_to_hsv(pVecR, pVecG, pVecB, pH, pS, pV, pAdd);
 
     // Modify Saturation
+    pH = _mm_add_ps(pH, pAdd);                                                                                      // hue += add;
     pH = _mm_sub_ps(pH, _mm_and_ps(_mm_cmpge_ps(pH, xmm_p6), xmm_p6));                                              // if (hue >= 6.0f) hue -= 6.0f;
     pH = _mm_add_ps(pH, _mm_and_ps(_mm_cmplt_ps(pH, xmm_p0), xmm_p6));                                              // if (hue < 0) hue += 6.0f;
     pS = _mm_mul_ps(pS, pSaturationParam[0]);                                                                       // sat *= saturationParam;
     pS = _mm_max_ps(xmm_p0, _mm_min_ps(xmm_p1, pS));                                                                // sat = std::max(0.0f, std::min(1.0f, sat));
 
     // Convert HSV to RGB
-    HSV_to_RGB_sse(pVecR, pVecG, pVecB, pH, pS, pV);
+    hsv_to_rgb(pVecR, pVecG, pVecB, pH, pS, pV, pAdd);
 }
+
+#endif
 
 inline void compute_saturation_host(RpptFloatRGB *pixel, Rpp32f saturationParam)
 {
     // Convert RGB to HSV
-    Rpp32f hue, sat, val;
-    RGB_to_HSV(pixel, hue, sat, val);
+    Rpp32f hue, sat, val, add;
+    rgb_to_hsv(pixel->R, pixel->G, pixel->B, hue, sat, val, add);
 
     // Modify Saturation
+    hue += add;
     if (hue >= 6.0f) hue -= 6.0f;
     if (hue < 0) hue += 6.0f;
     sat *= saturationParam;
     sat = std::max(0.0f, std::min(1.0f, sat));
+
     // Convert HSV to RGB
-    HSV_to_RGB(hue, sat, val, pixel);
+    hsv_to_rgb(pixel->R, pixel->G, pixel->B, hue, sat, val, add);
 }
 
 RppStatus saturation_u8_u8_host_tensor(Rpp8u *srcPtr,
