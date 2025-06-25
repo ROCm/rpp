@@ -70,7 +70,7 @@ imageAugmentationMap = {
     40: ["erode", "HIP"],
     41: ["dilate", "HIP"],
     42: ["hue", "HOST", "HIP"],
-    43: ["saturaton", "HOST", "HIP"],
+    43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
