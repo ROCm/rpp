@@ -788,6 +788,13 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  */
 RppStatus rppt_fog_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor, Rpp32f *greyFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+RppStatus rppt_solarize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f* thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! @}
  */
 
