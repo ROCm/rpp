@@ -69,6 +69,8 @@ imageAugmentationMap = {
     39: ["resize_crop_mirror", "HOST", "HIP"],
     40: ["erode", "HIP"],
     41: ["dilate", "HIP"],
+    42: ["hue", "HOST", "HIP"],
+    43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
@@ -127,7 +129,7 @@ miscAugmentationMap  = {
 }
 
 ImageAugmentationGroupMap = {
-    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
+    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 42, 43, 45, 81],
     "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84],
     "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
     "filter_augmentations" : [40, 41, 49, 54],
