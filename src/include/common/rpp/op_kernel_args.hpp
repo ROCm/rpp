@@ -27,9 +27,9 @@ SOFTWARE.
 #include <type_traits>
 #include <cstdint>
 #if __has_include(<half/half.hpp>)
-#include <half/half.hpp>
+    #include <half/half.hpp>
 #else
-#include <half.hpp>
+    #include <half.hpp>
 #endif
 
 struct OpKernelArg
