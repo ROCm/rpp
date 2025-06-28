@@ -36,7 +36,11 @@ SOFTWARE.
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
 #endif // HIP_COMPILE
+#if __has_include(<half/half.hpp>)
 #include <half/half.hpp>
+#else
+#include <half.hpp>
+#endif
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
