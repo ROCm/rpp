@@ -77,6 +77,31 @@ function(add_kernel_includes KERNEL_FILES)
     configure_file(batch_pd/kernel_includes.cpp.in ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
 endfunction()
 
+function(remove_audio_augmentations SOURCE_LIST BACKEND)
+    if( "${BACKEND}" STREQUAL "HIP")
+        list(REMOVE_ITEM ${SOURCE_LIST}
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/non_silent_region_detection.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/to_decibels.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/pre_emphasis_filter.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/down_mixing.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/spectrogram.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/resample.cpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tensor/hip/kernel/mel_filter_bank.cpp"
+        )
+    endif()
+    list(REMOVE_ITEM ${SOURCE_LIST}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/rppt_tensor_audio_augmentations.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/non_silent_region_detection.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/to_decibels.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/pre_emphasis_filter.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/down_mixing.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/spectrogram.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/resample.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tensor/cpu/kernel/mel_filter_bank.cpp"
+    )
+    set(${SOURCE_LIST} ${${SOURCE_LIST}} PARENT_SCOPE)
+endfunction()
+
 function(add_fma_property)
     set_source_files_properties(tensor/rppt_tensor_audio_augmentations.cpp
                                 tensor/rppt_tensor_statistical_operations.cpp
@@ -136,6 +161,10 @@ if( "${BACKEND}" STREQUAL "HIP")
         file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
         list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
     endif()
+    # Remove audio augmentations from the list of files to be compiled
+    if(NOT RPP_AUDIO_SUPPORT)
+        remove_audio_augmentations(Rpp_Source "${BACKEND}")
+    endif()
     message("-- ${Green}HIP kernels added${ColourReset}")
 
     # Set compiler flags
@@ -156,6 +185,10 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB MOD_CL_CPP "batch_pd/cl/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS} ${MOD_CL_CPP})
+    # Remove audio augmentations from the list of files to be compiled
+    if(NOT RPP_AUDIO_SUPPORT)
+        remove_audio_augmentations(Rpp_Source "${BACKEND}")
+    endif()
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
     add_fma_property()
     # Add OpenCL specific preprocessor flags
@@ -175,6 +208,10 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     if(NOT RPP_LEGACY_SUPPORT)
         file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
         list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
+    endif()
+    # Remove audio augmentations from the list of files to be compiled
+    if(NOT RPP_AUDIO_SUPPORT)
+        remove_audio_augmentations(Rpp_Source "${BACKEND}")
     endif()
     message("-- ${Green}HOST kernels added${ColourReset}")
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
