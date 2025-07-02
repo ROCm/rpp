@@ -756,7 +756,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
-            tensorStddevArr[idx + 3] = stddevImage;       
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
         // Tensor Stddev without fused output-layout toggle (NHWC)
@@ -843,7 +843,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
-            tensorStddevArr[idx + 3] = stddevImage;         
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 

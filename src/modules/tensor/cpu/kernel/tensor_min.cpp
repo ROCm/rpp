@@ -763,7 +763,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
             minArr[minArrIndex] = (Rpp16f) minR;
 			minArr[minArrIndex + 1] = (Rpp16f) minG;
 			minArr[minArrIndex + 2] = (Rpp16f) minB;
-			minArr[minArrIndex + 3] = (Rpp16f) minC;     
+			minArr[minArrIndex + 3] = (Rpp16f) minC;
         }
     }
     return RPP_SUCCESS;
