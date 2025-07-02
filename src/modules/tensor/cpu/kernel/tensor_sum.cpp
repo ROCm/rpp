@@ -594,7 +594,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
             tensorSumArr[index] = (Rpp32f)sumR;
             tensorSumArr[index + 1] = (Rpp32f)sumG;
             tensorSumArr[index + 2] = (Rpp32f)sumB;
-            tensorSumArr[index + 3] = (Rpp32f)sum;   
+            tensorSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 
