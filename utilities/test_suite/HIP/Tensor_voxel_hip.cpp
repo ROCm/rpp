@@ -69,7 +69,7 @@ int main(int argc, char * argv[])
         if (testType == 0)
             cout << "\ncase " << testCase << " is not supported\n";
 
-        return -1;
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
     int numChannels, offsetInBytes;
@@ -395,7 +395,7 @@ int main(int argc, char * argv[])
         if (missingFuncFlag == 1)
         {
             cout << "\nThe functionality doesn't yet exist in RPP\n";
-            return -1;
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
 
         // Copy output buffer to host
