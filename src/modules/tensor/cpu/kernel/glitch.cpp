@@ -370,7 +370,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp32u alignedLength = (((roi.xywhROI.roiWidth)/ 2) * 2) - 2;
+            Rpp32u alignedLength = (((roi.xywhROI.roiWidth)/ 10) * 10) - 10;
             Rpp32s vectorIncrement = 2;
             Rpp32s vectorIncrementPkd = 6;
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
