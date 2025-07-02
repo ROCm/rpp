@@ -1710,7 +1710,7 @@ inline void rpp_store24_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG,
     _mm256_storeu_ps(dstPtrB, p[2]);
 }
 
-inline void transpose_and_convert_to_f64_pkd3_to_pln3(__m128 *p128, __m256 *p)
+inline void transpose_and_convert_to_f64_pkd3_to_pln3(__m128 *p128, __m256d *p)
 {
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
@@ -1834,7 +1834,7 @@ inline void rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
     _mm_storeu_ps(dstPtr + 21, p128[3]);
 }
 
-inline void extract_and_convert_to_f64_pln3_to_pln3(__m256 *px, __m256 *p)
+inline void extract_and_convert_to_f64_pln3_to_pln3(__m256 *px, __m256d *p)
 {
     __m128 px128[6];
     px128[0] = _mm256_castps256_ps128(px[0]);
