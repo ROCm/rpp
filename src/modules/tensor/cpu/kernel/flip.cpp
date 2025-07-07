@@ -424,7 +424,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                srcPtrTemp += hFlipFactor;
+                srcPtrTemp += hFlipFactor - 2;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = srcPtrTemp[0];
@@ -520,7 +520,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
-                srcPtrTemp += hFlipFactor;
+                srcPtrTemp += hFlipFactor - 2;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = srcPtrTemp[0];
