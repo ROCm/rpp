@@ -367,7 +367,9 @@ __global__ void emboss_3x3_pkd_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -459,7 +461,9 @@ __global__ void emboss_5x5_pkd_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -559,7 +563,9 @@ __global__ void emboss_7x7_pkd_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -667,7 +673,9 @@ __global__ void emboss_9x9_pkd_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -758,7 +766,9 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
         }
         rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
     }  
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -799,7 +809,9 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -813,6 +825,7 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
+
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = static_cast<float4>(0);
@@ -838,7 +851,9 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }       
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -905,7 +920,9 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         }
         rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -950,6 +967,7 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         }
   
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -990,7 +1008,9 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }     
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -1061,7 +1081,9 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         }
         rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1124,6 +1146,7 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
+
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = static_cast<float4>(0);
@@ -1149,7 +1172,9 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }       
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -1224,7 +1249,9 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
         }
         rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1271,7 +1298,9 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -1291,6 +1320,7 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
+
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = static_cast<float4>(0);
@@ -1316,7 +1346,9 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
             }
             rpp_hip_load8_to_uchar8(tempBuffer, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]); // Convert to uchar8
         }
+
         __syncthreads();
+
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
             (hipThreadIdx_x < tileSize.x) &&
@@ -1409,7 +1441,9 @@ __global__ void emboss_3x3_pkd3_pln3_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1500,7 +1534,9 @@ __global__ void emboss_5x5_pkd3_pln3_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1600,7 +1636,9 @@ __global__ void emboss_7x7_pkd3_pln3_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1708,7 +1746,9 @@ __global__ void emboss_9x9_pkd3_pln3_tensor(T *srcPtr,
         // Use helper function to load padded data into shared memory
         rpp_hip_load24_pkd3_to_uchar8_pln3(tempBuffer, src_smem_channel);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1821,7 +1861,9 @@ __global__ void emboss_3x3_pln3_pkd3_tensor(T *srcPtr,
         rpp_hip_load8_to_uchar8(tempBuffer1, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
         rpp_hip_load8_to_uchar8(tempBuffer2, &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -1916,7 +1958,9 @@ __global__ void emboss_5x5_pln3_pkd3_tensor(T *srcPtr,
         rpp_hip_load8_to_uchar8(tempBuffer1, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
         rpp_hip_load8_to_uchar8(tempBuffer2, &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -2019,7 +2063,9 @@ __global__ void emboss_7x7_pln3_pkd3_tensor(T *srcPtr,
         rpp_hip_load8_to_uchar8(tempBuffer1, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
         rpp_hip_load8_to_uchar8(tempBuffer2, &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8]);
     }
+
     __syncthreads();
+
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
         (hipThreadIdx_x < tileSize.x) &&
@@ -2168,6 +2214,22 @@ __global__ void emboss_9x9_pln3_pkd3_tensor(T *srcPtr,
     }
 }
 
+__device__ void flip_kernel(float *filterTensor, int kernelSize)
+{
+    float temp[kernelSize * kernelSize];
+    for (int i = 0; i < kernelSize; i++)
+    {
+        for (int j = 0; j < kernelSize; j++)
+        {
+            temp[(kernelSize - 1 - i) * kernelSize + (kernelSize - 1 - j)] = filterTensor[i * kernelSize + j];
+        }
+    }
+    for (int i = 0; i < kernelSize * kernelSize; i++)
+    {
+        filterTensor[i] = temp[i];
+    }
+}
+
 __global__ void create_emboss_kernel_3x3(float *filterTensor,
                                          float *strengthTensor,
                                          int batchSize)
@@ -2178,6 +2240,7 @@ __global__ void create_emboss_kernel_3x3(float *filterTensor,
 
     float *filter = &filterTensor[id_x * 9];  // Each filter is 3x3 = 9 elements
     float strength = strengthTensor[id_x];
+    float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
     // Base emboss kernel 
     const float baseKernel[9] = {
@@ -2188,7 +2251,8 @@ __global__ void create_emboss_kernel_3x3(float *filterTensor,
 
     // Apply strength scaling
     for (int i = 0; i < 9; i++)
-        filter[i] = baseKernel[i] * strength;
+        filter[i] = baseKernel[i] * clampedStrength;
+    flip_kernel(filter, 3);
 }
 
 __global__ void create_emboss_kernel_5x5(float *filterTensor,
@@ -2201,6 +2265,7 @@ __global__ void create_emboss_kernel_5x5(float *filterTensor,
 
     float *filter = &filterTensor[id_x * 25];
     float strength = strengthTensor[id_x];
+    float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
     // Example 5x5 Emboss kernel (diagonal edge emphasis)
     const float baseKernel[25] = {
@@ -2213,7 +2278,8 @@ __global__ void create_emboss_kernel_5x5(float *filterTensor,
 
     // Apply strength scaling
     for (int i = 0; i < 25; i++)
-        filter[i] = baseKernel[i] * strength;
+        filter[i] = baseKernel[i] * clampedStrength;
+    flip_kernel(filter, 5);
 }
 
 __global__ void create_emboss_kernel_7x7(float *filterTensor,
@@ -2226,6 +2292,7 @@ __global__ void create_emboss_kernel_7x7(float *filterTensor,
 
     float *filter = &filterTensor[id_x * 49];
     float strength = strengthTensor[id_x];
+    float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
     // Sample 7x7 Emboss Kernel (top-left to bottom-right edge detection)
     const float baseKernel[49] = {
@@ -2240,7 +2307,8 @@ __global__ void create_emboss_kernel_7x7(float *filterTensor,
 
     // Apply strength
     for (int i = 0; i < 49; i++)
-        filter[i] = baseKernel[i] * strength;
+        filter[i] = baseKernel[i] * clampedStrength;
+    flip_kernel(filter, 7);
 }
 
 __global__ void create_emboss_kernel_9x9(float *filterTensor,
@@ -2253,6 +2321,7 @@ __global__ void create_emboss_kernel_9x9(float *filterTensor,
 
     float *filter = &filterTensor[id_x * 81];
     float strength = strengthTensor[id_x];
+    float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
     // A sample 9x9 Emboss kernel (diagonal edge detection, symmetric from top-left to bottom-right)
     const float baseKernel[81] = {
@@ -2269,7 +2338,8 @@ __global__ void create_emboss_kernel_9x9(float *filterTensor,
 
     // Apply strength scaling
     for (int i = 0; i < 81; i++)
-        filter[i] = baseKernel[i] * strength;
+        filter[i] = baseKernel[i] * clampedStrength;
+    flip_kernel(filter, 9);
 }
 
 static RppStatus hip_exec_create_emboss_kernel(Rpp32f *filterTensor,

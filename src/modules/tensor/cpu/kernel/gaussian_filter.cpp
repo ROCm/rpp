@@ -160,14 +160,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                         dstPtrTemp += padLength;
 #if __AVX2__
+                        Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[6], pDst[2];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -184,7 +186,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -211,14 +213,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[9], pDst[2];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -236,7 +240,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -262,13 +266,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[9], pDst[2];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -288,7 +294,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -316,6 +322,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
 
                     // process padLength number of columns in each row
                     // left border pixels in image which does not have required pixels in 3x3 box, process them separately
@@ -323,11 +330,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
@@ -336,7 +344,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[6];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -363,7 +371,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -404,14 +412,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                         dstPtrTemp += padLength;
-    #if __AVX2__
+#if __AVX2__
+                        Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[10], pDst[2];
-                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
@@ -424,11 +434,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                             dstPtrTemp += 12;
                         }
-    #endif
+#endif
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -456,13 +466,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                     dstPtrTemp += padLength * 3;
-    #if __AVX2__
+#if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -475,11 +487,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -509,17 +521,19 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -527,7 +541,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[10];
-                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
@@ -552,7 +566,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -581,13 +595,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-    #if __AVX2__
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
+#if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -603,12 +619,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -650,14 +666,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                         dstPtrTemp += padLength;
 #if __AVX2__
+                        Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[14], pDst;
-                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -679,7 +697,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -707,13 +725,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[28], pDst;
-                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
                             permute_blend_add_7x7_pkd(pDst, &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
@@ -734,7 +754,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -764,17 +784,19 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;    
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -782,7 +804,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[14];
-                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
@@ -806,7 +828,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -835,12 +857,14 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[28], pDst[2];
-                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
@@ -863,7 +887,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -904,14 +928,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                         dstPtrTemp += padLength;
 #if __AVX2__
+                        Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[18], pDst;
-                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -932,7 +958,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -960,13 +986,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[36], pDst;
-                        rpp_load_filter_9x9_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_filter_9x9_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
                             permute_blend_add_9x9_pkd(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -987,7 +1015,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1018,15 +1046,17 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -1034,7 +1064,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[18];
-                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1058,7 +1088,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1087,12 +1117,14 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
 #if __AVX2__
+                    Rpp32s padindex = (verticalDirection == 1) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[45], pDst[2];
-                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)
@@ -1115,7 +1147,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1191,13 +1223,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                    Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1222,13 +1255,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
@@ -1254,13 +1288,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                Rpp32s verticalDirection = i < padLength ? 0 : 1;
 
                 // process padLength number of columns in each row
                 for (int k = 0; k < padLength; k++)
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection);
                         dstPtrTemp++;
                     }
                 }
@@ -1270,7 +1305,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection);
                         increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1296,13 +1331,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                Rpp32s verticalDirection = i < padLength ? 0 : 1;
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, verticalDirection);
                 vectorLoopCount += padLength * 3;
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     int channel = vectorLoopCount % 3;
-                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, verticalDirection, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }
