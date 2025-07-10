@@ -34,9 +34,6 @@ inline void rgb_to_hsv(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pH, 
     pV = _mm256_max_ps(pVecR, _mm256_max_ps(pVecG, pVecB));                                                         // cmax = RPPMAX3(rf, gf, bf);
     pS = _mm256_min_ps(pVecR, _mm256_min_ps(pVecG, pVecB));                                                         // cmin = RPPMIN3(rf, gf, bf);
     pDelta = _mm256_sub_ps(pV, pS);                                                                                 // delta = cmax - cmin;
-    pH = avx_p0;                                                                                                    // hue = 0.0f;
-    pS = avx_p0;                                                                                                    // sat = 0.0f;
-    pAdd = avx_p0;                                                                                                  // add = 0.0f;
     pMask[0] = _mm256_and_ps(_mm256_cmp_ps(pDelta, avx_p0, _CMP_NEQ_OQ), _mm256_cmp_ps(pV, avx_p0, _CMP_NEQ_OQ));   // if ((delta != 0) && (cmax != 0)) {
     pS = _mm256_div_ps(_mm256_and_ps(pMask[0], pDelta), pV);                                                        //     sat = delta / cmax;
     pMask[1] = _mm256_cmp_ps(pV, pVecR, _CMP_EQ_OQ);                                                                //     Temporarily store cmax == rf comparison
@@ -67,9 +64,6 @@ inline void hsv_to_rgb(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 &pH, 
     pA = _mm256_sub_ps(pV, pS);                                                                                     // Rpp32f p = v - vsat;
     pH = _mm256_sub_ps(pV, pAdd);                                                                                   // Rpp32f q = v - vsatf;
     pS = _mm256_add_ps(pA, pAdd);                                                                                   // Rpp32f t = v - vsat + vsatf;
-    pVecR = avx_p0;                                                                                                 // Reset dstPtrR
-    pVecG = avx_p0;                                                                                                 // Reset dstPtrG
-    pVecB = avx_p0;                                                                                                 // Reset dstPtrB
     pMask[0] = _mm256_castsi256_ps(_mm256_cmpeq_epi32(pxIntH, avx_px0));                                            // switch (hueIntegerPart) {case 0:
     pVecR = _mm256_and_ps(pMask[0], pV);                                                                            //     rf = v;
     pVecG = _mm256_and_ps(pMask[0], pS);                                                                            //     gf = t;
@@ -106,9 +100,6 @@ inline void rgb_to_hsv(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 &pH, 
     pV = _mm_max_ps(pVecR, _mm_max_ps(pVecG, pVecB));                                                               // cmax = RPPMAX3(rf, gf, bf);
     pS = _mm_min_ps(pVecR, _mm_min_ps(pVecG, pVecB));                                                               // cmin = RPPMIN3(rf, gf, bf);
     pDelta = _mm_sub_ps(pV, pS);                                                                                    // delta = cmax - cmin;
-    pH = xmm_p0;                                                                                                    // hue = 0.0f;
-    pS = xmm_p0;                                                                                                    // sat = 0.0f;
-    pAdd = xmm_p0;                                                                                                  // add = 0.0f;
     pMask[0] = _mm_and_ps(_mm_cmpneq_ps(pDelta, xmm_p0), _mm_cmpneq_ps(pV, xmm_p0));                                // if ((delta != 0) && (cmax != 0)) {
     pS = _mm_div_ps(_mm_and_ps(pMask[0], pDelta), pV);                                                              //     sat = delta / cmax;
     pMask[1] = _mm_cmpeq_ps(pV, pVecR);                                                                             //     Temporarily store cmax == rf comparison
@@ -139,9 +130,6 @@ inline void hsv_to_rgb(__m128 &pVecR, __m128 &pVecG, __m128 &pVecB, __m128 &pH, 
     pA = _mm_sub_ps(pV, pS);                                                                                        // Rpp32f p = v - vsat;
     pH = _mm_sub_ps(pV, pAdd);                                                                                      // Rpp32f q = v - vsatf;
     pS = _mm_add_ps(pA, pAdd);                                                                                      // Rpp32f t = v - vsat + vsatf;
-    pVecR = xmm_p0;                                                                                                 // Reset dstPtrR
-    pVecG = xmm_p0;                                                                                                 // Reset dstPtrG
-    pVecB = xmm_p0;                                                                                                 // Reset dstPtrB
     pMask[0] = _mm_castsi128_ps(_mm_cmpeq_epi32(pxIntH, xmm_px0));                                                  // switch (hueIntegerPart) {case 0:
     pVecR = _mm_and_ps(pMask[0], pV);                                                                               //     rf = v;
     pVecG = _mm_and_ps(pMask[0], pS);                                                                               //     gf = t;
