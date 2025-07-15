@@ -11,9 +11,9 @@ inline void or_op(T *dst, T *src1, T *src2) { *dst = *src1 | *src2; }
 template<typename T>
 inline void xor_op(T *dst, T *src1, T *src2) { *dst = *src1 ^ *src2; }
 
-inline void simd_and_si256(__m256 &a, __m256 &b) { a = _mm256_and_si256(a, b); }
-inline void simd_or_si256(__m256 &a, __m256 &b) { a = _mm256_and_si256(a, b); }
-inline void simd_xor_si256(__m256 &a, __m256 &b) { a = _mm256_and_si256(a, b); }
+inline void simd_and_si256(__m256i &a, __m256i &b) { a = _mm256_and_si256(a, b); }
+inline void simd_or_si256(__m256i &a, __m256i &b) { a = _mm256_or_si256(a, b); }
+inline void simd_xor_si256(__m256i &a, __m256i &b) { a = _mm256_xor_si256(a, b); }
 
 template<typename T, typename Operation>
 inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
@@ -34,16 +34,16 @@ inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rp
 
 template<typename Operation, typename SIMDOperation>
 RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
-                                            Rpp8u *srcPtr2,
-                                            RpptGenericDescPtr srcPtr1GenericDescPtr,
-                                            RpptGenericDescPtr srcPtr2GenericDescPtr,
-                                            Rpp8u *dstPtr,
-                                            RpptGenericDescPtr dstGenericDescPtr,
-                                            Operation op,
-                                            SIMDOperation simd_op,
-                                            Rpp32u *srcPtr1roiTensor,
-                                            Rpp32u *srcPtr2roiTensor,
-                                            rpp::Handle& handle) {
+                                                    Rpp8u *srcPtr2,
+                                                    RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                    RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                    Rpp8u *dstPtr,
+                                                    RpptGenericDescPtr dstGenericDescPtr,
+                                                    Operation op,
+                                                    SIMDOperation simd_op,
+                                                    Rpp32u *srcPtr1roiTensor,
+                                                    Rpp32u *srcPtr2roiTensor,
+                                                    rpp::Handle& handle) {
 
     checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
     BroadcastDstShape(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr);
@@ -170,9 +170,9 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
@@ -201,9 +201,9 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     int vectorLoopCount = 0;
                     __m256i p2 = _mm256_set1_epi8(srcPtrTest2[0]);
@@ -232,9 +232,9 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
@@ -271,15 +271,15 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp8u *srcPtrNew1 = srcPtrTest1;
+                        Rpp8u *srcPtrNew2 = srcPtrTest2;
+                        Rpp8u *dstPtrNew = dstPtrTest;
 
                         int vectorLoopCount = 0;
 
@@ -315,15 +315,15 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp8u *srcPtrNew1 = srcPtrTest1;
+                        Rpp8u *srcPtrNew2 = srcPtrTest2;
+                        Rpp8u *dstPtrNew = dstPtrTest;
 
                         int vectorLoopCount = 0;
                         __m256i p2 = _mm256_set1_epi8(srcPtrNew2[0]);
@@ -358,21 +358,20 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp8u *srcPtrTest1 = srcPtrTemp1;
+                    Rpp8u *srcPtrTest2 = srcPtrTemp2;
+                    Rpp8u *dstPtrTest = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp8u *srcPtrNew1 = srcPtrTest1;
+                        Rpp8u *srcPtrNew2 = srcPtrTest2;
+                        Rpp8u *dstPtrNew = dstPtrTest;
 
                         int vectorLoopCount = 0;
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p1, p2;
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
                             simd_op(p1, p2);
@@ -414,7 +413,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_char_host_tensor(Rpp8u *srcPtr1,
                                                              RpptGenericDescPtr srcPtr2GenericDescPtr,
                                                              Rpp8u *dstPtr,
                                                              RpptGenericDescPtr dstGenericDescPtr,
-                                                             RpptOp tensorOp,
+                                                             RpptBitwiseOp tensorOp,
                                                              Rpp32u *srcPtr1roiTensor,
                                                              Rpp32u *srcPtr2roiTensor,
                                                              rpp::Handle& handle) {

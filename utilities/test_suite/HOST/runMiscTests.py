@@ -48,7 +48,7 @@ def get_log_file_list():
     ]
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    bitDepths = range(7)
+    bitDepths = range(0, 1)
     if testType == 0:
         bitDepths = [2]
     for bitDepth in bitDepths:

@@ -157,6 +157,90 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** tensor_and_tensor ********************/
+
+RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
+                                      RppPtr_t srcPtr2,
+                                      RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                      RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                      RppPtr_t dstPtr,
+                                      RpptGenericDescPtr dstGenericDescPtr,
+                                      Rpp32u *roiTensorSrc1,
+                                      Rpp32u *roiTensorSrc2,
+                                      rppHandle_t rppHandle)
+{
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        tensor_binary_bitwise_op_dispatch_char_host_tensor(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                           static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                           srcPtr1GenericDescPtr,
+                                                           srcPtr2GenericDescPtr,
+                                                           static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                           dstGenericDescPtr,
+                                                           RPP_TENSOR_OP_AND,
+                                                           roiTensorSrc1,
+                                                           roiTensorSrc2,
+                                                           rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+}
+
+/******************** tensor_or_tensor ********************/
+
+RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                     RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptGenericDescPtr dstGenericDescPtr,
+                                     Rpp32u *roiTensorSrc1,
+                                     Rpp32u *roiTensorSrc2,
+                                     rppHandle_t rppHandle)
+{
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        tensor_binary_bitwise_op_dispatch_char_host_tensor(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                           static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                           srcPtr1GenericDescPtr,
+                                                           srcPtr2GenericDescPtr,
+                                                           static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                           dstGenericDescPtr,
+                                                           RPP_TENSOR_OP_OR,
+                                                           roiTensorSrc1,
+                                                           roiTensorSrc2,
+                                                           rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+}
+
+/******************** tensor_xor_tensor ********************/
+
+RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1,
+                                      RppPtr_t srcPtr2,
+                                      RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                      RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                      RppPtr_t dstPtr,
+                                      RpptGenericDescPtr dstGenericDescPtr,
+                                      Rpp32u *roiTensorSrc1,
+                                      Rpp32u *roiTensorSrc2,
+                                      rppHandle_t rppHandle)
+{
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        tensor_binary_bitwise_op_dispatch_char_host_tensor(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                           static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                           srcPtr1GenericDescPtr,
+                                                           srcPtr2GenericDescPtr,
+                                                           static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                           dstGenericDescPtr,
+                                                           RPP_TENSOR_OP_XOR,
+                                                           roiTensorSrc1,
+                                                           roiTensorSrc2,
+                                                           rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+}
+
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/

@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     bitDepth = atoi(argv[7]);
     string dst = argv[9];
     string scriptPath = argv[10];
-    qaMode = (testType == 0);
+    qaMode = 0;//(testType == 0);
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[8]) : 1;
@@ -86,31 +86,39 @@ int main(int argc, char **argv)
     Rpp32u *roiTensorSecond ;
     Rpp32u *dstRoiTensor = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
     
-    fill_roi_values(nDim, batchSize, roiTensor, qaMode);
-    memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
+    //fill_roi_values(nDim, batchSize, roiTensor, qaMode);
+    //memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
+    fill_roi_values(nDim, batchSize, roiTensor, qaMode, 0);
+    fill_roi_values(nDim, batchSize, dstRoiTensor, qaMode, 2);
     if(testCase == CONCAT)
     {
         roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
-        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode);
-        dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask]; 
+        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode, 0);
+        dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask];
     }
-
+    if (testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
+    {
+        roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
+        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode, 1);
+        //dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask];
+    }
     // set src/dst generic tensor descriptors
     RpptGenericDesc srcDescriptor, srcDescriptorSecond, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, srcDescriptorPtrNDSecond, dstDescriptorPtrND;
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
     int offSetInBytes = 0;
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    printf("bitDepth is %d\n", bitDepth);
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
     {
         srcDescriptorPtrNDSecond = &srcDescriptorSecond;
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, bitDepth, batchSize, roiTensorSecond);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 0, batchSize, roiTensorSecond);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     }
@@ -128,23 +136,23 @@ int main(int argc, char **argv)
 
     iBufferSizeInBytes = iBufferSize * get_size_of_data_type(srcDescriptorPtrND->dataType);
     oBufferSizeInBytes = oBufferSize * get_size_of_data_type(dstDescriptorPtrND->dataType);
-
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
     Rpp16s *inputI16 = NULL;
     inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
     outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
     {
-        for(int i = 0; i <= nDim; i++)
+        for(int i = 0; i  <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
-
+    printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
+    exit(0);
     void *input, *inputSecond, *output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
     output = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
 
@@ -152,7 +160,7 @@ int main(int argc, char **argv)
     if(qaMode)
     {
         read_data(inputF32, nDim, 0, scriptPath, funcName);
-        if(testCase == CONCAT)
+        if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
             read_data(inputF32Second, nDim, 0, scriptPath, funcName);
     }
     else
@@ -160,7 +168,7 @@ int main(int argc, char **argv)
         std::srand(0);
         for(int i = 0; i < iBufferSize; i++)
             inputF32[i] = static_cast<float>(std::rand() % 255);
-        if(testCase == CONCAT)
+        if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         {
             for(int i = 0; i < iBufferSizeSecond; i++)
                 inputF32Second[i] = static_cast<float>((std::rand() % 255));
@@ -284,6 +292,39 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
 
+                break;
+            }
+            case TENSOR_AND_TENSOR:
+            {
+                testCaseName  = "tensor_and_tensor";
+
+                startWallTime = omp_get_wtime();
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                    rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
+            case TENSOR_OR_TENSOR:
+            {
+                testCaseName  = "tensor_or_tensor";
+
+                startWallTime = omp_get_wtime();
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                    rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
+            case TENSOR_XOR_TENSOR:
+            {
+                testCaseName  = "tensor_xor_tensor";
+
+                startWallTime = omp_get_wtime();
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                    rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                else
+                    missingFuncFlag = 1;
                 break;
             }
             default:

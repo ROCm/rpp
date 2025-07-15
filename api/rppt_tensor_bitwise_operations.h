@@ -214,6 +214,12 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+
+RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+
+RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+
 /*! @}
  */
 
