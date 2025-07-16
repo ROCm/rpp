@@ -100,6 +100,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             Rpp32u vectorLoopCount = 0;
             if (src1shape == 1)
             {
+                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p1 = _mm256_set1_epi8(srcPtrTemp1[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -120,6 +121,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else if (src2shape == 1)
             {
+                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p2 = _mm256_set1_epi8(srcPtrTemp2[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -140,6 +142,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else
             {
+                printf("broadcastNDim are %d\n", 1);
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
@@ -168,6 +171,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             Rpp32u src2shape = src2length[1];
             if(src1shape == 1)
             {
+                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -199,6 +203,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else if (src2shape == 1)
             {
+                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -230,6 +235,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else
             {
+                printf("broadcastNDim are %d\n", 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -269,6 +275,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             Rpp32u src2shape = src2length[2];
             if(src1shape == 1)
             {
+                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -313,6 +320,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else if (src2shape == 1)
             {
+                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -356,6 +364,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
             }
             else
             {
+                printf("broadcastNDim is %d\n", 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp8u *srcPtrTest1 = srcPtrTemp1;
@@ -373,7 +382,7 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
-                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
+                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrNew2);    // simd loads
                             simd_op(p1, p2);
                             _mm256_storeu_si256((__m256i *)dstPtrNew, p1);    // simd stores
                             srcPtrNew1 += vectorIncrement;
@@ -400,8 +409,10 @@ RppStatus tensor_binary_bitwise_op_char_host_tensor(Rpp8u *srcPtr1,
                 }
             }
         }
-        else
+        else {
+            printf("broadcastNDim is %d\n", 4);
             tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
+        }
     }
 
     return RPP_SUCCESS;

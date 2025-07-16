@@ -108,6 +108,7 @@ int main(int argc, char **argv)
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
     int offSetInBytes = 0;
+    bitDepth = 0;
     printf("bitDepth is %d\n", bitDepth);
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
     if(testCase == LOG1P)
@@ -149,7 +150,6 @@ int main(int argc, char **argv)
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
     printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
-    exit(0);
     void *input, *inputSecond, *output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
@@ -303,6 +303,19 @@ int main(int argc, char **argv)
                     rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
+                //Rpp8u* ip1 = (Rpp8u*)input;
+                //for(int i = 0; i < iBufferSize; i++)
+                //    printf("%d ", ip1[i]);
+                //printf("\n");
+                //Rpp8u* ip2 = (Rpp8u*)inputSecond;
+                //for(int i = 0; i < iBufferSizeSecond; i++)
+                //    printf("%d ", ip2[i]);
+                //printf("\n");
+                //Rpp8u* op = (Rpp8u*)output;
+                //for(int i = 0; i < oBufferSize; i++)
+                //    printf("%d ", op[i]);
+                //printf("\n");
+                //exit(0);
                 break;
             }
             case TENSOR_OR_TENSOR:
@@ -314,6 +327,19 @@ int main(int argc, char **argv)
                     rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
+                Rpp8u* ip1 = (Rpp8u*)input;
+                for(int i = 0; i < iBufferSize; i++)
+                    printf("%d ", ip1[i]);
+                printf("\n");
+                Rpp8u* ip2 = (Rpp8u*)inputSecond;
+                for(int i = 0; i < iBufferSizeSecond; i++)
+                    printf("%d ", ip2[i]);
+                printf("\n");
+                Rpp8u* op = (Rpp8u*)output;
+                for(int i = 0; i < oBufferSize; i++)
+                    printf("%d ", op[i]);
+                printf("\n");
+                exit(0);
                 break;
             }
             case TENSOR_XOR_TENSOR:
@@ -325,6 +351,19 @@ int main(int argc, char **argv)
                     rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
+                Rpp8u* ip1 = (Rpp8u*)input;
+                for(int i = 0; i < iBufferSize; i++)
+                    printf("%d ", ip1[i]);
+                printf("\n");
+                Rpp8u* ip2 = (Rpp8u*)inputSecond;
+                for(int i = 0; i < iBufferSizeSecond; i++)
+                    printf("%d ", ip2[i]);
+                printf("\n");
+                Rpp8u* op = (Rpp8u*)output;
+                for(int i = 0; i < oBufferSize; i++)
+                    printf("%d ", op[i]);
+                printf("\n");
+                exit(0);
                 break;
             }
             default:
