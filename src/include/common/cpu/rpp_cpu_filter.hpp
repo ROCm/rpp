@@ -77,44 +77,51 @@ inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
     }
 }
 
-template<typename T> 
-inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
-                                  Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
-                                  Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
-                                  Rpp32s horizontalDirection, Rpp32s verticalDirection,
-                                  Rpp32u channels = 1) 
-{
-    double accum = 0.0; // Use double for accumulation
-    Rpp32s columnKernelLoopLimit = kernelSize;
 
+template<typename T>
+inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
+                                              Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
+                                              Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                              Rpp32s horizontalDirection, Rpp32s verticalDirection,
+                                              Rpp32u channels = 1)
+{
+    Rpp32s columnKernelLoopLimit = kernelSize;
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
 
-    for (Rpp32s i = 0; i < kernelSize; i++)
+    Rpp32s rowClampIdx = (verticalDirection == 1) ? rowKernelLoopLimit - 1 : 0;
+    Rpp32s colClampIdx = (horizontalDirection == 1) ? columnKernelLoopLimit - 1 : 0;
+
+    // Loop over all channels
+    for (Rpp32u c = 0; c < channels; ++c)
     {
-        Rpp32s clampedRowIdx = (i < rowKernelLoopLimit) ? i : rowKernelLoopLimit - 1;
+        Rpp32f accum = 0.0f;
 
-        for (Rpp32s j = 0, k = 0; j < kernelSize; j++, k += channels)
+        for (int i = 0; i < kernelSize; i++)
         {
-            Rpp32s clampedColIdx = (j < columnKernelLoopLimit) ? j : columnKernelLoopLimit - 1;
+            Rpp32s unclampedRowIdx = i - padLength + verticalDirection;
+            Rpp32s rowIdx = std::min(std::max(unclampedRowIdx, 0), static_cast<Rpp32s>(rowKernelLoopLimit - 1));
 
-            double pixelVal;
-            if constexpr (std::is_same<T, Rpp8s>::value)
-                pixelVal = static_cast<double>(srcPtrTemp[clampedRowIdx][clampedColIdx * channels] + 128);
-            else
-                pixelVal = static_cast<double>(srcPtrTemp[clampedRowIdx][clampedColIdx * channels]);
+            for (int j = 0; j < kernelSize; j++)
+            {
+                Rpp32s unclampedColIdx = j - padLength + horizontalDirection;
+                Rpp32s colIdx = std::min(std::max(unclampedColIdx, 0), static_cast<Rpp32s>(columnKernelLoopLimit - 1));
 
-            accum += pixelVal * static_cast<double>(filterTensor[i * kernelSize + j]);
+                Rpp32f pixel;
+                if constexpr (std::is_same<T, Rpp8s>::value)
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowIdx][colIdx * channels + c] + 128);
+                else
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowIdx][colIdx * channels + c]);
+
+                accum += pixel * filterTensor[i * kernelSize + j];
+            }
         }
+
+        if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+            accum = nearbyintf(accum);
+
+        // Store the result in dstPtrTemp at the correct channel offset
+        saturate_pixel(accum, dstPtrTemp + c);
     }
-
-    if constexpr (std::is_same<T, Rpp8s>::value)
-        accum -= 128.0;
-
-    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-        accum = nearbyint(accum);
-
-    Rpp32f pixel = static_cast<Rpp32f>(accum);
-    saturate_pixel(pixel, dstPtrTemp);
 }
 
 // process padLength number of columns in each row
@@ -445,99 +452,136 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
 // -------------------- Filter load functions for U8 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s verticalDirection)
 {
-    for (int k = 0; k < 3; k++)
+    rpp_load16_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);   // top row
+    rpp_load16_u8_to_f32_avx(srcPtrTemp[1], &pRow[2]);   // center row
+
+    if (rowKernelLoopLimit == 3)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
+        rpp_load16_u8_to_f32_avx(srcPtrTemp[2], &pRow[4]);   // bottom row
     }
+    else
+    {
+        // replicate either top or center row as bottom row (nearest neighbor)
+        pRow[4] = (verticalDirection == 1) ? pRow[2] : pRow[0];
+    }
+
+    // Add duplicate register (for alignment with your loop logic)
+    pRow[1] = pRow[0]; 
+    pRow[3] = pRow[2];
+    pRow[5] = pRow[4];
 }
 
 // load function for 5x5 kernel size with nearest neighbor padding
-inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 5; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load16_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
     }
 }
 
 // load function for 7x7 kernel size with nearest neighbor padding
-inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 7; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load16_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
     }
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 9; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load16_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
     }
 }
 
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s verticalDirection)
 {
-    for (int k = 0; k < 3; k++)
+    // Load first row (top), middle row, and bottom row
+    rpp_load24_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);   // Top row (3 registers)
+    rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[3]);   // Mid row  (3 registers)
+
+    if (rowKernelLoopLimit == 3)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 3]);
+        rpp_load24_u8_to_f32_avx(srcPtrTemp[2], &pRow[6]);  // Bottom row (3 registers)
+    }
+    else
+    {
+        // Replicate nearest available row to act as bottom row
+        // verticalDirection = 0 → replicate top (srcPtrTemp[0])
+        // verticalDirection = 1 → replicate middle (srcPtrTemp[1])
+        if (verticalDirection == 1)
+        {
+            pRow[6] = pRow[3];
+            pRow[7] = pRow[4];
+            pRow[8] = pRow[5];
+        }
+        else
+        {
+            pRow[6] = pRow[0];
+            pRow[7] = pRow[1];
+            pRow[8] = pRow[2];
+        }
     }
 }
 
-inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 5; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load32_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 4]);
     }
 }
 
-inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 7; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load32_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 4]);
     }
 }
 
-inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 9; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load32_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 4]);
     }
 }
 
-inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < 9; k++)
     {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
+        int idx = (padIndex + k < rowKernelLoopLimit) ? k : rowKernelLoopLimit - 1;
         rpp_load40_u8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 5]);
     }
 }
 
 // -------------------- Filter load functions for I8 bitdepth --------------------
 
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowIdx, Rpp32s inputHeight)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
-    }
+    // Clamp row indices
+    int row0 = (rowIdx - 1 < 0) ? 0 : (rowIdx - 1);
+    int row1 = rowIdx;
+    int row2 = (rowIdx + 1 >= inputHeight) ? (inputHeight - 1) : (rowIdx + 1);
+
+    // Load the 3 rows
+    rpp_load16_i8_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top row (channels)
+    rpp_load16_i8_to_f32_avx(srcPtrTemp[row1], &pRow[2]);  // Middle row
+    rpp_load16_i8_to_f32_avx(srcPtrTemp[row2], &pRow[4]);  // Bottom row
 }
 
 inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
@@ -567,13 +611,17 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     }
 }
 
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s padIndex, Rpp32s rowKernelLoopLimit)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[idx], &pRow[k * 3]);
-    }
+    // Clamp padIndex within 0 to 2 (local tile height)
+    int row0 = (padIndex - 1 < 0) ? 0 : (padIndex - 1);
+    int row1 = padIndex;
+    int row2 = (padIndex + 1 >= rowKernelLoopLimit) ? (rowKernelLoopLimit - 1) : (padIndex + 1);
+
+    // Load 24 i8s from each row and convert to 3 __m256 vectors (one per channel)
+    rpp_load24_i8_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top → [0], [1], [2]
+    rpp_load24_i8_to_f32_avx(srcPtrTemp[row1], &pRow[3]);  // Mid → [3], [4], [5]
+    rpp_load24_i8_to_f32_avx(srcPtrTemp[row2], &pRow[6]);  // Bot → [6], [7], [8]
 }
 
 inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
@@ -614,13 +662,17 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8s **srcP
 
 // -------------------- Filter load functions for F32 bitdepth --------------------
 
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowIdx, Rpp32s inputHeight)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
-    }
+    // Clamp row indices for nearest neighbor padding
+    int row0 = (rowIdx - 1 < 0) ? 0 : (rowIdx - 1);
+    int row1 = rowIdx;
+    int row2 = (rowIdx + 1 >= inputHeight) ? (inputHeight - 1) : (rowIdx + 1);
+
+    // Load each row (16 floats = 2 __m256 registers per row)
+    rpp_load16_f32_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top row → pRow[0], pRow[1]
+    rpp_load16_f32_to_f32_avx(srcPtrTemp[row1], &pRow[2]);  // Mid  row → pRow[2], pRow[3]
+    rpp_load16_f32_to_f32_avx(srcPtrTemp[row2], &pRow[4]);  // Bot  row → pRow[4], pRow[5]
 }
 
 inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
@@ -650,13 +702,17 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     }
 }
 
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowIdx, Rpp32s inputHeight)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[idx], &pRow[k * 3]);
-    }
+    // Clamp row indices for nearest neighbor padding
+    int row0 = (rowIdx - 1 < 0) ? 0 : (rowIdx - 1);
+    int row1 = rowIdx;
+    int row2 = (rowIdx + 1 >= inputHeight) ? (inputHeight - 1) : (rowIdx + 1);
+
+    // Load each row (24 floats per row → 3 x __m256 registers)
+    rpp_load24_f32_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top row → pRow[0] to pRow[2]
+    rpp_load24_f32_to_f32_avx(srcPtrTemp[row1], &pRow[3]);  // Mid  row → pRow[3] to pRow[5]
+    rpp_load24_f32_to_f32_avx(srcPtrTemp[row2], &pRow[6]);  // Bot  row → pRow[6] to pRow[8]
 }
 
 inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
@@ -699,12 +755,15 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp32f **src
 
 inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[idx], &pRow[k * 2]);
-    }
+    int row0 = (padIndex - 1 < 0) ? 0 : (padIndex - 1);
+    int row1 = padIndex;
+    int row2 = (padIndex + 1 >= rowKernelLoopLimit) ? (rowKernelLoopLimit - 1) : (padIndex + 1);
+
+    rpp_load16_f16_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top row
+    rpp_load16_f16_to_f32_avx(srcPtrTemp[row1], &pRow[2]);  // Mid row
+    rpp_load16_f16_to_f32_avx(srcPtrTemp[row2], &pRow[4]);  // Bot row
 }
+
 
 inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
@@ -733,13 +792,17 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     }
 }
 
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowIdx, Rpp32s inputHeight)
 {
-    for (int k = 0; k < 3; k++)
-    {
-        int idx = (k < rowKernelLoopLimit) ? k : padIndex;
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[idx], &pRow[k * 3]);
-    }
+    // Clamp row indices based on Nearest Neighbor logic
+    int row0 = (rowIdx - 1 < 0) ? 0 : (rowIdx - 1);
+    int row1 = rowIdx;
+    int row2 = (rowIdx + 1 >= inputHeight) ? (inputHeight - 1) : (rowIdx + 1);
+
+    // Load 3 rows of 24 values (8 RGB pixels) into pRow
+    rpp_load24_f16_to_f32_avx(srcPtrTemp[row0], &pRow[0]);  // Top → pRow[0,1,2]
+    rpp_load24_f16_to_f32_avx(srcPtrTemp[row1], &pRow[3]);  // Mid → pRow[3,4,5]
+    rpp_load24_f16_to_f32_avx(srcPtrTemp[row2], &pRow[6]);  // Bot → pRow[6,7,8]
 }
 
 inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
