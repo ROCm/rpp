@@ -172,7 +172,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
     printf("Bitwise operation invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);   
     if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)))
     {
-        printf("Bitwise operation invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
+        printf("Bitwise operation1 invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
         tensor_binary_bitwise_op_dispatch_char_host_tensor(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
                                                            static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                            srcPtr1GenericDescPtr,
@@ -185,7 +185,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
                                                            rpp::deref(rppHandle));
     }
     else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) && (dstGenericDescPtr->dataType == RpptDataType::U16)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::I16))) {
-        printf("Bitwise operation invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
+        printf("Bitwise operation2 invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
         tensor_binary_bitwise_op_dispatch_short_host_tensor(reinterpret_cast<Rpp16u*>(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                             reinterpret_cast<Rpp16u*>(static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                             srcPtr1GenericDescPtr,
@@ -198,7 +198,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
                                                             rpp::deref(rppHandle));
     }
     else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32))) {
-        printf("Bitwise operation invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
+        printf("Bitwise operation3 invoked with srcPtr1GenericDescPtr->dataType and dstGenericDescPtr->dataType %d %d\n", srcPtr1GenericDescPtr->dataType, dstGenericDescPtr->dataType);
         tensor_binary_bitwise_op_dispatch_int_host_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u *>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                           reinterpret_cast<Rpp32u*>(static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                           srcPtr1GenericDescPtr,
