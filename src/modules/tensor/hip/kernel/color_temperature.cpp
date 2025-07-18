@@ -34,6 +34,7 @@ __device__ void color_temperature_hip_compute(T *srcPtr, d_float24 *pix_f24, flo
         adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
         rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
         rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
+        rpp_hip_pixel_check_0to1(pix_f24);      //boundary checks for float variants
     }
     else if constexpr (std::is_same<T, schar>::value)
     {
