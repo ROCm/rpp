@@ -315,6 +315,27 @@ RppStatus tensor_binary_bitwise_op_dispatch_char_host_tensor(Rpp8u *srcPtr1,
                                                              Rpp32u *srcPtr2roiTensor,
                                                              rpp::Handle& handle);
 
+RppStatus tensor_binary_bitwise_op_dispatch_short_host_tensor(Rpp16u *srcPtr1,
+                                                              Rpp16u *srcPtr2,
+                                                              RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                              RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                              Rpp16u *dstPtr,
+                                                              RpptGenericDescPtr dstGenericDescPtr,
+                                                              RpptBitwiseOp tensorOp,
+                                                              Rpp32u *srcPtr1roiTensor,
+                                                              Rpp32u *srcPtr2roiTensor,
+                                                              rpp::Handle& handle);
+
+RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(Rpp32u *srcPtr1,
+                                                              Rpp32u *srcPtr2,
+                                                              RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                              RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                              Rpp32u *dstPtr,
+                                                              RpptGenericDescPtr dstGenericDescPtr,
+                                                              RpptBitwiseOp tensorOp,
+                                                              Rpp32u *srcPtr1roiTensor,
+                                                              Rpp32u *srcPtr2roiTensor,
+                                                              rpp::Handle& handle);
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------

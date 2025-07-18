@@ -108,18 +108,18 @@ int main(int argc, char **argv)
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
     int offSetInBytes = 0;
-    bitDepth = 5;
+    bitDepth = 6;
     printf("bitDepth is %d\n", bitDepth);
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 5, batchSize, roiTensor);
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 5, batchSize, dstRoiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
     {
         srcDescriptorPtrNDSecond = &srcDescriptorSecond;
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 5, batchSize, roiTensorSecond);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 6, batchSize, roiTensorSecond);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     }
@@ -150,6 +150,7 @@ int main(int argc, char **argv)
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
     printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
+    //exit(0);
     void *input, *inputSecond, *output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
@@ -165,13 +166,17 @@ int main(int argc, char **argv)
     }
     else
     {
+        //printf("Goes inside here\n");
         std::srand(0);
-        for(int i = 0; i < iBufferSize; i++)
-            inputF32[i] = static_cast<float>(std::rand() % 255);
+        for(int i = 0; i < iBufferSize; i++) {
+            inputF32[i] = static_cast<float>(std::rand() % 65535);
+            //printf("%f ", inputF32[i]);
+        }
+        //printf("\n");
         if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         {
             for(int i = 0; i < iBufferSizeSecond; i++)
-                inputF32Second[i] = static_cast<float>((std::rand() % 255));
+                inputF32Second[i] = static_cast<float>((std::rand() % 65535));
         }
     }
     if(testCase == LOG1P)
@@ -201,7 +206,6 @@ int main(int argc, char **argv)
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
-    //exit(0);
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
@@ -300,19 +304,19 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_and_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7)
                     rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                Rpp8s* ip1 = (Rpp8s*)input;
+                Rpp16s* ip1 = (Rpp16s*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
-                Rpp8s* ip2 = (Rpp8s*)inputSecond;
+                Rpp16s* ip2 = (Rpp16s*)inputSecond;
                 for(int i = 0; i < iBufferSizeSecond; i++)
                     printf("%d ", ip2[i]);
                 printf("\n");
-                Rpp8s* op = (Rpp8s*)output;
+                Rpp16s* op = (Rpp16s*)output;
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");
@@ -324,19 +328,19 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_or_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7)
                     rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                Rpp8s* ip1 = (Rpp8s*)input;
+                Rpp16s* ip1 = (Rpp16s*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
-                Rpp8s* ip2 = (Rpp8s*)inputSecond;
+                Rpp16s* ip2 = (Rpp16s*)inputSecond;
                 for(int i = 0; i < iBufferSizeSecond; i++)
                     printf("%d ", ip2[i]);
                 printf("\n");
-                Rpp8s* op = (Rpp8s*)output;
+                Rpp16s* op = (Rpp16s*)output;
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");
@@ -347,19 +351,19 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_xor_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7)
                     rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                Rpp8s* ip1 = (Rpp8s*)input;
+                Rpp16s* ip1 = (Rpp16s*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
-                Rpp8s* ip2 = (Rpp8s*)inputSecond;
+                Rpp16s* ip2 = (Rpp16s*)inputSecond;
                 for(int i = 0; i < iBufferSizeSecond; i++)
                     printf("%d ", ip2[i]);
                 printf("\n");
-                Rpp8s* op = (Rpp8s*)output;
+                Rpp16s* op = (Rpp16s*)output;
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");
