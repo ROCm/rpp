@@ -303,7 +303,7 @@ if testType == 0:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -337,7 +337,7 @@ else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # List of augmentation names without QA support
