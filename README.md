@@ -189,8 +189,16 @@ mkdir rpp-test && cd rpp-test
 cmake /opt/rocm/share/rpp/test/
 ctest -VV
 ```
-> [!IMPORTANT]
-> [Test suite prerequisites](utilities/test_suite#prerequisites) are required to run tests
+> [!NOTE]
+> * **Ubuntu**: Install Nifti-Imaging to run all tests
+> ```
+> git clone https://github.com/NIFTI-Imaging/nifti_clib.git
+> cd nifti_clib
+> git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788
+> mkdir build && cd build && cmake ..
+> sudo make -j$nproc install
+> ```
+> * **SLES/RHEL**: Install [prerequisites](utilities/test_suite#prerequisites) to run all tests
 
 ## Test Functionalities
 
