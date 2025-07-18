@@ -24,46 +24,15 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
+#include "rpp_hip_rgb_hsv_conversion.hpp"
 
 __device__ void color_twist_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB, float4 *colorTwistParams_f4)
 {
     // RGB to HSV
-
-    float hue, sat, v, add;
-    float rf, gf, bf, cmax, cmin, delta;
-    rf = *pixelR;
-    gf = *pixelG;
-    bf = *pixelB;
-    cmax = fmaxf(fmaxf(rf, gf), bf);
-    cmin = fminf(fminf(rf, gf), bf);
-    delta = cmax - cmin;
-    hue = 0.0f;
-    sat = 0.0f;
-    add = 0.0f;
-    if ((delta != 0) && (cmax != 0))
-    {
-        sat = delta / cmax;
-        if (cmax == rf)
-        {
-            hue = gf - bf;
-            add = 0.0f;
-        }
-        else if (cmax == gf)
-        {
-            hue = bf - rf;
-            add = 2.0f;
-        }
-        else
-        {
-            hue = rf - gf;
-            add = 4.0f;
-        }
-        hue /= delta;
-    }
-    v = cmax;
+    float hue, sat, val, add = 0.0f;
+    rgb_to_hsv_hip(pixelR, pixelG, pixelB, hue, sat, val, add);
 
     // Modify Hue and Saturation
-
     hue += colorTwistParams_f4->z + add;
     if (hue >= 6.0f) hue -= 6.0f;
     if (hue < 0) hue += 6.0f;
@@ -71,26 +40,10 @@ __device__ void color_twist_1RGB_hip_compute(float *pixelR, float *pixelG, float
     sat = fmaxf(0.0f, fminf(1.0f, sat));
 
     // HSV to RGB with brightness/contrast adjustment
-
-    int hueIntegerPart = (int) hue;
-    float hueFractionPart = hue - hueIntegerPart;
-    float vsat = v * sat;
-    float vsatf = vsat * hueFractionPart;
-    float p = v - vsat;
-    float q = v - vsatf;
-    float t = v - vsat + vsatf;
-    switch (hueIntegerPart)
-    {
-        case 0: rf = v; gf = t; bf = p; break;
-        case 1: rf = q; gf = v; bf = p; break;
-        case 2: rf = p; gf = v; bf = t; break;
-        case 3: rf = p; gf = q; bf = v; break;
-        case 4: rf = t; gf = p; bf = v; break;
-        case 5: rf = v; gf = p; bf = q; break;
-    }
-    *pixelR = fmaf(rf, colorTwistParams_f4->x, colorTwistParams_f4->y);
-    *pixelG = fmaf(gf, colorTwistParams_f4->x, colorTwistParams_f4->y);
-    *pixelB = fmaf(bf, colorTwistParams_f4->x, colorTwistParams_f4->y);
+    hsv_to_rgb_hip(hue, sat, val, pixelR, pixelG, pixelB); 
+    *pixelR = fmaf(*pixelR, colorTwistParams_f4->x, colorTwistParams_f4->y);
+    *pixelG = fmaf(*pixelG, colorTwistParams_f4->x, colorTwistParams_f4->y);
+    *pixelB = fmaf(*pixelB, colorTwistParams_f4->x, colorTwistParams_f4->y);
 }
 
 __device__ void color_twist_8RGB_hip_compute(d_float24 *pix_f24, float4 *colorTwistParams_f4)
@@ -143,14 +96,14 @@ __device__ void color_twist_hip_compute(schar *srcPtr, d_float24 *pix_f24, float
 
 template <typename T>
 __global__ void color_twist_pkd_hip_tensor(T *srcPtr,
-                                       uint2 srcStridesNH,
-                                       T *dstPtr,
-                                       uint2 dstStridesNH,
-                                       float *brightnessTensor,
-                                       float *contrastTensor,
-                                       float *hueTensor,
-                                       float *saturationTensor,
-                                       RpptROIPtr roiTensorPtrSrc)
+                                           uint2 srcStridesNH,
+                                           T *dstPtr,
+                                           uint2 dstStridesNH,
+                                           float *brightnessTensor,
+                                           float *contrastTensor,
+                                           float *hueTensor,
+                                           float *saturationTensor,
+                                           RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -175,14 +128,14 @@ __global__ void color_twist_pkd_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_twist_pln_hip_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint3 dstStridesNCH,
-                                      float *brightnessTensor,
-                                      float *contrastTensor,
-                                      float *hueTensor,
-                                      float *saturationTensor,
-                                      RpptROIPtr roiTensorPtrSrc)
+                                           uint3 srcStridesNCH,
+                                           T *dstPtr,
+                                           uint3 dstStridesNCH,
+                                           float *brightnessTensor,
+                                           float *contrastTensor,
+                                           float *hueTensor,
+                                           float *saturationTensor,
+                                           RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -207,14 +160,14 @@ __global__ void color_twist_pln_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_twist_pkd3_pln3_hip_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            float *brightnessTensor,
-                                            float *contrastTensor,
-                                            float *hueTensor,
-                                            float *saturationTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                                 uint2 srcStridesNH,
+                                                 T *dstPtr,
+                                                 uint3 dstStridesNCH,
+                                                 float *brightnessTensor,
+                                                 float *contrastTensor,
+                                                 float *hueTensor,
+                                                 float *saturationTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -239,14 +192,14 @@ __global__ void color_twist_pkd3_pln3_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_twist_pln3_pkd3_hip_tensor(T *srcPtr,
-                                            uint3 srcStridesNCH,
-                                            T *dstPtr,
-                                            uint2 dstStridesNH,
-                                            float *brightnessTensor,
-                                            float *contrastTensor,
-                                            float *hueTensor,
-                                            float *saturationTensor,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                                 uint3 srcStridesNCH,
+                                                 T *dstPtr,
+                                                 uint2 dstStridesNH,
+                                                 float *brightnessTensor,
+                                                 float *contrastTensor,
+                                                 float *hueTensor,
+                                                 float *saturationTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -271,12 +224,12 @@ __global__ void color_twist_pln3_pkd3_hip_tensor(T *srcPtr,
 
 template <typename T>
 RppStatus hip_exec_color_twist_tensor(T *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rpp::Handle& handle)
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
