@@ -78,7 +78,7 @@ inline void median_filter_generic_tensor(T *srcPtrTemp, T *dstPtrTemp, Rpp32s ro
             // Copy pixel values for all channels
             if (channels == 3)
             {
-                memcpy(&blockData[index], &srcPtrTemp[srcIdx], 3);
+                memcpy(&blockData[index], &srcPtrTemp[srcIdx], 3 * sizeof(T));
                 index += 3;
             }
             else if (channels == 1)
