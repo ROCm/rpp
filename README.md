@@ -56,7 +56,7 @@ Spectrogram kernel output represented as a image <br><br>
 > * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 > * `gfx908` or higher GPU required
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
+* Install ROCm `7.0.0` and above with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
@@ -67,13 +67,14 @@ Spectrogram kernel output represented as a image <br><br>
 >   ```shell
 >    sudo apt install clang
 >   ```
+> * To use GNU compiler or custom compilers use `-D CMAKE_CXX_COMPILER` during build
 
 ### Libraries
 * CMake Version `3.10` and above
   ```shell
   sudo apt install cmake
   ```
-* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` and above
   ```shell
   sudo apt install half
   ```
@@ -98,7 +99,7 @@ The installation process uses the following steps:
 
 * [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+* Install ROCm `7.0.0` and above with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
 > [!IMPORTANT]
 > Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
@@ -244,8 +245,8 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.3.0.60300`
-* CMake - Version `3.16.3`+
-* AMD Clang++ - Version `18.0.0`
-* half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
+* ROCm: rocm-core - `7.0.0`+
+* CMake - Version `3.10`+
+* AMD Clang++ - Version `18.0.0`+
+* Half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
