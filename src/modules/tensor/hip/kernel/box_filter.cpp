@@ -26,11 +26,12 @@ SOFTWARE.
 
 // -------------------- Set 0 - box_filter device helpers --------------------
 
-__device__ void box_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
+template <typename T>
+__device__ void box_filter_3x3_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
     float src_f1;
-    uint3 src_ui3;
-    src_ui3 = *(uint3 *)srcPtr;
+    using VectorType3 = typename FilterDispatch<T>::VectorType3;
+    VectorType3 src_ui3 = *(VectorType3 *)srcPtr;
     src_f1 = rpp_hip_unpack0(src_ui3.x);
     dst_f8->f1[0] = fmaf(src_f1, 0.1111111f, dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui3.x);
@@ -67,7 +68,8 @@ __device__ void box_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f1, 0.1111111f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_3x3_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
+template <>
+__device__ void box_filter_3x3_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
 {
     d_float12 *src_f12 = (d_float12 *)srcPtr;
     dst_f8->f1[0] = fmaf(src_f12->f1[0], 0.1111111f, dst_f8->f1[0]);
@@ -96,11 +98,12 @@ __device__ void box_filter_3x3_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f12->f1[9], 0.1111111f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
+template <typename T>
+__device__ void box_filter_5x5_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
     float src_f1;
-    uint3 src_ui3;
-    src_ui3 = *(uint3 *)srcPtr;
+    using VectorType3 = typename FilterDispatch<T>::VectorType3;
+    VectorType3 src_ui3 = *(VectorType3 *)srcPtr;
     src_f1 = rpp_hip_unpack0(src_ui3.x);
     dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui3.x);
@@ -155,7 +158,8 @@ __device__ void box_filter_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_5x5_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
+template <>
+__device__ void box_filter_5x5_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
 {
     d_float12 *src_f12 = (d_float12 *)srcPtr;
     dst_f8->f1[0] = fmaf(src_f12->f1[0], 0.04f, dst_f8->f1[0]);
@@ -200,10 +204,12 @@ __device__ void box_filter_5x5_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f12->f1[11], 0.04f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_7x7_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
+template <typename T>
+__device__ void box_filter_7x7_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
     float src_f1;
-    uint4 src_ui4 = *(uint4 *)srcPtr;
+    using VectorType4 = typename FilterDispatch<T>::VectorType4;
+    VectorType4 src_ui4 = *(VectorType4 *)srcPtr;
     src_f1 = rpp_hip_unpack0(src_ui4.x);
     dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui4.x);
@@ -276,7 +282,8 @@ __device__ void box_filter_7x7_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_7x7_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
+template <>
+__device__ void box_filter_7x7_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
 {
     d_float16 *src_f16 = (d_float16 *)srcPtr;
     dst_f8->f1[0] = fmaf(src_f16->f1[0], 0.02040816f, dst_f8->f1[0]);
@@ -337,10 +344,12 @@ __device__ void box_filter_7x7_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f16->f1[13], 0.02040816f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
+template <typename T>
+__device__ void box_filter_9x9_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
     float src_f1;
-    uint4 src_ui4 = *(uint4 *)srcPtr;
+    using VectorType4 = typename FilterDispatch<T>::VectorType4;
+    VectorType4 src_ui4 = *(VectorType4 *)srcPtr;
     src_f1 = rpp_hip_unpack0(src_ui4.x);
     dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui4.x);
@@ -431,7 +440,8 @@ __device__ void box_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
     dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
 }
 
-__device__ void box_filter_9x9_row_hip_compute(float *srcPtr, d_float8 *dst_f8)
+template <>
+__device__ void box_filter_9x9_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
 {
     d_float16 *src_f16 = (d_float16 *)srcPtr;
     dst_f8->f1[0] = fmaf(src_f16->f1[0], 0.01234568f, dst_f8->f1[0]);
@@ -528,7 +538,8 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -544,7 +555,7 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -589,7 +600,7 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -611,7 +622,8 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -627,7 +639,7 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -679,7 +691,7 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -701,7 +713,8 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -717,7 +730,7 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -775,7 +788,7 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -797,7 +810,8 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -813,7 +827,7 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -877,7 +891,7 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -902,7 +916,8 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -937,7 +952,7 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -976,7 +991,7 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
         __syncthreads();
@@ -1013,7 +1028,7 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
             box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
 }
@@ -1037,7 +1052,8 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1074,7 +1090,7 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -1115,7 +1131,7 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
         __syncthreads();
@@ -1154,7 +1170,7 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
             box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
 }
@@ -1178,7 +1194,8 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1217,7 +1234,7 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -1260,7 +1277,7 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
         __syncthreads();
@@ -1301,7 +1318,7 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
             box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
 }
@@ -1325,7 +1342,8 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1366,7 +1384,7 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -1411,7 +1429,7 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
         __syncthreads();
@@ -1454,7 +1472,7 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
             box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &sum_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
 }
@@ -1479,7 +1497,8 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1495,7 +1514,7 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1541,7 +1560,7 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
 
@@ -1563,7 +1582,8 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1579,7 +1599,7 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1631,7 +1651,7 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
 
@@ -1653,7 +1673,8 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1669,7 +1690,7 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1727,7 +1748,7 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
 
@@ -1749,7 +1770,8 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1765,7 +1787,7 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1829,7 +1851,7 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
 
@@ -1853,7 +1875,8 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1919,7 +1942,7 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -1941,7 +1964,8 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -2013,7 +2037,7 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -2035,7 +2059,8 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -2113,7 +2138,7 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
@@ -2135,7 +2160,8 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -2219,7 +2245,7 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
         box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &sum_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
 
