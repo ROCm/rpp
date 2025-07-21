@@ -30,11 +30,11 @@ SOFTWARE.
 template <typename T>
 __device__ void median_filter_3x3_row_hip_compute(T* src_smem, d_float8* median_f8)
 {
-    using SupportT = typename FilterDispatch<T>::SupportType;
+    using VectorType = typename FilterDispatch<T>::VectorType;
     // Load 3 rows of shared memory into vectorized uint3/ int3 format
-    SupportT row0 = *((SupportT*)&src_smem[0 * SMEM_LENGTH_X]);
-    SupportT row1 = *((SupportT*)&src_smem[1 * SMEM_LENGTH_X]);
-    SupportT row2 = *((SupportT*)&src_smem[2 * SMEM_LENGTH_X]);
+    VectorType row0 = *((VectorType*)&src_smem[0 * SMEM_LENGTH_X]);
+    VectorType row1 = *((VectorType*)&src_smem[1 * SMEM_LENGTH_X]);
+    VectorType row2 = *((VectorType*)&src_smem[2 * SMEM_LENGTH_X]);
 
     float3 val0_f3, val1_f3, val2_f3, valz_f3;
 
@@ -427,8 +427,8 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -438,7 +438,7 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -500,8 +500,8 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -511,7 +511,7 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -574,8 +574,8 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -585,7 +585,7 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -650,8 +650,8 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -661,7 +661,7 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -728,8 +728,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 median_f8;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -866,8 +866,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 median_f8;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1004,8 +1004,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float8 median_f8;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1142,8 +1142,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float8 median_f8;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1280,8 +1280,8 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1291,7 +1291,7 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1357,8 +1357,8 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1368,7 +1368,7 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1434,8 +1434,8 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1445,7 +1445,7 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1511,8 +1511,8 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1522,7 +1522,7 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    SharedT *src_smem_channel[3];
+    SharedType *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1589,8 +1589,8 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1668,8 +1668,8 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1747,8 +1747,8 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1826,8 +1826,8 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    using SharedT = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedType = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
