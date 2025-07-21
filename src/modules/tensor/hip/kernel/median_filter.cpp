@@ -27,12 +27,14 @@ SOFTWARE.
 
 // -------------------- median_filter device helpers --------------------
 
-__device__ void median_filter_3x3_row_hip_compute(uchar* src_smem, d_float8* median_f8)
+template <typename T>
+__device__ void median_filter_3x3_row_hip_compute(T* src_smem, d_float8* median_f8)
 {
-    // Load 3 rows of shared memory into vectorized uint3 format
-    uint3 row0 = *((uint3*)&src_smem[0 * SMEM_LENGTH_X]);
-    uint3 row1 = *((uint3*)&src_smem[1 * SMEM_LENGTH_X]);
-    uint3 row2 = *((uint3*)&src_smem[2 * SMEM_LENGTH_X]);
+    using SupportT = typename FilterDispatch<T>::SupportType;
+    // Load 3 rows of shared memory into vectorized uint3/ int3 format
+    SupportT row0 = *((SupportT*)&src_smem[0 * SMEM_LENGTH_X]);
+    SupportT row1 = *((SupportT*)&src_smem[1 * SMEM_LENGTH_X]);
+    SupportT row2 = *((SupportT*)&src_smem[2 * SMEM_LENGTH_X]);
 
     float3 val0_f3, val1_f3, val2_f3, valz_f3;
 
@@ -47,223 +49,224 @@ __device__ void median_filter_3x3_row_hip_compute(uchar* src_smem, d_float8* med
     valz_f3.x = rpp_hip_unpack0(row0.x);
     valz_f3.y = rpp_hip_unpack1(row0.x);
     valz_f3.z = rpp_hip_unpack2(row0.x);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack0(row1.x);
     valz_f3.y = rpp_hip_unpack1(row1.x);
     valz_f3.z = rpp_hip_unpack2(row1.x);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack0(row2.x);
     valz_f3.y = rpp_hip_unpack1(row2.x);
     valz_f3.z = rpp_hip_unpack2(row2.x);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
     // Compute 3x3 median:
     // - Take max of row mins, median of row medians, min of row maxes
     // - Then, compute median of those three
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[0] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[0] = rpp_hip_median3(valz_f3);
 
     // pixel 1
     valz_f3.x = rpp_hip_unpack1(row0.x);
     valz_f3.y = rpp_hip_unpack2(row0.x);
     valz_f3.z = rpp_hip_unpack3(row0.x);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack1(row1.x);
     valz_f3.y = rpp_hip_unpack2(row1.x);
     valz_f3.z = rpp_hip_unpack3(row1.x);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack1(row2.x);
     valz_f3.y = rpp_hip_unpack2(row2.x);
     valz_f3.z = rpp_hip_unpack3(row2.x);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[1] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[1] = rpp_hip_median3(valz_f3);
 
     // pixel 2
     valz_f3.x = rpp_hip_unpack2(row0.x);
     valz_f3.y = rpp_hip_unpack3(row0.x);
     valz_f3.z = rpp_hip_unpack0(row0.y);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack2(row1.x);
     valz_f3.y = rpp_hip_unpack3(row1.x);
     valz_f3.z = rpp_hip_unpack0(row1.y);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack2(row2.x);
     valz_f3.y = rpp_hip_unpack3(row2.x);
     valz_f3.z = rpp_hip_unpack0(row2.y);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[2] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[2] = rpp_hip_median3(valz_f3);
 
     // pixel 3
     valz_f3.x = rpp_hip_unpack3(row0.x);
     valz_f3.y = rpp_hip_unpack0(row0.y);
     valz_f3.z = rpp_hip_unpack1(row0.y);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack3(row1.x);
     valz_f3.y = rpp_hip_unpack0(row1.y);
     valz_f3.z = rpp_hip_unpack1(row1.y);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);;
 
     valz_f3.x = rpp_hip_unpack3(row2.x);
     valz_f3.y = rpp_hip_unpack0(row2.y);
     valz_f3.z = rpp_hip_unpack1(row2.y);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[3] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[3] = rpp_hip_median3(valz_f3);
 
     // pixel 4
     valz_f3.x = rpp_hip_unpack0(row0.y);
     valz_f3.y = rpp_hip_unpack1(row0.y);
     valz_f3.z = rpp_hip_unpack2(row0.y);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack0(row1.y);
     valz_f3.y = rpp_hip_unpack1(row1.y);
     valz_f3.z = rpp_hip_unpack2(row1.y);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack0(row2.y);
     valz_f3.y = rpp_hip_unpack1(row2.y);
     valz_f3.z = rpp_hip_unpack2(row2.y);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[4] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[4] = rpp_hip_median3(valz_f3);
 
     // pixel 5
     valz_f3.x = rpp_hip_unpack1(row0.y);
     valz_f3.y = rpp_hip_unpack2(row0.y);
     valz_f3.z = rpp_hip_unpack3(row0.y);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack1(row1.y);
     valz_f3.y = rpp_hip_unpack2(row1.y);
     valz_f3.z = rpp_hip_unpack3(row1.y);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack1(row2.y);
     valz_f3.y = rpp_hip_unpack2(row2.y);
     valz_f3.z = rpp_hip_unpack3(row2.y);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[5] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[5] = rpp_hip_median3(valz_f3);
 
     // pixel 6
     valz_f3.x = rpp_hip_unpack2(row0.y);
     valz_f3.y = rpp_hip_unpack3(row0.y);
     valz_f3.z = rpp_hip_unpack0(row0.z);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack2(row1.y);
     valz_f3.y = rpp_hip_unpack3(row1.y);
     valz_f3.z = rpp_hip_unpack0(row1.z);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack2(row2.y);
     valz_f3.y = rpp_hip_unpack3(row2.y);
     valz_f3.z = rpp_hip_unpack0(row2.z);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[6] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[6] = rpp_hip_median3(valz_f3);
 
     // pixel 7
     valz_f3.x = rpp_hip_unpack3(row0.y);
     valz_f3.y = rpp_hip_unpack0(row0.z);
     valz_f3.z = rpp_hip_unpack1(row0.z);
-    val0_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val0_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val0_f3.x = rpp_hip_min3(valz_f3);
+    val0_f3.y = rpp_hip_median3(valz_f3);
+    val0_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack3(row1.y);
     valz_f3.y = rpp_hip_unpack0(row1.z);
     valz_f3.z = rpp_hip_unpack1(row1.z);
-    val1_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val1_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val1_f3.x = rpp_hip_min3(valz_f3);
+    val1_f3.y = rpp_hip_median3(valz_f3);
+    val1_f3.z = rpp_hip_max3(valz_f3);
 
     valz_f3.x = rpp_hip_unpack3(row2.y);
     valz_f3.y = rpp_hip_unpack0(row2.z);
     valz_f3.z = rpp_hip_unpack1(row2.z);
-    val2_f3.x = rpp_hip_min3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.y = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
-    val2_f3.z = rpp_hip_max3(valz_f3.x, valz_f3.y, valz_f3.z);
+    val2_f3.x = rpp_hip_min3(valz_f3);
+    val2_f3.y = rpp_hip_median3(valz_f3);
+    val2_f3.z = rpp_hip_max3(valz_f3);
 
-    valz_f3.x = rpp_hip_max3(val0_f3.x, val1_f3.x, val2_f3.x);
-    valz_f3.y = rpp_hip_median3(val0_f3.y, val1_f3.y, val2_f3.y);
-    valz_f3.z = rpp_hip_min3(val0_f3.z, val1_f3.z, val2_f3.z);
-    median_f8->f1[7] = rpp_hip_median3(valz_f3.x, valz_f3.y, valz_f3.z);
+    valz_f3.x = rpp_hip_max3(make_float3(val0_f3.x, val1_f3.x, val2_f3.x));
+    valz_f3.y = rpp_hip_median3(make_float3(val0_f3.y, val1_f3.y, val2_f3.y));
+    valz_f3.z = rpp_hip_min3(make_float3(val0_f3.z, val1_f3.z, val2_f3.z));
+    median_f8->f1[7] = rpp_hip_median3(valz_f3);
 }
 
-__device__ void median_filter_3x3_row_hip_compute(float* src_smem, d_float8* median_f8)
+template <>
+__device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_float8* median_f8)
 {
     float* row0Ptr = src_smem;
     float* row1Ptr = row0Ptr + SMEM_LENGTH_X;
@@ -277,23 +280,23 @@ __device__ void median_filter_3x3_row_hip_compute(float* src_smem, d_float8* med
         float3 row1_f3 = make_float3(row1Ptr[px], row1Ptr[px + 1], row1Ptr[px + 2]);
         float3 row2_f3 = make_float3(row2Ptr[px], row2Ptr[px + 1], row2Ptr[px + 2]);
 
-        minVal_f3.x = rpp_hip_min3(row0_f3.x, row0_f3.y, row0_f3.z);
-        medianVal_f3.x = rpp_hip_median3(row0_f3.x, row0_f3.y, row0_f3.z);
-        maxVal_f3.x = rpp_hip_max3(row0_f3.x, row0_f3.y, row0_f3.z);
+        minVal_f3.x = rpp_hip_min3(row0_f3);
+        medianVal_f3.x = rpp_hip_median3(row0_f3);
+        maxVal_f3.x = rpp_hip_max3(row0_f3);
 
-        minVal_f3.y = rpp_hip_min3(row1_f3.x, row1_f3.y, row1_f3.z);
-        medianVal_f3.y = rpp_hip_median3(row1_f3.x, row1_f3.y, row1_f3.z);
-        maxVal_f3.y = rpp_hip_max3(row1_f3.x, row1_f3.y, row1_f3.z);
+        minVal_f3.y = rpp_hip_min3(row1_f3);
+        medianVal_f3.y = rpp_hip_median3(row1_f3);
+        maxVal_f3.y = rpp_hip_max3(row1_f3);
 
-        minVal_f3.z = rpp_hip_min3(row2_f3.x, row2_f3.y, row2_f3.z);
-        medianVal_f3.z = rpp_hip_median3(row2_f3.x, row2_f3.y, row2_f3.z);
-        maxVal_f3.z = rpp_hip_max3(row2_f3.x, row2_f3.y, row2_f3.z);
+        minVal_f3.z = rpp_hip_min3(row2_f3);
+        medianVal_f3.z = rpp_hip_median3(row2_f3);
+        maxVal_f3.z = rpp_hip_max3(row2_f3);
 
-        float maxOfMin = rpp_hip_min3(minVal_f3.x, minVal_f3.y, minVal_f3.z);
-        float median   = rpp_hip_median3(medianVal_f3.x, medianVal_f3.y, medianVal_f3.z);
-        float minOfMax = rpp_hip_max3(maxVal_f3.x, maxVal_f3.y, maxVal_f3.z);
+        float maxOfMin = rpp_hip_min3(make_float3(minVal_f3.x, minVal_f3.y, minVal_f3.z));
+        float median   = rpp_hip_median3(make_float3(medianVal_f3.x, medianVal_f3.y, medianVal_f3.z));
+        float minOfMax = rpp_hip_max3(make_float3(maxVal_f3.x, maxVal_f3.y, maxVal_f3.z));
 
-        median_f8->f1[px] = rpp_hip_median3(minOfMax, median, maxOfMin);
+        median_f8->f1[px] = rpp_hip_median3(make_float3(minOfMax, median, maxOfMin));
     }
 }
 
@@ -322,11 +325,12 @@ __device__ float compute_median(float *window)
     return window[medianIndex];
 }
 
-template <int kernelSize>
-__device__ void median_filter_row_hip_compute(uchar *srcPtr, d_float8 *median_f8)
+template <int kernelSize, typename T>
+__device__ void median_filter_row_hip_compute(T *srcPtr, d_float8 *median_f8)
 {
+    using bufType = typename std::conditional<std::is_same<T, uchar>::value, uint32_t, int32_t>::type;
     const int paddedKernelWidth = kernelSize + 7; // padded row size for aligned memory access
-    const int uint32LoadCountPerRow = (kernelSize + 10) / 4; // Number of 32-bit loads required to read each row
+    const int loadCountPerRow = (kernelSize + 10) / 4; // Number of 32-bit loads required to read each row
     const int windowSize = kernelSize * kernelSize;
 
     float src[kernelSize * paddedKernelWidth];
@@ -334,12 +338,12 @@ __device__ void median_filter_row_hip_compute(uchar *srcPtr, d_float8 *median_f8
     // Load and unpack image data from shared memory into float array
     for (int i = 0; i < kernelSize; ++i)
     {
-        // uint32 pointer to the start of the current row in shared memory (SMEM_LENGTH_X assumed defined)
-        uint32_t *srcPtrRowUint = (uint32_t *)(srcPtr + i * SMEM_LENGTH_X);
+        //pointer to the start of the current row in shared memory (SMEM_LENGTH_X assumed defined)
+        bufType *srcPtrRowUint = (bufType *)(srcPtr + i * SMEM_LENGTH_X);
 
-        for (int j = 0; j < uint32LoadCountPerRow; ++j)
+        for (int j = 0; j < loadCountPerRow; ++j)
         {
-            uint32_t val = srcPtrRowUint[j];
+            bufType val = srcPtrRowUint[j];
             // Unpack 4 bytes from each 32-bit int
             #pragma unroll
             for (int k = 0; k < 4; ++k)
@@ -347,7 +351,7 @@ __device__ void median_filter_row_hip_compute(uchar *srcPtr, d_float8 *median_f8
                 int posInRow = (j << 2) + k; // same as j*4 + k, but faster with shift
                 if (posInRow >= paddedKernelWidth)
                     break;
-                src[i * paddedKernelWidth + posInRow] = float((val >> (k << 3)) & 0xFF);
+                src[i * paddedKernelWidth + posInRow] = float((T)((val >> (k << 3)) & 0xFF));
             }
         }
     }
@@ -423,7 +427,8 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -433,7 +438,7 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -473,7 +478,7 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -495,7 +500,8 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -505,7 +511,7 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -546,7 +552,7 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -568,7 +574,8 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -578,7 +585,7 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -621,7 +628,7 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -643,7 +650,8 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -653,7 +661,7 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -696,7 +704,7 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -720,7 +728,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 median_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -755,7 +764,7 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_y < tileSize.y))
     {
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
     }
 
     // Process the remaining 2 channels for RGB images
@@ -795,7 +804,7 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
 
         __syncthreads();
@@ -833,7 +842,7 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
     }
 }
@@ -857,7 +866,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 median_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -892,7 +902,7 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_y < tileSize.y))
     {
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
     }
 
     if (channelsDst == 3)
@@ -931,7 +941,7 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
 
         __syncthreads();
@@ -969,7 +979,7 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
     }
 }
@@ -994,7 +1004,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float8 median_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1029,7 +1040,7 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_y < tileSize.y))
     {
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
     }
 
     if (channelsDst == 3)
@@ -1068,7 +1079,7 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
 
         __syncthreads();
@@ -1106,7 +1117,7 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
     }
 }
@@ -1131,7 +1142,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float8 median_f8;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1165,7 +1177,7 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_y < tileSize.y))
     {
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-        FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
     }
 
     if (channelsDst == 3)
@@ -1204,7 +1216,7 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
 
         __syncthreads();
@@ -1242,7 +1254,7 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_y < tileSize.y))
         {
             median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], &median_f8);
-            FilterDispatch<T>::rpp_hip_store8(dstPtr + dstIdx, &median_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &median_f8);
         }
     }
 }
@@ -1268,7 +1280,8 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1278,7 +1291,7 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1321,7 +1334,7 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
     }
 }
 
@@ -1344,7 +1357,8 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1354,7 +1368,7 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1397,7 +1411,7 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
     }
 }
 
@@ -1420,7 +1434,8 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1430,7 +1445,7 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1473,7 +1488,7 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
     }
 }
 
@@ -1496,7 +1511,8 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1506,7 +1522,7 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    typename FilterDispatch<T>::SharedType *src_smem_channel[3];
+    SharedT *src_smem_channel[3];
     src_smem_channel[0] = &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8];
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
@@ -1549,7 +1565,7 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &median_f24);
     }
 }
 
@@ -1573,7 +1589,8 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1629,7 +1646,7 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -1651,7 +1668,8 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1707,7 +1725,7 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -1729,7 +1747,8 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1785,7 +1804,7 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
@@ -1807,7 +1826,8 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 median_f24;
-    __shared__ typename FilterDispatch<T>::SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    using SharedT = typename FilterDispatch<T>::SharedType;
+    __shared__ SharedT src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1863,7 +1883,7 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8], &median_f24.f8[0]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8], &median_f24.f8[1]);
         median_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8], &median_f24.f8[2]);
-        FilterDispatch<T>::rpp_hip_store24_pln3_to_pkd3(dstPtr + dstIdx, &median_f24);
+        rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &median_f24);
     }
 }
 
