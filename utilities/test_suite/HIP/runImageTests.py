@@ -350,7 +350,7 @@ else:
                 srcPath1 = inFilePath1
                 srcPath2 = inFilePath2
             for layout in range(3):
-                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", imageAugmentationMap, func_group_finder)
+                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder)
 
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
