@@ -639,9 +639,9 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
+                    compute_brightness_12_host(p, pBrightnessParams);  // brightness adjustment
                     //Boundary check for f16
                     rpp_pixel_check_0to1(p, 3);
-                    compute_brightness_12_host(p, pBrightnessParams);  // brightness adjustment
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
