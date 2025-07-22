@@ -242,6 +242,39 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_tensor_and_tensor_generic_tensor(T *srcPtr1,
+                                                    T *srcPtr2,
+                                                    RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                    RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                    T *dstPtr,
+                                                    RpptGenericDescPtr dstGenericDescPtr,
+                                                    Rpp32u *roiTensor1,
+                                                    Rpp32u *roiTensor2,
+                                                    rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
+                                                   T *srcPtr2,
+                                                   RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                   RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                   T *dstPtr,
+                                                   RpptGenericDescPtr dstGenericDescPtr,
+                                                   Rpp32u *roiTensor1,
+                                                   Rpp32u *roiTensor2,
+                                                   rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_tensor_xor_tensor_generic_tensor(T *srcPtr1,
+                                                    T *srcPtr2,
+                                                    RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                    RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                    T *dstPtr,
+                                                    RpptGenericDescPtr dstGenericDescPtr,
+                                                    Rpp32u *roiTensor1,
+                                                    Rpp32u *roiTensor2,
+                                                    rpp::Handle& handle);
+
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------

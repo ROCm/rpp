@@ -460,4 +460,106 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+/******************** TENSOR_AND_TENSOR ********************/
+
+RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                     RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptGenericDescPtr dstGenericDescPtr,
+                                     Rpp32u *roiTensorSrc1,
+                                     Rpp32u *roiTensorSrc2,
+                                     rppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+
+    Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
+
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_tensor_and_tensor_generic_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                  static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                  srcPtr1GenericDescPtr,
+                                                  srcPtr2GenericDescPtr,
+                                                  static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                  dstGenericDescPtr,
+                                                  roiTensorSrc1,
+                                                  roiTensorSrc2,
+                                                  rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+    #elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+    #endif // backend
+}
+
+/******************** TENSOR_OR_TENSOR ********************/
+
+RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1,
+                                    RppPtr_t srcPtr2,
+                                    RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                    RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptGenericDescPtr dstGenericDescPtr,
+                                    Rpp32u *roiTensorSrc1,
+                                    Rpp32u *roiTensorSrc2,
+                                    rppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+
+    Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
+
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_tensor_or_tensor_generic_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                 static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                 srcPtr1GenericDescPtr,
+                                                 srcPtr2GenericDescPtr,
+                                                 static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                 dstGenericDescPtr,
+                                                 roiTensorSrc1,
+                                                 roiTensorSrc2,
+                                                 rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+    #elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+    #endif // backend
+}
+
+/******************** TENSOR_XOR_TENSOR ********************/
+
+RppStatus rppt_tensor_xor_tensor_gpu(RppPtr_t srcPtr1,
+                                     RppPtr_t srcPtr2,
+                                     RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                     RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptGenericDescPtr dstGenericDescPtr,
+                                     Rpp32u *roiTensorSrc1,
+                                     Rpp32u *roiTensorSrc2,
+                                     rppHandle_t rppHandle)
+{
+    #ifdef HIP_COMPILE
+
+    Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
+
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_tensor_xor_tensor_generic_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
+                                                  static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
+                                                  srcPtr1GenericDescPtr,
+                                                  srcPtr2GenericDescPtr,
+                                                  static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                  dstGenericDescPtr,
+                                                  roiTensorSrc1,
+                                                  roiTensorSrc2,
+                                                  rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+    #elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+    #endif // backend
+}
+
 #endif // GPU_SUPPORT
