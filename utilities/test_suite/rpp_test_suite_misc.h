@@ -142,6 +142,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 //printf("Goes inside 1920x1080\n");
+                printf("Flag is %d\n", flag);
                 std::array<Rpp32u, 4> roi = {0, 0, 1, 20};
                 if(flag == 1)
                     roi = {0, 0, 2, 20};

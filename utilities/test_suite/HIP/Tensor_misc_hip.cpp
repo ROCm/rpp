@@ -87,7 +87,6 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&dstRoiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode, 0);
     fill_roi_values(nDim, batchSize, dstRoiTensor, qaMode, 2);
-    memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
     if(testCase == CONCAT)
     {
         roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
@@ -108,7 +107,7 @@ int main(int argc, char **argv)
 
     // set dims and compute strides
     int offSetInBytes = 0;
-    bitDepth = = 0;
+    bitDepth = 0;
     set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
@@ -127,11 +126,14 @@ int main(int argc, char **argv)
     Rpp32u iBufferSizeInBytes = 1;
     Rpp32u oBufferSizeInBytes = 1;
     Rpp32u iBufferSizeSecondInBytes = 1;
+    printf("Output : ");
     for(int i = 0; i <= nDim; i++)
     {
         iBufferSize *= srcDescriptorPtrND->dims[i];
         oBufferSize *= dstDescriptorPtrND->dims[i];
+        printf("%d ", dstDescriptorPtrND->dims[i]);
     }
+    printf("\n");
 
     iBufferSizeInBytes = iBufferSize * get_size_of_data_type(srcDescriptorPtrND->dataType);
     oBufferSizeInBytes = oBufferSize * get_size_of_data_type(dstDescriptorPtrND->dataType);
@@ -148,14 +150,14 @@ int main(int argc, char **argv)
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
-
+    printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
     void *input, *inputSecond, *output;
     void *d_input, *d_inputSecond, *d_inputI16, *d_output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
     output = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
     CHECK_RETURN_STATUS(hipMalloc(&d_input, iBufferSizeInBytes));
-    CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes * 2));
+    CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes));
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, iBufferSizeSecondInBytes));
 
@@ -193,7 +195,7 @@ int main(int argc, char **argv)
 
     // copy data from HOST to HIP
     CHECK_RETURN_STATUS(hipMemcpy(d_input, input, iBufferSizeInBytes, hipMemcpyHostToDevice));
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         CHECK_RETURN_STATUS(hipMemcpy(d_inputSecond, inputSecond, iBufferSizeSecondInBytes, hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
@@ -328,7 +330,7 @@ int main(int argc, char **argv)
                     rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
                 Rpp8u* ip1 = (Rpp8u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
@@ -353,7 +355,7 @@ int main(int argc, char **argv)
                     rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
                 Rpp8u* ip1 = (Rpp8u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
@@ -378,7 +380,7 @@ int main(int argc, char **argv)
                     rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
                 Rpp8u* ip1 = (Rpp8u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);

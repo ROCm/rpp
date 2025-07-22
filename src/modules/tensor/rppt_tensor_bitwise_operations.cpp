@@ -478,6 +478,7 @@ RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1,
 
     if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
+        printf("Inside U8 type\n");
         hip_exec_tensor_and_tensor_generic_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
                                                   static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                   srcPtr1GenericDescPtr,

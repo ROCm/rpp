@@ -1,5 +1,20 @@
 #include "rpp.h"
 
+// Computes strides for ND Tensor
+inline void broadcast_compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u tensorDim)
+{
+    if (tensorDim > 0)
+    {
+        Rpp32u v = 1;
+        for (Rpp32u i = tensorDim - 1; i > 0; i--)
+        {
+            strides[i] = v;
+            v *= shape[i];
+        }
+        strides[0] = v;
+    }
+}
+
 inline void checkEqualBatchSize(RpptGenericDescPtr src1DescriptorPtrND, RpptGenericDescPtr src2DescriptorPtrND) {
     if(src1DescriptorPtrND->dims[0] != src2DescriptorPtrND->dims[0]) {
         printf("Batch Size of Inputs must be equal\n");
@@ -145,9 +160,9 @@ inline void GroupShapes(RpptGenericDescPtr src1DescriptorPtrND, RpptGenericDescP
             dstDescriptorPtrND->dims[d] = updated_dims[idx++];
         }
 
-        compute_strides(src1DescriptorPtrND->strides, src1DescriptorPtrND->dims, src1DescriptorPtrND->numDims);
-        compute_strides(src2DescriptorPtrND->strides, src2DescriptorPtrND->dims, src2DescriptorPtrND->numDims);
-        compute_strides(dstDescriptorPtrND->strides, dstDescriptorPtrND->dims, dstDescriptorPtrND->numDims);
+        broadcast_compute_strides(src1DescriptorPtrND->strides, src1DescriptorPtrND->dims, src1DescriptorPtrND->numDims);
+        broadcast_compute_strides(src2DescriptorPtrND->strides, src2DescriptorPtrND->dims, src2DescriptorPtrND->numDims);
+        broadcast_compute_strides(dstDescriptorPtrND->strides, dstDescriptorPtrND->dims, dstDescriptorPtrND->numDims);
     }
 }
 

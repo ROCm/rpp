@@ -25,17 +25,20 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
     uint srcIdx2 = (id_z * srcStrides2) + id_x;
     uint dstIdx = (id_z * dstStrides) + id_x;
 
-    d_float8 src1_f8, src2_f8, dst_f8;
+    d_uchar8 src1_uc8, src2_uc8, dst_uc8;
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
+
     if(srcDims1[0] == 1)
-        src1_f8.f4[0] = src1_f8.f4[1] = (float4)srcPtr1[srcIdx1];
+        src1_uc8.uc4[0] = src1_uc8.uc4[1] = (uchar4)srcPtr1[srcIdx1];
     else
-        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, &src1_f8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, src1Ptr_uc8);
     if(srcDims2[0] == 1)
-        src2_f8.f4[0] = src2_f8.f4[1] = (float4)srcPtr2[srcIdx2];
+        src2_uc8.uc4[0] = src2_uc8.uc4[1] = (uchar4)srcPtr2[srcIdx2];
     else
-        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, &src2_f8);
-    rpp_hip_math_bitwiseOr8(&src1_f8, &src2_f8, &dst_f8);
-    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, src2Ptr_uc8);
+    rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
+    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 }
 
 template <typename T>
@@ -62,17 +65,20 @@ __global__ void tensor_or_tensor_2d_hip_tensor(T *srcPtr1,
     uint srcIdx2 = (id_z * srcStrides2NH.x) + ((id_y) * srcStrides2NH.y) + id_x;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    d_float8 src1_f8, src2_f8, dst_f8;
+    d_uchar8 src1_uc8, src2_uc8, dst_uc8;
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
+
     if(srcDims1[1] == 1)
-        src1_f8.f4[0] = src1_f8.f4[1] = (float4)srcPtr1[srcIdx1];
+        src1_uc8.uc4[0] = src1_uc8.uc4[1] = (uchar4)srcPtr1[srcIdx1];
     else
-        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, &src1_f8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, src1Ptr_uc8);
     if(srcDims2[1] == 1)
-        src2_f8.f4[0] = src2_f8.f4[1] = (float4)srcPtr2[srcIdx2];
+        src2_uc8.uc4[0] = src2_uc8.uc4[1] = (uchar4)srcPtr2[srcIdx2];
     else
-        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, &src2_f8);
-    rpp_hip_math_bitwiseOr8(&src1_f8, &src2_f8, &dst_f8);
-    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, src2Ptr_uc8);
+    rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
+    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 }
 
 template <typename T>
@@ -99,17 +105,20 @@ __global__ void tensor_or_tensor_3d_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_z) * srcStrides2DH.x) + ((id_y) * srcStrides2DH.y) + id_x;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
 
-    d_float8 src1_f8, src2_f8, dst_f8;
+    d_uchar8 src1_uc8, src2_uc8, dst_uc8;
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
+
     if(srcDims1[2] == 1)
-        src1_f8.f4[0] = src1_f8.f4[1] = (float4)srcPtr1[srcIdx1];
+        src1_uc8.uc4[0] = src1_uc8.uc4[1] = (uchar4)srcPtr1[srcIdx1];
     else
-        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, &src1_f8);
+        rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, src1Ptr_uc8);
     if(srcDims2[2] == 1)
-        src2_f8.f4[0] = src2_f8.f4[1] = (float4)srcPtr2[srcIdx2];
+        src2_uc8.uc4[0] = src2_uc8.uc4[1] = (uchar4)srcPtr2[srcIdx2];
     else
-        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, &src2_f8);
-    rpp_hip_math_bitwiseOr8(&src1_f8, &src2_f8, &dst_f8);
-    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_f8);
+        rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, src2Ptr_uc8);
+    rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
+    rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
 }
 
 template <typename T>
