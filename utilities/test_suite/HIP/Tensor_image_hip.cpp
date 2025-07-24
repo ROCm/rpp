@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -443,6 +443,14 @@ int main(int argc, char **argv)
     Rpp32f *alpha = nullptr;
     if(testCase == RAIN)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *hueShift = nullptr;
+    if(testCase == HUE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *saturationFactor = nullptr;
+    if(testCase == SATURATION)
+        CHECK_RETURN_STATUS(hipHostMalloc(&saturationFactor, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
     if(testCase == THRESHOLD)
@@ -1102,6 +1110,36 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case HUE:
+                {
+                    testCaseName = "hue";
+
+                    for (i = 0; i < batchSize; i++)
+                        hueShift[i] = 60.0;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_hue_gpu(d_input, srcDescPtr, d_output, dstDescPtr, hueShift, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SATURATION:
+                {
+                    testCaseName = "saturation";
+
+                    for (i = 0; i < batchSize; i++)
+                        saturationFactor[i] = 5;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_saturation_gpu(d_input, srcDescPtr, d_output, dstDescPtr, saturationFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1892,6 +1930,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
     if(alpha != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(hueShift != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(hueShift));
+    if(saturationFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(saturationFactor));
     if (minTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
