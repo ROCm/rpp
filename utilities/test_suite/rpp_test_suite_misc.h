@@ -143,11 +143,11 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             {
                 //printf("Goes inside 1920x1080\n");
                 printf("Flag is %d\n", flag);
-                std::array<Rpp32u, 4> roi = {0, 0, 1, 20};
+                std::array<Rpp32u, 4> roi = {0, 0, 2, 24};
                 if(flag == 1)
-                    roi = {0, 0, 2, 20};
+                    roi = {0, 0, 2, 1};
                 if(flag == 2)
-                    roi = {0, 0, 2, 20};
+                    roi = {0, 0, 2, 24};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
