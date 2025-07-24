@@ -356,6 +356,7 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
+                printf("\nTensor OR Tensor\n");
                 Rpp8u* ip1 = (Rpp8u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
