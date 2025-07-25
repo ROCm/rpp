@@ -139,6 +139,12 @@ ImageAugmentationGroupMap = {
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
 }
 
+voxelAugmentationGroupMap = {
+    "arithmetic_operations" : [0, 2, 3, 5],
+    "effects_augmentations" : [6],
+    "geometric_augmentations" : [1, 4]
+}
+
 def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():
@@ -239,9 +245,9 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
         return False
 
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path, func_group_finder):
+def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap, func_group_finder):
     if qaMode == 0:
-        functionality_group = func_group_finder(int(case))
+        functionality_group = func_group_finder(groupMap, int(case))
         dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
@@ -249,15 +255,15 @@ def directory_name_generator(qaMode, affinity, layoutType, case, path, func_grou
     return dst_folder_temp
 
 # Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath, backend, func_group_finder):
+def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder):
     if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pkd3"
     elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pln3"
     elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pln1"
 
     return dstPathTemp, log_file_layout
@@ -419,8 +425,8 @@ def print_case_list(imageAugmentationMap, backendType, parser):
         sys.exit(0)
 
 # Functionality group finder
-def func_group_finder(case_number):
-    for key, value in ImageAugmentationGroupMap.items():
+def func_group_finder(groupMap, case_number):
+    for key, value in groupMap.items():
         if case_number in value:
             return key
     return "miscellaneous"
