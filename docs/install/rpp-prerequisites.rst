@@ -14,14 +14,16 @@ ROCm Performance Primitives (RPP) is supported on the following operating system
 
 The following compilers and libraries are required to build and install RPP:
 
-* half, the half-precision floating-point library, version 1.12.0 or later
+* HIP
+* OpenMP
+* half, the half-precision floating-point library, version 1.12.0 and above
 * libstdc++-12-dev for Ubuntu 22.04 only
-* Clang version 5.0.1 or later for CPU-only backends
-* AMD Clang++ Version 18.0.0 or later for HIP and OpenCL backends
+* Clang version 5.0.1 and above for CPU-only backends
+* AMD Clang++ Version 18.0.0 and above for HIP and OpenCL backends
 
 With the following compiler support:
 
-* C++17 or later
+* C++17 and above
 * OpenMP
 * Threads
 

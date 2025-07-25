@@ -45,7 +45,7 @@ elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang+
 endif()
 
 # RPP Version
-set(VERSION "2.0.0")
+set(VERSION "2.1.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)

@@ -61,7 +61,7 @@ Spectrogram kernel output represented as a image <br><br>
 > `sudo amdgpu-install --usecase=rocm`
 
 ### Compiler
-* AMD Clang++ Version 18.0.0 or later - installed with ROCm
+* AMD Clang++ Version 18.0.0 and above - installed with ROCm
 > [!NOTE]
 > * For CPU only backend use Clang Version `5.0.1` and above
 >   ```shell
@@ -70,11 +70,23 @@ Spectrogram kernel output represented as a image <br><br>
 > * To use GNU compiler or custom compilers use `-D CMAKE_CXX_COMPILER` during build
 
 ### Libraries
+
 * CMake Version `3.10` and above
   ```shell
   sudo apt install cmake
   ```
-* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` and above
+
+* HIP
+  ```shell
+  sudo apt install rocm-hip-runtime-dev
+  ```
+
+* OpenMP
+  ```shell
+  sudo apt install openmp-extras-dev
+  ```
+
+* Half-precision floating-point - Version `1.12.0` and above
   ```shell
   sudo apt install half
   ```
@@ -88,7 +100,6 @@ Spectrogram kernel output represented as a image <br><br>
 >  ```shell
 >  sudo apt install libstdc++-12-dev
 >  ```
-
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
@@ -249,4 +260,3 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 * CMake - Version `3.10`+
 * AMD Clang++ - Version `18.0.0`+
 * Half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
-* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
