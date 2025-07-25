@@ -321,7 +321,7 @@ if(testType == 0):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -350,7 +350,7 @@ else:
                 srcPath1 = inFilePath1
                 srcPath2 = inFilePath2
             for layout in range(3):
-                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder)
 
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
@@ -373,7 +373,7 @@ else:
                 srcPath1 = inFilePath1
                 srcPath2 = inFilePath2
             for layout in range(3):
-                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder)
 
                 print("\n")
                 for bitDepth in range(7):
@@ -424,7 +424,7 @@ else:
 
                 # Add functionality group header
                 if CASE_NUM in NEW_FUNC_GROUP_LIST:
-                    FUNC_GROUP = func_group_finder(CASE_NUM)
+                    FUNC_GROUP = func_group_finder(ImageAugmentationGroupMap, CASE_NUM)
                     new_file.write("0,0,0,0,0\n")
                     new_file.write(FUNC_GROUP + ",0,0,0,0\n")
                     new_file.write("0,0,0,0,0\n")
