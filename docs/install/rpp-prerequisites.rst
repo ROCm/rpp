@@ -23,7 +23,7 @@ The following compilers and libraries are required to build and install RPP:
 
 With the following compiler support:
 
-* C++17 and above
+* C++17 or later
 * OpenMP
 * Threads
 
