@@ -95,17 +95,25 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
                                                T *dstPtr,
                                                uint *dstStrides,
                                                uint *dstDims,
+                                               uint numElements,
                                                Rpp32u *roiTensor)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
 
-    if(id_x >= dstStrides[0])
+    if(id_x >= numElements)
         return;
 
-    uint dstIdx = (id_z * *dstStrides++) + id_x;
-    uint srcIdx1 = (id_z * *srcStrides1++) + id_x;
-    uint srcIdx2 = (id_z * *srcStrides2++) + id_x;
+    uint dstIdx = id_x;
+    uint srcIdx1 = 0;
+    uint srcIdx2 = 0;
+
+    for(int i = numDims - 1; i >= 0; i--) {
+        int index = id_x % dstDims[i];
+        srcIdx1 = srcIdx1 + (index * srcStrides1[i]);
+        srcIdx2 = srcIdx2 + (index * srcStrides2[i]);
+        idx = idx / dstDims[i];
+    }
 
     dstPtr[dstIdx] = srcPtr1[srcIdx1] | srcPtr2[srcIdx2];
 }
@@ -217,8 +225,11 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     else
     {
         printf("NumDims are %d\n", numDims);
+
+        Rpp32u numElements = getNumDestElements(dstbroadcastDesPtr);
+
         // interpret the input as 1D tensor
-        int globalThreads_x = dstBroadcastDescPtr->strides[0];
+        int globalThreads_x = numElements;
         int globalThreads_y = 1;
         int globalThreads_z = dstBroadcastDescPtr->dims[0];
 
@@ -237,6 +248,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
                         dstPtr,
                         dstBroadcastDescPtr->strides,
                         dstBroadcastDescPtr->dims + 1,
+                        numElements,
                         roiTensor1);
     }
 
