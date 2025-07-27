@@ -127,9 +127,9 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     CHECK_RETURN_STATUS(hipHostMalloc(&src1BroadcastDescPtr, sizeof(RpptGenericDesc)));
     CHECK_RETURN_STATUS(hipHostMalloc(&src2BroadcastDescPtr, sizeof(RpptGenericDesc)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstBroadcastDescPtr, sizeof(RpptGenericDesc)));
-    src1BroadcastDescPtr = srcGenericDescPtr1;
-    src2BroadcastDescPtr = srcGenericDescPtr2;
-    dstBroadcastDescPtr = dstGenericDescPtr;
+    *src1BroadcastDescPtr = *srcGenericDescPtr1;
+    *src2BroadcastDescPtr = *srcGenericDescPtr2;
+    *dstBroadcastDescPtr = *dstGenericDescPtr;
     GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
     StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
     StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
