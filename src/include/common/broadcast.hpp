@@ -177,9 +177,9 @@ inline void StridesForBroadcasting(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
 
 inline int getNumDestElements(RpptGenericDescPtr dstDescriptorPtrND) {
     int ndim = dstDescriptorPtrND->numDims;
-    int numElements = srcDescriptorPtrND->dims[0]
+    int numElements = dstDescriptorPtrND->dims[0];
     for(int i = 1; i < ndim - 1; i++) {
-        numElements *= srcDescriptorND->dims[i];
+        numElements *= dstDescriptorPtrND->dims[i];
     }
     return numElements;
 }

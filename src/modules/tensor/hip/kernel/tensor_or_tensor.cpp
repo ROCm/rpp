@@ -112,7 +112,7 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
         int index = id_x % dstDims[i];
         srcIdx1 = srcIdx1 + (index * srcStrides1[i]);
         srcIdx2 = srcIdx2 + (index * srcStrides2[i]);
-        idx = idx / dstDims[i];
+        id_x = id_x / dstDims[i];
     }
 
     dstPtr[dstIdx] = srcPtr1[srcIdx1] | srcPtr2[srcIdx2];
@@ -226,7 +226,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     {
         printf("NumDims are %d\n", numDims);
 
-        Rpp32u numElements = getNumDestElements(dstbroadcastDesPtr);
+        Rpp32u numElements = getNumDestElements(dstBroadcastDescPtr);
 
         // interpret the input as 1D tensor
         int globalThreads_x = numElements;
