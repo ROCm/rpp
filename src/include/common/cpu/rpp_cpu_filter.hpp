@@ -77,51 +77,51 @@ inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
     }
 }
 
-
 template<typename T>
 inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
-                                              Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
-                                              Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
-                                              Rpp32s horizontalDirection, Rpp32s verticalDirection,
-                                              Rpp32u channels = 1)
+                                                   Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
+                                                   Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                   Rpp32s horizontalDirection, Rpp32s verticalDirection,
+                                                   Rpp32u channels = 1)
 {
     Rpp32s columnKernelLoopLimit = kernelSize;
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
 
-    Rpp32s rowClampIdx = (verticalDirection == 1) ? rowKernelLoopLimit - 1 : 0;
-    Rpp32s colClampIdx = (horizontalDirection == 1) ? columnKernelLoopLimit - 1 : 0;
+    Rpp32f accum = 0.0f;
 
-    // Loop over all channels
-    for (Rpp32u c = 0; c < channels; ++c)
+    for (int i = 0; i < kernelSize; i++)
     {
-        Rpp32f accum = 0.0f;
+        // Compute actual row for vertical clamping
+        Rpp32s rowOffset = (verticalDirection == -1)
+                            ? std::max(0, static_cast<Rpp32s>(i + rowKernelLoopLimit - kernelSize))   // clamp top
+                            : (verticalDirection == 1) ? std::min(rowKernelLoopLimit - 1, i) // raw kernel row index bottom padded region 
+                            : i ; // valid region without padding  
 
-        for (int i = 0; i < kernelSize; i++)
+        for (int j = 0, k = 0 ; j < kernelSize; j++, k += channels)
         {
-            Rpp32s unclampedRowIdx = i - padLength + verticalDirection;
-            Rpp32s rowIdx = std::min(std::max(unclampedRowIdx, 0), static_cast<Rpp32s>(rowKernelLoopLimit - 1));
+            // Compute actual column for horizontal clamping
+            Rpp32s colOffset = (horizontalDirection == -1)
+                                ? std::max(0, static_cast<Rpp32s>(j + columnKernelLoopLimit - kernelSize))   // clamp left
+                                : (horizontalDirection == 1) ? std::min(columnKernelLoopLimit - 1, j) // raw kernel row index right padded region 
+                                : j ; // valid region without padding  
 
-            for (int j = 0; j < kernelSize; j++)
-            {
-                Rpp32s unclampedColIdx = j - padLength + horizontalDirection;
-                Rpp32s colIdx = std::min(std::max(unclampedColIdx, 0), static_cast<Rpp32s>(columnKernelLoopLimit - 1));
+            // Access and convert pixel
+            Rpp32f pixel;
+            if constexpr (std::is_same<T, Rpp8s>::value)
+                pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels] + 128);
+            else
+                pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels]);
 
-                Rpp32f pixel;
-                if constexpr (std::is_same<T, Rpp8s>::value)
-                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowIdx][colIdx * channels + c] + 128);
-                else
-                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowIdx][colIdx * channels + c]);
-
-                accum += pixel * filterTensor[i * kernelSize + j];
-            }
+            // Apply filter
+            accum += pixel * filterTensor[i * kernelSize + j];
         }
-
-        if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-            accum = nearbyintf(accum);
-
-        // Store the result in dstPtrTemp at the correct channel offset
-        saturate_pixel(accum, dstPtrTemp + c);
     }
+
+    // Round if required and store result
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        accum = nearbyintf(accum);
+
+    saturate_pixel(accum, dstPtrTemp);
 }
 
 // process padLength number of columns in each row
@@ -132,7 +132,7 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
 {
     for (int k = 0; k < padLength; k++)
     {
-        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection);
+        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, verticalDirection);
         dstPtrTemp++;
     }
 }
@@ -146,7 +146,7 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
         T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
-            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection, 3);
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, verticalDirection, 3);
             dstPtrTempChannel += 3;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -164,7 +164,7 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
     {
         for (int k = 0; k < padLength; k++)
         {
-            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, verticalDirection, 3);
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, verticalDirection, 3);
             dstPtrTempChannels[c] += 1;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
