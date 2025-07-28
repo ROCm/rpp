@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
+        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -1073,6 +1073,40 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case HUE:
+                {
+                    testCaseName = "hue";
+
+                    Rpp32f hueShift[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        hueShift[i] = 60.0;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5) 
+                        rppt_hue_host(input, srcDescPtr, output, dstDescPtr, hueShift, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SATURATION:
+                {
+                    testCaseName = "saturation";
+
+                    Rpp32f saturationFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        saturationFactor[i] = 5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5) 
+                        rppt_saturation_host(input, srcDescPtr, output, dstDescPtr, saturationFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
