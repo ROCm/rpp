@@ -248,3 +248,23 @@ template RppStatus hip_exec_tensor_xor_tensor_generic_tensor<Rpp8u>(Rpp8u*,
                                                                     Rpp32u*,
                                                                     Rpp32u*,
                                                                     rpp::Handle&);
+
+template RppStatus hip_exec_tensor_xor_tensor_generic_tensor<Rpp16u>(Rpp16u*,
+                                                                     Rpp16u*,
+                                                                     RpptGenericDescPtr,
+                                                                     RpptGenericDescPtr,
+                                                                     Rpp16u*,
+                                                                     RpptGenericDescPtr,
+                                                                     Rpp32u*,
+                                                                     Rpp32u*,
+                                                                     rpp::Handle&);
+
+template RppStatus hip_exec_tensor_xor_tensor_generic_tensor<Rpp32u>(Rpp32u*,
+                                                                     Rpp32u*,
+                                                                     RpptGenericDescPtr,
+                                                                     RpptGenericDescPtr,
+                                                                     Rpp32u*,
+                                                                     RpptGenericDescPtr,
+                                                                     Rpp32u*,
+                                                                     Rpp32u*,
+                                                                     rpp::Handle&);
