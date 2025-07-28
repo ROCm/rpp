@@ -25,13 +25,27 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
-// Typically called for U8 and I8 data types - Bitwise AND with mask to represent with lesser number of bits
+// Helper for U8 and I8 data type images - Bitwise AND with mask to represent with lesser number of bits
 __device__ void posterize_hip_compute(d_uchar8 *src_uc8, d_uchar8* src_mask_u8, d_uchar8 *dst_uc8)
 {
     rpp_hip_math_bitwiseAnd8(src_uc8, src_mask_u8, dst_uc8);
 }
 
-// Typically called for F16 data type - Scaled up to 0-255, bitwise and is performed, and normalized back to 0-1
+// Helper for F16 data type images - Scaled up to 0-255, bitwise and is performed, and normalized back to 0-1
+// Pixel values are scaled up to the range 0–255 before a bitwise AND is performed.
+// The same method used for F32 is not applied here as it leads to precision mismatches.
+//
+// Example:
+// The equivalence of 96 in the 0–255 range (U8 representation) is either:
+//   - 0.376471 in F32 (normalized to [0, 1])
+//   - 0.376465 in F16 (normalized to [0, 1])
+//
+// Multiplying these values by the posterize factor for 3 bits (7.968750) results in:
+//   - F32: 0.376471 × 7.968750 = 3.000000
+//   - F16: 0.376465 × 7.968750 = 2.999954
+//
+// Taking the floor of these values gives different results, which causes significant pixel mismatches.
+
 __device__ void posterize_hip_compute(d_float8 *src_f8, d_uchar8* src_mask_u8, d_float8 *dst_f8)
 {
     rpp_hip_math_multiply8_const(src_f8, src_f8, (float4)255);
@@ -39,13 +53,13 @@ __device__ void posterize_hip_compute(d_float8 *src_f8, d_uchar8* src_mask_u8, d
     rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
 }
 
-// Typically called for F32 data type - Scaled up by posterize factor, floored and normalized back to 0-1
-__device__ void posterize_hip_compute(d_float8 *src_f8, d_float8* src_factor_f8, d_float8 *dst_f8)
+// Helper for F32 data type images - Scaled up by posterize factor, floored and normalized back to 0-1
+__device__ void posterize_hip_compute(d_float8 *src_f8, d_float8* srcFactor_f8, d_float8 *dst_f8)
 {
     d_float8 scaled_src_f8, floored_src_f8;
-    rpp_hip_math_multiply8(src_f8, src_factor_f8, &scaled_src_f8);
+    rpp_hip_math_multiply8(src_f8, srcFactor_f8, &scaled_src_f8);
     rpp_hip_math_floor8(&scaled_src_f8, &floored_src_f8);
-    rpp_hip_math_divide8(&floored_src_f8, src_factor_f8, dst_f8);
+    rpp_hip_math_divide8(&floored_src_f8, srcFactor_f8, dst_f8);
 }
 
 __global__ void posterize_pkd_hip_tensor(Rpp8u *srcPtr,
@@ -139,16 +153,16 @@ __global__ void posterize_pkd_hip_tensor(Rpp32f *srcPtr,
 
     float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
 
-    d_float8 src_factor_f8;
-    src_factor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    src_factor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    d_float8 srcFactor_f8;
+    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    posterize_hip_compute(&src_f24.f8[0], &src_factor_f8, &dst_f24.f8[0]);
-    posterize_hip_compute(&src_f24.f8[1], &src_factor_f8, &dst_f24.f8[1]);
-    posterize_hip_compute(&src_f24.f8[2], &src_factor_f8, &dst_f24.f8[2]);
+    posterize_hip_compute(&src_f24.f8[0], &srcFactor_f8, &dst_f24.f8[0]);
+    posterize_hip_compute(&src_f24.f8[1], &srcFactor_f8, &dst_f24.f8[1]);
+    posterize_hip_compute(&src_f24.f8[2], &srcFactor_f8, &dst_f24.f8[2]);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -275,14 +289,14 @@ __global__ void posterize_pln_hip_tensor(Rpp32f *srcPtr,
 
     float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
 
-    d_float8 src_factor_f8;
-    src_factor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    src_factor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    d_float8 srcFactor_f8;
+    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
 
     d_float8 src_f8, dst_f8;
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    posterize_hip_compute(&src_f8, &src_factor_f8, &dst_f8);
+    posterize_hip_compute(&src_f8, &srcFactor_f8, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -291,14 +305,14 @@ __global__ void posterize_pln_hip_tensor(Rpp32f *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        posterize_hip_compute(&src_f8, &src_factor_f8, &dst_f8);
+        posterize_hip_compute(&src_f8, &srcFactor_f8, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        posterize_hip_compute(&src_f8, &src_factor_f8, &dst_f8);
+        posterize_hip_compute(&src_f8, &srcFactor_f8, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -392,16 +406,16 @@ __global__ void posterize_pkd3_pln3_hip_tensor(Rpp32f *srcPtr,
 
     float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
 
-    d_float8 src_factor_f8;
-    src_factor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    src_factor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    d_float8 srcFactor_f8;
+    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    posterize_hip_compute(&src_f24.f8[0], &src_factor_f8, &dst_f24.f8[0]);
-    posterize_hip_compute(&src_f24.f8[1], &src_factor_f8, &dst_f24.f8[1]);
-    posterize_hip_compute(&src_f24.f8[2], &src_factor_f8, &dst_f24.f8[2]);
+    posterize_hip_compute(&src_f24.f8[0], &srcFactor_f8, &dst_f24.f8[0]);
+    posterize_hip_compute(&src_f24.f8[1], &srcFactor_f8, &dst_f24.f8[1]);
+    posterize_hip_compute(&src_f24.f8[2], &srcFactor_f8, &dst_f24.f8[2]);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -494,16 +508,16 @@ __global__ void posterize_pln3_pkd3_hip_tensor(Rpp32f *srcPtr,
 
     float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
 
-    d_float8 src_factor_f8;
-    src_factor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    src_factor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    d_float8 srcFactor_f8;
+    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    posterize_hip_compute(&src_f24.f8[0], &src_factor_f8, &dst_f24.f8[0]);
-    posterize_hip_compute(&src_f24.f8[1], &src_factor_f8, &dst_f24.f8[1]);
-    posterize_hip_compute(&src_f24.f8[2], &src_factor_f8, &dst_f24.f8[2]);
+    posterize_hip_compute(&src_f24.f8[0], &srcFactor_f8, &dst_f24.f8[0]);
+    posterize_hip_compute(&src_f24.f8[1], &srcFactor_f8, &dst_f24.f8[1]);
+    posterize_hip_compute(&src_f24.f8[2], &srcFactor_f8, &dst_f24.f8[2]);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 

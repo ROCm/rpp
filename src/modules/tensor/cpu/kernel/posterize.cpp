@@ -497,11 +497,20 @@ RppStatus posterize_f32_f32_host_tensor(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-// Pixel values are scaled up to range of 0 - 255 before bitwise and is performed on the values
-// The same method used for F32 is not applied here as it leads to precision mismatches
-// Example - For representing 96, the F32 and F16 representations are 0.376471 and 0.376465 respectively
-// Multiplying them by posterize factor for 3 bits (7.968750) leads to 3.000000 and 2.999954,
-// floor of which gives varying answers and significant pixel mismatches
+// Pixel values are scaled up to the range 0–255 before a bitwise AND is performed.
+// The same method used for F32 is not applied here as it leads to precision mismatches.
+//
+// Example:
+// The equivalence of 96 in the 0–255 range (U8 representation) is either:
+//   - 0.376471 in F32 (normalized to [0, 1])
+//   - 0.376465 in F16 (normalized to [0, 1])
+//
+// Multiplying these values by the posterize factor for 3 bits (7.968750) results in:
+//   - F32: 0.376471 × 7.968750 = 3.000000
+//   - F16: 0.376465 × 7.968750 = 2.999954
+//
+// Taking the floor of these values gives different results, which causes significant pixel mismatches.
+
 RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RpptDescPtr srcDescPtr,
                                         Rpp16f *dstPtr,
