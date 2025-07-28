@@ -22,8 +22,8 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
         return;
 
     uint srcIdx1 = (id_z * srcStrides1.x) + (id_x * srcStrides1.y);
-    uint srcIdx2 = (id_z * srcStrides2.x) + (id_x * srcStrides1.y);
-    uint dstIdx = (id_z * dstStrides.x) + (id_x * srcStrides1.y);
+    uint srcIdx2 = (id_z * srcStrides2.x) + (id_x * srcStrides2.y);
+    uint dstIdx = (id_z * dstStrides.x) + (id_x * dstStrides.y);
 
     dstPtr[dstIdx] = srcPtr1[srcIdx1] | srcPtr2[srcIdx2];
 }
@@ -143,6 +143,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
 
     Rpp32u numDims = dstBroadcastDescPtr->numDims - 1; // exclude batchsize from input dims
+    printf("numDims is %d\n", numDims);
 
     if (numDims == 1)
     {
