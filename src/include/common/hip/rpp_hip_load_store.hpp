@@ -1448,6 +1448,11 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(uchar *srcPtr, uchar *sr
     *(uint2 *)srcPtr_uc8 = *(uint2 *)srcPtr;
 }
 
+__device__ __forceinline__ void rpp_hip_load8_to_uint8(uint *srcPtr, d_uint8 *srcPtr_ui8)
+{
+    srcPtr_ui8 = *(d_uint8 *)srcPtr;
+}
+
 // F32 loads without layout toggle (8 F32 pixels)
 
 __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, uchar *srcPtr_uc8)
@@ -1855,6 +1860,11 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr,
 __device__ __forceinline__ void rpp_hip_pack_uchar8_and_store8(uchar *dstPtr, d_uchar8 *dstPtr_f8)
 {
     *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)dstPtr_f8;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_uint8_and_store8(uint *dstPtr, d_uint8 *dstPtr_f8)
+{
+    *(d_uint8_s *)dstPtr = *(d_uint8_s *)dstPtr_f8;
 }
 
 __device__ __forceinline__ void rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(uchar *dstPtr, d_uchar24 *dstPtr_f24)

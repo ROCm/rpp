@@ -25,10 +25,43 @@ __global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp8u *srcPtr1,
     uint dstIdx = (id_z * dstStrides) + id_x;
 
     d_uchar8 src1_uc8, src2_uc8, dst_uc8;
-    rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, &src1_uc8);
-    rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, &src2_uc8);
+    uchar* src1Ptr_uc8 = (uchar*)&src1_uc8;
+    uchar* src2Ptr_uc8 = (uchar*)&src2_uc8;
+
+    rpp_hip_load8_to_uchar8(srcPtr1 + srcIdx1, src1Ptr_uc8);
+    rpp_hip_load8_to_uchar8(srcPtr2 + srcIdx2, src2Ptr_uc8);
     rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
     rpp_hip_pack_uchar8_and_store8(dstPtr + dstIdx, &dst_uc8);
+}
+
+__global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp32u *srcPtr1,
+                                                             Rpp32u *srcPtr2,
+                                                             uint2 srcStrides1,
+                                                             uint2 srcStrides2,
+                                                             uint *srcDims1,
+                                                             uint *srcDims2,
+                                                             Rpp32u *dstPtr,
+                                                             uint2 dstStrides,
+                                                             uint *dstDims,
+                                                             uint *src1RoiTensor,
+                                                             uint *src2RoiTensor)
+{
+    uint id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // width
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // batchsize
+
+    if (id_x >= dstDims[0])
+        return;
+
+    uint srcIdx1 = (id_z * srcStrides1) + id_x;
+    uint srcIdx2 = (id_z * srcStrides2) + id_x;
+    uint dstIdx = (id_z * dstStrides) + id_x;
+
+    d_uint8 src1_uc8, src2_uc8, dst_uc8;
+
+    rpp_hip_load8_to_uint8(srcPtr1 + srcIdx1, &src1_uc8);
+    rpp_hip_load8_to_uint8(srcPtr2 + srcIdx2, &src1_uc8);
+    rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
+    rpp_hip_pack_uint8_and_store8(dstPtr + dstIdx, &dst_uc8);
 }
 
 template <typename T>
@@ -181,7 +214,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
         int globalThreads_y = 1;
         int globalThreads_z = dstBroadcastDescPtr->dims[0];
 
-        if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && (src1BroadcastDescPtr->datatype == RpptDataType::U8))
+        if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && ((src1BroadcastDescPtr->datatype == RpptDataType::U8) || (src1BroadcastDescPtr->datatype == RpptDataType::F32)))
         {
             globalThreads_x = globalThreads_x >> 3;
             hipLaunchKernelGGL(tensor_or_tensor_1d_non_broadcast_hip_tensor,
