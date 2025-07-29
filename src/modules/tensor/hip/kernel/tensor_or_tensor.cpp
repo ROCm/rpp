@@ -4,12 +4,12 @@
 
 __global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp8u *srcPtr1,
                                                              Rpp8u *srcPtr2,
-                                                             uint2 srcStrides1,
-                                                             uint2 srcStrides2,
+                                                             uint srcStrides1,
+                                                             uint srcStrides2,
                                                              uint *srcDims1,
                                                              uint *srcDims2,
                                                              Rpp8u *dstPtr,
-                                                             uint2 dstStrides,
+                                                             uint dstStrides,
                                                              uint *dstDims,
                                                              uint *src1RoiTensor,
                                                              uint *src2RoiTensor)
@@ -36,12 +36,12 @@ __global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp8u *srcPtr1,
 
 __global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp32u *srcPtr1,
                                                              Rpp32u *srcPtr2,
-                                                             uint2 srcStrides1,
-                                                             uint2 srcStrides2,
+                                                             uint srcStrides1,
+                                                             uint srcStrides2,
                                                              uint *srcDims1,
                                                              uint *srcDims2,
                                                              Rpp32u *dstPtr,
-                                                             uint2 dstStrides,
+                                                             uint dstStrides,
                                                              uint *dstDims,
                                                              uint *src1RoiTensor,
                                                              uint *src2RoiTensor)
@@ -59,7 +59,7 @@ __global__ void tensor_or_tensor_1d_non_broadcast_hip_tensor(Rpp32u *srcPtr1,
     d_uint8 src1_uc8, src2_uc8, dst_uc8;
 
     rpp_hip_load8_to_uint8(srcPtr1 + srcIdx1, &src1_uc8);
-    rpp_hip_load8_to_uint8(srcPtr2 + srcIdx2, &src1_uc8);
+    rpp_hip_load8_to_uint8(srcPtr2 + srcIdx2, &src2_uc8);
     rpp_hip_math_bitwiseOr8(&src1_uc8, &src2_uc8, &dst_uc8);
     rpp_hip_pack_uint8_and_store8(dstPtr + dstIdx, &dst_uc8);
 }
@@ -205,7 +205,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
 
     Rpp32u numDims = dstBroadcastDescPtr->numDims - 1; // exclude batchsize from input dims
-    printf("numDims is %d\n", numDims);
+    //printf("numDims is %d\n", numDims);
 
     if (numDims == 1)
     {
@@ -213,10 +213,15 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
         int globalThreads_x = dstBroadcastDescPtr->dims[1];
         int globalThreads_y = 1;
         int globalThreads_z = dstBroadcastDescPtr->dims[0];
+        //printf("Dims 1 are %d\n", src1BroadcastDescPtr->dims[1]);
+        //printf("Dims 2 are %d\n", src2BroadcastDescPtr->dims[1]);
+        //printf("Datatype is %d\n", src1BroadcastDescPtr->dataType);
 
-        if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && ((src1BroadcastDescPtr->datatype == RpptDataType::U8) || (src1BroadcastDescPtr->datatype == RpptDataType::F32)))
+        if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && ((src1BroadcastDescPtr->dataType == RpptDataType::U8) || (src1BroadcastDescPtr->dataType == RpptDataType::U32)))
         {
-            globalThreads_x = globalThreads_x >> 3;
+            //printf("Broadcast Test case 1\n");
+            globalThreads_x = (dstBroadcastDescPtr->dims[1] + 7)>> 3;
+            //printf("Values are %d %d %d\n", dstBroadcastDescPtr->dims[1] + 7, globalThreads_x, globalThreads_z);
             hipLaunchKernelGGL(tensor_or_tensor_1d_non_broadcast_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -224,18 +229,19 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
                             handle.GetStream(),
                             srcPtr1,
                             srcPtr2,
-                            make_uint2(src1BroadcastDescPtr->strides[0], src1BroadcastDescPtr->strides[1]),
-                            make_uint2(src2BroadcastDescPtr->strides[0], src2BroadcastDescPtr->strides[1]),
+                            src1BroadcastDescPtr->strides[0],
+                            src2BroadcastDescPtr->strides[0],
                             src1BroadcastDescPtr->dims + 1,
                             src2BroadcastDescPtr->dims + 1,
                             dstPtr,
-                            make_uint2(dstBroadcastDescPtr->strides[0], dstBroadcastDescPtr->strides[1]),
+                            dstBroadcastDescPtr->strides[0],
                             dstBroadcastDescPtr->dims + 1,
                             roiTensor1,
                             roiTensor2);
         }
         else
         {
+            //printf("Broadcast Test case 2\n");
             hipLaunchKernelGGL(tensor_or_tensor_1d_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -346,7 +352,7 @@ template RppStatus hip_exec_tensor_or_tensor_generic_tensor<Rpp8u>(Rpp8u*,
                                                                    Rpp32u*,
                                                                    rpp::Handle&);
 
-template RppStatus hip_exec_tensor_or_tensor_generic_tensor<Rpp16u>(Rpp16u*,
+/*template RppStatus hip_exec_tensor_or_tensor_generic_tensor<Rpp16u>(Rpp16u*,
                                                                     Rpp16u*,
                                                                     RpptGenericDescPtr,
                                                                     RpptGenericDescPtr,
@@ -354,7 +360,7 @@ template RppStatus hip_exec_tensor_or_tensor_generic_tensor<Rpp16u>(Rpp16u*,
                                                                     RpptGenericDescPtr,
                                                                     Rpp32u*,
                                                                     Rpp32u*,
-                                                                    rpp::Handle&);
+                                                                    rpp::Handle&);*/
 
 template RppStatus hip_exec_tensor_or_tensor_generic_tensor<Rpp32u>(Rpp32u*,
                                                                     Rpp32u*,

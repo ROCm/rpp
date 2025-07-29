@@ -547,7 +547,7 @@ RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1,
                                                  roiTensorSrc2,
                                                  rpp::deref(rppHandle));
     }
-    else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) && (dstGenericDescPtr->dataType == RpptDataType::U16)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::I16)))
+    /*else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) && (dstGenericDescPtr->dataType == RpptDataType::U16)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::I16)))
     {
         hip_exec_tensor_or_tensor_generic_tensor(reinterpret_cast<Rpp16u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                  reinterpret_cast<Rpp16u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -558,7 +558,7 @@ RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1,
                                                  roiTensorSrc1,
                                                  roiTensorSrc2,
                                                  rpp::deref(rppHandle));
-    }
+    }*/
     else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32)))
     {
         hip_exec_tensor_or_tensor_generic_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),

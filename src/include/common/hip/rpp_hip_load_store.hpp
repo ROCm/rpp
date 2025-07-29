@@ -1450,7 +1450,7 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(uchar *srcPtr, uchar *sr
 
 __device__ __forceinline__ void rpp_hip_load8_to_uint8(uint *srcPtr, d_uint8 *srcPtr_ui8)
 {
-    srcPtr_ui8 = *(d_uint8 *)srcPtr;
+    *srcPtr_ui8 = *(d_uint8 *)srcPtr;
 }
 
 // F32 loads without layout toggle (8 F32 pixels)
