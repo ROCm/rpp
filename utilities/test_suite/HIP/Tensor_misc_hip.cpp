@@ -107,16 +107,16 @@ int main(int argc, char **argv)
 
     // set dims and compute strides
     int offSetInBytes = 0;
-    bitDepth = 0;
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
+    bitDepth = 9;
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 9, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, dstRoiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 9, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrNDSecond, sizeof(RpptGenericDesc)));
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 0, batchSize, roiTensorSecond);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 9, batchSize, roiTensorSecond);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
     }
 
@@ -126,14 +126,14 @@ int main(int argc, char **argv)
     Rpp32u iBufferSizeInBytes = 1;
     Rpp32u oBufferSizeInBytes = 1;
     Rpp32u iBufferSizeSecondInBytes = 1;
-    printf("Output : ");
+    //printf("Output : ");
     for(int i = 0; i <= nDim; i++)
     {
         iBufferSize *= srcDescriptorPtrND->dims[i];
         oBufferSize *= dstDescriptorPtrND->dims[i];
-        printf("%d ", dstDescriptorPtrND->dims[i]);
+        //printf("%d ", dstDescriptorPtrND->dims[i]);
     }
-    printf("\n");
+    //printf("\n");
 
     iBufferSizeInBytes = iBufferSize * get_size_of_data_type(srcDescriptorPtrND->dataType);
     oBufferSizeInBytes = oBufferSize * get_size_of_data_type(dstDescriptorPtrND->dataType);
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
-    printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
+    //printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
     void *input, *inputSecond, *output;
     void *d_input, *d_inputSecond, *d_inputI16, *d_output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
@@ -172,11 +172,11 @@ int main(int argc, char **argv)
     {
         std::srand(0);
         for(int i = 0; i < iBufferSize; i++)
-            inputF32[i] = static_cast<float>((std::rand() % 255));
+            inputF32[i] = static_cast<float>((std::rand() % 262143));
         if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         {
             for(int i = 0; i < iBufferSizeSecond; i++)
-                inputF32Second[i] = static_cast<float>((std::rand() % 255));
+                inputF32Second[i] = static_cast<float>((std::rand() % 262143));
         }
     }
 
@@ -331,15 +331,15 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
-                Rpp8u* ip1 = (Rpp8u*)input;
+                Rpp32u* ip1 = (Rpp32u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
-                Rpp8u* ip2 = (Rpp8u*)inputSecond;
+                Rpp32u* ip2 = (Rpp32u*)inputSecond;
                 for(int i = 0; i < iBufferSizeSecond; i++)
                     printf("%d ", ip2[i]);
                 printf("\n");
-                Rpp8u* op = (Rpp8u*)output;
+                Rpp32u* op = (Rpp32u*)output;
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");
@@ -356,20 +356,20 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
-                printf("\nTensor OR Tensor\n");
-                Rpp8u* ip1 = (Rpp8u*)input;
-                for(int i = 0; i < iBufferSize; i++)
-                    printf("%d ", ip1[i]);
-                printf("\n");
-                Rpp8u* ip2 = (Rpp8u*)inputSecond;
-                for(int i = 0; i < iBufferSizeSecond; i++)
-                    printf("%d ", ip2[i]);
-                printf("\n");
-                Rpp8u* op = (Rpp8u*)output;
-                for(int i = 0; i < oBufferSize; i++)
-                    printf("%d ", op[i]);
-                printf("\n");
-                exit(0);
+                //printf("\nTensor OR Tensor\n");
+                //Rpp32u* ip1 = (Rpp32u*)input;
+                //for(int i = 0; i < iBufferSize; i++)
+                //    printf("%u ", ip1[i]);
+                //printf("\n");
+                //Rpp32u* ip2 = (Rpp32u*)inputSecond;
+                //for(int i = 0; i < iBufferSizeSecond; i++)
+                //    printf("%u ", ip2[i]);
+                //printf("\n");
+                //Rpp32u* op = (Rpp32u*)output;
+                //for(int i = 0; i < oBufferSize; i++)
+                //    printf("%u ", op[i]);
+                //printf("\n");
+                //exit(0);
                 break;
             }
             case TENSOR_XOR_TENSOR:
@@ -382,15 +382,15 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
-                Rpp8u* ip1 = (Rpp8u*)input;
+                Rpp32u* ip1 = (Rpp32u*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
-                Rpp8u* ip2 = (Rpp8u*)inputSecond;
+                Rpp32u* ip2 = (Rpp32u*)inputSecond;
                 for(int i = 0; i < iBufferSizeSecond; i++)
                     printf("%d ", ip2[i]);
                 printf("\n");
-                Rpp8u* op = (Rpp8u*)output;
+                Rpp32u* op = (Rpp32u*)output;
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");

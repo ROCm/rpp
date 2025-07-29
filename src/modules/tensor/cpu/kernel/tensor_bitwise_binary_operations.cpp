@@ -105,7 +105,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u vectorLoopCount = 0;
             if (src1shape == 1)
             {
-                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 1);
+                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p1 = simd_set1_val(srcPtrTemp1[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -126,7 +126,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 1);
+                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p2 = simd_set1_val(srcPtrTemp2[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -147,7 +147,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                printf("broadcastNDim are %d\n", 1);
+                //printf("broadcastNDim are %d\n", 1);
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
@@ -176,7 +176,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u src2shape = src2length[1];
             if(src1shape == 1)
             {
-                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 2);
+                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -208,7 +208,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 2);
+                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -240,7 +240,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                printf("broadcastNDim are %d\n", 2);
+                //printf("broadcastNDim are %d\n", 2);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -280,7 +280,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u src2shape = src2length[2];
             if(src1shape == 1)
             {
-                printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 3);
+                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -325,7 +325,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 3);
+                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -369,7 +369,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                printf("broadcastNDim is %d\n", 3);
+                //printf("broadcastNDim is %d\n", 3);
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrTest1 = srcPtrTemp1;
@@ -415,7 +415,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
         }
         else {
-            printf("broadcastNDim is %d\n", 4);
+            //printf("broadcastNDim is %d\n", 4);
             tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
         }
     }

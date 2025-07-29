@@ -142,12 +142,12 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 //printf("Goes inside 1920x1080\n");
-                printf("Flag is %d\n", flag);
-                std::array<Rpp32u, 4> roi = {0, 0, 1, 10};
+                //printf("Flag is %d\n", flag);
+                std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
                 if(flag == 1)
-                    roi = {0, 0, 1, 1};
+                    roi = {0, 0, 1920, 1};
                 if(flag == 2)
-                    roi = {0, 0, 1, 10};
+                    roi = {0, 0, 1920, 1080};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -409,17 +409,17 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                                    Rpp64u ioBufferSize, Rpp64u ioBufferSizeSecond, Rpp64u outputBufferSize, Rpp64u outputBufferSizeSecond,
                                    RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcDescriptorPtrNDSecond, Rpp32s testCase)
 {
-    printf("Goes here first\n");
+    //printf("Goes here first\n");
     if (outputBitDepth == 0 || outputBitDepth == 3 || outputBitDepth == 4) // U8 case
     {
-        printf("Goes inside here\n");
+        //printf("Goes inside here\n");
         Rpp8u *outputU8 = static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes;
         for (Rpp32s i = 0; i < ioBufferSize; i++)
             outputU8[i] = static_cast<Rpp8u>(std::clamp(std::round(inputF32[i]), 0.0f, 255.0f));
 
         if (testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         {
-            printf("Goes inside here second\n");
+            //printf("Goes inside here second\n");
             Rpp8u *outputU8Second = static_cast<Rpp8u *>(outputSecond) + srcDescriptorPtrNDSecond->offsetInBytes;
             for (Rpp32s i = 0; i < ioBufferSizeSecond; i++)
                 outputU8Second[i] = static_cast<Rpp8u>(std::clamp(std::round(inputF32Second[i]), 0.0f, 255.0f));
@@ -446,14 +446,14 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     }
     else if (outputBitDepth == 5) // I8 case
     {
-        printf("Goes inside here i8\n");
+        //printf("Goes inside here i8\n");
         Rpp8s *outputI8 = static_cast<Rpp8s *>(output) + srcGenericDescPtr->offsetInBytes;
         for (int i = 0; i < ioBufferSize; i++)
             outputI8[i] = static_cast<Rpp8s>(std::clamp(std::round(inputF32[i]) - 128, -128.0f, 127.0f));
 
         if (testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
         {
-            printf("Goes inside here second i8\n");
+            //printf("Goes inside here second i8\n");
             Rpp8s *outputI8Second = static_cast<Rpp8s *>(outputSecond) + srcDescriptorPtrNDSecond->offsetInBytes;
             for (int i = 0; i < ioBufferSizeSecond; i++)
                 outputI8Second[i] = static_cast<Rpp8s>(std::clamp(std::round(inputF32Second[i]) - 128, -128.0f, 127.0f));
@@ -461,7 +461,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     }
     else if (outputBitDepth == 6) // F16 case
     {
-        printf("Goes inside here i16\n");
+        //printf("Goes inside here i16\n");
         Rpp16s *outputF16 = reinterpret_cast<Rpp16s *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
             outputF16[i] = static_cast<Rpp16s>(std::clamp(std::round(inputF32[i]) - 32768, -32768.0f, 32767.0f)); // F16 range
@@ -475,7 +475,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     }
     else if (outputBitDepth == 7) // F16 case
     {
-        printf("Goes inside here u16\n");
+        //printf("Goes inside here u16\n");
         Rpp16u *outputF16 = reinterpret_cast<Rpp16u *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
             outputF16[i] = static_cast<Rpp16u>(std::clamp(std::round(inputF32[i]), 0.0f, 65535.0f)); // F16 range
@@ -489,7 +489,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     }
     else if (outputBitDepth == 8) // F16 case
     {
-        printf("Goes inside here i16\n");
+        //printf("Goes inside here i16\n");
         Rpp32s *outputF16 = reinterpret_cast<Rpp32s *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
             outputF16[i] = static_cast<Rpp32s>(std::clamp(std::round(inputF32[i]) - 131072, -131071.0f, 131072.0f)); // F16 range
@@ -503,7 +503,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
     }
     else if (outputBitDepth == 9) // F16 case
     {
-        printf("Goes inside here u16\n");
+        //printf("Goes inside here u16\n");
         Rpp32u *outputF16 = reinterpret_cast<Rpp32u *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
             outputF16[i] = static_cast<Rpp32u>(std::clamp(std::round(inputF32[i]), 0.0f, 262143.0f)); // F16 range

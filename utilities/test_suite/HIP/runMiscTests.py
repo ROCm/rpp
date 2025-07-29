@@ -107,7 +107,7 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == 1 and profilingOption == "NO":
         print("\n")
-        bitDepths = range(7)
+        bitDepths = range(1)
         for bitDepth in bitDepths:
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
     elif testType == 1 and profilingOption == "YES":

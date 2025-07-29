@@ -108,18 +108,18 @@ int main(int argc, char **argv)
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
     int offSetInBytes = 0;
-    bitDepth = 8;
+    bitDepth = 9;
     printf("bitDepth is %d\n", bitDepth);
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 8, batchSize, roiTensor);
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 9, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 8, batchSize, dstRoiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 9, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
     {
         srcDescriptorPtrNDSecond = &srcDescriptorSecond;
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 8, batchSize, roiTensorSecond);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 9, batchSize, roiTensorSecond);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     }
@@ -332,7 +332,8 @@ int main(int argc, char **argv)
                     rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                Rpp32s* ip1 = (Rpp32s*)input;
+                break;
+                /*Rpp32s* ip1 = (Rpp32s*)input;
                 for(int i = 0; i < iBufferSize; i++)
                     printf("%d ", ip1[i]);
                 printf("\n");
@@ -344,7 +345,7 @@ int main(int argc, char **argv)
                 for(int i = 0; i < oBufferSize; i++)
                     printf("%d ", op[i]);
                 printf("\n");
-                break;
+                break;*/
             }
             case TENSOR_XOR_TENSOR:
             {
