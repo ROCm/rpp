@@ -152,7 +152,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
                 srcPtrChannel += srcDescPtr->strides.cStride;
-                dstPtrChannel += srcDescPtr->strides.cStride;
+                dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
