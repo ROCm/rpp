@@ -2016,9 +2016,7 @@ struct FilterDispatchFloat
 {
     using SharedType = float;
     using SupportType = float3;
-
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(T* src, float** dst) { rpp_hip_load24_pkd3_to_float24_pln3(src, dst); }
-
     __device__ __forceinline__ static void rpp_hip_load8(T* src, float* dst) { rpp_hip_load8_and_unpack_to_float8(src, (d_float8*)dst); }
 };
 
@@ -2031,11 +2029,8 @@ struct FilterDispatchChar
     using VectorType = typename std::conditional<std::is_same<T, uchar>::value , uint3 , int3>::type;
 
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(uchar* src, uchar** dst) { rpp_hip_load24_pkd3_to_uchar8_pln3(src, dst); }
-
     __device__ __forceinline__ static void rpp_hip_load8(uchar* src, uchar* dst) { rpp_hip_load8_to_uchar8(src, dst); }
-
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(schar* src, schar** dst) { rpp_hip_load24_pkd3_to_schar8_pln3(src, dst); }
-
     __device__ __forceinline__ static void rpp_hip_load8(schar* src, schar* dst) { rpp_hip_load8_to_schar8(src, dst); }
 };
 
