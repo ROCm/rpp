@@ -25,6 +25,18 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
+// Helper functions that compute mask/factor based on individual image's posterize level bits
+__device__ __forceinline__ uchar compute_posterizeBitsMask(uchar imgPosterizeLevelBits)
+{
+    return ((1 << imgPosterizeLevelBits) - 1) << (8 - imgPosterizeLevelBits);
+}
+
+__device__ __forceinline__ float compute_posterizeBitsFactor(uchar imgPosterizeLevelBits)
+{
+    return 255.0/(1 << (8 - imgPosterizeLevelBits));
+}
+
+
 // Helper for U8 and I8 data type images - Bitwise AND with mask to represent with lesser number of bits
 __device__ void posterize_hip_compute(d_uchar8 *src_uc8, d_uchar8* src_mask_u8, d_uchar8 *dst_uc8)
 {
@@ -48,9 +60,9 @@ __device__ void posterize_hip_compute(d_uchar8 *src_uc8, d_uchar8* src_mask_u8, 
 
 __device__ void posterize_hip_compute(d_float8 *src_f8, d_uchar8* src_mask_u8, d_float8 *dst_f8)
 {
-    rpp_hip_math_multiply8_const(src_f8, src_f8, (float4)255);
+    rpp_hip_math_multiply8_const(src_f8, src_f8, MAKE_FLOAT4(255));
     rpp_hip_math_scaled_bitwiseAnd8(src_f8, src_mask_u8, dst_f8);
-    rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
+    rpp_hip_math_multiply8_const(dst_f8, dst_f8, MAKE_FLOAT4(ONE_OVER_255));
 }
 
 // Helper for F32 data type images - Scaled up by posterize factor, floored and normalized back to 0-1
@@ -83,10 +95,10 @@ __global__ void posterize_pkd_hip_tensor(Rpp8u *srcPtr,
 
     d_uchar8 src_mask_u8;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_uchar24 src_uc24, dst_uc24;
 
@@ -118,10 +130,10 @@ __global__ void posterize_pkd_hip_tensor(half *srcPtr,
 
     d_uchar8 src_mask_u8;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_float24 src_f24, dst_f24;
 
@@ -151,11 +163,11 @@ __global__ void posterize_pkd_hip_tensor(Rpp32f *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
+    float posterizeBitsFactor = compute_posterizeBitsFactor(posterizeLevelBits[id_z]);
 
     d_float8 srcFactor_f8;
-    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[0] = MAKE_FLOAT4(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = MAKE_FLOAT4(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
@@ -186,11 +198,11 @@ __global__ void posterize_pln_hip_tensor(Rpp8u *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_uchar8 src_uc8, dst_uc8;
     uchar* srcPtr_uc8 = (uchar*)&src_uc8;
@@ -237,11 +249,11 @@ __global__ void posterize_pln_hip_tensor(half *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_float8 src_f8, dst_f8;
 
@@ -287,11 +299,11 @@ __global__ void posterize_pln_hip_tensor(Rpp32f *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
+    float posterizeBitsFactor = compute_posterizeBitsFactor(posterizeLevelBits[id_z]);
 
     d_float8 srcFactor_f8;
-    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[0] = MAKE_FLOAT4(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = MAKE_FLOAT4(posterizeBitsFactor);
 
     d_float8 src_f8, dst_f8;
 
@@ -336,11 +348,11 @@ __global__ void posterize_pkd3_pln3_hip_tensor(Rpp8u *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_uchar24 src_uc24, dst_uc24;
 
@@ -370,11 +382,11 @@ __global__ void posterize_pkd3_pln3_hip_tensor(half *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_float24 src_f24, dst_f24;
 
@@ -404,11 +416,11 @@ __global__ void posterize_pkd3_pln3_hip_tensor(Rpp32f *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
+    float posterizeBitsFactor = compute_posterizeBitsFactor(posterizeLevelBits[id_z]);
 
     d_float8 srcFactor_f8;
-    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[0] = MAKE_FLOAT4(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = MAKE_FLOAT4(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
@@ -438,11 +450,11 @@ __global__ void posterize_pln3_pkd3_hip_tensor(Rpp8u *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_uchar24 src_uc24, dst_uc24;
 
@@ -472,11 +484,11 @@ __global__ void posterize_pln3_pkd3_hip_tensor(half *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    uchar posterizeBitsMask = ((1 << posterizeLevelBits[id_z]) - 1) << (8 - posterizeLevelBits[id_z]);
+    uchar posterizeBitsMask = compute_posterizeBitsMask(posterizeLevelBits[id_z]);
 
     d_uchar8 src_mask_u8;
-    src_mask_u8.uc4[0] = (uchar4)(posterizeBitsMask);
-    src_mask_u8.uc4[1] = (uchar4)(posterizeBitsMask);
+    src_mask_u8.uc4[0] = MAKE_UCHAR4(posterizeBitsMask);
+    src_mask_u8.uc4[1] = MAKE_UCHAR4(posterizeBitsMask);
 
     d_float24 src_f24, dst_f24;
 
@@ -506,11 +518,11 @@ __global__ void posterize_pln3_pkd3_hip_tensor(Rpp32f *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[id_z]));
+    float posterizeBitsFactor = compute_posterizeBitsFactor(posterizeLevelBits[id_z]);
 
     d_float8 srcFactor_f8;
-    srcFactor_f8.f4[0] = (float4)(posterizeBitsFactor);
-    srcFactor_f8.f4[1] = (float4)(posterizeBitsFactor);
+    srcFactor_f8.f4[0] = MAKE_FLOAT4(posterizeBitsFactor);
+    srcFactor_f8.f4[1] = MAKE_FLOAT4(posterizeBitsFactor);
 
     d_float24 src_f24, dst_f24;
 
