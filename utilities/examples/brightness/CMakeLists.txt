@@ -68,7 +68,7 @@ find_package(TurboJpeg QUIET)
 
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
-include_directories(${OpenMP_CXX_INCLUDE_DIRS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 if(TurboJpeg_FOUND)
