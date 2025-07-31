@@ -63,6 +63,7 @@ endif()
 find_package(OpenCV QUIET)
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
+include_directories(${OpenMP_CXX_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 if (OpenCV_FOUND)

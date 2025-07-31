@@ -162,6 +162,7 @@ else()
                 endif()
 
                 if(OpenMP_CXX_FOUND)
+                    include_directories(${OpenMP_CXX_INCLUDE_DIRS})
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
 
