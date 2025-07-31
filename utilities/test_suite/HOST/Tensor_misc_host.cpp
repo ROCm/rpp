@@ -126,9 +126,9 @@ int main(int argc, char **argv)
     Rpp32u iBufferSize = 1;
     Rpp32u oBufferSize = 1;
     Rpp32u iBufferSizeSecond = 1;
-    Rpp32u iBufferSizeInBytes = 1;
-    Rpp32u oBufferSizeInBytes = 1;
-    Rpp32u iBufferSizeSecondInBytes = 1;
+    Rpp64u iBufferSizeInBytes = 1;
+    Rpp64u oBufferSizeInBytes = 1;
+    Rpp64u iBufferSizeSecondInBytes = 1;
     for(int i = 0; i <= nDim; i++)
     {
         iBufferSize *= srcDescriptorPtrND->dims[i];

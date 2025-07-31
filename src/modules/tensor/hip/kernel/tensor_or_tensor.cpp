@@ -197,9 +197,9 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
     CHECK_RETURN_STATUS(hipHostMalloc(&src1BroadcastDescPtr, sizeof(RpptGenericDesc)));
     CHECK_RETURN_STATUS(hipHostMalloc(&src2BroadcastDescPtr, sizeof(RpptGenericDesc)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstBroadcastDescPtr, sizeof(RpptGenericDesc)));
-    src1BroadcastDescPtr = srcGenericDescPtr1;
-    src2BroadcastDescPtr = srcGenericDescPtr2;
-    dstBroadcastDescPtr = dstGenericDescPtr;
+    *src1BroadcastDescPtr = *srcGenericDescPtr1;
+    *src2BroadcastDescPtr = *srcGenericDescPtr2;
+    *dstBroadcastDescPtr = *dstGenericDescPtr;
     GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
     StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
     StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
@@ -217,7 +217,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
         //printf("Dims 2 are %d\n", src2BroadcastDescPtr->dims[1]);
         //printf("Datatype is %d\n", src1BroadcastDescPtr->dataType);
 
-        /*if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && ((src1BroadcastDescPtr->dataType == RpptDataType::U8) || (src1BroadcastDescPtr->dataType == RpptDataType::U32)))
+        if((src1BroadcastDescPtr->dims[1] != 1) && (src2BroadcastDescPtr->dims[1] != 1) && ((src1BroadcastDescPtr->dataType == RpptDataType::U8) || (src1BroadcastDescPtr->dataType == RpptDataType::U32)))
         {
             //printf("Broadcast Test case 1\n");
             globalThreads_x = (dstBroadcastDescPtr->dims[1] + 7)>> 3;
@@ -240,7 +240,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
                             roiTensor2);
         }
         else
-        {*/
+        {
             //printf("Broadcast Test case 2\n");
             hipLaunchKernelGGL(tensor_or_tensor_1d_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -258,7 +258,7 @@ RppStatus hip_exec_tensor_or_tensor_generic_tensor(T *srcPtr1,
                             dstBroadcastDescPtr->dims + 1,
                             roiTensor1,
                             roiTensor2);
-        //}
+        }
     }
     else if (numDims == 2)
     {

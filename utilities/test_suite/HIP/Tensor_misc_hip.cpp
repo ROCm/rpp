@@ -123,9 +123,9 @@ int main(int argc, char **argv)
     Rpp32u iBufferSize = 1;
     Rpp32u oBufferSize = 1;
     Rpp32u iBufferSizeSecond = 1;
-    Rpp32u iBufferSizeInBytes = 1;
-    Rpp32u oBufferSizeInBytes = 1;
-    Rpp32u iBufferSizeSecondInBytes = 1;
+    Rpp64u iBufferSizeInBytes = 1;
+    Rpp64u oBufferSizeInBytes = 1;
+    Rpp64u iBufferSizeSecondInBytes = 1;
     //printf("Output : ");
     for(int i = 0; i <= nDim; i++)
     {
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
                     rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
-                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
+                //CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
                 //printf("\nTensor OR Tensor\n");
                 //Rpp32u* ip1 = (Rpp32u*)input;
                 //for(int i = 0; i < iBufferSize; i++)
