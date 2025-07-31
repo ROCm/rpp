@@ -82,6 +82,9 @@ typedef struct { schar sc1[3];                                                  
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
+#define MAKE_FLOAT4(val) make_float4(val, val, val, val)
+#define MAKE_UCHAR4(val) make_uchar4(val, val, val, val)
+
 #ifdef LEGACY_SUPPORT
 enum class RPPTensorDataType
 {
