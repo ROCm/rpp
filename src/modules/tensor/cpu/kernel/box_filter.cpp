@@ -120,10 +120,12 @@ inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s colu
 
     accum *= kernelSizeInverseSquare;
 
-    if constexpr (std::is_same<T, Rpp8s>::value)
-        accum += 128.0f;
-
-    saturate_pixel(accum, dstPtrTemp);
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        *dstPtrTemp = static_cast<T>(std::nearbyintf(accum));
+    else if constexpr (std::is_same<T, Rpp16f>::value)
+        *dstPtrTemp = static_cast<Rpp16f>(accum);
+    else
+        *dstPtrTemp = accum;
 }
 
 // process padLength number of columns in each row for PLN-PLN case
