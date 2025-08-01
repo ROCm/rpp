@@ -122,7 +122,7 @@ else()
         NAMES sndfile libsndfile
         PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
         PATH_SUFFIXES lib lib64)
-    find_package(OpenMP QUIET)
+    find_package(OpenMP COMPONENTS CXX QUIET)
     find_package(OpenCV QUIET)
     find_package(TurboJpeg QUIET)
 
@@ -198,7 +198,7 @@ else()
                             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
                         endif()
                     endif()
-                    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+                    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
                     find_package(HIP QUIET)
                     if(HIP_FOUND)
                         message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
