@@ -197,9 +197,9 @@ inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
 // convert lower half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
 inline void cvtlo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
 {
-    pxDst[0] = _mm256_cvtepi8_epi16(_mm256_castsi256_si128(pxRow[0]));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_cvtepi8_epi16(_mm256_castsi256_si128(pxRow[1])));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_cvtepi8_epi16(_mm256_castsi256_si128(pxRow[2])));
+    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[1], avx_px0), 8), 8));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[2], avx_px0), 8), 8));
 }
 
 // unpack higher half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
@@ -416,11 +416,15 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
                                 cvtlo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
                                 cvthi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            }
                             else
+                            {
                                 unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
                                 unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            }
 
                             // perform blend and shuffle operations to get required order and add them
                             __m128i pxTemp[4];
@@ -428,7 +432,6 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             blend_shuffle_add_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_add_3x3_host<1, 3>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_add_3x3_host<1, 3>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
-
                             __m128i pxDst[2];
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -492,8 +495,16 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_load_box_filter_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            cvtlo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                            cvthi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        }
+                        else
+                        {
+                            unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                            unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
@@ -506,12 +517,18 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                         pxTemp[2] = _mm_mulhi_epi16(pxTemp[2], pxConvolutionFactor);
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        }
 
                         pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
-                        if constexpr (std::is_same<T, Rpp8s>::value)
-                            pxResult = _mm256_sub_epi8(pxResult, avx_pxConvertI8);
 
                         _mm256_storeu_si256((__m256i *)dstPtrTemp, pxResult);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
@@ -560,8 +577,16 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_load_box_filter_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            cvtlo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                            cvthi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        }
+                        else
+                        {
+                            unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                            unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
@@ -574,12 +599,15 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                         pxTemp[2] = _mm_mulhi_epi16(pxTemp[2], pxConvolutionFactor);
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            pxDst[0] = _mm_sub_epi8(pxDst[0], xmm_pxConvertI8);
-                            pxDst[1] = _mm_sub_epi8(pxDst[1], xmm_pxConvertI8);
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
                         }
 
                         // convert from PKD3 to PLN3 and store channelwise
@@ -649,8 +677,16 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             rpp_load_box_filter_char_3x3_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                cvtlo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                                cvthi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            }
+                            else
+                            {
+                                unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
+                                unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            }
 
                             // perform blend and shuffle operations for the first 8 output values to get required order and add them
                             __m128i pxTemp[4];
@@ -663,17 +699,19 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                             pxTemp[2] = _mm_mulhi_epi16(pxTemp[2], pxConvolutionFactor);
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
 
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
-                        }
-                        if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
-                            pxResultPln[0] = _mm256_sub_epi8(pxResultPln[0], avx_pxConvertI8);
-                            pxResultPln[1] = _mm256_sub_epi8(pxResultPln[1], avx_pxConvertI8);
-                            pxResultPln[2] = _mm256_sub_epi8(pxResultPln[2], avx_pxConvertI8);
                         }
 
                         __m128i pxResultPkd[6];
