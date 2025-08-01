@@ -46,8 +46,8 @@ endif()
 
 project(test_suite/HIP)
 
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
 if(NOT WIN32)
@@ -131,7 +131,7 @@ else()
             NAMES sndfile libsndfile
             PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
             PATH_SUFFIXES lib lib64)
-        find_package(OpenMP QUIET)
+        find_package(OpenMP COMPONENTS CXX QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
@@ -173,8 +173,7 @@ else()
 
                     if(OpenMP_CXX_FOUND)
                         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-                        message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                         message("-- ${Green}${PROJECT_NAME} All Tensor HIP tests set to build with OpenMP${ColourReset}")
 
                         # HIP test set 1 - RPP Tensor-Image HIP test suite
