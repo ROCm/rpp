@@ -1658,8 +1658,16 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
                         rpp_load_box_filter_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-                        unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            cvtlo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
+                            cvthi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        }
+                        else
+                        {
+                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
+                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        }
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
@@ -1761,7 +1769,6 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
-                            pxResultPln[c] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
                             if constexpr (std::is_same<T, Rpp8s>::value)
                                 pxResultPln[c] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
                             else
@@ -1825,8 +1832,16 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_load_box_filter_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         // get the accumalated result for first 8 elements
-                        unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            cvtlo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
+                            cvthi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        }
+                        else
+                        {
+                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
+                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                        }
 
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[4];
