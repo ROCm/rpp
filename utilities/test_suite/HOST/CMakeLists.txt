@@ -155,7 +155,6 @@ else()
                 # include and link directories
                 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
                 if(NOT APPLE)
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
