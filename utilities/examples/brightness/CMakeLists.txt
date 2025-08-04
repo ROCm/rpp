@@ -87,7 +87,7 @@ if (HIP_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(brightness_hip brightness_hip.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
     target_link_libraries(brightness_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${HIP_LIBRARIES} ${LINK_LIBRARY_LIST} hip::device)
 
 else()
