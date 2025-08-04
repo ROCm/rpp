@@ -160,7 +160,7 @@ else()
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
 
                     # include and link directories
                     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
