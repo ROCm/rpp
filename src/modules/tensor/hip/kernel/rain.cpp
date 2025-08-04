@@ -44,8 +44,8 @@ __device__ __forceinline__ void rain_hip_compute(float *srcPtr, d_float8 *src1_f
 
 __device__ __forceinline__ void rain_hip_compute(schar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0] + (float4)128) - (float4)128;
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1] + (float4)128) - (float4)128;
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0] + FLOAT4_128) - FLOAT4_128;
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1] + FLOAT4_128) - FLOAT4_128;
 }
 
 __device__ __forceinline__ void rain_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
@@ -76,7 +76,7 @@ __global__ void rain_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
@@ -110,7 +110,7 @@ __global__ void rain_pln_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
     d_float8 src1_f8, src2_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
@@ -154,7 +154,7 @@ __global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
@@ -187,7 +187,7 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, srcStridesNCH.y, &src1_f24);

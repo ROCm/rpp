@@ -29,42 +29,42 @@ __device__ void resize_crop_mirror_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i
 {
     float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
     float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
-    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
-    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
+    float4 wOffset_f4 = MAKE_FLOAT4((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = MAKE_FLOAT4((hRatio - 1) * 0.5f);
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
-    locDst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = MAKE_FLOAT4((float)id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = MAKE_FLOAT4((float)id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = MAKE_FLOAT4((float)id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4((float)id_y);
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [0-3]
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [4-7]
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [0-3]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [4-7]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 __device__ void resize_crop_mirror_roi_and_srclocs_hip_compute_mirror(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
     float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
     float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
-    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
-    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
+    float4 wOffset_f4 = MAKE_FLOAT4((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = MAKE_FLOAT4((hRatio - 1) * 0.5f);
 
     d_float8 decrement_f8, locDst_f8x, locDst_f8y;
     decrement_f8.f4[0] = make_float4(dstDimsWH->x - 1, dstDimsWH->x - 2, dstDimsWH->x - 3, dstDimsWH->x - 4);
     decrement_f8.f4[1] = make_float4(dstDimsWH->x - 5, dstDimsWH->x - 6, dstDimsWH->x - 7, dstDimsWH->x - 8);
-    locDst_f8x.f4[0] = decrement_f8.f4[0] - (float4)id_x;
-    locDst_f8x.f4[1] = decrement_f8.f4[1] - (float4)id_x;
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = decrement_f8.f4[0] - MAKE_FLOAT4((float)id_x);
+    locDst_f8x.f4[1] = decrement_f8.f4[1] - MAKE_FLOAT4((float)id_x);
+    locDst_f8y.f4[0] = MAKE_FLOAT4((float)id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4((float)id_y);
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [width-1 - width-4]
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [width-5 - width-8]
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [width-1 - width-4]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [width-5 - width-8]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4((float)srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 template <typename T>

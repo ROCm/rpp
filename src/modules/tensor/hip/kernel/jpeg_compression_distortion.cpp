@@ -30,11 +30,11 @@ __device__ const float normCoeff = 0.3535533905932737f;
 __device__ const float4 dctACDF = {1.387039845322148f, 1.175875602419359f, 0.785694958387102f, 0.275899379282943f};
 __device__ const float2 dctBE = {1.306562964876377f, 0.541196100146197f};
 
-__device__ const float4 yR_f4 = (float4)0.299f;
-__device__ const float4 yG_f4 = (float4)0.587f;
-__device__ const float4 yB_f4 = (float4)0.114f;
-__device__ const float4 maxVal255_f4 = (float4)255.0f;
-__device__ const float4 maxVal128_f4 = (float4)128.0f;
+__device__ const float4 yR_f4 = {0.299f, 0.299f, 0.299f, 0.299f};
+__device__ const float4 yG_f4 = {0.587f, 0.587f, 0.587f, 0.587f};
+__device__ const float4 yB_f4 = {0.114f, 0.114f, 0.114f, 0.114f};
+__device__ const float4 maxVal255_f4 = {255.0f, 255.0f, 255.0f, 255.0f};
+__device__ const float4 maxVal128_f4 = {128.0f, 128.0f, 128.0f, 128.0f};
 
 // Clamping for signed char (schar)
 __device__ inline void clamp_range(schar *src, float* values)
@@ -137,15 +137,15 @@ __device__ inline void downsample_cbcr_hip_compute(d_float8 *r1_f8, d_float8 *r2
         (avgB_f8.f4[1].z + avgB_f8.f4[1].w)
     );
 
-    *cb_f4 = (avgR_f4 * (float4)-0.042184f) + (avgG_f4 * (float4)-0.082816f) + (avgB_f4 * (float4)0.125000f) + maxVal128_f4;
-    *cr_f4 = (avgR_f4 * (float4)0.125000f)  + (avgG_f4 * (float4)-0.104672f) + (avgB_f4 * (float4)-0.020328f) + maxVal128_f4;
+    *cb_f4 = (avgR_f4 * MAKE_FLOAT4(-0.042184f)) + (avgG_f4 * MAKE_FLOAT4(-0.082816f)) + (avgB_f4 * MAKE_FLOAT4(0.125000f)) + maxVal128_f4;
+    *cr_f4 = (avgR_f4 * MAKE_FLOAT4(0.125000f))  + (avgG_f4 * MAKE_FLOAT4(-0.104672f)) + (avgB_f4 * MAKE_FLOAT4(-0.020328f)) + maxVal128_f4;
 }
 
 // DCT forward 1D implementation
 __device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
 {
     int val = (-128.0f * offset128);
-    float4 val4 = (float4)val;
+    float4 val4 = MAKE_FLOAT4((float)val);
 
     // Load data into float4 vectors
     float4 vec1_f4 = *(float4*)&vec[0];
@@ -172,15 +172,15 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
     temp5_f4.y = fmaf(dctACDF.z, temp2_f4.x, fmaf(dctACDF.x, temp2_f4.y, fmaf(dctACDF.w, temp2_f4.z, -dctACDF.y * temp2_f4.w)));
     temp5_f4.w = fmaf(dctACDF.w, temp2_f4.x, fmaf(dctACDF.z, temp2_f4.y, fmaf(dctACDF.y, temp2_f4.z, dctACDF.x * temp2_f4.w)));
 
-    *(float4*)&vec[0] = (temp4_f4 * (float4)normCoeff);  // stores to vec[0] through vec[3]
-    *(float4*)&vec[4] = (temp5_f4 * (float4)normCoeff);;  // stores to vec[4] through vec[7]
+    *(float4*)&vec[0] = (temp4_f4 * MAKE_FLOAT4(normCoeff));  // stores to vec[0] through vec[3]
+    *(float4*)&vec[4] = (temp5_f4 * MAKE_FLOAT4(normCoeff));  // stores to vec[4] through vec[7]
 }
 
 // Inverse 1D DCT
 __device__ inline void dct_inv_8x8_1d(float *vec, bool offset128)
 {
     int val = (128.0f * offset128);
-    float4 val4 = (float4)val;
+    float4 val4 = MAKE_FLOAT4((float)val);
 
     // Load data into float4 vectors
     float4 vec1_f4 = *(float4*)&vec[0];
@@ -228,8 +228,8 @@ __device__ inline void upsample_and_RGB_hip_compute(float4 cb_f4, float4 cr_f4, 
     d_float8 y_f8 = *((d_float8*)ch1_f8);
 
     // Subtract 128 from cb_f4 and Cr_f4 before expanding
-    cb_f4 = cb_f4 - (float4)128.0f;
-    cr_f4 = cr_f4 - (float4)128.0f;
+    cb_f4 = cb_f4 - FLOAT4_128;
+    cr_f4 = cr_f4 - FLOAT4_128;
 
     // Expand each value
     cb_f8.f4[0] = make_float4(cb_f4.x, cb_f4.x, cb_f4.y, cb_f4.y);
@@ -238,14 +238,14 @@ __device__ inline void upsample_and_RGB_hip_compute(float4 cb_f4, float4 cr_f4, 
     cr_f8.f4[1] = make_float4(cr_f4.z, cr_f4.z, cr_f4.w, cr_f4.w);
 
     // Now use the offset-adjusted values in the conversion
-    r_f8.f4[0] = y_f8.f4[0] + ((float4)1.402f * cr_f8.f4[0]);
-    r_f8.f4[1] = y_f8.f4[1] + ((float4)1.402f * cr_f8.f4[1]);
+    r_f8.f4[0] = y_f8.f4[0] + (MAKE_FLOAT4(1.402f) * cr_f8.f4[0]);
+    r_f8.f4[1] = y_f8.f4[1] + (MAKE_FLOAT4(1.402f) * cr_f8.f4[1]);
 
-    g_f8.f4[0] = y_f8.f4[0] - ((float4)0.344136285f * cb_f8.f4[0]) - ((float4)0.714136285f * cr_f8.f4[0]);
-    g_f8.f4[1] = y_f8.f4[1] - ((float4)0.344136285f * cb_f8.f4[1]) - ((float4)0.714136285f * cr_f8.f4[1]);
+    g_f8.f4[0] = y_f8.f4[0] - (MAKE_FLOAT4(0.344136285f) * cb_f8.f4[0]) - (MAKE_FLOAT4(0.714136285f)* cr_f8.f4[0]);
+    g_f8.f4[1] = y_f8.f4[1] - (MAKE_FLOAT4(0.344136285f) * cb_f8.f4[1]) - (MAKE_FLOAT4(0.714136285f) * cr_f8.f4[1]);
 
-    b_f8.f4[0] = y_f8.f4[0] + ((float4)1.772f * cb_f8.f4[0]);
-    b_f8.f4[1] = y_f8.f4[1] + ((float4)1.772f * cb_f8.f4[1]);
+    b_f8.f4[0] = y_f8.f4[0] + (MAKE_FLOAT4(1.772f) * cb_f8.f4[0]);
+    b_f8.f4[1] = y_f8.f4[1] + (MAKE_FLOAT4(1.772f) * cb_f8.f4[1]);
 
     // Write back the results
     *((d_float8*)ch1_f8) = r_f8;
