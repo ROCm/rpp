@@ -87,7 +87,7 @@ if(HIP_FOUND AND OpenCV_FOUND)
     # add_executable(Single_hip Single_hip.cpp)
     add_executable(uniqueFunctionalities_hip uniqueFunctionalities_hip.cpp)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lrpp ${HIP_LIBRARIES} ${LINK_LIBRARY_LIST} hip::device)
     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lrpp ${HIP_LIBRARIES} ${LINK_LIBRARY_LIST} hip::device)
     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lrpp ${HIP_LIBRARIES} ${LINK_LIBRARY_LIST} hip::device)
