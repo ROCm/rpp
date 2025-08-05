@@ -411,7 +411,7 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
 }
 
-// -------------------- Filter load functions for U8 bitdepth --------------------
+// -------------------- Filter load functions for U8/I8 bitdepth --------------------
 
 // load function for 3x3 kernel size
 inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
