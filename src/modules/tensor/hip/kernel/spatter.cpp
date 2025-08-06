@@ -42,8 +42,8 @@ __device__ void spatter_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *d
 
 __device__ void spatter_hip_compute(schar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *mask_f8, d_float8 *maskInv_f8, float4 *pix_f4)
 {
-    dst_f8->f4[0] = ((src_f8->f4[0] +FLOAT4_128) * maskInv_f8->f4[0]) + (*pix_f4 * mask_f8->f4[0]) -FLOAT4_128;
-    dst_f8->f4[1] = ((src_f8->f4[1] +FLOAT4_128) * maskInv_f8->f4[1]) + (*pix_f4 * mask_f8->f4[1]) -FLOAT4_128;
+    dst_f8->f4[0] = ((src_f8->f4[0] + FLOAT4_128) * maskInv_f8->f4[0]) + (*pix_f4 * mask_f8->f4[0]) - FLOAT4_128;
+    dst_f8->f4[1] = ((src_f8->f4[1] + FLOAT4_128) * maskInv_f8->f4[1]) + (*pix_f4 * mask_f8->f4[1]) - FLOAT4_128;
 }
 
 __device__ void spatter_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *mask_f8, d_float8 *maskInv_f8, float4 *pix_f4)

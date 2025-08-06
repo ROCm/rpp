@@ -68,7 +68,7 @@ __device__ void compute_glitch_locs_hip(int id_x, int id_y, RpptChannelOffsets r
     check_locs(srcLocsX_f24->f8[0], srcLocsY_f24->f8[0], rgbOffsets.r, roiTensorPtrSrc);        // check if all srcLocs in roi bounds
 
     srcLocsX_f24->f4[2] = MAKE_FLOAT4(id_x + rgbOffsets.g.x) + increment_f4;            // find G channel srcLocsX 0, 1, 2, 3
-    srcLocsX_f24->f4[3] = srcLocsX_f24->f4[2] +MAKE_FLOAT4(4);                                      // find G channel srcLocsX 4, 5, 6, 7
+    srcLocsX_f24->f4[3] = srcLocsX_f24->f4[2] + MAKE_FLOAT4(4);                                      // find G channel srcLocsX 4, 5, 6, 7
     srcLocsY_f24->f4[2] = srcLocsY_f24->f4[3]  = MAKE_FLOAT4(id_y + rgbOffsets.g.y);    // find G channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
     check_locs(srcLocsX_f24->f8[1], srcLocsY_f24->f8[1], rgbOffsets.g, roiTensorPtrSrc);        // check if all srcLocs in roi bounds
 
