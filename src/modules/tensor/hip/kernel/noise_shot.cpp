@@ -56,22 +56,22 @@ __device__ void shot_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBox
 
 __device__ void shot_noise_8_adjusted_input_hip_compute(uchar *srcPtr, d_float8 *pix_f8) {}
 __device__ void shot_noise_8_adjusted_input_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_255); }
-__device__ void shot_noise_8_adjusted_input_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_add8_const(pix_f8, pix_f8, FLOAT4_255); }
+__device__ void shot_noise_8_adjusted_input_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_add8_const(pix_f8, pix_f8, FLOAT4_128); }
 __device__ void shot_noise_8_adjusted_input_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_255); }
 
 __device__ void shot_noise_24_adjusted_input_hip_compute(uchar *srcPtr, d_float24 *pix_f24) {}
 __device__ void shot_noise_24_adjusted_input_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_255); }
-__device__ void shot_noise_24_adjusted_input_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_add24_const(pix_f24, pix_f24, FLOAT4_255); }
+__device__ void shot_noise_24_adjusted_input_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_add24_const(pix_f24, pix_f24, FLOAT4_128); }
 __device__ void shot_noise_24_adjusted_input_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_255); }
 
 __device__ void shot_noise_8_adjusted_output_hip_compute(uchar *srcPtr, d_float8 *pix_f8) {}
 __device__ void shot_noise_8_adjusted_output_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_ONE_OVER_255); }
-__device__ void shot_noise_8_adjusted_output_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_subtract8_const(pix_f8, pix_f8, FLOAT4_255); }
+__device__ void shot_noise_8_adjusted_output_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_subtract8_const(pix_f8, pix_f8, FLOAT4_128); }
 __device__ void shot_noise_8_adjusted_output_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_ONE_OVER_255); }
 
 __device__ void shot_noise_24_adjusted_output_hip_compute(uchar *srcPtr, d_float24 *pix_f24) {}
 __device__ void shot_noise_24_adjusted_output_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_ONE_OVER_255); }
-__device__ void shot_noise_24_adjusted_output_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_subtract24_const(pix_f24, pix_f24, FLOAT4_255); }
+__device__ void shot_noise_24_adjusted_output_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_subtract24_const(pix_f24, pix_f24, FLOAT4_128); }
 __device__ void shot_noise_24_adjusted_output_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_ONE_OVER_255); }
 
 template <typename T>

@@ -590,7 +590,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_pkd3(T *sr
 
     if ((locSrc.x < roiPtrSrc_i4->x) || (locSrc.y < roiPtrSrc_i4->y) || (locSrc.x > roiPtrSrc_i4->z) || (locSrc.y > roiPtrSrc_i4->w))
     {
-        *dst_f3 = make_float3(0.0f, 0.0f, 0.0f);
+        *dst_f3 = MAKE_FLOAT3(0.0f);
     }
     else
     {
