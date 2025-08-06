@@ -62,7 +62,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     // Compute corresponding 8 srcIdxs given id_x
     for (int i = 0; i < tensorDims; i++)
     {
-        uint4 srcStrides_ui4 = static_cast<uint4>(srcStrides[permTensor[permTensor[i]]]);
+        uint4 srcStrides_ui4 = MAKE_UINT4(srcStrides[permTensor[permTensor[i]]]);
         srcIdxs.ui4[0] += (dstCoords[permTensor[i]].ui4[0] * srcStrides_ui4);        // incrementally adding respective (coordinate value * stride) to get srcIdxs for 0, 1, 2, 3 elements
         srcIdxs.ui4[1] += (dstCoords[permTensor[i]].ui4[1] * srcStrides_ui4);        // incrementally adding respective (coordinate value * stride) to get srcIdxs for 4, 5, 6, 7 elements
         dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);

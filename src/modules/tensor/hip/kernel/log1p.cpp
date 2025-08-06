@@ -32,7 +32,7 @@ __device__ void log1p_hip_compute(Rpp16s *srcPtr, d_float8 *src_f8, d_float8 *ds
     for(int i = 0; i < 8; i++)
         src_f8->f1[i] =  fabsf(src_f8->f1[i]);
 
-    rpp_hip_math_add8_const(src_f8, src_f8, (float4)1);
+    rpp_hip_math_add8_const(src_f8, src_f8, MAKE_FLOAT4(1));
     rpp_hip_math_log1p(src_f8, dst_f8);
 }
 
