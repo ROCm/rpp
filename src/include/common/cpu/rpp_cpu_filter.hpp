@@ -97,12 +97,12 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
                             : (verticalDirection == 1) ? std::min(rowKernelLoopLimit - 1, i) // raw kernel row index bottom padded region 
                             : i ; // valid region without padding  
 
-        for (int j = 0, k = 0 ; j < kernelSize; j++, k += channels)
+        for (int j = 0; j < kernelSize; j++)
         {
             // Compute actual column for horizontal clamping
             Rpp32s colOffset = (horizontalDirection == -1)
                                 ? std::max(0, static_cast<Rpp32s>(j + columnKernelLoopLimit - kernelSize))   // clamp left
-                                : (horizontalDirection == 1) ? std::min(columnKernelLoopLimit - 1, j) // raw kernel row index right padded region 
+                                : ((horizontalDirection == 1) || (columnKernelLoopLimit != kernelSize)) ? std::min(static_cast<Rpp32s>(columnKernelLoopLimit - 1), j) // raw kernel row index right padded region 
                                 : j ; // valid region without padding  
 
             // Access and convert pixel

@@ -1050,7 +1050,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth ? 1 : 0 ;
+                            Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0 ;
                             convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, horizontalDirection, verticalDirection);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
@@ -1111,7 +1111,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth ? 1 : 0 ;
+                        Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0 ;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, horizontalDirection, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
@@ -1187,7 +1187,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth ? 1 : 0 ;
+                            Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0 ;
                             convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, horizontalDirection, verticalDirection);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
@@ -1251,7 +1251,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth ? 1 : 0 ;
+                        Rpp32s horizontalDirection = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0 ;
                         int channel = vectorLoopCount % 3;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, horizontalDirection, verticalDirection, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
