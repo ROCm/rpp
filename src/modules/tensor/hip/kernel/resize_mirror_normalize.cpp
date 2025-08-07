@@ -133,11 +133,11 @@ __global__ void resize_mirror_normalize_bilinear_pkd_hip_tensor(T *srcPtr,
     int incrementPerImage = id_z * 3;
     d_float8 rmnParamsR_f8, rmnParamsG_f8, rmnParamsB_f8;
     rmnParamsR_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage]);              // Get mean for R channel
-    rmnParamsR_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage]));      // Get (1 / stdDev) for R channel
+    rmnParamsR_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage]);        // Get (1 / stdDev) for R channel
     rmnParamsG_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 1]);          // Get mean for G channel
-    rmnParamsG_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 1]));  // Get (1 / stdDev) for G channel
+    rmnParamsG_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage + 1]);    // Get (1 / stdDev) for G channel
     rmnParamsB_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 2]);          // Get mean for B channel
-    rmnParamsB_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 2]));  // Get (1 / stdDev) for B channel
+    rmnParamsB_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage + 2]);    // Get (1 / stdDev) for B channel
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
