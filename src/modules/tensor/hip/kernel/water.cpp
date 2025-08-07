@@ -31,7 +31,7 @@ __device__ void water_roi_and_srclocs_hip_compute(int id_x, int id_y, float4 *am
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = MAKE_FLOAT4(id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[0] = MAKE_FLOAT4((float)id_x) + increment_f8.f4[0];
     locDst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
     locDst_f8y.f4[0] = MAKE_FLOAT4(id_y);
     locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
