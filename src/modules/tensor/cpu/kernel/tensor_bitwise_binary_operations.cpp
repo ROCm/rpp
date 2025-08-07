@@ -50,7 +50,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                                                Rpp32u *srcPtr2roiTensor,
                                                rpp::Handle& handle) {
 
-    checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
+    /*checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
     BroadcastDstShape(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr);
     RpptGenericDesc src1BroadcastDesc, src2BroadcastDesc, dstBroadcastDesc;
     RpptGenericDescPtr src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr;
@@ -62,13 +62,13 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
     dstBroadcastDesc = *dstGenericDescPtr;
     GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
     StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
+    StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);*/
 
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
-    Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
-    Rpp32u batchSize = dstBroadcastDescPtr->dims[0];
+    //Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
+    //Rpp32u batchSize = dstBroadcastDescPtr->dims[0];
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -76,9 +76,67 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
         Rpp32u *src1begin = src1roi;
+        Rpp32u *src1dims = src1begin + src1NDim;
 
         Rpp32u *src2roi = srcPtr2roiTensor + batchCount * src2NDim * 2;
         Rpp32u *src2begin = src2roi;
+        Rpp32u *src2dims = src2begin + src2NDim;
+
+        Rpp32u *src1Strides = srcPtr1GenericDescPtr->strides;
+        Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
+
+        Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
+        Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
+        Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim;
+        Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim;
+
+        // These are the dimensions that are based on individual ROIs, and strides are separate for each sample in the batch
+        Rpp32u src1BroadcastDims[RPPT_MAX_DIMS], src2BroadcastDims[RPPT_MAX_DIMS], dstBroadcastDims[RPPT_MAX_DIMS];
+        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS], src2BroadcastStrides[RPPT_MAX_DIMS];
+
+        bool incompatibleDims = false;
+
+        for(int i = 0; i < minDim; i++) {
+            Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+            src1BroadcastDims[curIndex] = src1dims[src1NDim - i - 1];
+            src2BroadcastDims[curIndex] = src2dims[src2NDim - i - 1];
+            src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+            src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+            if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
+                incompatibleDims = true;
+            dstBroadcastDims[curIndex] = src1BroadcastDims[curIndex] > src2BroadcastDims[curIndex] ? src1BroadcastDims[curIndex] : src2BroadcastDims[curIndex];
+        }
+        if(incompatibleDims == true) {
+            printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+        }
+        if(src1NDim < src2NDim) {
+            for(int i = minDim; i < dstDim; i++){
+                Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+                src1BroadcastDims[curIndex] = 1;
+                src2BroadcastDims[curIndex] = src2dims[src2NDim - i];
+                dstBroadcastDims[curIndex] = src2dims[src2NDim - i];
+                src1BroadcastStrides[curIndex] = 0;
+                src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+            }
+        }
+        else if(src1NDim > src2NDim) {
+            for(int i = minDim; i < dstDim; i++){
+                Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+                src2BroadcastDims[curIndex] = 1;
+                src1BroadcastDims[curIndex] = src1dims[src1NDim - i];
+                dstBroadcastDims[curIndex] = src1dims[src1NDim - i];
+                src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                src2BroadcastStrides[curIndex] = 0;
+            }
+        }
+        for(int i = 0; i < minDim; i++) {
+            if((src1BroadcastDims[RPPT_MAX_DIMS - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS - 1 - i] == 1)) {
+                src1BroadcastStrides[RPPT_MAX_DIMS - 1 - i] = 0;
+            }
+            if((src2BroadcastDims[RPPT_MAX_DIMS - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS - 1 - i] == 1)) {
+                src2BroadcastStrides[RPPT_MAX_DIMS - 1 - i] = 0;
+            }
+        }
 
         T *srcPtrTemp1 = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
         T *srcPtrTemp2 = srcPtr2 + batchCount * srcPtr2GenericDescPtr->strides[0];
@@ -97,7 +155,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         Rpp32u alignMask = vectorIncrement - 1;
 
-        if (broadcastNDim == 1)
+        /*if (broadcastNDim == 1)
         {
             Rpp32u alignedLength = length[0] & ~alignMask;
             Rpp32u src1shape = src1length[0];
@@ -417,7 +475,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         else {
             //printf("broadcastNDim is %d\n", 4);
             tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
-        }
+        }*/
     }
 
     return RPP_SUCCESS;
