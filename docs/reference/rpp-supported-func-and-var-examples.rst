@@ -64,12 +64,10 @@ The following table shows example outputs of some ROCm Performance Primitives (R
     :target: orig_road
 
 .. |orig_street| image:: ../data/doxygenInputs/img640x480.png
-    :width: 50%
     :target: orig_street
 
 .. |orig_question| image:: ../data/doxygenInputs/lens_img640x480.png
     :target: orig_question
-    :width: 50%
 
 .. |brightness| image:: ../data/doxygenOutputs/color_augmentations_brightness_img150x150.png
     :target: brightness
