@@ -31,18 +31,21 @@ elseif(ROCM_PATH)
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+
 # Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
 if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
     set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 # RPP Version
-set(VERSION "2.0.0")
+set(VERSION "2.1.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -65,6 +68,10 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
+
+# RPP_LEGACY_SUPPORT - default = OFF
+option(RPP_LEGACY_SUPPORT     "Build RPP with Legacy Support"       OFF)
+
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 
@@ -106,6 +113,10 @@ else()
     endif()
 endif()
 
+if("${BACKEND}" STREQUAL "OCL" AND NOT RPP_LEGACY_SUPPORT)
+    message(FATAL_ERROR "Backend cannot be OCL when Legacy Support is Disabled")
+endif()
+
 message("-- ${BoldBlue}AMD ROCm Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
@@ -137,6 +148,7 @@ endif()
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
 endif()
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Half
@@ -148,16 +160,20 @@ if (RPP_AUDIO_SUPPORT)
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
 endif()
 
+if (RPP_LEGACY_SUPPORT)
+    add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
+endif()
+
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D RPP_LEGACY_SUPPORT=${RPP_LEGACY_SUPPORT} [Select RPP legacy support [options:ON/OFF](default:OFF)]${ColourReset}")
 
 # OpenMP
-find_package(OpenMP REQUIRED)
+find_package(OpenMP COMPONENTS CXX REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 # STD Filesystem
 if(NOT APPLE)
@@ -168,8 +184,7 @@ endif()
 # -fPIC -- Generate position-independent code if possible.
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
 # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation.
-# -std=gnu++17 -- Conform to the ISO 2017 C++ standard with GNU extensions.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma")
 
 # Check AVX/SSE support
 include(CheckCXXCompilerFlag)
@@ -199,23 +214,9 @@ if("${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
 
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-
     # Set supported GPU Targets
     if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
-        find_package(ROCmCMakeBuildTools QUIET)
-        if(NOT ROCmCMakeBuildTools_FOUND)
-            find_package(ROCM QUIET)
-        endif()
-        include(ROCMCheckTargetIds OPTIONAL RESULT_VARIABLE HAS_ROCM_CHECK_TARGET_IDS)
-
-        set(OPTIONAL_GPU_TARGETS "gfx950;gfx1200;gfx1201")
-        if(HAS_ROCM_CHECK_TARGET_IDS)
-            rocm_check_target_ids(OPTIONAL_GPU_TARGETS_AVAILABLE TARGETS ${OPTIONAL_GPU_TARGETS})
-        else() # if we don't have rocm_check_target_ids, just assume the targets are available
-            set(OPTIONAL_GPU_TARGETS_AVAILABLE "${OPTIONAL_GPU_TARGETS}")
-        endif()
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;${OPTIONAL_GPU_TARGETS_AVAILABLE}")
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx950;gfx1200;gfx1201")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -301,6 +302,7 @@ endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
+configure_file("${PROJECT_SOURCE_DIR}/api/rpp_legacy_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h")
 
 # Enable SIMD for HOST code (in both OpenCL and HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
@@ -333,7 +335,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/api
-        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include
+        $<$<BOOL:${RPP_AUDIO_SUPPORT}>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include>
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
@@ -372,6 +374,9 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
 install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
         COMPONENT dev)
+install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+        COMPONENT dev)
 
 # install Test
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
@@ -382,6 +387,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/rpp-performancetests DES
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+set(CPACK_RESOURCE_FILE_FFTS_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/FFTS_LICENSE")
+install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
+install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
 
 # CTest - Needs RPP Installed
 enable_testing()

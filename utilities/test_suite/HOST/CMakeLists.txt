@@ -33,19 +33,21 @@ else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 # Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
 if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
     set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
     set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
 elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 project(test_suite/HOST)
 
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
 if(NOT WIN32)
@@ -125,7 +127,7 @@ else()
             NAMES sndfile libsndfile
             PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
             PATH_SUFFIXES lib lib64)
-        find_package(OpenMP QUIET)
+        find_package(OpenMP COMPONENTS CXX QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
@@ -153,12 +155,14 @@ else()
                 # include and link directories
                 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+
+                if(NOT APPLE)
+                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+                endif()
 
                 if(OpenMP_CXX_FOUND)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-                    message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
 
                     # HOST test set 1 - RPP Tensor-Image HOST test suite

@@ -54,6 +54,7 @@ The following table shows example outputs of some ROCm Performance Primitives (R
   "bitwise inclusive OR", |orig_road| |orig_dog|, |bitwise_or|
   "remap", |orig_road|, |remap|
 
+
 .. |orig_dog| image:: ../data/doxygenInputs/img150x150_2.png 
 
 .. |orig_flower| image:: ../data/doxygenInputs/img150x150_1.png
@@ -77,7 +78,7 @@ The following table shows example outputs of some ROCm Performance Primitives (R
 .. |jitter| image:: ../data/doxygenOutputs/effects_augmentations_jitter_img150x150.png
 
 .. |noise| image:: ../data/doxygenOutputs/effects_augmentations_gaussian_noise_img150x150.png
-   
+
 .. |fog| image:: ../data/doxygenOutputs/effects_augmentations_fog_img640x480.png
 
 .. |rain| image:: ../data/doxygenOutputs/effects_augmentations_rain_img640x480.png
@@ -89,7 +90,7 @@ The following table shows example outputs of some ROCm Performance Primitives (R
 .. |flip| image:: ../data/doxygenOutputs/geometric_augmentations_flip_img150x150.png
 
 .. |resize| image:: ../data/doxygenOutputs/geometric_augmentations_resize_img150x150.png
- 
+
 .. |resize_crop_mirror| image:: ../data/doxygenOutputs/geometric_augmentations_resize_crop_mirror_img115x115.png
 
 .. |rotate| image:: ../data/doxygenOutputs/geometric_augmentations_rotate_img150x150.png

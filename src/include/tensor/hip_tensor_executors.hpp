@@ -61,6 +61,15 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                                       uint *roiTensor,
                                       rpp::Handle& handle);
 
+// -------------------- log1p --------------------
+
+RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        uint *roiTensor,
+                                        rpp::Handle& handle);
+
 // -------------------- magnitude --------------------
 
 template <typename T>
@@ -280,6 +289,30 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             rpp::Handle& handle);
 
+// -------------------- hue --------------------
+
+template <typename T>
+RppStatus hip_exec_hue_tensor(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              T *dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              Rpp32f *hueTensor,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle);
+                                     
+// -------------------- saturation --------------------
+
+template <typename T>
+RppStatus hip_exec_saturation_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *saturationTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);                                     
+
 // -------------------- color_twist --------------------
 
 template <typename T>
@@ -357,14 +390,15 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
                                RpptDescPtr dstDescPtr,
                                rpp::Handle& handle);
 
-// -------------------- swap_channels --------------------
+// -------------------- channel_permute --------------------
 
 template <typename T>
-RppStatus hip_exec_swap_channels_tensor(T *srcPtr,
-                                        RpptDescPtr srcDescPtr,
-                                        T *dstPtr,
-                                        RpptDescPtr dstDescPtr,
-                                        rpp::Handle& handle);
+RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32u *permutationTensor,
+                                          rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
@@ -952,5 +986,29 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rpp::Handle& handle);
+
+// -------------------- concat --------------------
+
+template <typename T>
+RppStatus hip_exec_concat_tensor(T *srcPtr1,
+                                RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                T *srcPtr2,
+                                RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                T *dstPtr,
+                                RpptGenericDescPtr dstGenericDescPtr,
+                                Rpp32u axis,
+                                Rpp32u *srcPtr1roiTensor,
+                                rpp::Handle& handle);
+
+// -------------------- jpeg_compression distortion --------------------
+
+template <typename T>
+RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               T *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               rpp::Handle& handle);
 
 #endif // HIP_TENSOR_EXECUTORS_HPP
