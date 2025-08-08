@@ -300,29 +300,51 @@ __device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_floa
     }
 }
 
-template<int kernelSize>
-__device__ float compute_median(float *window)
+template<int kernelSize, typename T>
+__device__ __forceinline__ float compute_median(T *window)
 {
     constexpr int windowSize = kernelSize * kernelSize;
-    constexpr int medianIndex = (windowSize - 1) / 2;
-    // Partial selection sort for median - sufficient to find median without full sorting
-    int sortSteps = medianIndex + 1;
+    constexpr int medianIndex = (windowSize - 1) / 2;    // median position
 
-    for (int i = 0; i < sortSteps; ++i)
+    int leftIdx  = 0;
+    int rightIdx = windowSize - 1;
+
+    // Hoare Quick-Select -----------------------------------------------------
+    while (leftIdx < rightIdx)
     {
-        int minIdx = i;
-        for (int j = i + 1; j < windowSize; ++j)
+        // 1. choose midVal – median-of-3 (first, mid, last) is good enough
+        int midIdx   = (leftIdx + rightIdx) >> 1;
+        float3 val_f3 = make_float3(window[leftIdx], window[midIdx], window[rightIdx]);
+        float midVal = rpp_hip_median3(val_f3);
+
+        // 2. partition
+        int i = leftIdx;
+        int j = rightIdx;
+        while (i <= j)
         {
-            if (window[j] < window[minIdx])
-                minIdx = j;
+            while (window[i] < midVal)  ++i;
+            while (window[j] > midVal)  --j;
+
+            if (i <= j)
+            {
+                T tmp = window[i];
+                window[i]      = window[j];
+                window[j]      = tmp;
+                ++i;
+                --j;
+            }
         }
-        // Swap i-th and minIdx element
-        float temp = window[i];
-        window[i] = window[minIdx];
-        window[minIdx] = temp;
+
+        // 3. shrink the search interval toward the median slot
+        if (medianIndex <= j)
+            rightIdx = j;
+        else if (i <= medianIndex)
+            leftIdx = i;
+        else
+            break;               // midVal is the median
     }
 
-    return window[medianIndex];
+     return static_cast<float>(window[medianIndex]);
 }
 
 template <int kernelSize, typename T>
@@ -333,7 +355,7 @@ __device__ void median_filter_row_hip_compute(T *srcPtr, d_float8 *median_f8)
     const int loadCountPerRow = (kernelSize + 10) / 4; // Number of 32-bit loads required to read each row
     const int windowSize = kernelSize * kernelSize;
 
-    float src[kernelSize * paddedKernelWidth];
+    T src[kernelSize * paddedKernelWidth];
 
     // Load and unpack image data from shared memory into float array
     for (int i = 0; i < kernelSize; ++i)
@@ -351,7 +373,7 @@ __device__ void median_filter_row_hip_compute(T *srcPtr, d_float8 *median_f8)
                 int posInRow = (j << 2) + k; // same as j*4 + k, but faster with shift
                 if (posInRow >= paddedKernelWidth)
                     break;
-                src[i * paddedKernelWidth + posInRow] = float((T)((val >> (k << 3)) & 0xFF));
+                src[i * paddedKernelWidth + posInRow] = ((T)((val >> (k << 3)) & 0xFF));
             }
         }
     }
@@ -359,7 +381,7 @@ __device__ void median_filter_row_hip_compute(T *srcPtr, d_float8 *median_f8)
     // Compute median for 8 different filter positions on this row
     for (int filter = 0; filter < 8; ++filter)
     {
-        float window[windowSize];
+        T window[windowSize];
         const int offsetX = filter; // offset in columns for this pixel's filter window
 
         // Extract the window from src buffer with padding offset
