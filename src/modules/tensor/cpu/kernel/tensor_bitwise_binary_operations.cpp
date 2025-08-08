@@ -29,9 +29,9 @@ inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rp
         for (int i = 0; i < *dstShape; i++)
         {
             tensor_binary_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
-            dst += *(dstStrides + 1);
-            src1 += *(src1Strides + 1);
-            src2 += *(src2Strides + 1);
+            dst += *(dstStrides);
+            src1 += *(src1Strides);
+            src2 += *(src2Strides);
         }
     }
 }
@@ -50,25 +50,11 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                                                Rpp32u *srcPtr2roiTensor,
                                                rpp::Handle& handle) {
 
-    /*checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
-    BroadcastDstShape(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr);
-    RpptGenericDesc src1BroadcastDesc, src2BroadcastDesc, dstBroadcastDesc;
-    RpptGenericDescPtr src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr;
-    src1BroadcastDescPtr = &src1BroadcastDesc;
-    src2BroadcastDescPtr = &src2BroadcastDesc;
-    dstBroadcastDescPtr = &dstBroadcastDesc;
-    src1BroadcastDesc = *srcPtr1GenericDescPtr;
-    src2BroadcastDesc = *srcPtr2GenericDescPtr;
-    dstBroadcastDesc = *dstGenericDescPtr;
-    GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);*/
-
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
     //Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
-    //Rpp32u batchSize = dstBroadcastDescPtr->dims[0];
+    Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -84,6 +70,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         Rpp32u *src1Strides = srcPtr1GenericDescPtr->strides;
         Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
+        Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
         Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
         Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
@@ -92,7 +79,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         // These are the dimensions that are based on individual ROIs, and strides are separate for each sample in the batch
         Rpp32u src1BroadcastDims[RPPT_MAX_DIMS], src2BroadcastDims[RPPT_MAX_DIMS], dstBroadcastDims[RPPT_MAX_DIMS];
-        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS], src2BroadcastStrides[RPPT_MAX_DIMS];
+        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS], src2BroadcastStrides[RPPT_MAX_DIMS], dstBroadcastStrides[RPPT_MAX_DIMS];
 
         bool incompatibleDims = false;
 
@@ -102,6 +89,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             src2BroadcastDims[curIndex] = src2dims[src2NDim - i - 1];
             src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
             src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+            dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
             if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
                 incompatibleDims = true;
             dstBroadcastDims[curIndex] = src1BroadcastDims[curIndex] > src2BroadcastDims[curIndex] ? src1BroadcastDims[curIndex] : src2BroadcastDims[curIndex];
@@ -117,6 +105,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 dstBroadcastDims[curIndex] = src2dims[src2NDim - i];
                 src1BroadcastStrides[curIndex] = 0;
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
             }
         }
         else if(src1NDim > src2NDim) {
@@ -127,6 +116,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 dstBroadcastDims[curIndex] = src1dims[src1NDim - i];
                 src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = 0;
+                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
             }
         }
         for(int i = 0; i < minDim; i++) {
@@ -149,13 +139,19 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         T *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u *length = dstBroadcastDescPtr->dims + 1;
-        Rpp32u *src1length = src1BroadcastDescPtr->dims + 1;
-        Rpp32u *src2length = src2BroadcastDescPtr->dims + 1;
+        Rpp32u testOffset = RPPT_MAX_DIMS - dstDim;
+
+        Rpp32u *length = dstBroadcastDims + testOffset;//dstBroadcastDescPtr->dims + 1;
+        Rpp32u *src1length = src1BroadcastDims + testOffset;
+        Rpp32u *src2length = src2BroadcastDims + testOffset;
+
+        Rpp32u *src1BcastStrides = src1BroadcastStrides + testOffset;
+        Rpp32u *src2BcastStrides = src2BroadcastStrides + testOffset;
+        Rpp32u *dstBcastStrides =  dstBroadcastStrides + testOffset;
 
         Rpp32u alignMask = vectorIncrement - 1;
 
-        /*if (broadcastNDim == 1)
+        if (dstDim == 1)
         {
             Rpp32u alignedLength = length[0] & ~alignMask;
             Rpp32u src1shape = src1length[0];
@@ -227,7 +223,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 }
             }
         }
-        else if (broadcastNDim == 2)
+        else if (dstDim == 2)
         {
             Rpp32u alignedLength = length[1] & ~alignMask;
             Rpp32u src1shape = src1length[1];
@@ -259,9 +255,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrTest2++;
                         dstPtrTest++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
@@ -291,9 +287,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrTest1++;
                         dstPtrTest++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
@@ -325,13 +321,13 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrTest2++;
                         dstPtrTest++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
-        else if (broadcastNDim == 3)
+        else if (dstDim == 3)
         {
             Rpp32u alignedLength = length[2] & ~alignMask;
             Rpp32u src1shape = src1length[2];
@@ -371,14 +367,14 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrNew++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrTest1 += src1BcastStrides[1];
+                        srcPtrTest2 += src2BcastStrides[1];
+                        dstPtrTest += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
@@ -415,14 +411,14 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrNew++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrTest1 += src1BcastStrides[1];
+                        srcPtrTest2 += src2BcastStrides[1];
+                        dstPtrTest += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
@@ -461,21 +457,21 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrNew++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrTest1 += src1BcastStrides[1];
+                        srcPtrTest2 += src2BcastStrides[1];
+                        dstPtrTest += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
         else {
             //printf("broadcastNDim is %d\n", 4);
-            tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
-        }*/
+            tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+        }
     }
 
     return RPP_SUCCESS;
