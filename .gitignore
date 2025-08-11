@@ -1,4 +1,5 @@
 .vscode
+api/rpp_version.h
 build/
 build*
 sample_test
