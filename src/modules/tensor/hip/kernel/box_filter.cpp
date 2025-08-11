@@ -26,496 +26,60 @@ SOFTWARE.
 
 // -------------------- Set 0 - box_filter device helpers --------------------
 
-template <typename T>
-__device__ void box_filter_3x3_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
+// Precomputed inverse square values for different kernel sizes (3, 5, 7, 9)
+__device__ const float4 kernelSize3InverseSquare = {0.1111111f, 0.1111111f, 0.1111111f, 0.1111111f};
+__device__ const float4 kernelSize5InverseSquare = {0.04f, 0.04f, 0.04f, 0.04f};
+__device__ const float4 kernelSize7InverseSquare = {0.02040816f, 0.02040816f, 0.02040816f, 0.02040816f};
+__device__ const float4 kernelSize9InverseSquare = {0.01234568f, 0.01234568f, 0.01234568f, 0.01234568f};
+
+
+// box filter implementation for U8 and I8 datatypes.
+template <int filterSize, typename T>
+__device__ void box_filter_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
-    float src_f1;
-    using VectorType = typename FilterDispatch<T>::VectorType;
-    VectorType *src_c4 = reinterpret_cast<VectorType*>(srcPtr);
-    src_f1 = (float)(src_c4[0].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.1111111f, dst_f8->f1[0]);
-    src_f1 = (float)(src_c4[0].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.1111111f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.1111111f, dst_f8->f1[1]);
-    src_f1 = (float)(src_c4[0].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.1111111f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.1111111f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.1111111f, dst_f8->f1[2]);
-    src_f1 = (float)(src_c4[0].w);
-    dst_f8->f1[1] = fmaf(src_f1, 0.1111111f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.1111111f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.1111111f, dst_f8->f1[3]);
-    src_f1 = (float)(src_c4[1].x);
-    dst_f8->f1[2] = fmaf(src_f1, 0.1111111f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.1111111f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.1111111f, dst_f8->f1[4]);
-    src_f1 = (float)(src_c4[1].y);
-    dst_f8->f1[3] = fmaf(src_f1, 0.1111111f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.1111111f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.1111111f, dst_f8->f1[5]);
-    src_f1 = (float)(src_c4[1].z);
-    dst_f8->f1[4] = fmaf(src_f1, 0.1111111f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.1111111f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.1111111f, dst_f8->f1[6]);
-    src_f1 = (float)(src_c4[1].w);
-    dst_f8->f1[5] = fmaf(src_f1, 0.1111111f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.1111111f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.1111111f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].x);
-    dst_f8->f1[6] = fmaf(src_f1, 0.1111111f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.1111111f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].y);
-    dst_f8->f1[7] = fmaf(src_f1, 0.1111111f, dst_f8->f1[7]);
+    int sum = 0;
+    #pragma unroll
+    // Initialize the sum with the first 'filterSize' elements
+    for (int j = 0; j < filterSize; ++j)
+        sum += srcPtr[j];
+
+    // Store the first output by adding the running sum to dst_f8->f1[0]
+    dst_f8->f1[0] += sum;
+
+    // Slide the window by one element and update the sum:
+    // add the new element on the right and subtract the old element on the left.
+    #pragma unroll
+    for (int k = 1; k < 8; ++k) {
+        sum += srcPtr[k + filterSize - 1];   // Add new rightmost element
+        sum -= srcPtr[k - 1];                 // Remove old leftmost element
+        dst_f8->f1[k] += sum;                    // Store updated sum in output
+    }
 }
 
-template <>
-__device__ void box_filter_3x3_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
+// box filter implementation for F16 and F32 datatypes.
+template <const int filterSize>
+__device__ void box_filter_row_hip_compute(float* srcPtr, d_float8* dst_f8)
 {
-    d_float12 *src_f12 = (d_float12 *)srcPtr;
-    dst_f8->f1[0] = fmaf(src_f12->f1[0], 0.1111111f, dst_f8->f1[0]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[1], 0.1111111f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[1], 0.1111111f, dst_f8->f1[1]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[2], 0.1111111f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[2], 0.1111111f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[2], 0.1111111f, dst_f8->f1[2]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[3], 0.1111111f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[3], 0.1111111f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[3], 0.1111111f, dst_f8->f1[3]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[4], 0.1111111f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[4], 0.1111111f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[4], 0.1111111f, dst_f8->f1[4]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[5], 0.1111111f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[5], 0.1111111f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[5], 0.1111111f, dst_f8->f1[5]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[6], 0.1111111f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[6], 0.1111111f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[6], 0.1111111f, dst_f8->f1[6]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[7], 0.1111111f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[7], 0.1111111f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[7], 0.1111111f, dst_f8->f1[7]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[8], 0.1111111f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[8], 0.1111111f, dst_f8->f1[7]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[9], 0.1111111f, dst_f8->f1[7]);
-}
+    // source vector type based on kernel size for efficient loading.
+    using srcVecType = typename std::conditional<(filterSize == 3 || filterSize == 5), d_float12, d_float16>::type;
 
-template <typename T>
-__device__ void box_filter_5x5_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
-{
-    float src_f1;
-    using VectorType = typename FilterDispatch<T>::VectorType;
-    VectorType *src_c4 = reinterpret_cast<VectorType*>(srcPtr);
-    src_f1 = (float)(src_c4[0].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
-    src_f1 = (float)(src_c4[0].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.04f, dst_f8->f1[1]);
-    src_f1 = (float)(src_c4[0].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.04f, dst_f8->f1[2]);
-    src_f1 = (float)(src_c4[0].w);
-    dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.04f, dst_f8->f1[3]);
-    src_f1 = (float)(src_c4[1].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.04f, dst_f8->f1[4]);
-    src_f1 = (float)(src_c4[1].y);
-    dst_f8->f1[1] = fmaf(src_f1, 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.04f, dst_f8->f1[5]);
-    src_f1 = (float)(src_c4[1].z);
-    dst_f8->f1[2] = fmaf(src_f1, 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.04f, dst_f8->f1[6]);
-    src_f1 = (float)(src_c4[1].w);
-    dst_f8->f1[3] = fmaf(src_f1, 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].x);
-    dst_f8->f1[4] = fmaf(src_f1, 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].y);
-    dst_f8->f1[5] = fmaf(src_f1, 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].z);
-    dst_f8->f1[6] = fmaf(src_f1, 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].w);
-    dst_f8->f1[7] = fmaf(src_f1, 0.04f, dst_f8->f1[7]);
-}
+    // Interpret the srcPtr memory as a vector of floats (srcVecType)
+    const srcVecType& src_f = *reinterpret_cast<const srcVecType *>(srcPtr);
 
-template <>
-__device__ void box_filter_5x5_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
-{
-    d_float12 *src_f12 = (d_float12 *)srcPtr;
-    dst_f8->f1[0] = fmaf(src_f12->f1[0], 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[1], 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[1], 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[2], 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[2], 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[2], 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[3], 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[3], 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[3], 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[3], 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[0] = fmaf(src_f12->f1[4], 0.04f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[4], 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[4], 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[4], 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[4], 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[1] = fmaf(src_f12->f1[5], 0.04f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[5], 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[5], 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[5], 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[5], 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[2] = fmaf(src_f12->f1[6], 0.04f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[6], 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[6], 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[6], 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[6], 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[3] = fmaf(src_f12->f1[7], 0.04f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[7], 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[7], 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[7], 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[7], 0.04f, dst_f8->f1[7]);
-    dst_f8->f1[4] = fmaf(src_f12->f1[8], 0.04f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[8], 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[8], 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[8], 0.04f, dst_f8->f1[7]);
-    dst_f8->f1[5] = fmaf(src_f12->f1[9], 0.04f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[9], 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[9], 0.04f, dst_f8->f1[7]);
-    dst_f8->f1[6] = fmaf(src_f12->f1[10], 0.04f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[10], 0.04f, dst_f8->f1[7]);
-    dst_f8->f1[7] = fmaf(src_f12->f1[11], 0.04f, dst_f8->f1[7]);
-}
+    // Load current destination values into local variable for accumulation
+    d_float8 localDst = *dst_f8;
 
-template <typename T>
-__device__ void box_filter_7x7_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
-{
-    float src_f1;
-    using VectorType = typename FilterDispatch<T>::VectorType;
-    VectorType *src_c4 = reinterpret_cast<VectorType*>(srcPtr);
-    src_f1 = (float)(src_c4[0].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    src_f1 = (float)(src_c4[0].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    src_f1 = (float)(src_c4[0].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    src_f1 = (float)(src_c4[0].w);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    src_f1 = (float)(src_c4[1].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    src_f1 = (float)(src_c4[1].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    src_f1 = (float)(src_c4[1].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    src_f1 = (float)(src_c4[1].w);
-    dst_f8->f1[1] = fmaf(src_f1, 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].x);
-    dst_f8->f1[2] = fmaf(src_f1, 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].y);
-    dst_f8->f1[3] = fmaf(src_f1, 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].z);
-    dst_f8->f1[4] = fmaf(src_f1, 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].w);
-    dst_f8->f1[5] = fmaf(src_f1, 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].x);
-    dst_f8->f1[6] = fmaf(src_f1, 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].y);
-    dst_f8->f1[7] = fmaf(src_f1, 0.02040816f, dst_f8->f1[7]);
-}
+    #pragma unroll
+    // Accumulate sum over kernel window for each of the 8 output elements
+    for (int i = 0; i < filterSize; ++i)
+    {
+        #pragma unroll
+        for (int j = 0; j < 8; ++j)
+            localDst.f1[j] += src_f.f1[i + j];
+    }
 
-template <>
-__device__ void box_filter_7x7_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
-{
-    d_float16 *src_f16 = (d_float16 *)srcPtr;
-    dst_f8->f1[0] = fmaf(src_f16->f1[0], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[1], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[1], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[2], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[2], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[2], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[3], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[3], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[3], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[3], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[4], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[4], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[4], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[4], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[4], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[5], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[6], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[7], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[8], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[9], 0.02040816f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[9], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[9], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[9], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[9], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[10], 0.02040816f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[10], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[10], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[10], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[11], 0.02040816f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[11], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[11], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[12], 0.02040816f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[12], 0.02040816f, dst_f8->f1[7]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[13], 0.02040816f, dst_f8->f1[7]);
-}
-
-template <typename T>
-__device__ void box_filter_9x9_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
-{
-    float src_f1;
-    using VectorType = typename FilterDispatch<T>::VectorType;
-    VectorType *src_c4 = reinterpret_cast<VectorType*>(srcPtr);
-    src_f1 = (float)(src_c4[0].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    src_f1 = (float)(src_c4[0].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    src_f1 = (float)(src_c4[0].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    src_f1 = (float)(src_c4[0].w);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    src_f1 = (float)(src_c4[1].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    src_f1 = (float)(src_c4[1].y);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    src_f1 = (float)(src_c4[1].z);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    src_f1 = (float)(src_c4[1].w);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].x);
-    dst_f8->f1[0] = fmaf(src_f1, 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].y);
-    dst_f8->f1[1] = fmaf(src_f1, 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].z);
-    dst_f8->f1[2] = fmaf(src_f1, 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[2].w);
-    dst_f8->f1[3] = fmaf(src_f1, 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].x);
-    dst_f8->f1[4] = fmaf(src_f1, 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].y);
-    dst_f8->f1[5] = fmaf(src_f1, 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].z);
-    dst_f8->f1[6] = fmaf(src_f1, 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-    src_f1 = (float)(src_c4[3].w);
-    dst_f8->f1[7] = fmaf(src_f1, 0.01234568f, dst_f8->f1[7]);
-}
-
-template <>
-__device__ void box_filter_9x9_row_hip_compute<float>(float *srcPtr, d_float8 *dst_f8)
-{
-    d_float16 *src_f16 = (d_float16 *)srcPtr;
-    dst_f8->f1[0] = fmaf(src_f16->f1[0], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[1], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[1], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[2], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[2], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[2], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[3], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[3], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[3], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[3], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[4], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[4], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[4], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[4], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[4], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[5], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[6], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[7], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[0] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[8], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[1] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[9], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[2] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[10], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[3] = fmaf(src_f16->f1[11], 0.01234568f, dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[11], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[11], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[11], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[11], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[4] = fmaf(src_f16->f1[12], 0.01234568f, dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[12], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[12], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[12], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[5] = fmaf(src_f16->f1[13], 0.01234568f, dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[13], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[13], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[6] = fmaf(src_f16->f1[14], 0.01234568f, dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[14], 0.01234568f, dst_f8->f1[7]);
-    dst_f8->f1[7] = fmaf(src_f16->f1[15], 0.01234568f, dst_f8->f1[7]);
+    // Write the accumulated sums back to the destination pointer
+    *dst_f8 = localDst;
 }
 
 // -------------------- Set 1 - PKD3->PKD3 for T = U8/F32/F16/I8 --------------------
@@ -591,15 +155,19 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize3InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -679,21 +247,25 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize5InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -773,27 +345,31 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize7InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -873,33 +449,37 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize9InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -961,9 +541,13 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 2; i++)
+            sum_f8.f4[i] *= kernelSize3InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -1003,9 +587,13 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize3InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1043,9 +631,13 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize3InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1106,11 +698,15 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 2; i++)
+            sum_f8.f4[i] *= kernelSize5InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -1150,11 +746,15 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize5InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1192,11 +792,15 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize5InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1258,13 +862,17 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 2; i++)
+            sum_f8.f4[i] *= kernelSize7InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -1304,13 +912,17 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize7InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1348,13 +960,17 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-            box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize7InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1415,15 +1031,19 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 2; i++)
+            sum_f8.f4[i] *= kernelSize9InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -1463,15 +1083,19 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize9InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1509,15 +1133,19 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
-            box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8);
+            box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8);
+            // Normalize sum by kernel size inverse factor
+            #pragma unroll
+            for(int i = 0; i < 2; i++)
+                sum_f8.f4[i] *= kernelSize9InverseSquare;
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1600,15 +1228,19 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize3InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1687,21 +1319,25 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize5InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1780,27 +1416,31 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize7InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1879,33 +1519,37 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize9InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1991,15 +1635,19 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize3InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -2083,21 +1731,25 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize5InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -2181,27 +1833,31 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize7InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -2285,33 +1941,37 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
-        box_filter_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 3][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 3][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 3][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 5][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 5][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 5][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 7][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 7][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 7][hipThreadIdx_x8], &sum_f24.f8[2]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1]);
+        box_filter_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2]);
+        // Normalize sum by kernel size inverse factor
+        #pragma unroll
+        for(int i = 0; i < 6; i++)
+            sum_f24.f4[i] *= kernelSize9InverseSquare;
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -2610,6 +2270,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
 
     return RPP_SUCCESS;
 }
+
 template RppStatus hip_exec_box_filter_tensor<Rpp8u>(Rpp8u*,
                                                      RpptDescPtr,
                                                      Rpp8u*,

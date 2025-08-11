@@ -2047,9 +2047,6 @@ template <typename T>
 struct FilterDispatchChar
 {
     using SharedType = T;
-    using VectorType3 =  typename std::conditional<std::is_same<T, uchar>::value , uint3 , int3>::type; // VectorTypes are used to extract vector of values from the shared memory
-    using VectorType4 =  typename std::conditional<std::is_same<T, uchar>::value , uint4 , int4>::type; // VectorTypes are used to extract vector of values from the shared memory
-    using VectorType = typename std::conditional<std::is_same<T, uchar>::value, uchar4, char4>::type; // VectorTypes are used to extract vector of values from the shared memory
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(uchar* src, uchar** dst) { rpp_hip_load24_pkd3_to_uchar8_pln3(src, dst); }
     __device__ __forceinline__ static void rpp_hip_load8(uchar* src, uchar* dst) { rpp_hip_load8_to_uchar8(src, dst); }
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(schar* src, schar** dst) { rpp_hip_load24_pkd3_to_schar8_pln3(src, dst); }
