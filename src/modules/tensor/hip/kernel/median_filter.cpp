@@ -314,7 +314,7 @@ __device__ __forceinline__ float compute_median(T *window)
     {
         // 1. choose midVal – median-of-3 (first, mid, last) is good enough
         int midIdx   = (leftIdx + rightIdx) >> 1;
-        float3 val_f3 = make_float3(window[leftIdx], window[midIdx], window[rightIdx]);
+        float3 val_f3 = make_float3(static_cast<float>(window[leftIdx]), static_cast<float>(window[midIdx]), static_cast<float>(window[rightIdx]));
         float midVal = rpp_hip_median3(val_f3);
 
         // 2. partition
@@ -344,7 +344,7 @@ __device__ __forceinline__ float compute_median(T *window)
             break;               // midVal is the median
     }
 
-     return static_cast<float>(window[medianIndex]);
+    return static_cast<float>(window[medianIndex]);
 }
 
 template <int kernelSize, typename T>
@@ -373,7 +373,7 @@ __device__ void median_filter_row_hip_compute(T *srcPtr, d_float8 *median_f8)
                 int posInRow = (j << 2) + k; // same as j*4 + k, but faster with shift
                 if (posInRow >= paddedKernelWidth)
                     break;
-                src[i * paddedKernelWidth + posInRow] = ((T)((val >> (k << 3)) & 0xFF));
+                src[i * paddedKernelWidth + posInRow] = static_cast<T>((val >> (k << 3)) & 0xFF);
             }
         }
     }
