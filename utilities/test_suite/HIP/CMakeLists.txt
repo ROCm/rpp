@@ -80,41 +80,42 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 ]]
 
 # find RPP
-find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
-find_path(RPP_INCLUDE_DIR NAMES rpp.h PATHS ${ROCM_PATH}/include/rpp)
+find_package(rpp 2.1.0 QUIET)
+if(rpp_FOUND)
+    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+    message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
+    message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+else()
+    message("-- ${Yellow}${PROJECT_NAME} requires rpp. Install rpp before running CTests")
+endif(rpp_FOUND)
 
-if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
-    set(RPP_FOUND TRUE)
-    message("-- ${White}${PROJECT_NAME}: Using RPP -- \n\tLibraries:${RPP_LIBRARY} \n\tIncludes:${RPP_INCLUDE_DIR}${ColourReset}")
-endif()
-
-if(NOT RPP_FOUND)
+if(NOT rpp_FOUND)
     message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running RPP Test Suite")
 else()
     # RPP installation - Backend check
-    set(RPP_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${RPP_INCLUDE_DIR}/rpp_backend.h)
-        file(READ ${RPP_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
+    set(rpp_BACKEND_HIP_FOUND 0)
+    if(EXISTS ${rpp_INCLUDE_DIR}/rpp_backend.h)
+        file(READ ${rpp_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
         string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+        set(rpp_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
     endif()
-    if(NOT DEFINED BACKEND AND RPP_BACKEND_HIP_FOUND)
+    if(NOT DEFINED BACKEND AND rpp_BACKEND_HIP_FOUND)
         set(BACKEND "HIP")
         message("-- ${Green}${PROJECT_NAME} is supported to build and run with RPP HIP backend installation${ColourReset}")
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
         message("-- ${Red}${PROJECT_NAME} is not supported to build and run with RPP HOST backend installation${ColourReset}")
     endif()
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${RPP_LIBRARY})
-    include_directories(${RPP_INCLUDE_DIR})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rpp::rpp)
+    include_directories(${rpp_INCLUDE_DIR})
 
     # RPP HIP test suite works for RPP built with HIP backend
     if("${BACKEND}" STREQUAL "HIP")
 
         # RPP installation - Audio support check
         set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-        if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
-            file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
+        if(EXISTS ${rpp_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
+            file(READ ${rpp_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
             string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
@@ -193,9 +194,9 @@ else()
                                 #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln1.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
                                 # else()                                                                                                                                                        # added only on HOST
                                 #     message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")          # added only on HOST
                                 # endif(OPENPYXL_FOUND EQUAL 0)                                                                                                                                 # added only on HOST
@@ -258,4 +259,4 @@ else()
     else()
         message("-- ${Red}${PROJECT_NAME} is supported to build and run only with RPP HIP backend installation${ColourReset}")
     endif("${BACKEND}" STREQUAL "HIP")
-endif(NOT RPP_FOUND)
+endif(NOT rpp_FOUND)
