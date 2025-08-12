@@ -8,7 +8,7 @@ Building and installing ROCm Performance Primitives
 
 ROCm Performance Primitives (RPP) supports HIP and OpenCL backends running on `accelerators based on the CDNA architecture <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_, and supports CPU-only backends on CPUs that support PCIe™ atomics.
 
-On OpenCL and HIP backends, RPP requires ROCm installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ and the ``rocm`` usecase:
+On OpenCL and HIP backends, RPP requires ROCm installed with the `AMDGPU installer <https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.4.1/install/install-methods/amdgpu-installer-index.html>`_ and the ``rocm`` usecase:
 
 .. code:: shell
     
