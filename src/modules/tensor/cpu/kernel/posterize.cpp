@@ -106,6 +106,7 @@ RppStatus posterize_char_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
 
+        // Mask generated based on the number of bits to represent the image for image posterization
         Rpp8u posterizeBitsMask = ((1 << posterizeLevelBits[batchCount]) - 1) << (8 - posterizeLevelBits[batchCount]);
         __m256i pxPosterizeBitsMask = _mm256_set1_epi8(posterizeBitsMask);
 
@@ -347,6 +348,7 @@ RppStatus posterize_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
+        // Factor generated based on the number of bits to represent the image for image posterization
         Rpp32f posterizeBitsFactor = 255.0/(1 << (8 - posterizeLevelBits[batchCount]));
         __m256 pPosterizeBitsFactor = _mm256_set1_ps(posterizeBitsFactor);
         __m256 pPosterizeBitsInverseFactor = _mm256_set1_ps(1 / posterizeBitsFactor);
@@ -547,6 +549,7 @@ RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
+        // Mask generated based on the number of bits to represent the image for image posterization
         Rpp32u posterizeBitsMask = ((1 << posterizeLevelBits[batchCount]) - 1) << (8 - posterizeLevelBits[batchCount]);
         __m256i pxPosterizeBitsMask = _mm256_set1_epi32(posterizeBitsMask);
 
