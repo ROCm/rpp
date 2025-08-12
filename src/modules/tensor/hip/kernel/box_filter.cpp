@@ -33,13 +33,13 @@ __device__ const float4 kernelSize7InverseSquare = {0.02040816f, 0.02040816f, 0.
 __device__ const float4 kernelSize9InverseSquare = {0.01234568f, 0.01234568f, 0.01234568f, 0.01234568f};
 
 
-// box filter implementation for U8 and I8 datatypes.
+// Box Filter implementation for U8 and I8 datatypes.
 template <int filterSize, typename T>
 __device__ void box_filter_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
 {
     int sum = 0;
-    #pragma unroll
     // Initialize the sum with the first 'filterSize' elements
+    #pragma unroll
     for (int j = 0; j < filterSize; ++j)
         sum += srcPtr[j];
 
@@ -51,8 +51,8 @@ __device__ void box_filter_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
     #pragma unroll
     for (int k = 1; k < 8; ++k) {
         sum += srcPtr[k + filterSize - 1];   // Add new rightmost element
-        sum -= srcPtr[k - 1];                 // Remove old leftmost element
-        dst_f8->f1[k] += sum;                    // Store updated sum in output
+        sum -= srcPtr[k - 1];                // Remove old leftmost element
+        dst_f8->f1[k] += sum;                // Store updated sum in output
     }
 }
 
@@ -69,8 +69,8 @@ __device__ void box_filter_row_hip_compute(float* srcPtr, d_float8* dst_f8)
     // Load current destination values into local variable for accumulation
     d_float8 localDst = *dst_f8;
 
-    #pragma unroll
     // Accumulate sum over kernel window for each of the 8 output elements
+    #pragma unroll
     for (int i = 0; i < filterSize; ++i)
     {
         #pragma unroll
