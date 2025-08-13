@@ -30,7 +30,7 @@ __device__ const float normCoeff = 0.3535533905932737f;
 __device__ const float4 dctACDF = {1.387039845322148f, 1.175875602419359f, 0.785694958387102f, 0.275899379282943f};
 __device__ const float2 dctBE = {1.306562964876377f, 0.541196100146197f};
 
-__device__ const float4 yR_f4 = MAKE_FLOAT4(0.299f);
+__device__ const float4 yR_f4 = {0.299f, 0.299f, 0.299f, 0.299f};
 __device__ const float4 yG_f4 = {0.587f, 0.587f, 0.587f, 0.587f};
 __device__ const float4 yB_f4 = {0.114f, 0.114f, 0.114f, 0.114f};
 __device__ const float4 maxVal255_f4 = {255.0f, 255.0f, 255.0f, 255.0f};
