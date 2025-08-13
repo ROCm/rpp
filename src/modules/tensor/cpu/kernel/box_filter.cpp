@@ -1486,13 +1486,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_load_box_filter_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<9>(pxRow, pxRowHalf);
                         }
 
                         // get the accumalated result for next 24 elements
@@ -1675,13 +1673,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         rpp_load_box_filter_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<9>(pxRow, pxRowHalf);
                         }
 
                         // get the accumalated result for next 24 elements
