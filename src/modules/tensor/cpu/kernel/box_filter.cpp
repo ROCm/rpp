@@ -188,180 +188,32 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
 
 // -------------------- Set 0 box_filter compute functions --------------------
 
-// unpack lower half of 3 256 bit registers and add (used for 3x3 kernel size U8 variants)
-inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
+// unpack halves from K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+template <const int K>
+inline void unpack_and_add_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[i], avx_px0));
+    pxDst[1] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[1] = _mm256_add_epi16(pxDst[1], _mm256_unpackhi_epi8(pxRow[i], avx_px0));
 }
 
-// unpack and sign extend lower half of 3 256 bit registers and add (used for 3x3 kernel size I8 variants)
-inline void unpacklo_signext_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
+// unpack and sign extend halves of K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+template <const int K>
+inline void unpack_signext_and_add_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[2], avx_px0), 8), 8));
-}
-
-// unpack higher half of 3 256 bit registers and add (used for 3x3 kernel size U8 variants)
-inline void unpackhi_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-}
-
-// unpack and sign extend higher half of 3 256 bit registers and add (used for 3x3 kernel size I8 variants)
-inline void unpackhi_signext_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[2], avx_px0), 8), 8));
-}
-
-// unpack lower half of 5 256 bit registers and add (used for 5x5 kernel size U8 variants)
-inline void unpacklo_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-}
-
-// unpack and sign extend lower half of 5 256 bit registers and add (used for 5x5 kernel size I8 variants)
-inline void unpacklo_signext_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[4], avx_px0), 8), 8));
-}
-
-// unpack higher half of 5 256 bit registers and add (used for 5x5 kernel size U8 variants)
-inline void unpackhi_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-}
-
-// unpack and sign extend lower half of 5 256 bit registers and add (used for 5x5 kernel size I8 variants)
-inline void unpackhi_signext_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[4], avx_px0), 8), 8));
-}
-
-// unpack lower half of 7 256 bit registers and add (used for 7x7 kernel size U8 variants)
-inline void unpacklo_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-}
-
-// unpack and sign extend lower half of 7 256 bit registers and add (used for 7x7 kernel size I8 variants)
-inline void unpacklo_signext_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[4], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[5], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[6], avx_px0), 8), 8));
-}
-
-// unpack higher half of 7 256 bit registers and add (used for 7x7 kernel size U8 variants)
-inline void unpackhi_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-}
-
-// unpack and sign extend higher half of 7 256 bit registers and add (used for 7x7 kernel size I8 variants)
-inline void unpackhi_signext_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[4], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[5], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[6], avx_px0), 8), 8));
-}
-
-// unpack lower half of 9 256 bit registers and add (used for 9x9 kernel size U8 variants)
-inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[7], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[8], avx_px0));
-}
-
-// unpack and sign extend higher half of 9 256 bit registers and add (used for 9x9 kernel size I8 variants)
-inline void unpacklo_signext_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[4], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[5], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[6], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[7], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[8], avx_px0), 8), 8));
-}
-
-// unpack higher half of 9 256 bit registers and add (used for 9x9 kernel size U8 variants)
-inline void unpackhi_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[7], avx_px0));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[8], avx_px0));
-}
-
-// unpack and sign extend higher half of 9 256 bit registers and add (used for 9x9 kernel size I8 variants)
-inline void unpackhi_signext_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[1], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[2], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[3], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[4], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[5], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[6], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[7], avx_px0), 8), 8));
-    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[8], avx_px0), 8), 8));
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[i], avx_px0), 8), 8));
+    pxDst[1] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[1] = _mm256_add_epi16(pxDst[1], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[i], avx_px0), 8), 8));
 }
 
 // add 3 256 bit registers (used for 3x3 kernel size F32/F16 variants)
@@ -491,13 +343,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<3>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<3>(pxRow, pxRowHalf);
                             }
 
                             // perform blend and shuffle operations to get required order and add them
@@ -572,13 +422,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<3>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<3>(pxRow, pxRowHalf);
                         }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
@@ -654,13 +502,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<3>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<3>(pxRow, pxRowHalf);
                         }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
@@ -754,13 +600,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<3>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_3x3_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_3x3_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<3>(pxRow, pxRowHalf);
                             }
 
                             // perform blend and shuffle operations for the first 8 output values to get required order and add them
@@ -863,13 +707,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<5>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<5>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[4], pxDst[2];
@@ -942,13 +784,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<5>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<5>(pxRow, pxRowHalf);
                         }
 
                         __m128i pxTemp[5], pxDst[2];
@@ -1022,13 +862,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<5>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<5>(pxRow, pxRowHalf);
                         }
 
                         __m128i pxTemp[5], pxDst[2];
@@ -1122,13 +960,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<5>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_5x5_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_5x5_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<5>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[4], pxDst[2];
@@ -1228,13 +1064,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<7>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<7>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[4], pxDst[2];
@@ -1324,13 +1158,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                               unpack_signext_and_add_host<7>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<7>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[4], pxDst[2];
@@ -1414,13 +1246,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<7>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<7>(pxRow, pxRowHalf);
                         }
 
                         __m128i pxTemp[4], pxResult;
@@ -1483,13 +1313,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<7>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_7x7_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<7>(pxRow, pxRowHalf);
                         }
 
                         __m128i pxTemp[4], pxResult[2];
@@ -1571,13 +1399,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<9>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[3], pxDst;
@@ -1643,13 +1469,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         __m256i pxRowHalf[2], pxResult;
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<9>(pxRow, pxRowHalf);
                         }
 
                         // get the accumalated result for first 8 elements
@@ -1756,13 +1580,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
-                                unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                                unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                             }
                             else
                             {
-                                unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                                unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                                unpack_and_add_host<9>(pxRow, pxRowHalf);
                             }
 
                             __m128i pxTemp[3], pxDst;
@@ -1836,13 +1658,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // get the accumalated result for first 8 elements
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
-                            unpacklo_signext_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_signext_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_signext_and_add_host<9>(pxRow, pxRowHalf);
                         }
                         else
                         {
-                            unpacklo_and_add_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_add_9x9_host(pxRow, &pxRowHalf[1]);
+                            unpack_and_add_host<9>(pxRow, pxRowHalf);
                         }
 
                         // get the accumalated result for first 8 elements
