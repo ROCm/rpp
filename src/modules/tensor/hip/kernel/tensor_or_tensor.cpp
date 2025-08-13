@@ -133,6 +133,8 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
     uint* src1SampleStrides = srcStrides1 + id_z * RPPT_MAX_DIMS;
     uint* src2SampleStrides = srcStrides2 + id_z * RPPT_MAX_DIMS;
     uint* dstSampleStrides = dstStrides + id_z * RPPT_MAX_DIMS;
+    if(id_x >= dstSampleStrides[0])
+        return;
 
     uint dstIdx = id_x + id_z * dstSampleStrides[0];
     uint srcIdx1 = id_z * src1SampleStrides[0];
@@ -141,8 +143,6 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
     for(int i = numDims - 1; i >= 0; i--)
     {
         int index = id_x % dstSampleDims[i];
-        if(index >= dstSampleDims[i])
-            return;
         srcIdx1 = srcIdx1 + (index * src1SampleStrides[i + 1]);
         srcIdx2 = srcIdx2 + (index * src2SampleStrides[i + 1]);
         id_x = id_x / dstSampleDims[i];
