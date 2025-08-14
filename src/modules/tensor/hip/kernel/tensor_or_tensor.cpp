@@ -188,18 +188,17 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     }
 
     // Allocate host-side buffers for broadcast dims/strides
-    Rpp32u *src1BroadcastDims = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    Rpp32u *src2BroadcastDims = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    Rpp32u *dstBroadcastDims = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    Rpp32u *src1BeginOffsets = (Rpp32u*)calloc(batchSize, sizeof(Rpp32u));
-    Rpp32u *src2BeginOffsets = (Rpp32u*)calloc(batchSize, sizeof(Rpp32u));
+    Rpp32u *src1BroadcastDims = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    Rpp32u *src2BroadcastDims = src1BroadcastDims + (batchSize * RPPT_MAX_DIMS);
+    Rpp32u *dstBroadcastDims = src2BroadcastDims + (batchSize * RPPT_MAX_DIMS);
+    Rpp32u *src1BeginOffsets = dstBroadcastDims + (batchSize * RPPT_MAX_DIMS);
+    Rpp32u *src2BeginOffsets = src1BeginOffsets + batchSize;
 
-    Rpp32u *src1BroadcastStrides = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    Rpp32u *src2BroadcastStrides = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    Rpp32u *dstBroadcastStrides = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-
+    Rpp32u *src1BroadcastStrides = src2BeginOffsets + batchSize;//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
+    Rpp32u *src2BroadcastStrides = src1BroadcastStrides + (batchSize * RPPT_MAX_DIMS);//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
+    Rpp32u *dstBroadcastStrides = src2BroadcastStrides + (batchSize * RPPT_MAX_DIMS);//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(handle.GetNumThreads())
+#pragma omp parallel for num_threads(batchSize)
     for (int i = 0; i < batchSize; i++)
     {
         bool incompatibleDims = false;
@@ -214,58 +213,63 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
 
         Rpp32u *src1BDims = src1BroadcastDims + i * RPPT_MAX_DIMS;
         Rpp32u *src2BDims = src2BroadcastDims + i * RPPT_MAX_DIMS;
-        Rpp32u *dstBDims = dstBroadcastDims + i * RPPT_MAX_DIMS;
+        Rpp32u *dstBDims  = dstBroadcastDims  + i * RPPT_MAX_DIMS;
 
         Rpp32u *src1BStrides = src1BroadcastStrides + i * RPPT_MAX_DIMS;
         Rpp32u *src2BStrides = src2BroadcastStrides + i * RPPT_MAX_DIMS;
-        Rpp32u *dstBStrides = dstBroadcastStrides  + i * RPPT_MAX_DIMS;
+        Rpp32u *dstBStrides  = dstBroadcastStrides  + i * RPPT_MAX_DIMS;
 
+        // Step 0: copy the first stride
         src1BStrides[0] = src1Strides[0];
         src2BStrides[0] = src2Strides[0];
-        dstBStrides[0] = dstStrides[0];
+        dstBStrides[0]  = dstStrides[0];
 
+        src1BeginOffsets[i] = 0;
+        src2BeginOffsets[i] = 0;
+
+        // Step 1: copy minDim dimensions & strides
+        memcpy(src1BDims, src1dims, minDim * sizeof(Rpp32u));
+        memcpy(src2BDims, src2dims, minDim * sizeof(Rpp32u));
+        memcpy(src1BStrides + 1, src1Strides + 1, minDim * sizeof(Rpp32u));
+        memcpy(src2BStrides + 1, src2Strides + 1, minDim * sizeof(Rpp32u));
+        memcpy(dstBStrides + 1, dstStrides + 1, minDim * sizeof(Rpp32u));
+
+        // Compute offsets & check incompatibility
         for (int j = 0; j < minDim; j++)
         {
-            src1BDims[j] = src1dims[j];
-            src2BDims[j] = src2dims[j];
-            src1BStrides[j + 1] = src1Strides[j + 1];
-            src2BStrides[j + 1] = src2Strides[j + 1];
-            dstBStrides[j + 1] = dstStrides[j + 1];
-
             if ((src1BDims[j] != src2BDims[j]) && (src1BDims[j] != 1) && (src2BDims[j] != 1))
                 incompatibleDims = true;
+
             dstBDims[j] = std::max(src1BDims[j], src2BDims[j]);
             src1BeginOffsets[i] += src1begin[j] * src1Strides[j + 1];
             src2BeginOffsets[i] += src2begin[j] * src2Strides[j + 1];
         }
 
+        // Step 2: handle extra dims beyond minDim
         if (src1NDim < src2NDim)
         {
-            for (int j = minDim; j < dstDim; j++)
-            {
-                src1BDims[j] = 1;
-                src2BDims[j] = src2dims[j];
-                dstBDims[j] = src2dims[j];
-                src1BStrides[j + 1] = 0;
-                src2BStrides[j + 1] = src2Strides[j + 1];
-                dstBStrides[j + 1]  = dstStrides[j + 1];
-            }
-        }
+            int extraDims = dstDim - minDim;
+            memset(src1BDims + minDim, 1, extraDims * sizeof(Rpp32u));
+            memcpy(src2BDims + minDim, src2dims + minDim, extraDims * sizeof(Rpp32u));
+            memcpy(dstBDims  + minDim, src2dims + minDim, extraDims * sizeof(Rpp32u));
 
+            memset(src1BStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
+            memcpy(src2BStrides + minDim + 1, src2Strides + minDim + 1, extraDims * sizeof(Rpp32u));
+            memcpy(dstBStrides  + minDim + 1, dstStrides  + minDim + 1, extraDims * sizeof(Rpp32u));
+        }
         else if (src1NDim > src2NDim)
         {
-            for (int j = minDim; j < dstDim; j++)
-            {
-                src2BDims[j] = 1;
-                src1BDims[j] = src1dims[j];
-                dstBDims[j] = src1dims[j];
-                src1BStrides[j + 1] = src1Strides[j + 1];
-                src2BStrides[j + 1] = 0;
-                dstBStrides[j + 1] = dstStrides[j + 1];
-            }
+            int extraDims = dstDim - minDim;
+            memcpy(src1BDims + minDim, src1dims + minDim, extraDims * sizeof(Rpp32u));
+            memset(src2BDims + minDim, 1, extraDims * sizeof(Rpp32u));
+            memcpy(dstBDims  + minDim, src1dims + minDim, extraDims * sizeof(Rpp32u));
+
+            memcpy(src1BStrides + minDim + 1, src1Strides + minDim + 1, extraDims * sizeof(Rpp32u));
+            memset(src2BStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
+            memcpy(dstBStrides + minDim + 1, dstStrides + minDim + 1, extraDims * sizeof(Rpp32u));
         }
 
-        // Step 3: Zero-out strides for size-1 broadcast dims
+        // Step 3: zero-out strides for broadcast dims
         for (int j = 0; j < minDim; j++) {
             if ((src1BDims[j] != dstBDims[j]) && (src1BDims[j] == 1))
                 src1BStrides[j + 1] = 0;
@@ -275,23 +279,23 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     }
 
     // Allocate device memory for HIP kernel inputs
-    Rpp32u *d_src1BroadcastDims, *d_src2BroadcastDims, *d_dstBroadcastDims, *d_src1BeginOffsets, *d_src2BeginOffsets;
+    Rpp32u *d_dstBroadcastDims, *d_src1BeginOffsets, *d_src2BeginOffsets;
     Rpp32u *d_src1BroadcastStrides, *d_src2BroadcastStrides, *d_dstBroadcastStrides;
 
-    hipMalloc(&d_dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    hipMalloc(&d_src1BeginOffsets, batchSize * sizeof(Rpp32u));
-    hipMalloc(&d_src2BeginOffsets, batchSize * sizeof(Rpp32u));
-    hipMalloc(&d_src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    hipMalloc(&d_src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    hipMalloc(&d_dstBroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
+    d_dstBroadcastDims = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    d_src1BeginOffsets = d_dstBroadcastDims + (batchSize * RPPT_MAX_DIMS);
+    d_src2BeginOffsets = d_src1BeginOffsets + batchSize;
+    d_src1BroadcastStrides = d_src2BeginOffsets + batchSize;//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
+    d_src2BroadcastStrides = d_src1BroadcastStrides + (batchSize * RPPT_MAX_DIMS);//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
+    d_dstBroadcastStrides = d_src2BroadcastStrides + (batchSize * RPPT_MAX_DIMS);//(Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
 
     // Copy to device
-    hipMemcpy(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    hipMemcpyAsync(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
+    hipMemcpyAsync(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
+    hipMemcpyAsync(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
+    hipMemcpyAsync(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
+    hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
+    hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream());
 
     if(dstDim == 1)
     {
@@ -299,7 +303,6 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         int globalThreads_x = dstGenericDescPtr->dims[1];
         int globalThreads_y = 1;
         int globalThreads_z = dstGenericDescPtr->dims[0];
-        //printf("Broadcast Test case 2\n");
         hipLaunchKernelGGL(tensor_or_tensor_1d_hip_tensor,
                         dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                         dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
