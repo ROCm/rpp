@@ -175,6 +175,18 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     Rpp32u *src2Strides = srcGenericDescPtr2->strides;
     Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
+    for(int i = 0; i < minDim; i++)
+    {
+        if(srcGenericDescPtr1->dims[src1NDim - i] != srcGenericDescPtr2->dims[src2NDim - i])
+        {
+            if((srcGenericDescPtr1->dims[src1NDim - i] != 1) && (srcGenericDescPtr2->dims[src2NDim - i] != 1))
+            {
+                printf("Incompatible dimensions for the batch\n");
+                return RPP_SUCCESS;
+            }
+        }
+    }
+
     // Allocate host-side buffers for broadcast dims/strides
     Rpp32u *src1BroadcastDims = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
     Rpp32u *src2BroadcastDims = (Rpp32u*)malloc(batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
@@ -260,22 +272,12 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
             if ((src2BDims[j] != dstBDims[j]) && (src2BDims[j] == 1))
                 src2BStrides[j + 1] = 0;
         }
-
-        std::cout<<"\n batchSize "<< i;
-        for(int j = 0; j < 5; j++)
-            printf("\n B srcStrides1[%d] : %d", j, src1BStrides[j]);
-        for(int j = 0; j < 5; j++)
-            printf("\n B srcStrides2[%d] : %d", j, src2BStrides[j]);
-        for(int j = 0; j < 5; j++)
-            printf("\n B dstStrides2[%d] : %d", j, dstBStrides[j]);
     }
-    
+
     // Allocate device memory for HIP kernel inputs
     Rpp32u *d_src1BroadcastDims, *d_src2BroadcastDims, *d_dstBroadcastDims, *d_src1BeginOffsets, *d_src2BeginOffsets;
     Rpp32u *d_src1BroadcastStrides, *d_src2BroadcastStrides, *d_dstBroadcastStrides;
 
-    hipMalloc(&d_src1BroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
-    hipMalloc(&d_src2BroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
     hipMalloc(&d_dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
     hipMalloc(&d_src1BeginOffsets, batchSize * sizeof(Rpp32u));
     hipMalloc(&d_src2BeginOffsets, batchSize * sizeof(Rpp32u));
@@ -284,8 +286,6 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     hipMalloc(&d_dstBroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u));
 
     // Copy to device
-    hipMemcpy(d_src1BroadcastDims, src1BroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
-    hipMemcpy(d_src2BroadcastDims, src2BroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
     hipMemcpy(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice);
     hipMemcpy(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice);
     hipMemcpy(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice);
