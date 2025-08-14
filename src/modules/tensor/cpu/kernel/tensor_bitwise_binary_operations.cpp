@@ -57,8 +57,8 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
     Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim;
 
     for(int test = 0; test < minDim; test++) {
-        if(srcPtr1GenericDescPtr->dims[minDim - test] != srcPtr2GenericDescPtr->dims[minDim - test])
-            if((srcPtr1GenericDescPtr->dims[minDim - test] != 1) && (srcPtr2GenericDescPtr->dims[minDim - test] != 1)) {
+        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
+            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1)) {
                 printf("Incompatible dimensions for the batch\n");
                 return RPP_SUCCESS;
         }
