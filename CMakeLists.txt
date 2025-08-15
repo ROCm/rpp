@@ -586,7 +586,7 @@ cpack_add_component(runtime
 
 cpack_add_component(dev
     DISPLAY_NAME "RPP Develop Package"
-    DESCRIPTION "computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
+    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
 
 cpack_add_component(test
     DISPLAY_NAME "RPP Test Package"
