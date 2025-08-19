@@ -127,9 +127,9 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
         dstPtrChannel = dstPtrImage;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         Rpp8u thresholdParam = static_cast<Rpp8u>(std::round(thresholdTensor[batchCount] * 255));
 #if __AVX2__
@@ -156,19 +156,19 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
-                // {
-                //     __m256i p[3];
-                //     rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);                               // simd loads
-                //     compute_solarize_96_host(p, pxThresholdParam);                                           // threshold adjustment
-                //     rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
-                //     srcPtrTemp += vectorIncrement;
-                //     dstPtrTempR += vectorIncrementPerChannel;
-                //     dstPtrTempG += vectorIncrementPerChannel;
-                //     dstPtrTempB += vectorIncrementPerChannel;
-                // }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+                    __m256i p[3];
+                    rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);                               // simd loads
+                    compute_solarize_96_host(p, pxThresholdParam);                                           // threshold adjustment
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
 #endif
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = (*(srcPtrTemp) >= thresholdParam) ? (255 - *(srcPtrTemp)) : *(srcPtrTemp);
                     *dstPtrTempG++ = (*(srcPtrTemp + 1) >= thresholdParam) ? (255 - *(srcPtrTemp + 1)) : *(srcPtrTemp + 1);
@@ -198,17 +198,17 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                // for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
-                // {
-                //     __m256i p[3];
-                //     rpp_simd_load(rpp_load96_u8_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
-                //     compute_solarize_96_host(p, pxThresholdParam); 	                                        // threshold adjustment
-                //     rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, p);                           // simd stores
-                //     srcPtrTempR += 32;
-                //     srcPtrTempG += 32;
-                //     srcPtrTempB += 32;
-                //     dstPtrTemp += 96;
-                // }
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
+                {
+                    __m256i p[3];
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_solarize_96_host(p, pxThresholdParam); 	                                        // threshold adjustment
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, p);                           // simd stores
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
+                }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -241,17 +241,17 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-//                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
-//                     {
-// #if __AVX2__
-//                         __m256i p;
-//                         p = _mm256_loadu_si256((__m256i *)srcPtrTemp);
-//                         compute_solarize_32_host(&p, pxThresholdParam);
-//                         _mm256_storeu_si256((__m256i *)dstPtrTemp, p);
-// #endif
-//                         srcPtrTemp +=32;
-//                         dstPtrTemp +=32;
-//                     }
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
+                    {
+#if __AVX2__
+                        __m256i p;
+                        p = _mm256_loadu_si256((__m256i *)srcPtrTemp);
+                        compute_solarize_32_host(&p, pxThresholdParam);
+                        _mm256_storeu_si256((__m256i *)dstPtrTemp, p);
+#endif
+                        srcPtrTemp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
+                    }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = (*srcPtrTemp >= thresholdParam) ? (255 - (*srcPtrTemp)) : *srcPtrTemp;
@@ -325,17 +325,17 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
-                {
-                    __m256 p[3];
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
-                    compute_solarize_24_host(p, pThresholdParam); 	                                           // threshold adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
-                    srcPtrTemp += 24;
-                    dstPtrTempR += 8;
-                    dstPtrTempG += 8;
-                    dstPtrTempB += 8;
-                }
+                // for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                // {
+                //     __m256 p[3];
+                //     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
+                //     compute_solarize_24_host(p, pThresholdParam); 	                                           // threshold adjustment
+                //     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
+                //     srcPtrTemp += 24;
+                //     dstPtrTempR += 8;
+                //     dstPtrTempG += 8;
+                //     dstPtrTempB += 8;
+                // }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -369,17 +369,17 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
-                {
-                    __m256 p[3];
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
-                    compute_solarize_24_host(p, pThresholdParam); 	                                         // threshold adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);                           // simd stores
-                    srcPtrTempR += 8;
-                    srcPtrTempG += 8;
-                    srcPtrTempB += 8;
-                    dstPtrTemp += 24;
-                }
+                // for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                // {
+                //     __m256 p[3];
+                //     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                //     compute_solarize_24_host(p, pThresholdParam); 	                                         // threshold adjustment
+                //     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);                           // simd stores
+                //     srcPtrTempR += 8;
+                //     srcPtrTempG += 8;
+                //     srcPtrTempB += 8;
+                //     dstPtrTemp += 24;
+                // }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -413,17 +413,17 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
-                    {
-#if __AVX2__
-                        __m256 p;
-                        rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, &p);      // simd loads
-                        compute_solarize_8_host(&p, pThresholdParam);              // threshold adjustment
-                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p);    // simd stores
-#endif
-                        srcPtrTemp += 8;
-                        dstPtrTemp += 8;
-                    }
+//                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+//                     {
+// #if __AVX2__
+//                         __m256 p;
+//                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, &p);      // simd loads
+//                         compute_solarize_8_host(&p, pThresholdParam);              // threshold adjustment
+//                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p);    // simd stores
+// #endif
+//                         srcPtrTemp += 8;
+//                         dstPtrTemp += 8;
+//                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = (*srcPtrTemp >= thresholdParam) ? (1.0f - (*srcPtrTemp)) : *srcPtrTemp;
