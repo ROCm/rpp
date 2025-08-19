@@ -83,13 +83,13 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
         // These are the dimensions that are based on individual ROIs, and strides are separate for each sample in the batch
-        Rpp32u src1BroadcastDims[RPPT_MAX_DIMS], src2BroadcastDims[RPPT_MAX_DIMS], dstBroadcastDims[RPPT_MAX_DIMS];
-        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS], src2BroadcastStrides[RPPT_MAX_DIMS], dstBroadcastStrides[RPPT_MAX_DIMS];
+        Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
+        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
 
         bool incompatibleDims = false;
 
         for(int i = 0; i < minDim; i++) {
-            Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+            Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
             src1BroadcastDims[curIndex] = src1dims[src1NDim - i - 1];
             src2BroadcastDims[curIndex] = src2dims[src2NDim - i - 1];
             src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
@@ -104,7 +104,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         }
         if(src1NDim < src2NDim) {
             for(int i = minDim; i < dstDim; i++){
-                Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
                 src1BroadcastDims[curIndex] = 1;
                 src2BroadcastDims[curIndex] = src2dims[src2NDim - i];
                 dstBroadcastDims[curIndex] = src2dims[src2NDim - i];
@@ -115,7 +115,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         }
         else if(src1NDim > src2NDim) {
             for(int i = minDim; i < dstDim; i++){
-                Rpp32u curIndex = RPPT_MAX_DIMS - i - 1;
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
                 src2BroadcastDims[curIndex] = 1;
                 src1BroadcastDims[curIndex] = src1dims[src1NDim - i];
                 dstBroadcastDims[curIndex] = src1dims[src1NDim - i];
@@ -125,11 +125,11 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
         }
         for(int i = 0; i < minDim; i++) {
-            if((src1BroadcastDims[RPPT_MAX_DIMS - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS - 1 - i] == 1)) {
-                src1BroadcastStrides[RPPT_MAX_DIMS - 1 - i] = 0;
+            if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1)) {
+                src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
             }
-            if((src2BroadcastDims[RPPT_MAX_DIMS - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS - 1 - i] == 1)) {
-                src2BroadcastStrides[RPPT_MAX_DIMS - 1 - i] = 0;
+            if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1)) {
+                src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
             }
         }
 
@@ -144,7 +144,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         T *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u testOffset = RPPT_MAX_DIMS - dstDim;
+        Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
 
         Rpp32u *length = dstBroadcastDims + testOffset;
         Rpp32u *src1length = src1BroadcastDims + testOffset;
