@@ -64,7 +64,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         }
     }
 
-    //Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
@@ -82,11 +81,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         Rpp32u *src1Strides = srcPtr1GenericDescPtr->strides;
         Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
         Rpp32u *dstStrides = dstGenericDescPtr->strides;
-
-        //Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
-        //Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
-        //Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim;
-        //Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim;
 
         // These are the dimensions that are based on individual ROIs, and strides are separate for each sample in the batch
         Rpp32u src1BroadcastDims[RPPT_MAX_DIMS], src2BroadcastDims[RPPT_MAX_DIMS], dstBroadcastDims[RPPT_MAX_DIMS];
@@ -152,7 +146,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         Rpp32u testOffset = RPPT_MAX_DIMS - dstDim;
 
-        Rpp32u *length = dstBroadcastDims + testOffset;//dstBroadcastDescPtr->dims + 1;
+        Rpp32u *length = dstBroadcastDims + testOffset;
         Rpp32u *src1length = src1BroadcastDims + testOffset;
         Rpp32u *src2length = src2BroadcastDims + testOffset;
 
@@ -170,7 +164,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u vectorLoopCount = 0;
             if (src1shape == 1)
             {
-                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p1 = simd_set1_val(srcPtrTemp1[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -191,7 +184,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 1);
 #if __AVX2__
                 __m256i p2 = simd_set1_val(srcPtrTemp2[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -212,7 +204,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                //printf("broadcastNDim are %d\n", 1);
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
@@ -241,30 +232,29 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u src2shape = src2length[1];
             if(src1shape == 1)
             {
-                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrElem1 = srcPtrTemp1;
+                    T *srcPtrElem2 = srcPtrTemp2;
+                    T *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
-                    __m256i p1 = simd_set1_val(srcPtrTest1[0]);
+                    __m256i p1 = simd_set1_val(srcPtrElem1[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTest2);  // simd loads
+                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);  // simd loads
                         simd_op(p2, p1);
-                        _mm256_storeu_si256((__m256i *)dstPtrTest, p2);    // simd stores
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd stores
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
                     srcPtrTemp1 += src1BcastStrides[0];
                     srcPtrTemp2 += src2BcastStrides[0];
@@ -273,30 +263,29 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 2);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrElem1 = srcPtrTemp1;
+                    T *srcPtrElem2 = srcPtrTemp2;
+                    T *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-                    __m256i p2 = simd_set1_val(srcPtrTest2[0]);
 #if __AVX2__
+                    __m256i p2 = simd_set1_val(srcPtrElem2[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTest1);    // simd loads
+                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
                         simd_op(p1, p2);
-                        _mm256_storeu_si256((__m256i *)dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        dstPtrElem++;
                     }
                     srcPtrTemp1 += src1BcastStrides[0];
                     srcPtrTemp2 += src2BcastStrides[0];
@@ -305,32 +294,31 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                //printf("broadcastNDim are %d\n", 2);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrElem1 = srcPtrTemp1;
+                    T *srcPtrElem2 = srcPtrTemp2;
+                    T *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTest1);    // simd loads
-                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTest2);    // simd loads
+                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
+                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
                         simd_op(p1, p2);
-                        _mm256_storeu_si256((__m256i *)dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
                     srcPtrTemp1 += src1BcastStrides[0];
                     srcPtrTemp2 += src2BcastStrides[0];
@@ -345,42 +333,40 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             Rpp32u src2shape = src2length[2];
             if(src1shape == 1)
             {
-                //printf("Source 1 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrOuter1 = srcPtrTemp1;
+                    T *srcPtrOuter2 = srcPtrTemp2;
+                    T *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        T *srcPtrNew1 = srcPtrTest1;
-                        T *srcPtrNew2 = srcPtrTest2;
-                        T *dstPtrNew = dstPtrTest;
+                        T *srcPtrElem1 = srcPtrOuter1;
+                        T *srcPtrElem2 = srcPtrOuter2;
+                        T *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-
-                        __m256i p1 = simd_set1_val(srcPtrNew1[0]);
 #if __AVX2__
+                        __m256i p1 = simd_set1_val(srcPtrElem1[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrNew2);    // simd loads
+                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
                             simd_op(p2, p1);
-                            _mm256_storeu_si256((__m256i *)dstPtrNew, p2);    // simd stores
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd stores
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BcastStrides[1];
-                        srcPtrTest2 += src2BcastStrides[1];
-                        dstPtrTest += dstBcastStrides[1];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
                     srcPtrTemp1 += src1BcastStrides[0];
@@ -390,41 +376,40 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                //printf("Source 2 shape and broadcastNDim are %d %d\n", 1, 3);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrOuter1 = srcPtrTemp1;
+                    T *srcPtrOuter2 = srcPtrTemp2;
+                    T *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        T *srcPtrNew1 = srcPtrTest1;
-                        T *srcPtrNew2 = srcPtrTest2;
-                        T *dstPtrNew = dstPtrTest;
+                        T *srcPtrElem1 = srcPtrOuter1;
+                        T *srcPtrElem2 = srcPtrOuter2;
+                        T *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-                        __m256i p2 = simd_set1_val(srcPtrNew2[0]);
 #if __AVX2__
+                        __m256i p2 = simd_set1_val(srcPtrElem2[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
+                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
                             simd_op(p1, p2);
-                            _mm256_storeu_si256((__m256i *)dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BcastStrides[1];
-                        srcPtrTest2 += src2BcastStrides[1];
-                        dstPtrTest += dstBcastStrides[1];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
                     srcPtrTemp1 += src1BcastStrides[0];
@@ -434,43 +419,42 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
             else
             {
-                //printf("broadcastNDim is %d\n", 3);
                 for (int i = 0; i < length[0]; i++)
                 {
-                    T *srcPtrTest1 = srcPtrTemp1;
-                    T *srcPtrTest2 = srcPtrTemp2;
-                    T *dstPtrTest = dstPtrTemp;
+                    T *srcPtrOuter1 = srcPtrTemp1;
+                    T *srcPtrOuter2 = srcPtrTemp2;
+                    T *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        T *srcPtrNew1 = srcPtrTest1;
-                        T *srcPtrNew2 = srcPtrTest2;
-                        T *dstPtrNew = dstPtrTest;
+                        T *srcPtrElem1 = srcPtrOuter1;
+                        T *srcPtrElem2 = srcPtrOuter2;
+                        T *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrNew1);    // simd loads
-                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrNew2);    // simd loads
+                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
+                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
                             simd_op(p1, p2);
-                            _mm256_storeu_si256((__m256i *)dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BcastStrides[1];
-                        srcPtrTest2 += src2BcastStrides[1];
-                        dstPtrTest += dstBcastStrides[1];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
                     srcPtrTemp1 += src1BcastStrides[0];
@@ -480,7 +464,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             }
         }
         else {
-            //printf("broadcastNDim is %d\n", 4);
             tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
         }
     }
