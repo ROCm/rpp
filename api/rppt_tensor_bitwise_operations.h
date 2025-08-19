@@ -291,7 +291,7 @@ RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGene
 #endif
 
 /*! \brief Bitwise XOR Generic augmentation on HOST backend with broadcasting support
- * \details This function computes bitwise OR between two 2D, 3D or ND tensors in HOST memory along with broadcasting support
+ * \details This function computes bitwise XOR between two 2D, 3D or ND tensors in HOST memory along with broadcasting support
  *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
  * \param [in] srcPtr1 source tensor memory in HOST memory
  * \param [in] srcPtr2 source tensor memory in HOST memory

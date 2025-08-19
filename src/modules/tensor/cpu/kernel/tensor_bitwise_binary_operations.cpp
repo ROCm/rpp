@@ -1,6 +1,7 @@
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
 
+// Bitwise AND, OR, XOR scalar operations
 template<typename T>
 inline void and_op(T *dst, T *src1, T *src2) { *dst = *src1 & *src2; }
 
@@ -10,16 +11,19 @@ inline void or_op(T *dst, T *src1, T *src2) { *dst = *src1 | *src2; }
 template<typename T>
 inline void xor_op(T *dst, T *src1, T *src2) { *dst = *src1 ^ *src2; }
 
+// Bitwise AND, OR, XOR vector operations for 256 bit vectors
 inline void simd_and_si256(__m256i &a, __m256i &b) { a = _mm256_and_si256(a, b); }
 inline void simd_or_si256(__m256i &a, __m256i &b) { a = _mm256_or_si256(a, b); }
 inline void simd_xor_si256(__m256i &a, __m256i &b) { a = _mm256_xor_si256(a, b); }
 
+// Helper functions for broadcasting for different datatypes (8 bit, 16 bit and 32 bit)
 inline __m256i simd_set1_val(Rpp8u &val) { return _mm256_set1_epi8(val); }
 inline __m256i simd_set1_val(Rpp16u &val) { return _mm256_set1_epi16(val); }
 inline __m256i simd_set1_val(Rpp32u &val) { return _mm256_set1_epi32(val); }
 
+// Computes ND tensor bitwise operations recursively
 template<typename T, typename Operation>
-inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
+inline void tensor_binary_bitwise_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
 {
     if (!nDim)
         op(dst, src1, src2);
@@ -27,7 +31,7 @@ inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rp
     {
         for (int i = 0; i < *dstShape; i++)
         {
-            tensor_binary_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
+            tensor_binary_bitwise_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
             dst += *(dstStrides);
             src1 += *(src1Strides);
             src2 += *(src2Strides);
@@ -50,18 +54,19 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                                                rpp::Handle& handle) {
 
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
-    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
-    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim;
-    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim;
+    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
 
-    for(int test = 0; test < minDim; test++) {
+    // Overall dimension compatibility check for the entire batch
+    for(int test = 0; test < minDim; test++)
         if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
-            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1)) {
+            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
+            {
                 printf("Incompatible dimensions for the batch\n");
                 return RPP_SUCCESS;
-        }
-    }
+            }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -81,28 +86,35 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
         Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
-        // These are the dimensions that are based on individual ROIs, and strides are separate for each sample in the batch
+        // Dimensions and Strides based on individual sample ROIs, used for broadcasting purposes
         Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
         Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
 
         bool incompatibleDims = false;
 
-        for(int i = 0; i < minDim; i++) {
+        // Copy ROI limits and Strides to individual sample strides and dims
+        for(int i = 0; i < minDim; i++)
+        {
             Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
             src1BroadcastDims[curIndex] = src1dims[src1NDim - i - 1];
             src2BroadcastDims[curIndex] = src2dims[src2NDim - i - 1];
             src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
             src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
             dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+            // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
             if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
                 incompatibleDims = true;
             dstBroadcastDims[curIndex] = src1BroadcastDims[curIndex] > src2BroadcastDims[curIndex] ? src1BroadcastDims[curIndex] : src2BroadcastDims[curIndex];
         }
-        if(incompatibleDims == true) {
+
+        // Dimension compatibility failure case
+        if(incompatibleDims == true)
             printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
-        }
-        if(src1NDim < src2NDim) {
-            for(int i = minDim; i < dstDim; i++){
+
+        // Handle cases of mismatching num dims
+        if(src1NDim < src2NDim)
+            for(int i = minDim; i < dstDim; i++)
+            {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
                 src1BroadcastDims[curIndex] = 1;
                 src2BroadcastDims[curIndex] = src2dims[src2NDim - i];
@@ -111,9 +123,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
                 dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
             }
-        }
-        else if(src1NDim > src2NDim) {
-            for(int i = minDim; i < dstDim; i++){
+        else if(src1NDim > src2NDim)
+            for(int i = minDim; i < dstDim; i++)
+            {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
                 src2BroadcastDims[curIndex] = 1;
                 src1BroadcastDims[curIndex] = src1dims[src1NDim - i];
@@ -122,12 +134,17 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 src2BroadcastStrides[curIndex] = 0;
                 dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
             }
-        }
-        for(int i = 0; i < minDim; i++) {
-            if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1)) {
+
+        // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
+        // Setting stride to zero will allow for repetition of values operated required for broadcasting
+        for(int i = 0; i < minDim; i++)
+        {
+            if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+            {
                 src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
             }
-            if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1)) {
+            if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+            {
                 src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
             }
         }
@@ -145,6 +162,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
 
+        // Shift dims and strides by offset to process only valid values
         Rpp32u *length = dstBroadcastDims + testOffset;
         Rpp32u *src1length = src1BroadcastDims + testOffset;
         Rpp32u *src2length = src2BroadcastDims + testOffset;
@@ -155,6 +173,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
         Rpp32u alignMask = vectorIncrement - 1;
 
+        // For nDim = 1, 2, 3 cases handled when the lowest axis shape = 1 and != 1 for efficient processing
         if (dstDim == 1)
         {
             Rpp32u alignedLength = length[0] & ~alignMask;
@@ -164,12 +183,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             if (src1shape == 1)
             {
 #if __AVX2__
-                __m256i p1 = simd_set1_val(srcPtrTemp1[0]);
+                __m256i p1 = simd_set1_val(srcPtrTemp1[0]);    // simd broadcast
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);
-                    simd_op(p2, p1);
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p2);    // simd stores
+                    __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
+                    simd_op(p2, p1);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p2);    // simd store
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -184,12 +203,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             else if (src2shape == 1)
             {
 #if __AVX2__
-                __m256i p2 = simd_set1_val(srcPtrTemp2[0]);
+                __m256i p2 = simd_set1_val(srcPtrTemp2[0]);    // simd broadcast
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);
-                    simd_op(p1, p2);
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd stores
+                    __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
+                    simd_op(p1, p2);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -206,10 +225,10 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd loads
-                    __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd loads
-                    simd_op(p1, p2);
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd stores
+                    __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
+                    __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
+                    simd_op(p1, p2);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -239,12 +258,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
                     int vectorLoopCount = 0;
 #if __AVX2__
-                    __m256i p1 = simd_set1_val(srcPtrElem1[0]);
+                    __m256i p1 = simd_set1_val(srcPtrElem1[0]);    // simd broadcast
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);  // simd loads
-                        simd_op(p2, p1);
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd stores
+                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);  // simd load
+                        simd_op(p2, p1);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -270,12 +289,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
                     int vectorLoopCount = 0;
 #if __AVX2__
-                    __m256i p2 = simd_set1_val(srcPtrElem2[0]);
+                    __m256i p2 = simd_set1_val(srcPtrElem2[0]);    // simd broadcast
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
-                        simd_op(p1, p2);
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
+                        simd_op(p1, p2);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -303,10 +322,10 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
-                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
-                        simd_op(p1, p2);
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                        __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
+                        __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
+                        simd_op(p1, p2);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -346,12 +365,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
                         int vectorLoopCount = 0;
 #if __AVX2__
-                        __m256i p1 = simd_set1_val(srcPtrElem1[0]);
+                        __m256i p1 = simd_set1_val(srcPtrElem1[0]);    // simd broadcast
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
-                            simd_op(p2, p1);
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd stores
+                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
+                            simd_op(p2, p1);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -389,12 +408,12 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
                         int vectorLoopCount = 0;
 #if __AVX2__
-                        __m256i p2 = simd_set1_val(srcPtrElem2[0]);
+                        __m256i p2 = simd_set1_val(srcPtrElem2[0]);    // simd broadcast
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
-                            simd_op(p1, p2);
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
+                            simd_op(p1, p2);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -434,10 +453,10 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd loads
-                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd loads
-                            simd_op(p1, p2);
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd stores
+                            __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
+                            __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
+                            simd_op(p1, p2);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
@@ -462,14 +481,14 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                 }
             }
         }
-        else {
-            tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
-        }
+        else
+            tensor_binary_bitwise_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
     }
 
     return RPP_SUCCESS;
 }
 
+// Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
 template<typename T>
 RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
                                                         T *srcPtr2,
@@ -480,12 +499,13 @@ RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
                                                         RpptBitwiseOp tensorOp,
                                                         Rpp32u *srcPtr1roiTensor,
                                                         Rpp32u *srcPtr2roiTensor,
-                                                        rpp::Handle& handle) {
-    int vectorIncrement = 32;
+                                                        rpp::Handle& handle)
+{
+    int vectorIncrement = 32; // Vector Increment for U8/I8 datatype
     if((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I16))
-        vectorIncrement = 16;
+        vectorIncrement = 16; // Vector Increment for U16/I16 datatype
     else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
-        vectorIncrement = 8;
+        vectorIncrement = 8; // Vector Increment for U32/I32 datatype
 
     switch(tensorOp) {
         case RPP_TENSOR_OP_AND:
