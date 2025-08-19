@@ -2,6 +2,9 @@
 #include "rpp_hip_math.hpp"
 #include <omp.h>
 
+// -------------------- Set 1 - helper kernels --------------------
+
+// Functor for bitwise AND operation
 template <typename T>
 struct BitwiseAnd {
     __device__ __forceinline__ T operator()(T a, T b) const {
@@ -9,6 +12,7 @@ struct BitwiseAnd {
     }
 };
 
+// Functor for bitwise OR operation
 template <typename T>
 struct BitwiseOr {
     __device__ __forceinline__ T operator()(T a, T b) const {
@@ -16,12 +20,15 @@ struct BitwiseOr {
     }
 };
 
+// Functor for bitwise XOR operation
 template <typename T>
 struct BitwiseXor {
     __device__ __forceinline__ T operator()(T a, T b) const {
         return a ^ b;
     }
 };
+
+// -------------------- Set 2 - bitwise operation kernels --------------------
 
 template <typename T, typename Operation>
 __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
@@ -33,7 +40,7 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
                                                T *dstPtr,
                                                uint* dstStrides,
                                                uint *dstDims,
-                                                Operation op)
+                                               Operation op)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
@@ -152,6 +159,8 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
 
     dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
+
+// -------------------- Set 3 - executor kernels --------------------
 
 template <typename T, typename Operation>
 RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
@@ -395,6 +404,8 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     return RPP_SUCCESS;
 }
 
+
+// Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
 template<typename T>
 RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
                                                        T *srcPtr2,
@@ -424,34 +435,34 @@ RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
 }
 
 template RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor<Rpp8u>(Rpp8u*,
-                                                                   Rpp8u*,
-                                                                   RpptGenericDescPtr,
-                                                                   RpptGenericDescPtr,
-                                                                   Rpp8u*,
-                                                                   RpptGenericDescPtr,
-                                                                   RpptBitwiseOp,
-                                                                   Rpp32u*,
-                                                                   Rpp32u*,
-                                                                   rpp::Handle&);
+                                                                       Rpp8u*,
+                                                                       RpptGenericDescPtr,
+                                                                       RpptGenericDescPtr,
+                                                                       Rpp8u*,
+                                                                       RpptGenericDescPtr,
+                                                                       RpptBitwiseOp,
+                                                                       Rpp32u*,
+                                                                       Rpp32u*,
+                                                                       rpp::Handle&);
 
 template RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor<Rpp16u>(Rpp16u*,
-                                                                    Rpp16u*,
-                                                                    RpptGenericDescPtr,
-                                                                    RpptGenericDescPtr,
-                                                                    Rpp16u*,
-                                                                    RpptGenericDescPtr,
-                                                                    RpptBitwiseOp,
-                                                                    Rpp32u*,
-                                                                    Rpp32u*,
-                                                                    rpp::Handle&);
+                                                                        Rpp16u*,
+                                                                        RpptGenericDescPtr,
+                                                                        RpptGenericDescPtr,
+                                                                        Rpp16u*,
+                                                                        RpptGenericDescPtr,
+                                                                        RpptBitwiseOp,
+                                                                        Rpp32u*,
+                                                                        Rpp32u*,
+                                                                        rpp::Handle&);
 
 template RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor<Rpp32u>(Rpp32u*,
-                                                                    Rpp32u*,
-                                                                    RpptGenericDescPtr,
-                                                                    RpptGenericDescPtr,
-                                                                    Rpp32u*,
-                                                                    RpptGenericDescPtr,
-                                                                    RpptBitwiseOp,
-                                                                    Rpp32u*,
-                                                                    Rpp32u*,
-                                                                    rpp::Handle&);
+                                                                        Rpp32u*,
+                                                                        RpptGenericDescPtr,
+                                                                        RpptGenericDescPtr,
+                                                                        Rpp32u*,
+                                                                        RpptGenericDescPtr,
+                                                                        RpptBitwiseOp,
+                                                                        Rpp32u*,
+                                                                        Rpp32u*,
+                                                                        rpp::Handle&);
