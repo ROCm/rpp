@@ -232,19 +232,6 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uc
         dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
 
-// d_uint8 bitwiseOR
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uint8 *src1_uc8, d_uint8 *src2_uc8, d_uint8 *dst_uc8)
-{
-        dst_uc8->ui1[0] = src1_uc8->ui1[0] | src2_uc8->ui1[0];
-        dst_uc8->ui1[1] = src1_uc8->ui1[1] | src2_uc8->ui1[1];
-        dst_uc8->ui1[2] = src1_uc8->ui1[2] | src2_uc8->ui1[2];
-        dst_uc8->ui1[3] = src1_uc8->ui1[3] | src2_uc8->ui1[3];
-        dst_uc8->ui1[4] = src1_uc8->ui1[4] | src2_uc8->ui1[4];
-        dst_uc8->ui1[5] = src1_uc8->ui1[5] | src2_uc8->ui1[5];
-        dst_uc8->ui1[6] = src1_uc8->ui1[6] | src2_uc8->ui1[6];
-        dst_uc8->ui1[7] = src1_uc8->ui1[7] | src2_uc8->ui1[7];
-}
 
 // d_uchar8 bitwiseXOR
 
