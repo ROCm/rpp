@@ -1691,7 +1691,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "solarize";
 
-
                     for (int i = 0; i < batchSize; i++)
                         thresholdTensor[i] = 0.5;
 
