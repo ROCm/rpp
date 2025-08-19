@@ -214,21 +214,118 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Bitwise AND Generic augmentation on HOST backend with broadcasting support
+ * \details This function computes bitwise AND between two 2D, 3D or ND tensors in HOST memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HOST memory
+ * \param [in] srcPtr2 source tensor memory in HOST memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Bitwise AND Generic augmentation on HIP backend with broadcasting support
+ * \details This function computes bitwise AND between two 2D, 3D or ND tensors in HIP memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory
+ * \param [in] srcPtr2 source tensor memory in HIP memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+#endif
+
+/*! \brief Bitwise OR Generic augmentation on HOST backend with broadcasting support
+ * \details This function computes bitwise OR between two 2D, 3D or ND tensors in HOST memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HOST memory
+ * \param [in] srcPtr2 source tensor memory in HOST memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Bitwise OR Generic augmentation on HIP backend with broadcasting support
+ * \details This function computes bitwise OR between two 2D, 3D or ND tensors in HIP memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory
+ * \param [in] srcPtr2 source tensor memory in HIP memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+#endif
+
+/*! \brief Bitwise XOR Generic augmentation on HOST backend with broadcasting support
+ * \details This function computes bitwise OR between two 2D, 3D or ND tensors in HOST memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HOST memory
+ * \param [in] srcPtr2 source tensor memory in HOST memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-
-RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
-
-RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
-
+/*! \brief Bitwise XOR Generic augmentation on HIP backend with broadcasting support
+ * \details This function computes bitwise XOR between two 2D, 3D or ND tensors in HIP memory along with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory
+ * \param [in] srcPtr2 source tensor memory in HIP memory
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_xor_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
-
-
 #endif
 /*! @}
  */
