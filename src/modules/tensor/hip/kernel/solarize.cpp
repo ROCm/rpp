@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-__device__ void solarize_hip_rgb_compute(d_float24 *pix_f24, float thresholdParam, float maxVal)
+__device__ void solarize_hip_rgb_compute(d_float24 *pix_f24, float &thresholdParam, float &maxVal)
 {
     for (int i = 0; i < 8; i++)
     {
@@ -34,7 +34,7 @@ __device__ void solarize_hip_rgb_compute(d_float24 *pix_f24, float thresholdPara
     }
 }
 
-__device__ void solarize_hip_greyscale_compute(d_float8 *pix_f8, float thresholdParam, float maxVal)
+__device__ void solarize_hip_greyscale_compute(d_float8 *pix_f8, float &thresholdParam, float &maxVal)
 {
     for (int i = 0; i < 8; i++)
        pix_f8->f1[i] = (pix_f8->f1[i] >= thresholdParam) ? (maxVal - pix_f8->f1[i]) : pix_f8->f1[i];
