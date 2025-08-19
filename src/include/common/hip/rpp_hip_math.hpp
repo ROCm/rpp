@@ -232,7 +232,6 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uc
         dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
 
-
 // d_uchar8 bitwiseXOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
