@@ -157,7 +157,7 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** tensor_and_tensor ********************/
+/******************** tensor AND tensor ********************/
 
 RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
                                       RppPtr_t srcPtr2,
@@ -211,7 +211,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-/******************** tensor_or_tensor ********************/
+/********************tensor OR tensor ********************/
 
 RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1,
                                      RppPtr_t srcPtr2,
@@ -265,7 +265,7 @@ RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
-/******************** tensor_xor_tensor ********************/
+/******************** tensor XOR tensor ********************/
 
 RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1,
                                       RppPtr_t srcPtr2,
@@ -458,7 +458,7 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-/******************** TENSOR_AND_TENSOR ********************/
+/******************** tensor AND tensor ********************/
 
 RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1,
                                      RppPtr_t srcPtr2,
@@ -517,7 +517,7 @@ RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1,
     #endif // backend
 }
 
-/******************** TENSOR_OR_TENSOR ********************/
+/******************** tensor OR tensor ********************/
 
 RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1,
                                     RppPtr_t srcPtr2,
@@ -576,7 +576,7 @@ RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1,
     #endif // backend
 }
 
-/******************** TENSOR_XOR_TENSOR ********************/
+/******************** tensor XOR tensor ********************/
 
 RppStatus rppt_tensor_xor_tensor_gpu(RppPtr_t srcPtr1,
                                      RppPtr_t srcPtr2,
