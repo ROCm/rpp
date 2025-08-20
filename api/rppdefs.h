@@ -213,6 +213,12 @@ typedef enum
     RPP_TENSOR_OP_XOR
 } RpptBitwiseOp;
 
+typedef enum
+{
+    RPP_BROADCAST_ENABLE,
+    RPP_BROADCAST_DISABLE
+} RpptBroadcastMode;
+
 #ifdef LEGACY_SUPPORT
 /*! \brief RPP Operations type enum
  * \ingroup group_rppdefs

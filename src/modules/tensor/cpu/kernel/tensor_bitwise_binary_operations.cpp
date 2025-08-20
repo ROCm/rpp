@@ -48,6 +48,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                                                RpptGenericDescPtr dstGenericDescPtr,
                                                Operation op,
                                                SIMDOperation simd_op,
+                                               RpptBroadcastMode broadcastMode,
                                                Rpp32u vectorIncrement,
                                                Rpp32u *srcPtr1roiTensor,
                                                Rpp32u *srcPtr2roiTensor,
@@ -86,67 +87,94 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
         Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
-        // Dimensions and Strides based on individual sample ROIs, used for broadcasting purposes
-        Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
-        Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
+        Rpp32u *length, *src1length, *src2length, *src1BcastStrides, *src2BcastStrides, *dstBcastStrides;
 
-        bool incompatibleDims = false;
-
-        // Copy ROI limits and Strides to individual sample strides and dims until minDim
-        for(int i = 0; i < minDim; i++)
+        if(broadcastMode == RPP_BROADCAST_ENABLE)
         {
-            Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-            src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
-            src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
-            src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-            src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-            dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-            // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
-            if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
-                incompatibleDims = true;
-            dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
-        }
+            // Dimensions and Strides based on individual sample ROIs, used for broadcasting purposes
+            Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
+            Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
 
-        // Dimension compatibility failure case
-        if(incompatibleDims == true)
-            printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            bool incompatibleDims = false;
 
-        // Handle cases of mismatching num dims
-        if(src1NDim < src2NDim)
-            for(int i = minDim; i < dstDim; i++)
+            // Copy ROI limits and Strides to individual sample strides and dims until minDim
+            for(int i = 0; i < minDim; i++)
             {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src1BroadcastDims[curIndex] = 1;
-                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                src1BroadcastStrides[curIndex] = 0;
+                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
+                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
                 dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-            }
-        else if(src1NDim > src2NDim)
-            for(int i = minDim; i < dstDim; i++)
-            {
-                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src2BroadcastDims[curIndex] = 1;
-                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-                src2BroadcastStrides[curIndex] = 0;
-                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
+                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
+                    incompatibleDims = true;
+                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
             }
 
-        // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
-        // Setting stride to zero will allow for repetition of values operated required for broadcasting
-        for(int i = 0; i < minDim; i++)
+            // Dimension compatibility failure case
+            if(incompatibleDims == true)
+                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+
+            // Handle cases of mismatching num dims
+            if(src1NDim < src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src1BroadcastDims[curIndex] = 1;
+                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    src1BroadcastStrides[curIndex] = 0;
+                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+            else if(src1NDim > src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src2BroadcastDims[curIndex] = 1;
+                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                    src2BroadcastStrides[curIndex] = 0;
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+
+            // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
+            // Setting stride to zero will allow for repetition of values operated required for broadcasting
+            for(int i = 0; i < minDim; i++)
+            {
+                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+            }
+
+            Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
+
+            // Shift dims and strides by offset to process only valid values
+            length = dstBroadcastDims + testOffset;
+            src1length = src1BroadcastDims + testOffset;
+            src2length = src2BroadcastDims + testOffset;
+
+            src1BcastStrides = src1BroadcastStrides + testOffset;
+            src2BcastStrides = src2BroadcastStrides + testOffset;
+            dstBcastStrides =  dstBroadcastStrides + testOffset;
+        }
+        else
         {
-            if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-            {
-                src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-            }
-            if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-            {
-                src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-            }
+            // Both length for dest and srclength set to src1Dims because in non broadcast case, source and destination dimensions are expected to be the same
+            length = src1Dims;
+            src1length = src1Dims;
+            src2length = src2Dims;
+
+            src1BcastStrides = srcPtr1GenericDescPtr->strides + 1;
+            src2BcastStrides = srcPtr2GenericDescPtr->strides + 1;
+            dstBcastStrides =  dstGenericDescPtr->strides + 1;
         }
 
         T *srcPtrTemp1 = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
@@ -159,17 +187,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             srcPtrTemp2 += src2Begin[i] * srcPtr2GenericDescPtr->strides[i + 1];
 
         T *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
-
-        Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
-
-        // Shift dims and strides by offset to process only valid values
-        Rpp32u *length = dstBroadcastDims + testOffset;
-        Rpp32u *src1length = src1BroadcastDims + testOffset;
-        Rpp32u *src2length = src2BroadcastDims + testOffset;
-
-        Rpp32u *src1BcastStrides = src1BroadcastStrides + testOffset;
-        Rpp32u *src2BcastStrides = src2BroadcastStrides + testOffset;
-        Rpp32u *dstBcastStrides =  dstBroadcastStrides + testOffset;
 
         Rpp32u alignMask = vectorIncrement - 1;
 
@@ -497,6 +514,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
                                                         T *dstPtr,
                                                         RpptGenericDescPtr dstGenericDescPtr,
                                                         RpptBitwiseOp tensorOp,
+                                                        RpptBroadcastMode broadcastMode,
                                                         Rpp32u *srcPtr1roiTensor,
                                                         Rpp32u *srcPtr2roiTensor,
                                                         rpp::Handle& handle)
@@ -509,13 +527,13 @@ RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
 
     switch(tensorOp) {
         case RPP_TENSOR_OP_AND:
-            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, and_op<T>, simd_and_si256, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, and_op<T>, simd_and_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_OR:
-            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, or_op<T>, simd_or_si256, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, or_op<T>, simd_or_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_XOR:
-            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, xor_op<T>, simd_xor_si256, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_bitwise_op_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, xor_op<T>, simd_xor_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 
@@ -529,6 +547,7 @@ template RppStatus tensor_binary_bitwise_op_dispatch_host_tensor<Rpp8u>(Rpp8u*,
                                                                         Rpp8u*,
                                                                         RpptGenericDescPtr,
                                                                         RpptBitwiseOp,
+                                                                        RpptBroadcastMode,
                                                                         Rpp32u*,
                                                                         Rpp32u*,
                                                                         rpp::Handle&);
@@ -540,6 +559,7 @@ template RppStatus tensor_binary_bitwise_op_dispatch_host_tensor<Rpp16u>(Rpp16u*
                                                                          Rpp16u*,
                                                                          RpptGenericDescPtr,
                                                                          RpptBitwiseOp,
+                                                                         RpptBroadcastMode,
                                                                          Rpp32u*,
                                                                          Rpp32u*,
                                                                          rpp::Handle&);
@@ -551,6 +571,7 @@ template RppStatus tensor_binary_bitwise_op_dispatch_host_tensor<Rpp32u>(Rpp32u*
                                                                          Rpp32u*,
                                                                          RpptGenericDescPtr,
                                                                          RpptBitwiseOp,
+                                                                         RpptBroadcastMode,
                                                                          Rpp32u*,
                                                                          Rpp32u*,
                                                                          rpp::Handle&);

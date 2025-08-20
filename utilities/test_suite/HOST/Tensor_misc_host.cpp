@@ -364,10 +364,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
-                    if(broadCastFlag == 0 || broadCastFlag == 2)
-                        rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 0)
+                        rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    else if(broadCastFlag == 2)
+                        rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_and_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_and_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -381,10 +383,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
-                    if(broadCastFlag == 0 || broadCastFlag == 2)
-                        rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 0)
+                        rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    else if(broadCastFlag == 2)
+                        rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_or_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_or_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -398,10 +402,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
-                    if(broadCastFlag == 0 || broadCastFlag == 2)
-                        rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 0)
+                        rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    else if(broadCastFlag == 2)
+                        rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_xor_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_xor_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                 }
                 else
                     missingFuncFlag = 1;
