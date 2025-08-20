@@ -81,6 +81,8 @@ typedef union { uchar uc1[24];  uchar4 uc4[6];  uchar3 uc3[8];    d_uchar8 uc8[3
 typedef struct { schar sc1[3];                                                                  }   d_schar3_s;
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
+typedef union { schar sc1[8];   char4 sc4[2];                                                   }   d_schar8;
+typedef union { schar sc1[24];  char4 sc4[6];  char3 sc3[8];    d_schar8 sc8[3];                }   d_schar24;
 
 #ifdef LEGACY_SUPPORT
 enum class RPPTensorDataType
@@ -1462,7 +1464,12 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, uchar *sr
 }
 
 // I8 loads without layout toggle (8 I8 pixels)
+__device__ __forceinline__ void rpp_hip_load8_to_schar8(schar *srcPtr, schar *srcPtr_sc8)
+{
+    *(int2 *)srcPtr_sc8 = *(int2 *)srcPtr;
+}
 
+// I8 loads without layout toggle (8 I8 pixels)
 __device__ __forceinline__ void rpp_hip_load8_to_uchar8(schar *srcPtr, uchar *srcPtr_uc8)
 {
     rpp_hip_convert8_i8_to_u8(srcPtr, srcPtr_uc8);
@@ -1576,6 +1583,26 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_float24_pln3(uchar *srcPt
                                    src_uc24.uc1[ 8] , src_uc24.uc1[11] );    // write B00-B03
     srcPtrB_f8->f4[1] = make_float4(src_uc24.uc1[14] , src_uc24.uc1[17] , 
                                    src_uc24.uc1[20] , src_uc24.uc1[23] );    // write B04-B07
+}
+
+//I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_schar8_pln3(schar *srcPtr, schar **srcPtrs_sc8)
+{
+    d_schar24 src_sc24;
+    *(d_schar24_s *)&src_sc24 = *(d_schar24_s *)srcPtr;
+
+    d_schar8 *srcPtrR_sc8, *srcPtrG_sc8, *srcPtrB_sc8;
+    srcPtrR_sc8 = (d_schar8 *)srcPtrs_sc8[0];
+    srcPtrG_sc8 = (d_schar8 *)srcPtrs_sc8[1];
+    srcPtrB_sc8 = (d_schar8 *)srcPtrs_sc8[2];
+
+    srcPtrR_sc8->sc4[0] = make_char4(src_sc24.sc1[ 0], src_sc24.sc1[ 3], src_sc24.sc1[ 6], src_sc24.sc1[ 9]);    // write R00-R03
+    srcPtrR_sc8->sc4[1] = make_char4(src_sc24.sc1[12], src_sc24.sc1[15], src_sc24.sc1[18], src_sc24.sc1[21]);    // write R04-R07
+    srcPtrG_sc8->sc4[0] = make_char4(src_sc24.sc1[ 1], src_sc24.sc1[ 4], src_sc24.sc1[ 7], src_sc24.sc1[10]);    // write G00-G03
+    srcPtrG_sc8->sc4[1] = make_char4(src_sc24.sc1[13], src_sc24.sc1[16], src_sc24.sc1[19], src_sc24.sc1[22]);    // write G04-G07
+    srcPtrB_sc8->sc4[0] = make_char4(src_sc24.sc1[ 2], src_sc24.sc1[ 5], src_sc24.sc1[ 8], src_sc24.sc1[11]);    // write B00-B03
+    srcPtrB_sc8->sc4[1] = make_char4(src_sc24.sc1[14], src_sc24.sc1[17], src_sc24.sc1[20], src_sc24.sc1[23]);    // write B04-B07
 }
 
 //I8 loads with layout toggle PKD3 to PLN3 (24 I8 pixels)
@@ -1980,5 +2007,39 @@ __global__ void convert_pln3_pkd3_hip_tensor(T *srcPtr,
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
+
+// Type-based dispatch functions to load, process, and store image data for float/half and uchar/schar types
+
+// Structure to Dispatch load/store functions for float/half types
+template <typename T>
+struct FilterDispatchFloat
+{
+    using SharedType = float;
+    using SupportType = float3;
+    __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(T* src, float** dst) { rpp_hip_load24_pkd3_to_float24_pln3(src, dst); }
+    __device__ __forceinline__ static void rpp_hip_load8(T* src, float* dst) { rpp_hip_load8_and_unpack_to_float8(src, (d_float8*)dst); }
+};
+
+// Structure to Dispatch load/store functions for uchar/schar types
+template <typename T>
+struct FilterDispatchChar
+{
+    using SharedType = T;
+    // VectorType used to extract vector of values from the shared memory
+    using VectorType = typename std::conditional<std::is_same<T, uchar>::value , uint3 , int3>::type;
+
+    __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(uchar* src, uchar** dst) { rpp_hip_load24_pkd3_to_uchar8_pln3(src, dst); }
+    __device__ __forceinline__ static void rpp_hip_load8(uchar* src, uchar* dst) { rpp_hip_load8_to_uchar8(src, dst); }
+    __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(schar* src, schar** dst) { rpp_hip_load24_pkd3_to_schar8_pln3(src, dst); }
+    __device__ __forceinline__ static void rpp_hip_load8(schar* src, schar* dst) { rpp_hip_load8_to_schar8(src, dst); }
+};
+
+// Type alias to select appropriate dispatch struct based on data type (float/half and uchar/schar)
+template <typename T>
+using FilterDispatch = typename std::conditional<
+    std::is_same<T, float>::value || std::is_same<T, half>::value,
+    FilterDispatchFloat<T>,
+    FilterDispatchChar<T>
+>::type;
 
 #endif // RPP_HIP_LOAD_STORE_HPP

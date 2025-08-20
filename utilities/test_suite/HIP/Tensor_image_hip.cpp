@@ -182,6 +182,7 @@ int main(int argc, char **argv)
     string func = funcName;
     func += funcType;
 
+    RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
@@ -1317,6 +1318,24 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case MEDIAN_FILTER:
+                {
+                    testCaseName = "median_filter";
+                    Rpp32u kernelSize = additionalParam;
+                    if (borderType != RpptImageBorderType::REPLICATE)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_median_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
