@@ -346,4 +346,22 @@ __device__ __forceinline__ void rpp_hip_math_log1p(d_float8 *src_f8, d_float8 *d
     dst_f8->f1[7] = __logf((src_f8->f1[7]));
 }
 
+// Maximum of three float values
+__device__ __forceinline__ float rpp_hip_max3(const float3 &src_f3)
+{
+    return fmaxf(src_f3.x, fmaxf(src_f3.y, src_f3.z));
+}
+
+// Minimum of three float values
+__device__ __forceinline__ float rpp_hip_min3(const float3 &src_f3)
+{
+    return fminf(src_f3.x, fminf(src_f3.y, src_f3.z));
+}
+
+// Median of three float values
+__device__ __forceinline__ float rpp_hip_median3(const float3 &src_f3)
+{
+    return __builtin_amdgcn_fmed3f(src_f3.x, src_f3.y, src_f3.z);
+}
+
 #endif // RPP_HIP_MATH_HPP
