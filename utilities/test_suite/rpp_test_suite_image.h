@@ -99,6 +99,7 @@ std::map<int, string> augmentationMap =
     {45, "color_temperature"},
     {46, "vignette"},
     {49, "box_filter"},
+    {51, "median_filter"},
     {54, "gaussian_filter"},
     {61, "magnitude"},
     {63, "phase"},
@@ -160,6 +161,7 @@ enum Augmentation {
     COLOR_TEMPERATURE = 45,
     VIGNETTE = 46,
     BOX_FILTER = 49,
+    MEDIAN_FILTER = 51,
     GAUSSIAN_FILTER = 54,
     MAGNITUDE = 61,
     PHASE = 63,
@@ -185,8 +187,8 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
-const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, GAUSSIAN_FILTER};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
+const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
 const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};
@@ -1176,7 +1178,7 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER || testCase == GAUSSIAN_FILTER)
+    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER || testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
