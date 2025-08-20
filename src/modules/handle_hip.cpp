@@ -315,6 +315,9 @@ void Handle::rpp_destroy_object_gpu()
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem));
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
     CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
+
+    delete this->GetInitHandle();
+    this->impl = nullptr;
 }
 
 void Handle::rpp_destroy_object_host()
