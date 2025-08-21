@@ -232,6 +232,30 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uc
         dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
 
+__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
+{
+        dst_us8->us1[0] = src1_us8->us1[0] | src2_us8->us1[0];
+        dst_us8->us1[1] = src1_us8->us1[1] | src2_us8->us1[1];
+        dst_us8->us1[2] = src1_us8->us1[2] | src2_us8->us1[2];
+        dst_us8->us1[3] = src1_us8->us1[3] | src2_us8->us1[3];
+        dst_us8->us1[4] = src1_us8->us1[4] | src2_us8->us1[4];
+        dst_us8->us1[5] = src1_us8->us1[5] | src2_us8->us1[5];
+        dst_us8->us1[6] = src1_us8->us1[6] | src2_us8->us1[6];
+        dst_us8->us1[7] = src1_us8->us1[7] | src2_us8->us1[7];
+}
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
+{
+        dst_ui8->ui1[0] = src1_ui8->ui1[0] | src2_ui8->ui1[0];
+        dst_ui8->ui1[1] = src1_ui8->ui1[1] | src2_ui8->ui1[1];
+        dst_ui8->ui1[2] = src1_ui8->ui1[2] | src2_ui8->ui1[2];
+        dst_ui8->ui1[3] = src1_ui8->ui1[3] | src2_ui8->ui1[3];
+        dst_ui8->ui1[4] = src1_ui8->ui1[4] | src2_ui8->ui1[4];
+        dst_ui8->ui1[5] = src1_ui8->ui1[5] | src2_ui8->ui1[5];
+        dst_ui8->ui1[6] = src1_ui8->ui1[6] | src2_ui8->ui1[6];
+        dst_ui8->ui1[7] = src1_ui8->ui1[7] | src2_ui8->ui1[7];
+}
+
 // d_uchar8 bitwiseXOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
