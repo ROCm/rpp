@@ -416,6 +416,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
                                                        T *dstPtr,
                                                        RpptGenericDescPtr dstGenericDescPtr,
                                                        RpptBitwiseOp tensorOp,
+                                                       RpptBroadcastMode broadcastMode,
                                                        Rpp32u *srcPtr1roiTensor,
                                                        Rpp32u *srcPtr2roiTensor,
                                                        rpp::Handle& handle)

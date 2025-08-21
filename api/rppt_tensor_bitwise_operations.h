@@ -249,7 +249,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGe
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 #endif
 
 /*! \brief Bitwise OR Generic augmentation on HOST backend with broadcasting support
@@ -287,7 +287,7 @@ RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGen
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 #endif
 
 /*! \brief Bitwise XOR Generic augmentation on HOST backend with broadcasting support
@@ -325,7 +325,7 @@ RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGe
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_tensor_xor_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
+RppStatus rppt_tensor_xor_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 #endif
 /*! @}
  */
