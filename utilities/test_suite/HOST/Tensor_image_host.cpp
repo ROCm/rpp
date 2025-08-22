@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool dropoutTypeCase = (dropoutTypeCases.find(testCase) != dropoutTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
@@ -147,6 +148,13 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
+    if (testCase == 94) // dropout
+    {
+        switch (additionalParam)
+        {
+            case CHANNEL:funcName += "_channel"; break;
+        }
+    }
     if (funcName.empty())
     {
         if (testType == 0)
@@ -1710,6 +1718,37 @@ int main(int argc, char **argv)
                         rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, qualityTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
+
+                    break;
+                }
+                case DROPOUT:
+                {
+                    testCaseName = "dropout";
+
+                    switch(additionalParam)
+                    {
+                        case CHANNEL:
+                        {
+                            testCaseName = "channel";
+                            Rpp32f dropProb[batchSize];
+                            for (i = 0; i < batchSize; i++)
+                                dropProb[i] = 0.4f;
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropProb, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        default:
+                        {
+                            missingFuncFlag = 1;
+                            break;
+                        }
+                    }
 
                     break;
                 }

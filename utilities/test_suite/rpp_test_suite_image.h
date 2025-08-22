@@ -122,7 +122,8 @@ std::map<int, string> augmentationMap =
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
     {92, "slice"},
-    {93, "jpeg_compression_distortion"}
+    {93, "jpeg_compression_distortion"},
+    {94, "dropout"}
 };
 
 enum Augmentation {
@@ -184,10 +185,16 @@ enum Augmentation {
     TENSOR_MEAN = 90,
     TENSOR_STDDEV = 91,
     SLICE = 92,
-    JPEG_COMPRESSION_DISTORTION = 93
+    JPEG_COMPRESSION_DISTORTION = 93,
+    DROPOUT = 94
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
+enum DropoutType
+{
+    CHANNEL = 0,
+};
+
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, DROPOUT};
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -195,6 +202,7 @@ const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_F
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
+const unordered_set<int> dropoutTypeCases = {DROPOUT};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
@@ -300,6 +308,16 @@ inline std::string get_noise_type(unsigned int val)
         case 1: return "Gaussian";
         case 2: return "Shot";
         default:return "SaltAndPepper";
+    }
+}
+
+// returns the dropout type applied to an image
+inline std::string get_dropout_type(unsigned int val)
+{
+    switch(val)
+    {
+        case 0: return "channel";
+        default:return "channel";
     }
 }
 
