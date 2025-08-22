@@ -27,7 +27,7 @@ SOFTWARE.
 
 // -------------------- Set 0 - Dropout main kernels --------------------
 
-__device__ __forceinline__ void dropout_vector(d_float8 &pix_f8, uint8_t *maskTensor)
+__device__ __forceinline__ void dropout_vector_compute(d_float8 &pix_f8, uint8_t *maskTensor)
 {
     float mask = static_cast<float>(*maskTensor);
     float4 mask4 = make_float4(mask, mask, mask, mask);
@@ -69,7 +69,7 @@ __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
     for (int c = 0; c < 3; ++c)
-        dropout_vector(dst_f24.f8[c], maskTensor + c);
+        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -100,7 +100,7 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
     d_float8 dst_f8;
     
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-    dropout_vector(dst_f8, maskTensor);
+    dropout_vector_compute(dst_f8, maskTensor);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     if (channelsDst == 3)
     {
@@ -108,14 +108,14 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-        dropout_vector(dst_f8, maskTensor + 1);
+        dropout_vector_compute(dst_f8, maskTensor + 1);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-        dropout_vector(dst_f8, maskTensor + 2);
+        dropout_vector_compute(dst_f8, maskTensor + 2);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -145,7 +145,7 @@ __global__ void channel_dropout_pkd3_pln3_hip_tensor(T *srcPtr,
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
     for (int c = 0; c < 3; ++c)
-        dropout_vector(dst_f24.f8[c], maskTensor + c);
+        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -175,7 +175,7 @@ __global__ void channel_dropout_pln3_pkd3_hip_tensor(T *srcPtr,
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
     for (int c = 0; c < 3; ++c)
-        dropout_vector(dst_f24.f8[c], maskTensor + c);
+        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
