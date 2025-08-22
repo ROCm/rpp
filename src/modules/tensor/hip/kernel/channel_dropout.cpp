@@ -36,12 +36,6 @@ __device__ __forceinline__ void dropout_vector_compute(d_float8 &pix_f8, uint8_t
     pix_f8.f4[1] = pix_f8.f4[1] * mask4;
 }
 
-__device__ __forceinline__ void dropout_vector_i8(d_float8 &pix_f8)
-{
-    pix_f8.f4[0] = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
-    pix_f8.f4[1] = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
-}
-
 template <typename T>
 __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
                                                uint2 srcStridesNH,
