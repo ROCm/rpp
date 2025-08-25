@@ -213,7 +213,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     // Generate channel mask on host
     std::mt19937 gen(42); //std::random_device{}()
-    uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
+    uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
     for (int b = 0; b < dstDescPtr->n; b++)
     {
         std::bernoulli_distribution keepDist(1.0f - dropProb[b]);
@@ -234,6 +234,8 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NHWC && srcDescPtr->c == 3)
     {
+        //Processing 24 pixels per thread
+        globalThreads_x = (dstDescPtr->strides.hStride + 23) / 24;
         hipLaunchKernelGGL(channel_dropout_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
