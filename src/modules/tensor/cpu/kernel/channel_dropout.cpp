@@ -25,7 +25,7 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include <random>
 
-inline void dropout_mask_apply_avx(__m256 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
+inline void dropout_mask_apply_avx_48(__m256 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
 {
     __m256 maskR = _mm256_set1_ps((float)maskValR);
     __m256 maskG = _mm256_set1_ps((float)maskValG);
@@ -44,7 +44,7 @@ inline void dropout_mask_apply_avx(__m256 *p, uint8_t maskValR, uint8_t maskValG
     p[5] = _mm256_mul_ps(p[5], maskB);
 }
 
-inline void dropout_mask_apply_sse(__m128 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
+inline void dropout_mask_apply_sse_48(__m128 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
 {
     __m128 maskR = _mm_set1_ps((float)maskValR);
     __m128 maskG = _mm_set1_ps((float)maskValG);
@@ -67,6 +67,70 @@ inline void dropout_mask_apply_sse(__m128 *p, uint8_t maskValR, uint8_t maskValG
     p[9]  = _mm_mul_ps(p[9],  maskB);
     p[10] = _mm_mul_ps(p[10], maskB);
     p[11] = _mm_mul_ps(p[11], maskB);
+}
+
+inline void dropout_mask_apply_avx_16(__m256 *p, uint8_t maskVal)
+{
+    __m256 mask = _mm256_set1_ps((float)maskVal);
+                        
+    p[0] = _mm256_mul_ps(p[0], mask);
+    p[1] = _mm256_mul_ps(p[1], mask);
+}
+
+inline void dropout_mask_apply_sse_16(__m128 *p, uint8_t maskVal)
+{
+    __m128 mask = _mm_set1_ps((float)maskVal);
+
+    p[0] = _mm_mul_ps(p[0], mask);
+    p[1] = _mm_mul_ps(p[1], mask);
+    p[2] = _mm_mul_ps(p[2], mask);
+    p[3] = _mm_mul_ps(p[3], mask);
+}
+
+inline void dropout_mask_apply_avx_24(__m256 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
+{
+    __m256 maskR = _mm256_set1_ps((float)maskValR);
+    __m256 maskG = _mm256_set1_ps((float)maskValG);
+    __m256 maskB = _mm256_set1_ps((float)maskValB);
+
+    // R channel → p[0]
+    p[0] = _mm256_mul_ps(p[0], maskR);
+    
+    // G channel → p[1]
+    p[1] = _mm256_mul_ps(p[1], maskG);
+
+    // B channel → p[2]
+    p[2] = _mm256_mul_ps(p[2], maskB);
+}
+
+inline void dropout_mask_apply_sse_24(__m128 *p, uint8_t maskValR, uint8_t maskValG, uint8_t maskValB)
+{
+    __m128 maskR = _mm_set1_ps((float)maskValR);
+    __m128 maskG = _mm_set1_ps((float)maskValG);
+    __m128 maskB = _mm_set1_ps((float)maskValB);
+
+    // R channel
+    p[0] = _mm_mul_ps(p[0], maskR);
+
+    // G channel
+    p[1] = _mm_mul_ps(p[1], maskG);
+
+    // B channel
+    p[2]  = _mm_mul_ps(p[2],  maskB);
+}
+
+inline void dropout_mask_apply_avx_8(__m256 *p, uint8_t maskVal)
+{
+    __m256 mask = _mm256_set1_ps((float)maskVal);
+                        
+    p[0] = _mm256_mul_ps(p[0], mask);
+}
+
+inline void dropout_mask_apply_sse_4(__m128 *p, uint8_t maskVal)
+{
+    __m128 mask = _mm_set1_ps((float)maskVal);
+
+    p[0] = _mm_mul_ps(p[0], mask);
 }
 
 inline void generate_channel_masks(uint8_t *channelMasks,
@@ -158,12 +222,12 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    dropout_mask_apply_avx(p, maskValR, maskValG, maskValB);
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    dropout_mask_apply_sse(p, maskValR, maskValG, maskValB);       // apply dropout masks
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);       // apply dropout masks
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -218,12 +282,12 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    dropout_mask_apply_avx(p, maskValR, maskValG, maskValB);
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    dropout_mask_apply_sse(p, maskValR, maskValG, maskValB);
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -274,12 +338,12 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    dropout_mask_apply_avx(p, maskValR, maskValG, maskValB);
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    dropout_mask_apply_sse(p, maskValR, maskValG, maskValB);
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -322,19 +386,13 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
                     {
 #if __AVX2__
                         __m256 p[2], mask;
-                        mask = _mm256_set1_ps(maskVal);
                         rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);    // simd loads                        
-                        p[0] = _mm256_mul_ps(p[0], mask);
-                        p[1] = _mm256_mul_ps(p[1], mask);
+                        dropout_mask_apply_avx_16(p, maskVal);
                         rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);    // simd stores
 #else
-                        __m128 p[4], mask;
-                        mask = _mm_set1_ps(maskVal);
+                        __m128 p[4];
                         rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                        p[0] = _mm_mul_ps(p[0], mask);
-                        p[1] = _mm_mul_ps(p[1], mask);
-                        p[2] = _mm_mul_ps(p[2], mask);
-                        p[3] = _mm_mul_ps(p[3], mask);
+                        dropout_mask_apply_sse_48(p, maskVal);
                         rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
 #endif
                         srcPtrTemp +=16;
@@ -431,22 +489,12 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -500,22 +548,12 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -565,22 +603,12 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -626,15 +654,13 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                         __m256 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        if(!maskVal)
-                            p[0] = avx_p0;
+                        dropout_mask_apply_avx_8(p, maskVal);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
 #else
                         __m128 p[1];
 
                         rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp, p);    // simd loads
-                        if(!maskVal)
-                            p[0] = xmm_p0;
+                        dropout_mask_apply_sse_4(p, maskVal);
                         rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
 #endif
                         srcPtrTemp += vectorIncrementPerChannel;
@@ -739,22 +765,12 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
 #endif
 
@@ -824,22 +840,12 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[4];
                     rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -895,22 +901,12 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = avx_p0;
-                    if(!maskValG)
-                        p[1] = avx_p0;
-                    if(!maskValB)
-                        p[2] = avx_p0;
+                    dropout_mask_apply_avx_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                     __m128 p[3];
                     rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
-                    if(!maskValR)
-                        p[0] = xmm_p0;
-                    if(!maskValG)
-                        p[1] = xmm_p0;
-                    if(!maskValB)
-                        p[2] = xmm_p0;
+                    dropout_mask_apply_sse_24(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 #endif
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
@@ -962,15 +958,13 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
                         __m256 p[1];
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, p);    // simd loads
-                        if(!maskVal)
-                            p[0] = avx_p0;
+                        dropout_mask_apply_avx_8(p, maskVal);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
 #else
                         __m128 p[1];
 
                         rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp_ps, p);    // simd loads
-                        if(!maskVal)
-                            p[0] = xmm_p0;
+                        dropout_mask_apply_avx_4(p, maskVal);
                         rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp_ps, p);    // simd stores
 #endif
 
@@ -1066,46 +1060,12 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    if(!maskValR)
-                    {    
-                        p[0] = avx_p0;
-                        p[1] = avx_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[2] = avx_p0;
-                        p[3] = avx_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[4] = avx_p0;
-                        p[5] = avx_p0;
-                    }
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                    {    
-                        p[0] = xmm_p0;
-                        p[1] = xmm_p0;
-                        p[2] = xmm_p0;
-                        p[3] = xmm_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[4] = xmm_p0;
-                        p[5] = xmm_p0;
-                        p[6] = xmm_p0;
-                        p[7] = xmm_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[8] = xmm_p0;
-                        p[9] = xmm_p0;
-                        p[10] = xmm_p0;
-                        p[11] = xmm_p0;
-                    }
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 #endif
 
@@ -1160,46 +1120,12 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    if(!maskValR)
-                    {    
-                        p[0] = avx_p0;
-                        p[1] = avx_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[2] = avx_p0;
-                        p[3] = avx_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[4] = avx_p0;
-                        p[5] = avx_p0;
-                    }
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    if(!maskValR)
-                    {    
-                        p[0] = xmm_p0;
-                        p[1] = xmm_p0;
-                        p[2] = xmm_p0;
-                        p[3] = xmm_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[4] = xmm_p0;
-                        p[5] = xmm_p0;
-                        p[6] = xmm_p0;
-                        p[7] = xmm_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[8] = xmm_p0;
-                        p[9] = xmm_p0;
-                        p[10] = xmm_p0;
-                        p[11] = xmm_p0;
-                    }
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -1249,46 +1175,12 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);
-                    if(!maskValR)
-                    {    
-                        p[0] = avx_p0;
-                        p[1] = avx_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[2] = avx_p0;
-                        p[3] = avx_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[4] = avx_p0;
-                        p[5] = avx_p0;
-                    }
+                    dropout_mask_apply_avx_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
-                    if(!maskValR)
-                    {    
-                        p[0] = xmm_p0;
-                        p[1] = xmm_p0;
-                        p[2] = xmm_p0;
-                        p[3] = xmm_p0;
-                    }
-                    if(!maskValG)
-                    {    
-                        p[4] = xmm_p0;
-                        p[5] = xmm_p0;
-                        p[6] = xmm_p0;
-                        p[7] = xmm_p0;
-                    }
-                    if(!maskValB)
-                    {    
-                        p[8] = xmm_p0;
-                        p[9] = xmm_p0;
-                        p[10] = xmm_p0;
-                        p[11] = xmm_p0;
-                    }
+                    dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 #endif
                     srcPtrTemp += vectorIncrement;
@@ -1334,23 +1226,13 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
                         __m256 p[2];
 
                         rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        if(!maskVal)
-                        {
-                            p[0] = avx_p0;
-                            p[1] = avx_p0;
-                        }
+                        dropout_mask_apply_avx_16(p, maskVal);
                         rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);    // simd stores
 #else
                         __m128 p[4];
 
                         rpp_simd_load(rpp_load16_i8_to_f32, srcPtrTemp, p);    // simd loads
-                        if(!maskVal)
-                        {
-                            p[0] = xmm_p0;
-                            p[1] = xmm_p0;
-                            p[2] = xmm_p0;
-                            p[3] = xmm_p0;
-                        }
+                        dropout_mask_apply_sse_16(p, maskVal);
                         rpp_simd_store(rpp_store16_f32_to_i8, dstPtrTemp, p);    // simd stores
 #endif
 
