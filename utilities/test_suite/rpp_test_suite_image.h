@@ -192,6 +192,8 @@ enum Augmentation {
 enum DropoutType
 {
     CHANNEL = 0,
+    CUTOUT = 1,
+    GRID = 2
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, DROPOUT};
@@ -1605,6 +1607,167 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
+    }
+}
+
+// Dropout Region initializer for unit and performance testing
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth, int dropoutType)
+{
+    std::mt19937 rng(42); // use std::random_device{}() for random dropout region
+    std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
+    std::uniform_real_distribution<float> w_ratio(0.2f, 0.4f);
+    std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
+    std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
+    std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
+    std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
+    std::uniform_int_distribution<int> coarse_box_count_dist(5, maxBoxesPerImage);
+
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = reinterpret_cast<Rpp32f *>(colorBuffer);
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+
+    if (inputBitDepth == 0)
+        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp8u));
+    else if (inputBitDepth == 1)
+        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp16f));
+    else if (inputBitDepth == 2)
+        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp32f));
+    else if (inputBitDepth == 5)
+        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp8s));
+
+    for (int i = 0; i < batchSize; i++)
+    {
+        int roiW = roiTensorPtrSrc[i].xywhROI.roiWidth;
+        int roiH = roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        int actualBoxCount = 1;
+        std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
+
+        int boxOffset = i * maxBoxesPerImage;
+        int validBoxCount = 0;
+
+        for (int b = 0; b < actualBoxCount; b++)
+        {
+            float boxW, boxH;
+
+            if (dropoutType == 0) // Cutout: Perfect square
+            {
+                float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
+                boxW = boxH = std::max(1.0f, squareSize);
+            }
+            else
+            {
+                float sizeRatioW = (*curr_wh_ratio)(rng);
+                float sizeRatioH = (*curr_wh_ratio)(rng);
+                boxW = std::max(1.0f, sizeRatioW * roiW);
+                boxH = std::max(1.0f, sizeRatioH * roiH);
+            }
+
+            // Ensure box is always inside ROI and not at (0,0)
+            float x_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
+            float y_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
+
+            float roiX = roiTensorPtrSrc[i].xywhROI.xy.x;
+            float roiY = roiTensorPtrSrc[i].xywhROI.xy.y;
+
+            anchorBoxInfoTensor[boxOffset + b].lt.x = roiX + x_start;
+            anchorBoxInfoTensor[boxOffset + b].lt.y = roiY + y_start;
+            anchorBoxInfoTensor[boxOffset + b].rb.x = roiX + x_start + boxW;
+            anchorBoxInfoTensor[boxOffset + b].rb.y = roiY + y_start + boxH;
+
+            int colorOffset = (boxOffset + b) * channels;
+            for (int c = 0; c < channels; c++)
+            {
+                Rpp32f dropoutColor = 0.0f;
+                if (inputBitDepth == 0)
+                    colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
+                else if (inputBitDepth == 1)
+                    colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+            }
+            validBoxCount++;
+        }
+        numOfBoxes[i] = validBoxCount;
+    }
+}
+
+inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32f holeRatio, bool randomOffset, Rpp32f* colorBuffer, int channels, int inputBitDepth)
+{
+    // Initialize color buffer based on bit depth
+    for (int i = 0; i < batchSize * gridH * gridW * channels; i++)
+    {
+        switch (inputBitDepth)
+        {
+            case 0: reinterpret_cast<Rpp8u*>(colorBuffer)[i]  = 0;    break;
+            case 1: reinterpret_cast<Rpp16f*>(colorBuffer)[i] = 0.0f; break;
+            case 2: reinterpret_cast<Rpp32f*>(colorBuffer)[i] = 0.0f; break;
+            case 5: reinterpret_cast<Rpp8s*>(colorBuffer)[i]  = -128; break;
+        }
+    }
+
+    std::random_device rd;  
+    std::mt19937 gen(42); // use rd() for random output
+
+    // Generate grid dropout boxes
+    for (int i = 0; i < batchSize; ++i)
+    {
+        Rpp32u roiW = roiTensorPtrSrc[i].xywhROI.roiWidth;
+        Rpp32u roiH = roiTensorPtrSrc[i].xywhROI.roiHeight;
+        Rpp32s x_base = roiTensorPtrSrc[i].xywhROI.xy.x;
+        Rpp32s y_base = roiTensorPtrSrc[i].xywhROI.xy.y;
+
+        Rpp32u cellW = (gridW > 0) ? roiW / gridW : 0;
+        Rpp32u cellH = (gridH > 0) ? roiH / gridH : 0;
+
+        if (cellW == 0 || cellH == 0 || gridH == 0 || gridW == 0)
+        {
+            numOfBoxes[i] = 0;
+            continue;
+        }
+
+        Rpp32u holeW = static_cast<Rpp32u>(cellW * holeRatio);
+        Rpp32u holeH = static_cast<Rpp32u>(cellH * holeRatio);
+
+        int boxOffset = i * gridH * gridW;
+        int boxCount = 0;
+
+        for (Rpp32u row = 0; row < gridH; ++row)
+        {
+            for (Rpp32u col = 0; col < gridW; ++col)
+            {
+                Rpp32s cellX = x_base + col * cellW;
+                Rpp32s cellY = y_base + row * cellH;
+
+                // random offset inside the cell if enabled
+                Rpp32s offsetX = 0, offsetY = 0;
+                if (randomOffset && (cellW > holeW) && (cellH > holeH))
+                {
+                    std::uniform_int_distribution<int> distX(0, cellW - holeW);
+                    std::uniform_int_distribution<int> distY(0, cellH - holeH);
+                    offsetX = distX(gen);
+                    offsetY = distY(gen);
+                }
+
+                Rpp32s x1 = std::min(cellX + offsetX, x_base + (Rpp32s)roiW - 1);
+                Rpp32s y1 = std::min(cellY + offsetY, y_base + (Rpp32s)roiH - 1);
+                Rpp32s x2 = std::min(x1 + (Rpp32s)holeW - 1, x_base + (Rpp32s)roiW - 1);
+                Rpp32s y2 = std::min(y1 + (Rpp32s)holeH - 1, y_base + (Rpp32s)roiH - 1);
+
+                int boxIdx = boxOffset + boxCount;
+                anchorBoxInfoTensor[boxIdx].lt.x = x1;
+                anchorBoxInfoTensor[boxIdx].lt.y = y1;
+                anchorBoxInfoTensor[boxIdx].rb.x = x2;
+                anchorBoxInfoTensor[boxIdx].rb.y = y2;
+
+                ++boxCount;
+            }
+        }
+
+        numOfBoxes[i] = boxCount;
     }
 }
 
