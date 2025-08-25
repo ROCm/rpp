@@ -342,7 +342,7 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
 #else
                     __m128 p[12];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcPtrTemp, p);    // simd loads
                     dropout_mask_apply_sse_48(p, maskValR, maskValG, maskValB);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
 #endif
@@ -392,7 +392,7 @@ RppStatus channel_dropout_u8_u8_host_tensor(Rpp8u *srcPtr,
 #else
                         __m128 p[4];
                         rpp_simd_load(rpp_load16_u8_to_f32, srcPtrTemp, p);    // simd loads
-                        dropout_mask_apply_sse_48(p, maskVal);
+                        dropout_mask_apply_sse_16(p, maskVal);
                         rpp_simd_store(rpp_store16_f32_to_u8, dstPtrTemp, p);    // simd stores
 #endif
                         srcPtrTemp +=16;
@@ -471,9 +471,10 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -504,9 +505,9 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = maskValR ? srcPtrTemp[0] : 0.0f;
-                    *dstPtrTempG = maskValG ? srcPtrTemp[1] : 0.0f;
-                    *dstPtrTempB = maskValB ? srcPtrTemp[2] : 0.0f;
+                    *dstPtrTempR = maskValR * srcPtrTemp[0];
+                    *dstPtrTempG = maskValG * srcPtrTemp[1];
+                    *dstPtrTempB = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -530,9 +531,10 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -563,9 +565,9 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? *srcPtrTempR : 0.0f;
-                    dstPtrTemp[1] = maskValG ? *srcPtrTempG : 0.0f;
-                    dstPtrTemp[2] = maskValB ? *srcPtrTempB : 0.0f;
+                    dstPtrTemp[0] = maskValR * *srcPtrTempR;
+                    dstPtrTemp[1] = maskValG * *srcPtrTempG;
+                    dstPtrTemp[2] = maskValB * *srcPtrTempB;
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -587,9 +589,10 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -616,9 +619,9 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? srcPtrTemp[0] : 0.0f;
-                    dstPtrTemp[1] = maskValG ? srcPtrTemp[1] : 0.0f;
-                    dstPtrTemp[2] = maskValB ? srcPtrTemp[2] : 0.0f;
+                    dstPtrTemp[0] = maskValR * srcPtrTemp[0];
+                    dstPtrTemp[1] = maskValG * srcPtrTemp[1];
+                    dstPtrTemp[2] = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -658,7 +661,6 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
 #else
                         __m128 p[1];
-
                         rpp_simd_load(rpp_load4_f32_to_f32, srcPtrTemp, p);    // simd loads
                         dropout_mask_apply_sse_4(p, maskVal);
                         rpp_simd_store(rpp_store4_f32_to_f32, dstPtrTemp, p);    // simd stores
@@ -668,7 +670,7 @@ RppStatus channel_dropout_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = maskVal ? *srcPtrTemp : 0.0f;
+                        *dstPtrTemp = maskVal * *srcPtrTemp;
 
                         srcPtrTemp++;
                         dstPtrTemp++;
@@ -740,10 +742,11 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-            
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -788,9 +791,9 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = maskValR ? srcPtrTemp[0] : 0.0f;
-                    *dstPtrTempG = maskValG ? srcPtrTemp[1] : 0.0f;
-                    *dstPtrTempB = maskValB ? srcPtrTemp[2] : 0.0f;
+                    *dstPtrTempR = maskValR * srcPtrTemp[0];
+                    *dstPtrTempG = maskValG * srcPtrTemp[1];
+                    *dstPtrTempB = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -813,10 +816,11 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-            
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -857,9 +861,9 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? *srcPtrTempR : 0.0f;
-                    dstPtrTemp[1] = maskValG ? *srcPtrTempG : 0.0f;
-                    dstPtrTemp[2] = maskValB ? *srcPtrTempB : 0.0f;
+                    dstPtrTemp[0] = maskValR * *srcPtrTempR;
+                    dstPtrTemp[1] = maskValG * *srcPtrTempG;
+                    dstPtrTemp[2] = maskValB * *srcPtrTempB;
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -881,9 +885,10 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -916,9 +921,9 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? srcPtrTemp[0] : 0.0f;
-                    dstPtrTemp[1] = maskValG ? srcPtrTemp[1] : 0.0f;
-                    dstPtrTemp[2] = maskValB ? srcPtrTemp[2] : 0.0f;
+                    dstPtrTemp[0] = maskValR * srcPtrTemp[0];
+                    dstPtrTemp[1] = maskValG * srcPtrTemp[1];
+                    dstPtrTemp[2] = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -975,7 +980,7 @@ RppStatus channel_dropout_f16_f16_host_tensor(Rpp16f *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = maskVal ? *srcPtrTemp : 0.0f;
+                        *dstPtrTemp = maskVal * *srcPtrTemp;
 
                         srcPtrTemp++;
                         dstPtrTemp++;
@@ -1042,9 +1047,10 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -1076,9 +1082,9 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = maskValR ? srcPtrTemp[0] : -128;
-                    *dstPtrTempG = maskValG ? srcPtrTemp[1] : -128;
-                    *dstPtrTempB = maskValB ? srcPtrTemp[2] : -128;
+                    *dstPtrTempR = maskValR * srcPtrTemp[0];
+                    *dstPtrTempG = maskValG * srcPtrTemp[1];
+                    *dstPtrTempB = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -1102,9 +1108,10 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
             
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -1135,9 +1142,9 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? *srcPtrTempR : -128;
-                    dstPtrTemp[1] = maskValG ? *srcPtrTempG : -128;
-                    dstPtrTemp[2] = maskValB ? *srcPtrTempB : -128;
+                    dstPtrTemp[0] = maskValR * *srcPtrTempR;
+                    dstPtrTemp[1] = maskValG * *srcPtrTempG;
+                    dstPtrTemp[2] = maskValB * *srcPtrTempB;
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1159,9 +1166,10 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            uint8_t maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            uint8_t maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
+            uint8_t maskValR, maskValG, maskValB;
+            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
+            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
+            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -1188,9 +1196,9 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR ? srcPtrTemp[0] : -128;
-                    dstPtrTemp[1] = maskValG ? srcPtrTemp[1] : -128;
-                    dstPtrTemp[2] = maskValB ? srcPtrTemp[2] : -128;
+                    dstPtrTemp[0] = maskValR * srcPtrTemp[0];
+                    dstPtrTemp[1] = maskValG * srcPtrTemp[1];
+                    dstPtrTemp[2] = maskValB * srcPtrTemp[2];
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -1241,7 +1249,7 @@ RppStatus channel_dropout_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = maskVal ? *srcPtrTemp : -128;
+                        *dstPtrTemp = maskVal * *srcPtrTemp;
 
                         srcPtrTemp++;
                         dstPtrTemp++;

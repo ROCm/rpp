@@ -27,13 +27,39 @@ SOFTWARE.
 
 // -------------------- Set 0 - Dropout main kernels --------------------
 
-__device__ __forceinline__ void dropout_vector_compute(d_float8 &pix_f8, uint8_t *maskTensor)
+__device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *maskTensor)
 {
+    // Convert mask value (0 or 1) to float
     float mask = static_cast<float>(*maskTensor);
     float4 mask4 = make_float4(mask, mask, mask, mask);
 
+    // Multiply pixel data by mask
     pix_f8.f4[0] = pix_f8.f4[0] * mask4;
     pix_f8.f4[1] = pix_f8.f4[1] * mask4;
+}
+
+__device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor)
+{
+    // Convert mask values (0 or 1) for R, G, B
+    float maskR, maskG, maskB;
+    maskR = static_cast<float>(maskTensor[0]);
+    maskG = static_cast<float>(maskTensor[1]);
+    maskB = static_cast<float>(maskTensor[2]);
+    
+    float4 maskR4, maskG4, maskB4;
+    maskR4 = make_float4(maskR, maskR, maskR, maskR);
+    maskG4 = make_float4(maskG, maskG, maskG, maskG);
+    maskB4 = make_float4(maskB, maskB, maskB, maskB);
+
+    // Multiply each channel’s pixels by its mask
+    pix_f24.f4[0] = pix_f24.f4[0] * maskR4; // Red
+    pix_f24.f4[1] = pix_f24.f4[1] * maskR4;
+    
+    pix_f24.f4[2] = pix_f24.f4[2] * maskG4; // Green
+    pix_f24.f4[3] = pix_f24.f4[3] * maskG4;
+    
+    pix_f24.f4[4] = pix_f24.f4[4] * maskB4; // Blue
+    pix_f24.f4[5] = pix_f24.f4[5] * maskB4;
 }
 
 template <typename T>
@@ -56,14 +82,11 @@ __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x * 3 + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
+    d_float24 dst_f24;
     uint8_t *maskTensor = channelMask + id_z * 3;
 
-
-    d_float24 dst_f24;
-
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
-    for (int c = 0; c < 3; ++c)
-        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
+    compute_dropout_f24(dst_f24, maskTensor);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -89,12 +112,11 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    uint8_t *maskTensor = channelMask + id_z * channelsDst;
-
     d_float8 dst_f8;
+    uint8_t *maskTensor = channelMask + id_z * channelsDst;
     
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-    dropout_vector_compute(dst_f8, maskTensor);
+    compute_dropout_f8(dst_f8, maskTensor);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     if (channelsDst == 3)
     {
@@ -102,14 +124,14 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-        dropout_vector_compute(dst_f8, maskTensor + 1);
+        compute_dropout_f8(dst_f8, maskTensor + 1);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
-        dropout_vector_compute(dst_f8, maskTensor + 2);
+        compute_dropout_f8(dst_f8, maskTensor + 2);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -138,8 +160,7 @@ __global__ void channel_dropout_pkd3_pln3_hip_tensor(T *srcPtr,
     uint8_t *maskTensor = channelMask + id_z * 3;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
-    for (int c = 0; c < 3; ++c)
-        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
+    compute_dropout_f24(dst_f24, maskTensor);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -168,8 +189,7 @@ __global__ void channel_dropout_pln3_pkd3_hip_tensor(T *srcPtr,
     uint8_t *maskTensor = channelMask + id_z * 3;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
-    for (int c = 0; c < 3; ++c)
-        dropout_vector_compute(dst_f24.f8[c], maskTensor + c);
+    compute_dropout_f24(dst_f24, maskTensor);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
