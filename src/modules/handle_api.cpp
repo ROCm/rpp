@@ -48,19 +48,19 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
     if(backend == RppBackend::RPP_HOST_BACKEND)
     {
 #if GPU_SUPPORT
-        rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
+        auto status = rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
 #else
-        rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
+        auto status = rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_host(); });
 #endif
         delete handle;
-        return rppStatusSuccess;
+        return status;
     }
 #if GPU_SUPPORT
     else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
     {
-        rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
+        auto status = rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu(); });
         delete handle;
-        return rppStatusSuccess;
+        return status;
     }
 #endif // GPU_SUPPORT
     else
