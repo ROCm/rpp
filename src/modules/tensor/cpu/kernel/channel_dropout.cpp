@@ -78,11 +78,11 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
+        
+        uint8_t *maskPtr = channelMaskHost + batchCount * srcDescPtr->c;
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
-
 
         // Channel Dropout with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -92,11 +92,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -111,15 +106,15 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        *dstPtrTempR = maskValR ? srcPtrTemp[0] : -128;
-                        *dstPtrTempG = maskValG ? srcPtrTemp[1] : -128;
-                        *dstPtrTempB = maskValB ? srcPtrTemp[2] : -128;
+                        *dstPtrTempR = maskPtr[0] ? srcPtrTemp[0] : -128;
+                        *dstPtrTempG = maskPtr[1] ? srcPtrTemp[1] : -128;
+                        *dstPtrTempB = maskPtr[2] ? srcPtrTemp[2] : -128;
                     }
                     else
                     {
-                        *dstPtrTempR = maskValR * srcPtrTemp[0];
-                        *dstPtrTempG = maskValG * srcPtrTemp[1];
-                        *dstPtrTempB = maskValB * srcPtrTemp[2];
+                        *dstPtrTempR = maskPtr[0] * srcPtrTemp[0];
+                        *dstPtrTempG = maskPtr[1] * srcPtrTemp[1];
+                        *dstPtrTempB = maskPtr[2] * srcPtrTemp[2];
                     }
 
                     srcPtrTemp += 3;
@@ -144,11 +139,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
-
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
@@ -162,15 +152,15 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        dstPtrRow[0] = maskValR ? *srcPtrTempR : -128;
-                        dstPtrRow[1] = maskValG ? *srcPtrTempG : -128;
-                        dstPtrRow[2] = maskValB ? *srcPtrTempB : -128;
+                        dstPtrRow[0] = maskPtr[0] ? *srcPtrTempR : -128;
+                        dstPtrRow[1] = maskPtr[1] ? *srcPtrTempG : -128;
+                        dstPtrRow[2] = maskPtr[2] ? *srcPtrTempB : -128;
                     }
                     else
                     {
-                        dstPtrTemp[0] = maskValR * *srcPtrTempR;
-                        dstPtrTemp[1] = maskValG * *srcPtrTempG;
-                        dstPtrTemp[2] = maskValB * *srcPtrTempB;
+                        dstPtrTemp[0] = maskPtr[0] * *srcPtrTempR;
+                        dstPtrTemp[1] = maskPtr[1] * *srcPtrTempG;
+                        dstPtrTemp[2] = maskPtr[2] * *srcPtrTempB;
                     }
 
                     srcPtrTempR++;
@@ -193,11 +183,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
-
             //for better performance Raw C implementation is optimized
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -210,15 +195,15 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        dstPtrRow[0] = maskValR ? srcPtrTemp[0] : -128;
-                        dstPtrRow[1] = maskValG ? srcPtrTemp[1] : -128;
-                        dstPtrRow[2] = maskValB ? srcPtrTemp[2] : -128;
+                        dstPtrRow[0] = maskPtr[0] ? srcPtrTemp[0] : -128;
+                        dstPtrRow[1] = maskPtr[1] ? srcPtrTemp[1] : -128;
+                        dstPtrRow[2] = maskPtr[2] ? srcPtrTemp[2] : -128;
                     }
                     else
                     {
-                        dstPtrTemp[0] = maskValR * srcPtrTemp[0];
-                        dstPtrTemp[1] = maskValG * srcPtrTemp[1];
-                        dstPtrTemp[2] = maskValB * srcPtrTemp[2];
+                        dstPtrTemp[0] = maskPtr[0] * srcPtrTemp[0];
+                        dstPtrTemp[1] = maskPtr[1] * srcPtrTemp[1];
+                        dstPtrTemp[2] = maskPtr[2] * srcPtrTemp[2];
                     }
 
                     srcPtrTemp += 3;
@@ -239,7 +224,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 srcPtrRow = srcPtrChannel;
                 dstPtrRow = dstPtrChannel;
 
-                uint8_t maskVal = channelMaskHost[batchCount * srcDescPtr->c + c];
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     T *srcPtrTemp, *dstPtrTemp;
@@ -250,9 +234,9 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                            *dstPtrTemp = maskVal ? *srcPtrTemp : -128;
+                            *dstPtrTemp = maskPtr[c] ? *srcPtrTemp : -128;
                         else
-                            *dstPtrTemp = maskVal * *srcPtrTemp;
+                            *dstPtrTemp = maskPtr[c] * *srcPtrTemp;
                         
                         srcPtrTemp++;
                         dstPtrTemp++;
