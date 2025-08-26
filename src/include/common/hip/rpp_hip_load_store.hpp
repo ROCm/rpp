@@ -388,10 +388,10 @@ template <>
 __device__ __forceinline__ uint rpp_hip_pack_i8<RoundToNearest>(float4 src)
 {
     char4 dst_c4;
-    dst_c4.w = (schar)(nearbyintf(src.w));
-    dst_c4.z = (schar)(nearbyintf(src.z));
-    dst_c4.y = (schar)(nearbyintf(src.y));
-    dst_c4.x = (schar)(nearbyintf(src.x));
+    dst_c4.w = (schar)(__builtin_rintf(src.w));
+    dst_c4.z = (schar)(__builtin_rintf(src.z));
+    dst_c4.y = (schar)(__builtin_rintf(src.y));
+    dst_c4.x = (schar)(__builtin_rintf(src.x));
 
     return *(uint *)&dst_c4;
 }
