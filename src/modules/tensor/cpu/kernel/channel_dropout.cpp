@@ -109,9 +109,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = maskValR * srcPtrTemp[0];
-                    *dstPtrTempG = maskValG * srcPtrTemp[1];
-                    *dstPtrTempB = maskValB * srcPtrTemp[2];
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        *dstPtrTempR = maskValR ? srcPtrTemp[0] : -128;
+                        *dstPtrTempG = maskValG ? srcPtrTemp[1] : -128;
+                        *dstPtrTempB = maskValB ? srcPtrTemp[2] : -128;
+                    }
+                    else
+                    {
+                        *dstPtrTempR = maskValR * srcPtrTemp[0];
+                        *dstPtrTempG = maskValG * srcPtrTemp[1];
+                        *dstPtrTempB = maskValB * srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -151,9 +160,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR * *srcPtrTempR;
-                    dstPtrTemp[1] = maskValG * *srcPtrTempG;
-                    dstPtrTemp[2] = maskValB * *srcPtrTempB;
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        dstPtrRow[0] = maskValR ? *srcPtrTempR : -128;
+                        dstPtrRow[1] = maskValG ? *srcPtrTempG : -128;
+                        dstPtrRow[2] = maskValB ? *srcPtrTempB : -128;
+                    }
+                    else
+                    {
+                        dstPtrTemp[0] = maskValR * *srcPtrTempR;
+                        dstPtrTemp[1] = maskValG * *srcPtrTempG;
+                        dstPtrTemp[2] = maskValB * *srcPtrTempB;
+                    }
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -190,9 +208,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR * srcPtrTemp[0];
-                    dstPtrTemp[1] = maskValG * srcPtrTemp[1];
-                    dstPtrTemp[2] = maskValB * srcPtrTemp[2];
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        dstPtrRow[0] = maskValR ? srcPtrTemp[0] : -128;
+                        dstPtrRow[1] = maskValG ? srcPtrTemp[1] : -128;
+                        dstPtrRow[2] = maskValB ? srcPtrTemp[2] : -128;
+                    }
+                    else
+                    {
+                        dstPtrTemp[0] = maskValR * srcPtrTemp[0];
+                        dstPtrTemp[1] = maskValG * srcPtrTemp[1];
+                        dstPtrTemp[2] = maskValB * srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -222,7 +249,10 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = maskVal * *srcPtrTemp;
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                            *dstPtrTemp = maskVal ? *srcPtrTemp : -128;
+                        else
+                            *dstPtrTemp = maskVal * *srcPtrTemp;
                         
                         srcPtrTemp++;
                         dstPtrTemp++;
