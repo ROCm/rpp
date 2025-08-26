@@ -1358,6 +1358,11 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
 {
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if(dropProb[i] < 0 || dropProb[i] > 1)
+            return RPP_ERROR_INVALID_ARGUMENTS;
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -2834,10 +2839,13 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    for(int i = 0; i < srcDescPtr->n; i++)
+        if(dropProb[i] < 0 || dropProb[i] > 1)
+            return RPP_ERROR_INVALID_ARGUMENTS;
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
-    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
-    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

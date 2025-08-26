@@ -842,19 +842,6 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams);
 
-// -------------------- channel_dropout --------------------
-
-template<typename T>
-RppStatus channel_dropout_host_tensor(T *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      T *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropProb,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle);
-
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- copy --------------------
@@ -1637,6 +1624,19 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
+
+// -------------------- channel_dropout --------------------
+
+template<typename T>
+RppStatus channel_dropout_host_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *dropProb,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
 
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 

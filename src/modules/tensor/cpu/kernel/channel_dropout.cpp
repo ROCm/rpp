@@ -78,7 +78,8 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
+        
+        uint8_t *maskPtr = channelMaskHost + batchCount * srcDescPtr->c;
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
@@ -93,11 +94,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
-
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -109,9 +105,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = maskValR * srcPtrTemp[0];
-                    *dstPtrTempG = maskValG * srcPtrTemp[1];
-                    *dstPtrTempB = maskValB * srcPtrTemp[2];
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        *dstPtrTempR = maskPtr[0] ? srcPtrTemp[0] : -128;
+                        *dstPtrTempG = maskPtr[1] ? srcPtrTemp[1] : -128;
+                        *dstPtrTempB = maskPtr[2] ? srcPtrTemp[2] : -128;
+                    }
+                    else
+                    {
+                        *dstPtrTempR = maskPtr[0] * srcPtrTemp[0];
+                        *dstPtrTempG = maskPtr[1] * srcPtrTemp[1];
+                        *dstPtrTempB = maskPtr[2] * srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -135,11 +140,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
-
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
@@ -151,9 +151,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR * *srcPtrTempR;
-                    dstPtrTemp[1] = maskValG * *srcPtrTempG;
-                    dstPtrTemp[2] = maskValB * *srcPtrTempB;
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        dstPtrRow[0] = maskPtr[0] ? *srcPtrTempR : -128;
+                        dstPtrRow[1] = maskPtr[1] ? *srcPtrTempG : -128;
+                        dstPtrRow[2] = maskPtr[2] ? *srcPtrTempB : -128;
+                    }
+                    else
+                    {
+                        dstPtrTemp[0] = maskPtr[0] * *srcPtrTempR;
+                        dstPtrTemp[1] = maskPtr[1] * *srcPtrTempG;
+                        dstPtrTemp[2] = maskPtr[2] * *srcPtrTempB;
+                    }
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -175,11 +184,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
-            uint8_t maskValR, maskValG, maskValB;
-            maskValR = channelMaskHost[batchCount * srcDescPtr->c + 0];
-            maskValG = channelMaskHost[batchCount * srcDescPtr->c + 1];
-            maskValB = channelMaskHost[batchCount * srcDescPtr->c + 2];
-
             //for better performance Raw C implementation is optimized
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -190,9 +194,18 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = maskValR * srcPtrTemp[0];
-                    dstPtrTemp[1] = maskValG * srcPtrTemp[1];
-                    dstPtrTemp[2] = maskValB * srcPtrTemp[2];
+                    if constexpr (std::is_same<T, Rpp8s>::value)
+                    {
+                        dstPtrRow[0] = maskPtr[0] ? srcPtrTemp[0] : -128;
+                        dstPtrRow[1] = maskPtr[1] ? srcPtrTemp[1] : -128;
+                        dstPtrRow[2] = maskPtr[2] ? srcPtrTemp[2] : -128;
+                    }
+                    else
+                    {
+                        dstPtrTemp[0] = maskPtr[0] * srcPtrTemp[0];
+                        dstPtrTemp[1] = maskPtr[1] * srcPtrTemp[1];
+                        dstPtrTemp[2] = maskPtr[2] * srcPtrTemp[2];
+                    }
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -212,7 +225,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 srcPtrRow = srcPtrChannel;
                 dstPtrRow = dstPtrChannel;
 
-                uint8_t maskVal = channelMaskHost[batchCount * srcDescPtr->c + c];
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     T *srcPtrTemp, *dstPtrTemp;
@@ -222,7 +234,10 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = maskVal * *srcPtrTemp;
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                            *dstPtrTemp = maskPtr[c] ? *srcPtrTemp : -128;
+                        else
+                            *dstPtrTemp = maskPtr[c] * *srcPtrTemp;
                         
                         srcPtrTemp++;
                         dstPtrTemp++;
