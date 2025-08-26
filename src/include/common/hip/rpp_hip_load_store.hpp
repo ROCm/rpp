@@ -88,6 +88,7 @@ typedef union { schar sc1[24];  char4 sc4[6];  char3 sc3[8];    d_schar8 sc8[3];
 #define MAKE_FLOAT4(val) make_float4(val, val, val, val)
 #define MAKE_UINT4(val) make_uint4(val, val, val, val)
 #define MAKE_INT4(val) make_int4(val, val, val, val)
+#define MAKE_UCHAR4(val) make_uchar4(val, val, val, val)
 #define MAKE_FLOAT3(val) make_float3(val, val, val)
 #define MAKE_FLOAT2(val) make_float2(val, val)
 #define MAKE_UINT2(val) make_uint2(val, val)
