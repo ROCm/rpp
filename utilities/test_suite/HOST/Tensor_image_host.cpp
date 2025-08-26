@@ -158,6 +158,8 @@ int main(int argc, char **argv)
                 funcName += "_cutout"; break;
             case GRID:
                 funcName += "_grid"; break;
+            case RANDOM_ERASE:
+                funcName += "_random_erase"; break;
         }
     }
     if (funcName.empty())
@@ -1794,6 +1796,21 @@ int main(int argc, char **argv)
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                                rppt_grid_dropout_host(input, srcDescPtr, output, dstDescPtr, gridW, gridH, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        case RANDOM_ERASE:
+                        {
+                            testCaseName = "random_erase";
+                            Rpp32u boxesInEachImage = 1;
+                            bool randomSeed = false;
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_random_erase_host(input, srcDescPtr, output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 

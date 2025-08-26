@@ -148,6 +148,8 @@ int main(int argc, char **argv)
                 funcName += "_cutout"; break;
             case GRID:
                 funcName += "_grid"; break;
+            case RANDOM_ERASE:
+                funcName += "_random_erase"; break;
         }
     }
     if (funcName.empty())
@@ -409,7 +411,7 @@ int main(int argc, char **argv)
     Rpp32f *colorBuffer;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numOfBoxes;
-    if(testCase == ERASE || (testCase == DROPOUT && dropoutTypeCase == CUTOUT))
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
@@ -1784,6 +1786,20 @@ int main(int argc, char **argv)
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                                rppt_grid_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gridW, gridH, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        case RANDOM_ERASE:
+                        {
+                            testCaseName = "random_erase";
+                            boxesInEachImage = 1;
+                            bool randomSeed = false;
+
+                            startWallTime = omp_get_wtime();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_random_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 

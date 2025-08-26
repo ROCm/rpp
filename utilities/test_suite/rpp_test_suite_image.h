@@ -195,7 +195,8 @@ enum DropoutType
 {
     CHANNEL = 0,
     CUTOUT = 1,
-    GRID = 2
+    GRID = 2,
+    RANDOM_ERASE = 3
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, DROPOUT};
@@ -1613,7 +1614,6 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
     std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
-    std::uniform_int_distribution<int> coarse_box_count_dist(5, maxBoxesPerImage);
 
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -1636,6 +1636,11 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
 
         int actualBoxCount = 1;
         std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
+
+        if (dropoutType == 3) // Random Erasing
+        {
+            curr_wh_ratio = &wh_ratio_random;
+        }
 
         int boxOffset = i * maxBoxesPerImage;
         int validBoxCount = 0;

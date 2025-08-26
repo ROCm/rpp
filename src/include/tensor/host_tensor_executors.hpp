@@ -1688,6 +1688,20 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle);
 
+// -------------------- random_erasing --------------------
+
+template <typename T>
+RppStatus random_erase_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptRoiLtrb *anchorBoxInfoTensor,
+                                   Rpp32u *numBoxesTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------

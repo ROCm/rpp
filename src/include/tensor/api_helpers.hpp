@@ -51,6 +51,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
+    std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
 
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -64,6 +65,9 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
 
         int actualBoxCount = 1;
         std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
+
+        if (dropoutType == 3) // Random Erasing
+            curr_wh_ratio = &wh_ratio_random;
 
         int boxOffset = i * maxBoxesPerImage;
         int validBoxCount = 0;
