@@ -63,12 +63,12 @@ __global__ void solarize_pkd_tensor(T *srcPtr,
 
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f);  // Scale threshold [0,1] to full uint8 range [0,255]
-        maxVal = 255.0f;                                   // Maximum value for uint8
+        thresholdParam = roundf(thresholdParam * 255.0f);           // Scale threshold [0, 1] to full uint8 range [0, 255]
+        maxVal = 255.0f;                                            // Maximum value for uint8
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f) - 128.0f;  // Scale threshold [0,1] to signed int8 range [-128,127]
+        thresholdParam = roundf(thresholdParam * 255.0f) - 128.0f;  // Scale threshold [0, 1] to signed int8 range [-128, 127]
         maxVal = -1.0f;                                             // Use -1 as "max" for solarize operation on signed int8
     }
 
@@ -101,8 +101,8 @@ __global__ void solarize_pln3_tensor(T *srcPtr,
 
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f);  // Scale threshold [0,1] to full uint8 range [0,255]
-        maxVal = 255.0f;                                   // Maximum value for uint8
+        thresholdParam = roundf(thresholdParam * 255.0f);           // Scale threshold [0,1] to full uint8 range [0,255]
+        maxVal = 255.0f;                                            // Maximum value for uint8
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
@@ -139,8 +139,8 @@ __global__ void solarize_pln1_tensor(T *srcPtr,
 
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f);  // Scale threshold [0,1] to full uint8 range [0,255]
-        maxVal = 255.0f;                                   // Maximum value for uint8
+        thresholdParam = roundf(thresholdParam * 255.0f);           // Scale threshold [0,1] to full uint8 range [0,255]
+        maxVal = 255.0f;                                            // Maximum value for uint8
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
@@ -177,8 +177,8 @@ __global__ void solarize_pkd3_pln3_tensor(T *srcPtr,
 
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f);  // Scale threshold [0,1] to full uint8 range [0,255]
-        maxVal = 255.0f;                                   // Maximum value for uint8
+        thresholdParam = roundf(thresholdParam * 255.0f);           // Scale threshold [0,1] to full uint8 range [0,255]
+        maxVal = 255.0f;                                            // Maximum value for uint8
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
@@ -215,8 +215,8 @@ __global__ void solarize_pln3_pkd3_tensor(T *srcPtr,
 
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        thresholdParam = roundf(thresholdParam * 255.0f);  // Scale threshold [0,1] to full uint8 range [0,255]
-        maxVal = 255.0f;                                   // Maximum value for uint8
+        thresholdParam = roundf(thresholdParam * 255.0f);           // Scale threshold [0,1] to full uint8 range [0,255]
+        maxVal = 255.0f;                                            // Maximum value for uint8
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {

@@ -596,7 +596,7 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
 
-// -------------------- Solarize --------------------
+// -------------------- solarize --------------------
 
 template <typename T>
 RppStatus hip_exec_solarize_tensor(T *srcPtr,

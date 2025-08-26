@@ -61,18 +61,19 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        const Rpp8u maxVal = 255;
+
+        Rpp32f thresholdParam = std::round(thresholdTensor[batchCount] * maxVal); // scale normalized [0, 1] threshold to [0, 255] range
+#if __AVX2__
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
-        const Rpp8u maxVal = 255;
-
-        Rpp32f thresholdParam = std::round(thresholdTensor[batchCount] * maxVal); // scale normalized [0,1] threshold to [0,255] range
-#if __AVX2__
         __m256 pxThresholdParam = _mm256_set1_ps(thresholdParam);
 #endif
         // Solarize with fused output-layout toggle (NHWC -> NCHW)
@@ -163,7 +164,9 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else
         {
+#if __AVX2__
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel - 1);
+#endif
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8u *srcPtrRow, *dstPtrRow;
@@ -184,9 +187,10 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrTemp, p);
                         compute_solarize_host<2>(p, pxThresholdParam, avx_p255);
                         rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p);
-#endif
+
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
+#endif
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -230,19 +234,20 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        const Rpp32u vectorIncrement = 24;
-        const Rpp32u vectorIncrementPerChannel = 8;
-        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
         const Rpp32f maxVal = 1.0f;
 
         Rpp32f thresholdParam = thresholdTensor[batchCount];
 
 #if __AVX2__
+        const Rpp32u vectorIncrement = 24;
+        const Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
         __m256 pThresholdParam = _mm256_set1_ps(thresholdParam);
 #endif
         // Threshold with fused output-layout toggle (NHWC -> NCHW)
@@ -336,7 +341,9 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         else
         {
+#if __AVX2__
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel - 1);
+#endif
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
@@ -357,9 +364,10 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, &p);      // simd loads
                         compute_solarize_host<1>(&p, pThresholdParam, avx_p1);              // threshold adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p);    // simd stores
-#endif
+
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
+#endif
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -403,19 +411,20 @@ RppStatus solarize_f16_f16_host_tensor(Rpp16f *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
         Rpp16f *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u vectorIncrement = 24;
-        Rpp32u vectorIncrementPerChannel = 8;
-        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
         const Rpp32f maxVal = 1.0f;
 
         Rpp32f thresholdParam = thresholdTensor[batchCount];
 
 #if __AVX2__
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
         __m256 pThresholdParam = _mm256_set1_ps(thresholdParam);
 #endif
         // Threshold with fused output-layout toggle (NHWC -> NCHW)
@@ -509,7 +518,9 @@ RppStatus solarize_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         else
         {
+#if __AVX2__
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel - 1);
+#endif
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp16f *srcPtrRow, *dstPtrRow;
@@ -526,13 +537,14 @@ RppStatus solarize_f16_f16_host_tensor(Rpp16f *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
 #if __AVX2__
-                        __m256 p[1];
-                        rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, p);      // simd loads
-                        compute_solarize_host<1>(p, pThresholdParam, avx_p1);              // threshold adjustment
-                        rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);    // simd stores
-#endif
+                        __m256 p;
+                        rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, &p);      // simd loads
+                        compute_solarize_host<1>(&p, pThresholdParam, avx_p1);              // threshold adjustment
+                        rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, &p);    // simd stores
+
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
+#endif
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -576,19 +588,19 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
         Rpp8s *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        const Rpp8s maxVal = -1;
+
+        Rpp32f thresholdParam = std::round(thresholdTensor[batchCount] * 255);  // scale normalized [0, 1] threshold to [-128, 127] range
+#if __AVX2__
         const Rpp32u vectorIncrement = 48;
         const Rpp32u vectorIncrementPerChannel = 16;
         Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
-        const Rpp32s offset = 128;
-        const Rpp8s maxVal = -1;
-
-        Rpp32f thresholdParam = std::round(thresholdTensor[batchCount] * 255);  // scale normalized [0,1] threshold to [0,255] range
-#if __AVX2__
         __m256 pxThresholdParam = _mm256_set1_ps(thresholdParam);
 #endif
         // Threshold with fused output-layout toggle (NHWC -> NCHW)
@@ -681,7 +693,9 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
         }
         else
         {
+#if __AVX2__
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel - 1);
+#endif
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8s *srcPtrRow, *dstPtrRow;
@@ -702,9 +716,10 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
                         rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrTemp, p);
                         compute_solarize_host<2>(p, pxThresholdParam, avx_p255);
                         rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p);
-#endif
+
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
+#endif
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
