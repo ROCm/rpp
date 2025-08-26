@@ -88,6 +88,9 @@ typedef union { schar sc1[24];  char4 sc4[6];  char3 sc3[8];    d_schar8 sc8[3];
 struct NoRounding {};
 struct RoundToNearest {};
 
+#define MAKE_FLOAT4(val) make_float4(val, val, val, val)
+#define MAKE_UCHAR4(val) make_uchar4(val, val, val, val)
+
 #ifdef LEGACY_SUPPORT
 enum class RPPTensorDataType
 {
