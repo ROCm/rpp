@@ -368,6 +368,7 @@ __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
 
 // -------------------- Set 3 - executor kernels --------------------
 
+// Contains kernel launches to the broadcast version, can be used for the non broadcast cases also
 template <typename T, typename Operation>
 RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
                                                         T *srcPtr2,
@@ -376,123 +377,10 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
                                                         T *dstPtr,
                                                         RpptGenericDescPtr dstGenericDescPtr,
                                                         Operation op,
-                                                        RpptBroadcastMode broadcastMode,
                                                         uint *roiTensor1,
                                                         uint *roiTensor2,
                                                         rpp::Handle& handle)
 {
-    Rpp32u numDims = srcGenericDescPtr1->numDims - 1;
-    if((numDims == 1) && (broadcastMode == RPP_BROADCAST_DISABLE))
-    {
-
-        // NHW
-        int globalThreads_x = (dstGenericDescPtr->dims[1] + 7) >> 3;
-        int globalThreads_y = 1;
-        int globalThreads_z = dstGenericDescPtr->dims[0];
-
-        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_1d_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr1,
-                           srcPtr2,
-                           srcGenericDescPtr1->strides[0],
-                           srcGenericDescPtr2->strides[0],
-                           dstPtr,
-                           dstGenericDescPtr->strides[0],
-                           roiTensor1,
-                           roiTensor2,
-                           op);
-
-        return RPP_SUCCESS;
-    }
-    else if((numDims == 2) && (broadcastMode == RPP_BROADCAST_DISABLE))
-    {
-
-        printf("Disable broadcast numDims = 2 case\n");
-        //exit(0);
-        // NHW
-        int globalThreads_x = (dstGenericDescPtr->dims[2] + 7) >> 3;
-        int globalThreads_y = dstGenericDescPtr->dims[1];
-        int globalThreads_z = dstGenericDescPtr->dims[0];
-
-        printf("Threads : %d %d %d\n", globalThreads_x, globalThreads_y, globalThreads_z);
-        //return RPP_SUCCESS;
-
-        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_2d_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr1,
-                           srcPtr2,
-                           make_uint2(srcGenericDescPtr1->strides[0], srcGenericDescPtr1->strides[1]),
-                           make_uint2(srcGenericDescPtr2->strides[0], srcGenericDescPtr2->strides[1]),
-                           dstPtr,
-                           make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
-                           roiTensor1,
-                           roiTensor2,
-                           op);
-
-        return RPP_SUCCESS;
-    }
-    else if((numDims == 3) && (broadcastMode == RPP_BROADCAST_DISABLE))
-    {
-        // NHW
-        int globalThreads_x = (dstGenericDescPtr->dims[3] + 7) >> 3;
-        int globalThreads_y = dstGenericDescPtr->dims[2];
-        int globalThreads_z = dstGenericDescPtr->dims[1];
-
-        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
-        {
-            hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_3d_hip_tensor,
-                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr1 + (batchCount * srcGenericDescPtr1->strides[0]),
-                            srcPtr2 + (batchCount * srcGenericDescPtr2->strides[0]),
-                            make_uint2(srcGenericDescPtr1->strides[1], srcGenericDescPtr1->strides[2]),
-                            make_uint2(srcGenericDescPtr2->strides[1], srcGenericDescPtr2->strides[2]),
-                            dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
-                            make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
-                            &roiTensor1[batchCount * 6],
-                            &roiTensor2[batchCount * 6],
-                            op);
-        }
-
-        return RPP_SUCCESS;
-    }
-    else if((numDims >= 4) && (broadcastMode == RPP_BROADCAST_DISABLE))
-    {
-
-        printf("Disable broadcast numDims = 4 case\n");
-        // NHW
-        int globalThreads_x = (dstGenericDescPtr->dims[2] + 7) >> 3;
-        int globalThreads_y = dstGenericDescPtr->dims[1];
-        int globalThreads_z = dstGenericDescPtr->dims[0];
-
-        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_nd_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr1,
-                           srcPtr2,
-                           srcGenericDescPtr1->strides,
-                           srcGenericDescPtr2->strides,
-                           srcGenericDescPtr1->dims + 1,
-                           srcGenericDescPtr1->numDims - 1,
-                           dstPtr,
-                           dstGenericDescPtr->strides,
-                           roiTensor1,
-                           roiTensor2,
-                           op);
-
-        return RPP_SUCCESS;
-    }
-
     Rpp32u batchSize = dstGenericDescPtr->dims[0]; // Number of samples in batch
     Rpp32u src1NDim = srcGenericDescPtr1->numDims - 1; // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcGenericDescPtr2->numDims - 1; // Omitting batchSize here to get tensor dimension
@@ -626,6 +514,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
 
+    // based on number of dimensions call the corresponding kernel
     if(dstDim == 1)
     {
         // NW
@@ -725,6 +614,118 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     return RPP_SUCCESS;
 }
 
+// Contains kernel launches specific to the non broadcast version, cannot be used for the broadcast cases
+template <typename T, typename Operation>
+RppStatus hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(T *srcPtr1,
+                                                                      T *srcPtr2,
+                                                                      RpptGenericDescPtr srcGenericDescPtr1,
+                                                                      RpptGenericDescPtr srcGenericDescPtr2,
+                                                                      T *dstPtr,
+                                                                      RpptGenericDescPtr dstGenericDescPtr,
+                                                                      Operation op,
+                                                                      uint *roiTensor1,
+                                                                      uint *roiTensor2,
+                                                                      rpp::Handle& handle)
+{
+    Rpp32u numDims = srcGenericDescPtr1->numDims - 1; // exclude batchsize from input dims
+    // based on number of dimensions call the corresponding kernel
+    if(numDims == 1)
+    {
+
+        // NW
+        int globalThreads_x = (dstGenericDescPtr->dims[1] + 7) >> 3;
+        int globalThreads_y = 1;
+        int globalThreads_z = dstGenericDescPtr->dims[0];
+
+        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_1d_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr1,
+                           srcPtr2,
+                           srcGenericDescPtr1->strides[0],
+                           srcGenericDescPtr2->strides[0],
+                           dstPtr,
+                           dstGenericDescPtr->strides[0],
+                           roiTensor1,
+                           roiTensor2,
+                           op);
+    }
+    else if(numDims == 2)
+    {
+        // NHW
+        int globalThreads_x = (dstGenericDescPtr->dims[2] + 7) >> 3;
+        int globalThreads_y = dstGenericDescPtr->dims[1];
+        int globalThreads_z = dstGenericDescPtr->dims[0];
+
+        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_2d_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr1,
+                           srcPtr2,
+                           make_uint2(srcGenericDescPtr1->strides[0], srcGenericDescPtr1->strides[1]),
+                           make_uint2(srcGenericDescPtr2->strides[0], srcGenericDescPtr2->strides[1]),
+                           dstPtr,
+                           make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
+                           roiTensor1,
+                           roiTensor2,
+                           op);
+    }
+    else if(numDims == 3)
+    {
+        // NDHW
+        int globalThreads_x = (dstGenericDescPtr->dims[3] + 7) >> 3;
+        int globalThreads_y = dstGenericDescPtr->dims[2];
+        int globalThreads_z = dstGenericDescPtr->dims[1];
+
+        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
+        {
+            hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_3d_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr1 + (batchCount * srcGenericDescPtr1->strides[0]),
+                               srcPtr2 + (batchCount * srcGenericDescPtr2->strides[0]),
+                               make_uint2(srcGenericDescPtr1->strides[1], srcGenericDescPtr1->strides[2]),
+                               make_uint2(srcGenericDescPtr2->strides[1], srcGenericDescPtr2->strides[2]),
+                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                               make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
+                               &roiTensor1[batchCount * 6],
+                               &roiTensor2[batchCount * 6],
+                               op);
+        }
+    }
+    else
+    {
+        // interpret the input as 1D tensor
+        int globalThreads_x = dstGenericDescPtr->strides[0];
+        int globalThreads_y = 1;
+        int globalThreads_z = dstGenericDescPtr->dims[0];
+
+        hipLaunchKernelGGL(tensor_or_tensor_non_broadcast_nd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr1,
+                           srcPtr2,
+                           srcGenericDescPtr1->strides,
+                           srcGenericDescPtr2->strides,
+                           srcGenericDescPtr1->dims + 1,
+                           srcGenericDescPtr1->numDims - 1,
+                           dstPtr,
+                           dstGenericDescPtr->strides,
+                           roiTensor1,
+                           roiTensor2,
+                           op);
+    }
+
+    return RPP_SUCCESS;
+}
 
 // Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
 template<typename T>
@@ -735,22 +736,39 @@ RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
                                                        T *dstPtr,
                                                        RpptGenericDescPtr dstGenericDescPtr,
                                                        RpptBitwiseOp tensorOp,
-                                                       RpptBroadcastMode broadcastMode,
                                                        Rpp32u *srcPtr1roiTensor,
                                                        Rpp32u *srcPtr2roiTensor,
                                                        rpp::Handle& handle)
 {
-    switch(tensorOp)
+    if(broadcastMode == RPP_BROADCAST_ENABLE)
     {
-        case RPP_TENSOR_OP_AND:
-            hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        case RPP_TENSOR_OP_OR:
-            hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        case RPP_TENSOR_OP_XOR:
-            hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
+        switch(tensorOp)
+        {
+            case RPP_TENSOR_OP_AND:
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_OR:
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_XOR:
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+        }
+    }
+    else
+    {
+        switch(tensorOp)
+        {
+            case RPP_TENSOR_OP_AND:
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_OR:
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_XOR:
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+        }
     }
 
     return RPP_SUCCESS;
