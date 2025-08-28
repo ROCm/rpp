@@ -95,10 +95,8 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
 template <typename T, typename Operation>
 __global__ void tensor_or_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
                                                              T *src2Ptr,
-                                                             uint src1Strides,
-                                                             uint src2Strides,
                                                              T *dstPtr,
-                                                             uint dstStrides,
+                                                             uint strides,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
                                                              Operation op)
@@ -118,9 +116,9 @@ __global__ void tensor_or_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
     if (id_x >= width)
         return;
 
-    uint srcIdx1 = (id_z * src1Strides) + id_x + beginX1;
-    uint srcIdx2 = (id_z * src2Strides)+ id_x + beginX2;
-    uint dstIdx = (id_z * dstStrides) + id_x;
+    uint srcIdx1 = (id_z * strides) + id_x + beginX1;
+    uint srcIdx2 = (id_z * strides) + id_x + beginX2;
+    uint dstIdx = (id_z * strides) + id_x;
 
     VectorType src1_vec8, src2_vec8, dst_vec8;
     BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
@@ -164,10 +162,8 @@ __global__ void tensor_or_tensor_2d_hip_tensor(T *srcPtr1,
 template <typename T, typename Operation>
 __global__ void tensor_or_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
                                                              T *src2Ptr,
-                                                             uint2 src1StridesNH,
-                                                             uint2 src2StridesNH,
                                                              T *dstPtr,
-                                                             uint2 dstStridesNH,
+                                                             uint2 stridesNH,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
                                                              Operation op)
@@ -191,9 +187,9 @@ __global__ void tensor_or_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
     if (id_x >= width || id_y >= height)
         return;
 
-    uint srcIdx1 = (id_z * src1StridesNH.x) + ((id_y + beginY1) * src1StridesNH.y) + id_x + beginX1;
-    uint srcIdx2 = (id_z * src1StridesNH.x) + ((id_y + beginY2) * src1StridesNH.y) + id_x + beginX2;
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
+    uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
+    uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
+    uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
 
     VectorType src1_vec8, src2_vec8, dst_vec8;
     BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
@@ -232,10 +228,8 @@ __global__ void tensor_or_tensor_3d_hip_tensor(T *srcPtr1,
 template <typename T, typename Operation>
 __global__ void tensor_or_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
                                                              T *src2Ptr,
-                                                             uint2 src1StridesDH,
-                                                             uint2 src2StridesDH,
                                                              T *dstPtr,
-                                                             uint2 dstStridesDH,
+                                                             uint2 stridesDH,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
                                                              Operation op)
@@ -262,9 +256,9 @@ __global__ void tensor_or_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
     if (id_x >= lengthX2 || id_y >= lengthY2 || id_z >= lengthZ2)
         return;
 
-    uint srcIdx1 = ((id_z + beginZ1) * src1StridesDH.x) + ((id_y + beginY1) * src1StridesDH.y) + id_x + beginX1;
-    uint srcIdx2 = ((id_z + beginZ2) * src2StridesDH.x) + ((id_y + beginY2) * src2StridesDH.y) + id_x + beginX2;
-    uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
+    uint srcIdx1 = ((id_z + beginZ1) * stridesDH.x) + ((id_y + beginY1) * stridesDH.y) + id_x + beginX1;
+    uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + beginX2;
+    uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x;
 
     VectorType src1_vec8, src2_vec8, dst_vec8;
     BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
@@ -317,12 +311,10 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
 template <typename T, typename Operation>
 __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
                                                              T *src2Ptr,
-                                                             uint* src1Strides,
-                                                             uint* src2Strides,
                                                              uint* src1Dims,
                                                              uint numDims,
                                                              T *dstPtr,
-                                                             uint *dstStrides,
+                                                             uint *strides,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
                                                              Operation op)
@@ -332,7 +324,7 @@ __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
 
     using VectorType = typename BitwiseLoadStoreExecute<T>::VectorType;
 
-    if(id_x >= dstStrides[0])
+    if(id_x >= strides[0])
         return;
 
     uint *roi1 = roiTensor1 + id_z * numDims * 2;
@@ -340,23 +332,24 @@ __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
     uint *roi2 = roiTensor2 + id_z * numDims * 2;
     uint *begin2 = roi2;
     uint *length = &roi2[numDims];
-    uint dstIdx = (id_z * *dstStrides++);
-    uint srcIdx1 = (id_z * *src1Strides++);
-    uint srcIdx2 = (id_z * *src2Strides++);
+    uint dstIdx = (id_z * *strides);
+    uint srcIdx1 = (id_z * *strides);
+    uint srcIdx2 = (id_z * *strides);
+    strides++;
     uint coords[RPPT_MAX_DIMS];
 
     for (int i = 0; i < numDims; i++)
     {
-        coords[i] = (id_x / src1Strides[i]) % src1Dims[i];
+        coords[i] = (id_x / strides[i]) % src1Dims[i];
         if(coords[i] >= length[i])
             return;
     }
 
     for (int i = 0; i < numDims; i++)
     {
-        dstIdx += (coords[i] * dstStrides[i]);
-        srcIdx1 += (begin1[i] + (coords[i] * src1Strides[i]));
-        srcIdx2 += (begin2[i] + (coords[i] * src2Strides[i]));
+        dstIdx += (coords[i] * strides[i]);
+        srcIdx1 += (begin1[i] + (coords[i] * strides[i]));
+        srcIdx2 += (begin2[i] + (coords[i] * strides[i]));
     }
 
     VectorType src1_vec8, src2_vec8, dst_vec8;
@@ -644,8 +637,6 @@ RppStatus hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(T *srcPtr1
                            handle.GetStream(),
                            srcPtr1,
                            srcPtr2,
-                           srcGenericDescPtr1->strides[0],
-                           srcGenericDescPtr2->strides[0],
                            dstPtr,
                            dstGenericDescPtr->strides[0],
                            roiTensor1,
@@ -666,8 +657,6 @@ RppStatus hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(T *srcPtr1
                            handle.GetStream(),
                            srcPtr1,
                            srcPtr2,
-                           make_uint2(srcGenericDescPtr1->strides[0], srcGenericDescPtr1->strides[1]),
-                           make_uint2(srcGenericDescPtr2->strides[0], srcGenericDescPtr2->strides[1]),
                            dstPtr,
                            make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
                            roiTensor1,
@@ -690,8 +679,6 @@ RppStatus hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(T *srcPtr1
                                handle.GetStream(),
                                srcPtr1 + (batchCount * srcGenericDescPtr1->strides[0]),
                                srcPtr2 + (batchCount * srcGenericDescPtr2->strides[0]),
-                               make_uint2(srcGenericDescPtr1->strides[1], srcGenericDescPtr1->strides[2]),
-                               make_uint2(srcGenericDescPtr2->strides[1], srcGenericDescPtr2->strides[2]),
                                dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                &roiTensor1[batchCount * 6],
@@ -713,8 +700,6 @@ RppStatus hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(T *srcPtr1
                            handle.GetStream(),
                            srcPtr1,
                            srcPtr2,
-                           srcGenericDescPtr1->strides,
-                           srcGenericDescPtr2->strides,
                            srcGenericDescPtr1->dims + 1,
                            srcGenericDescPtr1->numDims - 1,
                            dstPtr,
