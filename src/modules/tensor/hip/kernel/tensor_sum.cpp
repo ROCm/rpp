@@ -1222,7 +1222,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1247,7 +1247,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1272,7 +1272,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1335,7 +1335,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1360,7 +1360,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1385,7 +1385,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1433,7 +1433,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1458,7 +1458,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -1483,7 +1483,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialSumArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_sum_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),

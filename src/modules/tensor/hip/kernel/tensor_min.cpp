@@ -367,7 +367,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialMinArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_min_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
@@ -392,7 +392,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            partialMinArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_min_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
@@ -417,7 +417,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialMinArr,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_min_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
