@@ -338,6 +338,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -387,6 +388,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += 8;
@@ -435,6 +437,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -485,6 +488,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTempR += 8;
@@ -578,6 +582,7 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -627,6 +632,7 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += 8;
@@ -675,6 +681,7 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -725,6 +732,7 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTempR += 8;

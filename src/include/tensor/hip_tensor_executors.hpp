@@ -596,6 +596,18 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
 
+// -------------------- posterize --------------------
+
+template <typename T>
+RppStatus hip_exec_posterize_tensor(T *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    T *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp8u *posterizeLevelBits,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    rpp::Handle& handle);
+
 // -------------------- solarize --------------------
 
 template <typename T>
@@ -633,6 +645,18 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
+
+// -------------------- median_filter --------------------
+
+template <typename T>
+RppStatus hip_exec_median_filter_tensor(T *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        T *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32u kernelSize,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        rpp::Handle& handle);
 
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
