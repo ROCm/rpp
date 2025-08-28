@@ -218,6 +218,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
 }
 
+// d_ushort8 bitwiseAND
+
 __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
 {
         dst_us8->us1[0] = src1_us8->us1[0] & src2_us8->us1[0];
@@ -229,6 +231,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_ushort8 *src1_us8, d_
         dst_us8->us1[6] = src1_us8->us1[6] & src2_us8->us1[6];
         dst_us8->us1[7] = src1_us8->us1[7] & src2_us8->us1[7];
 }
+
+// d_uint8 bitwiseAND
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
 {
@@ -256,6 +260,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uc
         dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
 }
 
+// d_ushort8 bitwiseOR
+
 __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
 {
         dst_us8->us1[0] = src1_us8->us1[0] | src2_us8->us1[0];
@@ -267,6 +273,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_ushort8 *src1_us8, d_u
         dst_us8->us1[6] = src1_us8->us1[6] | src2_us8->us1[6];
         dst_us8->us1[7] = src1_us8->us1[7] | src2_us8->us1[7];
 }
+
+// d_uint8 bitwiseAND
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
 {
@@ -294,6 +302,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
 
+// d_ushort8 bitwiseXOR
+
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
 {
         dst_us8->us1[0] = src1_us8->us1[0] ^ src2_us8->us1[0];
@@ -305,6 +315,8 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_ushort8 *src1_us8, d_
         dst_us8->us1[6] = src1_us8->us1[6] ^ src2_us8->us1[6];
         dst_us8->us1[7] = src1_us8->us1[7] ^ src2_us8->us1[7];
 }
+
+// d_uint8 bitwiseXOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
 {
