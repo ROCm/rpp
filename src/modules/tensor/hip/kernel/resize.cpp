@@ -31,21 +31,21 @@ __device__ void resize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *ds
 {
     float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
     float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
-    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
-    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
+    float4 wOffset_f4 = MAKE_FLOAT4((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = MAKE_FLOAT4((hRatio - 1) * 0.5f);
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
-    locDst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = MAKE_FLOAT4(id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = MAKE_FLOAT4(id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [0-3]
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [4-7]
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [0-3]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [4-7]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 __device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int dstLocation, float scale, int limit, int *srcLoc, float *weight, float offset, int srcStride)
@@ -402,7 +402,7 @@ __global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
     resize_roi_generic_srcloc_and_weight_hip_compute(srcRoi_i4.y, id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeight, hOffset, 1);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
-    float3 outPixel_f3 = (float3)0.0f;
+    float3 outPixel_f3 = MAKE_FLOAT3(0.0f);
     float rowCoeffSum = 0.0f, colCoeffSum = 0.0f;
     for(int j = 0; j < hKernelSize; j++)
     {
@@ -417,13 +417,13 @@ __global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
             int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + (k * 3)), 0), widthLimit);
             rpp_hip_compute_interpolation_coefficient(interpolationType, (colWeight - wRadius + k) * wScale , &colCoeff);
             colCoeffSum += colCoeff;
-            float3 coeff_f3 = (float3)(colCoeff * rowCoeff);
+            float3 coeff_f3 = MAKE_FLOAT3(colCoeff * rowCoeff);
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[colIndex], srcRowPtrsForInterp[colIndex + 1], srcRowPtrsForInterp[colIndex + 2]) * coeff_f3);
         }
     }
     rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
     colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
-    outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
+    outPixel_f3 *= MAKE_FLOAT3(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
     rpp_hip_pixel_check_and_store(outPixel_f3.y, &dstPtr[dstIdx + 1]);
@@ -480,7 +480,7 @@ __global__ void resize_generic_pln3_hip_tensor(T *srcPtr,
     srcPtrTemp[2] = srcPtrTemp[1] + srcStridesNCH.y;
 
     T *srcRowPtrsForInterp[3];
-    float3 outPixel_f3 = (float3)0.0f;
+    float3 outPixel_f3 = MAKE_FLOAT3(0.0f);
     float rowCoeffSum = 0.0f, colCoeffSum = 0.0f;
     for(int j = 0; j < hKernelSize; j++)
     {
@@ -497,13 +497,13 @@ __global__ void resize_generic_pln3_hip_tensor(T *srcPtr,
             int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + k), 0), widthLimit);
             rpp_hip_compute_interpolation_coefficient(interpolationType, (colWeight - wRadius + k) * wScale , &colCoeff);
             colCoeffSum += colCoeff;
-            float3 coeff_f3 = (float3)(colCoeff * rowCoeff);
+            float3 coeff_f3 = MAKE_FLOAT3(colCoeff * rowCoeff);
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[0][colIndex], srcRowPtrsForInterp[1][colIndex], srcRowPtrsForInterp[2][colIndex]) * coeff_f3);
         }
     }
     rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
     colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
-    outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
+    outPixel_f3 *= MAKE_FLOAT3(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
     rpp_hip_pixel_check_and_store(outPixel_f3.y, &dstPtr[dstIdx + dstStridesNCH.y]);
@@ -627,7 +627,7 @@ __global__ void resize_generic_pkd3_pln3_hip_tensor(T *srcPtr,
     resize_roi_generic_srcloc_and_weight_hip_compute(srcRoi_i4.y, id_y, hRatio, heightLimit, &srcLocationRowFloor, &rowWeight, hOffset, 1);
 
     T *srcPtrTemp = srcPtr + (id_z * srcStridesNH.x);
-    float3 outPixel_f3 = (float3)0.0f;
+    float3 outPixel_f3 = MAKE_FLOAT3(0.0f);
     float rowCoeffSum = 0.0f, colCoeffSum = 0.0f;
     for(int j = 0; j < hKernelSize; j++)
     {
@@ -642,7 +642,7 @@ __global__ void resize_generic_pkd3_pln3_hip_tensor(T *srcPtr,
             int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + (k * 3)), 0), widthLimit);
             rpp_hip_compute_interpolation_coefficient(interpolationType, (colWeight - wRadius + k) * wScale , &colCoeff);
             colCoeffSum += colCoeff;
-            float3 coeff_f3 = (float3)(colCoeff * rowCoeff);
+            float3 coeff_f3 = MAKE_FLOAT3(colCoeff * rowCoeff);
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[colIndex], srcRowPtrsForInterp[colIndex + 1], srcRowPtrsForInterp[colIndex + 2]) * coeff_f3);
         }
     }
@@ -705,7 +705,7 @@ __global__ void resize_generic_pln3_pkd3_hip_tensor(T *srcPtr,
     srcPtrTemp[2] = srcPtrTemp[1] + srcStridesNCH.y;
 
     T *srcRowPtrsForInterp[3];
-    float3 outPixel_f3 = (float3)0.0f;
+    float3 outPixel_f3 = MAKE_FLOAT3(0.0f);
     float rowCoeffSum = 0.0f, colCoeffSum = 0.0f;
     for(int j = 0; j < hKernelSize; j++)
     {
@@ -722,13 +722,13 @@ __global__ void resize_generic_pln3_pkd3_hip_tensor(T *srcPtr,
             int colIndex = fminf(fmaxf((int)(srcLocationColumnFloor + k), 0), widthLimit);
             rpp_hip_compute_interpolation_coefficient(interpolationType, (colWeight - wRadius + k) * wScale , &colCoeff);
             colCoeffSum += colCoeff;
-            float3 coeff_f3 = (float3)(colCoeff * rowCoeff);
+            float3 coeff_f3 = MAKE_FLOAT3(colCoeff * rowCoeff);
             outPixel_f3 += (make_float3(srcRowPtrsForInterp[0][colIndex], srcRowPtrsForInterp[1][colIndex], srcRowPtrsForInterp[2][colIndex]) * coeff_f3);
         }
     }
     rowCoeffSum = (rowCoeffSum == 0.0f) ? 1.0f : rowCoeffSum;
     colCoeffSum = (colCoeffSum == 0.0f) ? 1.0f : colCoeffSum;
-    outPixel_f3 *= (float3)(1 / (rowCoeffSum * colCoeffSum));
+    outPixel_f3 *= MAKE_FLOAT3(1 / (rowCoeffSum * colCoeffSum));
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     rpp_hip_pixel_check_and_store(outPixel_f3.x, &dstPtr[dstIdx]);
     rpp_hip_pixel_check_and_store(outPixel_f3.y, &dstPtr[dstIdx + 1]);
