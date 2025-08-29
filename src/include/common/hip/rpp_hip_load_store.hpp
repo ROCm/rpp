@@ -84,8 +84,15 @@ typedef struct { d_schar8_s sc8[3];                                             
 typedef union { schar sc1[8];   char4 sc4[2];                                                   }   d_schar8;
 typedef union { schar sc1[24];  char4 sc4[6];  char3 sc3[8];    d_schar8 sc8[3];                }   d_schar24;
 
+// Helper macros to create vector types (float2/3/4, int2/4, uint2/4) with all components initialized to the same scalar value
 #define MAKE_FLOAT4(val) make_float4(val, val, val, val)
+#define MAKE_UINT4(val) make_uint4(val, val, val, val)
+#define MAKE_INT4(val) make_int4(val, val, val, val)
 #define MAKE_UCHAR4(val) make_uchar4(val, val, val, val)
+#define MAKE_FLOAT3(val) make_float3(val, val, val)
+#define MAKE_FLOAT2(val) make_float2(val, val)
+#define MAKE_UINT2(val) make_uint2(val, val)
+#define MAKE_INT2(val) make_int2(val, val)
 
 #ifdef LEGACY_SUPPORT
 enum class RPPTensorDataType
@@ -142,6 +149,11 @@ struct RPPTensorFunctionMetaData
 #define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
 #define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
 #define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
+#define FLOAT4_ONE_OVER_255 make_float4(0.003921569f, 0.003921569f, 0.003921569f, 0.003921569f)
+#define FLOAT4_255 make_float4(255.0f, 255.0f, 255.0f, 255.0f)
+#define FLOAT4_128 make_float4(128.0f, 128.0f, 128.0f, 128.0f)
+#define FLOAT4_ZERO make_float4(0.0f, 0.0f, 0.0f, 0.0f)
+#define UINT2_ZERO make_uint2(0, 0)
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -304,20 +316,20 @@ __device__ __forceinline__ void rpp_hip_adjust_range(uchar *dstPtr, d_float8 *su
 
 __device__ __forceinline__ void rpp_hip_adjust_range(float *dstPtr, d_float8 *sum_f8)
 {
-    sum_f8->f4[0] = sum_f8->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f8->f4[1] = sum_f8->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f8->f4[0] = sum_f8->f4[0] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f8->f4[1] = sum_f8->f4[1] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
 }
 
 __device__ __forceinline__ void rpp_hip_adjust_range(schar *dstPtr, d_float8 *sum_f8)
 {
-    sum_f8->f4[0] = sum_f8->f4[0] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f8->f4[1] = sum_f8->f4[1] - (float4) 128;    // Subtract 128 for schar image data
+    sum_f8->f4[0] = sum_f8->f4[0] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f8->f4[1] = sum_f8->f4[1] - FLOAT4_128;    // Subtract 128 for schar image data
 }
 
 __device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float8 *sum_f8)
 {
-    sum_f8->f4[0] = sum_f8->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f8->f4[1] = sum_f8->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f8->f4[0] = sum_f8->f4[0] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f8->f4[1] = sum_f8->f4[1] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
 }
 
 // d_float24 adjust pixel range for different bit depths
@@ -326,32 +338,32 @@ __device__ __forceinline__ void rpp_hip_adjust_range(uchar *dstPtr, d_float24 *s
 
 __device__ __forceinline__ void rpp_hip_adjust_range(float *dstPtr, d_float24 *sum_f24)
 {
-    sum_f24->f4[0] = sum_f24->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[1] = sum_f24->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[2] = sum_f24->f4[2] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[3] = sum_f24->f4[3] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[4] = sum_f24->f4[4] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
-    sum_f24->f4[5] = sum_f24->f4[5] * (float4) ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[0] = sum_f24->f4[0] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[1] = sum_f24->f4[1] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[2] = sum_f24->f4[2] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[3] = sum_f24->f4[3] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[4] = sum_f24->f4[4] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
+    sum_f24->f4[5] = sum_f24->f4[5] * FLOAT4_ONE_OVER_255;    // Divide by 255 for float image data
 }
 
 __device__ __forceinline__ void rpp_hip_adjust_range(schar *dstPtr, d_float24 *sum_f24)
 {
-    sum_f24->f4[0] = sum_f24->f4[0] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[1] = sum_f24->f4[1] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[2] = sum_f24->f4[2] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[3] = sum_f24->f4[3] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[4] = sum_f24->f4[4] - (float4) 128;    // Subtract 128 for schar image data
-    sum_f24->f4[5] = sum_f24->f4[5] - (float4) 128;    // Subtract 128 for schar image data
+    sum_f24->f4[0] = sum_f24->f4[0] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f24->f4[1] = sum_f24->f4[1] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f24->f4[2] = sum_f24->f4[2] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f24->f4[3] = sum_f24->f4[3] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f24->f4[4] = sum_f24->f4[4] - FLOAT4_128;    // Subtract 128 for schar image data
+    sum_f24->f4[5] = sum_f24->f4[5] - FLOAT4_128;    // Subtract 128 for schar image data
 }
 
 __device__ __forceinline__ void rpp_hip_adjust_range(half *dstPtr, d_float24 *sum_f24)
 {
-    sum_f24->f4[0] = sum_f24->f4[0] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[1] = sum_f24->f4[1] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[2] = sum_f24->f4[2] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[3] = sum_f24->f4[3] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[4] = sum_f24->f4[4] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
-    sum_f24->f4[5] = sum_f24->f4[5] * (float4) ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[0] = sum_f24->f4[0] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[1] = sum_f24->f4[1] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[2] = sum_f24->f4[2] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[3] = sum_f24->f4[3] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[4] = sum_f24->f4[4] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
+    sum_f24->f4[5] = sum_f24->f4[5] * FLOAT4_ONE_OVER_255;    // Divide by 255 for half image data
 }
 
 // -------------------- Set 1 - Packing --------------------
@@ -503,8 +515,8 @@ __device__ __forceinline__ void rpp_hip_convert8_i8_to_u8(schar *srcPtr, uchar *
     uint2 *dstPtr_ui2;
     dstPtr_ui2 = (uint2 *)dstPtr;
 
-    dstPtr_ui2->x = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i2->x) + (float4) 128);
-    dstPtr_ui2->y = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i2->y) + (float4) 128);
+    dstPtr_ui2->x = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i2->x) + FLOAT4_128);
+    dstPtr_ui2->y = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i2->y) + FLOAT4_128);
 }
 
 // I8 to U8 conversions (24 pixels)
@@ -517,12 +529,12 @@ __device__ __forceinline__ void rpp_hip_convert24_i8_to_u8(schar *srcPtr, uchar 
     d_uint6 *dstPtr_ui6;
     dstPtr_ui6 = (d_uint6 *)dstPtr;
 
-    dstPtr_ui6->ui1[0] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[0]) + (float4) 128);
-    dstPtr_ui6->ui1[1] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[1]) + (float4) 128);
-    dstPtr_ui6->ui1[2] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[2]) + (float4) 128);
-    dstPtr_ui6->ui1[3] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[3]) + (float4) 128);
-    dstPtr_ui6->ui1[4] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[4]) + (float4) 128);
-    dstPtr_ui6->ui1[5] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[5]) + (float4) 128);
+    dstPtr_ui6->ui1[0] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[0]) + FLOAT4_128);
+    dstPtr_ui6->ui1[1] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[1]) + FLOAT4_128);
+    dstPtr_ui6->ui1[2] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[2]) + FLOAT4_128);
+    dstPtr_ui6->ui1[3] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[3]) + FLOAT4_128);
+    dstPtr_ui6->ui1[4] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[4]) + FLOAT4_128);
+    dstPtr_ui6->ui1[5] = rpp_hip_pack(rpp_hip_unpack_from_i8(srcPtr_i6->i1[5]) + FLOAT4_128);
 }
 
 // -------------------- Set 4 - Loads to float --------------------
@@ -1462,8 +1474,8 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, uchar *sr
 
     uint2 *srcPtr_ui2;
     srcPtr_ui2 = (uint2 *)srcPtr_uc8;
-    srcPtr_ui2->x = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f8.f4[0] * (float4) 255.0));
-    srcPtr_ui2->y = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f8.f4[1] * (float4) 255.0));
+    srcPtr_ui2->x = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f8.f4[0] * FLOAT4_255));
+    srcPtr_ui2->y = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f8.f4[1] * FLOAT4_255));
 }
 
 // I8 loads without layout toggle (8 I8 pixels)
@@ -1517,12 +1529,12 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(float *srcPtr
     *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
 
     d_uint6 src_ui6;
-    src_ui6.ui1[0] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[0] * (float4) 255.0));    // write R00G00B00R01
-    src_ui6.ui1[1] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[1] * (float4) 255.0));    // write G01B01R02G02
-    src_ui6.ui1[2] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[2] * (float4) 255.0));    // write B02R03G03B03
-    src_ui6.ui1[3] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[3] * (float4) 255.0));    // write R04G04B04R05
-    src_ui6.ui1[4] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[4] * (float4) 255.0));    // write G05B05R06G06
-    src_ui6.ui1[5] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[5] * (float4) 255.0));    // write B06R07G07B07
+    src_ui6.ui1[0] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[0] * FLOAT4_255));    // write R00G00B00R01
+    src_ui6.ui1[1] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[1] * FLOAT4_255));    // write G01B01R02G02
+    src_ui6.ui1[2] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[2] * FLOAT4_255));    // write B02R03G03B03
+    src_ui6.ui1[3] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[3] * FLOAT4_255));    // write R04G04B04R05
+    src_ui6.ui1[4] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[4] * FLOAT4_255));    // write G05B05R06G06
+    src_ui6.ui1[5] = rpp_hip_pack(rpp_hip_pixel_check_0to255(src_f24.f4[5] * FLOAT4_255));    // write B06R07G07B07
 
     d_uchar8 *srcPtrR_uc8, *srcPtrG_uc8, *srcPtrB_uc8;
     srcPtrR_uc8 = (d_uchar8 *)srcPtrs_uc8[0];

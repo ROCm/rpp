@@ -298,15 +298,15 @@ __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
     return x;
 }
 
-__device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 x_f4)
+__device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 val_f4)
 {
-    float4 xHalf_f4 = (float4)0.5f * x_f4;
-    int4 i_i4 = *(int4 *)&x_f4;                                     // float bits in int
-    i_i4 = (int4) NEWTON_METHOD_INITIAL_GUESS - (i_i4 >> (int4)1);  // initial guess for Newton's method
-    x_f4 = *(float4 *)&i_i4;                                        // new bits to float
-    x_f4 = x_f4 * ((float4)1.5f - xHalf_f4 * x_f4 * x_f4);          // One round of Newton's method
+    float4 xHalf_f4 = MAKE_FLOAT4(0.5f) * val_f4;
+    int4 val_i4 = *(int4 *)&val_f4;                                     // float bits in int
+    val_i4 = MAKE_INT4(NEWTON_METHOD_INITIAL_GUESS) - (val_i4 >> MAKE_INT4(1));  // initial guess for Newton's method
+    val_f4 = *(float4 *)&val_i4;                                        // new bits to float
+    val_f4 = val_f4 * (MAKE_FLOAT4(1.5f) - xHalf_f4 * val_f4 * val_f4);          // One round of Newton's method
 
-    return x_f4;
+    return val_f4;
 }
 
 __device__ __forceinline__ void rpp_hip_math_sqrt8(d_float8 *pix_f8, d_float8 *pixSqrt_f8)
@@ -314,7 +314,7 @@ __device__ __forceinline__ void rpp_hip_math_sqrt8(d_float8 *pix_f8, d_float8 *p
     pixSqrt_f8->f4[0] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[0]);
     pixSqrt_f8->f4[1] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[1]);
 
-    float4 one_f4 = (float4)1.0f;
+    float4 one_f4 = MAKE_FLOAT4(1.0f);
     pixSqrt_f8->f4[0] = one_f4 / pixSqrt_f8->f4[0];
     pixSqrt_f8->f4[1] = one_f4 / pixSqrt_f8->f4[1];
 }
@@ -328,7 +328,7 @@ __device__ __forceinline__ void rpp_hip_math_sqrt24(d_float24 *pix_f24, d_float2
     pixSqrt_f24->f4[4] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[4]);
     pixSqrt_f24->f4[5] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[5]);
 
-    float4 one_f4 = (float4)1.0f;
+    float4 one_f4 = MAKE_FLOAT4(1.0f);
     pixSqrt_f24->f4[0] = one_f4 / pixSqrt_f24->f4[0];
     pixSqrt_f24->f4[1] = one_f4 / pixSqrt_f24->f4[1];
     pixSqrt_f24->f4[2] = one_f4 / pixSqrt_f24->f4[2];

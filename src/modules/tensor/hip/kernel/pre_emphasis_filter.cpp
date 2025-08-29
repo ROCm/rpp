@@ -49,7 +49,7 @@ __global__ void pre_emphasis_filter_tensor(float *srcPtr,
     float coeff = coeffTensor[id_z];
 
     d_float8 src1_f8, src2_f8, dst_f8;
-    float4 coeff_f4 = static_cast<float4>(coeff);
+    float4 coeff_f4 = MAKE_FLOAT4(coeff);
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src1_f8);
     if(id_x == 0)
     {

@@ -49,7 +49,7 @@ __global__ void multiply_scalar_ncdhw_hip_tensor(float *srcPtr,
     for(int c = 0; c < channels; c++)
     {
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-        rpp_hip_math_multiply8_const(&val_f8, &val_f8, static_cast<float4>(mulParam));
+        rpp_hip_math_multiply8_const(&val_f8, &val_f8, MAKE_FLOAT4(mulParam));
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
         srcIdx += srcStridesCDH.x;
         dstIdx += dstStridesCDH.x;
@@ -77,7 +77,7 @@ __global__ void multiply_scalar_ndhwc_hip_tensor(float *srcPtr,
 
     d_float24 val_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
-    rpp_hip_math_multiply24_const(&val_f24, &val_f24, static_cast<float4>(mulParam));
+    rpp_hip_math_multiply24_const(&val_f24, &val_f24, MAKE_FLOAT4(mulParam));
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
