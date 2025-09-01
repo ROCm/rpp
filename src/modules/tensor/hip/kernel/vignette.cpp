@@ -31,14 +31,14 @@ __device__ void vignette_gaussian_hip_compute(float &multiplier, int2 &halfDimsW
     rowLocComponent = idXY_i2.y - halfDimsWH_i2.y;
     rowLocComponent *= (rowLocComponent);
 
-    float4 rowLocComponent_f4 = static_cast<float4>(rowLocComponent);
-    float4 multiplier_f4 = static_cast<float4>(multiplier);
+    float4 rowLocComponent_f4 = MAKE_FLOAT4(rowLocComponent);
+    float4 multiplier_f4 = MAKE_FLOAT4(multiplier);
 
     d_float8 colLocComponent_f8;
     colLocComponent_f8.f4[0] = make_float4(idXY_i2.x, idXY_i2.x + 1, idXY_i2.x + 2, idXY_i2.x + 3);
-    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + static_cast<float4>(4);
-    colLocComponent_f8.f4[0] -= static_cast<float4>(halfDimsWH_i2.x);
-    colLocComponent_f8.f4[1] -= static_cast<float4>(halfDimsWH_i2.x);
+    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + MAKE_FLOAT4(4);
+    colLocComponent_f8.f4[0] -= MAKE_FLOAT4(halfDimsWH_i2.x);
+    colLocComponent_f8.f4[1] -= MAKE_FLOAT4(halfDimsWH_i2.x);
     colLocComponent_f8.f4[0] = (colLocComponent_f8.f4[0] * colLocComponent_f8.f4[0]) + rowLocComponent_f4;
     colLocComponent_f8.f4[1] = (colLocComponent_f8.f4[1] * colLocComponent_f8.f4[1]) + rowLocComponent_f4;
     colLocComponent_f8.f4[0] = colLocComponent_f8.f4[0] * multiplier_f4;
@@ -65,7 +65,7 @@ __device__ void vignette_8_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void vignette_8_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *gaussianValue_f8)
 {
-    float4 i8Offset_f4 = static_cast<float4>(128.0f);
+    float4 i8Offset_f4 = MAKE_FLOAT4(128.0f);
     rpp_hip_math_add8_const(src_f8, src_f8, i8Offset_f4);
     dst_f8->f4[0] = src_f8->f4[0] * gaussianValue_f8->f4[0];
     dst_f8->f4[1] = src_f8->f4[1] * gaussianValue_f8->f4[1];

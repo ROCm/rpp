@@ -51,7 +51,7 @@ __global__ void blend_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
 
     d_float8 src1_f8, src2_f8, dst_f8;
 
@@ -83,7 +83,7 @@ __global__ void blend_pln_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
 
     d_float8 src1_f8, src2_f8, dst_f8;
 
@@ -133,7 +133,7 @@ __global__ void blend_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
 
     d_float24 src1_f24, src2_f24, dst_f24;
 
@@ -166,7 +166,7 @@ __global__ void blend_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 alpha_f4 = MAKE_FLOAT4(alpha[id_z]);
 
     d_float24 src1_f24, src2_f24, dst_f24;
 
