@@ -689,6 +689,7 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
 
         __syncthreads();
         srcIdx += srcStridesNCH.y;
+        dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
