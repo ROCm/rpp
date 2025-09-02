@@ -56,17 +56,21 @@ def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFi
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg):
     with open(loggingFolder + "/Tensor_misc_host_raw_performance_log.txt", "a") as logFile:
-        logFile.write("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + " " + str(bitDepth) + "\n")
+        logFile.write("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         log_detected(process, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
-    bitDepths = [0, 1, 2, 5]
+    bitDepths = [0]
     if int(case) == 2:   
         bitDepths = [2, 4]
     elif int(case) == 4:
-        bitDepths = [7]
+        bitDepths = [11]
+    elif int(case) in (5, 6, 7) and testType == 1:
+            bitDepths = [0, 5, 7, 8, 9, 10]
+    elif testType == 1:
+        bitDepths = [0, 1, 2, 5]
     if testType == 0:
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg)
     elif testType == 1:
@@ -86,7 +90,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
-    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies if the broadcasting case to be used. Default is 0.")
+    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies if the broadcasting case to be used (e.g., 0 1 2)")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     print_case_list(miscAugmentationMap, "HOST", parser)
     args = parser.parse_args()
@@ -185,7 +189,6 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HOST" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
 broadcastableCases = ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor"] # Add other broadcast functions here
-
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
