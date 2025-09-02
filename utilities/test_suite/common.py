@@ -36,7 +36,7 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_f32_"}
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i16_f32_"}
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],

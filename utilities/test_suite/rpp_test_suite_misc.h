@@ -78,7 +78,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
         bitDepthStr = "f32";
     else if (bitDepth == 4)
         bitDepthStr = "u8";
-    else if (bitDepth == 7)
+    else if (bitDepth == 11)
         bitDepthStr = "f32";
 
     if (readType == 0) // Input
@@ -106,14 +106,12 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
 
 // Read data from Bin file
 template <typename T>
-void read_data(T *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag, bool isMeanStd = false)
+void read_data(T *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag = 0, bool isMeanStd = false)
 {
     if (nDim < 2 || nDim > 4)
     {
-        if(nDim != 4 || (testCase != "log1p")) {
-            std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
-            exit(0);
-        }
+        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
+        exit(0);
     }
     std::string dataPath = get_path(nDim, readType, scriptPath, testCase, bitDepth, broadCastFlag, isMeanStd);
     read_bin_file(dataPath, data);
@@ -447,7 +445,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
     }
 }
 
-Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag = 0)
 {
     string refFile = get_path(nDim, readType, scriptPath, testCase, bitDepth, broadCastFlag);
     std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
@@ -637,16 +635,16 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
         case 2: dataType = RpptDataType::F32; break;
         case 4: dataType = RpptDataType::F32; break;
         case 5: dataType = RpptDataType::I8; break;
-        case 7: dataType = RpptDataType::F32; break;
+        case 11: dataType = RpptDataType::F32; break;
         default: std::cerr << "ERROR: Invalid bitDepth specified!" << std::endl; return;
     }
     Rpp32u goldenOutputLength;
     if(testCase == "log")
-        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, 2, broadCastFlag);
+        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, 2);
     else if(testCase == "tensor_and_tensor" || testCase == "tensor_or_tensor" || testCase == "tensor_xor_tensor")
         goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, bitDepth, broadCastFlag);
     else
-        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, bitDepth, broadCastFlag);
+        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, bitDepth);
     void *refOutput = calloc(goldenOutputLength, get_size_of_data_type(dataType));
     read_data(refOutput, nDim, 1, scriptPath, testCase, bitDepth, broadCastFlag);
     int subVariantStride = 0;

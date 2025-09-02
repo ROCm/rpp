@@ -52,12 +52,9 @@ int main(int argc, char **argv)
     int additionalParam = (axisMaskCase || permOrderCase || broadCastCase) ? atoi(argv[8]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam, broadCastFlag = additionalParam;
 
-    if (broadCastFlag && !broadCastCase)
-        return RPP_ERROR_NOT_IMPLEMENTED;
-
     if(qaMode && batchSize != 3)
     {
-        cout<<"QA mode can only run with batchsize 3"<<std::endl;
+        cout<<"QA mode can only run with batchsize 3" << std::endl;
         return -1;
     }
 
@@ -91,9 +88,9 @@ int main(int argc, char **argv)
         func += "_axisMask" + std::to_string(axisMask);
     if(permOrderCase)
         func += "_permOrder" + std::to_string(permOrder);
-    if(broadCastFlag == 1)
+    if((broadCastFlag == 1) && (broadCastCase))
         func += "_broadcast_input2";
-    else if(broadCastFlag == 2)
+    else if((broadCastFlag == 2) && (broadCastCase))
         func += "_broadcast_input1";
 
     // fill roi based on mode and number of dimensions
@@ -115,7 +112,7 @@ int main(int argc, char **argv)
         roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
         fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode, broadCastFlag);
     }
- 
+
     // set src/dst generic tensor descriptors
     RpptGenericDesc srcDescriptor, srcDescriptorSecond, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, srcDescriptorPtrNDSecond, dstDescriptorPtrND;
@@ -184,14 +181,16 @@ int main(int argc, char **argv)
     // read input data
     if(qaMode)
     {
-        if(bitDepth == 11) // log1p
-            read_data(input, nDim, 0, scriptPath, funcName, 2, broadCastFlag);
-        else if(bitDepth == 4) // log
-            read_data(input, nDim, 0, scriptPath, funcName, 0, broadCastFlag);
-        else
+        if(broadCastCase)
             read_data(input, nDim, 0, scriptPath, funcName, bitDepth, broadCastFlag);
+        else if(bitDepth == 11) // log1p
+            read_data(input, nDim, 0, scriptPath, funcName, 2);
+        else if(bitDepth == 4) // log
+            read_data(input, nDim, 0, scriptPath, funcName, 0);
+        else
+            read_data(input, nDim, 0, scriptPath, funcName, bitDepth);
         if(testCase == CONCAT)
-            read_data(inputSecond, nDim, 0, scriptPath, funcName, bitDepth, broadCastFlag);
+            read_data(inputSecond, nDim, 0, scriptPath, funcName, bitDepth);
         if(broadCastCase)
         {
             Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
@@ -444,7 +443,7 @@ int main(int argc, char **argv)
 
     if(qaMode)
     {
-        compare_output(output, nDim, batchSize, bitDepth, oBufferSize, dst, func, testCaseName, additionalParam, scriptPath, broadCastFlag, externalMeanStd);
+        compare_output(output, nDim, batchSize, bitDepth, oBufferSize, dst, func, testCaseName, additionalParam, scriptPath, broadCastCase ? broadCastFlag : 0, externalMeanStd);
     }
     else
     {
