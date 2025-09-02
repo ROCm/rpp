@@ -38,6 +38,7 @@ SOFTWARE.
 #include <iomanip>
 #include "rpp.h"
 #include "nifti1.h"
+#include "rpp_test_suite_common.h"
 
 using namespace std;
 typedef int16_t NIFTI_DATATYPE;
@@ -183,9 +184,9 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
 {
     descriptorPtr3D->numDims = 5;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    if(inputBitDepth == 0)
+    if(inputBitDepth == U8_U8)
         descriptorPtr3D->dataType = RpptDataType::U8;
-    else if(inputBitDepth == 2)
+    else if(inputBitDepth == F32_F32)
         descriptorPtr3D->dataType = RpptDataType::F32;
 
     if (layoutType == 0)

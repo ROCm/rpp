@@ -356,43 +356,43 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
 // sets descriptor data types of src/dst
 inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    if (ip_bitDepth == 0)
+    if (ip_bitDepth == U8_U8)
     {
         funcName += "_u8_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::U8;
     }
-    else if (ip_bitDepth == 1)
+    else if (ip_bitDepth == F16_F16)
     {
         funcName += "_f16_";
         srcDescPtr->dataType = RpptDataType::F16;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 2)
+    else if (ip_bitDepth == F32_F32)
     {
         funcName += "_f32_";
         srcDescPtr->dataType = RpptDataType::F32;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 3)
+    else if (ip_bitDepth == U8_F16)
     {
         funcName += "_u8_f16_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 4)
+    else if (ip_bitDepth == U8_F32)
     {
         funcName += "_u8_f32_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 5)
+    else if (ip_bitDepth == I8_I8)
     {
         funcName += "_i8_";
         srcDescPtr->dataType = RpptDataType::I8;
         dstDescPtr->dataType = RpptDataType::I8;
     }
-    else if (ip_bitDepth == 6)
+    else if (ip_bitDepth == U8_I8)
     {
         funcName += "_u8_i8_";
         srcDescPtr->dataType = RpptDataType::U8;

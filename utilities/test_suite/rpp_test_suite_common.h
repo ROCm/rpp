@@ -32,6 +32,16 @@ SOFTWARE.
 #define DEBUG_MODE 0
 using namespace std;
 
+enum BitDepth {
+    U8_U8 = 0,
+    F16_F16 = 1,
+    F32_F32 = 2,
+    U8_F16 = 3,
+    U8_F32 = 4,
+    I8_I8 = 5,
+    U8_I8 = 6
+};
+
 // Opens a folder and recursively search for files with given extension
 void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
