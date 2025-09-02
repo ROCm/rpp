@@ -80,9 +80,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
         bitDepthStr = "u8";
     else if (bitDepth == 7)
         bitDepthStr = "f32";
-    else
-        exit(1);
-    
+
     if (readType == 0) // Input
     {
         folderPath = "/../TEST_MISC_FILES/";
@@ -122,7 +120,7 @@ void read_data(T *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string 
 }
 
 // Fill the starting indices and length of ROI values
-void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMode, Rpp32u flag = 0)
+void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMode, Rpp32u broadCastFlag = 0)
 {
     if(qaMode)
     {
@@ -131,7 +129,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 std::array<Rpp32u, 4> roi = {0, 0, 100, 100};
-                if(flag == 1)
+                if(broadCastFlag == 1)
                     roi = {0, 0, 100, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
@@ -140,7 +138,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 25, 25, 32};
-                if(flag == 1)
+                if(broadCastFlag == 1)
                     roi = {0, 0, 0, 25, 25, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
@@ -150,7 +148,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 4:
             {
                 std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 4, 10, 25, 40};
-                if(flag == 1)
+                if(broadCastFlag == 1)
                     roi = {0, 0, 0, 0, 4, 10, 25, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
@@ -166,8 +164,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
-                if(flag == 1)
-                    roi = {0, 0, 1920, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -181,9 +177,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             }
             case 4:
             {
-                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 4, 2, 1, 10};
-                if(flag == 1)
-                    roi = {0, 0, 0, 0, 4, 1, 2, 1};
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 1, 128, 128, 128};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -686,7 +680,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < 1.0f))
+                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < 1e-6))
                     cnt++;
             }
         }
@@ -696,7 +690,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if(std::abs(out[j] - ref[j]) < 1.0f)
+                if(std::abs(out[j] - ref[j]) < 1e-6)
                     cnt++;
             }
         }
@@ -707,16 +701,6 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
             for(int j = 0; j < sampleLength; j++)
             {
                 if(out[j] - ref[j] == 0) 
-                    cnt++;
-            }
-        }
-        else if(bitDepth == 5)  // I8
-        {
-            Rpp8s *ref = static_cast<Rpp8s *>(refOutput) + sampleOffset;
-            Rpp8s *out = static_cast<Rpp8s *>(output) + i * sampleLength;
-            for(int j = 0; j < sampleLength; j++)
-            {
-                if(std::abs((int)out[j] - (int)ref[j]) <= 1)
                     cnt++;
             }
         }
