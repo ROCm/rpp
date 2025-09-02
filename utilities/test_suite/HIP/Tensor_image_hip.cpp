@@ -150,6 +150,8 @@ int main(int argc, char **argv)
                 funcName += "_grid"; break;
             case RANDOM_ERASE:
                 funcName += "_random_erase"; break;
+            case COARSE:
+                funcName += "_coarse"; break;
         }
     }
     if (funcName.empty())
@@ -1800,6 +1802,20 @@ int main(int argc, char **argv)
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                                 rppt_random_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        case COARSE:
+                        {
+                            testCaseName = "coarse";
+                            int maxBoxesPerImage = 8;
+                            bool randomSeed = false;
+
+                            startWallTime = omp_get_wtime();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_coarse_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, maxBoxesPerImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 

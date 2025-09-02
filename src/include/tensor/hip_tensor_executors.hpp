@@ -649,6 +649,21 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                        RpptRoiType roiType,
                                        rpp::Handle& handle);
 
+// -------------------- coarse_dropout --------------------
+
+template <typename T, typename U>
+RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptRoiLtrb *anchorBoxInfoTensor,
+                                         U *colorsTensor,
+                                         Rpp32u *numBoxesTensor,
+                                         int maxBoxesPerImage,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- box_filter --------------------

@@ -1716,6 +1716,88 @@ RppStatus rppt_random_erase_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** coarse_dropout ********************/
+
+RppStatus rppt_coarse_dropout_host(RppPtr_t srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   int maxBoxesPerImage,
+                                   bool randomSeed,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rppHandle_t rppHandle)
+{
+    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * maxBoxesPerImage];
+    Rpp32u numBoxesTensor[srcDescPtr->n * maxBoxesPerImage];
+    void *colorsTensor = reinterpret_cast<Rpp32f *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
+    init_dropout_erase(srcDescPtr->n, maxBoxesPerImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 4);
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        coarse_dropout_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                   srcDescPtr,
+                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   anchorBoxInfoTensor,
+                                   static_cast<Rpp8u*>(colorsTensor),
+                                   numBoxesTensor,
+                                   maxBoxesPerImage,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        coarse_dropout_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   anchorBoxInfoTensor,
+                                   static_cast<Rpp16f*>(colorsTensor),
+                                   numBoxesTensor,
+                                   maxBoxesPerImage,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        coarse_dropout_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   anchorBoxInfoTensor,
+                                   static_cast<Rpp32f*>(colorsTensor),
+                                   numBoxesTensor,
+                                   maxBoxesPerImage,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        coarse_dropout_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                   srcDescPtr,
+                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   anchorBoxInfoTensor,
+                                   static_cast<Rpp8s*>(colorsTensor),
+                                   numBoxesTensor,
+                                   maxBoxesPerImage,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
@@ -3428,14 +3510,14 @@ RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr,
 /******************** random_erase ********************/
 
 RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr,
-                         RpptDescPtr srcDescPtr,
-                         RppPtr_t dstPtr,
-                         RpptDescPtr dstDescPtr,
-                         Rpp32u boxesInEachImage,
-                         bool randomSeed,
-                         RpptROIPtr roiTensorPtrSrc,
-                         RpptRoiType roiType,
-                         rppHandle_t rppHandle)
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32u boxesInEachImage,
+                                bool randomSeed,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
 
@@ -3495,6 +3577,97 @@ RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      rpp::deref(rppHandle));
+    }
+
+    CHECK_RETURN_STATUS(hipHostFree(colorsTensor));
+    CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+    CHECK_RETURN_STATUS(hipHostFree(numBoxesTensor));
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** coarse_dropout ********************/
+
+RppStatus rppt_coarse_dropout_gpu(RppPtr_t srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  RppPtr_t dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  int maxBoxesPerImage,
+                                  bool randomSeed,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+
+    void *colorsTensor;
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    Rpp32u *numBoxesTensor;
+    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * maxBoxesPerImage * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * maxBoxesPerImage * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * maxBoxesPerImage * sizeof(RpptRoiLtrb)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&numBoxesTensor, srcDescPtr->n * sizeof(Rpp32u)));
+
+    init_dropout_erase(srcDescPtr->n, maxBoxesPerImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 4);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_coarse_dropout_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       static_cast<Rpp8u *>(colorsTensor),
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_coarse_dropout_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                       srcDescPtr,
+                                       reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       static_cast<half*>(colorsTensor),
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_coarse_dropout_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                       srcDescPtr,
+                                       reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       static_cast<Rpp32f*>(colorsTensor),
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_coarse_dropout_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       static_cast<Rpp8s*>(colorsTensor),
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       rpp::deref(rppHandle));
     }
 
     CHECK_RETURN_STATUS(hipHostFree(colorsTensor));
