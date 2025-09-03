@@ -91,7 +91,11 @@ int main(int argc, char **argv)
         case 4: bitdepthStr = "u8_f32"; break;
         case 5: bitdepthStr = "i8"; break;
         case 6: bitdepthStr = "u8_i8"; break;
-        case 7: bitdepthStr = "i16_f32"; break;
+        case 7: bitdepthStr = "i16"; break;
+        case 8: bitdepthStr = "u16"; break;
+        case 9: bitdepthStr = "i32"; break;
+        case 10: bitdepthStr = "u32"; break;
+        case 11: bitdepthStr = "i16_u32"; break;
         default: bitdepthStr = "unknown"; break;
     }
 
@@ -131,7 +135,8 @@ int main(int argc, char **argv)
 
     // set dims and compute strides
     int offSetInBytes = 0;
-    if(testCase == LOG1P && bitDepth == 7){
+    if(testCase == LOG1P && bitDepth == 11)
+    {
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 7, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
     }
@@ -145,6 +150,7 @@ int main(int argc, char **argv)
     }
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
+    srcDescriptorPtrNDSecond = nullptr;
     if(testCase == CONCAT || broadCastCase)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrNDSecond, sizeof(RpptGenericDesc)));
@@ -164,7 +170,7 @@ int main(int argc, char **argv)
         oBufferSize *= dstDescriptorPtrND->dims[i];
     }
 
-    if(testCase == LOG1P && bitDepth == 7)
+    if(testCase == LOG1P && bitDepth == 11)
     {
         // LOG1P expects int16 input (we transform F32->I16 in inputI16), but the 'input' buffer used
         // here is F32 (we store F32 to then convert). So allocate as F32 to hold that data.
@@ -181,8 +187,8 @@ int main(int argc, char **argv)
     void *input = nullptr, *inputSecond = nullptr, *output = nullptr, *inputI16 = nullptr;
     void *d_input = nullptr, *d_inputSecond = nullptr, *d_output = nullptr, *d_inputI16 = nullptr;
 
-    input = calloc(iBufferSize, get_size_of_data_type(srcDescriptorPtrND->dataType));
-    output = calloc(oBufferSize, get_size_of_data_type(dstDescriptorPtrND->dataType));
+    input = calloc(iBufferSizeInBytes, 1);
+    output = calloc(oBufferSizeInBytes, 1);
     CHECK_RETURN_STATUS(hipMalloc(&d_input, iBufferSizeInBytes));
     CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes));
     if(testCase == CONCAT || broadCastCase)
@@ -196,47 +202,52 @@ int main(int argc, char **argv)
     // read input data
     if(qaMode)
     {
-        if(bitDepth == 7) // log1p
-            read_data(input, nDim, 0, scriptPath, funcName, 2, broadCastFlag);
-        else if(bitDepth == 4) // log
-            read_data(input, nDim, 0, scriptPath, funcName, 0, broadCastFlag);
-        else
+        if(broadCastCase)
             read_data(input, nDim, 0, scriptPath, funcName, bitDepth, broadCastFlag);
+        else if(bitDepth == 11) // log1p
+            read_data(input, nDim, 0, scriptPath, funcName, 2);
+        else if(bitDepth == 4) // log
+            read_data(input, nDim, 0, scriptPath, funcName, 0);
+        else
+            read_data(input, nDim, 0, scriptPath, funcName, bitDepth);
         if(testCase == CONCAT)
-            read_data(inputSecond, nDim, 0, scriptPath, funcName, bitDepth, broadCastFlag);
+            read_data(inputSecond, nDim, 0, scriptPath, funcName, bitDepth);
+        if(broadCastCase)
+        {
+            Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
+            Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
+            for (int i = 0; i < iBufferSizeSecond; i++)
+                inputSecondTemp[i] = inputU8[i+1];
+        }
     }
     else
     {
-        // Generic random data filling based on bitDepth
-        switch(bitDepth)
+
+        Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
+        Rpp16s *inputI16 = NULL;
+        inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+        outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
+        if((testCase == CONCAT) || (broadCastCase))
+            inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
+
+        // Generate sample values in range based on number of bits for representation
+        // Note : I32/U32 can represent higher range of values - Limit set just for testing purposes
+        Rpp32u valLimit = 255;
+        if((bitDepth == 7) || (bitDepth == 8))
+            valLimit = 65535;
+        if((bitDepth == 9) || (bitDepth == 10))
+            valLimit = 262143;
+
+        std::srand(0);
+        for(int i = 0; i < iBufferSize; i++)
+            inputF32[i] = static_cast<float>((std::rand() % valLimit));
+        if((testCase == CONCAT) || (broadCastCase))
         {
-            case 0: // U8
-            {
-                Rpp8u* inputU8 = static_cast<Rpp8u*>(input);
-                for(int i = 0; i < iBufferSize; i++) 
-                    inputU8[i] = static_cast<Rpp8u>(std::rand() % 256);
-                if (testCase == CONCAT || broadCastCase)
-                {
-                    Rpp8u* inputSecondU8 = static_cast<Rpp8u*>(inputSecond);
-                    for(int i = 0; i < iBufferSizeSecond; i++)
-                        inputSecondU8[i] = static_cast<Rpp8u>(std::rand() % 256);
-                }
-                break;
-            }
-            case 2: // F32
-            {
-                Rpp32f* inputF32 = static_cast<Rpp32f*>(input);
-                for(int i = 0; i < iBufferSize; i++) 
-                    inputF32[i] = static_cast<Rpp32f>(std::rand() % 255);
-                if (testCase == CONCAT || broadCastCase)
-                {
-                    Rpp32f* inputSecondF32 = static_cast<Rpp32f*>(inputSecond);
-                    for(int i = 0; i < iBufferSizeSecond; i++)
-                        inputSecondF32[i] = static_cast<Rpp32f>(std::rand() % 255);
-                }
-                break;
-            }
+            for(int i = 0; i < iBufferSizeSecond; i++)
+                inputF32Second[i] = static_cast<float>((std::rand() % valLimit));
         }
+
+        convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
     }
 
     if(testCase == LOG1P)
@@ -249,13 +260,6 @@ int main(int argc, char **argv)
         Rpp16s *inputI16_cast = static_cast<Rpp16s *>(inputI16);
         for (int i = 0; i < iBufferSize; i++)
             inputI16_cast[i] = static_cast<Rpp16s>(inputF32[i]);
-    }
-    else if(qaMode && broadCastCase)
-    {
-        Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
-        Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
-        for (int i = 0; i < iBufferSizeSecond; i++)
-            inputSecondTemp[i] = inputU8[i + 1];
     }
 
     // Copy data from Host to Device
@@ -389,7 +393,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log1p";
 
                 startWallTime = omp_get_wtime();
-                if(bitDepth == 7)
+                if(bitDepth == 11)
                     rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -401,7 +405,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_and_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if (bitDepth == 0  bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -420,7 +424,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_or_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -439,7 +443,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_xor_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_xor_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -508,7 +512,7 @@ int main(int argc, char **argv)
     if(inputSecond)
         free(inputSecond);
     if(inputI16)
-        CHECK_RETURN_STATUS(hipHostFree(inputI16));
+        free(inputI16);
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipHostFree(dstRoiTensor));
     if(roiTensorSecond)
