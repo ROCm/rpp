@@ -59,6 +59,8 @@ typedef halfhpp Rpp16f;
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
+/*! \brief RPP maximum dimensions in tensor for a sample (except batch size) \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_DIMS_SAMPLE   ( 4 )
 /*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
