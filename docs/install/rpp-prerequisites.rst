@@ -11,8 +11,6 @@ ROCm Performance Primitives (RPP) has been tested on the following Linux environ
 * Ubuntu version 22.04 or 24.04
 * RHEL version 8 and 9
 
-* SLES 15-SP5
-
 See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
 
 The following compilers and libraries are required to build and install RPP:
@@ -33,3 +31,4 @@ On OpenCL and HIP backends, RPP requires ROCm installed with the `AMDGPU install
 On CPU-only backends, also referred to as HOST backends, RPP requires CPUs that support PCIe™ atomics.
 
 The `test suite prerequisites <https://github.com/ROCm/rpp/blob/develop/utilities/test_suite/README.md>`_ are required to build the RPP test suite.
+
