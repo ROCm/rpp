@@ -20,7 +20,7 @@ inline void simd_multiply_ps(__m256 &a, __m256 &b) { a = _mm256_mul_ps(a, b); }
 inline void simd_divide_ps(__m256 &a, __m256 &b) { a = _mm256_div_ps(a, b); }
 
 template<typename T, typename Operation>
-inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
+inline void tensor_binary_arithmetic_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
 {
     if (!nDim)
         op(dst, src1, src2);
@@ -28,7 +28,7 @@ inline void tensor_binary_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rp
     {
         for (int i = 0; i < *dstShape; i++)
         {
-            tensor_binary_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
+            tensor_binary_arithmetic_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
             dst += *(dstStrides + 1);
             src1 += *(src1Strides + 1);
             src2 += *(src2Strides + 1);
@@ -45,57 +45,149 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                                RpptGenericDescPtr dstGenericDescPtr,
                                                Operation op,
                                                SIMDOperation simd_op,
+                                               RpptBroadcastMode broadcastMode,
                                                Rpp32u *srcPtr1roiTensor,
                                                Rpp32u *srcPtr2roiTensor,
-                                               rpp::Handle& handle) {
-    checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
-    BroadcastDstShape(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr);
-    RpptGenericDesc src1BroadcastDesc, src2BroadcastDesc, dstBroadcastDesc;
-    RpptGenericDescPtr src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr;
-    src1BroadcastDescPtr = &src1BroadcastDesc;
-    src2BroadcastDescPtr = &src2BroadcastDesc;
-    dstBroadcastDescPtr = &dstBroadcastDesc;
-    src1BroadcastDesc = *srcPtr1GenericDescPtr;
-    src2BroadcastDesc = *srcPtr2GenericDescPtr;
-    dstBroadcastDesc = *dstGenericDescPtr;
-    GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
-
+                                               rpp::Handle& handle)
+{
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
-    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
-    Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
-    Rpp32u batchSize = dstBroadcastDescPtr->dims[0];
+    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+
+    // Overall dimension compatibility check for the entire batch
+    for(int test = 0; test < minDim; test++)
+        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
+            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
+            {
+                printf("Incompatible dimensions for the batch\n");
+                return RPP_SUCCESS;
+            }
+
+    Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
-        Rpp32u *src1begin = src1roi;
+        Rpp32u *src1Begin = src1roi;
+        Rpp32u *src1Dims = src1Begin + src1NDim;
 
         Rpp32u *src2roi = srcPtr2roiTensor + batchCount * src2NDim * 2;
-        Rpp32u *src2begin = src2roi;
+        Rpp32u *src2Begin = src2roi;
+        Rpp32u *src2Dims = src2Begin + src2NDim;
+
+        Rpp32u *src1Strides = srcPtr1GenericDescPtr->strides;
+        Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
+        Rpp32u *dstStrides = dstGenericDescPtr->strides;
+
+        Rpp32u *length, *src1length, *src2length, *src1BcastStrides, *src2BcastStrides, *dstBcastStrides;
+
+        if(broadcastMode == RPP_BROADCAST_ENABLE)
+        {
+            // Dimensions and Strides based on individual sample ROIs, used for broadcasting purposes
+            Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
+            Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
+
+            bool incompatibleDims = false;
+
+            // Copy ROI limits and Strides to individual sample strides and dims until minDim
+            for(int i = 0; i < minDim; i++)
+            {
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
+                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
+                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
+                    incompatibleDims = true;
+                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+            }
+
+            // Dimension compatibility failure case
+            if(incompatibleDims == true)
+                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+
+            // Handle cases of mismatching num dims
+            if(src1NDim < src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src1BroadcastDims[curIndex] = 1;
+                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    src1BroadcastStrides[curIndex] = 0;
+                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+            else if(src1NDim > src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src2BroadcastDims[curIndex] = 1;
+                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                    src2BroadcastStrides[curIndex] = 0;
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+
+            // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
+            // Setting stride to zero will allow for repetition of values operated required for broadcasting
+            for(int i = 0; i < minDim; i++)
+            {
+                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+            }
+
+            Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
+
+            // Shift dims and strides by offset to process only valid values
+            length = dstBroadcastDims + testOffset;
+            src1length = src1BroadcastDims + testOffset;
+            src2length = src2BroadcastDims + testOffset;
+
+            src1BcastStrides = src1BroadcastStrides + testOffset;
+            src2BcastStrides = src2BroadcastStrides + testOffset;
+            dstBcastStrides =  dstBroadcastStrides + testOffset;
+        }
+        else
+        {
+            // Both length for dest and srclength set to src1Dims because in non broadcast case, source and destination dimensions are expected to be the same
+            length = src1Dims;
+            src1length = src1Dims;
+            src2length = src2Dims;
+
+            src1BcastStrides = srcPtr1GenericDescPtr->strides + 1;
+            src2BcastStrides = srcPtr2GenericDescPtr->strides + 1;
+            dstBcastStrides =  dstGenericDescPtr->strides + 1;
+        }
 
         Rpp32f *srcPtrTemp1 = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
         Rpp32f *srcPtrTemp2 = srcPtr2 + batchCount * srcPtr2GenericDescPtr->strides[0];
 
         for(int i = 0; i < src1NDim; i++)
-            srcPtrTemp1 += src1begin[i] * srcPtr1GenericDescPtr->strides[i + 1];
+            srcPtrTemp1 += src1Begin[i] * srcPtr1GenericDescPtr->strides[i + 1];
 
         for(int i = 0; i < src2NDim; i++)
-            srcPtrTemp2 += src2begin[i] * srcPtr2GenericDescPtr->strides[i + 1];
+            srcPtrTemp2 += src2Begin[i] * srcPtr2GenericDescPtr->strides[i + 1];
 
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u *length = dstBroadcastDescPtr->dims + 1;
-        Rpp32u *src1length = src1BroadcastDescPtr->dims + 1;
-        Rpp32u *src2length = src2BroadcastDescPtr->dims + 1;
-
         Rpp32u vectorIncrement = 16;
 
-        if (broadcastNDim == 1)
+        // For nDim = 1, 2, 3 cases handled when the lowest axis shape = 1 and != 1 for efficient processing
+        if (dstDim == 1)
         {
             Rpp32u alignedLength = length[0] & ~15;
             Rpp32u src1shape = src1length[0];
@@ -170,7 +262,7 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 }
             }
         }
-        else if (broadcastNDim == 2)
+        else if (dstDim == 2)
         {
             Rpp32u alignedLength = length[1] & ~15;
             Rpp32u src1shape = src1length[1];
@@ -179,105 +271,105 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp32f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-                    __m256 p1 = _mm256_set1_ps(srcPtrTest1[0]);
 #if __AVX2__
+                    __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p2[2];
-                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTest2, p2);    // simd loads
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
                         simd_op(p2[0], p1);
                         simd_op(p2[1], p1);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTest, p2);    // simd stores
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p2);    // simd stores
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp32f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-                    __m256 p2 = _mm256_set1_ps(srcPtrTest2[0]);
 #if __AVX2__
+                    __m256 p2 = _mm256_set1_ps(srcPtrElem2[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p1[2];
-                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTest1, p1);    // simd loads
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
                         simd_op(p1[0], p2);
                         simd_op(p1[1], p2);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp32f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p1[2], p2[2];
-                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTest1, p1);    // simd loads
-                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTest2, p2);    // simd loads
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
                         simd_op(p1[0], p2[0]);
                         simd_op(p1[1], p2[1]);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
-        else if (broadcastNDim == 3)
+        else if (dstDim == 3)
         {
             Rpp32u alignedLength = length[2] & ~15;
             Rpp32u src1shape = src1length[2];
@@ -286,142 +378,142 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp32f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp32f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp32f *srcPtrNew1 = srcPtrTest1;
-                        Rpp32f *srcPtrNew2 = srcPtrTest2;
-                        Rpp32f *dstPtrNew = dstPtrTest;
+                        Rpp32f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp32f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-                        __m256 p1 = _mm256_set1_ps(srcPtrNew1[0]);
 #if __AVX2__
+                        __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p2[2];
-                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrNew2, p2);    // simd loads
+                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
                             simd_op(p2[0], p1);
-                            simd_op(p2[1], p1);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrNew, p2);    // simd stores
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            simd_op(p2[0], p1);
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p2);    // simd stores
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp32f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp32f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp32f *srcPtrNew1 = srcPtrTest1;
-                        Rpp32f *srcPtrNew2 = srcPtrTest2;
-                        Rpp32f *dstPtrNew = dstPtrTest;
+                        Rpp32f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp32f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-                        __m256 p2 = _mm256_set1_ps(srcPtrNew2[0]);
 #if __AVX2__
+                        __m256 p2 =  _mm256_set1_ps(srcPtrElem2[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p1[2];
-                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrNew1, p1);    // simd loads
+                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
                             simd_op(p1[0], p2);
                             simd_op(p1[1], p2);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp32f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp32f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp32f *dstPtrTest = dstPtrTemp;
+                    Rpp32f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp32f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp32f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp32f *srcPtrNew1 = srcPtrTest1;
-                        Rpp32f *srcPtrNew2 = srcPtrTest2;
-                        Rpp32f *dstPtrNew = dstPtrTest;
+                        Rpp32f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp32f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p1[2], p2[2];
-                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrNew1, p1);    // simd loads
-                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrNew2, p2);    // simd loads
+                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
+                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
                             simd_op(p1[0], p2[0]);
                             simd_op(p1[1], p2[1]);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
         else
-            tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
+            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
     }
 
     return RPP_SUCCESS;
@@ -434,21 +526,23 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                                         Rpp32f *dstPtr,
                                                         RpptGenericDescPtr dstGenericDescPtr,
                                                         RpptOp tensorOp,
+                                                        RpptBroadcastMode broadcastMode,
                                                         Rpp32u *srcPtr1roiTensor,
                                                         Rpp32u *srcPtr2roiTensor,
-                                                        rpp::Handle& handle) {
+                                                        rpp::Handle& handle)
+{
     switch(tensorOp) {
         case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<Rpp32f>, simd_add_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<Rpp32f>, simd_add_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<Rpp32f>, simd_subtract_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<Rpp32f>, simd_subtract_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp32f>, simd_multiply_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp32f>, simd_multiply_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp32f>, simd_divide_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp32f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 
@@ -457,65 +551,156 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
 template<typename Operation, typename SIMDOperation>
 RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
-                                                Rpp16f *srcPtr2,
-                                                RpptGenericDescPtr srcPtr1GenericDescPtr,
-                                                RpptGenericDescPtr srcPtr2GenericDescPtr,
-                                                Rpp16f *dstPtr,
-                                                RpptGenericDescPtr dstGenericDescPtr,
-                                                Operation op,
-                                                SIMDOperation simd_op,
-                                                Rpp32u *srcPtr1roiTensor,
-                                                Rpp32u *srcPtr2roiTensor,
-                                                rpp::Handle& handle) {
-
-    checkEqualBatchSize(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr);
-    BroadcastDstShape(srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr);
-    RpptGenericDesc src1BroadcastDesc, src2BroadcastDesc, dstBroadcastDesc;
-    RpptGenericDescPtr src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr;
-    src1BroadcastDescPtr = &src1BroadcastDesc;
-    src2BroadcastDescPtr = &src2BroadcastDesc;
-    dstBroadcastDescPtr = &dstBroadcastDesc;
-    src1BroadcastDesc = *srcPtr1GenericDescPtr;
-    src2BroadcastDesc = *srcPtr2GenericDescPtr;
-    dstBroadcastDesc = *dstGenericDescPtr;
-    GroupShapes(src1BroadcastDescPtr, src2BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src1BroadcastDescPtr, dstBroadcastDescPtr);
-    StridesForBroadcasting(src2BroadcastDescPtr, dstBroadcastDescPtr);
+                                               Rpp16f *srcPtr2,
+                                               RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                               RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                               Rpp16f *dstPtr,
+                                               RpptGenericDescPtr dstGenericDescPtr,
+                                               Operation op,
+                                               SIMDOperation simd_op,
+                                               RpptBroadcastMode broadcastMode,
+                                               Rpp32u *srcPtr1roiTensor,
+                                               Rpp32u *srcPtr2roiTensor,
+                                               rpp::Handle& handle) {
 
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;
-    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;
-    Rpp32u broadcastNDim = dstBroadcastDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
-    Rpp32u batchSize = dstBroadcastDescPtr->dims[0];
+    Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
+    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+
+    // Overall dimension compatibility check for the entire batch
+    for(int test = 0; test < minDim; test++)
+        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
+            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
+            {
+                printf("Incompatible dimensions for the batch\n");
+                return RPP_SUCCESS;
+            }
+
+    Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
-        Rpp32u *src1begin = src1roi;
+        Rpp32u *src1Begin = src1roi;
+        Rpp32u *src1Dims = src1Begin + src1NDim;
 
         Rpp32u *src2roi = srcPtr2roiTensor + batchCount * src2NDim * 2;
-        Rpp32u *src2begin = src2roi;
+        Rpp32u *src2Begin = src2roi;
+        Rpp32u *src2Dims = src2Begin + src2NDim;
+
+        Rpp32u *src1Strides = srcPtr1GenericDescPtr->strides;
+        Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
+        Rpp32u *dstStrides = dstGenericDescPtr->strides;
+
+        Rpp32u *length, *src1length, *src2length, *src1BcastStrides, *src2BcastStrides, *dstBcastStrides;
+
+        if(broadcastMode == RPP_BROADCAST_ENABLE)
+        {
+            // Dimensions and Strides based on individual sample ROIs, used for broadcasting purposes
+            Rpp32u src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE], src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE], dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE];
+            Rpp32u src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE], dstBroadcastStrides[RPPT_MAX_DIMS_SAMPLE];
+
+            bool incompatibleDims = false;
+
+            // Copy ROI limits and Strides to individual sample strides and dims until minDim
+            for(int i = 0; i < minDim; i++)
+            {
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
+                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
+                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
+                    incompatibleDims = true;
+                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+            }
+
+            // Dimension compatibility failure case
+            if(incompatibleDims == true)
+                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+
+            // Handle cases of mismatching num dims
+            if(src1NDim < src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src1BroadcastDims[curIndex] = 1;
+                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    src1BroadcastStrides[curIndex] = 0;
+                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+            else if(src1NDim > src2NDim)
+                for(int i = minDim; i < dstDim; i++)
+                {
+                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
+                    src2BroadcastDims[curIndex] = 1;
+                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
+                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                    src2BroadcastStrides[curIndex] = 0;
+                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                }
+
+            // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
+            // Setting stride to zero will allow for repetition of values operated required for broadcasting
+            for(int i = 0; i < minDim; i++)
+            {
+                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
+                {
+                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
+                }
+            }
+
+            Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
+
+            // Shift dims and strides by offset to process only valid values
+            length = dstBroadcastDims + testOffset;
+            src1length = src1BroadcastDims + testOffset;
+            src2length = src2BroadcastDims + testOffset;
+
+            src1BcastStrides = src1BroadcastStrides + testOffset;
+            src2BcastStrides = src2BroadcastStrides + testOffset;
+            dstBcastStrides =  dstBroadcastStrides + testOffset;
+        }
+        else
+        {
+            // Both length for dest and srclength set to src1Dims because in non broadcast case, source and destination dimensions are expected to be the same
+            length = src1Dims;
+            src1length = src1Dims;
+            src2length = src2Dims;
+
+            src1BcastStrides = srcPtr1GenericDescPtr->strides + 1;
+            src2BcastStrides = srcPtr2GenericDescPtr->strides + 1;
+            dstBcastStrides =  dstGenericDescPtr->strides + 1;
+        }
 
         Rpp16f *srcPtrTemp1 = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
         Rpp16f *srcPtrTemp2 = srcPtr2 + batchCount * srcPtr2GenericDescPtr->strides[0];
 
         for(int i = 0; i < src1NDim; i++)
-            srcPtrTemp1 += src1begin[i] * srcPtr1GenericDescPtr->strides[i + 1];
+            srcPtrTemp1 += src1Begin[i] * srcPtr1GenericDescPtr->strides[i + 1];
 
         for(int i = 0; i < src2NDim; i++)
-            srcPtrTemp2 += src2begin[i] * srcPtr2GenericDescPtr->strides[i + 1];
+            srcPtrTemp2 += src2Begin[i] * srcPtr2GenericDescPtr->strides[i + 1];
 
         Rpp16f *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u *length = dstBroadcastDescPtr->dims + 1;
-        Rpp32u *src1length = src1BroadcastDescPtr->dims + 1;
-        Rpp32u *src2length = src2BroadcastDescPtr->dims + 1;
-
         Rpp32u vectorIncrement = 16;
 
-        if (broadcastNDim == 1)
+        // For nDim = 1, 2, 3 cases handled when the lowest axis shape = 1 and != 1 for efficient processing
+        if (dstDim == 1)
         {
             Rpp32u alignedLength = length[0] & ~15;
             Rpp32u src1shape = src1length[0];
@@ -590,7 +775,7 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 }
             }
         }
-        else if (broadcastNDim == 2)
+        else if (dstDim == 2)
         {
             Rpp32u alignedLength = length[1] & ~15;
             Rpp32u src1shape = src1length[1];
@@ -599,105 +784,105 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp16f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp16f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-                    __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrTest1)[0]));
 #if __AVX2__
+                    __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem1)[0]));
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p2[2];
-                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTest2, p2);    // simd loads
+                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
                         simd_op(p2[0], p1);
                         simd_op(p2[1], p1);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTest, p2);    // simd stores
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p2);    // simd stores
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp16f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp16f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-                    __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrTest2)[0]));
 #if __AVX2__
+                    __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem2)[0]));
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p1[2];
-                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTest1, p1);    // simd loads
+                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
                         simd_op(p1[0], p2);
                         simd_op(p1[1], p2);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrElem1 = srcPtrTemp1;
+                    Rpp16f *srcPtrElem2 = srcPtrTemp2;
+                    Rpp16f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256 p1[2], p2[2];
-                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTest1, p1);    // simd loads
-                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTest2, p2);    // simd loads
+                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
+                        rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
                         simd_op(p1[0], p2[0]);
                         simd_op(p1[1], p2[1]);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTest, p1);    // simd stores
-                        srcPtrTest1 += vectorIncrement;
-                        srcPtrTest2 += vectorIncrement;
-                        dstPtrTest += vectorIncrement;
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                        srcPtrElem1 += vectorIncrement;
+                        srcPtrElem2 += vectorIncrement;
+                        dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrTest, srcPtrTest1, srcPtrTest2);
-                        srcPtrTest1++;
-                        srcPtrTest2++;
-                        dstPtrTest++;
+                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        srcPtrElem1++;
+                        srcPtrElem2++;
+                        dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
-        else if (broadcastNDim == 3)
+        else if (dstDim == 3)
         {
             Rpp32u alignedLength = length[2] & ~15;
             Rpp32u src1shape = src1length[2];
@@ -706,142 +891,142 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp16f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp16f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp16f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp16f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp16f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-                        __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrNew1)[0]));
 #if __AVX2__
+                        __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem1)[0]));
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p2[2];
-                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrNew2, p2);    // simd loads
+                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
                             simd_op(p2[0], p1);
                             simd_op(p2[0], p1);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrNew, p2);    // simd stores
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p2);    // simd stores
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else if (src2shape == 1)
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp16f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp16f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp16f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp16f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp16f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-                        __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrNew2)[0]));
 #if __AVX2__
+                        __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem2)[0]));
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p1[2];
-                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrNew1, p1);    // simd loads
+                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
                             simd_op(p1[0], p2);
                             simd_op(p1[1], p2);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
             else
             {
                 for (int i = 0; i < length[0]; i++)
                 {
-                    Rpp16f *srcPtrTest1 = srcPtrTemp1;
-                    Rpp16f *srcPtrTest2 = srcPtrTemp2;
-                    Rpp16f *dstPtrTest = dstPtrTemp;
+                    Rpp16f *srcPtrOuter1 = srcPtrTemp1;
+                    Rpp16f *srcPtrOuter2 = srcPtrTemp2;
+                    Rpp16f *dstPtrOuter = dstPtrTemp;
 
                     for (int j = 0; j < length[1]; j++)
                     {
-                        Rpp16f *srcPtrNew1 = srcPtrTest1;
-                        Rpp16f *srcPtrNew2 = srcPtrTest2;
-                        Rpp16f *dstPtrNew = dstPtrTest;
+                        Rpp16f *srcPtrElem1 = srcPtrOuter1;
+                        Rpp16f *srcPtrElem2 = srcPtrOuter2;
+                        Rpp16f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p1[2], p2[2];
-                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrNew1, p1);    // simd loads
-                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrNew2, p2);    // simd loads
+                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
+                            rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
                             simd_op(p1[0], p2[0]);
                             simd_op(p1[1], p2[1]);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrNew, p1);    // simd stores
-                            srcPtrNew1 += vectorIncrement;
-                            srcPtrNew2 += vectorIncrement;
-                            dstPtrNew += vectorIncrement;
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                            srcPtrElem1 += vectorIncrement;
+                            srcPtrElem2 += vectorIncrement;
+                            dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrNew, srcPtrNew1, srcPtrNew2);
-                            srcPtrNew1++;
-                            srcPtrNew2++;
-                            dstPtrNew++;
+                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            srcPtrElem1++;
+                            srcPtrElem2++;
+                            dstPtrElem++;
                         }
 
-                        srcPtrTest1 += src1BroadcastDescPtr->strides[2];
-                        srcPtrTest2 += src2BroadcastDescPtr->strides[2];
-                        dstPtrTest += dstBroadcastDescPtr->strides[2];
+                        srcPtrOuter1 += src1BcastStrides[1];
+                        srcPtrOuter2 += src2BcastStrides[1];
+                        dstPtrOuter += dstBcastStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BroadcastDescPtr->strides[1];
-                    srcPtrTemp2 += src2BroadcastDescPtr->strides[1];
-                    dstPtrTemp += dstBroadcastDescPtr->strides[1];
+                    srcPtrTemp1 += src1BcastStrides[0];
+                    srcPtrTemp2 += src2BcastStrides[0];
+                    dstPtrTemp += dstBcastStrides[0];
                 }
             }
         }
         else
-            tensor_binary_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BroadcastDescPtr->strides, src2BroadcastDescPtr->strides, dstPtrTemp, dstBroadcastDescPtr->strides, length, broadcastNDim, op);
+            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
     }
 
     return RPP_SUCCESS;
@@ -854,21 +1039,22 @@ RppStatus tensor_binary_op_dispatch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                                                         Rpp16f *dstPtr,
                                                         RpptGenericDescPtr dstGenericDescPtr,
                                                         RpptOp tensorOp,
+                                                        RpptBroadcastMode broadcastMode,
                                                         Rpp32u *srcPtr1roiTensor,
                                                         Rpp32u *srcPtr2roiTensor,
                                                         rpp::Handle& handle) {
     switch(tensorOp) {
         case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<Rpp16f>, simd_add_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<Rpp16f>, simd_add_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<Rpp16f>, simd_subtract_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<Rpp16f>, simd_subtract_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp16f>, simd_multiply_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp16f>, simd_multiply_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp16f>, simd_divide_ps, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp16f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 

@@ -232,6 +232,12 @@ typedef enum
     RPP_TENSOR_OP_DIVIDE
 } RpptOp;
 
+typedef enum
+{
+    RPP_BROADCAST_ENABLE,
+    RPP_BROADCAST_DISABLE
+} RpptBroadcastMode;
+
 /*! \brief RPP BitDepth Conversion type enum
  * \ingroup group_rppdefs
  */

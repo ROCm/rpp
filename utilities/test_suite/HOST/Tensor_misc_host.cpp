@@ -303,8 +303,8 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_add_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
-                    rppt_tensor_add_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                if (bitDepth == 1 || bitDepth == 2)
+                    rppt_tensor_add_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
                 break;
@@ -314,8 +314,8 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_subtract_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
-                    rppt_tensor_subtract_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                if (bitDepth == 1 || bitDepth == 2)
+                    rppt_tensor_subtract_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
                 break;
@@ -325,8 +325,8 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_multiply_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
-                    rppt_tensor_multiply_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                if (bitDepth == 1 || bitDepth == 2)
+                    rppt_tensor_multiply_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
                 break;
@@ -336,8 +336,8 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_divide_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
-                    rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, roiTensor, roiTensorSecond, handle);
+                if (bitDepth == 1 || bitDepth == 2)
+                    rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
                 break;
