@@ -9,7 +9,8 @@ ROCm Performance Primitives prerequisites
 ROCm Performance Primitives (RPP) has been tested on the following Linux environments:
 
 * Ubuntu version 22.04 or 24.04
-* RHEL version 8 or 9
+* RHEL version 8 and 9
+
 * SLES 15-SP5
 
 See `Supported operating systems <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-operating-systems>`_ for the complete list of ROCm supported Linux environments.
