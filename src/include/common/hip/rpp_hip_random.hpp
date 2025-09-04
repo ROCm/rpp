@@ -123,7 +123,7 @@ __device__ __forceinline__ float rpp_hip_rng_1_gaussian_f32(RpptXorwowStateBoxMu
         float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
         float s = 1 / rpp_hip_math_inverse_sqrt1(-2.0f * __logf(u));
         __sincosf(v, &result_f2.x, &result_f2.y);
-        result_f2 *= (float2)s;
+        result_f2 *= MAKE_FLOAT2(s);
         xorwowState->boxMullerExtra = result_f2.y;
         xorwowState->boxMullerFlag = 1;
         return result_f2.x;
@@ -141,7 +141,7 @@ __device__ __forceinline__ float2 rpp_hip_rng_2_gaussian_f32(RpptXorwowStateBoxM
     float v = y * RPP_2POW32_INV_MUL_2PI + RPP_2POW32_INV_MUL_2PI_DIV_2;
     float s = 1 / rpp_hip_math_inverse_sqrt1(-2.0f * __logf(u));
     __sincosf(v, &result_f2.x, &result_f2.y);
-    result_f2 *= (float2)s;
+    result_f2 *= MAKE_FLOAT2(s);
 
     return result_f2;
 }

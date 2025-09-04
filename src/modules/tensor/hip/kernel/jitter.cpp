@@ -32,21 +32,21 @@ __device__ __forceinline__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiP
 {
     d_float8 widthIncrement_f8, heightIncrement_f8;
     rpp_hip_rng_8_xorwow_f32(xorwowState, &widthIncrement_f8);
-    rpp_hip_math_multiply8_const(&widthIncrement_f8, &widthIncrement_f8, static_cast<float4>(kernelSize));
+    rpp_hip_math_multiply8_const(&widthIncrement_f8, &widthIncrement_f8, MAKE_FLOAT4(kernelSize));
     rpp_hip_rng_8_xorwow_f32(xorwowState, &heightIncrement_f8);
-    rpp_hip_math_multiply8_const(&heightIncrement_f8, &heightIncrement_f8, static_cast<float4>(kernelSize));
+    rpp_hip_math_multiply8_const(&heightIncrement_f8, &heightIncrement_f8, MAKE_FLOAT4(kernelSize));
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
-    increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);   // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 0, 1, 2, 3 here, and adding (float4)4 later to get 4, 5, 6, 7 incremented srcLocs
+    increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);   // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 0, 1, 2, 3 here, and adding MAKE_FLOAT4(4) later to get 4, 5, 6, 7 incremented srcLocs
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = static_cast<float4>(id_x) + increment_f8.f4[0];
-    locDst_f8x.f4[1] = static_cast<float4>(id_x) + increment_f8.f4[1];
-    locDst_f8y.f4[0] = locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = MAKE_FLOAT4(id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
-    locSrc_f16->f8[0].f4[0] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[0] + widthIncrement_f8.f4[0] - static_cast<float4>(bound);
-    locSrc_f16->f8[0].f4[1] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[1] + widthIncrement_f8.f4[1] - static_cast<float4>(bound);
-    locSrc_f16->f8[1].f4[0] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[0] + heightIncrement_f8.f4[0] - static_cast<float4>(bound);
-    locSrc_f16->f8[1].f4[1] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[1] + heightIncrement_f8.f4[1] - static_cast<float4>(bound);
+    locSrc_f16->f8[0].f4[0] = MAKE_FLOAT4(srcRoiPtr_i4->x) + locDst_f8x.f4[0] + widthIncrement_f8.f4[0] - MAKE_FLOAT4(bound);
+    locSrc_f16->f8[0].f4[1] = MAKE_FLOAT4(srcRoiPtr_i4->x) + locDst_f8x.f4[1] + widthIncrement_f8.f4[1] - MAKE_FLOAT4(bound);
+    locSrc_f16->f8[1].f4[0] = MAKE_FLOAT4(srcRoiPtr_i4->y) + locDst_f8y.f4[0] + heightIncrement_f8.f4[0] - MAKE_FLOAT4(bound);
+    locSrc_f16->f8[1].f4[1] = MAKE_FLOAT4(srcRoiPtr_i4->y) + locDst_f8y.f4[1] + heightIncrement_f8.f4[1] - MAKE_FLOAT4(bound);
 
     // Apply boundary checks and adjustments
     for(int i = 0; i < 8; ++i)

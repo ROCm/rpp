@@ -224,7 +224,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                 else
                 {
                     for (int i = 0; i < numBins; i++, outIdx += hStride)
-                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
+                        dstPtrTemp[outIdx] = complexFft[i].real() * complexFft[i].real() + complexFft[i].imag() * complexFft[i].imag(); // Magnitude computation
                 }
             }
             else
@@ -237,7 +237,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                 else
                 {
                     for (int i = 0; i < numBins; i++)
-                        *dstPtrBinTemp++ = std::norm(complexFft[i]);
+                        *dstPtrBinTemp++ = complexFft[i].real() * complexFft[i].real() + complexFft[i].imag() * complexFft[i].imag(); // Magnitude computation
                 }
             }
         }

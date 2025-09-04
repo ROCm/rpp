@@ -31,13 +31,13 @@ __device__ void water_roi_and_srclocs_hip_compute(int id_x, int id_y, float4 *am
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = static_cast<float4>(id_x) + increment_f8.f4[0];
-    locDst_f8x.f4[1] = static_cast<float4>(id_x) + increment_f8.f4[1];
-    locDst_f8y.f4[0] = static_cast<float4>(id_y);
-    locDst_f8y.f4[1] = static_cast<float4>(id_y);
+    locDst_f8x.f4[0] = MAKE_FLOAT4((float)id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = MAKE_FLOAT4(id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
     d_float8 sinFactor_f8, cosFactor_f8;
-    sinFactor_f8.f4[0] = static_cast<float4>((sinf(fmaf(freqX, static_cast<float>(id_y), phaseX))));
+    sinFactor_f8.f4[0] = MAKE_FLOAT4((sinf(fmaf(freqX, static_cast<float>(id_y), phaseX))));
     sinFactor_f8.f4[1] = sinFactor_f8.f4[0];
     cosFactor_f8.f1[0] = cosf(fmaf(freqY, locDst_f8x.f1[0], phaseY));
     cosFactor_f8.f1[1] = cosf(fmaf(freqY, locDst_f8x.f1[1], phaseY));
@@ -79,8 +79,8 @@ __global__ void water_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
-    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
+    float4 amplX_f4 = MAKE_FLOAT4(amplXTensor[id_z]);
+    float4 amplY_f4 = MAKE_FLOAT4(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
@@ -121,8 +121,8 @@ __global__ void water_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
-    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
+    float4 amplX_f4 = MAKE_FLOAT4(amplXTensor[id_z]);
+    float4 amplY_f4 = MAKE_FLOAT4(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
@@ -177,8 +177,8 @@ __global__ void water_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
-    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
+    float4 amplX_f4 = MAKE_FLOAT4(amplXTensor[id_z]);
+    float4 amplY_f4 = MAKE_FLOAT4(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
@@ -218,8 +218,8 @@ __global__ void water_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
-    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
+    float4 amplX_f4 = MAKE_FLOAT4(amplXTensor[id_z]);
+    float4 amplY_f4 = MAKE_FLOAT4(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];

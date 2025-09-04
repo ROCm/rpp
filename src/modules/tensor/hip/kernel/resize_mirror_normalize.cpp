@@ -33,20 +33,20 @@ __device__ void rmn_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float8 *pix_f8, 
 
 __device__ void rmn_hip_compute(float *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0] * (float4) ONE_OVER_255) * rmnParamsf8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0] * (float4) ONE_OVER_255) * rmnParamsf8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0] * FLOAT4_ONE_OVER_255) * rmnParamsf8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0] * FLOAT4_ONE_OVER_255) * rmnParamsf8->f4[1]);
 }
 
 __device__ void rmn_hip_compute(schar *srcPtr, schar *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(((pix_f8->f4[0] + (float4)128) - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1]) - (float4)128;
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(((pix_f8->f4[1] + (float4)128) - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1]) - (float4)128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(((pix_f8->f4[0] + FLOAT4_128) - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1]) - FLOAT4_128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(((pix_f8->f4[1] + FLOAT4_128) - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1]) - FLOAT4_128;
 }
 
 __device__ void rmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0] * (float4) ONE_OVER_255) * rmnParamsf8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0] * (float4) ONE_OVER_255) * rmnParamsf8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0] * FLOAT4_ONE_OVER_255) * rmnParamsf8->f4[1]);
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0] * FLOAT4_ONE_OVER_255) * rmnParamsf8->f4[1]);
 }
 
 __device__ void rmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
@@ -65,42 +65,42 @@ __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoi
 {
     float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
     float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
-    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
-    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
+    float4 wOffset_f4 = MAKE_FLOAT4((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = MAKE_FLOAT4((hRatio - 1) * 0.5f);
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
-    locDst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = MAKE_FLOAT4(id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = MAKE_FLOAT4(id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = MAKE_FLOAT4(id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [0-3]
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [4-7]
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [0-3]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [4-7]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute_mirror(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
 {
     float wRatio = (float)(srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) / dstDimsWH->x;
     float hRatio = (float)(srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) / dstDimsWH->y;
-    float4 wOffset_f4 = (float4)((wRatio - 1) * 0.5f);
-    float4 hOffset_f4 = (float4)((hRatio - 1) * 0.5f);
+    float4 wOffset_f4 = MAKE_FLOAT4((wRatio - 1) * 0.5f);
+    float4 hOffset_f4 = MAKE_FLOAT4((hRatio - 1) * 0.5f);
 
     d_float8 decrement_f8, locDst_f8x, locDst_f8y;
     decrement_f8.f4[0] = make_float4(dstDimsWH->x - 1, dstDimsWH->x - 2, dstDimsWH->x - 3, dstDimsWH->x - 4);
     decrement_f8.f4[1] = make_float4(dstDimsWH->x - 5, dstDimsWH->x - 6, dstDimsWH->x - 7, dstDimsWH->x - 8);
-    locDst_f8x.f4[0] = decrement_f8.f4[0] - (float4)id_x;
-    locDst_f8x.f4[1] = decrement_f8.f4[1] - (float4)id_x;
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = decrement_f8.f4[0] - MAKE_FLOAT4(id_x);
+    locDst_f8x.f4[1] = decrement_f8.f4[1] - MAKE_FLOAT4(id_x);
+    locDst_f8y.f4[0] = MAKE_FLOAT4(id_y);
+    locDst_f8y.f4[1] = MAKE_FLOAT4(id_y);
 
-    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [width-1 - width-4]
-    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * (float4)wRatio) + wOffset_f4 + (float4)srcRoiPtr_i4->x;  // Compute src x locations in float for dst x locations [width-5 - width-8]
-    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [0-3]
-    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * (float4)hRatio) + hOffset_f4 + (float4)srcRoiPtr_i4->y;  // Compute src y locations in float for dst y locations [4-7]
+    locSrc_f16->f8[0].f4[0] = (locDst_f8x.f4[0] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [width-1 - width-4]
+    locSrc_f16->f8[0].f4[1] = (locDst_f8x.f4[1] * MAKE_FLOAT4(wRatio)) + wOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->x);  // Compute src x locations in float for dst x locations [width-5 - width-8]
+    locSrc_f16->f8[1].f4[0] = (locDst_f8y.f4[0] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [0-3]
+    locSrc_f16->f8[1].f4[1] = (locDst_f8y.f4[1] * MAKE_FLOAT4(hRatio)) + hOffset_f4 + MAKE_FLOAT4(srcRoiPtr_i4->y);  // Compute src y locations in float for dst y locations [4-7]
 }
 
 template <typename T, typename U>
@@ -132,12 +132,12 @@ __global__ void resize_mirror_normalize_bilinear_pkd_hip_tensor(T *srcPtr,
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     int incrementPerImage = id_z * 3;
     d_float8 rmnParamsR_f8, rmnParamsG_f8, rmnParamsB_f8;
-    rmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    rmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    rmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    rmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    rmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    rmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    rmnParamsR_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage]);              // Get mean for R channel
+    rmnParamsR_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage]);        // Get (1 / stdDev) for R channel
+    rmnParamsG_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 1]);          // Get mean for G channel
+    rmnParamsG_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage + 1]);    // Get (1 / stdDev) for G channel
+    rmnParamsB_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 2]);          // Get mean for B channel
+    rmnParamsB_f8.f4[1] = MAKE_FLOAT4(1 / stdDevTensor[incrementPerImage + 2]);    // Get (1 / stdDev) for B channel
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -186,8 +186,8 @@ __global__ void resize_mirror_normalize_bilinear_pln_hip_tensor(T *srcPtr,
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     int incrementPerImage = id_z * channelsDst;
     d_float8 rmnParams_f8;
-    rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage];          // Get mean for R channel
-    rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);  // Get (1 / stdDev) for R channel
+    rmnParams_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage]);          // Get mean for R channel
+    rmnParams_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage]));  // Get (1 / stdDev) for R channel
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -205,8 +205,8 @@ __global__ void resize_mirror_normalize_bilinear_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
+        rmnParams_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 1]);          // Get mean for G channel
+        rmnParams_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 1]));  // Get (1 / stdDev) for G channel
 
         rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
         rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
@@ -215,8 +215,8 @@ __global__ void resize_mirror_normalize_bilinear_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        rmnParams_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-        rmnParams_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+        rmnParams_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 2]);          // Get mean for B channel
+        rmnParams_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 2]));  // Get (1 / stdDev) for B channel
 
         rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8, false);
         rmn_hip_compute(srcPtr, dstPtr, &dst_f8, &rmnParams_f8);
@@ -253,12 +253,12 @@ __global__ void resize_mirror_normalize_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     int incrementPerImage = id_z * 3;
     d_float8 rmnParamsR_f8, rmnParamsG_f8, rmnParamsB_f8;
-    rmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    rmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    rmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    rmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    rmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    rmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    rmnParamsR_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage]);              // Get mean for R channel
+    rmnParamsR_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage]));      // Get (1 / stdDev) for R channel
+    rmnParamsG_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 1]);          // Get mean for G channel
+    rmnParamsG_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 1]));  // Get (1 / stdDev) for G channel
+    rmnParamsB_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 2]);          // Get mean for B channel
+    rmnParamsB_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 2]));  // Get (1 / stdDev) for B channel
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)
@@ -305,12 +305,12 @@ __global__ void resize_mirror_normalize_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     int incrementPerImage = id_z * 3;
     d_float8 rmnParamsR_f8, rmnParamsG_f8, rmnParamsB_f8;
-    rmnParamsR_f8.f4[0] = (float4)meanTensor[incrementPerImage];              // Get mean for R channel
-    rmnParamsR_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage]);      // Get (1 / stdDev) for R channel
-    rmnParamsG_f8.f4[0] = (float4)meanTensor[incrementPerImage + 1];          // Get mean for G channel
-    rmnParamsG_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 1]);  // Get (1 / stdDev) for G channel
-    rmnParamsB_f8.f4[0] = (float4)meanTensor[incrementPerImage + 2];          // Get mean for B channel
-    rmnParamsB_f8.f4[1] = (float4)(1 / stdDevTensor[incrementPerImage + 2]);  // Get (1 / stdDev) for B channel
+    rmnParamsR_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage]);              // Get mean for R channel
+    rmnParamsR_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage]));      // Get (1 / stdDev) for R channel
+    rmnParamsG_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 1]);          // Get mean for G channel
+    rmnParamsG_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 1]));  // Get (1 / stdDev) for G channel
+    rmnParamsB_f8.f4[0] = MAKE_FLOAT4(meanTensor[incrementPerImage + 2]);          // Get mean for B channel
+    rmnParamsB_f8.f4[1] = MAKE_FLOAT4((1 / stdDevTensor[incrementPerImage + 2]));  // Get (1 / stdDev) for B channel
 
     d_float16 locSrc_f16;
     if(mirrorTensor[id_z] == 1)

@@ -1247,24 +1247,11 @@ RppStatus non_linear_blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-                    for(int cnt = 0; cnt < 24; cnt++)
-                    {
-                        srcPtr1Temp_ps[cnt] = (Rpp32f) srcPtr1Temp[cnt];
-                        srcPtr2Temp_ps[cnt] = (Rpp32f) srcPtr2Temp[cnt];
-                    }
                     __m256 p1[3], p2[3];
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp_ps, p1);                              // simd loads
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp_ps, p2);                              // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);                              // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr2Temp, p2);                              // simd loads
                     compute_non_linear_blend_24_host(p1, p2, pMultiplier, pILocComponent, pJLocComponent);          // non_linear_blend adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p1);  // simd stores
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
-                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
-                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
-                    }
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);  // simd stores
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 24;
                     dstPtrTempR += 8;
@@ -1327,25 +1314,11 @@ RppStatus non_linear_blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtr1TempR_ps[8], srcPtr1TempG_ps[8], srcPtr1TempB_ps[8];
-                    Rpp32f srcPtr2TempR_ps[8], srcPtr2TempG_ps[8], srcPtr2TempB_ps[8];
-                    Rpp32f dstPtrTemp_ps[25];
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        srcPtr1TempR_ps[cnt] = (Rpp32f) srcPtr1TempR[cnt];
-                        srcPtr1TempG_ps[cnt] = (Rpp32f) srcPtr1TempG[cnt];
-                        srcPtr1TempB_ps[cnt] = (Rpp32f) srcPtr1TempB[cnt];
-                        srcPtr2TempR_ps[cnt] = (Rpp32f) srcPtr2TempR[cnt];
-                        srcPtr2TempG_ps[cnt] = (Rpp32f) srcPtr2TempG[cnt];
-                        srcPtr2TempB_ps[cnt] = (Rpp32f) srcPtr2TempB[cnt];
-                    }
                     __m256 p1[3], p2[3];
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR_ps, srcPtr1TempG_ps, srcPtr1TempB_ps, p1); // simd loads
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR_ps, srcPtr2TempG_ps, srcPtr2TempB_ps, p2); // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1); // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2); // simd loads
                     compute_non_linear_blend_24_host(p1, p2, pMultiplier, pILocComponent, pJLocComponent);          // non_linear_blend adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p1);                             // simd stores
-                    for(int cnt = 0; cnt < 24; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);                             // simd stores
                     srcPtr1TempR += 8;
                     srcPtr1TempG += 8;
                     srcPtr1TempB += 8;
@@ -1406,20 +1379,11 @@ RppStatus non_linear_blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
-                    Rpp32f dstPtrTemp_ps[25];
-                    for(int cnt = 0; cnt < 24; cnt++)
-                    {
-                        srcPtr1Temp_ps[cnt] = (Rpp32f) srcPtr1Temp[cnt];
-                        srcPtr2Temp_ps[cnt] = (Rpp32f) srcPtr2Temp[cnt];
-                    }
                     __m256 p1[3], p2[3];
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp_ps, p1);                      // simd loads
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp_ps, p2);                      // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);                      // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr2Temp, p2);                      // simd loads
                     compute_non_linear_blend_24_host(p1, p2, pMultiplier, pILocComponent, pJLocComponent);  // non_linear_blend adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p1);                     // simd stores
-                    for(int cnt = 0; cnt < 24; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);                     // simd stores
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 24;
                     dstPtrTemp += 24;
@@ -1480,29 +1444,11 @@ RppStatus non_linear_blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtr1TempR_ps[8], srcPtr1TempG_ps[8], srcPtr1TempB_ps[8];
-                    Rpp32f srcPtr2TempR_ps[8], srcPtr2TempG_ps[8], srcPtr2TempB_ps[8];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        srcPtr1TempR_ps[cnt] = (Rpp32f) srcPtr1TempR[cnt];
-                        srcPtr1TempG_ps[cnt] = (Rpp32f) srcPtr1TempG[cnt];
-                        srcPtr1TempB_ps[cnt] = (Rpp32f) srcPtr1TempB[cnt];
-                        srcPtr2TempR_ps[cnt] = (Rpp32f) srcPtr2TempR[cnt];
-                        srcPtr2TempG_ps[cnt] = (Rpp32f) srcPtr2TempG[cnt];
-                        srcPtr2TempB_ps[cnt] = (Rpp32f) srcPtr2TempB[cnt];
-                    }
                     __m256 p1[6], p2[6];
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR_ps, srcPtr1TempG_ps, srcPtr1TempB_ps, p1); // simd loads
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR_ps, srcPtr2TempG_ps, srcPtr2TempB_ps, p2); // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1); // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2); // simd loads
                     compute_non_linear_blend_24_host(p1, p2, pMultiplier, pILocComponent, pJLocComponent);          // non_linear_blend adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p1);  // simd stores
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
-                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
-                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
-                    }
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);  // simd stores
                     srcPtr1TempR += 8;
                     srcPtr1TempG += 8;
                     srcPtr1TempB += 8;
@@ -1569,19 +1515,11 @@ RppStatus non_linear_blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8], dstPtrTemp_ps[8];
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        srcPtr1Temp_ps[cnt] = (Rpp32f) srcPtr1Temp[cnt];
-                        srcPtr2Temp_ps[cnt] = (Rpp32f) srcPtr2Temp[cnt];
-                    }
                     __m256 p1[2], p2[2];
-                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp_ps, p1);                               // simd loads
-                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp_ps, p2);                               // simd loads
+                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr1Temp, p1);                               // simd loads
+                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, p2);                               // simd loads
                     compute_non_linear_blend_8_host(p1, p2, pMultiplier, pILocComponent, pJLocComponent);   // non_linear_blend adjustment
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p1);                              // simd stores
-                    for(int cnt = 0; cnt < 8; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);                              // simd stores
                     srcPtr1Temp += 8;
                     srcPtr2Temp += 8;
                     dstPtrTemp += 8;
