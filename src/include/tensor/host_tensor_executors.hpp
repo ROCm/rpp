@@ -2728,4 +2728,17 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                                         Rpp32u *srcPtr2roiTensor,
                                                         rpp::Handle& handle);
 
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T *srcPtr1,
+                                                            T *srcPtr2,
+                                                            RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                            RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                            T *dstPtr,
+                                                            RpptGenericDescPtr dstGenericDescPtr,
+                                                            RpptOp tensorOp,
+                                                            RpptBroadcastMode broadcastMode,
+                                                            Rpp32u *srcPtr1roiTensor,
+                                                            Rpp32u *srcPtr2roiTensor,
+                                                            rpp::Handle& handle);
+
 #endif // HOST_TENSOR_EXECUTORS_HPP
