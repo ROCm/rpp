@@ -124,12 +124,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.16;
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = 257 * 3170 * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -347,12 +347,12 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
-                    srcDimsTensor[0] = 257;
-                    srcDimsTensor[1] = 225;
-                    srcDimsTensor[2] = 257;
-                    srcDimsTensor[3] = 211;
-                    srcDimsTensor[4] = 257;
-                    srcDimsTensor[5] = 214;
+                    srcDimsTensor[0] = 80;
+                    srcDimsTensor[1] = 3170;
+                    srcDimsTensor[2] = 80;
+                    srcDimsTensor[3] = 552;
+                    srcDimsTensor[4] = 80;
+                    srcDimsTensor[5] = 1131;
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 

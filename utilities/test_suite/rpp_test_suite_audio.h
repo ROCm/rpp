@@ -63,9 +63,9 @@ enum Augmentation {
 // Golden outputs for Non Silent Region Detection
 std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 {
-    {"sample1", {0, 35840}},
-    {"sample2", {0, 33680}},
-    {"sample3", {0, 34160}}
+    {"sample1", {0, 507150}},
+    {"sample2", {0, 88200}},
+    {"sample3", {0, 180810}}
 };
 
 // Cutoff values for audio kernels listed for HOST backend followed by HIP
@@ -91,7 +91,7 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
     descPtr->c = maxChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    // descPtr->w = ((descPtr->w / 8) * 8) + 8;
     descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
     descPtr->strides.hStride = descPtr->c * descPtr->w;
     descPtr->strides.wStride = descPtr->c;

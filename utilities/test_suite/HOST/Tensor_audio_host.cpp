@@ -138,12 +138,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.16;
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = 257 * 3170 * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -323,8 +323,8 @@ int main(int argc, char **argv)
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
+                        inRateTensor[i] = 44100;
+                        outRateTensor[i] = 44100 * 1.15f;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -357,14 +357,14 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "mel_filter_bank";
 
-                    Rpp32f sampleRate = 16000;
+                    Rpp32f sampleRate = 44100;
                     Rpp32f minFreq = 0.0;
                     Rpp32f maxFreq = sampleRate / 2;
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
                     // (height, width) for each tensor in a batch for given QA inputs.
-                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214};
+                    Rpp32s srcDimsTensor[] = {257, 3170, 257, 552, 257, 1131};
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
