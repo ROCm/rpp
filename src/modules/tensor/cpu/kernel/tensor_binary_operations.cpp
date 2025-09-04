@@ -19,10 +19,25 @@ inline void simd_subtract_ps(__m256 &a, __m256 &b) { a = _mm256_sub_ps(a, b); }
 inline void simd_multiply_ps(__m256 &a, __m256 &b) { a = _mm256_mul_ps(a, b); }
 inline void simd_divide_ps(__m256 &a, __m256 &b) { a = _mm256_div_ps(a, b); }
 
-inline void simd_add_si256(__m256i &a, __m256i &b) { }
-inline void simd_sub_si256(__m256i &a, __m256i &b) { }
-inline void simd_mul_si256(__m256i &a, __m256i &b) { }
-inline void simd_div_si256(__m256i &a, __m256i &b) { }
+template<typename T> inline void simd_add_si256(__m256i &a, __m256i &b);
+template<typename T> inline void simd_subtract_si256(__m256i &a, __m256i &b);
+template<typename T> inline void simd_multiply_si256(__m256i &a, __m256i &b);
+template<typename T> inline void simd_divide_si256(__m256i &a, __m256i &b);
+
+template<> inline void simd_add_si256<Rpp8u>(__m256i &a, __m256i &b) { a = _mm256_add_epi8(a, b);}
+template<> inline void simd_subtract_si256<Rpp8u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi8(a, b);}
+template<> inline void simd_multiply_si256<Rpp8u>(__m256i &a, __m256i &b) { }
+template<> inline void simd_divide_si256<Rpp8u>(__m256i &a, __m256i &b) { }
+
+template<> inline void simd_add_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_add_epi16(a, b);}
+template<> inline void simd_subtract_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi16(a, b);}
+template<> inline void simd_multiply_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_mullo_epi16(a, b);}
+template<> inline void simd_divide_si256<Rpp16u>(__m256i &a, __m256i &b) { }
+
+template<> inline void simd_add_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_add_epi32(a, b);}
+template<> inline void simd_subtract_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi32(a, b);}
+template<> inline void simd_multiply_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_mullo_epi32(a, b);}
+template<> inline void simd_divide_si256<Rpp32u>(__m256i &a, __m256i &b) { }
 
 // Helper functions for broadcasting for different datatypes (8 bit, 16 bit and 32 bit)
 inline __m256i simd_set1_val(Rpp8u &val) { return _mm256_set1_epi8(val); }
@@ -1554,20 +1569,27 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T *srcPtr1,
                                                             Rpp32u *srcPtr2roiTensor,
                                                             rpp::Handle& handle)
 {
-    int vectorIncrement = 0;
+    int vectorIncrement = 32; // Vector Increment for U8/I8 datatype
+    if((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I16))
+        vectorIncrement = 16; // Vector Increment for U16/I16 datatype
+    else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
+        vectorIncrement = 8; // Vector Increment for U32/I32 datatype
+
+    if((tensorOp == RPP_TENSOR_OP_DIVIDE) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && (srcPtr1GenericDescPtr->dataType == RpptDataType::U8)))
+        vectorIncrement = 0;
 
     switch(tensorOp) {
         case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<T>, simd_add_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<T>, simd_add_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<T>, simd_sub_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<T>, simd_subtract_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<T>, simd_mul_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<T>, simd_multiply_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T>, simd_div_si256, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T>, simd_divide_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 
