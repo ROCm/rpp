@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (!testType) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return RPP_ERROR_NOT_IMPLEMENTED;
@@ -400,7 +400,7 @@ int main(int argc, char * argv[])
 
         // Copy output buffer to host
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
-        if(testType == 0)
+        if(!testType) // unit test mode
         {
             cout <<"\n\n";
             if(noOfIterations > 1)
@@ -535,7 +535,7 @@ int main(int argc, char * argv[])
         }
     }
 
-    if(testType == 1)
+    if(testType) // performance test mode
     {
         // Display measured times
         maxWallTime *= 1000;

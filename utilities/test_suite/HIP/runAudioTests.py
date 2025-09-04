@@ -75,7 +75,7 @@ def generate_performance_reports(RESULTS_DIR):
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepth.F32_F32.value)), "HIP")
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -83,7 +83,7 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepth.F32_F32.value)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -100,7 +100,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             output_str = output.decode('utf-8')
             logFile.write(output_str)
 
-        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepth.F32_F32.value)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
@@ -276,7 +276,7 @@ elif testType == 1 and profilingOption == "YES":
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
 
     CASE_NUM_LIST = caseList
-    BIT_DEPTH_LIST = [2]
+    BIT_DEPTH_LIST = [BitDepth.F32_F32.value]
     OFT_LIST = [0]
 
     # Open csv file

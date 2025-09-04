@@ -80,21 +80,6 @@ enum Augmentation {
     GAUSSIAN_NOISE_VOXEL = 6
 };
 
-void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
-{
-    int remainingFiles = batchCount - (noOfFiles % batchCount);
-    std::string filePath = lastFilePath;
-    std::string fileName = lastFileName;
-    if (noOfFiles > 0 && ( noOfFiles < batchCount || noOfFiles % batchCount != 0 ))
-    {
-        for (int i = 0; i < remainingFiles; i++)
-        {
-            filePathVector.push_back(filePath);
-            fileNamesVector.push_back(fileName);
-        }
-    }
-}
-
 // Opens a folder and recursively search for .nii files
 void open_folder(const string& folderPath, vector<string>& niiFileNames, vector<string>& niiFilePath)
 {

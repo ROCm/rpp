@@ -32,7 +32,8 @@ SOFTWARE.
 #define DEBUG_MODE 0
 using namespace std;
 
-enum BitDepth {
+enum BitDepth
+{
     U8_U8 = 0,
     F16_F16 = 1,
     F32_F32 = 2,

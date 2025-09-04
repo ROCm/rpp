@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         cout << "\nInputs for this test case are:";
         cout << "\nsrc1 = " << argv[1];
         cout << "\nsrc2 = " << argv[2];
-        if (testType == 0)
+        if (!testType) // unit test mode
             cout << "\ndst = " << argv[3];
         cout << "\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = " << argv[4];
         cout << "\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = " << argv[5];
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (!testType) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -1743,7 +1743,7 @@ int main(int argc, char **argv)
         }
         wallTime *= 1000;
 
-        if (testType == 0)
+        if (!testType) // unit test mode
         {
             cout <<"\n\n";
             if(noOfIterations > 1)
@@ -1891,7 +1891,7 @@ int main(int argc, char **argv)
         }
     }
     rppDestroy(handle, backend);
-    if(testType == 1)
+    if(testType) // performance test mode
     {
         // Display measured times
         maxWallTime *= 1000;

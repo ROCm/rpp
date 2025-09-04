@@ -60,7 +60,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == 2 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
@@ -108,7 +108,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
     for bitDepth in list(BitDepth):
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == 2 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
@@ -320,18 +320,17 @@ if(testType == 0):
         if qaMode == 1 and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        for layout in range(3):
+        for layout in list(Layout):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
-    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
-        create_layout_directories(dstPath, layoutDict)
+        create_layout_directories(dstPath)
 else:
     if (testType == 1 and profilingOption == "NO"):
         noCaseSupported = all(case not in imageAugmentationMap for case in caseList)
@@ -346,10 +345,10 @@ else:
             if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
-            for layout in range(3):
+            for layout in list(Layout):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
-                run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
@@ -366,29 +365,29 @@ else:
             if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
-            for layout in range(3):
+            for layout in list(Layout):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
                 print("\n")
                 for bitDepth in list(BitDepth):
                     for outputFormatToggle in list(outputFormat):
                         # There is no layout toggle for PLN1 case, so skip this case
-                        if layout == 2 and outputFormatToggle == OutputFormat.TOGGLE:
+                        if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
                             continue
 
                         if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
                             for kernelSize in range(3, 10, 2):
-                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, kernelSize, "_kernelSize", numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
                         elif imageAugmentationMap[int(case)][0] == "noise":
                             # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                             for noiseType in range(3):
-                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, noiseType, "_noiseType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, noiseType, "_noiseType", numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
                         elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "warp_perspective", "remap"}:
                             # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                             for interpolationType in range(6):
-                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, interpolationType, "_interpolationType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, interpolationType, "_interpolationType", numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
                         else:
-                            run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, "", "", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                            run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, "", "", numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
                         print("------------------------------------------------------------------------------------------")
 

@@ -48,13 +48,13 @@ def get_log_file_list():
     ]
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    bitDepths = range(7)
+    bitDepths = list(BitDepth)
     if testType == 0:
-        bitDepths = [2]
+        bitDepths = [BitDepth.F32_F32]
     for bitDepth in bitDepths:
         print("\n./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
-        result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-        log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
+        result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth.value), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+        log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_misc_func_name(int(case), numDims, additionalArg))
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg):
@@ -69,9 +69,9 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == 1:
         print("\n")
-        bitDepths = range(7)
+        bitDepths = list(BitDepth)
         for bitDepth in bitDepths:
-            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
+            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():

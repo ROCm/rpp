@@ -225,15 +225,15 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
 {
     descriptorPtr3D->numDims = nDim + 1;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    if (bitDepth == 0)
+    if (bitDepth == U8_U8)
         descriptorPtr3D->dataType = RpptDataType::U8;
-    else if (bitDepth == 1)
+    else if (bitDepth == F16_F16)
         descriptorPtr3D->dataType = RpptDataType::F16;
-    else if (bitDepth == 2)
+    else if (bitDepth == F32_F32)
         descriptorPtr3D->dataType = RpptDataType::F32;
-    else if (bitDepth == 5)
+    else if (bitDepth == I8_I8)
         descriptorPtr3D->dataType = RpptDataType::I8;
-    else if (bitDepth == 6)
+    else if (bitDepth == U8_I8)
         descriptorPtr3D->dataType = RpptDataType::I16;
     descriptorPtr3D->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
@@ -379,7 +379,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                                    Rpp64u ioBufferSize, Rpp64u ioBufferSizeSecond, Rpp64u outputBufferSize, Rpp64u outputBufferSizeSecond,
                                    RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcDescriptorPtrNDSecond, Rpp32s testCase)
 {
-    if (outputBitDepth == 0 || outputBitDepth == 3 || outputBitDepth == 4) // U8 case
+    if (outputBitDepth == U8_U8 || outputBitDepth == U8_F32 || outputBitDepth == U8_F16) // U8 case
     {
         Rpp8u *outputU8 = static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes;
         for (Rpp32s i = 0; i < ioBufferSize; i++)
@@ -392,7 +392,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                 outputU8Second[i] = static_cast<Rpp8u>(std::clamp(std::round(inputF32Second[i]), 0.0f, 255.0f));
         }
     }
-    else if (outputBitDepth == 1) // F16 case
+    else if (outputBitDepth == F16_F16) // F16 case
     {
         Rpp16f *outputF16 = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
@@ -405,13 +405,13 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                 outputF16Second[i] = static_cast<Rpp16f>(std::clamp(inputF32Second[i], -65504.0f, 65504.0f));
         }
     }
-    else if (outputBitDepth == 2) // F32 case (No conversion needed)
+    else if (outputBitDepth == F32_F32) // F32 case (No conversion needed)
     {
         memcpy(output, inputF32, outputBufferSize);
         if (testCase == CONCAT)
             memcpy(outputSecond, inputF32Second, outputBufferSizeSecond);
     }
-    else if (outputBitDepth == 5) // I8 case
+    else if (outputBitDepth == I8_I8) // I8 case
     {
         Rpp8s *outputI8 = static_cast<Rpp8s *>(output) + srcGenericDescPtr->offsetInBytes;
         for (int i = 0; i < ioBufferSize; i++)
@@ -429,11 +429,11 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
 // Reconvert other bit depths to F32
 inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptGenericDescPtr dstDescPtr)
 {
-    if (inputBitDepth == 2 || inputBitDepth == 3) // Already F32, direct copy
+    if (inputBitDepth == F32_F32 || inputBitDepth == U8_F32) // Already F32, direct copy
     {
         memcpy(outputf32, output, outputBufferSize);
     }
-    else if (inputBitDepth == 0) // U8 to F32
+    else if (inputBitDepth == U8_U8) // U8 to F32
     {
         Rpp8u *outputTemp = static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;
@@ -444,7 +444,7 @@ inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int 
             outputf32Temp++;
         }
     }
-    else if (inputBitDepth == 1 || inputBitDepth == 4) // F16 to F32
+    else if (inputBitDepth == F16_F16 || inputBitDepth == U8_F16) // F16 to F32
     {
         Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;
@@ -455,7 +455,7 @@ inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int 
             outputf32Temp++;
         }
     }
-    else if (inputBitDepth == 5 || inputBitDepth == 6) // I8 to F32
+    else if (inputBitDepth == I8_I8 || inputBitDepth == U8_I8) // I8 to F32
     {
         Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;

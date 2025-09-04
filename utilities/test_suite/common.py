@@ -52,6 +52,10 @@ class OutputFormat(Enum):
     NON_TOGGLE = 0
     TOGGLE = 1
 
+class Layout(Enum):
+    PKD3 = 0
+    PLN3 = 1
+    PLN1 = 2
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -298,13 +302,13 @@ def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap,
 
 # Process the layout based on the given parameters and generate the directory name and log file layout.
 def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder, augMap):
-    if layout == 0:
+    if layout == Layout.PKD3:
         dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pkd3"
-    elif layout == 1:
+    elif layout == Layout.PLN3:
         dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pln3"
-    elif layout == 2:
+    elif layout == Layout.PLN1:
         dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pln1"
 
@@ -318,9 +322,9 @@ def validate_path(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
 # Create layout directories within a destination path based on a layout dictionary
-def create_layout_directories(dst_path, layout_dict):
-    for layout in range(3):
-        current_layout = layout_dict[layout]
+def create_layout_directories(dst_path):
+    for layout in Layout:   # iterate over enum members
+        current_layout = layout.name   # get the string name like "PKD3"
         try:
             os.makedirs(dst_path + '/' + current_layout)
         except FileExistsError:
@@ -442,11 +446,11 @@ def read_from_subprocess_and_write_to_log(process, logFile):
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
-    if layout == 0:
+    if Layout.PKD3:
         return "PKD3"
-    elif  layout == 1:
+    elif  Layout.PLN3:
         return "PLN3"
-    elif layout == 2:
+    elif Layout.PLN1:
         return "PLN1"
 
 # Prints entire case list if user asks for help
@@ -499,13 +503,13 @@ def dataframe_to_markdown(df):
 
 def get_image_layout_type(layout, outputFormatToggle, backend):
     result = "Tensor_" + backend
-    if layout == 0:
+    if Layout.PKD3:
         result += "_PKD3"
         if outputFormatToggle:
             result += "_toPLN3"
         else:
             result += "_toPKD3"
-    elif layout == 1:
+    elif Layout.PLN3:
         result += "_PLN3"
         if outputFormatToggle:
             result += "_toPKD3"
@@ -537,9 +541,9 @@ def get_misc_func_name(testCase, nDim, additionalArg):
 
 def get_voxel_layout_type(layout, backend):
     result = "Tensor_" + backend
-    if layout == 0:
+    if Layout.PKD3:
         result += "_PKD3_toPKD3"
-    elif layout == 1:
+    elif Layout.PLN3:
         result += "_PLN3_toPLN3"
     else:
        result += "_PLN1_toPLN1"
