@@ -757,14 +757,17 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T *srcPtr1,
     {
         switch(tensorOp)
         {
-            case RPP_TENSOR_OP_AND:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_ADD:
+                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
-            case RPP_TENSOR_OP_OR:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_SUBTRACT:
+                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
-            case RPP_TENSOR_OP_XOR:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_MULTIPLY:
+                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_DIVIDE:
+                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
         }
     }
@@ -772,14 +775,17 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T *srcPtr1,
     {
         switch(tensorOp)
         {
-            case RPP_TENSOR_OP_AND:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_ADD:
+                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
-            case RPP_TENSOR_OP_OR:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_SUBTRACT:
+                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
-            case RPP_TENSOR_OP_XOR:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            case RPP_TENSOR_OP_MULTIPLY:
+                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_DIVIDE:
+                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
         }
     }
@@ -793,7 +799,7 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u>(Rpp8u*
                                                                           RpptGenericDescPtr,
                                                                           Rpp8u*,
                                                                           RpptGenericDescPtr,
-                                                                          RpptBitwiseOp,
+                                                                          RpptOp,
                                                                           RpptBroadcastMode,
                                                                           Rpp32u*,
                                                                           Rpp32u*,
@@ -805,7 +811,7 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u>(Rpp16
                                                                            RpptGenericDescPtr,
                                                                            Rpp16u*,
                                                                            RpptGenericDescPtr,
-                                                                           RpptBitwiseOp,
+                                                                           RpptOp,
                                                                            RpptBroadcastMode,
                                                                            Rpp32u*,
                                                                            Rpp32u*,
@@ -817,7 +823,7 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u>(Rpp32
                                                                            RpptGenericDescPtr,
                                                                            Rpp32u*,
                                                                            RpptGenericDescPtr,
-                                                                           RpptBitwiseOp,
+                                                                           RpptOp,
                                                                            RpptBroadcastMode,
                                                                            Rpp32u*,
                                                                            Rpp32u*,
@@ -829,10 +835,10 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32f>(Rpp32
                                                                            RpptGenericDescPtr,
                                                                            Rpp32f*,
                                                                            RpptGenericDescPtr,
-                                                                           RpptBitwiseOp,
+                                                                           RpptOp,
                                                                            RpptBroadcastMode,
-                                                                           Rpp32f*,
-                                                                           Rpp32f*,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
                                                                            rpp::Handle&);
 
 template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
@@ -841,8 +847,8 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
                                                                          RpptGenericDescPtr,
                                                                          half*,
                                                                          RpptGenericDescPtr,
-                                                                         RpptBitwiseOp,
+                                                                         RpptOp,
                                                                          RpptBroadcastMode,
-                                                                         half*,
-                                                                         half*,
+                                                                         Rpp32u*,
+                                                                         Rpp32u*,
                                                                          rpp::Handle&);
