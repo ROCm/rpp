@@ -53,21 +53,6 @@ int main(int argc, char **argv)
     int additionalParam = (axisMaskCase || permOrderCase || broadCastCase) ? atoi(argv[8]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam, broadCastFlag = additionalParam;
 
-    if((broadCastCase && bitDepth != 0) || (broadCastFlag && !broadCastCase))
-        return RPP_ERROR_NOT_IMPLEMENTED;
-    
-    if(bitDepth == 4 && testCase != LOG)
-        return RPP_ERROR_NOT_IMPLEMENTED;
-    
-    if(bitDepth == 7 && testCase != LOG1P)
-        return RPP_ERROR_NOT_IMPLEMENTED;
-
-    if(testCase == LOG && !(bitDepth == 2 || bitDepth == 4))
-        return RPP_ERROR_NOT_IMPLEMENTED;
-
-    if(testCase == LOG1P && bitDepth != 7)
-        return RPP_ERROR_NOT_IMPLEMENTED;
-
     if(qaMode && batchSize != 3)
     {
         cout<<"QA mode can only run with batchsize 3"<<std::endl;
@@ -113,14 +98,13 @@ int main(int argc, char **argv)
     Rpp32u *roiTensor, *dstRoiTensor, *roiTensorSecond = nullptr;
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstRoiTensor, nDim * 2 * batchSize * sizeof(Rpp32u)));
-
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
     memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
     if(testCase == CONCAT)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorSecond, nDim * 2 * batchSize * sizeof(Rpp32u)));
         fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode);
-        dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask]; 
+        dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask];
     }
     if(broadCastCase)
     {
@@ -140,7 +124,8 @@ int main(int argc, char **argv)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 7, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
     }
-    else if(testCase == LOG && bitDepth == 4){
+    else if(testCase == LOG && bitDepth == 4)
+    {
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
     }
@@ -168,6 +153,8 @@ int main(int argc, char **argv)
     {
         iBufferSize *= srcDescriptorPtrND->dims[i];
         oBufferSize *= dstDescriptorPtrND->dims[i];
+        if(testCase == CONCAT || broadCastCase)
+            iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
     }
 
     if(testCase == LOG1P && bitDepth == 11)
@@ -193,10 +180,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes));
     if(testCase == CONCAT || broadCastCase)
     {
-        for(int i = 0; i  <= nDim; i++)
-            iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputSecond = calloc(iBufferSizeSecond, 1);
+        inputSecond = calloc(iBufferSizeSecond, get_size_of_data_type(srcDescriptorPtrNDSecond->dataType));
         CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, iBufferSizeSecondInBytes));
     }
     // read input data
@@ -266,7 +251,6 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipMemcpy(d_input, input, iBufferSizeInBytes, hipMemcpyHostToDevice));
     if(testCase == CONCAT || broadCastCase)
     {
-        Rpp64u iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         CHECK_RETURN_STATUS(hipMemcpy(d_inputSecond, inputSecond, iBufferSizeSecondInBytes, hipMemcpyHostToDevice));
     }
     if(testCase == LOG1P)
@@ -405,7 +389,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_and_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0  bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -493,7 +477,6 @@ int main(int argc, char **argv)
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
     rppDestroy(handle,backend);
-    CHECK_RETURN_STATUS(hipStreamDestroy(stream));
 
     // Free device memory
     CHECK_RETURN_STATUS(hipFree(d_input));
