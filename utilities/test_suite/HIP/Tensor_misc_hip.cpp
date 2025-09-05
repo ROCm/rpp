@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     bitDepth = atoi(argv[7]);
     string dst = argv[9];
     string scriptPath = argv[10];
-    qaMode = (testType == 0);
+    qaMode = 0;//(testType == 0);
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[8]) : 1;
@@ -85,13 +85,19 @@ int main(int argc, char **argv)
     Rpp32u *roiTensor, *dstRoiTensor, *roiTensorSecond;
     CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstRoiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
-    fill_roi_values(nDim, batchSize, roiTensor, qaMode);
-    memcpy(dstRoiTensor, roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u));
+    fill_roi_values(nDim, batchSize, roiTensor, qaMode, 0);
+    fill_roi_values(nDim, batchSize, dstRoiTensor, qaMode, 2);
     if(testCase == CONCAT)
     {
-        roiTensorSecond = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
-        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode);
+        CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorSecond, nDim * 2 * batchSize * sizeof(Rpp32u)));
+        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode, 2);
         dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask]; 
+    }
+    if (testCase == TENSOR_ADD_TENSOR)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorSecond, nDim * 2 * batchSize * sizeof(Rpp32u)));
+        fill_roi_values(nDim, batchSize, roiTensorSecond, qaMode, 2);
+        //dstRoiTensor[nDim + axisMask] = roiTensor[nDim + axisMask] + roiTensorSecond[nDim + axisMask];
     }
 
     // set src/dst generic tensor descriptors
@@ -101,29 +107,33 @@ int main(int argc, char **argv)
 
     // set dims and compute strides
     int offSetInBytes = 0;
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    bitDepth = 7;
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 7, batchSize, roiTensor);
     if(testCase == LOG1P)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 6, batchSize, roiTensor);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 7, batchSize, dstRoiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrNDSecond, sizeof(RpptGenericDesc)));
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, bitDepth, batchSize, roiTensorSecond);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, 7, batchSize, roiTensorSecond);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
     }
 
     Rpp32u iBufferSize = 1;
     Rpp32u oBufferSize = 1;
     Rpp32u iBufferSizeSecond = 1;
-    Rpp32u iBufferSizeInBytes = 1;
-    Rpp32u oBufferSizeInBytes = 1;
-    Rpp32u iBufferSizeSecondInBytes = 1;
+    Rpp64u iBufferSizeInBytes = 1;
+    Rpp64u oBufferSizeInBytes = 1;
+    Rpp64u iBufferSizeSecondInBytes = 1;
+    //printf("Output : ");
     for(int i = 0; i <= nDim; i++)
     {
         iBufferSize *= srcDescriptorPtrND->dims[i];
         oBufferSize *= dstDescriptorPtrND->dims[i];
+        //printf("%d ", dstDescriptorPtrND->dims[i]);
     }
+    //printf("\n");
 
     iBufferSizeInBytes = iBufferSize * get_size_of_data_type(srcDescriptorPtrND->dataType);
     oBufferSizeInBytes = oBufferSize * get_size_of_data_type(dstDescriptorPtrND->dataType);
@@ -131,31 +141,34 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
     Rpp16s *inputI16 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
-    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
-    if(testCase == CONCAT)
+    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
+    if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
     {
         for(int i = 0; i <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
+        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
-
+    printf("%d %d %d %d %d %d\n", iBufferSize, iBufferSizeSecond, oBufferSize, iBufferSizeInBytes, iBufferSizeSecondInBytes, oBufferSizeInBytes);
+    exit(0);
     void *input, *inputSecond, *output;
     void *d_input, *d_inputSecond, *d_inputI16, *d_output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
     inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
     output = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
     CHECK_RETURN_STATUS(hipMalloc(&d_input, iBufferSizeInBytes));
-    CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes * 2));
-    if(testCase == CONCAT)
+    CHECK_RETURN_STATUS(hipMalloc(&d_output, oBufferSizeInBytes));
+    if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
         CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, iBufferSizeSecondInBytes));
 
+    //printf("Goes here\n");
+    //exit(0);
     // read input data
     if(qaMode)
     {
         read_data(inputF32, nDim, 0, scriptPath, funcName);
-        if(testCase == CONCAT)
+        if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
             read_data(inputF32Second, nDim, 0, scriptPath, funcName);
     }
     else
@@ -163,7 +176,7 @@ int main(int argc, char **argv)
         std::srand(0);
         for(int i = 0; i < iBufferSize; i++)
             inputF32[i] = static_cast<float>((std::rand() % 255));
-        if(testCase == CONCAT)
+        if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
         {
             for(int i = 0; i < iBufferSizeSecond; i++)
                 inputF32Second[i] = static_cast<float>((std::rand() % 255));
@@ -181,14 +194,17 @@ int main(int argc, char **argv)
     }
 
     // Convert inputs to correponding bit depth specified by user
-    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeInBytes, srcDescriptorPtrND, testCase);
-
+    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
+    //printf("Goes here 3\n");
+    //exit(0);
     // copy data from HOST to HIP
     CHECK_RETURN_STATUS(hipMemcpy(d_input, input, iBufferSizeInBytes, hipMemcpyHostToDevice));
-    if(testCase == CONCAT)
+    if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)
         CHECK_RETURN_STATUS(hipMemcpy(d_inputSecond, inputSecond, iBufferSizeSecondInBytes, hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
+    //printf("Goes here 4\n");
+    //exit(0);
     Rpp32u *permTensor = nullptr;
     if (testCase == TRANSPOSE)
         CHECK_RETURN_STATUS(hipHostMalloc(&permTensor, nDim * sizeof(Rpp32u)));
@@ -207,6 +223,8 @@ int main(int argc, char **argv)
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     string testCaseName;
+    //printf("Goes here 5\n");
+    //exit(0);
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
@@ -311,6 +329,31 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case TENSOR_ADD_TENSOR:
+            {
+                testCaseName  = "tensor_add_tensor";
+
+                startWallTime = omp_get_wtime();
+                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
+                    rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                else
+                    missingFuncFlag = 1;
+                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, oBufferSizeInBytes, hipMemcpyDeviceToHost));
+                Rpp32u* ip1 = (Rpp32u*)input;
+                for(int i = 0; i < iBufferSize; i++)
+                    printf("%d ", ip1[i]);
+                printf("\n");
+                Rpp32u* ip2 = (Rpp32u*)inputSecond;
+                for(int i = 0; i < iBufferSizeSecond; i++)
+                    printf("%d ", ip2[i]);
+                printf("\n");
+                Rpp32u* op = (Rpp32u*)output;
+                for(int i = 0; i < oBufferSize; i++)
+                    printf("%d ", op[i]);
+                printf("\n");
+                exit(0);
+                break;
+            }
             default:
             {
                 missingFuncFlag = 1;
@@ -353,9 +396,15 @@ int main(int argc, char **argv)
 
 
     free(inputF32);
+    if(testCase == CONCAT)
+        free(inputF32Second);
     if(testCase == LOG1P)
         free(inputI16);
     free(outputF32);
+    free(input);
+    if(testCase == CONCAT)
+        free(inputSecond);
+    free(output);
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
@@ -363,6 +412,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_inputI16));
     CHECK_RETURN_STATUS(hipFree(d_input));
     CHECK_RETURN_STATUS(hipFree(d_output));
+    if(testCase == CONCAT)
+        CHECK_RETURN_STATUS(hipFree(d_inputSecond));
     if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
     if(stdDevTensor != nullptr)

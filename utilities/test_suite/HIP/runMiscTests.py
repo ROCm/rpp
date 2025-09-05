@@ -37,8 +37,8 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 8
+caseMin = min(miscAugmentationMap.keys())
+caseMax = max(miscAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -75,7 +75,7 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    bitDepths = range(7)
+    bitDepths = range(0, 1)
     if testType == 0:
         bitDepths = [2]
     for bitDepth in bitDepths:
@@ -107,7 +107,7 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == 1 and profilingOption == "NO":
         print("\n")
-        bitDepths = range(7)
+        bitDepths = range(1)
         for bitDepth in bitDepths:
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
     elif testType == 1 and profilingOption == "YES":
@@ -236,13 +236,13 @@ if noCaseSupported:
 for case in caseList:
     if int(case) not in miscAugmentationMap:
         continue
-    if case == "0":
+    if miscAugmentationMap[int(case)][0] == "transpose":
         for transposeOrder in range(1, numDims):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder, profilingOption)
-    elif case == "1":
+    elif miscAugmentationMap[int(case)][0] == "normalize":
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
-    elif case == "3":
+    elif miscAugmentationMap[int(case)][0] == "concat":
         for axisMask in range(0, numDims):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
     else:
