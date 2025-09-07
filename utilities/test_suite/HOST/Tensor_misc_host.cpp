@@ -456,7 +456,7 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     free(input);
-    if(inputSecond)
+    if(inputSecond != nullptr)
         free(inputSecond);
     free(output);
     if(inputI16 != nullptr)
