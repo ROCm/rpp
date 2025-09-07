@@ -173,7 +173,7 @@ int main(int argc, char **argv)
     output = calloc(oBufferSizeInBytes, 1);
     if(testCase == CONCAT || broadCastCase)
     {
-        for(int i = 0; i  <= nDim; i++)
+        for(int i = 0; i <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputSecond = calloc(iBufferSizeSecondInBytes, 1);
@@ -356,7 +356,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_and_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_and_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_or_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_or_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_xor_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);

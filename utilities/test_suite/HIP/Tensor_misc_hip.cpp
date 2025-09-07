@@ -390,7 +390,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_and_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_or_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -428,7 +428,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_xor_tensor";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
+                if(bitDepth == 0 || bitDepth == 5 || bitDepth == 6 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_xor_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
