@@ -1452,21 +1452,6 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(uchar *srcPtr, uchar *sr
     *(uint2 *)srcPtr_uc8 = *(uint2 *)srcPtr;
 }
 
-// U16 loads without toggle (8 U16 pixels)
-
-__device__ __forceinline__ void rpp_hip_load8_to_ushort8(ushort *srcPtr, ushort *srcPtr_ui8)
-{
-    *(d_ushort8 *)srcPtr_ui8 = *(d_ushort8 *)srcPtr;
-}
-
-// U32 loads without toggle (8 U32 pixels)
-
-__device__ __forceinline__ void rpp_hip_load8_to_uint8(uint *srcPtr, uint *srcPtr_ui8)
-{
-    *(d_uint8 *)srcPtr_ui8 = *(d_uint8 *)srcPtr;
-}
-
-
 // F32 loads without layout toggle (8 F32 pixels)
 
 __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, uchar *srcPtr_uc8)
@@ -1876,16 +1861,6 @@ __device__ __forceinline__ void rpp_hip_pack_uchar8_and_store8(uchar *dstPtr, d_
     *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)dstPtr_f8;
 }
 
-__device__ __forceinline__ void rpp_hip_pack_ushort8_and_store8(ushort *dstPtr, d_ushort8 *dstPtr_f8)
-{
-    *(d_ushort8_s *)dstPtr = *(d_ushort8_s *)dstPtr_f8;
-}
-
-__device__ __forceinline__ void rpp_hip_pack_uint8_and_store8(uint *dstPtr, d_uint8 *dstPtr_f8)
-{
-    *(d_uint8_s *)dstPtr = *(d_uint8_s *)dstPtr_f8;
-}
-
 __device__ __forceinline__ void rpp_hip_pack_uchar24_pkd3_and_store24_pkd3(uchar *dstPtr, d_uchar24 *dstPtr_f24)
 {
     *(d_uchar24_s *)dstPtr = *(d_uchar24_s *)dstPtr_f24;
@@ -1898,6 +1873,28 @@ __device__ __forceinline__ void rpp_hip_pack_uchar24_pln3_and_store24_pln3(uchar
     *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)&(dstPtr_f24->uc8[1]);
     dstPtr += increment;
     *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)&(dstPtr_f24->uc8[2]);
+}
+
+// ------------------------- Set 10 - Load/Stores for ushort/uint dtypes --------------------------
+
+__device__ __forceinline__ void rpp_hip_load8_to_ushort8(ushort *srcPtr, ushort *srcPtr_ui8)
+{
+    *(d_ushort8 *)srcPtr_ui8 = *(d_ushort8 *)srcPtr;
+}
+
+__device__ __forceinline__ void rpp_hip_load8_to_uint8(uint *srcPtr, uint *srcPtr_ui8)
+{
+    *(d_uint8 *)srcPtr_ui8 = *(d_uint8 *)srcPtr;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_ushort8_and_store8(ushort *dstPtr, d_ushort8 *dstPtr_f8)
+{
+    *(d_ushort8_s *)dstPtr = *(d_ushort8_s *)dstPtr_f8;
+}
+
+__device__ __forceinline__ void rpp_hip_pack_uint8_and_store8(uint *dstPtr, d_uint8 *dstPtr_f8)
+{
+    *(d_uint8_s *)dstPtr = *(d_uint8_s *)dstPtr_f8;
 }
 
 // copy ROI region from input to output for NCDHW layout tensors

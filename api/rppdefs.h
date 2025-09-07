@@ -213,10 +213,17 @@ typedef enum
     RPP_TENSOR_OP_XOR
 } RpptBitwiseOp;
 
+/*!
+ * \brief Broadcast support mode for RPP Tensor operations.
+ * \ingroup group_defs
+ *
+ * This enum specifies whether broadcasting is enabled or disabled
+ * when applying tensor operations.
+ */
 typedef enum
 {
     RPP_BROADCAST_ENABLE,
-    RPP_BROADCAST_DISABLE
+    RPP_BROADCAST_DISABLE    // Broadcasting is disabled; Requires input tensors to be of the same shape
 } RpptBroadcastMode;
 
 #ifdef LEGACY_SUPPORT

@@ -28,6 +28,9 @@ struct BitwiseXor {
     }
 };
 
+// -------------------- Set 2 - vector helper kernels --------------------
+
+// Structures to Dispatch load/store functions for uchar/ushort/uint types
 template <typename T> struct BitwiseLoadStoreExecute;
 
 template<> struct BitwiseLoadStoreExecute<uchar>
@@ -54,6 +57,7 @@ template<> struct BitwiseLoadStoreExecute<uint>
     __device__ __forceinline__ static void rpp_hip_pack_and_store8(uint *dst, d_uint8 *dst_u8) { rpp_hip_pack_uint8_and_store8(dst, dst_u8); };
 };
 
+// Structures used to dispatch execution of bitwise operations (AND, OR, XOR)
 template<typename VectorType, typename OpInstance> struct BitwiseOperationExecute;
 
 template<typename VectorType, typename T> struct BitwiseOperationExecute<VectorType, BitwiseOr<T>>  { __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_bitwiseOr8 (a, b, c);} };

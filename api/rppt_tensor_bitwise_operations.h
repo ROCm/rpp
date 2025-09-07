@@ -225,6 +225,7 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -244,6 +245,7 @@ RppStatus rppt_tensor_and_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGe
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -263,6 +265,7 @@ RppStatus rppt_tensor_and_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGen
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -282,6 +285,7 @@ RppStatus rppt_tensor_or_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGen
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -301,6 +305,7 @@ RppStatus rppt_tensor_or_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGene
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -320,6 +325,7 @@ RppStatus rppt_tensor_xor_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGe
  * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
  * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.

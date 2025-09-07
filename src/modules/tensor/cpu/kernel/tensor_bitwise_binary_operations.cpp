@@ -87,7 +87,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
         Rpp32u *src2Strides = srcPtr2GenericDescPtr->strides;
         Rpp32u *dstStrides = dstGenericDescPtr->strides;
 
-        Rpp32u *length, *src1length, *src2length, *src1BcastStrides, *src2BcastStrides, *dstBcastStrides;
+        Rpp32u *length, *src1length, *src2length, *src1ValidStrides, *src2ValidStrides, *dstValidStrides;
 
         if(broadcastMode == RPP_BROADCAST_ENABLE)
         {
@@ -161,9 +161,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             src1length = src1BroadcastDims + testOffset;
             src2length = src2BroadcastDims + testOffset;
 
-            src1BcastStrides = src1BroadcastStrides + testOffset;
-            src2BcastStrides = src2BroadcastStrides + testOffset;
-            dstBcastStrides =  dstBroadcastStrides + testOffset;
+            src1ValidStrides = src1BroadcastStrides + testOffset;
+            src2ValidStrides = src2BroadcastStrides + testOffset;
+            dstValidStrides =  dstBroadcastStrides + testOffset;
         }
         else
         {
@@ -172,9 +172,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             src1length = src1Dims;
             src2length = src2Dims;
 
-            src1BcastStrides = srcPtr1GenericDescPtr->strides + 1;
-            src2BcastStrides = srcPtr2GenericDescPtr->strides + 1;
-            dstBcastStrides =  dstGenericDescPtr->strides + 1;
+            src1ValidStrides = srcPtr1GenericDescPtr->strides + 1;
+            src2ValidStrides = srcPtr2GenericDescPtr->strides + 1;
+            dstValidStrides =  dstGenericDescPtr->strides + 1;
         }
 
         T *srcPtrTemp1 = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
@@ -291,9 +291,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrElem2++;
                         dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
             else if (src2shape == 1)
@@ -322,9 +322,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrElem1++;
                         dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
             else
@@ -355,9 +355,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                         srcPtrElem2++;
                         dstPtrElem++;
                     }
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
         }
@@ -399,14 +399,14 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrElem++;
                         }
 
-                        srcPtrOuter1 += src1BcastStrides[1];
-                        srcPtrOuter2 += src2BcastStrides[1];
-                        dstPtrOuter += dstBcastStrides[1];
+                        srcPtrOuter1 += src1ValidStrides[1];
+                        srcPtrOuter2 += src2ValidStrides[1];
+                        dstPtrOuter += dstValidStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
             else if (src2shape == 1)
@@ -442,14 +442,14 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrElem++;
                         }
 
-                        srcPtrOuter1 += src1BcastStrides[1];
-                        srcPtrOuter2 += src2BcastStrides[1];
-                        dstPtrOuter += dstBcastStrides[1];
+                        srcPtrOuter1 += src1ValidStrides[1];
+                        srcPtrOuter2 += src2ValidStrides[1];
+                        dstPtrOuter += dstValidStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
             else
@@ -487,19 +487,19 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                             dstPtrElem++;
                         }
 
-                        srcPtrOuter1 += src1BcastStrides[1];
-                        srcPtrOuter2 += src2BcastStrides[1];
-                        dstPtrOuter += dstBcastStrides[1];
+                        srcPtrOuter1 += src1ValidStrides[1];
+                        srcPtrOuter2 += src2ValidStrides[1];
+                        dstPtrOuter += dstValidStrides[1];
                     }
 
-                    srcPtrTemp1 += src1BcastStrides[0];
-                    srcPtrTemp2 += src2BcastStrides[0];
-                    dstPtrTemp += dstBcastStrides[0];
+                    srcPtrTemp1 += src1ValidStrides[0];
+                    srcPtrTemp2 += src2ValidStrides[0];
+                    dstPtrTemp += dstValidStrides[0];
                 }
             }
         }
         else
-            tensor_binary_bitwise_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+            tensor_binary_bitwise_op_recursive(srcPtrTemp1, srcPtrTemp2, src1ValidStrides, src2ValidStrides, dstPtrTemp, dstValidStrides, length, dstDim, op);
     }
 
     return RPP_SUCCESS;
