@@ -201,7 +201,7 @@ int main(int argc, char **argv)
     }
     else
     {
-
+        // Generic random data filling based on bitDepth
         Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
         Rpp16s *inputI16 = NULL;
         inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));

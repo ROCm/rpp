@@ -208,7 +208,7 @@ int main(int argc, char **argv)
     }
     else
     {
-
+        // Generic random data filling based on bitDepth
         Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
         Rpp16s *inputI16 = NULL;
         inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
@@ -482,13 +482,13 @@ int main(int argc, char **argv)
     // Free device memory
     CHECK_RETURN_STATUS(hipFree(d_input));
     CHECK_RETURN_STATUS(hipFree(d_output));
-    if(d_inputSecond)
+    if(d_inputSecond != nullptr)
         CHECK_RETURN_STATUS(hipFree(d_inputSecond));
-    if(d_inputI16)
+    if(d_inputI16 != nullptr))
         CHECK_RETURN_STATUS(hipFree(d_inputI16));
-    if(meanTensor)
+    if(meanTensor != nullptr))
         CHECK_RETURN_STATUS(hipFree(meanTensor));
-    if(stdDevTensor)
+    if(stdDevTensor != nullptr))
         CHECK_RETURN_STATUS(hipFree(stdDevTensor));
 
     free(input);
