@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
     if(qaMode && batchSize != 3)
     {
-        cout<<"QA mode can only run with batchsize 3"<<std::endl;
+        cout << "QA mode can only run with batchsize 3" <<std::endl;
         return -1;
     }
 

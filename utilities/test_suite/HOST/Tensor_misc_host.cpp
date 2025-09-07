@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
     if(qaMode && batchSize != 3)
     {
-        cout<<"QA mode can only run with batchsize 3" << std::endl;
+        cout << "QA mode can only run with batchsize 3" << std::endl;
         return -1;
     }
 
@@ -418,7 +418,6 @@ int main(int argc, char **argv)
 
         if(missingFuncFlag == 1)
         {
-            std::cout<<"\n inside";
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
         }
