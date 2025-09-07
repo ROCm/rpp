@@ -459,11 +459,11 @@ int main(int argc, char **argv)
     if(inputSecond)
         free(inputSecond);
     free(output);
-    if(testCase == LOG1P && inputI16 != nullptr)
+    if(inputI16 != nullptr)
         free(inputI16);
     free(roiTensor);
     free(dstRoiTensor);
-    if(roiTensorSecond)
+    if(roiTensorSecond != nullptr)
         free(roiTensorSecond);
     if(meanTensor != nullptr)
         free(meanTensor);

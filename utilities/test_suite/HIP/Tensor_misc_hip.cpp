@@ -493,17 +493,17 @@ int main(int argc, char **argv)
 
     free(input);
     free(output);
-    if(inputSecond)
+    if(inputSecond != nullptr)
         free(inputSecond);
-    if(inputI16)
+    if(inputI16 != nullptr)
         free(inputI16);
     CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     CHECK_RETURN_STATUS(hipHostFree(dstRoiTensor));
-    if(roiTensorSecond)
+    if(roiTensorSecond != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(roiTensorSecond));
     CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
-    if(srcDescriptorPtrNDSecond)
+    if(srcDescriptorPtrNDSecond != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrNDSecond));
     if (permTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permTensor));
