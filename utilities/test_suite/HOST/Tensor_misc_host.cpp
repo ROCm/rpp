@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         case 8: bitdepthStr = "u16"; break;
         case 9: bitdepthStr = "i32"; break;
         case 10: bitdepthStr = "u32"; break;
-        case 11: bitdepthStr = "i16_u32"; break;
+        case 11: bitdepthStr = "i16_f32"; break;
         default: bitdepthStr = "unknown"; break;
     }
 
@@ -435,9 +435,8 @@ int main(int argc, char **argv)
         std::string refFileName;
         refFileName = func + "_host.csv";
         refFile.open(refFileName);
-        Rpp8u* outputU8 = static_cast<Rpp8u*>(output);
         for (int i = 0; i < oBufferSize; i++)
-            refFile << static_cast<int>(outputU8[i]) << ",";
+            refFile << *((float*)output + i) << ",";
         refFile.close();
     }
 

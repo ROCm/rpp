@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         case 8: bitdepthStr = "u16"; break;
         case 9: bitdepthStr = "i32"; break;
         case 10: bitdepthStr = "u32"; break;
-        case 11: bitdepthStr = "i16_u32"; break;
+        case 11: bitdepthStr = "i16_f32"; break;
         default: bitdepthStr = "unknown"; break;
     }
 
@@ -129,7 +129,8 @@ int main(int argc, char **argv)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
     }
-    else{
+    else
+    {
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, dstRoiTensor);
     }
