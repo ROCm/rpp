@@ -484,11 +484,11 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(d_inputSecond != nullptr)
         CHECK_RETURN_STATUS(hipFree(d_inputSecond));
-    if(d_inputI16 != nullptr))
+    if(d_inputI16 != nullptr)
         CHECK_RETURN_STATUS(hipFree(d_inputI16));
-    if(meanTensor != nullptr))
+    if(meanTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
-    if(stdDevTensor != nullptr))
+    if(stdDevTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(stdDevTensor));
 
     free(input);
