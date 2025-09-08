@@ -36,7 +36,7 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i16_f32_"}
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -69,13 +69,10 @@ imageAugmentationMap = {
     39: ["resize_crop_mirror", "HOST", "HIP"],
     40: ["erode", "HIP"],
     41: ["dilate", "HIP"],
-    42: ["hue", "HOST", "HIP"],
-    43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
-    51: ["median_filter", "HOST", "HIP"],
-    54: ["gaussian_filter", "HOST", "HIP"],
+    54: ["gaussian_filter", "HIP", "HOST"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
     65: ["bitwise_and", "HOST", "HIP"],
@@ -97,8 +94,7 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HOST", "HIP"],
-    94: ["posterize", "HOST", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -128,28 +124,21 @@ miscAugmentationMap  = {
     2: ["log", "HOST", "HIP"],
     3: ["concat","HOST","HIP"],
     4: ["log1p", "HOST", "HIP"],
-    5: ["tensor_add_tensor", "HOST", "HIP"],
-    6: ["tensor_subtract_tensor", "HOST", "HIP"],
-    7: ["tensor_multiply_tensor", "HOST", "HIP"],
-    8: ["tensor_divide_tensor", "HOST", "HIP"]
+    8: ["tensor_add_tensor", "HOST", "HIP"],
+    9: ["tensor_subtract_tensor", "HOST", "HIP"],
+    10: ["tensor_multiply_tensor", "HOST", "HIP"],
+    11: ["tensor_divide_tensor", "HOST", "HIP"],
 }
 
 ImageAugmentationGroupMap = {
-    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 42, 43, 45, 81],
-    "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84, 94],
+    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
+    "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84],
     "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
-    "filter_augmentations" : [49, 51, 54],
-    "morphological_operations" : [40, 41],
+    "filter_augmentations" : [40, 41, 49, 54],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 66, 67, 68],
     "data_exchange_operations" : [70, 85, 86],
     "statistical_operations" : [15, 87, 88, 89, 90, 91]
-}
-
-voxelAugmentationGroupMap = {
-    "arithmetic_operations" : [0, 2, 3, 5],
-    "effects_augmentations" : [6],
-    "geometric_augmentations" : [1, 4]
 }
 
 def get_case_number(map, case):
@@ -252,9 +241,9 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
         return False
 
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap, func_group_finder):
+def directory_name_generator(qaMode, affinity, layoutType, case, path, func_group_finder):
     if qaMode == 0:
-        functionality_group = func_group_finder(groupMap, int(case))
+        functionality_group = func_group_finder(int(case))
         dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
@@ -262,15 +251,15 @@ def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap,
     return dst_folder_temp
 
 # Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder):
+def process_layout(layout, qaMode, case, dstPath, backend, func_group_finder):
     if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, func_group_finder)
         log_file_layout = "pkd3"
     elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, func_group_finder)
         log_file_layout = "pln3"
     elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, func_group_finder)
         log_file_layout = "pln1"
 
     return dstPathTemp, log_file_layout
@@ -432,8 +421,8 @@ def print_case_list(imageAugmentationMap, backendType, parser):
         sys.exit(0)
 
 # Functionality group finder
-def func_group_finder(groupMap, case_number):
-    for key, value in groupMap.items():
+def func_group_finder(case_number):
+    for key, value in ImageAugmentationGroupMap.items():
         if case_number in value:
             return key
     return "miscellaneous"
