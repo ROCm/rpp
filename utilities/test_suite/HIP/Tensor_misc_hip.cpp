@@ -195,8 +195,6 @@ int main(int argc, char **argv)
 
     // Convert inputs to correponding bit depth specified by user
     convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
-    //printf("Goes here 3\n");
-    //exit(0);
     // copy data from HOST to HIP
     CHECK_RETURN_STATUS(hipMemcpy(d_input, input, iBufferSizeInBytes, hipMemcpyHostToDevice));
     if(testCase == CONCAT || testCase == TENSOR_ADD_TENSOR)

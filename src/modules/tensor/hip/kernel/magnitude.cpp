@@ -30,8 +30,8 @@ __device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *sr
 {
     if constexpr (std::is_same<T, schar>::value)
     {
-        rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
-        rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
+        rpp_hip_math_add8_const(src1_f8, src1_f8, FLOAT4_128);
+        rpp_hip_math_add8_const(src2_f8, src2_f8, FLOAT4_128);
     }
 
     d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
@@ -43,8 +43,8 @@ __device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *sr
     
     if constexpr (std::is_same<T, schar>::value)
     {
-        dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
-        dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
+        dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - FLOAT4_128;
+        dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - FLOAT4_128;
     }
     else if constexpr (std::is_same<T, float>::value)  // For Float32
     {

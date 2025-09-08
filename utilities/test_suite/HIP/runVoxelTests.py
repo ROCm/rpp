@@ -37,8 +37,8 @@ dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 6
+caseMin = min(voxelAugmentationMap.keys())
+caseMax = max(voxelAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 def get_log_file_list(preserveOutput):
@@ -47,15 +47,6 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln3_raw_performance_log.txt",
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln1_raw_performance_log.txt"
     ]
-
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number == 0:
-        return "arithmetic_operations"
-    elif case_number == 1:
-        return "geometric_augmentations"
-    else:
-        return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
@@ -265,7 +256,7 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
         if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
             if testType == 0 and qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
@@ -285,7 +276,7 @@ elif (testType == 1 and profilingOption == "YES"):
         if int(case) not in voxelAugmentationMap:
             continue
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
             run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption)
 
         RESULTS_DIR = ""
@@ -314,7 +305,7 @@ elif (testType == 1 and profilingOption == "YES"):
 
                 # Add functionality group header
                 if CASE_NUM in NEW_FUNC_GROUP_LIST:
-                    FUNC_GROUP = func_group_finder(CASE_NUM)
+                    FUNC_GROUP = func_group_finder(voxelAugmentationGroupMap, CASE_NUM)
                     new_file.write("0,0,0,0,0\n")
                     new_file.write(FUNC_GROUP + ",0,0,0,0\n")
                     new_file.write("0,0,0,0,0\n")

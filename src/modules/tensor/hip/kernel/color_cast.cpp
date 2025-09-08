@@ -32,20 +32,20 @@ __device__ void color_cast_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void color_cast_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    float4 pixNorm_f4 = *pix_f4 * FLOAT4_ONE_OVER_255;
     dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
     dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
 
 __device__ void color_cast_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    dst_f8->f4[0] = (src_f8->f4[0] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
-    dst_f8->f4[1] = (src_f8->f4[1] + (float4)128 - *pix_f4) * *alpha_f4 + *pix_f4 - (float4)128;
+    dst_f8->f4[0] = (src_f8->f4[0] + FLOAT4_128 - *pix_f4) * *alpha_f4 + *pix_f4 - FLOAT4_128;
+    dst_f8->f4[1] = (src_f8->f4[1] + FLOAT4_128 - *pix_f4) * *alpha_f4 + *pix_f4 - FLOAT4_128;
 }
 
 __device__ void color_cast_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float4 *pix_f4, float4 *alpha_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    float4 pixNorm_f4 = *pix_f4 * FLOAT4_ONE_OVER_255;
     dst_f8->f4[0] = (src_f8->f4[0] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
     dst_f8->f4[1] = (src_f8->f4[1] - pixNorm_f4) * *alpha_f4 + pixNorm_f4;
 }
@@ -71,10 +71,10 @@ __global__ void color_cast_pkd_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
-    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
-    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
-    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+    float4 r_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].R);
+    float4 g_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].G);
+    float4 b_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = MAKE_FLOAT4(alphaTensor[id_z]);
 
     d_float24 src_f24, dst_f24;
 
@@ -106,10 +106,10 @@ __global__ void color_cast_pln_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
-    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
-    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
-    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+    float4 r_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].R);
+    float4 g_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].G);
+    float4 b_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = MAKE_FLOAT4(alphaTensor[id_z]);
 
     d_float24 src_f24, dst_f24;
 
@@ -141,10 +141,10 @@ __global__ void color_cast_pkd3_pln3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
-    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
-    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
-    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+    float4 r_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].R);
+    float4 g_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].G);
+    float4 b_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = MAKE_FLOAT4(alphaTensor[id_z]);
 
     d_float24 src_f24, dst_f24;
 
@@ -176,10 +176,10 @@ __global__ void color_cast_pln3_pkd3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 r_f4 = (float4)((float)rgbTensor[id_z].R);
-    float4 g_f4 = (float4)((float)rgbTensor[id_z].G);
-    float4 b_f4 = (float4)((float)rgbTensor[id_z].B);
-    float4 alpha_f4 = (float4)(alphaTensor[id_z]);
+    float4 r_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].R);
+    float4 g_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].G);
+    float4 b_f4 = MAKE_FLOAT4((float)rgbTensor[id_z].B);
+    float4 alpha_f4 = MAKE_FLOAT4(alphaTensor[id_z]);
 
     d_float24 src_f24, dst_f24;
 

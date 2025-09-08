@@ -36,7 +36,11 @@ SOFTWARE.
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
 #endif // HIP_COMPILE
-#include <half/half.hpp>
+#if __has_include(<half/half.hpp>)
+    #include <half/half.hpp>
+#else
+    #include <half.hpp>
+#endif
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
@@ -199,6 +203,7 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
+#ifdef LEGACY_SUPPORT
 /*! \brief RPP Operations type enum
  * \ingroup group_rppdefs
  */
@@ -257,6 +262,7 @@ typedef struct
     Rpp32f rho;
     Rpp32f theta;
 } RppPointPolar;
+#endif
 
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
@@ -301,6 +307,7 @@ typedef struct
 
 /******************** RPPI typedefs ********************/
 
+#ifdef LEGACY_SUPPORT
 /*! \brief RPPI Image color convert mode type enum
  * \ingroup group_rppdefs
  */
@@ -319,15 +326,6 @@ typedef enum
     RPPI_MEDIUM,
     RPPI_HIGH
 } RppiFuzzyLevel;
-
-/*! \brief RPPI Image channel format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_CHN_PLANAR,
-    RPPI_CHN_PACKED
-} RppiChnFormat;
 
 /*! \brief RPP Image axis type enum
  * \ingroup group_rppdefs
@@ -370,34 +368,6 @@ typedef enum
     HSV
 } RppiFormat;
 
-/*! \brief RPPI Image size(Width/Height dimensions) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    unsigned int width;
-    unsigned int height;
-} RppiSize;
-
-/*! \brief RPPI Image 2D cartesian point type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    int x;
-    int y;
-} RppiPoint;
-
-/*! \brief RPPI Image 3D point type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    int x;
-    int y;
-    int z;
-} RppiPoint3D;
-
 /*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
  * \ingroup group_rppdefs
  */
@@ -408,6 +378,25 @@ typedef struct
     int width;
     int height;
 } RppiRect;
+#endif
+
+/*! \brief RPPI Image channel format type enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RPPI_CHN_PLANAR,
+    RPPI_CHN_PACKED
+} RppiChnFormat;
+
+/*! \brief RPPI Image size(Width/Height dimensions) type struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    unsigned int width;
+    unsigned int height;
+} RppiSize;
 
 /*! \brief RPPI Image 2D ROI (XYWH format) type struct
  * \ingroup group_rppdefs
@@ -501,6 +490,16 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Image Border Type
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    REPLICATE = 0,     // Similar to Nearest Neighbors Padding
+    CONSTANT,          // Unsupported Border Type
+    REFLECT_NO_EDGE    // Unsupported Border Type
+} RpptImageBorderType;
+
 /*! \brief RPPT Mel Scale Formula
  * \ingroup group_rppdefs
  */
@@ -510,12 +509,31 @@ typedef enum
     HTK,         // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
 } RpptMelScaleFormula;
 
+/*! \brief RPPT Image 2D cartesian point type struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    int x;
+    int y;
+} RpptPoint2D;
+
+/*! \brief RPPT Image 3D point type struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    int x;
+    int y;
+    int z;
+} RpptPoint3D;
+
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
  */
 typedef struct
 {
-    RppiPoint lt, rb;    // Left-Top point and Right-Bottom point
+    RpptPoint2D lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
 
@@ -524,9 +542,9 @@ typedef struct
  */
 typedef struct
 {
-    RppiPoint r;
-    RppiPoint g;
-    RppiPoint b;
+    RpptPoint2D r;
+    RpptPoint2D g;
+    RpptPoint2D b;
 } RpptChannelOffsets;
 
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
@@ -534,7 +552,7 @@ typedef struct
  */
 typedef struct
 {
-    RppiPoint3D ltf, rbb; // Left-Top-Front point and Right-Bottom-Back point
+    RpptPoint3D ltf, rbb; // Left-Top-Front point and Right-Bottom-Back point
 
 } RpptRoiLtfrbb;
 
@@ -543,7 +561,7 @@ typedef struct
  */
 typedef struct
 {
-    RppiPoint xy;
+    RpptPoint2D xy;
     int roiWidth, roiHeight;
 
 } RpptRoiXywh;
@@ -553,7 +571,7 @@ typedef struct
  */
 typedef struct
 {
-    RppiPoint3D xyz;
+    RpptPoint3D xyz;
     int roiWidth, roiHeight, roiDepth;
 
 } RpptRoiXyzwhd;

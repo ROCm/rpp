@@ -22,26 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPP_VERSION_H
-#define RPP_VERSION_H
+#ifndef GUARD_RPPLEGACY_SUPPORT_H_IN
+#define GUARD_RPPLEGACY_SUPPORT_H_IN
 
-/*!
- * \file
- * \brief ROCm Performance Primitives (RPP) version
- * \defgroup group_rpp_version RPP Version
- * \brief ROCm Performance Primitives (RPP) version
- */
+#cmakedefine01 RPP_LEGACY_SUPPORT
 
-// TODO: change the patch version with every new feature
-#include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
 #endif
-// NOTE: IMPORTANT: Match the version with CMakelists.txt version
-#define RPP_VERSION_MAJOR 2
-#define RPP_VERSION_MINOR 0
-#define RPP_VERSION_PATCH 0
-#ifdef __cplusplus
-}
-#endif
-#endif    // RPP_VERSION_H

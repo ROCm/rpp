@@ -72,6 +72,7 @@ inline void copy_host_maxSrcSize(RppiSize maxSrcSize, rpp::Handle& handle)
     }
 }
 
+#ifdef LEGACY_SUPPORT
 inline void copy_host_maxDstSize(RppiSize maxDstSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -80,6 +81,7 @@ inline void copy_host_maxDstSize(RppiSize maxDstSize, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mcpu.maxDstSize[i].width = maxDstSize.width;
     }
 }
+#endif
 
 inline void copy_host_roi(RppiROI roiPoints, rpp::Handle& handle)
 {
@@ -110,6 +112,7 @@ inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
 #endif // backend
 }
 
+#ifdef LEGACY_SUPPORT
 inline void copy_dstSize(RppiSize *dstSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -125,6 +128,7 @@ inline void copy_dstSize(RppiSize *dstSize, rpp::Handle& handle)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.dstSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cdstSize.width, 0, NULL, NULL);
 #endif // backend
 }
+#endif
 
 inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
 {
@@ -256,6 +260,7 @@ inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
 #endif // backend
 }
 
+#ifdef LEGACY_SUPPORT
 inline void copy_dstMaxSize(RppiSize maxDstSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)
@@ -271,6 +276,7 @@ inline void copy_dstMaxSize(RppiSize maxDstSize, rpp::Handle& handle)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxDstSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width, 0, NULL, NULL);
 #endif // backend
 }
+#endif
 
 inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = true)
 {
@@ -303,6 +309,7 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif // backend
 }
 
+#ifdef LEGACY_SUPPORT
 inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = true)
 {
     int i;
@@ -334,6 +341,7 @@ inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #endif // backend
 }
 
+#endif
 #endif // GPU_SUPPORT
 
 inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPtr, RpptRoiType type)
