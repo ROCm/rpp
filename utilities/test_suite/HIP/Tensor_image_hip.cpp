@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
-    if (testCase == 94) // dropout
+    if (testCase == DROPOUT)
     {
         switch (additionalParam)
         {
@@ -474,9 +474,9 @@ int main(int argc, char **argv)
     if(testCase == POSTERIZE)
         CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
 
-    Rpp32f *droputProbability = nullptr;
+    Rpp32f *dropoutProbability = nullptr;
     if(testCase == DROPOUT && dropoutTypeCase == CHANNEL)
-        CHECK_RETURN_STATUS(hipHostMalloc(&droputProbability, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutProbability, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1745,11 +1745,11 @@ int main(int argc, char **argv)
                         {
                             testCaseName = "channel";
                             for (i = 0; i < batchSize; i++)
-                                droputProbability[i] = 0.4f;
+                                dropoutProbability[i] = 0.4f;
 
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, droputProbability, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dropoutProbability, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
@@ -1761,6 +1761,8 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
+
+                    break;
                 }
                 default:
                 {
@@ -2019,7 +2021,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
-    if(droputProbability != nullptr)
-        CHECK_RETURN_STATUS(hipHostFree(droputProbability));
+    if(dropoutProbability != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(dropoutProbability));
     return 0;
 }

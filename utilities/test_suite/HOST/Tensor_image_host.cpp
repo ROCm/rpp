@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
-    if (testCase == 94) // dropout
+    if (testCase == DROPOUT)
     {
         switch (additionalParam)
         {
@@ -1722,28 +1722,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case DROPOUT:
-                {
-                    testCaseName = "dropout";
-
-                    switch(additionalParam)
-                    {
-                        case CHANNEL:
-                        {
-                            testCaseName = "channel";
-                            Rpp32f droputProbability[batchSize];
-                            for (i = 0; i < batchSize; i++)
-                                droputProbability[i] = 0.4f;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, droputProbability, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                    break;
-                }
                 case POSTERIZE:
                 {
                     testCaseName = "posterize";
@@ -1759,6 +1737,37 @@ int main(int argc, char **argv)
                         rppt_posterize_host(input, srcDescPtr, output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
+
+                    break;
+                }
+                case DROPOUT:
+                {
+                    testCaseName = "dropout";
+
+                    switch(additionalParam)
+                    {
+                        case CHANNEL:
+                        {
+                            testCaseName = "channel";
+                            Rpp32f dropoutProbability[batchSize];
+                            for (i = 0; i < batchSize; i++)
+                                dropoutProbability[i] = 0.4f;
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        default:
+                        {
+                            missingFuncFlag = 1;
+                            break;
+                        }
+                    }
 
                     break;
                 }

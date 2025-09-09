@@ -26,14 +26,14 @@ SOFTWARE.
 #include <random>
 
 inline void generate_channel_masks(uint8_t *channelMasks,
-                                   Rpp32f *dropProb,
+                                   Rpp32f *dropoutProbability,
                                    Rpp32u batchSize,
                                    Rpp32u numChannels)
 {
     std::mt19937 rng(42); // fixed seed, or std::random_device{}()
     for (int b = 0; b < batchSize; b++)
     {
-        std::bernoulli_distribution keepDist(1.0f - dropProb[b]);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[b]);
         bool anyKept = false;
         int base = b * numChannels;
         for (Rpp32u c = 0; c < numChannels; c++)
@@ -52,7 +52,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropProb,
+                                      Rpp32f *dropoutProbability,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       RppLayoutParams layoutParams,
@@ -63,7 +63,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
 
     // Generate channel mask for this batch
     uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
-    generate_channel_masks(channelMaskHost, dropProb, dstDescPtr->n, srcDescPtr->c);
+    generate_channel_masks(channelMaskHost, dropoutProbability, dstDescPtr->n, srcDescPtr->c);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
