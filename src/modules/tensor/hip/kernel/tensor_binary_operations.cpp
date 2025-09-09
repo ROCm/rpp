@@ -78,6 +78,14 @@ template<> struct ArithmeticLoadStoreExecute<uint>
     __device__ __forceinline__ static void rpp_hip_pack_and_store8(uint *dst, d_uint8 *dst_u8) { rpp_hip_pack_uint8_and_store8(dst, dst_u8); };
 };
 
+template<> struct ArithmeticLoadStoreExecute<int>
+{
+    using VectorType = d_int8;
+
+    __device__ __forceinline__ static void rpp_hip_load8(int *src, d_int8 *dst) { rpp_hip_load8_to_int8(src, (int*)dst); }
+    __device__ __forceinline__ static void rpp_hip_pack_and_store8(int *dst, d_int8 *dst_u8) { rpp_hip_pack_int8_and_store8(dst, dst_u8); };
+};
+
 template<> struct ArithmeticLoadStoreExecute<float>
 {
     using VectorType = d_float8;
@@ -863,6 +871,18 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u>(Rpp32
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
                                                                            Rpp32u*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptOp,
+                                                                           RpptBroadcastMode,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32s>(Rpp32s*,
+                                                                           Rpp32s*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptGenericDescPtr,
+                                                                           Rpp32s*,
                                                                            RpptGenericDescPtr,
                                                                            RpptOp,
                                                                            RpptBroadcastMode,

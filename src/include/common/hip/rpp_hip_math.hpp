@@ -106,6 +106,12 @@ __device__ __forceinline__ void rpp_hip_math_subtract8(d_uint8 *src1Ptr_f8, d_ui
     dstPtr_f8->ui4[1] = src1Ptr_f8->ui4[1] - src2Ptr_f8->ui4[1];
 }
 
+__device__ __forceinline__ void rpp_hip_math_subtract8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+{
+    dstPtr_f8->i4[0] = src1Ptr_f8->i4[0] - src2Ptr_f8->i4[0];
+    dstPtr_f8->i4[1] = src1Ptr_f8->i4[1] - src2Ptr_f8->i4[1];
+}
+
 __device__ __forceinline__ void rpp_hip_math_subtract8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)
 {
     dstPtr_f8->us4[0] = src1Ptr_f8->us4[0] - src2Ptr_f8->us4[0];
@@ -140,6 +146,12 @@ __device__ __forceinline__ void rpp_hip_math_add8(d_uint8 *src1Ptr_f8, d_uint8 *
 {
     dstPtr_f8->ui4[0] = src1Ptr_f8->ui4[0] + src2Ptr_f8->ui4[0];
     dstPtr_f8->ui4[1] = src1Ptr_f8->ui4[1] + src2Ptr_f8->ui4[1];
+}
+
+__device__ __forceinline__ void rpp_hip_math_add8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+{
+    dstPtr_f8->i4[0] = src1Ptr_f8->i4[0] + src2Ptr_f8->i4[0];
+    dstPtr_f8->i4[1] = src1Ptr_f8->i4[1] + src2Ptr_f8->i4[1];
 }
 
 __device__ __forceinline__ void rpp_hip_math_add8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)
@@ -242,6 +254,12 @@ __device__ __forceinline__ void rpp_hip_math_multiply8(d_uint8 *src1Ptr_f8, d_ui
     dstPtr_f8->ui4[1] = src1Ptr_f8->ui4[1] * src2Ptr_f8->ui4[1];
 }
 
+__device__ __forceinline__ void rpp_hip_math_multiply8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+{
+    dstPtr_f8->i4[0] = src1Ptr_f8->i4[0] * src2Ptr_f8->i4[0];
+    dstPtr_f8->i4[1] = src1Ptr_f8->i4[1] * src2Ptr_f8->i4[1];
+}
+
 __device__ __forceinline__ void rpp_hip_math_multiply8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)
 {
     dstPtr_f8->us4[0] = src1Ptr_f8->us4[0] * src2Ptr_f8->us4[0];
@@ -310,6 +328,12 @@ __device__ __forceinline__ void rpp_hip_math_divide8(d_uint8 *src1Ptr_f8, d_uint
 {
     dstPtr_f8->ui4[0] = src1Ptr_f8->ui4[0] / src2Ptr_f8->ui4[0];
     dstPtr_f8->ui4[1] = src1Ptr_f8->ui4[1] / src2Ptr_f8->ui4[1];
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+{
+    dstPtr_f8->i4[0] = src1Ptr_f8->i4[0] / src2Ptr_f8->i4[0];
+    dstPtr_f8->i4[1] = src1Ptr_f8->i4[1] / src2Ptr_f8->i4[1];
 }
 
 __device__ __forceinline__ void rpp_hip_math_divide8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)

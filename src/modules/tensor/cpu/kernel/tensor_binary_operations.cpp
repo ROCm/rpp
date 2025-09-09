@@ -1673,3 +1673,15 @@ template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32u>(Rpp
                                                                              Rpp32u*,
                                                                              Rpp32u*,
                                                                              rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32s>(Rpp32s*,
+                                                                             Rpp32s*,
+                                                                             RpptGenericDescPtr,
+                                                                             RpptGenericDescPtr,
+                                                                             Rpp32s*,
+                                                                             RpptGenericDescPtr,
+                                                                             RpptOp,
+                                                                             RpptBroadcastMode,
+                                                                             Rpp32u*,
+                                                                             Rpp32u*,
+                                                                             rpp::Handle&);
