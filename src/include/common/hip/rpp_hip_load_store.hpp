@@ -1917,6 +1917,12 @@ __device__ __forceinline__ void rpp_hip_pack_uchar8_and_store8(uchar *dstPtr, d_
     *(d_uchar8_s *)dstPtr = *(d_uchar8_s *)dstPtr_f8;
 }
 
+__device__ __forceinline__ void rpp_hip_pack_schar8_and_store8(schar *dstPtr, d_schar8 *dstPtr_f8)
+{
+    *(d_schar8_s *)dstPtr = *(d_schar8_s *)dstPtr_f8;
+}
+
+
 __device__ __forceinline__ void rpp_hip_pack_ushort8_and_store8(ushort *dstPtr, d_ushort8 *dstPtr_f8)
 {
     *(d_ushort8_s *)dstPtr = *(d_ushort8_s *)dstPtr_f8;

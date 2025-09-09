@@ -203,6 +203,23 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
+/*! \brief RPP Tensor Operations type enum
+ * \ingroup group_rppdefs
+*/
+typedef enum
+{
+    RPP_TENSOR_OP_ADD,
+    RPP_TENSOR_OP_SUBTRACT,
+    RPP_TENSOR_OP_MULTIPLY,
+    RPP_TENSOR_OP_DIVIDE
+} RpptOp;
+
+typedef enum
+{
+    RPP_BROADCAST_ENABLE,
+    RPP_BROADCAST_DISABLE
+} RpptBroadcastMode;
+
 #ifdef LEGACY_SUPPORT
 /*! \brief RPP Operations type enum
  * \ingroup group_rppdefs
@@ -227,23 +244,6 @@ typedef enum
     RPP_SCALAR_OP_MIN,
     RPP_SCALAR_OP_MAX,
 } RppOp;
-
-/*! \brief RPP Tensor Operations type enum
- * \ingroup group_rppdefs
-*/
-typedef enum
-{
-    RPP_TENSOR_OP_ADD,
-    RPP_TENSOR_OP_SUBTRACT,
-    RPP_TENSOR_OP_MULTIPLY,
-    RPP_TENSOR_OP_DIVIDE
-} RpptOp;
-
-typedef enum
-{
-    RPP_BROADCAST_ENABLE,
-    RPP_BROADCAST_DISABLE
-} RpptBroadcastMode;
 
 /*! \brief RPP BitDepth Conversion type enum
  * \ingroup group_rppdefs

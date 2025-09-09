@@ -19,30 +19,47 @@ inline void simd_subtract_ps(__m256 &a, __m256 &b) { a = _mm256_sub_ps(a, b); }
 inline void simd_multiply_ps(__m256 &a, __m256 &b) { a = _mm256_mul_ps(a, b); }
 inline void simd_divide_ps(__m256 &a, __m256 &b) { a = _mm256_div_ps(a, b); }
 
-template<typename T> inline void simd_add_si256(__m256i &a, __m256i &b);
-template<typename T> inline void simd_subtract_si256(__m256i &a, __m256i &b);
-template<typename T> inline void simd_multiply_si256(__m256i &a, __m256i &b);
-template<typename T> inline void simd_divide_si256(__m256i &a, __m256i &b);
+template<typename T>
+inline void simd_add_si256(__m256i &a, __m256i &b)
+{
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        a = _mm256_add_epi8(a, b);
+    else if constexpr (std::is_same<T, short>::value || std::is_same<T, unsigned short>::value)
+        a = _mm256_add_epi16(a, b);
+    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+        a = _mm256_add_epi32(a, b);
+}
 
-template<> inline void simd_add_si256<Rpp8u>(__m256i &a, __m256i &b) { a = _mm256_add_epi8(a, b);}
-template<> inline void simd_subtract_si256<Rpp8u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi8(a, b);}
-template<> inline void simd_multiply_si256<Rpp8u>(__m256i &a, __m256i &b) { }
-template<> inline void simd_divide_si256<Rpp8u>(__m256i &a, __m256i &b) { }
+template<typename T>
+inline void simd_subtract_si256(__m256i &a, __m256i &b)
+{
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        a = _mm256_sub_epi8(a, b);
+    else if constexpr (std::is_same<T, short>::value || std::is_same<T, unsigned short>::value)
+        a = _mm256_sub_epi16(a, b);
+    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+        a = _mm256_sub_epi32(a, b);
+}
 
-template<> inline void simd_add_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_add_epi16(a, b);}
-template<> inline void simd_subtract_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi16(a, b);}
-template<> inline void simd_multiply_si256<Rpp16u>(__m256i &a, __m256i &b) { a = _mm256_mullo_epi16(a, b);}
-template<> inline void simd_divide_si256<Rpp16u>(__m256i &a, __m256i &b) { }
+template<typename T>
+inline void simd_multiply_si256(__m256i &a, __m256i &b)
+{
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        a = _mm256_mullo_epi16(a, b);
+    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+        a = _mm256_mullo_epi32(a, b);
+}
 
-template<> inline void simd_add_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_add_epi32(a, b);}
-template<> inline void simd_subtract_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_sub_epi32(a, b);}
-template<> inline void simd_multiply_si256<Rpp32u>(__m256i &a, __m256i &b) { a = _mm256_mullo_epi32(a, b);}
-template<> inline void simd_divide_si256<Rpp32u>(__m256i &a, __m256i &b) { }
+template<typename T>
+inline void simd_divide_si256(__m256i &a, __m256i &b) { }
 
 // Helper functions for broadcasting for different datatypes (8 bit, 16 bit and 32 bit)
 inline __m256i simd_set1_val(Rpp8u &val) { return _mm256_set1_epi8(val); }
+inline __m256i simd_set1_val(Rpp8s &val) { return _mm256_set1_epi8(val); }
 inline __m256i simd_set1_val(Rpp16u &val) { return _mm256_set1_epi16(val); }
+inline __m256i simd_set1_val(Rpp16s &val) { return _mm256_set1_epi16(val); }
 inline __m256i simd_set1_val(Rpp32u &val) { return _mm256_set1_epi32(val); }
+inline __m256i simd_set1_val(Rpp32s &val) { return _mm256_set1_epi32(val); }
 
 template<typename T, typename Operation>
 inline void tensor_binary_arithmetic_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
@@ -1575,7 +1592,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T *srcPtr1,
     else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
         vectorIncrement = 8; // Vector Increment for U32/I32 datatype
 
-    if((tensorOp == RPP_TENSOR_OP_DIVIDE) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && (srcPtr1GenericDescPtr->dataType == RpptDataType::U8)))
+    if((tensorOp == RPP_TENSOR_OP_DIVIDE) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
         vectorIncrement = 0;
 
     switch(tensorOp) {
@@ -1601,6 +1618,19 @@ template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u>(Rpp8
                                                                             RpptGenericDescPtr,
                                                                             RpptGenericDescPtr,
                                                                             Rpp8u*,
+                                                                            RpptGenericDescPtr,
+                                                                            RpptOp,
+                                                                            RpptBroadcastMode,
+                                                                            Rpp32u*,
+                                                                            Rpp32u*,
+                                                                            rpp::Handle&);
+
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8s>(Rpp8s*,
+                                                                            Rpp8s*,
+                                                                            RpptGenericDescPtr,
+                                                                            RpptGenericDescPtr,
+                                                                            Rpp8s*,
                                                                             RpptGenericDescPtr,
                                                                             RpptOp,
                                                                             RpptBroadcastMode,

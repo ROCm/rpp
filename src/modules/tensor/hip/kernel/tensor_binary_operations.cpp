@@ -46,6 +46,14 @@ template<> struct ArithmeticLoadStoreExecute<uchar>
     __device__ __forceinline__ static void rpp_hip_pack_and_store8(uchar *dst, d_uchar8 *dst_u8) { rpp_hip_pack_uchar8_and_store8(dst, dst_u8); };
 };
 
+template<> struct ArithmeticLoadStoreExecute<schar>
+{
+    using VectorType = d_schar8;
+
+    __device__ __forceinline__ static void rpp_hip_load8(schar *src, d_schar8 *dst) { rpp_hip_load8_to_schar8(src, (schar*)dst); }
+    __device__ __forceinline__ static void rpp_hip_pack_and_store8(schar *dst, d_schar8 *dst_u8) { rpp_hip_pack_schar8_and_store8(dst, dst_u8); };
+};
+
 template<> struct ArithmeticLoadStoreExecute<ushort>
 {
     using VectorType = d_ushort8;
@@ -804,6 +812,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u>(Rpp8u*
                                                                           Rpp32u*,
                                                                           Rpp32u*,
                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8s>(Rpp8s*,
+                                                                          Rpp8s*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptGenericDescPtr,
+                                                                          Rpp8s*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptOp,
+                                                                          RpptBroadcastMode,
+                                                                          Rpp32u*,
+                                                                          Rpp32u*,
+                                                                          rpp::Handle&);
+
 
 template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u>(Rpp16u*,
                                                                            Rpp16u*,
