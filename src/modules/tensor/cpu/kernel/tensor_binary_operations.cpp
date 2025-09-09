@@ -24,9 +24,9 @@ inline void simd_add_si256(__m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
         a = _mm256_add_epi8(a, b);
-    else if constexpr (std::is_same<T, short>::value || std::is_same<T, unsigned short>::value)
+    else if constexpr (std::is_same<T, Rpp16s>::value || std::is_same<T, Rpp16u>::value)
         a = _mm256_add_epi16(a, b);
-    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+    else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
         a = _mm256_add_epi32(a, b);
 }
 
@@ -35,18 +35,18 @@ inline void simd_subtract_si256(__m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
         a = _mm256_sub_epi8(a, b);
-    else if constexpr (std::is_same<T, short>::value || std::is_same<T, unsigned short>::value)
+    else if constexpr (std::is_same<T, Rpp16s>::value || std::is_same<T, Rpp16u>::value)
         a = _mm256_sub_epi16(a, b);
-    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+    else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
         a = _mm256_sub_epi32(a, b);
 }
 
 template<typename T>
 inline void simd_multiply_si256(__m256i &a, __m256i &b)
 {
-    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+    if constexpr (std::is_same<T, Rpp16u>::value || std::is_same<T, Rpp16s>::value)
         a = _mm256_mullo_epi16(a, b);
-    else if constexpr (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value)
+    else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
         a = _mm256_mullo_epi32(a, b);
 }
 
@@ -1643,6 +1643,18 @@ template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16u>(Rpp
                                                                              RpptGenericDescPtr,
                                                                              RpptGenericDescPtr,
                                                                              Rpp16u*,
+                                                                             RpptGenericDescPtr,
+                                                                             RpptOp,
+                                                                             RpptBroadcastMode,
+                                                                             Rpp32u*,
+                                                                             Rpp32u*,
+                                                                             rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16s>(Rpp16s*,
+                                                                             Rpp16s*,
+                                                                             RpptGenericDescPtr,
+                                                                             RpptGenericDescPtr,
+                                                                             Rpp16s*,
                                                                              RpptGenericDescPtr,
                                                                              RpptOp,
                                                                              RpptBroadcastMode,
