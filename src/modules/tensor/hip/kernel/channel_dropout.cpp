@@ -31,8 +31,7 @@ template<typename T>
 __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *maskTensor, T *srcPtr)
 {
     // Convert mask value (0 or 1) to float
-    float mask = static_cast<float>(*maskTensor);
-    float4 mask4 = make_float4(mask, mask, mask, mask);
+    float4 mask4 = MAKE_FLOAT4(static_cast<float>(*maskTensor));
 
     // Multiply pixel data by mask
     pix_f8.f4[0] = pix_f8.f4[0] * mask4;
@@ -43,13 +42,9 @@ template<typename T>
 __device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor, T *srcPtr)
 {
     // Convert mask values (0 or 1) for R, G, B
-    float maskR = static_cast<float>(maskTensor[0]);
-    float maskG = static_cast<float>(maskTensor[1]);
-    float maskB = static_cast<float>(maskTensor[2]);
-    
-    float4 maskR_f4 = make_float4(maskR, maskR, maskR, maskR);
-    float4 maskG_f4 = make_float4(maskG, maskG, maskG, maskG);
-    float4 maskB_f4 = make_float4(maskB, maskB, maskB, maskB);
+    float4 maskR_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[0]));
+    float4 maskG_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[1]));
+    float4 maskB_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[2]));
 
     // Multiply each channel’s pixels by its mask
     pix_f24.f4[0] = pix_f24.f4[0] * maskR_f4; // Red
@@ -66,7 +61,7 @@ __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *ma
 {
     // Convert mask value (0 or 1) to float
     float mask = static_cast<float>(*maskTensor);
-    float4 mask_f4 = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
+    float4 mask_f4 = MAKE_FLOAT4(-128.0f);
 
     // Multiply pixel data by mask
     pix_f8.f4[0] = mask ? pix_f8.f4[0] : mask_f4;
