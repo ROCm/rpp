@@ -1743,7 +1743,7 @@ int main(int argc, char **argv)
                     {
                         case CHANNEL:
                         {
-                            testCaseName = "channel";
+                            testCaseName = "channel_dropout";
                             bool randomSeed = qaFlag ? 0 : 1;
                             for (i = 0; i < batchSize; i++)
                                 dropoutProbability[i] = 0.4f;
