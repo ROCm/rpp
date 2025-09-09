@@ -152,7 +152,8 @@ int main(int argc, char **argv)
     {
         switch (additionalParam)
         {
-            case CHANNEL:funcName += "_channel"; break;
+            case CHANNEL:
+                funcName += "_channel"; break;
         }
     }
     if (funcName.empty())
@@ -1730,14 +1731,14 @@ int main(int argc, char **argv)
                         case CHANNEL:
                         {
                             testCaseName = "channel";
-                            Rpp32f dropProb[batchSize];
+                            Rpp32f droputProbability[batchSize];
                             for (i = 0; i < batchSize; i++)
-                                dropProb[i] = 0.4f;
+                                droputProbability[i] = 0.4f;
 
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropProb, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, droputProbability, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 

@@ -1353,7 +1353,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     RpptDescPtr srcDescPtr,
                                     RppPtr_t dstPtr,
                                     RpptDescPtr dstDescPtr,
-                                    Rpp32f *dropProb,
+                                    Rpp32f *droputProbability,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
@@ -1361,7 +1361,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     for(int i = 0; i < srcDescPtr->n; i++)
-        if(dropProb[i] < 0 || dropProb[i] > 1)
+        if(droputProbability[i] < 0 || droputProbability[i] > 1)
             return RPP_ERROR_INVALID_ARGUMENTS;
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -1371,7 +1371,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     srcDescPtr,
                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
-                                    dropProb,
+                                    droputProbability,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -1383,7 +1383,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
-                                     dropProb,
+                                     droputProbability,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1395,7 +1395,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
-                                     dropProb,
+                                     droputProbability,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1407,7 +1407,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     srcDescPtr,
                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
-                                    dropProb,
+                                    droputProbability,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -2833,7 +2833,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   Rpp32f *dropProb,
+                                   Rpp32f *droputProbability,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
@@ -2842,7 +2842,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     for(int i = 0; i < srcDescPtr->n; i++)
-        if(dropProb[i] < 0 || dropProb[i] > 1)
+        if(droputProbability[i] < 0 || droputProbability[i] > 1)
             return RPP_ERROR_INVALID_ARGUMENTS;
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
@@ -2853,7 +2853,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                srcDescPtr,
                                                static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
                                                dstDescPtr,
-                                               dropProb,
+                                               droputProbability,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -2864,7 +2864,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                srcDescPtr,
                                                reinterpret_cast<half *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
-                                               dropProb,
+                                               droputProbability,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -2875,7 +2875,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                srcDescPtr,
                                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
-                                               dropProb,
+                                               droputProbability,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -2886,7 +2886,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                srcDescPtr,
                                                static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
                                                dstDescPtr,
-                                               dropProb,
+                                               droputProbability,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));

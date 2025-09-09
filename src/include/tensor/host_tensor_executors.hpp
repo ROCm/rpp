@@ -842,6 +842,7 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams);
 
+
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- copy --------------------

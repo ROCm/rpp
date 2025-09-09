@@ -262,6 +262,7 @@ template RppStatus channel_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                       RpptRoiType,
                                                       RppLayoutParams,
                                                       rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
@@ -271,6 +272,7 @@ template RppStatus channel_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                        RpptRoiType,
                                                        RppLayoutParams,
                                                        rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                        RpptDescPtr,
                                                        Rpp16f*,
@@ -280,6 +282,7 @@ template RppStatus channel_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                        RpptRoiType,
                                                        RppLayoutParams,
                                                        rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp8s*,

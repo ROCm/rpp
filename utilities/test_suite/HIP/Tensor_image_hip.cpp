@@ -142,7 +142,8 @@ int main(int argc, char **argv)
     {
         switch (additionalParam)
         {
-            case CHANNEL:funcName += "_channel"; break;
+            case CHANNEL:
+                funcName += "_channel"; break;
         }
     }
     if (funcName.empty())
@@ -466,6 +467,12 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+    }
+
+    Rpp32f *droputProbability = nullptr;
+    if(testCase == DROPOUT && dropoutTypeCase == CHANNEL)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&droputProbability, batchSize * sizeof(Rpp32f)));
     }
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -1719,13 +1726,12 @@ int main(int argc, char **argv)
                         case CHANNEL:
                         {
                             testCaseName = "channel";
-                            Rpp32f dropProb[batchSize];
                             for (i = 0; i < batchSize; i++)
-                                dropProb[i] = 0.4f;
+                                droputProbability[i] = 0.4f;
 
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dropProb, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, droputProbability, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
@@ -1995,5 +2001,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
+    if(droputProbability != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(droputProbability));
     return 0;
 }

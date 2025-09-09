@@ -43,15 +43,13 @@ template<typename T>
 __device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor, T *srcPtr)
 {
     // Convert mask values (0 or 1) for R, G, B
-    float maskR, maskG, maskB;
-    maskR = static_cast<float>(maskTensor[0]);
-    maskG = static_cast<float>(maskTensor[1]);
-    maskB = static_cast<float>(maskTensor[2]);
+    float maskR = static_cast<float>(maskTensor[0]);
+    float maskG = static_cast<float>(maskTensor[1]);
+    float maskB = static_cast<float>(maskTensor[2]);
     
-    float4 maskR_f4, maskG_f4, maskB_f4;
-    maskR_f4 = make_float4(maskR, maskR, maskR, maskR);
-    maskG_f4 = make_float4(maskG, maskG, maskG, maskG);
-    maskB_f4 = make_float4(maskB, maskB, maskB, maskB);
+    float4 maskR_f4 = make_float4(maskR, maskR, maskR, maskR);
+    float4 maskG_f4 = make_float4(maskG, maskG, maskG, maskG);
+    float4 maskB_f4 = make_float4(maskB, maskB, maskB, maskB);
 
     // Multiply each channel’s pixels by its mask
     pix_f24.f4[0] = pix_f24.f4[0] * maskR_f4; // Red
@@ -78,13 +76,11 @@ __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *ma
 __device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor, schar *srcPtr)
 {
     // Convert mask values (0 or 1) for R, G, B
-    float maskR, maskG, maskB;
-    maskR = static_cast<float>(maskTensor[0]);
-    maskG = static_cast<float>(maskTensor[1]);
-    maskB = static_cast<float>(maskTensor[2]);
+    float maskR = static_cast<float>(maskTensor[0]);
+    float maskG = static_cast<float>(maskTensor[1]);
+    float maskB = static_cast<float>(maskTensor[2]);
     
-    float4 mask_f4;
-    mask_f4 = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
+    float4 mask_f4 = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
 
     // Multiply each channel’s pixels by its mask
     pix_f24.f4[0] = maskR ? pix_f24.f4[0] : mask_f4; // Red
@@ -109,10 +105,10 @@ __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x * 3 + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float24 dst_f24;
@@ -261,8 +257,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NHWC && srcDescPtr->c == 3)
     {
-        //Processing 24 pixels per thread
-        globalThreads_x = (dstDescPtr->strides.hStride + 23) / 24;
+        int globalThreads_x = (dstDescPtr->w + 7) >> 3;
         hipLaunchKernelGGL(channel_dropout_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -330,6 +325,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp8u>(Rpp8u*,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
+
 template RppStatus hip_exec_channel_dropout_tensor<Rpp8s>(Rpp8s*,
                                                           RpptDescPtr,
                                                           Rpp8s*,
@@ -338,6 +334,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp8s>(Rpp8s*,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
+
 template RppStatus hip_exec_channel_dropout_tensor<Rpp32f>(Rpp32f*,
                                                            RpptDescPtr,
                                                            Rpp32f*,
@@ -346,6 +343,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp32f>(Rpp32f*,
                                                            RpptROIPtr,
                                                            RpptRoiType,
                                                            rpp::Handle&);
+
 template RppStatus hip_exec_channel_dropout_tensor<half>(half*,
                                                          RpptDescPtr,
                                                          half*,
