@@ -60,21 +60,21 @@ __device__ void check_locs(d_float8 &xLocVals, d_float8 &yLocVals, RpptPoint2D o
 __device__ void compute_glitch_locs_hip(int id_x, int id_y, RpptChannelOffsets rgbOffsets, RpptROI roiTensorPtrSrc, d_float24 *srcLocsX_f24, d_float24 *srcLocsY_f24)
 {
     float4 increment_f4;
-    increment_f4 = make_float4(0.0f, 1.0f, 2.0f, 3.0f);                                         // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 0, 1, 2, 3 here, and adding (float4)4 later to get 4, 5, 6, 7 incremented srcLocs
+    increment_f4 = make_float4(0.0f, 1.0f, 2.0f, 3.0f);                                         // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 0, 1, 2, 3 here, and adding MAKE_FLOAT4(4) later to get 4, 5, 6, 7 incremented srcLocs
 
-    srcLocsX_f24->f4[0] = static_cast<float4>(id_x + rgbOffsets.r.x) + increment_f4;            // find R channel srcLocsX 0, 1, 2, 3
-    srcLocsX_f24->f4[1] = srcLocsX_f24->f4[0] + (float4) 4;                                     // find R channel srcLocsX 4, 5, 6, 7
-    srcLocsY_f24->f4[0] = srcLocsY_f24->f4[1] = static_cast<float4>(id_y + rgbOffsets.r.y);     // find R channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
+    srcLocsX_f24->f4[0] = MAKE_FLOAT4(id_x + rgbOffsets.r.x) + increment_f4;            // find R channel srcLocsX 0, 1, 2, 3
+    srcLocsX_f24->f4[1] = srcLocsX_f24->f4[0] + MAKE_FLOAT4(4);                                     // find R channel srcLocsX 4, 5, 6, 7
+    srcLocsY_f24->f4[0] = srcLocsY_f24->f4[1] = MAKE_FLOAT4(id_y + rgbOffsets.r.y);     // find R channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
     check_locs(srcLocsX_f24->f8[0], srcLocsY_f24->f8[0], rgbOffsets.r, roiTensorPtrSrc);        // check if all srcLocs in roi bounds
 
-    srcLocsX_f24->f4[2] = static_cast<float4>(id_x + rgbOffsets.g.x) + increment_f4;            // find G channel srcLocsX 0, 1, 2, 3
-    srcLocsX_f24->f4[3] = srcLocsX_f24->f4[2] +(float4) 4;                                      // find G channel srcLocsX 4, 5, 6, 7
-    srcLocsY_f24->f4[2] = srcLocsY_f24->f4[3]  = static_cast<float4>(id_y + rgbOffsets.g.y);    // find G channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
+    srcLocsX_f24->f4[2] = MAKE_FLOAT4(id_x + rgbOffsets.g.x) + increment_f4;            // find G channel srcLocsX 0, 1, 2, 3
+    srcLocsX_f24->f4[3] = srcLocsX_f24->f4[2] + MAKE_FLOAT4(4);                                      // find G channel srcLocsX 4, 5, 6, 7
+    srcLocsY_f24->f4[2] = srcLocsY_f24->f4[3]  = MAKE_FLOAT4(id_y + rgbOffsets.g.y);    // find G channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
     check_locs(srcLocsX_f24->f8[1], srcLocsY_f24->f8[1], rgbOffsets.g, roiTensorPtrSrc);        // check if all srcLocs in roi bounds
 
-    srcLocsX_f24->f4[4] = static_cast<float4>(id_x + rgbOffsets.b.x) + increment_f4;            // find B channel srcLocsX 0, 1, 2, 3
-    srcLocsX_f24->f4[5] = srcLocsX_f24->f4[4] + (float4) 4;                                     // find B channel srcLocsX 4, 5, 6, 7
-    srcLocsY_f24->f4[4] = srcLocsY_f24->f4[5] = static_cast<float4>(id_y + rgbOffsets.b.y);     // find B channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
+    srcLocsX_f24->f4[4] = MAKE_FLOAT4(id_x + rgbOffsets.b.x) + increment_f4;            // find B channel srcLocsX 0, 1, 2, 3
+    srcLocsX_f24->f4[5] = srcLocsX_f24->f4[4] + MAKE_FLOAT4(4);                                     // find B channel srcLocsX 4, 5, 6, 7
+    srcLocsY_f24->f4[4] = srcLocsY_f24->f4[5] = MAKE_FLOAT4(id_y + rgbOffsets.b.y);     // find B channel srcLocsY 0, 1, 2, 3 and 4, 5, 6, 7
     check_locs(srcLocsX_f24->f8[2], srcLocsY_f24->f8[2], rgbOffsets.b, roiTensorPtrSrc);        // check if all srcLocs in roi bounds
 }
 

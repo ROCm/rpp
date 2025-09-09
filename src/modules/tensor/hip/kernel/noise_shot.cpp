@@ -55,24 +55,24 @@ __device__ void shot_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBox
 }
 
 __device__ void shot_noise_8_adjusted_input_hip_compute(uchar *srcPtr, d_float8 *pix_f8) {}
-__device__ void shot_noise_8_adjusted_input_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, (float4)255.0f); }
-__device__ void shot_noise_8_adjusted_input_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_add8_const(pix_f8, pix_f8, (float4)128.0f); }
-__device__ void shot_noise_8_adjusted_input_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, (float4)255.0f); }
+__device__ void shot_noise_8_adjusted_input_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_255); }
+__device__ void shot_noise_8_adjusted_input_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_add8_const(pix_f8, pix_f8, FLOAT4_128); }
+__device__ void shot_noise_8_adjusted_input_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_255); }
 
 __device__ void shot_noise_24_adjusted_input_hip_compute(uchar *srcPtr, d_float24 *pix_f24) {}
-__device__ void shot_noise_24_adjusted_input_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, (float4)255.0f); }
-__device__ void shot_noise_24_adjusted_input_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_add24_const(pix_f24, pix_f24, (float4)128.0f); }
-__device__ void shot_noise_24_adjusted_input_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, (float4)255.0f); }
+__device__ void shot_noise_24_adjusted_input_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_255); }
+__device__ void shot_noise_24_adjusted_input_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_add24_const(pix_f24, pix_f24, FLOAT4_128); }
+__device__ void shot_noise_24_adjusted_input_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_255); }
 
 __device__ void shot_noise_8_adjusted_output_hip_compute(uchar *srcPtr, d_float8 *pix_f8) {}
-__device__ void shot_noise_8_adjusted_output_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, (float4)ONE_OVER_255); }
-__device__ void shot_noise_8_adjusted_output_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_subtract8_const(pix_f8, pix_f8, (float4)128.0f); }
-__device__ void shot_noise_8_adjusted_output_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, (float4)ONE_OVER_255); }
+__device__ void shot_noise_8_adjusted_output_hip_compute(float *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_ONE_OVER_255); }
+__device__ void shot_noise_8_adjusted_output_hip_compute(schar *srcPtr, d_float8 *pix_f8) { rpp_hip_math_subtract8_const(pix_f8, pix_f8, FLOAT4_128); }
+__device__ void shot_noise_8_adjusted_output_hip_compute(half *srcPtr, d_float8 *pix_f8) { rpp_hip_math_multiply8_const(pix_f8, pix_f8, FLOAT4_ONE_OVER_255); }
 
 __device__ void shot_noise_24_adjusted_output_hip_compute(uchar *srcPtr, d_float24 *pix_f24) {}
-__device__ void shot_noise_24_adjusted_output_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, (float4)ONE_OVER_255); }
-__device__ void shot_noise_24_adjusted_output_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_subtract24_const(pix_f24, pix_f24, (float4)128.0f); }
-__device__ void shot_noise_24_adjusted_output_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, (float4)ONE_OVER_255); }
+__device__ void shot_noise_24_adjusted_output_hip_compute(float *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_ONE_OVER_255); }
+__device__ void shot_noise_24_adjusted_output_hip_compute(schar *srcPtr, d_float24 *pix_f24) { rpp_hip_math_subtract24_const(pix_f24, pix_f24, FLOAT4_128); }
+__device__ void shot_noise_24_adjusted_output_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, FLOAT4_ONE_OVER_255); }
 
 template <typename T>
 __global__ void shot_noise_pkd_hip_tensor(T *srcPtr,
@@ -116,9 +116,9 @@ __global__ void shot_noise_pkd_hip_tensor(T *srcPtr,
         xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
         shot_noise_24_adjusted_input_hip_compute(srcPtr, &pix_f24);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactorInv);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactorInv));
         shot_noise_24_hip_compute(&pix_f24, &xorwowState);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactor);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactor));
         rpp_hip_pixel_check_0to255(&pix_f24);
         shot_noise_24_adjusted_output_hip_compute(srcPtr, &pix_f24);
     }
@@ -168,9 +168,9 @@ __global__ void shot_noise_pln_hip_tensor(T *srcPtr,
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
         shot_noise_8_adjusted_input_hip_compute(srcPtr, &pix_f8);
-        rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactorInv);
+        rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactorInv));
         shot_noise_8_hip_compute(&pix_f8, &xorwowState);
-        rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactor);
+        rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactor));
         rpp_hip_pixel_check_0to255(&pix_f8);
         shot_noise_8_adjusted_output_hip_compute(srcPtr, &pix_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
@@ -182,9 +182,9 @@ __global__ void shot_noise_pln_hip_tensor(T *srcPtr,
 
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
             shot_noise_8_adjusted_input_hip_compute(srcPtr, &pix_f8);
-            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactorInv);
+            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactorInv));
             shot_noise_8_hip_compute(&pix_f8, &xorwowState);
-            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactor);
+            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactor));
             rpp_hip_pixel_check_0to255(&pix_f8);
             shot_noise_8_adjusted_output_hip_compute(srcPtr, &pix_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
@@ -194,9 +194,9 @@ __global__ void shot_noise_pln_hip_tensor(T *srcPtr,
 
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
             shot_noise_8_adjusted_input_hip_compute(srcPtr, &pix_f8);
-            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactorInv);
+            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactorInv));
             shot_noise_8_hip_compute(&pix_f8, &xorwowState);
-            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, (float4)shotNoiseFactor);
+            rpp_hip_math_multiply8_const(&pix_f8, &pix_f8, MAKE_FLOAT4(shotNoiseFactor));
             rpp_hip_pixel_check_0to255(&pix_f8);
             shot_noise_8_adjusted_output_hip_compute(srcPtr, &pix_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
@@ -266,9 +266,9 @@ __global__ void shot_noise_pkd3_pln3_hip_tensor(T *srcPtr,
         xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
         shot_noise_24_adjusted_input_hip_compute(srcPtr, &pix_f24);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactorInv);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactorInv));
         shot_noise_24_hip_compute(&pix_f24, &xorwowState);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactor);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactor));
         rpp_hip_pixel_check_0to255(&pix_f24);
         shot_noise_24_adjusted_output_hip_compute(srcPtr, &pix_f24);
     }
@@ -317,9 +317,9 @@ __global__ void shot_noise_pln3_pkd3_hip_tensor(T *srcPtr,
         xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
         shot_noise_24_adjusted_input_hip_compute(srcPtr, &pix_f24);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactorInv);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactorInv));
         shot_noise_24_hip_compute(&pix_f24, &xorwowState);
-        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, (float4)shotNoiseFactor);
+        rpp_hip_math_multiply24_const(&pix_f24, &pix_f24, MAKE_FLOAT4(shotNoiseFactor));
         rpp_hip_pixel_check_0to255(&pix_f24);
         shot_noise_24_adjusted_output_hip_compute(srcPtr, &pix_f24);
     }

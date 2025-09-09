@@ -98,6 +98,7 @@ imageAugmentationMap = {
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
     93: ["jpeg_compression_distortion", "HOST", "HIP"],
+    94: ["posterize", "HOST", "HIP"],
     95: ["dropout", "HOST", "HIP"]
 }
 

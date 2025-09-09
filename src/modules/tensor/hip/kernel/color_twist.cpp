@@ -60,7 +60,7 @@ __device__ void color_twist_8RGB_hip_compute(d_float24 *pix_f24, float4 *colorTw
 
 __device__ void color_twist_hip_compute(uchar *srcPtr, d_float24 *pix_f24, float4 *colorTwistParams_f4)
 {
-    float4 normalizer_f4 = (float4) ONE_OVER_255;
+    float4 normalizer_f4 = FLOAT4_ONE_OVER_255;
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     colorTwistParams_f4->x = colorTwistParams_f4->x * 255.0f;
     colorTwistParams_f4->z = (((int)colorTwistParams_f4->z) % 360) * SIX_OVER_360;
@@ -83,8 +83,8 @@ __device__ void color_twist_hip_compute(half *srcPtr, d_float24 *pix_f24, float4
 }
 __device__ void color_twist_hip_compute(schar *srcPtr, d_float24 *pix_f24, float4 *colorTwistParams_f4)
 {
-    float4 i8Offset_f4 = (float4) 128.0f;
-    float4 normalizer_f4 = (float4) ONE_OVER_255;
+    float4 i8Offset_f4 =  FLOAT4_128;
+    float4 normalizer_f4 = FLOAT4_ONE_OVER_255;
     rpp_hip_math_add24_const(pix_f24, pix_f24, i8Offset_f4);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     colorTwistParams_f4->x = colorTwistParams_f4->x * 255.0f;

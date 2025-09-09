@@ -469,11 +469,14 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
     }
 
+
+    Rpp8u *posterizeLevelBits = nullptr;
+    if(testCase == POSTERIZE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
+
     Rpp32f *droputProbability = nullptr;
     if(testCase == DROPOUT && dropoutTypeCase == CHANNEL)
-    {
         CHECK_RETURN_STATUS(hipHostMalloc(&droputProbability, batchSize * sizeof(Rpp32f)));
-    }
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1717,6 +1720,21 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case POSTERIZE:
+                {
+                    testCaseName = "posterize";
+
+                    for(i = 0; i < batchSize; i++)
+                        posterizeLevelBits[i] = 3;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_posterize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case DROPOUT:
                 {
                     testCaseName = "dropout";
@@ -1743,8 +1761,6 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
-
-                    break;
                 }
                 default:
                 {
@@ -2001,6 +2017,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
+    if (posterizeLevelBits != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
     if(droputProbability != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(droputProbability));
     return 0;

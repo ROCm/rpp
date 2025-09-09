@@ -123,6 +123,7 @@ std::map<int, string> augmentationMap =
     {91, "tensor_stddev"},
     {92, "slice"},
     {93, "jpeg_compression_distortion"},
+    {94, "posterize"},
     {95, "dropout"}
 };
 
@@ -186,6 +187,7 @@ enum Augmentation {
     TENSOR_STDDEV = 91,
     SLICE = 92,
     JPEG_COMPRESSION_DISTORTION = 93,
+    POSTERIZE = 94,
     DROPOUT = 95
 };
 
