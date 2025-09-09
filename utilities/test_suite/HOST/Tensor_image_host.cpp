@@ -1750,13 +1750,14 @@ int main(int argc, char **argv)
                         {
                             testCaseName = "channel";
                             Rpp32f dropoutProbability[batchSize];
+                            bool randomSeed = qaFlag ? 0 : 1;
                             for (i = 0; i < batchSize; i++)
                                 dropoutProbability[i] = 0.4f;
 
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, &randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
