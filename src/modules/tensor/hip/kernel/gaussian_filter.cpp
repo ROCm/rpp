@@ -324,12 +324,12 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     float *filter_row1 = &filterTensor[id_z * 9];
     float *filter_row2 = &filter_row1[3];
     float *filter_row3 = &filter_row1[6];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -348,9 +348,9 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -400,12 +400,12 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[10];
     float *filter_row4 = &filter_row1[15];
     float *filter_row5 = &filter_row1[20];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -424,9 +424,9 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -484,12 +484,12 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[28];
     float *filter_row6 = &filter_row1[35];
     float *filter_row7 = &filter_row1[42];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -508,9 +508,9 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -576,12 +576,12 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[54];
     float *filter_row8 = &filter_row1[63];
     float *filter_row9 = &filter_row1[72];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -600,9 +600,9 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -672,13 +672,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     float *filter_row1 = &filterTensor[id_z * 9];
     float *filter_row2 = &filter_row1[3];
     float *filter_row3 = &filter_row1[6];
-    sum_f8.f4[0] = static_cast<float4>(0);
-    sum_f8.f4[1] = static_cast<float4>(0);
+    sum_f8.f4[0] = FLOAT4_ZERO;
+    sum_f8.f4[1] = FLOAT4_ZERO;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -697,13 +697,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -720,13 +720,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -771,13 +771,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[10];
     float *filter_row4 = &filter_row1[15];
     float *filter_row5 = &filter_row1[20];
-    sum_f8.f4[0] = static_cast<float4>(0);
-    sum_f8.f4[1] = static_cast<float4>(0);
+    sum_f8.f4[0] = FLOAT4_ZERO;
+    sum_f8.f4[1] = FLOAT4_ZERO;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -798,13 +798,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -823,13 +823,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -878,13 +878,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[28];
     float *filter_row6 = &filter_row1[35];
     float *filter_row7 = &filter_row1[42];
-    sum_f8.f4[0] = static_cast<float4>(0);
-    sum_f8.f4[1] = static_cast<float4>(0);
+    sum_f8.f4[0] = FLOAT4_ZERO;
+    sum_f8.f4[1] = FLOAT4_ZERO;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -907,13 +907,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -934,13 +934,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -993,13 +993,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[54];
     float *filter_row8 = &filter_row1[63];
     float *filter_row9 = &filter_row1[72];
-    sum_f8.f4[0] = static_cast<float4>(0);
-    sum_f8.f4[1] = static_cast<float4>(0);
+    sum_f8.f4[0] = FLOAT4_ZERO;
+    sum_f8.f4[1] = FLOAT4_ZERO;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1024,13 +1024,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1053,13 +1053,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = static_cast<float4>(0);
-        sum_f8.f4[1] = static_cast<float4>(0);
+        sum_f8.f4[0] = FLOAT4_ZERO;
+        sum_f8.f4[1] = FLOAT4_ZERO;
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+            *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y][hipThreadIdx_x8])) = UINT2_ZERO;
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1109,12 +1109,12 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row1 = &filterTensor[id_z * 9];
     float *filter_row2 = &filter_row1[3];
     float *filter_row3 = &filter_row1[6];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1133,9 +1133,9 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1185,12 +1185,12 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[10];
     float *filter_row4 = &filter_row1[15];
     float *filter_row5 = &filter_row1[20];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1209,9 +1209,9 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1269,12 +1269,12 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[28];
     float *filter_row6 = &filter_row1[35];
     float *filter_row7 = &filter_row1[42];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1293,9 +1293,9 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1361,12 +1361,12 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[54];
     float *filter_row8 = &filter_row1[63];
     float *filter_row9 = &filter_row1[72];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1385,9 +1385,9 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_smem_channel[0])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[1])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(src_smem_channel[2])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1458,12 +1458,12 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row1 = &filterTensor[id_z * 9];
     float *filter_row2 = &filter_row1[3];
     float *filter_row3 = &filter_row1[6];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1479,9 +1479,9 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1534,12 +1534,12 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[10];
     float *filter_row4 = &filter_row1[15];
     float *filter_row5 = &filter_row1[20];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1555,9 +1555,9 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1618,12 +1618,12 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[28];
     float *filter_row6 = &filter_row1[35];
     float *filter_row7 = &filter_row1[42];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1639,9 +1639,9 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1710,12 +1710,12 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[54];
     float *filter_row8 = &filter_row1[63];
     float *filter_row9 = &filter_row1[72];
-    sum_f24.f4[0] = static_cast<float4>(0);
-    sum_f24.f4[1] = static_cast<float4>(0);
-    sum_f24.f4[2] = static_cast<float4>(0);
-    sum_f24.f4[3] = static_cast<float4>(0);
-    sum_f24.f4[4] = static_cast<float4>(0);
-    sum_f24.f4[5] = static_cast<float4>(0);
+    sum_f24.f4[0] = FLOAT4_ZERO;
+    sum_f24.f4[1] = FLOAT4_ZERO;
+    sum_f24.f4[2] = FLOAT4_ZERO;
+    sum_f24.f4[3] = FLOAT4_ZERO;
+    sum_f24.f4[4] = FLOAT4_ZERO;
+    sum_f24.f4[5] = FLOAT4_ZERO;
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1731,9 +1731,9 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
-        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = UINT2_ZERO;
+        *(reinterpret_cast<uint2 *>(&src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = UINT2_ZERO;
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&

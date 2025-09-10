@@ -789,17 +789,60 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 RppStatus rppt_fog_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor, Rpp32f *greyFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Channel dropout augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details This function erases one or more user defined channel from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+/*! \brief Posterize augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The posterize augmentation adds a posterize effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html color_augmentations_channel_dropout_img150x150.png Sample Output
+ * \image html effects_augmentations_posterize_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] dropProb dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in HOST memory, of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_posterize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *posterizeLevelBits, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Posterize augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The posterize augmentation adds a posterize effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_posterize_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in pinned memory, of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HIP memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_posterize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *posterizeLevelBits, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif
+
+/*! \brief Channel dropout augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The channel dropout augmentation function erases one or more user defined channel from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_channel_dropout_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] randomSeed control the random number generator's seed.
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -807,11 +850,11 @@ RppStatus rppt_fog_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropProb, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, bool *randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Channel Dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details This function erases one or more user defined channel from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The channel dropout augmentation function erases one or more user defined channel from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -820,7 +863,8 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] dropProb dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] randomSeed control the random number generator's seed.
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -828,7 +872,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropProb, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, bool *randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! \brief Cutout dropout augmentation on HOST backend for a NCHW/NHWC layout tensor
@@ -930,6 +974,7 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  */
 RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, RppPtr_t colorsTensor, Rpp32u *numBoxesTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
 /*! @}
  */
 

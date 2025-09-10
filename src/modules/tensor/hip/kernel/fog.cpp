@@ -28,12 +28,12 @@ SOFTWARE.
 __device__ __forceinline__ void fog_grey_hip_compute(d_float8 *r_f8, d_float8 *g_f8, d_float8 *b_f8, float4 *greyFactor_f4)
 {
     float4 grey_f4[2];
-    float4 rMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_RED);
-    float4 gMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_GREEN);
-    float4 bMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_BLUE);
+    float4 rMultiplier_f4 = MAKE_FLOAT4(RGB_TO_GREY_WEIGHT_RED);
+    float4 gMultiplier_f4 = MAKE_FLOAT4(RGB_TO_GREY_WEIGHT_GREEN);
+    float4 bMultiplier_f4 = MAKE_FLOAT4(RGB_TO_GREY_WEIGHT_BLUE);
     grey_f4[0] = r_f8->f4[0] * rMultiplier_f4 + g_f8->f4[0] * gMultiplier_f4 + b_f8->f4[0] * bMultiplier_f4;
     grey_f4[1] = r_f8->f4[1] * rMultiplier_f4 + g_f8->f4[1] * gMultiplier_f4 + b_f8->f4[1] * bMultiplier_f4;
-    float4 oneMinusGreyFactor_f4 = static_cast<float4>(1.0f) - *greyFactor_f4;
+    float4 oneMinusGreyFactor_f4 = MAKE_FLOAT4(1.0f) - *greyFactor_f4;
     grey_f4[0] = grey_f4[0] * *greyFactor_f4;
     grey_f4[1] = grey_f4[1] * *greyFactor_f4;
     r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
@@ -49,19 +49,19 @@ __device__ __forceinline__ void fog_hip_compute(uchar *srcPtr, d_float8 *src_f8,
     float4 alphaFactor_f4[2];
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0]));
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1]));
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] * (MAKE_FLOAT4(1) - alphaFactor_f4[0])) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0]));
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] * (MAKE_FLOAT4(1) - alphaFactor_f4[1])) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1]));
 }
 
 __device__ __forceinline__ void fog_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
 {
     float4 pixNorm_f4[2], alphaFactor_f4[2];
-    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
-    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * MAKE_FLOAT4(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * MAKE_FLOAT4(ONE_OVER_255);
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
-    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+    dst_f8->f4[0] = (src_f8->f4[0] * (MAKE_FLOAT4(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (MAKE_FLOAT4(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
 }
 
 __device__ __forceinline__ void fog_hip_compute(schar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
@@ -69,19 +69,19 @@ __device__ __forceinline__ void fog_hip_compute(schar *srcPtr, d_float8 *src_f8,
     float4 alphaFactor_f4[2];
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[0]) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0])) - static_cast<float4>(128);
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[1]) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1])) - static_cast<float4>(128);
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + MAKE_FLOAT4(128)) * (MAKE_FLOAT4(1) - alphaFactor_f4[0]) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0])) - MAKE_FLOAT4(128);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + MAKE_FLOAT4(128)) * (MAKE_FLOAT4(1) - alphaFactor_f4[1]) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1])) - MAKE_FLOAT4(128);
 }
 
 __device__ __forceinline__ void fog_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
 {
     float4 pixNorm_f4[2], alphaFactor_f4[2];
-    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
-    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * MAKE_FLOAT4(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * MAKE_FLOAT4(ONE_OVER_255);
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
-    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+    dst_f8->f4[0] = (src_f8->f4[0] * (MAKE_FLOAT4(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (MAKE_FLOAT4(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
 }
 
 template <typename T>
@@ -112,8 +112,8 @@ __global__ void fog_pkd_hip_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
-    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
-    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    float4 intensityFactor_f4 = MAKE_FLOAT4(intensityFactor[id_z]);
+    float4 greyFactor_f4 = MAKE_FLOAT4(greyFactor[id_z]);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
     rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
     rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
@@ -152,8 +152,8 @@ __global__ void fog_pln_hip_tensor(T *srcPtr,
     uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * srcStridesNCH.z) + (id_x + maskLocOffsetX[id_z]);
 
     d_float8 maskAlpha_f8, maskIntensity_f8;
-    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
-    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    float4 intensityFactor_f4 = MAKE_FLOAT4(intensityFactor[id_z]);
+    float4 greyFactor_f4 = MAKE_FLOAT4(greyFactor[id_z]);
     rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
     rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
 
@@ -206,8 +206,8 @@ __global__ void fog_pkd3_pln3_hip_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
-    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
-    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    float4 intensityFactor_f4 = MAKE_FLOAT4(intensityFactor[id_z]);
+    float4 greyFactor_f4 = MAKE_FLOAT4(greyFactor[id_z]);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
     rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
     rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);
@@ -246,8 +246,8 @@ __global__ void fog_pln3_pkd3_hip_tensor(T *srcPtr,
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
-    float4 intensityFactor_f4 = static_cast<float4>(intensityFactor[id_z]);
-    float4 greyFactor_f4 = static_cast<float4>(greyFactor[id_z]);
+    float4 intensityFactor_f4 = MAKE_FLOAT4(intensityFactor[id_z]);
+    float4 greyFactor_f4 = MAKE_FLOAT4(greyFactor[id_z]);
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
     rpp_hip_load8_and_unpack_to_float8(fogAlphaMaskPtr + maskIdx, &maskAlpha_f8);
     rpp_hip_load8_and_unpack_to_float8(fogIntensityMaskPtr + maskIdx, &maskIntensity_f8);

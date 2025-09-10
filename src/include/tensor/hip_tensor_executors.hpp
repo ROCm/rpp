@@ -596,6 +596,18 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
 
+// -------------------- posterize --------------------
+
+template <typename T>
+RppStatus hip_exec_posterize_tensor(T *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    T *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp8u *posterizeLevelBits,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    rpp::Handle& handle);
+
 // -------------------- channel_dropout --------------------
 
 template <typename T>
@@ -603,7 +615,8 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
-                                          Rpp32f *dropProb,
+                                          Rpp32f *dropoutProbability,
+                                          bool *randomSeed,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);

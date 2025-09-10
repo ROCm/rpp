@@ -25,34 +25,13 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include <random>
 
-inline void generate_channel_masks(uint8_t *channelMasks,
-                                   Rpp32f *dropProb,
-                                   Rpp32u batchSize,
-                                   Rpp32u numChannels)
-{
-    std::mt19937 rng(42); // fixed seed, or std::random_device{}()
-    for (int b = 0; b < batchSize; b++)
-    {
-        std::bernoulli_distribution keepDist(1.0f - dropProb[b]);
-        bool anyKept = false;
-        int base = b * numChannels;
-        for (Rpp32u c = 0; c < numChannels; c++)
-        {
-            channelMasks[base + c] = keepDist(rng);
-            anyKept |= channelMasks[base + c];
-        }
-
-        if (!anyKept)
-            channelMasks[base + (rng() % numChannels)] = 1;
-    }
-}
-
 template<typename T>
 RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropProb,
+                                      Rpp32f *dropoutProbability,
+                                      bool *randomSeed,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       RppLayoutParams layoutParams,
@@ -60,10 +39,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
-
-    // Generate channel mask for this batch
-    uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
-    generate_channel_masks(channelMaskHost, dropProb, dstDescPtr->n, srcDescPtr->c);
+    uint8_t *scratchBuffer = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -78,8 +54,21 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        
-        uint8_t *maskPtr = channelMaskHost + batchCount * srcDescPtr->c;
+
+        uint8_t *maskPtr = scratchBuffer + batchCount * srcDescPtr->c;
+        int seed = *randomSeed ? std::random_device{}() : 42;
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        bool anyKept = false;
+        for (Rpp32u c = 0; c < dstDescPtr->c; c++)
+        {
+            maskPtr[c] = keepDist(rng);
+            anyKept |= maskPtr[c];
+        }
+
+        if (!anyKept)
+            maskPtr[rng() % dstDescPtr->c] = 1;
+
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
@@ -152,9 +141,9 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        dstPtrRow[0] = maskPtr[0] ? *srcPtrTempR : -128;
-                        dstPtrRow[1] = maskPtr[1] ? *srcPtrTempG : -128;
-                        dstPtrRow[2] = maskPtr[2] ? *srcPtrTempB : -128;
+                        dstPtrTemp[0] = maskPtr[0] ? *srcPtrTempR : -128;
+                        dstPtrTemp[1] = maskPtr[1] ? *srcPtrTempG : -128;
+                        dstPtrTemp[2] = maskPtr[2] ? *srcPtrTempB : -128;
                     }
                     else
                     {
@@ -195,9 +184,9 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
-                        dstPtrRow[0] = maskPtr[0] ? srcPtrTemp[0] : -128;
-                        dstPtrRow[1] = maskPtr[1] ? srcPtrTemp[1] : -128;
-                        dstPtrRow[2] = maskPtr[2] ? srcPtrTemp[2] : -128;
+                        dstPtrTemp[0] = maskPtr[0] ? srcPtrTemp[0] : -128;
+                        dstPtrTemp[1] = maskPtr[1] ? srcPtrTemp[1] : -128;
+                        dstPtrTemp[2] = maskPtr[2] ? srcPtrTemp[2] : -128;
                     }
                     else
                     {
@@ -258,33 +247,40 @@ template RppStatus channel_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                       Rpp8u*,
                                                       RpptDescPtr,
                                                       Rpp32f*,
+                                                      bool*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,
                                                       rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
+                                                       bool*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        RppLayoutParams,
                                                        rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                        RpptDescPtr,
                                                        Rpp16f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
+                                                       bool*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        RppLayoutParams,
                                                        rpp::Handle&);
+
 template RppStatus channel_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp32f*,
+                                                      bool*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,

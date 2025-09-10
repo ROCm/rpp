@@ -148,13 +148,16 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
-    if (testCase == 94) // dropout
+    if (testCase == DROPOUT)
     {
         switch (additionalParam)
         {
-            case CHANNEL:funcName += "_channel"; break;
-            case CUTOUT:funcName += "_cutout"; break;
-            case GRID:funcName += "_grid"; break;
+            case CHANNEL:
+                funcName += "_channel"; break;
+            case CUTOUT:
+                funcName += "_cutout"; break;
+            case GRID:
+                funcName += "_grid"; break;
         }
     }
     if (funcName.empty())
@@ -1723,6 +1726,24 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case POSTERIZE:
+                {
+                    testCaseName = "posterize";
+
+                    Rpp8u posterizeLevelBits[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        posterizeLevelBits[i] = 3;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_posterize_host(input, srcDescPtr, output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case DROPOUT:
                 {
                     testCaseName = "dropout";
@@ -1731,15 +1752,16 @@ int main(int argc, char **argv)
                     {
                         case CHANNEL:
                         {
-                            testCaseName = "channel";
-                            Rpp32f dropProb[batchSize];
+                            testCaseName = "channel_dropout";
+                            Rpp32f dropoutProbability[batchSize];
+                            bool randomSeed = qaFlag ? 0 : 1;
                             for (i = 0; i < batchSize; i++)
-                                dropProb[i] = 0.4f;
+                                dropoutProbability[i] = 0.4f;
 
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropProb, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, &randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
@@ -1747,7 +1769,7 @@ int main(int argc, char **argv)
                         }
                         case CUTOUT:
                         {
-                            testCaseName = "cutout";
+                            testCaseName = "cutout_dropout";
                             Rpp32u boxesInEachImage = 1;
                             Rpp32f colorBuffer[batchSize * boxesInEachImage];
                             RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
@@ -1766,7 +1788,7 @@ int main(int argc, char **argv)
                         }
                         case GRID:
                         {
-                            testCaseName = "grid";
+                            testCaseName = "grid_dropout";
                             Rpp32u gridH = 10, gridW = 10;
                             Rpp32f holeRatio = 0.4f;
                             bool randomOffset = false;

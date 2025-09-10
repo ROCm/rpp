@@ -842,6 +842,7 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams);
 
+
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- copy --------------------
@@ -1625,6 +1626,38 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
+// -------------------- posterize --------------------
+
+RppStatus posterize_char_host_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp8u *posterizeLevelBits,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus posterize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp8u *posterizeLevelBits,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp16f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp8u *posterizeLevelBits,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
 // -------------------- channel_dropout --------------------
 
 template<typename T>
@@ -1632,7 +1665,8 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropProb,
+                                      Rpp32f *dropoutProbability,
+                                      bool *randomSeed,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       RppLayoutParams layoutParams,
