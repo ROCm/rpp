@@ -25,12 +25,12 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "kernel_dims.hpp"
 
-__device__ uint4 add_uchar4_parts(uchar4 srcHalf1, uchar4 srcHalf2)
+__device__ __forceinline__ uint4 add_uchar4_parts(uchar4 srcHalf1, uchar4 srcHalf2)
 {
     return make_uint4(srcHalf1.x + srcHalf2.x, srcHalf1.y + srcHalf2.y, srcHalf1.z + srcHalf2.z, srcHalf1.w + srcHalf2.w);
 }
 
-__device__ int4 add_schar4_parts(char4 srcHalf1, char4 srcHalf2)
+__device__ __forceinline__ int4 add_schar4_parts(char4 srcHalf1, char4 srcHalf2)
 {
     return make_int4(srcHalf1.x + srcHalf2.x, srcHalf1.y + srcHalf2.y, srcHalf1.z + srcHalf2.z, srcHalf1.w + srcHalf2.w);
 }
@@ -753,24 +753,24 @@ __global__ void tensor_sum_pln3_hip(Rpp8u *srcPtr,
             src_uc24.uc8[2].uc1[i] = 0;
         }
     }
-    uint4 src_rchn, src_gchn, src_bchn;
+    uint4 srcChannelR, srcChannelG, srcChannelB;
 
-    src_rchn = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
-    src_gchn = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
-    src_bchn = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
+    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
+    srcChannelG = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
+    srcChannelB = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
 
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
-                                              src_rchn.y +
-                                              src_rchn.z +
-                                              src_rchn.w);                                      // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
-                                              src_gchn.y +
-                                              src_gchn.z +
-                                              src_gchn.w);                                      // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
-                                              src_bchn.y +
-                                              src_bchn.z +
-                                              src_bchn.w);                                      // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (srcChannelR.x +
+                                              srcChannelR.y +
+                                              srcChannelR.z +
+                                              srcChannelR.w);                                   // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (srcChannelG.x +
+                                              srcChannelG.y +
+                                              srcChannelG.z +
+                                              srcChannelG.w);                                   // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (srcChannelB.x +
+                                              srcChannelB.y +
+                                              srcChannelB.z +
+                                              srcChannelB.w);                                   // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                            // syncthreads after Shared load
 
@@ -859,24 +859,24 @@ __global__ void tensor_sum_pln3_hip(Rpp8s *srcPtr,
         }
     }
 
-    int4 src_rchn, src_gchn, src_bchn;
+    int4 srcChannelR, srcChannelG, srcChannelB;
 
-    src_rchn = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
-    src_gchn = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
-    src_bchn = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
+    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
+    srcChannelG = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
+    srcChannelB = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
 
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
-                                              src_rchn.y +
-                                              src_rchn.z +
-                                              src_rchn.w);                                      // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
-                                              src_gchn.y +
-                                              src_gchn.z +
-                                              src_gchn.w);                                      // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
-                                              src_bchn.y +
-                                              src_bchn.z +
-                                              src_bchn.w);                                      // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (srcChannelR.x +
+                                              srcChannelR.y +
+                                              srcChannelR.z +
+                                              srcChannelR.w);                                   // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (srcChannelG.x +
+                                              srcChannelG.y +
+                                              srcChannelG.z +
+                                              srcChannelG.w);                                   // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (srcChannelB.x +
+                                              srcChannelB.y +
+                                              srcChannelB.z +
+                                              srcChannelB.w);                                   // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                            // syncthreads after Shared load
 
@@ -1054,11 +1054,11 @@ __global__ void tensor_sum_pkd3_hip(Rpp8u *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
     d_uchar24 src_uc24;
-    uchar* src_chn_ptr[3];
-    src_chn_ptr[0] = (uchar*)(&src_uc24.uc8[0]);
-    src_chn_ptr[1] = (uchar*)(&src_uc24.uc8[1]);
-    src_chn_ptr[2] = (uchar*)(&src_uc24.uc8[2]);
-    rpp_hip_load24_pkd3_to_uchar8_pln3(srcPtr + srcIdx, src_chn_ptr);
+    uchar* srcChannelPtr[3];
+    srcChannelPtr[0] = (uchar*)(&src_uc24.uc8[0]);
+    srcChannelPtr[1] = (uchar*)(&src_uc24.uc8[1]);
+    srcChannelPtr[2] = (uchar*)(&src_uc24.uc8[2]);
+    rpp_hip_load24_pkd3_to_uchar8_pln3(srcPtr + srcIdx, srcChannelPtr);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                          // local memory reset of invalid values (from the vectorized global load) to 0
     {
@@ -1070,24 +1070,24 @@ __global__ void tensor_sum_pkd3_hip(Rpp8u *srcPtr,
         }
     }
 
-    uint4 src_rchn, src_gchn, src_bchn;
+    uint4 srcChannelR, srcChannelG, srcChannelB;
 
-    src_rchn = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
-    src_gchn = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
-    src_bchn = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
+    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
+    srcChannelG = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
+    srcChannelB = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
 
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
-                                              src_rchn.y +
-                                              src_rchn.z +
-                                              src_rchn.w);                          // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
-                                              src_gchn.y +
-                                              src_gchn.z +
-                                              src_gchn.w);                          // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
-                                              src_bchn.y +
-                                              src_bchn.z +
-                                              src_bchn.w);                          // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (srcChannelR.x +
+                                              srcChannelR.y +
+                                              srcChannelR.z +
+                                              srcChannelR.w);                       // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (srcChannelG.x +
+                                              srcChannelG.y +
+                                              srcChannelG.z +
+                                              srcChannelG.w);                       // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (srcChannelB.x +
+                                              srcChannelB.y +
+                                              srcChannelB.z +
+                                              srcChannelB.w);                       // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
@@ -1158,11 +1158,11 @@ __global__ void tensor_sum_pkd3_hip(Rpp8s *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
     d_schar24 src_sc24;
-    schar* src_chn_ptr[3];
-    src_chn_ptr[0] = (schar*)(&src_sc24.sc8[0]);
-    src_chn_ptr[1] = (schar*)(&src_sc24.sc8[1]);
-    src_chn_ptr[2] = (schar*)(&src_sc24.sc8[2]);
-    rpp_hip_load24_pkd3_to_schar8_pln3(srcPtr + srcIdx, src_chn_ptr);
+    schar* srcChannelPtr[3];
+    srcChannelPtr[0] = (schar*)(&src_sc24.sc8[0]);
+    srcChannelPtr[1] = (schar*)(&src_sc24.sc8[1]);
+    srcChannelPtr[2] = (schar*)(&src_sc24.sc8[2]);
+    rpp_hip_load24_pkd3_to_schar8_pln3(srcPtr + srcIdx, srcChannelPtr);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                          // local memory reset of invalid values (from the vectorized global load) to 0
     {
@@ -1174,24 +1174,24 @@ __global__ void tensor_sum_pkd3_hip(Rpp8s *srcPtr,
         }
     }
 
-    int4 src_rchn, src_gchn, src_bchn;
+    int4 srcChannelR, srcChannelG, srcChannelB;
 
-    src_rchn = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
-    src_gchn = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
-    src_bchn = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
+    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
+    srcChannelG = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
+    srcChannelB = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
 
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
-                                              src_rchn.y +
-                                              src_rchn.z +
-                                              src_rchn.w);                          // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
-                                              src_gchn.y +
-                                              src_gchn.z +
-                                              src_gchn.w);                          // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
-                                              src_bchn.y +
-                                              src_bchn.z +
-                                              src_bchn.w);                          // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (srcChannelR.x +
+                                              srcChannelR.y +
+                                              srcChannelR.z +
+                                              srcChannelR.w);                       // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (srcChannelG.x +
+                                              srcChannelG.y +
+                                              srcChannelG.z +
+                                              srcChannelG.w);                       // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (srcChannelB.x +
+                                              srcChannelB.y +
+                                              srcChannelB.z +
+                                              srcChannelB.w);                       // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
 
