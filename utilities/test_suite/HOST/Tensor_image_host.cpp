@@ -1761,7 +1761,7 @@ int main(int argc, char **argv)
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, &randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
@@ -1774,8 +1774,9 @@ int main(int argc, char **argv)
                             Rpp32f colorBuffer[batchSize * boxesInEachImage];
                             RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                             Rpp32u numOfBoxes[batchSize];
+                            bool randomSeed = qaFlag ? 0 : 1;
 
-                            init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth, 0);
+                            init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth, randomSeed, CUTOUT);
 
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
@@ -1796,8 +1797,9 @@ int main(int argc, char **argv)
                             Rpp32u boxesInEachImage = gridH * gridW;
                             Rpp32f colorBuffer[batchSize * 3 * boxesInEachImage];
                             RpptRoiLtrb anchorBoxInfoTensor[batchSize * gridH * gridW];
+                            bool randomSeed = qaFlag ? 0 : 1;
 
-                            init_grid_dropout(batchSize, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, gridH, gridW, holeRatio, randomOffset, colorBuffer, srcDescPtr->c, inputBitDepth);
+                            init_grid_dropout(batchSize, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, gridH, gridW, holeRatio, randomOffset, colorBuffer, srcDescPtr->c, inputBitDepth, randomSeed);
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)

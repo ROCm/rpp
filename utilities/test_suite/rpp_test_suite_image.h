@@ -1603,9 +1603,10 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth, int dropoutType)
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth, bool randomSeed, int dropoutType)
 {
-    std::mt19937 rng(42); // use std::random_device{}() for random dropout region
+    int seed = randomSeed ? std::random_device{}() : 42;
+    std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> w_ratio(0.2f, 0.4f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
@@ -1643,7 +1644,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
         {
             float boxW, boxH;
 
-            if (dropoutType == 0) // Cutout: Perfect square
+            if (dropoutType == 1) // Cutout: Perfect square
             {
                 float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
                 boxW = boxH = std::max(1.0f, squareSize);
@@ -1687,7 +1688,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     }
 }
 
-inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32f holeRatio, bool randomOffset, Rpp32f* colorBuffer, int channels, int inputBitDepth)
+inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32f holeRatio, bool randomOffset, Rpp32f* colorBuffer, int channels, int inputBitDepth, bool randomSeed)
 {
     // Initialize color buffer based on bit depth
     for (int i = 0; i < batchSize * gridH * gridW * channels; i++)
@@ -1701,8 +1702,8 @@ inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* an
         }
     }
 
-    std::random_device rd;  
-    std::mt19937 gen(42); // use rd() for random output
+    int seed = randomSeed ? std::random_device{}() : 42;
+    std::mt19937 rng(seed);
 
     // Generate grid dropout boxes
     for (int i = 0; i < batchSize; ++i)
@@ -1723,6 +1724,8 @@ inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* an
 
         Rpp32u holeW = static_cast<Rpp32u>(cellW * holeRatio);
         Rpp32u holeH = static_cast<Rpp32u>(cellH * holeRatio);
+        std::uniform_int_distribution<int> distX(0, (cellW > holeW) ? cellW - holeW : 0);
+        std::uniform_int_distribution<int> distY(0, (cellH > holeH) ? cellH - holeH : 0);
 
         int boxOffset = i * gridH * gridW;
         int boxCount = 0;
@@ -1738,10 +1741,8 @@ inline void init_grid_dropout(int batchSize, Rpp32u* numOfBoxes, RpptRoiLtrb* an
                 Rpp32s offsetX = 0, offsetY = 0;
                 if (randomOffset && (cellW > holeW) && (cellH > holeH))
                 {
-                    std::uniform_int_distribution<int> distX(0, cellW - holeW);
-                    std::uniform_int_distribution<int> distY(0, cellH - holeH);
-                    offsetX = distX(gen);
-                    offsetY = distY(gen);
+                    offsetX = distX(rng);
+                    offsetY = distY(rng);
                 }
 
                 Rpp32s x1 = std::min(cellX + offsetX, x_base + (Rpp32s)roiW - 1);

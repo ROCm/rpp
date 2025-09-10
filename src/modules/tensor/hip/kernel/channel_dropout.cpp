@@ -218,7 +218,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32f *dropoutProbability,
-                                          bool *randomSeed,
+                                          bool randomSeed,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle &handle)
@@ -232,7 +232,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     // Generate channel mask on host
     uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
-    int seed = *randomSeed ? std::random_device{}() : 42;
+    int seed = randomSeed ? std::random_device{}() : 42;
 #pragma omp parallel for num_threads(dstDescPtr->n)
     for (int b = 0; b < dstDescPtr->n; b++)
     {
@@ -320,7 +320,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp8u>(Rpp8u*,
                                                           Rpp8u*,
                                                           RpptDescPtr,
                                                           Rpp32f*,
-                                                          bool*,
+                                                          bool,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
@@ -330,7 +330,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp8s>(Rpp8s*,
                                                           Rpp8s*,
                                                           RpptDescPtr,
                                                           Rpp32f*,
-                                                          bool*,
+                                                          bool,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
@@ -340,7 +340,7 @@ template RppStatus hip_exec_channel_dropout_tensor<Rpp32f>(Rpp32f*,
                                                            Rpp32f*,
                                                            RpptDescPtr,
                                                            Rpp32f*,
-                                                           bool*,
+                                                           bool,
                                                            RpptROIPtr,
                                                            RpptRoiType,
                                                            rpp::Handle&);
@@ -350,7 +350,7 @@ template RppStatus hip_exec_channel_dropout_tensor<half>(half*,
                                                          half*,
                                                          RpptDescPtr,
                                                          Rpp32f*,
-                                                         bool*,
+                                                         bool,
                                                          RpptROIPtr,
                                                          RpptRoiType,
                                                          rpp::Handle&);
