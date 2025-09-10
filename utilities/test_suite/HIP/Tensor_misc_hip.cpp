@@ -224,7 +224,7 @@ int main(int argc, char **argv)
                 compute_strides(dstDescriptorPtrND);
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_transpose_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_normalize_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_log_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -295,7 +295,7 @@ int main(int argc, char **argv)
             {
                 testCaseName  = "concat";
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_concat_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;

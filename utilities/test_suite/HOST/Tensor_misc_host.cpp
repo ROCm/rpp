@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     bitDepth = atoi(argv[7]);
     string dst = argv[9];
     string scriptPath = argv[10];
-    qaMode = (testType == 0);
+    qaMode = (testType == 0); // unit test mode
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
     int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[8]) : 1;
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
                 compute_strides(dstDescriptorPtrND);
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
                     fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath);
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
                 testCaseName  = "concat";
 
                 startWallTime = omp_get_wtime();
-                if (bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5)
+                if (bitDepth == U8_U8 || bitDepth == F16_F16 || bitDepth == F32_F32 || bitDepth == I8_I8)
                     rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;

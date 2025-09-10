@@ -38,6 +38,7 @@ SOFTWARE.
 #include <iomanip>
 #include "rpp.h"
 #include "nifti1.h"
+#include "rpp_test_suite_common.h"
 
 using namespace std;
 typedef int16_t NIFTI_DATATYPE;
@@ -78,21 +79,6 @@ enum Augmentation {
     MULTIPLY_SCALAR = 5,
     GAUSSIAN_NOISE_VOXEL = 6
 };
-
-void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
-{
-    int remainingFiles = batchCount - (noOfFiles % batchCount);
-    std::string filePath = lastFilePath;
-    std::string fileName = lastFileName;
-    if (noOfFiles > 0 && ( noOfFiles < batchCount || noOfFiles % batchCount != 0 ))
-    {
-        for (int i = 0; i < remainingFiles; i++)
-        {
-            filePathVector.push_back(filePath);
-            fileNamesVector.push_back(fileName);
-        }
-    }
-}
 
 // Opens a folder and recursively search for .nii files
 void open_folder(const string& folderPath, vector<string>& niiFileNames, vector<string>& niiFilePath)
@@ -183,9 +169,9 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
 {
     descriptorPtr3D->numDims = 5;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    if(inputBitDepth == 0)
+    if(inputBitDepth == U8_U8)
         descriptorPtr3D->dataType = RpptDataType::U8;
-    else if(inputBitDepth == 2)
+    else if(inputBitDepth == F32_F32)
         descriptorPtr3D->dataType = RpptDataType::F32;
 
     if (layoutType == 0)
