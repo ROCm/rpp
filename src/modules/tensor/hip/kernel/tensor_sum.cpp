@@ -25,6 +25,11 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "kernel_dims.hpp"
 
+__device__ uint4 add_uchar4_parts(uchar4 src_h1, uchar4 src_h2)
+{
+    return make_uint4(src_h1.x + src_h2.x, src_h1.y + src_h2.y, src_h1.z + src_h2.z, src_h1.w + src_h2.w);
+}
+
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 __global__ void tensor_sum_grid_result_hip(Rpp32u *srcPtr,
                                            uint xBufferLength,
@@ -491,17 +496,17 @@ __global__ void tensor_sum_pln1_hip(Rpp8u *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_uint8 src_ui8;
-    rpp_hip_load8_to_uint8(srcPtr + srcIdx, &src_ui8);                     // load 8 pixels to local memory
+    d_uchar8 src_uc8;
+    rpp_hip_load8_to_uchar8(srcPtr + srcIdx, (uchar*)&src_uc8);                     // load 8 pixels to local memory
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
-            src_ui8.ui1[i] = 0;                                            // local memory reset of invalid values (from the vectorized global load) to 0
-    src_ui8.ui4[0] += src_ui8.ui4[1];                                      // perform small work of vectorized uint4 addition
-    partialSumRowPtr_smem[hipThreadIdx_x] += (src_ui8.ui1[0] +
-                                              src_ui8.ui1[1] +
-                                              src_ui8.ui1[2] +
-                                              src_ui8.ui1[3]);             // perform small work of reducing uint8s to uint using 16 x 16 threads and store in Shared
+            src_uc8.uc1[i] = 0;                                            // local memory reset of invalid values (from the vectorized global load) to 0
+    uint4 src_part_reduced = add_uchar4_parts(src_uc8.uc4[0], src_uc8.uc4[1]);    // perform small work of vectorized uint4 addition
+    partialSumRowPtr_smem[hipThreadIdx_x] += (src_part_reduced.x +
+                                              src_part_reduced.y +
+                                              src_part_reduced.z +
+                                              src_part_reduced.w);             // perform small work of reducing uint8s to uint using 16 x 16 threads and store in Shared
     __syncthreads();                                                       // syncthreads after Shared load
 
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
@@ -1025,33 +1030,41 @@ __global__ void tensor_sum_pkd3_hip(Rpp8u *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;            // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
-    d_uint24 src_ui24;
-    rpp_hip_load24_pkd3_to_uint24_pln3(srcPtr + srcIdx, &src_ui24);
+    d_uchar24 src_uc24;
+    uchar* src_chn_ptr[3];
+    src_chn_ptr[0] = (uchar*)(&src_uc24.uc8[0]);
+    src_chn_ptr[1] = (uchar*)(&src_uc24.uc8[1]);
+    src_chn_ptr[2] = (uchar*)(&src_uc24.uc8[2]);
+    rpp_hip_load24_pkd3_to_uchar8_pln3(srcPtr + srcIdx, src_chn_ptr);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                          // local memory reset of invalid values (from the vectorized global load) to 0
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_ui24.ui8[0].ui1[i] = 0;
-            src_ui24.ui8[1].ui1[i] = 0;
-            src_ui24.ui8[2].ui1[i] = 0;
+            src_uc24.uc8[0].uc1[i] = 0;
+            src_uc24.uc8[1].uc1[i] = 0;
+            src_uc24.uc8[2].uc1[i] = 0;
         }
     }
-    src_ui24.ui8[0].ui4[0] += src_ui24.ui8[0].ui4[1];
-    src_ui24.ui8[1].ui4[0] += src_ui24.ui8[1].ui4[1];
-    src_ui24.ui8[2].ui4[0] += src_ui24.ui8[2].ui4[1];
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[0].ui1[0] +
-                                              src_ui24.ui8[0].ui1[1] +
-                                              src_ui24.ui8[0].ui1[2] +
-                                              src_ui24.ui8[0].ui1[3]);              // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[1].ui1[0] +
-                                              src_ui24.ui8[1].ui1[1] +
-                                              src_ui24.ui8[1].ui1[2] +
-                                              src_ui24.ui8[1].ui1[3]);              // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[2].ui1[0] +
-                                              src_ui24.ui8[2].ui1[1] +
-                                              src_ui24.ui8[2].ui1[2] +
-                                              src_ui24.ui8[2].ui1[3]);              // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
+
+    uint4 src_rchn, src_gchn, src_bchn;
+
+    src_rchn = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
+    src_gchn = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
+    src_bchn = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
+
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
+                                              src_rchn.y +
+                                              src_rchn.z +
+                                              src_rchn.w);              // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
+                                              src_gchn.y +
+                                              src_gchn.z +
+                                              src_gchn.w);              // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
+                                              src_bchn.y +
+                                              src_bchn.z +
+                                              src_bchn.w);              // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
