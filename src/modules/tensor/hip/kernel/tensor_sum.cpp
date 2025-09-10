@@ -30,6 +30,11 @@ __device__ uint4 add_uchar4_parts(uchar4 src_h1, uchar4 src_h2)
     return make_uint4(src_h1.x + src_h2.x, src_h1.y + src_h2.y, src_h1.z + src_h2.z, src_h1.w + src_h2.w);
 }
 
+__device__ int4 add_schar4_parts(char4 src_h1, char4 src_h2)
+{
+    return make_int4(src_h1.x + src_h2.x, src_h1.y + src_h2.y, src_h1.z + src_h2.z, src_h1.w + src_h2.w);
+}
+
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 __global__ void tensor_sum_grid_result_hip(Rpp32u *srcPtr,
                                            uint xBufferLength,
@@ -557,17 +562,18 @@ __global__ void tensor_sum_pln1_hip(Rpp8s *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_int8 src_i8;
-    rpp_hip_load8_to_int8(srcPtr + srcIdx, &src_i8);                        // load 8 pixels to local memory
+    d_schar8 src_sc8;
+    rpp_hip_load8_to_schar8(srcPtr + srcIdx, (schar*)&src_sc8);                        // load 8 pixels to local memory
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
-            src_i8.i1[i] = 0;                                               // local memory reset of invalid values (from the vectorized global load) to 0
-    src_i8.i4[0] += src_i8.i4[1];
-    partialSumRowPtr_smem[hipThreadIdx_x] += (src_i8.i1[0] +
-                                              src_i8.i1[1] +
-                                              src_i8.i1[2] +
-                                              src_i8.i1[3]);                // perform small work of reducing int4s to int using 16 x 16 threads and store in Shared
+            src_sc8.sc1[i] = 0;                                               // local memory reset of invalid values (from the vectorized global load) to 0
+
+    int4 src_part_reduced = add_schar4_parts(src_sc8.sc4[0], src_sc8.sc4[1]);
+    partialSumRowPtr_smem[hipThreadIdx_x] += (src_part_reduced.x +
+                                              src_part_reduced.y +
+                                              src_part_reduced.z +
+                                              src_part_reduced.w);                // perform small work of reducing int4s to int using 16 x 16 threads and store in Shared
     __syncthreads();                                                        // syncthreads after Shared load
 
     // Reduction of 16 ints on 16 threads per block in x dimension (for every y dimension)
@@ -730,33 +736,41 @@ __global__ void tensor_sum_pln3_hip(Rpp8u *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_uint24 src_ui24;
-    rpp_hip_load24_pln3_to_uint24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_ui24);
+    d_uchar24 src_uc24;
+    uchar* srcPtrPln = srcPtr + srcIdx;
+    rpp_hip_load8_to_uchar8(srcPtrPln, (uchar*)&src_uc24.uc8[0]);                     // load 8 pixels to local memory
+    srcPtrPln = srcPtrPln + srcStridesNCH.y;
+    rpp_hip_load8_to_uchar8(srcPtrPln, (uchar*)&src_uc24.uc8[1]);                     // load 8 pixels to local memory
+    srcPtrPln = srcPtrPln + srcStridesNCH.y;
+    rpp_hip_load8_to_uchar8(srcPtrPln, (uchar*)&src_uc24.uc8[2]);                     // load 8 pixels to local memory
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_ui24.ui8[0].ui1[i] = 0;
-            src_ui24.ui8[1].ui1[i] = 0;
-            src_ui24.ui8[2].ui1[i] = 0;
+            src_uc24.uc8[0].uc1[i] = 0;
+            src_uc24.uc8[1].uc1[i] = 0;
+            src_uc24.uc8[2].uc1[i] = 0;
         }
     }
-    src_ui24.ui8[0].ui4[0] += src_ui24.ui8[0].ui4[1];
-    src_ui24.ui8[1].ui4[0] += src_ui24.ui8[1].ui4[1];
-    src_ui24.ui8[2].ui4[0] += src_ui24.ui8[2].ui4[1];
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[0].ui1[0] +
-                                              src_ui24.ui8[0].ui1[1] +
-                                              src_ui24.ui8[0].ui1[2] +
-                                              src_ui24.ui8[0].ui1[3]);                           // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[1].ui1[0] +
-                                              src_ui24.ui8[1].ui1[1] +
-                                              src_ui24.ui8[1].ui1[2] +
-                                              src_ui24.ui8[1].ui1[3]);                           // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_ui24.ui8[2].ui1[0] +
-                                              src_ui24.ui8[2].ui1[1] +
-                                              src_ui24.ui8[2].ui1[2] +
-                                              src_ui24.ui8[2].ui1[3]);                           // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
+    uint4 src_rchn, src_gchn, src_bchn;
+
+    src_rchn = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);
+    src_gchn = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
+    src_bchn = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
+
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
+                                              src_rchn.y +
+                                              src_rchn.z +
+                                              src_rchn.w);                          // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
+                                              src_gchn.y +
+                                              src_gchn.z +
+                                              src_gchn.w);                          // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
+                                              src_bchn.y +
+                                              src_bchn.z +
+                                              src_bchn.w);                            // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                             // syncthreads after Shared load
 
@@ -827,33 +841,42 @@ __global__ void tensor_sum_pln3_hip(Rpp8s *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_int24 src_i24;
-    rpp_hip_load24_pln3_to_int24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_i24);
+    d_schar24 src_sc24;
+    schar* srcPtrPln = srcPtr + srcIdx;
+    rpp_hip_load8_to_schar8(srcPtrPln, (schar*)&src_sc24.sc8[0]);                     // load 8 pixels to local memory
+    srcPtrPln = srcPtrPln + srcStridesNCH.y;
+    rpp_hip_load8_to_schar8(srcPtrPln, (schar*)&src_sc24.sc8[1]);                     // load 8 pixels to local memory
+    srcPtrPln = srcPtrPln + srcStridesNCH.y;
+    rpp_hip_load8_to_schar8(srcPtrPln, (schar*)&src_sc24.sc8[2]);                     // load 8 pixels to local memory
 
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_i24.i8[0].i1[i] = 0;
-            src_i24.i8[1].i1[i] = 0;
-            src_i24.i8[2].i1[i] = 0;
+            src_sc24.sc8[0].sc1[i] = 0;
+            src_sc24.sc8[1].sc1[i] = 0;
+            src_sc24.sc8[2].sc1[i] = 0;
         }
     }
-    src_i24.i8[0].i4[0] += src_i24.i8[0].i4[1];
-    src_i24.i8[1].i4[0] += src_i24.i8[1].i4[1];
-    src_i24.i8[2].i4[0] += src_i24.i8[2].i4[1];
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[0].i1[0] +
-                                              src_i24.i8[0].i1[1] +
-                                              src_i24.i8[0].i1[2] +
-                                              src_i24.i8[0].i1[3]);                             // perform small work of reducing R int4s to int using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[1].i1[0] +
-                                              src_i24.i8[1].i1[1] +
-                                              src_i24.i8[1].i1[2] +
-                                              src_i24.i8[1].i1[3]);                             // perform small work of reducing G int4s to int using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[2].i1[0] +
-                                              src_i24.i8[2].i1[1] +
-                                              src_i24.i8[2].i1[2] +
-                                              src_i24.i8[2].i1[3]);                             // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
+
+    int4 src_rchn, src_gchn, src_bchn;
+
+    src_rchn = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
+    src_gchn = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
+    src_bchn = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
+
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
+                                              src_rchn.y +
+                                              src_rchn.z +
+                                              src_rchn.w);                          // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
+                                              src_gchn.y +
+                                              src_gchn.z +
+                                              src_gchn.w);                          // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
+                                              src_bchn.y +
+                                              src_bchn.z +
+                                              src_bchn.w);                             // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                            // syncthreads after Shared load
 
@@ -1134,33 +1157,41 @@ __global__ void tensor_sum_pkd3_hip(Rpp8s *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;            // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
-    d_int24 src_i24;
-    rpp_hip_load24_pkd3_to_int24_pln3(srcPtr + srcIdx, &src_i24);
+    d_schar24 src_sc24;
+    schar* src_chn_ptr[3];
+    src_chn_ptr[0] = (schar*)(&src_sc24.sc8[0]);
+    src_chn_ptr[1] = (schar*)(&src_sc24.sc8[1]);
+    src_chn_ptr[2] = (schar*)(&src_sc24.sc8[2]);
+    rpp_hip_load24_pkd3_to_schar8_pln3(srcPtr + srcIdx, src_chn_ptr);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                          // local memory reset of invalid values (from the vectorized global load) to 0
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_i24.i8[0].i1[i] = 0;
-            src_i24.i8[1].i1[i] = 0;
-            src_i24.i8[2].i1[i] = 0;
+            src_sc24.sc8[0].sc1[i] = 0;
+            src_sc24.sc8[1].sc1[i] = 0;
+            src_sc24.sc8[2].sc1[i] = 0;
         }
     }
-    src_i24.i8[0].i4[0] += src_i24.i8[0].i4[1];
-    src_i24.i8[1].i4[0] += src_i24.i8[1].i4[1];
-    src_i24.i8[2].i4[0] += src_i24.i8[2].i4[1];
-    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[0].i1[0] +
-                                              src_i24.i8[0].i1[1] +
-                                              src_i24.i8[0].i1[2] +
-                                              src_i24.i8[0].i1[3]);                 // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
-    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[1].i1[0] +
-                                              src_i24.i8[1].i1[1] +
-                                              src_i24.i8[1].i1[2] +
-                                              src_i24.i8[1].i1[3]);                 // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
-    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_i24.i8[2].i1[0] +
-                                              src_i24.i8[2].i1[1] +
-                                              src_i24.i8[2].i1[2] +
-                                              src_i24.i8[2].i1[3]);                 // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
+
+    int4 src_rchn, src_gchn, src_bchn;
+
+    src_rchn = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);
+    src_gchn = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
+    src_bchn = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
+
+    partialRSumRowPtr_smem[hipThreadIdx_x] = (src_rchn.x +
+                                              src_rchn.y +
+                                              src_rchn.z +
+                                              src_rchn.w);                 // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
+    partialGSumRowPtr_smem[hipThreadIdx_x] = (src_gchn.x +
+                                              src_gchn.y +
+                                              src_gchn.z +
+                                              src_gchn.w);                  // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
+    partialBSumRowPtr_smem[hipThreadIdx_x] = (src_bchn.x +
+                                              src_bchn.y +
+                                              src_bchn.z +
+                                              src_bchn.w);                 // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
 
