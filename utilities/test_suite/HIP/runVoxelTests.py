@@ -256,7 +256,7 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
         if int(case) not in voxelAugmentationMap:
             continue
         for layout in list(Layout):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder, voxelAugmentationMap)
             if testType == 0 and qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
@@ -276,7 +276,7 @@ elif (testType == 1 and profilingOption == "YES"):
         if int(case) not in voxelAugmentationMap:
             continue
         for layout in list(Layout):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder, voxelAugmentationMap)
             run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout.value, case, numRuns, testType, qaMode, batchSize, profilingOption)
 
         RESULTS_DIR = ""

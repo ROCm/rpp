@@ -446,11 +446,11 @@ def read_from_subprocess_and_write_to_log(process, logFile):
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
-    if Layout.PKD3:
+    if layout == Layout.PKD3:
         return "PKD3"
-    elif  Layout.PLN3:
+    elif layout == Layout.PLN3:
         return "PLN3"
-    elif Layout.PLN1:
+    elif layout == Layout.PLN1:
         return "PLN1"
 
 # Prints entire case list if user asks for help
@@ -503,13 +503,13 @@ def dataframe_to_markdown(df):
 
 def get_image_layout_type(layout, outputFormatToggle, backend):
     result = "Tensor_" + backend
-    if Layout.PKD3:
+    if layout == Layout.PKD3:
         result += "_PKD3"
         if outputFormatToggle:
             result += "_toPLN3"
         else:
             result += "_toPKD3"
-    elif Layout.PLN3:
+    elif layout == Layout.PLN3:
         result += "_PLN3"
         if outputFormatToggle:
             result += "_toPKD3"
@@ -541,9 +541,9 @@ def get_misc_func_name(testCase, nDim, additionalArg):
 
 def get_voxel_layout_type(layout, backend):
     result = "Tensor_" + backend
-    if Layout.PKD3:
+    if layout == Layout.PKD3:
         result += "_PKD3_toPKD3"
-    elif Layout.PLN3:
+    elif layout == Layout.PLN3:
         result += "_PLN3_toPLN3"
     else:
        result += "_PLN1_toPLN1"
