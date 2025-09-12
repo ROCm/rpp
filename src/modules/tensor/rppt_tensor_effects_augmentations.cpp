@@ -3086,8 +3086,8 @@ RppStatus rppt_posterize_gpu(RppPtr_t srcPtr,
                                   dstDescPtr,
                                   posterizeLevelBits,
                                   roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
+                                  roiType,
+                                  rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
