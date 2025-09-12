@@ -45,7 +45,7 @@ inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32
 
 inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32u &maxHoleW, Rpp32u &maxHoleH, Rpp32f holeRatio, bool randomOffset)
 {
-    int seed = randomOffset ? std::random_device{}() : 42:
+    int seed = randomOffset ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
 
     for(int i=0; i< batchCount; i++)

@@ -42,12 +42,20 @@ __global__ void grid_dropout_pkd_hip_tensor(T *dstPtr,
     if ((id_y >= (anchorBoxInfoTensor[id_z].rb.y - anchorBoxInfoTensor[id_z].lt.y + 1)) || (id_x >= (anchorBoxInfoTensor[id_z].rb.x - anchorBoxInfoTensor[id_z].lt.x + 1)))
         return;
 
-    uint dstIdx = batch_idx * dstStridesNH.x;
-    dstIdx += (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNH.y + (id_x + anchorBoxInfoTensor[id_z].lt.x) * 3; 
+    uint dstIdx = (batch_idx * dstStridesNH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNH.y + (id_x + anchorBoxInfoTensor[id_z].lt.x) * 3;
 
-    dstPtr[dstIdx] = 0.0f;
-    dstPtr[dstIdx + 1] = 0.0f;
-    dstPtr[dstIdx + 2] = 0.0f;
+    if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        dstPtr[dstIdx] = -128.0f;
+        dstPtr[dstIdx + 1] = -128.0f;
+        dstPtr[dstIdx + 2] = -128.0f;
+    }
+    else
+    {
+        dstPtr[dstIdx] = 0.0f;
+        dstPtr[dstIdx + 1] = 0.0f;
+        dstPtr[dstIdx + 2] = 0.0f;
+    }
 }
 
 template <typename T>
@@ -65,12 +73,20 @@ __global__ void grid_dropout_pln_hip_tensor(T *dstPtr,
     if ((id_y >= (anchorBoxInfoTensor[id_z].rb.y - anchorBoxInfoTensor[id_z].lt.y + 1)) || (id_x >= (anchorBoxInfoTensor[id_z].rb.x - anchorBoxInfoTensor[id_z].lt.x + 1)))
         return;
 
-    uint dstIdx = batch_idx * dstStridesNCH.x;
-    dstIdx += (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNCH.z + (id_x + anchorBoxInfoTensor[id_z].lt.x); 
+    uint dstIdx = (batch_idx * dstStridesNCH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNCH.z + (id_x + anchorBoxInfoTensor[id_z].lt.x);
 
-    dstPtr[dstIdx] = 0.0f;
-    dstPtr[dstIdx + dstStridesNCH.y] = 0.0f;
-    dstPtr[dstIdx + dstStridesNCH.y * 2] = 0.0f;
+    if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        dstPtr[dstIdx] = -128.0f;
+        dstPtr[dstIdx + dstStridesNCH.y] = -128.0f;
+        dstPtr[dstIdx + dstStridesNCH.y * 2] = -128.0f;
+    }
+    else
+    {
+        dstPtr[dstIdx] = 0.0f;
+        dstPtr[dstIdx + dstStridesNCH.y] = 0.0f;
+        dstPtr[dstIdx + dstStridesNCH.y * 2] = 0.0f;
+    }
 }
 
 template <typename T>
@@ -88,10 +104,11 @@ __global__ void grid_dropout_pln1_hip_tensor(T *dstPtr,
     if ((id_y >= (anchorBoxInfoTensor[id_z].rb.y - anchorBoxInfoTensor[id_z].lt.y + 1)) || (id_x >= (anchorBoxInfoTensor[id_z].rb.x - anchorBoxInfoTensor[id_z].lt.x + 1)))
         return;
 
-    uint dstIdx = batch_idx * dstStridesNCH.x;
-    dstIdx += (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNCH.z + (id_x + anchorBoxInfoTensor[id_z].lt.x); 
-
-    dstPtr[dstIdx] = 0.0f;
+    uint dstIdx = (batch_idx * dstStridesNCH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNCH.z + (id_x + anchorBoxInfoTensor[id_z].lt.x);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        dstPtr[dstIdx] = -128.0f;
+    else
+        dstPtr[dstIdx] = 0.0f;
 }
 
 // -------------------- Set 1 - Kernel Executors --------------------
@@ -114,7 +131,8 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     Rpp32u boxesInEachImage = gridH * gridW;
     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
 
-    RpptRoiLtrb *anchorBoxInfoTensor = new RpptRoiLtrb[totalBoxes];
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb)));
     RpptRoiLtrb *d_anchorBoxInfoTensor;
     hipMalloc(&d_anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb));
 
@@ -129,9 +147,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     {
         // if src layout is NHWC, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NHWC)
-        {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        }
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             globalThreads_x = (dstDescPtr->w + 7) >> 3;
@@ -177,11 +193,9 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     }
     else if((dstDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->c == 3))
     {
-        // if src layout is NHWC, copy src to dst
+        // if src layout is NCHW, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NCHW)
-        {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        }
         else if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             globalThreads_x = (dstDescPtr->w + 7) >> 3;
@@ -213,8 +227,8 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                            boxesInEachImage);
     }
 
-    hipFree(d_anchorBoxInfoTensor);
-    delete[] anchorBoxInfoTensor;
+    CHECK_RETURN_STATUS(hipFree(d_anchorBoxInfoTensor));
+    CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
     return RPP_SUCCESS;
 }
 
