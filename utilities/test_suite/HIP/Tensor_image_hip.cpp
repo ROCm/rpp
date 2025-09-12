@@ -409,17 +409,9 @@ int main(int argc, char **argv)
     Rpp32f *colorBuffer;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numOfBoxes;
-    if(testCase == ERASE)
+    if(testCase == ERASE || (testCase == DROPOUT && dropoutTypeCase == CUTOUT))
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
-    }
-    if(testCase == DROPOUT)
-    {
-        boxesInEachImage = 100; 
-        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
         CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));

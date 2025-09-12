@@ -87,7 +87,6 @@ inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, 
                 Rpp32s x2 = std::min(x1 + (Rpp32s)holeW - 1, x_base + (Rpp32s)roiW - 1);
                 Rpp32s y2 = std::min(y1 + (Rpp32s)holeH - 1, y_base + (Rpp32s)roiH - 1);
 
-                // CORRECTED: Index is now calculated directly, removing the need for boxCount
                 int boxIdx = boxOffset + (row * gridW + col);
                 anchorBoxInfoTensor[boxIdx].lt.x = x1;
                 anchorBoxInfoTensor[boxIdx].lt.y = y1;

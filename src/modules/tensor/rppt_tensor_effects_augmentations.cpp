@@ -1560,15 +1560,15 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr,
 /******************** grid_dropout ********************/
 
 RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr,
-                          RpptDescPtr srcDescPtr,
-                          RppPtr_t dstPtr,
-                          RpptDescPtr dstDescPtr,
-                          RpptRoiLtrb *anchorBoxInfoTensor,
-                          RppPtr_t colorsTensor,
-                          Rpp32u *numBoxesTensor,
-                          RpptROIPtr roiTensorPtrSrc,
-                          RpptRoiType roiType,
-                          rppHandle_t rppHandle)
+                                 RpptDescPtr srcDescPtr,
+                                 RppPtr_t dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RpptRoiLtrb *anchorBoxInfoTensor,
+                                 RppPtr_t colorsTensor,
+                                 Rpp32u *numBoxesTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
