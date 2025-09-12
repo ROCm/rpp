@@ -1789,13 +1789,11 @@ int main(int argc, char **argv)
                             Rpp32u gridH = 10, gridW = 10;
                             Rpp32f holeRatio = 0.4f;
                             bool randomOffset = false;
-                            bool randomSeed = qaFlag ? 0 : 1;
-                            boxesInEachImage = gridH * gridW;
+                            randomOffset = qaFlag ? false : randomOffset;
 
-                            init_grid_dropout(batchSize, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, gridH, gridW, holeRatio, randomOffset, colorBuffer, srcDescPtr->c, inputBitDepth, randomSeed);
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                               rppt_grid_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                               rppt_grid_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gridW, gridH, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
