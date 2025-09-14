@@ -1572,13 +1572,31 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
     return RPP_SUCCESS;
 }
 
+template<typename T, typename Operation, typename SIMDOperation>
+RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
+                                           T *srcPtr2,
+                                           RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                           RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                           float *dstPtr,
+                                           RpptGenericDescPtr dstGenericDescPtr,
+                                           Operation op,
+                                           SIMDOperation simd_op,
+                                           RpptBroadcastMode broadcastMode,
+                                           Rpp32u vectorIncrement,
+                                           Rpp32u *srcPtr1roiTensor,
+                                           Rpp32u *srcPtr2roiTensor,
+                                           rpp::Handle& handle)
+{
+
+}
+
 // Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
-template<typename T>
-RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T *srcPtr1,
-                                                            T *srcPtr2,
+template<typename T1, typename T2>
+RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
+                                                            T1 *srcPtr2,
                                                             RpptGenericDescPtr srcPtr1GenericDescPtr,
                                                             RpptGenericDescPtr srcPtr2GenericDescPtr,
-                                                            T *dstPtr,
+                                                            T2 *dstPtr,
                                                             RpptGenericDescPtr dstGenericDescPtr,
                                                             RpptOp tensorOp,
                                                             RpptBroadcastMode broadcastMode,
@@ -1595,93 +1613,172 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T *srcPtr1,
     if((tensorOp == RPP_TENSOR_OP_DIVIDE) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
         vectorIncrement = 0;
 
-    switch(tensorOp) {
-        case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<T>, simd_add_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<T>, simd_subtract_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<T>, simd_multiply_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T>, simd_divide_si256<T>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
+    if constexpr (std::is_same_v<T1, T2>)
+    {
+        switch(tensorOp) {
+            case RPP_TENSOR_OP_ADD:
+                tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, add_op<T1>, simd_add_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_SUBTRACT:
+                tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, subtract_op<T1>, simd_subtract_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            case RPP_TENSOR_OP_MULTIPLY:
+                tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<T1>, simd_multiply_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+        }
+    }
+    if constexpr (std::is_same_v<T2, float>)
+    {
+        switch(tensorOp) {
+            case RPP_TENSOR_OP_DIVIDE:
+                tensor_binary_divide_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T1>, simd_divide_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+        }
     }
 
     return RPP_SUCCESS;
 }
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u>(Rpp8u*,
-                                                                            Rpp8u*,
-                                                                            RpptGenericDescPtr,
-                                                                            RpptGenericDescPtr,
-                                                                            Rpp8u*,
-                                                                            RpptGenericDescPtr,
-                                                                            RpptOp,
-                                                                            RpptBroadcastMode,
-                                                                            Rpp32u*,
-                                                                            Rpp32u*,
-                                                                            rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u, Rpp8u>(Rpp8u*,
+                                                                                   Rpp8u*,
+                                                                                   RpptGenericDescPtr,
+                                                                                   RpptGenericDescPtr,
+                                                                                   Rpp8u*,
+                                                                                   RpptGenericDescPtr,
+                                                                                   RpptOp,
+                                                                                   RpptBroadcastMode,
+                                                                                   Rpp32u*,
+                                                                                   Rpp32u*,
+                                                                                   rpp::Handle&);
 
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u, Rpp32f>(Rpp8u*,
+                                                                                    Rpp8u*,
+                                                                                    RpptGenericDescPtr,
+                                                                                    RpptGenericDescPtr,
+                                                                                    Rpp32f*,
+                                                                                    RpptGenericDescPtr,
+                                                                                    RpptOp,
+                                                                                    RpptBroadcastMode,
+                                                                                    Rpp32u*,
+                                                                                    Rpp32u*,
+                                                                                    rpp::Handle&);
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8s>(Rpp8s*,
-                                                                            Rpp8s*,
-                                                                            RpptGenericDescPtr,
-                                                                            RpptGenericDescPtr,
-                                                                            Rpp8s*,
-                                                                            RpptGenericDescPtr,
-                                                                            RpptOp,
-                                                                            RpptBroadcastMode,
-                                                                            Rpp32u*,
-                                                                            Rpp32u*,
-                                                                            rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8s, Rpp8s>(Rpp8s*,
+                                                                                   Rpp8s*,
+                                                                                   RpptGenericDescPtr,
+                                                                                   RpptGenericDescPtr,
+                                                                                   Rpp8s*,
+                                                                                   RpptGenericDescPtr,
+                                                                                   RpptOp,
+                                                                                   RpptBroadcastMode,
+                                                                                   Rpp32u*,
+                                                                                   Rpp32u*,
+                                                                                   rpp::Handle&);
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16u>(Rpp16u*,
-                                                                             Rpp16u*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptGenericDescPtr,
-                                                                             Rpp16u*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptOp,
-                                                                             RpptBroadcastMode,
-                                                                             Rpp32u*,
-                                                                             Rpp32u*,
-                                                                             rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8s, Rpp32f>(Rpp8s*,
+                                                                                    Rpp8s*,
+                                                                                    RpptGenericDescPtr,
+                                                                                    RpptGenericDescPtr,
+                                                                                    Rpp32f*,
+                                                                                    RpptGenericDescPtr,
+                                                                                    RpptOp,
+                                                                                    RpptBroadcastMode,
+                                                                                    Rpp32u*,
+                                                                                    Rpp32u*,
+                                                                                    rpp::Handle&);
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16s>(Rpp16s*,
-                                                                             Rpp16s*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptGenericDescPtr,
-                                                                             Rpp16s*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptOp,
-                                                                             RpptBroadcastMode,
-                                                                             Rpp32u*,
-                                                                             Rpp32u*,
-                                                                             rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16u, Rpp16u>(Rpp16u*,
+                                                                                     Rpp16u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp16u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32u>(Rpp32u*,
-                                                                             Rpp32u*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptGenericDescPtr,
-                                                                             Rpp32u*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptOp,
-                                                                             RpptBroadcastMode,
-                                                                             Rpp32u*,
-                                                                             Rpp32u*,
-                                                                             rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16u, Rpp32f>(Rpp16u*,
+                                                                                     Rpp16u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32f*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
 
-template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32s>(Rpp32s*,
-                                                                             Rpp32s*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptGenericDescPtr,
-                                                                             Rpp32s*,
-                                                                             RpptGenericDescPtr,
-                                                                             RpptOp,
-                                                                             RpptBroadcastMode,
-                                                                             Rpp32u*,
-                                                                             Rpp32u*,
-                                                                             rpp::Handle&);
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16s, Rpp16s>(Rpp16s*,
+                                                                                     Rpp16s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp16s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp16s, Rpp32f>(Rpp16s*,
+                                                                                     Rpp16s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32f*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32u, Rpp32u>(Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32u, Rpp32f>(Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32f*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32s, Rpp32s>(Rpp32s*,
+                                                                                     Rpp32s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
+
+template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp32s, Rpp32f>(Rpp32s*,
+                                                                                     Rpp32s*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptGenericDescPtr,
+                                                                                     Rpp32f*,
+                                                                                     RpptGenericDescPtr,
+                                                                                     RpptOp,
+                                                                                     RpptBroadcastMode,
+                                                                                     Rpp32u*,
+                                                                                     Rpp32u*,
+                                                                                     rpp::Handle&);
