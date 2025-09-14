@@ -1587,7 +1587,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                                            Rpp32u *srcPtr2roiTensor,
                                            rpp::Handle& handle)
 {
-
+        return RPP_SUCCESS;
 }
 
 // Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
