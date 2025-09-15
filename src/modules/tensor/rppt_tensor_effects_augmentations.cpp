@@ -1496,7 +1496,7 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr,
 {
     RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
     Rpp32u numBoxesTensor[srcDescPtr->n];
-    void *colorsTensor = malloc(srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f));
+    void *colorsTensor = reinterpret_cast<Rpp32f *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);;
     init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 1);
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -1556,7 +1556,6 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr,
                           layoutParams,
                           rpp::deref(rppHandle));
     }
-    free(colorsTensor);
 
     return RPP_SUCCESS;
 }
