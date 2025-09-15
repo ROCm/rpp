@@ -61,6 +61,7 @@ inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp8u>::value)
     {
+        printf("SIMD Divide Called 1\n");
         __m128i a_half1 = _mm256_castsi256_si128(a);
         __m128i a_half2 = _mm256_extracti128_si256(a, 1);
         __m128i b_half1 = _mm256_castsi256_si128(b);
@@ -72,6 +73,7 @@ inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
+        printf("SIMD Divide Called 2\n");
         __m128i a_half1 = _mm256_castsi256_si128(a);
         __m128i a_half2 = _mm256_extracti128_si256(a, 1);
         __m128i b_half1 = _mm256_castsi256_si128(b);
@@ -83,6 +85,7 @@ inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
     }
     else if constexpr (std::is_same<T, Rpp16u>::value)
     {
+        printf("SIMD Divide Called 3\n");
         __m128i a_half1 = _mm256_castsi256_si128(a);
         __m128i a_half2 = _mm256_extracti128_si256(a, 1);
         __m128i b_half1 = _mm256_castsi256_si128(b);
@@ -92,12 +95,18 @@ inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
     }
     else if constexpr (std::is_same<T, Rpp16s>::value)
     {
+        printf("SIMD Divide Called 4\n");
         __m128i a_half1 = _mm256_castsi256_si128(a);
         __m128i a_half2 = _mm256_extracti128_si256(a, 1);
         __m128i b_half1 = _mm256_castsi256_si128(b);
         __m128i b_half2 = _mm256_extracti128_si256(b, 1);
         out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half1)), _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half1)));
         out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half2)), _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half2)));
+    }
+    else if constexpr (std::is_same<T, Rpp32s>::value)
+    {
+        printf("SIMD Divide Called 4\n");
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(a), _mm256_cvtepi32_ps(b));
     }
 }
 
@@ -106,17 +115,23 @@ inline void store_ps_function(__m256 *out, Rpp32f *dst)
 {
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
     {
+        printf("Store for 8 bit\n");
         _mm256_storeu_ps(dst, out[0]);
         _mm256_storeu_ps(dst + 8, out[1]);
-        _mm256_storeu_ps(dst + 8, out[2]);
-        _mm256_storeu_ps(dst + 8, out[3]);
+        _mm256_storeu_ps(dst + 16, out[2]);
+        _mm256_storeu_ps(dst + 24, out[3]);
     }
     else if constexpr (std::is_same<T, Rpp16u>::value || std::is_same<T, Rpp16s>::value)
     {
+        printf("Store for 16 bit\n");
         _mm256_storeu_ps(dst, out[0]);
         _mm256_storeu_ps(dst + 8, out[1]);
     }
-
+    else if constexpr (std::is_same<T, Rpp32s>::value)
+    {
+        printf("Store for 32 bit\n");
+        _mm256_storeu_ps(dst, out[0]);
+    }
 }
 
 // Helper functions for broadcasting for different datatypes (8 bit, 16 bit and 32 bit)
@@ -1941,12 +1956,13 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                     int vectorLoopCount = 0;
 #if __AVX2__
                     __m256 pout[4];
+                    printf("alignedLength is %d\n", alignedLength);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
                         simd_op(pout, p1, p2);    // simd op
-                        store_ps_function<T>(pout, dstPtrTemp);    // simd store
+                        store_ps_function<T>(pout, dstPtrElem);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -2129,8 +2145,12 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
         vectorIncrement = 8; // Vector Increment for U32/I32 datatype
 
-    if((tensorOp == RPP_TENSOR_OP_DIVIDE) && (((srcPtr1GenericDescPtr->dataType != RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType != RpptDataType::I8))) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
+    if(((tensorOp == RPP_TENSOR_OP_DIVIDE) && (srcPtr1GenericDescPtr->dataType == RpptDataType::U32))  || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
         vectorIncrement = 0;
+
+    printf("Vector Increment is %d\n", vectorIncrement);
+
+    printf("Inside overall dispatch function\n");
 
     if constexpr (std::is_same_v<T1, T2>)
     {
