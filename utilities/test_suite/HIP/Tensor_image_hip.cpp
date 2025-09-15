@@ -1765,10 +1765,9 @@ int main(int argc, char **argv)
                             boxesInEachImage = 1;
                             bool randomSeed = qaFlag ? 0 : 1;
 
-                            init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth, randomSeed, CUTOUT);
                             startWallTime = omp_get_wtime();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_cutout_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                                rppt_cutout_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
@@ -2014,7 +2013,7 @@ int main(int argc, char **argv)
         if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostFree(mean));
     }
-    if(testCase == ERASE || testCase == DROPOUT)
+    if(testCase == ERASE)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
