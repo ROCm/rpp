@@ -2087,13 +2087,13 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-#if __AV__
+#if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                            simd_op(p1, p2);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                            simd_op(pout, p1, p2);    // simd op
+                            store_ps_function<T>(pout, dstPtrElem);    // simd store
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
