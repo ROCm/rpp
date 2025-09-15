@@ -16,7 +16,7 @@ inline void divide_op(T1 *dst, T2 *src1, T2 *src2)
 {
     if constexpr (std::is_same_v<T1, T2>)
         *dst = *src1 / *src2;
-    else if constexpr (std::is_same_v<T2, Rpp32f>)
+    else if constexpr (std::is_same_v<T1, Rpp32f>)
         *dst = static_cast<Rpp32f>(*src1) / static_cast<Rpp32f>(*src2);
 }
 
@@ -57,7 +57,67 @@ inline void simd_multiply_si256(__m256i &a, __m256i &b)
 }
 
 template<typename T>
-inline void simd_divide_si256(__m256i &a, __m256i &b) { }
+inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
+{
+    if constexpr (std::is_same<T, Rpp8u>::value)
+    {
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(a_half1)), _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_half1)));
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(a_half1, 8))), _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_half1, 8))));
+        out[2] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(a_half2)), _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_half2)));
+        out[3] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(a_half2, 8))), _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_half2, 8))));
+    }
+    else if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(a_half1)), _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(b_half1)));
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(a_half1, 8))), _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(b_half1, 8))));
+        out[2] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(a_half2)), _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(b_half2)));
+        out[3] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(a_half2, 8))), _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(b_half2, 8))));
+    }
+    else if constexpr (std::is_same<T, Rpp16u>::value)
+    {
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(a_half1)), _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(b_half1)));
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(a_half2)), _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(b_half2)));
+    }
+    else if constexpr (std::is_same<T, Rpp16s>::value)
+    {
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half1)), _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half1)));
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half2)), _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half2)));
+    }
+}
+
+template<typename T>
+inline void store_ps_function(__m256 *out, Rpp32f *dst)
+{
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+    {
+        _mm256_storeu_ps(dst, out[0]);
+        _mm256_storeu_ps(dst + 8, out[1]);
+        _mm256_storeu_ps(dst + 8, out[2]);
+        _mm256_storeu_ps(dst + 8, out[3]);
+    }
+    else if constexpr (std::is_same<T, Rpp16u>::value || std::is_same<T, Rpp16s>::value)
+    {
+        _mm256_storeu_ps(dst, out[0]);
+        _mm256_storeu_ps(dst + 8, out[1]);
+    }
+
+}
 
 // Helper functions for broadcasting for different datatypes (8 bit, 16 bit and 32 bit)
 inline __m256i simd_set1_val(Rpp8u &val) { return _mm256_set1_epi8(val); }
@@ -1594,6 +1654,8 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                                            rpp::Handle& handle)
 {
 
+    printf("tensor_binary_divide_host_tensor invoked\n");
+
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
@@ -1779,13 +1841,14 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             }
             else
             {
-#if __AV__
+#if __AVX2__
+                __m256 pout[4];
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
                     __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
-                    simd_op(p1, p2);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
+                    simd_op(pout, p1, p2);    // simd op
+                    store_ps_function<T>(pout, dstPtrTemp);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -1876,13 +1939,14 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                     Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-#if __AV__
+#if __AVX2__
+                    __m256 pout[4];
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                        simd_op(p1, p2);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                        simd_op(pout, p1, p2);    // simd op
+                        store_ps_function<T>(pout, dstPtrTemp);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -2065,7 +2129,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
         vectorIncrement = 8; // Vector Increment for U32/I32 datatype
 
-    if((tensorOp == RPP_TENSOR_OP_DIVIDE) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
+    if((tensorOp == RPP_TENSOR_OP_DIVIDE) && (((srcPtr1GenericDescPtr->dataType != RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType != RpptDataType::I8))) || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
         vectorIncrement = 0;
 
     if constexpr (std::is_same_v<T1, T2>)
@@ -2085,7 +2149,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
                 break;
         }
     }
-    if constexpr (std::is_same_v<T2, float>)
+    if constexpr (std::is_same_v<T2, Rpp32f>)
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_DIVIDE:
