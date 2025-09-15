@@ -67,8 +67,8 @@ inline __m256i simd_set1_val(Rpp16s &val) { return _mm256_set1_epi16(val); }
 inline __m256i simd_set1_val(Rpp32u &val) { return _mm256_set1_epi32(val); }
 inline __m256i simd_set1_val(Rpp32s &val) { return _mm256_set1_epi32(val); }
 
-template<typename T, typename Operation>
-inline void tensor_binary_arithmetic_op_recursive(T *src1, T *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
+template<typename T1, typename T2, typename Operation>
+inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
 {
     if (!nDim)
         op(dst, src1, src2);
@@ -590,7 +590,7 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
             tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp32f>, simd_multiply_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp32f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp32f, Rpp32f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 
@@ -1104,7 +1104,7 @@ RppStatus tensor_binary_op_dispatch_f16_f16_host_tensor(Rpp16f *srcPtr1,
             tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<Rpp16f>, simd_multiply_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp16f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f16_f16_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<Rpp16f, Rpp16f>, simd_divide_ps, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
     }
 
@@ -2080,13 +2080,19 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
             case RPP_TENSOR_OP_MULTIPLY:
                 tensor_binary_op_int_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, multiply_op<T1>, simd_multiply_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
+            default :
+                printf("Operation not supported\n");
+                break;
         }
     }
     if constexpr (std::is_same_v<T2, float>)
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_DIVIDE:
-                tensor_binary_divide_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T1>, simd_divide_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                tensor_binary_divide_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, divide_op<T2, T1>, simd_divide_si256<T1>, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                break;
+            default :
+                printf("Operation not supported\n");
                 break;
         }
     }
