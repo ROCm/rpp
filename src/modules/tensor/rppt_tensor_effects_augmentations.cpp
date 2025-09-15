@@ -1488,13 +1488,17 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   RpptRoiLtrb *anchorBoxInfoTensor,
-                                   RppPtr_t colorsTensor,
-                                   Rpp32u *numBoxesTensor,
+                                   Rpp32u boxesInEachImage,
+                                   bool randomSeed,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
 {
+    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
+    Rpp32u numBoxesTensor[srcDescPtr->n];
+    void *colorsTensor = malloc(srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f));
+    init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 1);
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1552,6 +1556,7 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr,
                           layoutParams,
                           rpp::deref(rppHandle));
     }
+    free(colorsTensor);
 
     return RPP_SUCCESS;
 }
@@ -1563,69 +1568,76 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  RppPtr_t dstPtr,
                                  RpptDescPtr dstDescPtr,
-                                 RpptRoiLtrb *anchorBoxInfoTensor,
-                                 RppPtr_t colorsTensor,
-                                 Rpp32u *numBoxesTensor,
+                                 Rpp32u gridW,
+                                 Rpp32u gridH,
+                                 Rpp32f holeRatio,
+                                 bool randomOffset,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)
 {
+    if((gridW <= 0) && (gridH <=0) && (holeRatio <= 0.0f)) return RPP_ERROR_INVALID_ARGUMENTS;                
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        erase_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                          srcDescPtr,
-                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                          dstDescPtr,
-                          anchorBoxInfoTensor,
-                          static_cast<Rpp8u*>(colorsTensor),
-                          numBoxesTensor,
-                          roiTensorPtrSrc,
-                          roiType,
-                          layoutParams,
-                          rpp::deref(rppHandle));
+        grid_dropout_host_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
+                                 srcDescPtr,
+                                 static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
+                                 dstDescPtr,
+                                 gridW,
+                                 gridH,
+                                 holeRatio,
+                                 randomOffset,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        erase_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                          srcDescPtr,
-                          reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + srcDescPtr->offsetInBytes),
-                          dstDescPtr,
-                          anchorBoxInfoTensor,
-                          static_cast<Rpp16f*>(colorsTensor),
-                          numBoxesTensor,
-                          roiTensorPtrSrc,
-                          roiType,
-                          layoutParams,
-                          rpp::deref(rppHandle));
+        grid_dropout_host_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 gridW,
+                                 gridH,
+                                 holeRatio,
+                                 randomOffset,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        erase_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                          srcDescPtr,
-                          reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                          dstDescPtr,
-                          anchorBoxInfoTensor,
-                          static_cast<Rpp32f*>(colorsTensor),
-                          numBoxesTensor,
-                          roiTensorPtrSrc,
-                          roiType,
-                          layoutParams,
-                          rpp::deref(rppHandle));
+        grid_dropout_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 gridW,
+                                 gridH,
+                                 holeRatio,
+                                 randomOffset,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        erase_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                          srcDescPtr,
-                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                          dstDescPtr,
-                          anchorBoxInfoTensor,
-                          static_cast<Rpp8s*>(colorsTensor),
-                          numBoxesTensor,
-                          roiTensorPtrSrc,
-                          roiType,
-                          layoutParams,
-                          rpp::deref(rppHandle));
+        grid_dropout_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                 srcDescPtr,
+                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                 dstDescPtr,
+                                 gridW,
+                                 gridH,
+                                 holeRatio,
+                                 randomOffset,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

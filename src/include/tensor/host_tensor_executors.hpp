@@ -1672,6 +1672,22 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle);
 
+// -------------------- grid_dropot --------------------
+
+template<typename T>
+RppStatus grid_dropout_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u gridW,
+                                   Rpp32u gridH,
+                                   Rpp32f holeRatio,
+                                   bool randomSeed,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------

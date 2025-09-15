@@ -49,12 +49,8 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
-    std::uniform_real_distribution<float> w_ratio(0.2f, 0.4f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
-    std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
-    std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
-    std::uniform_int_distribution<int> coarse_box_count_dist(5, maxBoxesPerImage);
 
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -107,11 +103,11 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
                 Rpp32f dropoutColor = 0.0f;
                 if (inputBitDepth == 0)
                     colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
-                else if (inputBitDepth == 1)
-                    colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
                 else if (inputBitDepth == 2)
+                    colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                else if (inputBitDepth == 1)
                     colors32f[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
-                else if (inputBitDepth == 5)
+                else if (inputBitDepth == 3)
                     colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
             }
             validBoxCount++;
