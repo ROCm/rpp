@@ -20,40 +20,42 @@ inline void divide_op(T1 *dst, T2 *src1, T2 *src2)
         *dst = static_cast<Rpp32f>(*src1) / static_cast<Rpp32f>(*src2);
 }
 
-inline void simd_add_ps(__m256 &a, __m256 &b) { a = _mm256_add_ps(a, b); }
-inline void simd_subtract_ps(__m256 &a, __m256 &b) { a = _mm256_sub_ps(a, b); }
-inline void simd_multiply_ps(__m256 &a, __m256 &b) { a = _mm256_mul_ps(a, b); }
-inline void simd_divide_ps(__m256 &a, __m256 &b) { a = _mm256_div_ps(a, b); }
+inline __m256 simd_add_ps(__m256 &a, __m256 &b) { return _mm256_add_ps(a, b); }
+inline __m256 simd_subtract_ps(__m256 &a, __m256 &b) { return _mm256_sub_ps(a, b); }
+inline __m256 simd_multiply_ps(__m256 &a, __m256 &b) { return _mm256_mul_ps(a, b); }
+inline __m256 simd_divide_ps(__m256 &a, __m256 &b) { return _mm256_div_ps(a, b); }
 
 template<typename T>
-inline void simd_add_si256(__m256i &a, __m256i &b)
+inline __m256i simd_add_si256(__m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-        a = _mm256_add_epi8(a, b);
+        return _mm256_add_epi8(a, b);
     else if constexpr (std::is_same<T, Rpp16s>::value || std::is_same<T, Rpp16u>::value)
-        a = _mm256_add_epi16(a, b);
+        return _mm256_add_epi16(a, b);
     else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
-        a = _mm256_add_epi32(a, b);
+        return _mm256_add_epi32(a, b);
 }
 
 template<typename T>
-inline void simd_subtract_si256(__m256i &a, __m256i &b)
+inline __m256i simd_subtract_si256(__m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-        a = _mm256_sub_epi8(a, b);
+        return _mm256_sub_epi8(a, b);
     else if constexpr (std::is_same<T, Rpp16s>::value || std::is_same<T, Rpp16u>::value)
-        a = _mm256_sub_epi16(a, b);
+        return _mm256_sub_epi16(a, b);
     else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
-        a = _mm256_sub_epi32(a, b);
+        return _mm256_sub_epi32(a, b);
 }
 
 template<typename T>
-inline void simd_multiply_si256(__m256i &a, __m256i &b)
+inline __m256i simd_multiply_si256(__m256i &a, __m256i &b)
 {
     if constexpr (std::is_same<T, Rpp16u>::value || std::is_same<T, Rpp16s>::value)
-        a = _mm256_mullo_epi16(a, b);
+        return _mm256_mullo_epi16(a, b);
     else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
-        a = _mm256_mullo_epi32(a, b);
+        return _mm256_mullo_epi32(a, b);
+    else
+        return _mm256_setzero_si256();
 }
 
 template<typename T>
@@ -105,8 +107,111 @@ inline void simd_divide_si256(__m256 *out, __m256i &a, __m256i &b)
     }
     else if constexpr (std::is_same<T, Rpp32s>::value)
     {
-        printf("SIMD Divide Called 4\n");
+        printf("SIMD Divide Called 5\n");
         out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(a), _mm256_cvtepi32_ps(b));
+    }
+}
+
+template<typename T>
+inline void simd_divide_broadcast_two_si256(__m256 *out, __m256i &a, __m256 &b)
+{
+    printf("Inside simd_divide_broadcast_two_si256 function\n");
+    if constexpr (std::is_same<T, Rpp8u>::value)
+    {
+        printf("SIMD Divide Called 1\n");
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(a_half1)), b);
+        printf("Output Sample : ");
+        rpp_mm256_print_ps(&out[0]);
+        printf("\n");
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(a_half1, 8))), b);
+        out[2] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(a_half2)), b);
+        out[3] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(a_half2, 8))), b);
+    }
+    else if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        printf("SIMD Divide Called 2\n");
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(a_half1)), b);
+        printf("Output Sample : ");
+        rpp_mm256_print_ps(&out[0]);
+        printf("\n");
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(a_half1, 8))), b);
+        out[2] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(a_half2)), b);
+        out[3] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(a_half2, 8))), b);
+    }
+    else if constexpr (std::is_same<T, Rpp16u>::value)
+    {
+        printf("SIMD Divide Called 3\n");
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(a_half1)), b);
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(a_half2)), b);
+    }
+    else if constexpr (std::is_same<T, Rpp16s>::value)
+    {
+        printf("SIMD Divide Called 4\n");
+        __m128i a_half1 = _mm256_castsi256_si128(a);
+        __m128i a_half2 = _mm256_extracti128_si256(a, 1);
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half1)), b);
+        out[1] = _mm256_div_ps(_mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(a_half2)), b);
+    }
+    else if constexpr (std::is_same<T, Rpp32s>::value)
+    {
+        printf("SIMD Divide Called 5\n");
+        out[0] = _mm256_div_ps(_mm256_cvtepi32_ps(a), b);
+    }
+}
+
+template<typename T>
+inline void simd_divide_broadcast_one_si256(__m256 *out, __m256 &a, __m256i &b)
+{
+    printf("Inside simd_divide_broadcast_one_si256 function\n");
+    if constexpr (std::is_same<T, Rpp8u>::value)
+    {
+        printf("SIMD Divide Called 1\n");
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_half1)));
+        printf("Output Sample : ");
+        rpp_mm256_print_ps(&out[0]);
+        printf("\n");
+        out[1] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_half1, 8))));
+        out[2] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_half2)));
+        out[3] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_half2, 8))));
+    }
+    else if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        printf("SIMD Divide Called 2\n");
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(b_half1)));
+        out[1] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(b_half1, 8))));
+        out[2] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(b_half2)));
+        out[3] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(b_half2, 8))));
+    }
+    else if constexpr (std::is_same<T, Rpp16u>::value)
+    {
+        printf("SIMD Divide Called 3\n");
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(b_half1)));
+        out[1] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(b_half2)));
+    }
+    else if constexpr (std::is_same<T, Rpp16s>::value)
+    {
+        printf("SIMD Divide Called 4\n");
+        __m128i b_half1 = _mm256_castsi256_si128(b);
+        __m128i b_half2 = _mm256_extracti128_si256(b, 1);
+        out[0] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half1)));
+        out[1] = _mm256_div_ps(a, _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(b_half2)));
+    }
+    else if constexpr (std::is_same<T, Rpp32s>::value)
+    {
+        printf("SIMD Divide Called 5\n");
+        out[0] = _mm256_div_ps(a, _mm256_cvtepi32_ps(b));
     }
 }
 
@@ -142,6 +247,13 @@ inline __m256i simd_set1_val(Rpp16s &val) { return _mm256_set1_epi16(val); }
 inline __m256i simd_set1_val(Rpp32u &val) { return _mm256_set1_epi32(val); }
 inline __m256i simd_set1_val(Rpp32s &val) { return _mm256_set1_epi32(val); }
 
+inline __m256i simd_set1_ps(Rpp8u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set1_epi8(val))); }
+inline __m256i simd_set1_ps(Rpp8s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_set1_epi8(val))); }
+inline __m256i simd_set1_ps(Rpp16u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_set1_epi16(val))); }
+inline __m256i simd_set1_ps(Rpp16s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(_mm_set1_epi16(val))); }
+inline __m256i simd_set1_ps(Rpp32u &val) { return _mm256_setzero_ps(); }
+inline __m256i simd_set1_ps(Rpp32s &val) { return _mm256_cvtepi32_ps(_mm256_set1_epi32(val)); }
+
 template<typename T1, typename T2, typename Operation>
 inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
 {
@@ -152,9 +264,9 @@ inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *sr
         for (int i = 0; i < *dstShape; i++)
         {
             tensor_binary_arithmetic_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
-            dst += *(dstStrides + 1);
-            src1 += *(src1Strides + 1);
-            src2 += *(src2Strides + 1);
+            dst += *(dstStrides);
+            src1 += *(src1Strides);
+            src2 += *(src2Strides);
         }
     }
 }
@@ -322,11 +434,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 __m256 p1 = _mm256_set1_ps(srcPtrTemp1[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p2[2];
+                    __m256 p2[2], dst[2];
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp2, p2);    // simd loads
-                    simd_op(p2[0], p1);
-                    simd_op(p2[1], p1);
-                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p2);    // simd stores
+                    dst[0] = simd_op(p1, p2[0]);
+                    dst[1] = simd_op(p1, p2[1]);
+                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -344,11 +456,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 __m256 p2 = _mm256_set1_ps(srcPtrTemp2[0]);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[2];
+                    __m256 p1[2], dst[2];
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp1, p1);    // simd loads
-                    simd_op(p1[0], p2);
-                    simd_op(p1[1], p2);
-                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
+                    dst[0] = simd_op(p1[0], p2);
+                    dst[1] = simd_op(p1[1], p2);
+                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp1 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -365,12 +477,12 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[2], p2[2];
+                    __m256 p1[2], p2[2], dst[2];
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp1, p1);    // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp2, p2);    // simd loads
-                    simd_op(p1[0], p2[0]);
-                    simd_op(p1[1], p2[1]);
-                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
+                    dst[0] = simd_op(p1[0], p2[0]);
+                    dst[1] = simd_op(p1[1], p2[1]);
+                    rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -403,11 +515,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p2[2];
+                        __m256 p2[2], dst[2];
                         rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                        simd_op(p2[0], p1);
-                        simd_op(p2[1], p1);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p2);    // simd stores
+                        dst[0] = simd_op(p1, p2[0]);
+                        dst[1] = simd_op(p1, p2[1]);
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -436,11 +548,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     __m256 p2 = _mm256_set1_ps(srcPtrElem2[0]);
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p1[2];
+                        __m256 p1[2], dst[2];
                         rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
-                        simd_op(p1[0], p2);
-                        simd_op(p1[1], p2);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                        dst[0] = simd_op(p1[0], p2);
+                        dst[1] = simd_op(p1[1], p2);
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem1 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -468,12 +580,12 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p1[2], p2[2];
+                        __m256 p1[2], p2[2], dst[2];
                         rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
                         rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                        simd_op(p1[0], p2[0]);
-                        simd_op(p1[1], p2[1]);
-                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                        dst[0] = simd_op(p1[0], p2[0]);
+                        dst[1] = simd_op(p1[1], p2[1]);
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -516,11 +628,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p2[2];
+                            __m256 p2[2], dst[2];
                             rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                            simd_op(p2[0], p1);
-                            simd_op(p2[0], p1);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p2);    // simd stores
+                            dst[0] = simd_op(p1, p2[0]);
+                            dst[1] = simd_op(p1, p2[1]);
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -561,11 +673,11 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m256 p2 =  _mm256_set1_ps(srcPtrElem2[0]);
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p1[2];
+                            __m256 p1[2], dst[2];
                             rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
-                            simd_op(p1[0], p2);
-                            simd_op(p1[1], p2);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                            dst[0] = simd_op(p1[0], p2);
+                            dst[1] = simd_op(p1[1], p2);
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -605,12 +717,12 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p1[2], p2[2];
+                            __m256 p1[2], p2[2], dst[2];
                             rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem1, p1);    // simd loads
                             rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                            simd_op(p1[0], p2[0]);
-                            simd_op(p1[1], p2[1]);
-                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, p1);    // simd stores
+                            dst[0] = simd_op(p1[0], p2[0]);
+                            dst[1] = simd_op(p1[1], p2[1]);
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
@@ -836,11 +948,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrTemp1)[0]));
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p2[2];
+                    __m256 p2[2], dst[2];
                     rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTemp2, p2);    // simd loads
-                    simd_op(p2[0], p1);
-                    simd_op(p2[1], p1);
-                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, p2);    // simd stores
+                    dst[0] = simd_op(p1, p2[0]);
+                    dst[1] = simd_op(p1, p2[1]);
+                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -858,11 +970,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrTemp2)[0]));
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[2];
+                    __m256 p1[2], dst[2];
                     rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTemp1, p1);    // simd loads
-                    simd_op(p1[0], p2);
-                    simd_op(p1[1], p2);
-                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
+                    dst[0] = simd_op(p1[0], p2);
+                    dst[1] = simd_op(p1[1], p2);
+                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp1 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -879,12 +991,12 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[2], p2[2];
+                    __m256 p1[2], p2[2], dst[2];
                     rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTemp1, p1);    // simd loads
                     rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrTemp2, p2);    // simd loads
-                    simd_op(p1[0], p2[0]);
-                    simd_op(p1[1], p2[1]);
-                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
+                    dst[0] = simd_op(p1[0], p2[0]);
+                    dst[1] = simd_op(p1[1], p2[1]);
+                    rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrTemp, dst);    // simd stores
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -917,11 +1029,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem1)[0]));
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p2[2];
+                        __m256 p2[2], dst[2];
                         rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                        simd_op(p2[0], p1);
-                        simd_op(p2[1], p1);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p2);    // simd stores
+                        dst[0] = simd_op(p1, p2[0]);
+                        dst[1] = simd_op(p1, p2[1]);
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -950,11 +1062,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem2)[0]));
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p1[2];
+                        __m256 p1[2], dst[2];
                         rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
-                        simd_op(p1[0], p2);
-                        simd_op(p1[1], p2);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                        dst[0] = simd_op(p1[0], p2);
+                        dst[1] = simd_op(p1[1], p2);
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem1 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -982,12 +1094,12 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-                        __m256 p1[2], p2[2];
+                        __m256 p1[2], p2[2], dst[2];
                         rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
                         rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                        simd_op(p1[0], p2[0]);
-                        simd_op(p1[1], p2[1]);
-                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                        dst[0] = simd_op(p1[0], p2[0]);
+                        dst[1] = simd_op(p1[1], p2[1]);
+                        rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -1030,11 +1142,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m256 p1 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem1)[0]));
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p2[2];
+                            __m256 p2[2], dst[2];
                             rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                            simd_op(p2[0], p1);
-                            simd_op(p2[0], p1);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p2);    // simd stores
+                            dst[0] = simd_op(p1, p2[0]);
+                            dst[1] = simd_op(p1, p2[1]);
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -1075,11 +1187,11 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m256 p2 = _mm256_cvtph_ps(_mm_set1_epi16(reinterpret_cast<Rpp16s*>(srcPtrElem2)[0]));
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p1[2];
+                            __m256 p1[2], dst[2];
                             rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
-                            simd_op(p1[0], p2);
-                            simd_op(p1[1], p2);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                            dst[0] = simd_op(p1[0], p2);
+                            dst[1] = simd_op(p1[1], p2);
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -1119,12 +1231,12 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-                            __m256 p1[2], p2[2];
+                            __m256 p1[2], p2[2], dst[2];
                             rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem1, p1);    // simd loads
                             rpp_simd_load(rpp_load16_f16_to_f32_avx, srcPtrElem2, p2);    // simd loads
-                            simd_op(p1[0], p2[0]);
-                            simd_op(p1[1], p2[1]);
-                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, p1);    // simd stores
+                            dst[0] = simd_op(p1[0], p2[0]);
+                            dst[1] = simd_op(p1[1], p2[1]);
+                            rpp_simd_store(rpp_store16_f32_to_f16_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
@@ -1352,8 +1464,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
-                    simd_op(p2, p1);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p2);    // simd store
+                    __m256i dst = simd_op(p1, p2);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, dst);    // simd store
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -1372,8 +1484,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
-                    simd_op(p1, p2);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
+                    __m256i dst = simd_op(p1, p2);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, dst);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -1392,8 +1504,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                 {
                     __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
                     __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
-                    simd_op(p1, p2);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
+                    __m256i dst = simd_op(p1, p2);    // simd op
+                    _mm256_storeu_si256((__m256i *)dstPtrTemp, dst);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -1427,8 +1539,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);  // simd load
-                        simd_op(p2, p1);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
+                        __m256i dst = simd_op(p1, p2);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -1458,8 +1570,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
-                        simd_op(p1, p2);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                        __m256i dst = simd_op(p1, p2);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
@@ -1489,8 +1601,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                        simd_op(p1, p2);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                        __m256i dst = simd_op(p1, p2);    // simd op
+                        _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
@@ -1534,8 +1646,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                            simd_op(p2, p1);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
+                            __m256i dst = simd_op(p1, p2);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -1577,8 +1689,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
-                            simd_op(p1, p2);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                            __m256i dst = simd_op(p1, p2);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
@@ -1620,8 +1732,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                            simd_op(p1, p2);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                            __m256i dst = simd_op(p1, p2);    // simd op
+                            _mm256_storeu_si256((__m256i *)dstPtrElem, dst);    // simd store
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
@@ -1816,40 +1928,44 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             Rpp32u vectorLoopCount = 0;
             if (src1shape == 1)
             {
-#if __AV__
-                __m256i p1 = simd_set1_val(srcPtrTemp1[0]);    // simd broadcast
+#if __AVX2__
+                __m256 pout[4];
+                __m256 p1 = simd_set1_ps(srcPtrTemp1[0]);    // simd broadcast
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
-                    simd_op(p2, p1);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p2);    // simd store
+                    simd_divide_broadcast_one_si256<T>(pout, p1, p2);    // simd op
+                    store_ps_function<T>(pout, dstPtrTemp);    // simd store
                     srcPtrTemp2 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
 #endif
                  for (; vectorLoopCount < length[0]; vectorLoopCount++)
                  {
-                     op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
+                     divide_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
                      srcPtrTemp2++;
                      dstPtrTemp++;
                  }
             }
             else if (src2shape == 1)
             {
-#if __AV__
-                __m256i p2 = simd_set1_val(srcPtrTemp2[0]);    // simd broadcast
+#if __AVX2__
+                __m256 pout[4];
+                __m256 p2 = simd_set1_ps(srcPtrTemp2[0]);    // simd broadcast
+                printf("P2 print\n");
+                rpp_mm256_print_ps(&p2);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
-                    simd_op(p1, p2);    // simd op
-                    _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd store
+                    simd_divide_broadcast_two_si256<T>(pout, p1, p2);      // simd op
+                    store_ps_function<T>(pout, dstPtrTemp);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
 #endif
                  for (; vectorLoopCount < length[0]; vectorLoopCount++)
                  {
-                     op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
+                     divide_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
                      srcPtrTemp1++;
                      dstPtrTemp++;
                  }
@@ -1862,7 +1978,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                 {
                     __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrTemp1);    // simd load
                     __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrTemp2);    // simd load
-                    simd_op(pout, p1, p2);    // simd op
+                    simd_divide_si256<T>(pout, p1, p2);        // simd op
                     store_ps_function<T>(pout, dstPtrTemp);    // simd store
                     srcPtrTemp1 += vectorIncrement;
                     srcPtrTemp2 += vectorIncrement;
@@ -1871,7 +1987,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
 #endif
                 for (; vectorLoopCount < length[0]; vectorLoopCount++)
                 {
-                    op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
+                    divide_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
                     srcPtrTemp1++;
                     srcPtrTemp2++;
                     dstPtrTemp++;
@@ -1885,6 +2001,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             Rpp32u src2shape = src2length[1];
             if(src1shape == 1)
             {
+                printf("When source 1 shape is 1\n");
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrElem1 = srcPtrTemp1;
@@ -1892,20 +2009,21 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                     Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-#if __AV__
-                    __m256i p1 = simd_set1_val(srcPtrElem1[0]);    // simd broadcast
+#if __AVX2__
+                    __m256 pout[4];
+                    __m256 p1 = simd_set1_ps(srcPtrElem1[0]);    // simd broadcast
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);  // simd load
-                        simd_op(p2, p1);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
+                        simd_divide_broadcast_one_si256<T>(pout, p1, p2);    // simd op
+                        store_ps_function<T>(pout, dstPtrElem);    // simd store
                         srcPtrElem2 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                         srcPtrElem2++;
                         dstPtrElem++;
                     }
@@ -1916,6 +2034,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             }
             else if (src2shape == 1)
             {
+                printf("When source 2 shape is 1\n");
                 for (int i = 0; i < length[0]; i++)
                 {
                     T *srcPtrElem1 = srcPtrTemp1;
@@ -1923,20 +2042,21 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                     Rpp32f *dstPtrElem = dstPtrTemp;
 
                     int vectorLoopCount = 0;
-#if __AV__
-                    __m256i p2 = simd_set1_val(srcPtrElem2[0]);    // simd broadcast
+#if __AVX2__
+                    __m256 pout[4];
+                    __m256 p2 = simd_set1_ps(srcPtrElem2[0]);    // simd broadcast
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
-                        simd_op(p1, p2);    // simd op
-                        _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                        simd_divide_broadcast_two_si256<T>(pout, p1, p2);    // simd op
+                        store_ps_function<T>(pout, dstPtrElem);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         dstPtrElem += vectorIncrement;
                     }
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                         srcPtrElem1++;
                         dstPtrElem++;
                     }
@@ -1961,7 +2081,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                     {
                         __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                         __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                        simd_op(pout, p1, p2);    // simd op
+                        simd_divide_si256<T>(pout, p1, p2);           // simd op
                         store_ps_function<T>(pout, dstPtrElem);    // simd store
                         srcPtrElem1 += vectorIncrement;
                         srcPtrElem2 += vectorIncrement;
@@ -1970,7 +2090,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
 #endif
                     for (; vectorLoopCount < length[1]; vectorLoopCount++)
                     {
-                        op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                        divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                         srcPtrElem1++;
                         srcPtrElem2++;
                         dstPtrElem++;
@@ -2001,20 +2121,21 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-#if __AV__
-                        __m256i p1 = simd_set1_val(srcPtrElem1[0]);    // simd broadcast
+#if __AVX2__
+                        __m256 pout[4];
+                        __m256 p1 = simd_set1_ps(srcPtrElem1[0]);    // simd broadcast
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                            simd_op(p2, p1);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p2);    // simd store
+                            simd_divide_broadcast_one_si256<T>(pout, p1, p2);    // simd op
+                            store_ps_function<T>(pout, dstPtrElem);    // simd store
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem2++;
                             dstPtrElem++;
                         }
@@ -2044,20 +2165,21 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-#if __AV__
-                        __m256i p2 = simd_set1_val(srcPtrElem2[0]);    // simd broadcast
+#if __AVX2__
+                        __m256 pout[4];
+                        __m256 p2 = simd_set1_ps(srcPtrElem2[0]);    // simd broadcast
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
-                            simd_op(p1, p2);    // simd op
-                            _mm256_storeu_si256((__m256i *)dstPtrElem, p1);    // simd store
+                            simd_divide_broadcast_two_si256<T>(pout, p1, p2);      // simd op
+                            store_ps_function<T>(pout, dstPtrTemp);            // simd store
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem1++;
                             dstPtrElem++;
                         }
@@ -2088,12 +2210,13 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
 
                         int vectorLoopCount = 0;
 #if __AVX2__
+                        __m256 pout[4];
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                             __m256i p2 = _mm256_loadu_si256((const __m256i *)srcPtrElem2);    // simd load
-                            simd_op(pout, p1, p2);    // simd op
-                            store_ps_function<T>(pout, dstPtrElem);    // simd store
+                            simd_divide_si256<T>(pout, p1, p2);           // simd op
+                            store_ps_function<T>(pout, dstPtrElem);    // simd store                            srcPtrElem1 += vectorIncrement;
                             srcPtrElem1 += vectorIncrement;
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
@@ -2101,7 +2224,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
 #endif
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
-                            op(dstPtrElem, srcPtrElem1, srcPtrElem2);
+                            divide_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem1++;
                             srcPtrElem2++;
                             dstPtrElem++;
