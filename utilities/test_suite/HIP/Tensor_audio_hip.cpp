@@ -347,11 +347,11 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
-                    srcDimsTensor[0] = 80;
+                    srcDimsTensor[0] = 257;
                     srcDimsTensor[1] = 3170;
-                    srcDimsTensor[2] = 80;
+                    srcDimsTensor[2] = 257;
                     srcDimsTensor[3] = 552;
-                    srcDimsTensor[4] = 80;
+                    srcDimsTensor[4] = 257;
                     srcDimsTensor[5] = 1131;
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             wallTime = endWallTime - startWallTime;

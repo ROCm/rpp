@@ -357,7 +357,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "mel_filter_bank";
 
-                    Rpp32f sampleRate = 44100;
+                    Rpp32f sampleRate = 16000;
                     Rpp32f minFreq = 0.0;
                     Rpp32f maxFreq = sampleRate / 2;
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             wallTime = endWallTime - startWallTime;
