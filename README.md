@@ -46,7 +46,7 @@ Spectrogram kernel output represented as a image <br><br>
 * Linux
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15 SP6` / `15 SP7`
+  * SLES - `15 SP7`
 
 
 ### Hardware
