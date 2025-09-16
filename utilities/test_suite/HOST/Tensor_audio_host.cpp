@@ -121,7 +121,7 @@ int main(int argc, char **argv)
         descriptorPtr3D->offsetInBytes = 0;
         descriptorPtr3D->dataType = RpptDataType::F32;
         descriptorPtr3D->dims[0] = batchSize;
-        descriptorPtr3D->dims[1] = maxSrcWidth;
+        descriptorPtr3D->dims[1] = (maxSrcWidth / 8) * 8 + 8; // Pad width up to the next multiple of 8
         descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
     }
 
