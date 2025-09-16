@@ -391,33 +391,6 @@ __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
     return *(uint *)&dst_c4;
 }
 
-// Packing to Uints
-
-__device__ __forceinline__ uint4 rpp_hip_pack_uint4(uchar4 src)
-{
-    uint4 dst_ui4;
-    dst_ui4.w = (uint)(src.w);
-    dst_ui4.z = (uint)(src.z);
-    dst_ui4.y = (uint)(src.y);
-    dst_ui4.x = (uint)(src.x);
-
-    return *(uint4 *)&dst_ui4;
-}
-
-// Packing to Ints
-
-__device__ __forceinline__ void rpp_hip_pack_int8(d_schar8_s *src_sc8, d_int8 *srcPtr_i8)
-{
-    srcPtr_i8->i1[0] = int(src_sc8->sc1[0]);
-    srcPtr_i8->i1[1] = int(src_sc8->sc1[1]);
-    srcPtr_i8->i1[2] = int(src_sc8->sc1[2]);
-    srcPtr_i8->i1[3] = int(src_sc8->sc1[3]);
-    srcPtr_i8->i1[4] = int(src_sc8->sc1[4]);
-    srcPtr_i8->i1[5] = int(src_sc8->sc1[5]);
-    srcPtr_i8->i1[6] = int(src_sc8->sc1[6]);
-    srcPtr_i8->i1[7] = int(src_sc8->sc1[7]);
-}
-
 // -------------------- Set 2 - Un-Packing --------------------
 
 // Un-Packing from U8s
