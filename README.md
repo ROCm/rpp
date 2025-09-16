@@ -46,7 +46,8 @@ Spectrogram kernel output represented as a image <br><br>
 * Linux
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
+  * SLES - `15 SP6` / `15 SP7`
+
 
 ### Hardware
 * **CPU**: [AMD64](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
