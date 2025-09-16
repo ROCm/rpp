@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool dropoutTypeCase = (dropoutTypeCases.find(testCase) != dropoutTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
@@ -137,6 +138,14 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
+    if (testCase == DROPOUT)
+    {
+        switch (additionalParam)
+        {
+            case CHANNEL:
+                funcName += "_channel"; break;
+        }
+    }
     if (funcName.empty())
     {
         if (testType == 0)
@@ -463,6 +472,10 @@ int main(int argc, char **argv)
     Rpp8u *posterizeLevelBits = nullptr;
     if(testCase == POSTERIZE)
         CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
+
+    Rpp32f *dropoutProbability = nullptr;
+    if(testCase == DROPOUT && dropoutTypeCase == CHANNEL)
+        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutProbability, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1721,6 +1734,36 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case DROPOUT:
+                {
+                    testCaseName = "dropout";
+
+                    switch(additionalParam)
+                    {
+                        case CHANNEL:
+                        {
+                            testCaseName = "channel_dropout";
+                            bool randomSeed = qaFlag ? 0 : 1;
+                            for (i = 0; i < batchSize; i++)
+                                dropoutProbability[i] = 0.4f;
+
+                            startWallTime = omp_get_wtime();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        default:
+                        {
+                            missingFuncFlag = 1;
+                            break;
+                        }
+                    }
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -1978,5 +2021,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
+    if(dropoutProbability != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(dropoutProbability));
     return 0;
 }
