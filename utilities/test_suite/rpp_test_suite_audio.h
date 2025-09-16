@@ -91,7 +91,7 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
     descPtr->c = maxChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    // descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    descPtr->w = ((descPtr->w / 8) * 8) + 8;
     descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
     descPtr->strides.hStride = descPtr->c * descPtr->w;
     descPtr->strides.wStride = descPtr->c;
