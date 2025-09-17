@@ -462,6 +462,18 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&rgbTensor, batchSize * sizeof(RpptRGB)));
     }
 
+    Rpp32f *brightness;
+    Rpp32f *contrast;
+    Rpp32f *hue;
+    Rpp32f *saturation;
+    if(testCase == COLOR_TWIST)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&brightness, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&contrast, batchSize * sizeof(RpptRGB)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&hue, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(RpptRGB)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -1111,10 +1123,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_twist";
 
-                    Rpp32f brightness[batchSize];
-                    Rpp32f contrast[batchSize];
-                    Rpp32f hue[batchSize];
-                    Rpp32f saturation[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
                         brightness[i] = 1.4;
