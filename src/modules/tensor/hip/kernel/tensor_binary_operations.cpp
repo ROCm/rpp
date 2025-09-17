@@ -31,8 +31,8 @@ struct ArithmeticMultiply {
 // Functor for arithmetic DIVIDE operation
 template <typename T>
 struct ArithmeticDivide {
-    __device__ __forceinline__ T operator()(T a, T b) const {
-        return a / b;
+    __device__ __forceinline__ float operator()(T a, T b) const {
+        return static_cast<float>(a) / static_cast<float>(b);
     }
 };
 
@@ -94,13 +94,13 @@ template<> struct ArithmeticLoadStoreExecute<float>
     __device__ __forceinline__ static void rpp_hip_pack_and_store8(float *dst, d_float8 *dst_f8) { rpp_hip_pack_float8_and_store8(dst, dst_f8); };
 };
 
-template<> struct ArithmeticLoadStoreExecute<half>
+/*template<> struct ArithmeticLoadStoreExecute<half>
 {
     using VectorType = d_float8;
 
     __device__ __forceinline__ static void rpp_hip_load8(half *src, d_float8 *dst) { rpp_hip_load8_and_unpack_to_float8(src, dst); }
     __device__ __forceinline__ static void rpp_hip_pack_and_store8(half *dst, d_float8 *dst_f8) { rpp_hip_pack_float8_and_store8(dst, dst_f8); };
-};
+};*/
 
 
 
@@ -109,18 +109,18 @@ template<typename VectorType, typename OpInstance> struct ArithmeticOperationExe
 template<typename VectorType, typename T> struct ArithmeticOperationExecute<VectorType, ArithmeticAdd<T>>  { __device__ __forceinline__ static void rpp_hip_math_arithmeticOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_add8 (a, b, c);} };
 template<typename VectorType, typename T> struct ArithmeticOperationExecute<VectorType, ArithmeticSubtract<T>> { __device__ __forceinline__ static void rpp_hip_math_arithmeticOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_subtract8(a, b, c);} };
 template<typename VectorType, typename T> struct ArithmeticOperationExecute<VectorType, ArithmeticMultiply<T>> { __device__ __forceinline__ static void rpp_hip_math_arithmeticOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_multiply8(a, b, c);} };
-template<typename VectorType, typename T> struct ArithmeticOperationExecute<VectorType, ArithmeticDivide<T>> { __device__ __forceinline__ static void rpp_hip_math_arithmeticOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_divide8(a, b, c);} };
+template<typename VectorType, typename T> struct ArithmeticOperationExecute<VectorType, ArithmeticDivide<T>> { __device__ __forceinline__ static void rpp_hip_math_arithmeticOp8(VectorType *a, VectorType *b, d_float8 *c){ rpp_hip_math_divide8(a, b, c);} };
 
 // -------------------- Set 2 - bitwise operation kernels --------------------
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_1d_hip_tensor(T *srcPtr1,
-                                               T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_1d_hip_tensor(T1 *srcPtr1,
+                                               T1 *srcPtr2,
                                                uint* srcStrides1,
                                                uint* srcStrides2,
                                                uint *src1BeginOffsets,
                                                uint *src2BeginOffsets,
-                                               T *dstPtr,
+                                               T2 *dstPtr,
                                                uint* dstStrides,
                                                uint *dstDims,
                                                Operation op)
@@ -143,10 +143,10 @@ __global__ void tensor_op_tensor_1d_hip_tensor(T *srcPtr1,
     dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
-                                                             T *src2Ptr,
-                                                             T *dstPtr,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_non_broadcast_1d_hip_tensor(T1 *src1Ptr,
+                                                             T1 *src2Ptr,
+                                                             T2 *dstPtr,
                                                              uint strides,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
@@ -155,7 +155,8 @@ __global__ void tensor_op_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
     uint id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    using VectorType = typename ArithmeticLoadStoreExecute<T>::VectorType;
+    using VectorType1 = typename ArithmeticLoadStoreExecute<T1>::VectorType;
+    using VectorType2 = typename ArithmeticLoadStoreExecute<T2>::VectorType;
 
     uint *roi1 = &roiTensor1[id_z * 4];
     uint beginX1 = roi1[0];
@@ -171,21 +172,22 @@ __global__ void tensor_op_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
     uint srcIdx2 = (id_z * strides) + id_x + beginX2;
     uint dstIdx = (id_z * strides) + id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    VectorType1 src1_vec8, src2_vec8;
+    VectorType2 dst_vec8;
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_2d_hip_tensor(T *srcPtr1,
-                                               T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
+                                               T1 *srcPtr2,
                                                uint* srcStrides1,
                                                uint* srcStrides2,
                                                uint *src1BeginOffsets,
                                                uint *src2BeginOffsets,
-                                               T *dstPtr,
+                                               T2 *dstPtr,
                                                uint *dstStrides,
                                                uint *dstDims,
                                                Operation op)
@@ -210,10 +212,10 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T *srcPtr1,
     dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
-                                                             T *src2Ptr,
-                                                             T *dstPtr,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_non_broadcast_2d_hip_tensor(T1 *src1Ptr,
+                                                             T1 *src2Ptr,
+                                                             T2 *dstPtr,
                                                              uint2 stridesNH,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
@@ -223,7 +225,8 @@ __global__ void tensor_op_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;       // height
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // batchsize
 
-    using VectorType = typename ArithmeticLoadStoreExecute<T>::VectorType;
+    using VectorType1 = typename ArithmeticLoadStoreExecute<T1>::VectorType;
+    using VectorType2 = typename ArithmeticLoadStoreExecute<T2>::VectorType;
 
     uint *roi1 = &roiTensor1[id_z * 4];
     uint beginY1 = roi1[0];
@@ -242,21 +245,22 @@ __global__ void tensor_op_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
     uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
     uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    VectorType1 src1_vec8, src2_vec8;
+    VectorType2 dst_vec8;
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_3d_hip_tensor(T *srcPtr1,
-                                               T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
+                                               T1 *srcPtr2,
                                                uint* srcStrides1,
                                                uint* srcStrides2,
                                                uint src1BeginOffset,
                                                uint src2BeginOffset,
-                                               T *dstPtr,
+                                               T2 *dstPtr,
                                                uint* dstStrides,
                                                uint *dstDims,
                                                Operation op)
@@ -276,10 +280,10 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T *srcPtr1,
     dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
-                                                             T *src2Ptr,
-                                                             T *dstPtr,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_non_broadcast_3d_hip_tensor(T1 *src1Ptr,
+                                                             T1 *src2Ptr,
+                                                             T2 *dstPtr,
                                                              uint2 stridesDH,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
@@ -289,7 +293,8 @@ __global__ void tensor_op_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;       // lengthY
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // lengthZ
 
-    using VectorType = typename ArithmeticLoadStoreExecute<T>::VectorType;
+    using VectorType1 = typename ArithmeticLoadStoreExecute<T1>::VectorType;
+    using VectorType2 = typename ArithmeticLoadStoreExecute<T2>::VectorType;
 
     uint *roi1 = roiTensor1;
     uint beginZ1 = roi1[0];
@@ -311,22 +316,23 @@ __global__ void tensor_op_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
     uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + beginX2;
     uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    VectorType1 src1_vec8, src2_vec8;
+    VectorType2 dst_vec8;
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_nd_hip_tensor(T *srcPtr1,
-                                               T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_nd_hip_tensor(T1 *srcPtr1,
+                                               T1 *srcPtr2,
                                                uint *srcStrides1,
                                                uint *srcStrides2,
                                                uint *src1BeginOffsets,
                                                uint *src2BeginOffsets,
                                                uint numDims,
-                                               T *dstPtr,
+                                               T2 *dstPtr,
                                                uint *dstStrides,
                                                uint *dstDims,
                                                Operation op)
@@ -359,12 +365,12 @@ __global__ void tensor_op_tensor_nd_hip_tensor(T *srcPtr1,
     dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
-template <typename T, typename Operation>
-__global__ void tensor_op_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
-                                                             T *src2Ptr,
+template <typename T1, typename T2, typename Operation>
+__global__ void tensor_op_tensor_non_broadcast_nd_hip_tensor(T1 *src1Ptr,
+                                                             T1 *src2Ptr,
                                                              uint* src1Dims,
                                                              uint numDims,
-                                                             T *dstPtr,
+                                                             T2 *dstPtr,
                                                              uint *strides,
                                                              uint *roiTensor1,
                                                              uint *roiTensor2,
@@ -373,7 +379,8 @@ __global__ void tensor_op_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
 
-    using VectorType = typename ArithmeticLoadStoreExecute<T>::VectorType;
+    using VectorType1 = typename ArithmeticLoadStoreExecute<T1>::VectorType;
+    using VectorType2 = typename ArithmeticLoadStoreExecute<T2>::VectorType;
 
     if(id_x >= strides[0])
         return;
@@ -403,22 +410,23 @@ __global__ void tensor_op_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
         srcIdx2 += (begin2[i] + (coords[i] * strides[i]));
     }
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    VectorType1 src1_vec8, src2_vec8;
+    VectorType2 dst_vec8;
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
 }
 
 // -------------------- Set 3 - executor kernels --------------------
 
 // Contains kernel launches to the broadcast version, can be used for the non broadcast cases also
-template <typename T, typename Operation>
-RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T *srcPtr1,
-                                                           T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
+                                                           T1 *srcPtr2,
                                                            RpptGenericDescPtr srcGenericDescPtr1,
                                                            RpptGenericDescPtr srcGenericDescPtr2,
-                                                           T *dstPtr,
+                                                           T2 *dstPtr,
                                                            RpptGenericDescPtr dstGenericDescPtr,
                                                            Operation op,
                                                            uint *roiTensor1,
@@ -659,12 +667,12 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T *srcPtr1,
 }
 
 // Contains kernel launches specific to the non broadcast version, cannot be used for the broadcast cases
-template <typename T, typename Operation>
-RppStatus hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(T *srcPtr1,
-                                                                         T *srcPtr2,
+template <typename T1, typename T2, typename Operation>
+RppStatus hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(T1 *srcPtr1,
+                                                                         T1 *srcPtr2,
                                                                          RpptGenericDescPtr srcGenericDescPtr1,
                                                                          RpptGenericDescPtr srcGenericDescPtr2,
-                                                                         T *dstPtr,
+                                                                         T2 *dstPtr,
                                                                          RpptGenericDescPtr dstGenericDescPtr,
                                                                          Operation op,
                                                                          uint *roiTensor1,
@@ -764,12 +772,12 @@ RppStatus hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(T *srcP
 }
 
 // Dispatcher function that dispatches the calls to the appropriate templated function based on the datatype and operation
-template<typename T>
-RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T *srcPtr1,
-                                                          T *srcPtr2,
+template<typename T1, typename T2>
+RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
+                                                          T1 *srcPtr2,
                                                           RpptGenericDescPtr srcPtr1GenericDescPtr,
                                                           RpptGenericDescPtr srcPtr2GenericDescPtr,
-                                                          T *dstPtr,
+                                                          T2 *dstPtr,
                                                           RpptGenericDescPtr dstGenericDescPtr,
                                                           RpptOp tensorOp,
                                                           RpptBroadcastMode broadcastMode,
@@ -779,45 +787,75 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T *srcPtr1,
 {
     if(broadcastMode == RPP_BROADCAST_ENABLE)
     {
-        switch(tensorOp)
+        if constexpr (std::is_same_v<T1, T2>)
         {
-            case RPP_TENSOR_OP_ADD:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_SUBTRACT:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_MULTIPLY:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_DIVIDE:
-                hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
+            switch(tensorOp)
+            {
+                case RPP_TENSOR_OP_ADD:
+                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                case RPP_TENSOR_OP_SUBTRACT:
+                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                case RPP_TENSOR_OP_MULTIPLY:
+                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                default :
+                    printf("Operation not supported\n");
+                    break;
+            }
+        }
+        if constexpr (std::is_same_v<T2, Rpp32f>)
+        {
+            switch(tensorOp)
+            {
+                case RPP_TENSOR_OP_DIVIDE:
+                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                default :
+                    printf("Operation not supported\n");
+                    break;
+            }
         }
     }
     else
     {
-        switch(tensorOp)
+        if constexpr (std::is_same_v<T1, T2>)
         {
-            case RPP_TENSOR_OP_ADD:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_SUBTRACT:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_MULTIPLY:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            case RPP_TENSOR_OP_DIVIDE:
-                hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
+            switch(tensorOp)
+            {
+                case RPP_TENSOR_OP_ADD:
+                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                case RPP_TENSOR_OP_SUBTRACT:
+                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                case RPP_TENSOR_OP_MULTIPLY:
+                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                default :
+                    printf("Operation not supported\n");
+                    break;
+            }
+        }
+        if constexpr (std::is_same_v<T2, Rpp32f>)
+        {
+            switch(tensorOp)
+            {
+                case RPP_TENSOR_OP_DIVIDE:
+                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                    break;
+                default :
+                    printf("Operation not supported\n");
+                    break;
+            }
         }
     }
 
     return RPP_SUCCESS;
 }
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u>(Rpp8u*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u, Rpp8u>(Rpp8u*,
                                                                           Rpp8u*,
                                                                           RpptGenericDescPtr,
                                                                           RpptGenericDescPtr,
@@ -829,7 +867,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u>(Rpp8u*
                                                                           Rpp32u*,
                                                                           rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8s>(Rpp8s*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u, Rpp32f>(Rpp8u*,
+                                                                          Rpp8u*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptGenericDescPtr,
+                                                                          Rpp32f*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptOp,
+                                                                          RpptBroadcastMode,
+                                                                          Rpp32u*,
+                                                                          Rpp32u*,
+                                                                          rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8s, Rpp8s>(Rpp8s*,
                                                                           Rpp8s*,
                                                                           RpptGenericDescPtr,
                                                                           RpptGenericDescPtr,
@@ -841,8 +891,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8s>(Rpp8s*
                                                                           Rpp32u*,
                                                                           rpp::Handle&);
 
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8s, Rpp32f>(Rpp8s*,
+                                                                          Rpp8s*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptGenericDescPtr,
+                                                                          Rpp32f*,
+                                                                          RpptGenericDescPtr,
+                                                                          RpptOp,
+                                                                          RpptBroadcastMode,
+                                                                          Rpp32u*,
+                                                                          Rpp32u*,
+                                                                          rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u>(Rpp16u*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u, Rpp16u>(Rpp16u*,
                                                                            Rpp16u*,
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
@@ -854,7 +915,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u>(Rpp16
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16s>(Rpp16s*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16u, Rpp32f>(Rpp16u*,
+                                                                           Rpp16u*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptGenericDescPtr,
+                                                                           Rpp32f*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptOp,
+                                                                           RpptBroadcastMode,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16s, Rpp16s>(Rpp16s*,
                                                                            Rpp16s*,
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
@@ -866,7 +939,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16s>(Rpp16
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u>(Rpp32u*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp16s, Rpp32f>(Rpp16s*,
+                                                                           Rpp16s*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptGenericDescPtr,
+                                                                           Rpp32f*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptOp,
+                                                                           RpptBroadcastMode,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u, Rpp32u>(Rpp32u*,
                                                                            Rpp32u*,
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
@@ -878,7 +963,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u>(Rpp32
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32s>(Rpp32s*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32u, Rpp32f>(Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptGenericDescPtr,
+                                                                           Rpp32f*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptOp,
+                                                                           RpptBroadcastMode,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32s, Rpp32s>(Rpp32s*,
                                                                            Rpp32s*,
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
@@ -890,7 +987,19 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32s>(Rpp32
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32f>(Rpp32f*,
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32s, Rpp32f>(Rpp32s*,
+                                                                           Rpp32s*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptGenericDescPtr,
+                                                                           Rpp32f*,
+                                                                           RpptGenericDescPtr,
+                                                                           RpptOp,
+                                                                           RpptBroadcastMode,
+                                                                           Rpp32u*,
+                                                                           Rpp32u*,
+                                                                           rpp::Handle&);
+
+template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32f, Rpp32f>(Rpp32f*,
                                                                            Rpp32f*,
                                                                            RpptGenericDescPtr,
                                                                            RpptGenericDescPtr,
@@ -902,7 +1011,7 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32f>(Rpp32
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
 
-template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
+/*template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
                                                                          half*,
                                                                          RpptGenericDescPtr,
                                                                          RpptGenericDescPtr,
@@ -912,4 +1021,4 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
                                                                          RpptBroadcastMode,
                                                                          Rpp32u*,
                                                                          Rpp32u*,
-                                                                         rpp::Handle&);
+                                                                         rpp::Handle&);*/

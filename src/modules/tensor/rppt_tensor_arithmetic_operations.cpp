@@ -764,7 +764,7 @@ RppStatus rppt_tensor_divide_tensor_host(RppPtr_t srcPtr1,
                                                           static_cast<Rpp8u *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                           srcPtr1GenericDescPtr,
                                                           srcPtr2GenericDescPtr,
-                                                          static_cast<Rpp32f *>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                          reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                           dstGenericDescPtr,
                                                           RPP_TENSOR_OP_DIVIDE,
                                                           broadcastMode,
@@ -778,7 +778,7 @@ RppStatus rppt_tensor_divide_tensor_host(RppPtr_t srcPtr1,
                                                           static_cast<Rpp8s *>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                           srcPtr1GenericDescPtr,
                                                           srcPtr2GenericDescPtr,
-                                                          static_cast<Rpp32f *>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                          reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                           dstGenericDescPtr,
                                                           RPP_TENSOR_OP_DIVIDE,
                                                           broadcastMode,
@@ -1201,7 +1201,7 @@ RppStatus rppt_tensor_add_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32)))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1215,7 +1215,21 @@ RppStatus rppt_tensor_add_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32))
+    {
+        tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
+                                                        srcPtr1GenericDescPtr,
+                                                        srcPtr2GenericDescPtr,
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        dstGenericDescPtr,
+                                                        RPP_TENSOR_OP_ADD,
+                                                        broadcastMode,
+                                                        roiTensorSrc1,
+                                                        roiTensorSrc2,
+                                                        rpp::deref(rppHandle));
+    }
+    /*else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1228,7 +1242,7 @@ RppStatus rppt_tensor_add_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
-    }
+    }*/
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
@@ -1318,7 +1332,7 @@ RppStatus rppt_tensor_subtract_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32)))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1332,7 +1346,21 @@ RppStatus rppt_tensor_subtract_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32))
+    {
+        tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
+                                                        srcPtr1GenericDescPtr,
+                                                        srcPtr2GenericDescPtr,
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        dstGenericDescPtr,
+                                                        RPP_TENSOR_OP_SUBTRACT,
+                                                        broadcastMode,
+                                                        roiTensorSrc1,
+                                                        roiTensorSrc2,
+                                                        rpp::deref(rppHandle));
+    }
+    /*else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1345,7 +1373,7 @@ RppStatus rppt_tensor_subtract_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
-    }
+    }*/
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
@@ -1435,7 +1463,7 @@ RppStatus rppt_tensor_multiply_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if (((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32)) || ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32)))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1449,7 +1477,21 @@ RppStatus rppt_tensor_multiply_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32))
+    {
+        tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
+                                                        srcPtr1GenericDescPtr,
+                                                        srcPtr2GenericDescPtr,
+                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        dstGenericDescPtr,
+                                                        RPP_TENSOR_OP_MULTIPLY,
+                                                        broadcastMode,
+                                                        roiTensorSrc1,
+                                                        roiTensorSrc2,
+                                                        rpp::deref(rppHandle));
+    }
+    /*else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1462,7 +1504,7 @@ RppStatus rppt_tensor_multiply_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
-    }
+    }*/
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
@@ -1496,13 +1538,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
 {
     #ifdef HIP_COMPILE
 
-    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
                                                         static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1510,13 +1552,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(static_cast<Rpp8s*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes,
                                                         static_cast<Rpp8s*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes,
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1524,13 +1566,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) && (dstGenericDescPtr->dataType == RpptDataType::U16))
+    else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp16u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp16u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        reinterpret_cast<Rpp16u*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1538,13 +1580,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if((srcPtr1GenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::I16))
+    else if((srcPtr1GenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp16s*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp16s*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        reinterpret_cast<Rpp16s*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1552,13 +1594,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::U32))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        reinterpret_cast<Rpp32u*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1566,13 +1608,13 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::I32))
+    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
                                                         srcPtr1GenericDescPtr,
                                                         srcPtr2GenericDescPtr,
-                                                        reinterpret_cast<Rpp32s*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                         dstGenericDescPtr,
                                                         RPP_TENSOR_OP_DIVIDE,
                                                         broadcastMode,
@@ -1580,7 +1622,7 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
     }
-    else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    /*else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),
                                                         reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr2) + srcPtr2GenericDescPtr->offsetInBytes),
@@ -1593,7 +1635,7 @@ RppStatus rppt_tensor_divide_tensor_gpu(RppPtr_t srcPtr1,
                                                         roiTensorSrc1,
                                                         roiTensorSrc2,
                                                         rpp::deref(rppHandle));
-    }
+    }*/
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         tensor_binary_arithmetic_op_dispatch_gpu_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcPtr1GenericDescPtr->offsetInBytes),

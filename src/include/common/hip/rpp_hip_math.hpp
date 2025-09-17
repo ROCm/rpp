@@ -324,40 +324,76 @@ __device__ __forceinline__ void rpp_hip_math_divide8(d_float8 *src1Ptr_f8, d_flo
     dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] / src2Ptr_f8->f4[1];
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_uint8 *src1Ptr_f8, d_uint8 *src2Ptr_f8, d_uint8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_uint8 *src1Ptr_f8, d_uint8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->ui4[0] = src1Ptr_f8->ui4[0] / src2Ptr_f8->ui4[0];
-    dstPtr_f8->ui4[1] = src1Ptr_f8->ui4[1] / src2Ptr_f8->ui4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->ui1[0]) / static_cast<float>(src2Ptr_f8->ui1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->ui1[1]) / static_cast<float>(src2Ptr_f8->ui1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->ui1[2]) / static_cast<float>(src2Ptr_f8->ui1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->ui1[3]) / static_cast<float>(src2Ptr_f8->ui1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->ui1[4]) / static_cast<float>(src2Ptr_f8->ui1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->ui1[5]) / static_cast<float>(src2Ptr_f8->ui1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->ui1[6]) / static_cast<float>(src2Ptr_f8->ui1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->ui1[7]) / static_cast<float>(src2Ptr_f8->ui1[7]);
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->i4[0] = src1Ptr_f8->i4[0] / src2Ptr_f8->i4[0];
-    dstPtr_f8->i4[1] = src1Ptr_f8->i4[1] / src2Ptr_f8->i4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->i1[0]) / static_cast<float>(src2Ptr_f8->i1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->i1[1]) / static_cast<float>(src2Ptr_f8->i1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->i1[2]) / static_cast<float>(src2Ptr_f8->i1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->i1[3]) / static_cast<float>(src2Ptr_f8->i1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->i1[4]) / static_cast<float>(src2Ptr_f8->i1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->i1[5]) / static_cast<float>(src2Ptr_f8->i1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->i1[6]) / static_cast<float>(src2Ptr_f8->i1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->i1[7]) / static_cast<float>(src2Ptr_f8->i1[7]);
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->us4[0] = src1Ptr_f8->us4[0] / src2Ptr_f8->us4[0];
-    dstPtr_f8->us4[1] = src1Ptr_f8->us4[1] / src2Ptr_f8->us4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->us1[0]) / static_cast<float>(src2Ptr_f8->us1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->us1[1]) / static_cast<float>(src2Ptr_f8->us1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->us1[2]) / static_cast<float>(src2Ptr_f8->us1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->us1[3]) / static_cast<float>(src2Ptr_f8->us1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->us1[4]) / static_cast<float>(src2Ptr_f8->us1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->us1[5]) / static_cast<float>(src2Ptr_f8->us1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->us1[6]) / static_cast<float>(src2Ptr_f8->us1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->us1[7]) / static_cast<float>(src2Ptr_f8->us1[7]);
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_short8 *src1Ptr_f8, d_short8 *src2Ptr_f8, d_short8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_short8 *src1Ptr_f8, d_short8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->s4[0] = src1Ptr_f8->s4[0] / src2Ptr_f8->s4[0];
-    dstPtr_f8->s4[1] = src1Ptr_f8->s4[1] / src2Ptr_f8->s4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->s1[0]) / static_cast<float>(src2Ptr_f8->s1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->s1[1]) / static_cast<float>(src2Ptr_f8->s1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->s1[2]) / static_cast<float>(src2Ptr_f8->s1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->s1[3]) / static_cast<float>(src2Ptr_f8->s1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->s1[4]) / static_cast<float>(src2Ptr_f8->s1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->s1[5]) / static_cast<float>(src2Ptr_f8->s1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->s1[6]) / static_cast<float>(src2Ptr_f8->s1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->s1[7]) / static_cast<float>(src2Ptr_f8->s1[7]);
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_schar8 *src1Ptr_f8, d_schar8 *src2Ptr_f8, d_schar8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_schar8 *src1Ptr_f8, d_schar8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->sc4[0] = src1Ptr_f8->sc4[0] / src2Ptr_f8->sc4[0];
-    dstPtr_f8->sc4[1] = src1Ptr_f8->sc4[1] / src2Ptr_f8->sc4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->sc1[0]) / static_cast<float>(src2Ptr_f8->sc1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->sc1[1]) / static_cast<float>(src2Ptr_f8->sc1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->sc1[2]) / static_cast<float>(src2Ptr_f8->sc1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->sc1[3]) / static_cast<float>(src2Ptr_f8->sc1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->sc1[4]) / static_cast<float>(src2Ptr_f8->sc1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->sc1[5]) / static_cast<float>(src2Ptr_f8->sc1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->sc1[6]) / static_cast<float>(src2Ptr_f8->sc1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->sc1[7]) / static_cast<float>(src2Ptr_f8->sc1[7]);
 }
 
-__device__ __forceinline__ void rpp_hip_math_divide8(d_uchar8 *src1Ptr_f8, d_uchar8 *src2Ptr_f8, d_uchar8 *dstPtr_f8)
+__device__ __forceinline__ void rpp_hip_math_divide8(d_uchar8 *src1Ptr_f8, d_uchar8 *src2Ptr_f8, d_float8 *dstPtr_f8)
 {
-    dstPtr_f8->uc4[0] = src1Ptr_f8->uc4[0] / src2Ptr_f8->uc4[0];
-    dstPtr_f8->uc4[1] = src1Ptr_f8->uc4[1] / src2Ptr_f8->uc4[1];
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->uc1[0]) / static_cast<float>(src2Ptr_f8->uc1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->uc1[1]) / static_cast<float>(src2Ptr_f8->uc1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->uc1[2]) / static_cast<float>(src2Ptr_f8->uc1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->uc1[3]) / static_cast<float>(src2Ptr_f8->uc1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->uc1[4]) / static_cast<float>(src2Ptr_f8->uc1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->uc1[5]) / static_cast<float>(src2Ptr_f8->uc1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->uc1[6]) / static_cast<float>(src2Ptr_f8->uc1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->uc1[7]) / static_cast<float>(src2Ptr_f8->uc1[7]);
 }
 
 // d_float8 divide with constant
