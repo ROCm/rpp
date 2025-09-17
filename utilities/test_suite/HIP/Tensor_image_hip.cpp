@@ -474,6 +474,14 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(RpptRGB)));
     }
 
+    Rpp32f *contrastFactor;
+    Rpp32f *contrastCenter;
+    if(testCase == CONTRAST)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&contrastFactor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&contrastCenter, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -625,8 +633,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "contrast";
 
-                    Rpp32f contrastFactor[batchSize];
-                    Rpp32f contrastCenter[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
                         contrastFactor[i] = 2.96;

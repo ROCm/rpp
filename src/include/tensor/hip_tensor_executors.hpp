@@ -340,6 +340,8 @@ RppStatus hip_exec_contrast_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
+                                   Rpp32f *contrastFactorTensor,
+                                   Rpp32f *contrastCenterTensor,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle);
