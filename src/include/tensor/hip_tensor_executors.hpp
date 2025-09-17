@@ -251,6 +251,8 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
+                                     Rpp32f *alphaTensor,
+                                     Rpp32f *betaTensor,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
