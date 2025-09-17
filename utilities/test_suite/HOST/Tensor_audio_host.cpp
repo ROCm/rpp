@@ -121,15 +121,15 @@ int main(int argc, char **argv)
         descriptorPtr3D->offsetInBytes = 0;
         descriptorPtr3D->dataType = RpptDataType::F32;
         descriptorPtr3D->dims[0] = batchSize;
-        descriptorPtr3D->dims[1] = (maxSrcWidth / 8) * 8 + 8; // Pad width up to the next multiple of 8
+        descriptorPtr3D->dims[1] = (maxSrcWidth / 8) * 8 + 8; // Ensure a consistent dimension order between generic and typed descriptors to prevent errors.
         descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
     }
 
     // set buffer sizes for src/dst
     if(testCase == MEL_FILTER_BANK)
     {
-        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+        iBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
     }
     else
     {
@@ -138,12 +138,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.16;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * RESAMPLE_BUFFER_SCALE_FACTOR;
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3170 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = AUDIO_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
