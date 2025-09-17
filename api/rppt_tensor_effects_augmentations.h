@@ -1030,7 +1030,7 @@ RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_coarse_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, int maxBoxesPerImage, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_coarse_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u maxBoxesPerImage, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Coarse dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
@@ -1052,7 +1052,7 @@ RppStatus rppt_coarse_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_coarse_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, int maxBoxesPerImage, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_coarse_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u maxBoxesPerImage, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 /*! @}
  */

@@ -1722,7 +1722,7 @@ RppStatus rppt_coarse_dropout_host(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   int maxBoxesPerImage,
+                                   Rpp32u maxBoxesPerImage,
                                    bool randomSeed,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
@@ -3356,8 +3356,8 @@ RppStatus rppt_cutout_dropout_gpu(RppPtr_t srcPtr,
     void *colorsTensor;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numBoxesTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * boxesInEachImage * sizeof(RpptRoiLtrb)));
     CHECK_RETURN_STATUS(hipHostMalloc(&numBoxesTensor, srcDescPtr->n * sizeof(Rpp32u)));
 
@@ -3524,8 +3524,8 @@ RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr,
     void *colorsTensor;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numBoxesTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * boxesInEachImage * sizeof(RpptRoiLtrb)));
     CHECK_RETURN_STATUS(hipHostMalloc(&numBoxesTensor, srcDescPtr->n * sizeof(Rpp32u)));
 
@@ -3595,7 +3595,7 @@ RppStatus rppt_coarse_dropout_gpu(RppPtr_t srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   RppPtr_t dstPtr,
                                   RpptDescPtr dstDescPtr,
-                                  int maxBoxesPerImage,
+                                  Rpp32u maxBoxesPerImage,
                                   bool randomSeed,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
@@ -3606,8 +3606,8 @@ RppStatus rppt_coarse_dropout_gpu(RppPtr_t srcPtr,
     void *colorsTensor;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numBoxesTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * maxBoxesPerImage * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * maxBoxesPerImage * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * maxBoxesPerImage * srcDescPtr->c * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * maxBoxesPerImage * srcDescPtr->c * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * maxBoxesPerImage * sizeof(RpptRoiLtrb)));
     CHECK_RETURN_STATUS(hipHostMalloc(&numBoxesTensor, srcDescPtr->n * sizeof(Rpp32u)));
 
