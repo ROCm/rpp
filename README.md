@@ -77,7 +77,7 @@ Spectrogram kernel output represented as a image <br><br>
   ```
 * HIP
   ```shell
-  sudo apt install rocm-hip-runtime-dev
+  sudo apt install hip-dev
   ```
 
 * OpenMP
