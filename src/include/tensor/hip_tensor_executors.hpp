@@ -277,6 +277,8 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
+                                     RpptRGB *rgbTensor,
+                                     Rpp32f *alphaTensor,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);

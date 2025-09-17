@@ -455,6 +455,13 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&beta, batchSize * sizeof(Rpp32f)));
     }
 
+    RpptRGB *rgbTensor;
+    if(testCase == COLOR_CAST)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&rgbTensor, batchSize * sizeof(RpptRGB)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -990,20 +997,17 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_cast";
 
-                    RpptRGB rgbTensor[batchSize];
-                    Rpp32f alphaTensor[batchSize];
-
                     for (i = 0; i < batchSize; i++)
                     {
                         rgbTensor[i].R = 0;
                         rgbTensor[i].G = 0;
                         rgbTensor[i].B = 100;
-                        alphaTensor[i] = 0.5;
+                        alpha[i] = 0.5;
                     }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
