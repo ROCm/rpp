@@ -444,6 +444,9 @@ int main(int argc, char **argv)
     Rpp32f *alpha = nullptr;
     if(testCase == RAIN)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+    
+    if(testCase == BLEND)
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
@@ -583,7 +586,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "blend";
 
-                    Rpp32f alpha[batchSize];
                     for (i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 
