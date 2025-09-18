@@ -507,11 +507,11 @@ __global__ void tensor_sum_pln1_hip(Rpp8u *srcPtr,
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
             src_uc8.uc1[i] = 0;                                                    // local memory reset of invalid values (from the vectorized global load) to 0
-    uint4 srcPartialReduced = add_uchar4_parts(src_uc8.uc4[0], src_uc8.uc4[1]);    // perform small work of vectorized uint4 addition
+    uint4 srcPartialReduced = add_uchar4_parts(src_uc8.uc4[0], src_uc8.uc4[1]);    // perform small work of vectorized uchar4 addition
     partialSumRowPtr_smem[hipThreadIdx_x] += (srcPartialReduced.x +
                                               srcPartialReduced.y +
                                               srcPartialReduced.z +
-                                              srcPartialReduced.w);                // perform small work of reducing uint8s to uint using 16 x 16 threads and store in Shared
+                                              srcPartialReduced.w);                // perform small work of reducing uint4s to uint using 16 x 16 threads and store in Shared
     __syncthreads();                                                               // syncthreads after Shared load
 
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
@@ -569,7 +569,7 @@ __global__ void tensor_sum_pln1_hip(Rpp8s *srcPtr,
         for(int i = xDiff; i < 8; i++)
             src_sc8.sc1[i] = 0;                                                   // local memory reset of invalid values (from the vectorized global load) to 0
 
-    int4 srcPartialReduced = add_schar4_parts(src_sc8.sc4[0], src_sc8.sc4[1]);    // perform small work of vectorized int4 addition
+    int4 srcPartialReduced = add_schar4_parts(src_sc8.sc4[0], src_sc8.sc4[1]);    // perform small work of vectorized schar4 addition
     partialSumRowPtr_smem[hipThreadIdx_x] += (srcPartialReduced.x +
                                               srcPartialReduced.y +
                                               srcPartialReduced.z +
@@ -755,7 +755,7 @@ __global__ void tensor_sum_pln3_hip(Rpp8u *srcPtr,
     }
     uint4 srcChannelR, srcChannelG, srcChannelB;
 
-    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);             // perform small work of vectorized uchar8s addition
+    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);             // perform small work of vectorized uchar4s addition
     srcChannelG = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
     srcChannelB = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
 
@@ -861,7 +861,7 @@ __global__ void tensor_sum_pln3_hip(Rpp8s *srcPtr,
 
     int4 srcChannelR, srcChannelG, srcChannelB;
 
-    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);             // perform small work of vectorized schar8s addition
+    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);             // perform small work of vectorized schar4s addition
     srcChannelG = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
     srcChannelB = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
 
@@ -1072,7 +1072,7 @@ __global__ void tensor_sum_pkd3_hip(Rpp8u *srcPtr,
 
     uint4 srcChannelR, srcChannelG, srcChannelB;
 
-    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);             // perform small work of vectorized uchar8s addition
+    srcChannelR = add_uchar4_parts(src_uc24.uc8[0].uc4[0], src_uc24.uc8[0].uc4[1]);             // perform small work of vectorized uchar4s addition
     srcChannelG = add_uchar4_parts(src_uc24.uc8[1].uc4[0], src_uc24.uc8[1].uc4[1]);
     srcChannelB = add_uchar4_parts(src_uc24.uc8[2].uc4[0], src_uc24.uc8[2].uc4[1]);
 
@@ -1176,7 +1176,7 @@ __global__ void tensor_sum_pkd3_hip(Rpp8s *srcPtr,
 
     int4 srcChannelR, srcChannelG, srcChannelB;
 
-    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);             // perform small work of vectorized schar8s addition
+    srcChannelR = add_schar4_parts(src_sc24.sc8[0].sc4[0], src_sc24.sc8[0].sc4[1]);             // perform small work of vectorized schar4s addition
     srcChannelG = add_schar4_parts(src_sc24.sc8[1].sc4[0], src_sc24.sc8[1].sc4[1]);
     srcChannelB = add_schar4_parts(src_sc24.sc8[2].sc4[0], src_sc24.sc8[2].sc4[1]);
 
