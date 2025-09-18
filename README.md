@@ -46,7 +46,7 @@ Spectrogram kernel output represented as a image <br><br>
 * Linux
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15 SP6` / `15 SP7`
+  * SLES - `15 SP7`
 
 
 ### Hardware
@@ -77,7 +77,7 @@ Spectrogram kernel output represented as a image <br><br>
   ```
 * HIP
   ```shell
-  sudo apt install rocm-hip-runtime-dev
+  sudo apt install hip-dev
   ```
 
 * OpenMP

@@ -411,7 +411,7 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
 }
 
-// -------------------- Filter load functions for U8 bitdepth --------------------
+// -------------------- Filter load functions for U8/I8 bitdepth --------------------
 
 // load function for 3x3 kernel size
 inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -1014,10 +1014,11 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp16f **src
     }
 }
 
-// -------------------- Filter load functions for U8 bitdepth --------------------
+// -------------------- Filter load functions for U8/I8 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+template<typename T>
+inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1025,11 +1026,12 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
     else
-        pxRow[2] = avx_px0;
+        pxRow[2] = pxRow[padIndex];
 }
 
 // load function for 5x5 kernel size
-inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+template<typename T>
+inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1038,11 +1040,12 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 5; k++)
-        pxRow[k] = avx_px0;
+        pxRow[k] = pxRow[padIndex];
 }
 
 // load function for 7x7 kernel size
-inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+template<typename T>
+inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1052,11 +1055,12 @@ inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp
     for (int k = 4; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 7; k++)
-        pxRow[k] = avx_px0;
+        pxRow[k] = pxRow[padIndex];
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+template<typename T>
+inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1067,69 +1071,13 @@ inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8u **srcPtrTemp
     for (int k = 5; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 9; k++)
-        pxRow[k] = avx_px0;
-}
-
-// -------------------- Filter load functions for I8 bitdepth --------------------
-
-// load function for 3x3 kernel size
-inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    // irrespective of row location, we need to load 2 rows for 3x3 kernel
-    pxRow[0] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[0]));
-    pxRow[1] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[1]));
-    if (rowKernelLoopLimit == 3)
-        pxRow[2] =  _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
-    else
-        pxRow[2] = avx_px0;
-}
-
-// load function for 5x5 kernel size
-inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    // irrespective of row location, we need to load 3 rows for 5x5 kernel
-    pxRow[0] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[0]));
-    pxRow[1] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[1]));
-    pxRow[2] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
-    for (int k = 3; k < rowKernelLoopLimit; k++)
-        pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
-    for (int k = rowKernelLoopLimit; k < 5; k++)
-        pxRow[k] = avx_px0;
-}
-
-// load function for 7x7 kernel size
-inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    // irrespective of row location, we need to load 4 rows for 7x7 kernel
-    pxRow[0] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[0]));
-    pxRow[1] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[1]));
-    pxRow[2] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
-    pxRow[3] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[3]));
-    for (int k = 4; k < rowKernelLoopLimit; k++)
-        pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
-    for (int k = rowKernelLoopLimit; k < 7; k++)
-        pxRow[k] = avx_px0;
-}
-
-// load function for 9x9 kernel size
-inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    // irrespective of row location, we need to load 5 rows for 9x9 kernel
-    pxRow[0] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[0]));
-    pxRow[1] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[1]));
-    pxRow[2] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
-    pxRow[3] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[3]));
-    pxRow[4] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[4]));
-    for (int k = 5; k < rowKernelLoopLimit; k++)
-        pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
-    for (int k = rowKernelLoopLimit; k < 9; k++)
-        pxRow[k] = avx_px0;
+        pxRow[k] = pxRow[padIndex];
 }
 
 // -------------------- Filter load functions for F32 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1137,11 +1085,11 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_loadu_ps(srcPtrTemp[2]);
     else
-        pRow[2] = avx_p0;
+        pRow[2] = pRow[padIndex];
 }
 
 // load function for 5x5 kernel size
-inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1150,11 +1098,11 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 5; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 // load function for 7x7 kernel size
-inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1164,11 +1112,11 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp
     for (int k = 4; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 7; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1179,13 +1127,13 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp
     for (int k = 5; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 9; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 // -------------------- Filter load functions for F16 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1193,11 +1141,11 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2]))));
     else
-        pRow[2] = avx_p0;
+        pRow[2] = pRow[padIndex];
 }
 
 // load function for 5x5 kernel size
-inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1206,11 +1154,11 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
     for (int k = rowKernelLoopLimit; k < 5; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 // load function for 7x7 kernel size
-inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1220,11 +1168,11 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp
     for (int k = 4; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
     for (int k = rowKernelLoopLimit; k < 7; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1235,7 +1183,7 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp
     for (int k = 5; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
     for (int k = rowKernelLoopLimit; k < 9; k++)
-        pRow[k] = avx_p0;
+        pRow[k] = pRow[padIndex];
 }
 
 #endif // RPP_CPU_FILTER_HPP
