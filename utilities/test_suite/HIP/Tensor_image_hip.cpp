@@ -500,6 +500,10 @@ int main(int argc, char **argv)
     if(testCase == GAMMA_CORRECTION)
         CHECK_RETURN_STATUS(hipHostMalloc(&gammaVal, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *stdDevTensor = nullptr;
+    if(testCase == GAUSSIAN_FILTER)
+        CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * sizeof(Rpp32f)));
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -1395,7 +1399,6 @@ int main(int argc, char **argv)
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
 
-                    Rpp32f stdDevTensor[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
                         stdDevTensor[i] = 5.0f;
