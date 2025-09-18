@@ -492,6 +492,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&mirror, batchSize * sizeof(Rpp32u)));
     }
 
+    Rpp32f *exposureFactor = nullptr;
+    if(testCase == EXPOSURE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&exposureFactor, batchSize * sizeof(Rpp32f)));
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -781,7 +785,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "exposure";
 
-                    Rpp32f exposureFactor[batchSize];
                     for (i = 0; i < batchSize; i++)
                         exposureFactor[i] = 1.4;
 
