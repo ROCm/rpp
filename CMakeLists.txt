@@ -330,8 +330,10 @@ target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/third_party/ffts/lib/libffts.a)
+    find_package(FFTS REQUIRED)
+    target_link_libraries(${PROJECT_NAME} FFTS::FFTS)
     message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
+    message("-- ${White}${PROJECT_NAME} -- Using FFTS - Library: ${FFTS_LIBRARIES} Include: ${FFTS_INCLUDE_DIRS}${ColourReset}")
 else()
     message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
@@ -340,7 +342,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVE
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/api
-        $<$<BOOL:${RPP_AUDIO_SUPPORT}>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include>
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
