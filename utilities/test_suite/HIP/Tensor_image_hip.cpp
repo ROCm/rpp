@@ -496,6 +496,10 @@ int main(int argc, char **argv)
     if(testCase == EXPOSURE)
         CHECK_RETURN_STATUS(hipHostMalloc(&exposureFactor, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *gammaVal = nullptr;
+    if(testCase == GAMMA_CORRECTION)
+        CHECK_RETURN_STATUS(hipHostMalloc(&gammaVal, batchSize * sizeof(Rpp32f)));
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -616,7 +620,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "gamma_correction";
 
-                    Rpp32f gammaVal[batchSize];
                     for (i = 0; i < batchSize; i++)
                         gammaVal[i] = 1.9;
 
