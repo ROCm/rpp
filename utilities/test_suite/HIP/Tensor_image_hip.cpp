@@ -504,6 +504,30 @@ int main(int argc, char **argv)
     if(testCase == GAUSSIAN_FILTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *noiseProbabilityTensor = nullptr;
+    Rpp32f *saltProbabilityTensor = nullptr;
+    Rpp32f *saltValueTensor = nullptr;
+    Rpp32f *pepperValueTensor = nullptr;
+    Rpp32f *meanTensor = nullptr;
+    Rpp32f *shotNoiseFactorTensor = nullptr;
+    if(testCase == NOISE)
+    {
+        if(additionalParam == 0)
+        {
+            CHECK_RETURN_STATUS(hipHostMalloc(&noiseProbabilityTensor, batchSize * sizeof(Rpp32f)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&saltProbabilityTensor, batchSize * sizeof(RpptRGB)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&saltValueTensor, batchSize * sizeof(Rpp32f)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&pepperValueTensor, batchSize * sizeof(RpptRGB)));
+        }
+        else if(additionalParam == 1)
+        {
+            CHECK_RETURN_STATUS(hipHostMalloc(&meanTensor, batchSize * sizeof(Rpp32f)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * sizeof(Rpp32f)));
+        }
+        else if(additionalParam == 2)
+            CHECK_RETURN_STATUS(hipHostMalloc(&shotNoiseFactorTensor, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -706,10 +730,6 @@ int main(int argc, char **argv)
                     {
                         case 0:
                         {
-                            Rpp32f noiseProbabilityTensor[batchSize];
-                            Rpp32f saltProbabilityTensor[batchSize];
-                            Rpp32f saltValueTensor[batchSize];
-                            Rpp32f pepperValueTensor[batchSize];
                             Rpp32u seed = 1255459;
                             for (i = 0; i < batchSize; i++)
                             {
@@ -729,8 +749,6 @@ int main(int argc, char **argv)
                         }
                         case 1:
                         {
-                            Rpp32f meanTensor[batchSize];
-                            Rpp32f stdDevTensor[batchSize];
                             Rpp32u seed = 1255459;
                             for (i = 0; i < batchSize; i++)
                             {
@@ -748,7 +766,6 @@ int main(int argc, char **argv)
                         }
                         case 2:
                         {
-                            Rpp32f shotNoiseFactorTensor[batchSize];
                             Rpp32u seed = 1255459;
                             for (i = 0; i < batchSize; i++)
                                 shotNoiseFactorTensor[i] = 80.0f;
