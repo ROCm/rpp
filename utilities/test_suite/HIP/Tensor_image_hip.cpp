@@ -2072,6 +2072,35 @@ int main(int argc, char **argv)
     }
     if(exposureFactor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(exposureFactor));
+    if(gammaVal != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(gammaVal));
+    if(stdDevTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(stdDevTensor));
+    if(testCase == NOISE)
+    {
+        if(additionalParam == 0)
+        {
+            CHECK_RETURN_STATUS(hipHostFree(noiseProbabilityTensor));
+            CHECK_RETURN_STATUS(hipHostFree(saltProbabilityTensor));
+            CHECK_RETURN_STATUS(hipHostFree(saltValueTensor));
+            CHECK_RETURN_STATUS(hipHostFree(pepperValueTensor));
+        }
+        else if(additionalParam == 2)
+            CHECK_RETURN_STATUS(hipHostFree(shotNoiseFactorTensor));
+    }
+    if(meanTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(meanTensor));
+    if(mirror != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(mirror));
+    if(testCase == WATER)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(amplX));
+        CHECK_RETURN_STATUS(hipHostFree(amplY));
+        CHECK_RETURN_STATUS(hipHostFree(freqX));
+        CHECK_RETURN_STATUS(hipHostFree(freqY));
+        CHECK_RETURN_STATUS(hipHostFree(phase));
+        CHECK_RETURN_STATUS(hipHostFree(phase));
+    }
     if(hueShift != NULL)
         CHECK_RETURN_STATUS(hipHostFree(hueShift));
     if(saturationFactor != NULL)
