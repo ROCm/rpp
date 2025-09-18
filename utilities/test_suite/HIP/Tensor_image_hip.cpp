@@ -448,24 +448,24 @@ int main(int argc, char **argv)
     if(testCase == BLEND)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
-    Rpp32f *beta;
+    Rpp32f *beta = nullptr;
     if(testCase == BRIGHTNESS)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&beta, batchSize * sizeof(Rpp32f)));
     }
 
-    RpptRGB *rgbTensor;
+    RpptRGB *rgbTensor = nullptr;
     if(testCase == COLOR_CAST)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&rgbTensor, batchSize * sizeof(RpptRGB)));
     }
 
-    Rpp32f *brightness;
-    Rpp32f *contrast;
-    Rpp32f *hue;
-    Rpp32f *saturation;
+    Rpp32f *brightness = nullptr;
+    Rpp32f *contrast = nullptr;
+    Rpp32f *hue = nullptr;
+    Rpp32f *saturation = nullptr;
     if(testCase == COLOR_TWIST)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&brightness, batchSize * sizeof(Rpp32f)));
@@ -474,12 +474,22 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(RpptRGB)));
     }
 
-    Rpp32f *contrastFactor;
-    Rpp32f *contrastCenter;
+    Rpp32f *contrastFactor = nullptr;
+    Rpp32f *contrastCenter = nullptr;
     if(testCase == CONTRAST)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&contrastFactor, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&contrastCenter, batchSize * sizeof(Rpp32f)));
+    }
+
+    Rpp32f *multiplier = nullptr;
+    Rpp32f *offset = nullptr;
+    Rpp32u *mirror = nullptr;
+    if(testCase == CROP_MIRROR_NORMALIZE)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&multiplier, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&offset, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&mirror, batchSize * sizeof(Rpp32u)));
     }
 
     Rpp32f *hueShift = nullptr;
@@ -1198,9 +1208,7 @@ int main(int argc, char **argv)
                 case CROP_MIRROR_NORMALIZE:
                 {
                     testCaseName = "crop_mirror_normalize";
-                    Rpp32f multiplier[batchSize * srcDescPtr->c];
-                    Rpp32f offset[batchSize * srcDescPtr->c];
-                    Rpp32u mirror[batchSize];
+
                     if (srcDescPtr->c == 3)
                     {
                         Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
