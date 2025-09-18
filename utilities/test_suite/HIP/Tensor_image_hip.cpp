@@ -2048,6 +2048,30 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
     if(alpha != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(beta != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(beta));
+    if(rgbTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(rgbTensor));
+    if(testCase == COLOR_TWIST)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(brightness));
+        CHECK_RETURN_STATUS(hipHostFree(contrast));
+        CHECK_RETURN_STATUS(hipHostFree(hue));
+        CHECK_RETURN_STATUS(hipHostFree(saturation));
+    }
+    if(testCase == CONTRAST)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(contrastFactor));
+        CHECK_RETURN_STATUS(hipHostFree(contrastCenter));
+    }
+    if(testCase == CROP_MIRROR_NORMALIZE)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(multiplier));
+        CHECK_RETURN_STATUS(hipHostFree(offset));
+        CHECK_RETURN_STATUS(hipHostFree(mirror));
+    }
+    if(exposureFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(exposureFactor));
     if(hueShift != NULL)
         CHECK_RETURN_STATUS(hipHostFree(hueShift));
     if(saturationFactor != NULL)
