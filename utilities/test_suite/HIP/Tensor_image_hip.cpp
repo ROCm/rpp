@@ -538,6 +538,22 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&mirror, batchSize * sizeof(Rpp32u)));
     }
 
+    Rpp32f *amplX = nullptr;
+    Rpp32f *amplY = nullptr;
+    Rpp32f *freqX = nullptr;
+    Rpp32f *freqY = nullptr;
+    Rpp32f *phaseX = nullptr;
+    Rpp32f *phaseY = nullptr;
+    if(testCase == WATER)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&amplX, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&amplY, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&freqX, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&freqY, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&phaseX, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&phaseY, batchSize * sizeof(Rpp32f)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -1016,13 +1032,6 @@ int main(int argc, char **argv)
                 case WATER:
                 {
                     testCaseName = "water";
-
-                    Rpp32f amplX[batchSize];
-                    Rpp32f amplY[batchSize];
-                    Rpp32f freqX[batchSize];
-                    Rpp32f freqY[batchSize];
-                    Rpp32f phaseX[batchSize];
-                    Rpp32f phaseY[batchSize];
 
                     for (i = 0; i < batchSize; i++)
                     {
