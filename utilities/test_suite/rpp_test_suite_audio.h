@@ -35,7 +35,9 @@ SOFTWARE.
 #include <sndfile.h>
 using namespace std;
 
-#define MEL_FILTER_BANK_MAX_HEIGHT 257 // Maximum height for mel filter bank set to 257 to ensure compatibility with test configuration
+#define AUDIO_MAX_HEIGHT             257  // Maximum height for mel filter bank and spectrogram set to 257 to ensure compatibility with test configuration, calculated as (nfft / 2) + 1 for a standard nfft of 512
+#define RESAMPLE_BUFFER_SCALE_FACTOR 1.16 // Scale factor to allocate a safe maximum buffer size for resampling, allowing for upsampling
+#define SPECTROGRAM_MAX_WIDTH        3170 // Maximum width for a spectrogram, pre-calculated based on the longest audio file in the test dataset
 
 std::map<int, string> audioAugmentationMap =
 {
@@ -63,9 +65,9 @@ enum Augmentation {
 // Golden outputs for Non Silent Region Detection
 std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 {
-    {"sample1", {0, 35840}},
-    {"sample2", {0, 33680}},
-    {"sample3", {0, 34160}}
+    {"sample1", {0, 507150}},
+    {"sample2", {0, 88200}},
+    {"sample3", {0, 180810}}
 };
 
 // Cutoff values for audio kernels listed for HOST backend followed by HIP
