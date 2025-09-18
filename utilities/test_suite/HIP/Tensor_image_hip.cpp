@@ -528,6 +528,9 @@ int main(int argc, char **argv)
             CHECK_RETURN_STATUS(hipHostMalloc(&shotNoiseFactorTensor, batchSize * sizeof(Rpp32f)));
     }
 
+    if(testCase == NON_LINEAR_BLEND)
+        CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * sizeof(Rpp32f)));
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -1036,13 +1039,12 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "non_linear_blend";
 
-                    Rpp32f stdDev[batchSize];
                     for (i = 0; i < batchSize; i++)
-                        stdDev[i] = 50.0;
+                        stdDevTensor[i] = 50.0;
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDevTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

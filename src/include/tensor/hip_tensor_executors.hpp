@@ -519,6 +519,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                                            RpptDescPtr srcDescPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
+                                           Rpp32f *stdDevTensor,
                                            RpptROIPtr roiTensorPtrSrc,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle);

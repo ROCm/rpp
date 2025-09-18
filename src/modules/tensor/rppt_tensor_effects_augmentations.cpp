@@ -1942,8 +1942,6 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
     for(int i = 0; i < srcDescPtr->n; i++)
         if (stdDevTensor[i] == 0)
             return RPP_ERROR_ZERO_DIVISION;
-    Rpp32u paramIndex = 0;
-    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1952,6 +1950,7 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
                                          srcDescPtr,
                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         stdDevTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -1963,6 +1962,7 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
                                          srcDescPtr,
                                          (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                          dstDescPtr,
+                                         stdDevTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -1974,6 +1974,7 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
                                          srcDescPtr,
                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                          dstDescPtr,
+                                         stdDevTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -1985,6 +1986,7 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
                                          srcDescPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         stdDevTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
