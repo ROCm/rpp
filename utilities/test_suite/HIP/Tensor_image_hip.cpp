@@ -531,6 +531,13 @@ int main(int argc, char **argv)
     if(testCase == NON_LINEAR_BLEND)
         CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * sizeof(Rpp32f)));
 
+    if(testCase == RESIZE_MIRROR_NORMALIZE)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&meanTensor, batchSize * 3 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&stdDevTensor, batchSize * 3 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&mirror, batchSize * sizeof(Rpp32u)));
+    }
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -1550,25 +1557,22 @@ int main(int argc, char **argv)
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                     }
 
-                    Rpp32f mean[batchSize * 3];
-                    Rpp32f stdDev[batchSize * 3];
-                    Rpp32u mirror[batchSize];
                     for (i = 0, j = 0; i < batchSize; i++, j += 3)
                     {
-                        mean[j] = 60.0;
-                        stdDev[j] = 1.0;
+                        meanTensor[j] = 60.0;
+                        stdDevTensor[j] = 1.0;
 
-                        mean[j + 1] = 80.0;
-                        stdDev[j + 1] = 1.0;
+                        meanTensor[j + 1] = 80.0;
+                        stdDevTensor[j + 1] = 1.0;
 
-                        mean[j + 2] = 100.0;
-                        stdDev[j + 2] = 1.0;
+                        meanTensor[j + 2] = 100.0;
+                        stdDevTensor[j + 2] = 1.0;
                         mirror[i] = 1;
                     }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                        rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, meanTensor, stdDevTensor, mirror, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
