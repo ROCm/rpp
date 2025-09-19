@@ -595,6 +595,7 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
         dstPtrChannel = dstPtrImage;
 
         const Rpp8s maxVal = -1;
+        const Rpp32s offset = 128;
 
         Rpp32f thresholdParam = std::round(thresholdTensor[batchCount] * 255);  // scale normalized [0, 1] threshold to [-128, 127] range
 #if __AVX2__
