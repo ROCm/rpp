@@ -456,6 +456,7 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 16;
         if (nDim == 1)
         {
+            alignedLength = length[0] & ~15;
             int vectorLoopCount = 0;
 #if __AVX2__
             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
