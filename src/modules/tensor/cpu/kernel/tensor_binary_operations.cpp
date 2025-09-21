@@ -56,6 +56,8 @@ inline __m256i simd_multiply_si256(__m256i &a, __m256i &b)
         return _mm256_mullo_epi32(a, b);
     else if constexpr (std::is_same<T, Rpp8u>::value)
     {
+        printf("U8 Multiply Invoked\n");
+
         __m256i a_lo = _mm256_unpacklo_epi8(a, avx_px0);
         __m256i b_lo = _mm256_unpacklo_epi8(b, avx_px0);
         __m256i a_hi = _mm256_unpackhi_epi8(a, avx_px0);
@@ -72,9 +74,11 @@ inline __m256i simd_multiply_si256(__m256i &a, __m256i &b)
     }
     else if constexpr (std::is_same<T, Rpp8s>::value)
     {
+        printf("I8 Multiply Invoked\n");
+
         __m256i a_lo = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(a, avx_px0), 8), 8);
         __m256i b_lo = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(b, avx_px0), 8), 8);
-        __m256i a_hi = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(b, avx_px0), 8), 8);
+        __m256i a_hi = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(a, avx_px0), 8), 8);
         __m256i b_hi = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(b, avx_px0), 8), 8);
 
         __m256i prod_lo = _mm256_mullo_epi16(a_lo, b_lo);
@@ -83,7 +87,7 @@ inline __m256i simd_multiply_si256(__m256i &a, __m256i &b)
         prod_lo = _mm256_and_si256(prod_lo, avx_mask8);
         prod_hi = _mm256_and_si256(prod_hi, avx_mask8);
 
-        return _mm256_packs_epi16(prod_lo, prod_hi);
+        return _mm256_packus_epi16(prod_lo, prod_hi);
     }
 }
 
