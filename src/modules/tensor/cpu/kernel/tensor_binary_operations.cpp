@@ -54,8 +54,37 @@ inline __m256i simd_multiply_si256(__m256i &a, __m256i &b)
         return _mm256_mullo_epi16(a, b);
     else if constexpr (std::is_same<T, Rpp32s>::value || std::is_same<T, Rpp32u>::value)
         return _mm256_mullo_epi32(a, b);
-    else
-        return _mm256_setzero_si256();
+    else if constexpr (std::is_same<T, Rpp8u>::value)
+    {
+        __m256i a_lo = _mm256_unpacklo_epi8(a, avx_px0);
+        __m256i b_lo = _mm256_unpacklo_epi8(b, avx_px0);
+        __m256i a_hi = _mm256_unpackhi_epi8(a, avx_px0);
+        __m256i b_hi = _mm256_unpackhi_epi8(b, avx_px0);
+
+        __m256i prod_lo = _mm256_mullo_epi16(a_lo, b_lo);
+        __m256i prod_hi = _mm256_mullo_epi16(a_hi, b_hi);
+
+        prod_lo = _mm256_and_si256(prod_lo, avx_mask8);
+        prod_hi = _mm256_and_si256(prod_hi, avx_mask8);
+
+        return _mm256_packus_epi16(prod_lo, prod_hi);
+
+    }
+    else if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        __m256i a_lo = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(a, avx_px0), 8), 8);
+        __m256i b_lo = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(b, avx_px0), 8), 8);
+        __m256i a_hi = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(b, avx_px0), 8), 8);
+        __m256i b_hi = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(b, avx_px0), 8), 8);
+
+        __m256i prod_lo = _mm256_mullo_epi16(a_lo, b_lo);
+        __m256i prod_hi = _mm256_mullo_epi16(a_hi, b_hi);
+
+        prod_lo = _mm256_and_si256(prod_lo, avx_mask8);
+        prod_hi = _mm256_and_si256(prod_hi, avx_mask8);
+
+        return _mm256_packs_epi16(prod_lo, prod_hi);
+    }
 }
 
 template<typename T>
@@ -2268,7 +2297,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     else if((srcPtr1GenericDescPtr->dataType == RpptDataType::U32) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I32))
         vectorIncrement = 8; // Vector Increment for U32/I32 datatype
 
-    if(((tensorOp == RPP_TENSOR_OP_DIVIDE) && (srcPtr1GenericDescPtr->dataType == RpptDataType::U32))  || ((tensorOp == RPP_TENSOR_OP_MULTIPLY) && ((srcPtr1GenericDescPtr->dataType == RpptDataType::U8) || (srcPtr1GenericDescPtr->dataType == RpptDataType::I8))))
+    if((tensorOp == RPP_TENSOR_OP_DIVIDE) && (srcPtr1GenericDescPtr->dataType == RpptDataType::U32))
         vectorIncrement = 0;
 
     printf("Vector Increment is %d\n", vectorIncrement);
