@@ -56,17 +56,17 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
         uint8_t *maskPtr = scratchBuffer + batchCount * srcDescPtr->c;
-        int seed = randomSeed ? std::random_device{}() : 42;
+        int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED; // Use a true random seed if requested, otherwise use the fixed seed for deterministic QA
         std::mt19937 rng(seed + batchCount);
-        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
-        bool anyKept = false;
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]); // Distribution for the probability of keeping (not dropping) a channel
+        bool atLeastOneChannelKept = false;
         for (Rpp32u c = 0; c < dstDescPtr->c; c++)
         {
             maskPtr[c] = keepDist(rng);
-            anyKept |= maskPtr[c];
+            atLeastOneChannelKept |= maskPtr[c];
         }
 
-        if (!anyKept)
+        if (!atLeastOneChannelKept)
             maskPtr[rng() % dstDescPtr->c] = 1;
 
         T *srcPtrChannel, *dstPtrChannel;
