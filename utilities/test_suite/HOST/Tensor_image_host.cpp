@@ -1737,6 +1737,23 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case SOLARIZE:
+                {
+                    testCaseName = "solarize";
+
+                    Rpp32f thresholdTensor[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                        thresholdTensor[i] = 0.5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_solarize_host(input, srcDescPtr, output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
