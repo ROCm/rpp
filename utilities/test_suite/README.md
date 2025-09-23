@@ -4,6 +4,11 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
+* CMake Version `3.10` or later
+  ```shell
+  sudo apt install cmake
+  ```
+
 * Turbo JPEG
   ```shell
   sudo apt-get install libturbojpeg0-dev
