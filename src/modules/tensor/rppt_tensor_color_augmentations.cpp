@@ -1636,15 +1636,13 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_INVALID_CHANNELS;
     }
 
-    Rpp32u paramIndex = 0;
-    copy_param_int(adjustmentValueTensor, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_color_temperature_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                           srcDescPtr,
                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                           dstDescPtr,
+                                          adjustmentValueTensor,
                                           roiTensorPtrSrc,
                                           roiType,
                                           rpp::deref(rppHandle));
@@ -1655,6 +1653,7 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
+                                          adjustmentValueTensor,
                                           roiTensorPtrSrc,
                                           roiType,
                                           rpp::deref(rppHandle));
@@ -1665,6 +1664,7 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
+                                          adjustmentValueTensor,
                                           roiTensorPtrSrc,
                                           roiType,
                                           rpp::deref(rppHandle));
@@ -1675,6 +1675,7 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                           dstDescPtr,
+                                          adjustmentValueTensor,
                                           roiTensorPtrSrc,
                                           roiType,
                                           rpp::deref(rppHandle));

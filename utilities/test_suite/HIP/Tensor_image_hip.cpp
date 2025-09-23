@@ -554,6 +554,21 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&phaseY, batchSize * sizeof(Rpp32f)));
     }
 
+    Rpp32u *horizontalFlag = nullptr;
+    Rpp32u *verticalFlag = nullptr;
+    if(testCase == FLIP)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&horizontalFlag, batchSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&verticalFlag, batchSize * sizeof(Rpp32u)));
+    }
+
+    if(testCase == RESIZE_CROP_MIRROR)
+        CHECK_RETURN_STATUS(hipHostMalloc(&mirror, batchSize * sizeof(Rpp32u)));
+
+    Rpp32s *adjustment = nullptr;    
+    if(testCase == COLOR_TEMPERATURE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&adjustment, batchSize * sizeof(Rpp32s)));
+
     Rpp32f *hueShift = nullptr;
     if(testCase == HUE)
         CHECK_RETURN_STATUS(hipHostMalloc(&hueShift, batchSize * sizeof(Rpp32f)));
@@ -896,8 +911,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "flip";
 
-                    Rpp32u horizontalFlag[batchSize];
-                    Rpp32u verticalFlag[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
                         horizontalFlag[i] = 1;
@@ -1313,7 +1326,6 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32u mirror[batchSize];
                     for (i = 0; i < batchSize; i++)
                         mirror[i] = 1;
 
@@ -1339,7 +1351,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp32s adjustment[batchSize];
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 
@@ -2068,14 +2079,11 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostFree(multiplier));
         CHECK_RETURN_STATUS(hipHostFree(offset));
-        CHECK_RETURN_STATUS(hipHostFree(mirror));
     }
     if(exposureFactor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(exposureFactor));
     if(gammaVal != NULL)
         CHECK_RETURN_STATUS(hipHostFree(gammaVal));
-    if(stdDevTensor != NULL)
-        CHECK_RETURN_STATUS(hipHostFree(stdDevTensor));
     if(testCase == NOISE)
     {
         if(additionalParam == 0)
@@ -2088,6 +2096,8 @@ int main(int argc, char **argv)
         else if(additionalParam == 2)
             CHECK_RETURN_STATUS(hipHostFree(shotNoiseFactorTensor));
     }
+    if(stdDevTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(stdDevTensor));
     if(meanTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(meanTensor));
     if(mirror != NULL)
@@ -2098,9 +2108,16 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(amplY));
         CHECK_RETURN_STATUS(hipHostFree(freqX));
         CHECK_RETURN_STATUS(hipHostFree(freqY));
-        CHECK_RETURN_STATUS(hipHostFree(phase));
-        CHECK_RETURN_STATUS(hipHostFree(phase));
+        CHECK_RETURN_STATUS(hipHostFree(phaseX));
+        CHECK_RETURN_STATUS(hipHostFree(phaseY));
     }
+    if(testCase == FLIP)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(horizontalFlag));
+        CHECK_RETURN_STATUS(hipHostFree(verticalFlag));
+    }
+    if(testCase == COLOR_TEMPERATURE)
+        CHECK_RETURN_STATUS(hipHostFree(adjustment));
     if(hueShift != NULL)
         CHECK_RETURN_STATUS(hipHostFree(hueShift));
     if(saturationFactor != NULL)

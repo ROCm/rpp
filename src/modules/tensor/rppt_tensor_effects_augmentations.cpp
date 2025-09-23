@@ -1524,7 +1524,10 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
 
     std::random_device rd;  // Random number engine seed
     std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
-    Rpp32u maskLocArrHostX[dstDescPtr->n], maskLocArrHostY[dstDescPtr->n];
+    Rpp32u *maskLocArrHostX = nullptr, *maskLocArrHostY = nullptr;
+    CHECK_RETURN_STATUS(hipHostMalloc(&maskLocArrHostX, dstDescPtr->n * sizeof(Rpp32u)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&maskLocArrHostY, dstDescPtr->n * sizeof(Rpp32u)));
+
     for(int i = 0; i < dstDescPtr->n; i++)
     {
         std::uniform_int_distribution<> distribX(0, SPATTER_MAX_WIDTH - roiTensorPtrSrcHost[i].xywhROI.roiWidth);
@@ -1532,11 +1535,6 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
         maskLocArrHostX[i] = distribX(gen);
         maskLocArrHostY[i] = distribY(gen);
     }
-
-    Rpp32u paramIndex = 0;
-    copy_param_uint(maskLocArrHostX, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(maskLocArrHostY, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_spatter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1544,6 +1542,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -1555,6 +1555,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -1566,6 +1568,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -1577,11 +1581,15 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
     }
 
+    CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostX));
+    CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostY));
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;

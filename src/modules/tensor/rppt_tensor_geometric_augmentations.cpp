@@ -2056,9 +2056,6 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_uint(horizontalTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(verticalTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -2066,6 +2063,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -2076,6 +2075,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -2086,6 +2087,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -2096,6 +2099,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -2309,8 +2314,6 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
     if (interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
-    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), 0);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_crop_mirror_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -2318,6 +2321,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                            dstDescPtr,
                                            dstImgSizes,
+                                           mirrorTensor,
                                            interpolationType,
                                            roiTensorPtrSrc,
                                            roiType,
@@ -2330,6 +2334,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            (half*)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                            dstDescPtr,
                                            dstImgSizes,
+                                           mirrorTensor,
                                            interpolationType,
                                            roiTensorPtrSrc,
                                            roiType,
@@ -2343,6 +2348,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            (Rpp32f*)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                            dstDescPtr,
                                            dstImgSizes,
+                                           mirrorTensor,
                                            interpolationType,
                                            roiTensorPtrSrc,
                                            roiType,
@@ -2355,6 +2361,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                            dstDescPtr,
                                            dstImgSizes,
+                                           mirrorTensor,
                                            interpolationType,
                                            roiTensorPtrSrc,
                                            roiType,
