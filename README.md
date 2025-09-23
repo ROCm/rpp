@@ -255,7 +255,7 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 * Linux distribution
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
+  * SLES - `15 SP7`
 * ROCm: rocm-core - `7.0.0`+
 * CMake - Version `3.10`+
 * AMD Clang++ - Version `18.0.0`+
