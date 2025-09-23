@@ -188,7 +188,7 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HOST" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
-broadcastableCases = ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor"] # Add other broadcast functions here
+broadcastableCases = ["tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor"] # Add other broadcast functions here
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)

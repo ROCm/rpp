@@ -99,10 +99,11 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
     {
         folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
         if(broadCastFlag == 1)
-            suffix = testCase + "_" + std::to_string(nDim) + "d_broadcast_output_" + bitDepthStr + ".bin";
-        else
-            suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";
-    }
+            suffix = testCase + "_" + std::to_string(nDim) + "d_broadcast_output2_" + bitDepthStr + ".bin";
+        else if(broadCastFlag == 2)
+            suffix = testCase + "_" + std::to_string(nDim) + "d_broadcast_output1_" + bitDepthStr + ".bin";
+         else
+            suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";    }
     return scriptPath + folderPath + suffix;
 }
 
@@ -129,7 +130,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 std::array<Rpp32u, 4> roi = {0, 0, 100, 100};
-                if(broadCastFlag == 1)
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
                     roi = {0, 0, 100, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
@@ -138,7 +139,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 25, 25, 32};
-                if(broadCastFlag == 1)
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
                     roi = {0, 0, 0, 25, 25, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
@@ -148,7 +149,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 4:
             {
                 std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 4, 10, 25, 40};
-                if(broadCastFlag == 1)
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
                     roi = {0, 0, 0, 0, 4, 10, 25, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
