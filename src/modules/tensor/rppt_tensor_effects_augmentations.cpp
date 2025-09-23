@@ -3075,9 +3075,9 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr,
                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                  dstDescPtr,
                                  thresholdTensor,
-                                  roiTensorPtrSrc,
-                                  roiType,
-                                  rpp::deref(rppHandle));
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
