@@ -608,6 +608,18 @@ RppStatus hip_exec_posterize_tensor(T *srcPtr,
                                     RpptRoiType roiType,
                                     rpp::Handle& handle);
 
+// -------------------- solarize --------------------
+
+template <typename T>
+RppStatus hip_exec_solarize_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32f *thresholdTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- box_filter --------------------

@@ -460,6 +460,9 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
     }
 
+    Rpp32f *thresholdTensor = nullptr;
+    if(testCase == SOLARIZE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&thresholdTensor, batchSize * sizeof(Rpp32f)));
     Rpp8u *posterizeLevelBits = nullptr;
     if(testCase == POSTERIZE)
         CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
@@ -1701,7 +1704,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 93:
+                case JPEG_COMPRESSION_DISTORTION:
                 {
                     testCaseName = "jpeg_compression_distortion";
                     startWallTime = omp_get_wtime();
@@ -1722,6 +1725,21 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_posterize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SOLARIZE:
+                {
+                    testCaseName = "solarize";
+
+                    for (int i = 0; i < batchSize; i++)
+                        thresholdTensor[i] = 0.5;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_solarize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
