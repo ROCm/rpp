@@ -128,8 +128,8 @@ int main(int argc, char **argv)
     // set buffer sizes for src/dst
     if(testCase == MEL_FILTER_BANK)
     {
-        iBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-        oBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
     }
     else
     {
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = AUDIO_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
