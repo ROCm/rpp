@@ -129,6 +129,11 @@ int main(int argc, char **argv)
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 0, batchSize, roiTensor);
         set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
     }
+    else if(testCase == TENSOR_DIVIDE_TENSOR && bitDepth == 4)
+    {
+        set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, 4, batchSize, roiTensor);
+        set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, 2, batchSize, dstRoiTensor);
+    }
     else if(testCase == TENSOR_DIVIDE_TENSOR)
     {
         set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
@@ -198,10 +203,18 @@ int main(int argc, char **argv)
             read_data(inputSecond, nDim, 0, scriptPath, funcName, bitDepth);
         if(broadCastCase)
         {
-            Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
-            Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
-            for (int i = 0; i < iBufferSizeSecond; i++)
-                inputSecondTemp[i] = inputU8[i+1];
+            if(bitDepth == 2) {
+                Rpp32f *inputSecondTemp = static_cast<Rpp32f *>(inputSecond);
+                Rpp32f *inputU8 = static_cast<Rpp32f *>(input);
+                for (int i = 0; i < iBufferSizeSecond; i++)
+                    inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+            }
+            else if((bitDepth == 0) || (bitDepth == 4)) {
+                Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
+                Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
+                for (int i = 0; i < iBufferSizeSecond; i++)
+                    inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+            }
         }
     }
     else
@@ -418,7 +431,7 @@ int main(int argc, char **argv)
                 testCaseName  = "tensor_divide_tensor";
 
                 startWallTime = omp_get_wtime();
-                if(bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
+                if(bitDepth == 0 || bitDepth == 1 || bitDepth == 2 || bitDepth == 4 || bitDepth == 5 || bitDepth == 7 || bitDepth == 8 || bitDepth == 9 || bitDepth == 10)
                 {
                     if(broadCastFlag == 0)
                         rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
@@ -452,7 +465,7 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
 
-    if(DEBUG_MODE)
+    /*if(DEBUG_MODE)
     {
         std::ofstream refFile;
         std::string refFileName;
@@ -460,6 +473,19 @@ int main(int argc, char **argv)
         refFile.open(refFileName);
         for (int i = 0; i < oBufferSize; i++)
             refFile << *((float*)output + i) << ",";
+        refFile.close();
+    }*/
+    if(DEBUG_MODE)
+    {
+        std::ofstream refFile;
+        refFile.open(func + ".csv");
+
+        refFile << std::fixed << std::setprecision(20);
+
+        float* new1 = (float*)(output);
+        for (int i = 0; i < oBufferSize; i++)
+            refFile << new1[i] << ",";
+            //refFile << static_cast<int>(*(reinterpret_cast<Rpp8u *>(output) + i)) << ",";
         refFile.close();
     }
 

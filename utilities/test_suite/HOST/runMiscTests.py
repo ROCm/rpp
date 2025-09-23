@@ -63,6 +63,8 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     bitDepths = [0, 2]
+    if int(case) == 11:
+        bitDepths = [2, 4]
     if int(case) == 2:   
         bitDepths = [2, 4]
     elif int(case) == 4:
@@ -188,7 +190,7 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HOST" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
-broadcastableCases = ["tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor"] # Add other broadcast functions here
+broadcastableCases = ["tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor", "tensor_divide_tensor"] # Add other broadcast functions here
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)

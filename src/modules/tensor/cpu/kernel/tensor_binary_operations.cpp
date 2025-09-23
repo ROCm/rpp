@@ -2205,7 +2205,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                         {
                             __m256i p1 = _mm256_loadu_si256((const __m256i *)srcPtrElem1);    // simd load
                             simd_divide_broadcast_two_si256<T>(pout, p1, p2);      // simd op
-                            store_ps_function<T>(pout, dstPtrTemp);            // simd store
+                            store_ps_function<T>(pout, dstPtrElem);            // simd store
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
                         }
