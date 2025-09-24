@@ -53,8 +53,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
         uint8_t *maskPtr = scratchBuffer + batchCount * srcDescPtr->c;
         int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED; // Use a true random seed if requested, otherwise use the fixed seed for deterministic QA
         std::mt19937 rng(seed + batchCount);
@@ -90,8 +88,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
@@ -136,8 +133,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 srcPtrTempB = srcPtrRowB;
                 dstPtrTemp = dstPtrRow;
 
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
@@ -179,8 +175,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                 srcPtrTemp = srcPtrRow;
                 dstPtrTemp = dstPtrRow;
 
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
                     if constexpr (std::is_same<T, Rpp8s>::value)
                     {
@@ -219,8 +214,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                     srcPtrTemp = srcPtrRow;
                     dstPtrTemp = dstPtrRow;
 
-                    int vectorLoopCount = 0;
-                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
                         if constexpr (std::is_same<T, Rpp8s>::value)
                             *dstPtrTemp = maskPtr[c] ? *srcPtrTemp : -128;
