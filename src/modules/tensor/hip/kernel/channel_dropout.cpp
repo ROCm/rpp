@@ -31,20 +31,21 @@ template<typename T>
 __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *maskTensor, T *srcPtr)
 {
     // Convert mask value (0 or 1) to float
-    float4 mask4 = MAKE_FLOAT4(static_cast<float>(*maskTensor));
+    float4 mask_f4 = MAKE_FLOAT4(static_cast<float>(*maskTensor));
 
     // Multiply pixel data by mask
-    pix_f8.f4[0] = pix_f8.f4[0] * mask4;
-    pix_f8.f4[1] = pix_f8.f4[1] * mask4;
+    pix_f8.f4[0] = pix_f8.f4[0] * mask_f4;
+    pix_f8.f4[1] = pix_f8.f4[1] * mask_f4;
 }
 
 template<typename T>
 __device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor, T *srcPtr)
 {
     // Convert mask values (0 or 1) for R, G, B
-    float4 maskR_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[0]));
-    float4 maskG_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[1]));
-    float4 maskB_f4 = MAKE_FLOAT4(static_cast<float>(maskTensor[2]));
+    uchar4 mask_uc4 = *(uchar4 *) maskTensor;
+    float4 maskR_f4 = MAKE_FLOAT4(static_cast<float>(mask_uc4.x));
+    float4 maskG_f4 = MAKE_FLOAT4(static_cast<float>(mask_uc4.y));
+    float4 maskB_f4 = MAKE_FLOAT4(static_cast<float>(mask_uc4.z));
 
     // Multiply each channel’s pixels by its mask
     pix_f24.f4[0] = pix_f24.f4[0] * maskR_f4; // Red
@@ -61,9 +62,8 @@ __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *ma
 {
     // Convert mask value (0 or 1) to float
     float mask = static_cast<float>(*maskTensor);
-    float4 mask_f4 = MAKE_FLOAT4(-128.0f);
+    float4 mask_f4 = FLOAT4_I8_MIN_VALUE;
 
-    // Multiply pixel data by mask
     pix_f8.f4[0] = mask ? pix_f8.f4[0] : mask_f4;
     pix_f8.f4[1] = mask ? pix_f8.f4[1] : mask_f4;
 }
@@ -71,13 +71,13 @@ __device__ __forceinline__ void compute_dropout_f8(d_float8 &pix_f8, uint8_t *ma
 __device__ __forceinline__ void compute_dropout_f24(d_float24 &pix_f24, uint8_t *maskTensor, schar *srcPtr)
 {
     // Convert mask values (0 or 1) for R, G, B
-    float maskR = static_cast<float>(maskTensor[0]);
-    float maskG = static_cast<float>(maskTensor[1]);
-    float maskB = static_cast<float>(maskTensor[2]);
+    uchar4 mask_uc4 = *(uchar4 *) maskTensor;
+    float maskR = static_cast<float>(mask_uc4.x);
+    float maskG = static_cast<float>(mask_uc4.y);
+    float maskB = static_cast<float>(mask_uc4.z);
     
-    float4 mask_f4 = make_float4(-128.0f, -128.0f, -128.0f, -128.0f);
+    float4 mask_f4 = FLOAT4_I8_MIN_VALUE;
 
-    // Multiply each channel’s pixels by its mask
     pix_f24.f4[0] = maskR ? pix_f24.f4[0] : mask_f4; // Red
     pix_f24.f4[1] = maskR ? pix_f24.f4[1] : mask_f4;
     
@@ -232,21 +232,21 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     // Generate channel mask on host
     uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
-    int seed = randomSeed ? std::random_device{}() : 42;
-#pragma omp parallel for num_threads(dstDescPtr->n)
-    for (int b = 0; b < dstDescPtr->n; b++)
+    int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED; // Use a true random seed if requested, otherwise use the fixed seed for deterministic QA
+#pragma omp parallel for
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
-        std::mt19937 gen(seed + b);
-        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[b]);
-        bool anyKept = false;
-        int base = b * srcDescPtr->c;
+        std::mt19937 gen(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]); // Distribution for the probability of keeping or dropping a channel
+        bool atLeastOneChannelKept = false; // Flag to track if all channels were dropped, to ensure at least one is kept
+        int base = batchCount * srcDescPtr->c;
         for (int c = 0; c < srcDescPtr->c; c++)
         {
             channelMaskHost[base + c] = keepDist(gen);
-            anyKept |= channelMaskHost[base + c];
+            atLeastOneChannelKept |= channelMaskHost[base + c];
         }
         // Ensure at least one channel is kept
-        if (!anyKept)
+        if (!atLeastOneChannelKept)
             channelMaskHost[base + (gen() % srcDescPtr->c)] = 1;
     }
 

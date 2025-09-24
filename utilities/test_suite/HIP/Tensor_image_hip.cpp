@@ -474,7 +474,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
 
     Rpp32f *dropoutProbability = nullptr;
-    if(testCase == DROPOUT && dropoutTypeCase == CHANNEL)
+    if(testCase == DROPOUT && additionalParam == CHANNEL)
         CHECK_RETURN_STATUS(hipHostMalloc(&dropoutProbability, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
