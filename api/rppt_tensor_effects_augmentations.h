@@ -841,8 +841,8 @@ RppStatus rppt_posterize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
- * \param [in] randomSeed control the random number generator's seed
+ * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D Rpp32f tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] randomSeed randomSeed single bool to control the random number generator's seed ( 0 - Fixed seed for QA , 1 - random seed generated for randomness)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -863,8 +863,8 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
- * \param [in] randomSeed control the random number generator's seed
+ * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D Rpp32f tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
+ * \param [in] randomSeed randomSeed single bool to control the random number generator's seed ( 0 - Fixed seed for QA , 1 - random seed generated for randomness)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -885,7 +885,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] boxesInEachImage The number of random box regions to erase from each image in the batch
+ * \param [in] boxInEachImage The number of random box regions to erase from each image in the batch
  * \param [in] randomSeed control the random number generator's seed
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -907,7 +907,7 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] boxesInEachImage The number of random box regions to erase from each image in the batch
+ * \param [in] boxInEachImage The number of random box regions to erase from each image in the batch
  * \param [in] randomSeed control the random number generator's seed
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -929,10 +929,10 @@ RppStatus rppt_cutout_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] gridW The number of columns in the grid to be overlaid on each image
- * \param [in] gridH The number of rows in the grid to be overlaid on each image
+ * \param [in] numGridsPerColumn The number of grids per columns to be overlaid on each image
+ * \param [in] numGridsPerRow The number of grids per rows to be overlaid on each image
  * \param [in] holeRatio The ratio (from 0.0 to 1.0) of the erased region's size relative to its corresponding grid cell size
- * \param [in] randomOffset A boolean flag; if true, the erased region is placed at a random offset within its cell, otherwise it's placed at a fixed position (e.g., top-left).
+ * \param [in] randomOffset A boolean flag; if true, the erased region is placed at a random offset within its cell, otherwise it's placed at a fixed position (e.g., top-left)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -940,7 +940,7 @@ RppStatus rppt_cutout_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u gridW, Rpp32u gridH, Rpp32f holeRatio, bool randomOffset, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u numGridsPerColumn, Rpp32u numGridsPerRow, Rpp32f holeRatio, bool randomOffset, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Grid dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
@@ -953,10 +953,10 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] gridW The number of columns in the grid to be overlaid on each image
- * \param [in] gridH The number of rows in the grid to be overlaid on each image
+ * \param [in] numGridsPerColumn The number of grids per columns to be overlaid on each image
+ * \param [in] numGridsPerRow The number of grids per rows to be overlaid on each image
  * \param [in] holeRatio The ratio (from 0.0 to 1.0) of the erased region's size relative to its corresponding grid cell size
- * \param [in] randomOffset A boolean flag; if true, the erased region is placed at a random offset within its cell, otherwise it's placed at a fixed position (e.g., top-left).
+ * \param [in] randomOffset A boolean flag; if true, the erased region is placed at a random offset within its cell, otherwise it's placed at a fixed position (e.g., top-left)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -964,7 +964,7 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u gridW, Rpp32u gridH, Rpp32f holeRatio, bool randomOffset, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u numGridsPerColumn, Rpp32u numGridsPerRow, Rpp32f holeRatio, bool randomOffset, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! \brief Random Erase augmentation on HOST backend for a NCHW/NHWC layout tensor

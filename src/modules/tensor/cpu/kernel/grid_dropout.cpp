@@ -30,8 +30,8 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   Rpp32u gridW,
-                                   Rpp32u gridH,
+                                   Rpp32u numGridsPerColumn,
+                                   Rpp32u numGridsPerRow,
                                    Rpp32f holeRatio,
                                    bool randomOffset,
                                    RpptROIPtr roiTensorPtrSrc,
@@ -42,14 +42,14 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
-    Rpp32u boxesInEachImage = gridH * gridW;
+    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
-    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * gridH * gridW];
+    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * numGridsPerRow * numGridsPerColumn];
     Rpp32u maxHoleW = 0, maxHoleH = 0;
-    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, gridH, gridW, maxHoleW, maxHoleH, holeRatio, randomOffset);
-    T blackValue{};
+    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
+    T fillValue{};
     if (std::is_same<T, Rpp8s>::value)
-        blackValue = -128;
+        fillValue = -128;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -117,9 +117,9 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
                 for (int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, blackValue);
-                    std::fill_n(dstPtrTempG, boxWidth, blackValue);
-                    std::fill_n(dstPtrTempB, boxWidth, blackValue);
+                    std::fill_n(dstPtrTempR, boxWidth, fillValue);
+                    std::fill_n(dstPtrTempG, boxWidth, fillValue);
+                    std::fill_n(dstPtrTempB, boxWidth, fillValue);
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
                     dstPtrTempB += dstDescPtr->strides.hStride;
@@ -175,9 +175,9 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for(int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = blackValue;
-                        dstPtrRow[1] = blackValue;
-                        dstPtrRow[2] = blackValue;
+                        dstPtrRow[0] = fillValue;
+                        dstPtrRow[1] = fillValue;
+                        dstPtrRow[2] = fillValue;
                         dstPtrRow += 3;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -223,9 +223,9 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
                 for (int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, blackValue);
-                    std::fill_n(dstPtrTempG, boxWidth, blackValue);
-                    std::fill_n(dstPtrTempB, boxWidth, blackValue);
+                    std::fill_n(dstPtrTempR, boxWidth, fillValue);
+                    std::fill_n(dstPtrTempG, boxWidth, fillValue);
+                    std::fill_n(dstPtrTempB, boxWidth, fillValue);
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
                     dstPtrTempB += dstDescPtr->strides.hStride;
@@ -259,7 +259,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTemp, boxWidth, blackValue);
+                    std::fill_n(dstPtrTemp, boxWidth, fillValue);
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
@@ -295,9 +295,9 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for(int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = blackValue;
-                        dstPtrRow[1] = blackValue;
-                        dstPtrRow[2] = blackValue;
+                        dstPtrRow[0] = fillValue;
+                        dstPtrRow[1] = fillValue;
+                        dstPtrRow[2] = fillValue;
                         dstPtrRow += 3;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;

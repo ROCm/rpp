@@ -117,8 +117,8 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp32u gridW,
-                                Rpp32u gridH,
+                                Rpp32u numGridsPerColumn,
+                                Rpp32u numGridsPerRow,
                                 Rpp32f holeRatio,
                                 bool randomOffset,
                                 RpptROIPtr roiTensorPtrSrc,
@@ -128,7 +128,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    Rpp32u boxesInEachImage = gridH * gridW;
+    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
 
     RpptRoiLtrb *anchorBoxInfoTensor;
@@ -137,7 +137,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     hipMalloc(&d_anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb));
 
     Rpp32u maxHoleW = 0, maxHoleH = 0;
-    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, gridH, gridW, maxHoleW, maxHoleH, holeRatio, randomOffset);
+    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
     hipMemcpy(d_anchorBoxInfoTensor, anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb), hipMemcpyHostToDevice);
 
     int globalThreads_x = maxHoleW;
