@@ -1789,7 +1789,7 @@ int main(int argc, char **argv)
                         case GRID:
                         {
                             testCaseName = "grid_dropout";
-                            Rpp32u gridH = 10, gridW = 10;
+                            Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                             Rpp32f holeRatio = 0.4f;
                             bool randomOffset = false;
                             randomOffset = qaFlag ? false : randomOffset;
@@ -1797,7 +1797,7 @@ int main(int argc, char **argv)
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
                             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                               rppt_grid_dropout_host(input, srcDescPtr, output, dstDescPtr, gridW, gridH, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
+                               rppt_grid_dropout_host(input, srcDescPtr, output, dstDescPtr, numGridsPerColumn, numGridsPerRow, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
 
