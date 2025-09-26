@@ -1920,9 +1920,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
     if(saturation != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
-    if(strength != NULL && bias != NULL){
-        CHECK_RETURN_STATUS(hipHostFree(&strength));
-        CHECK_RETURN_STATUS(hipHostFree(&bias));
+    if(testCase == EMBOSS)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(strength));
+        CHECK_RETURN_STATUS(hipHostFree(bias));
     }
     if (minTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(minTensor));
