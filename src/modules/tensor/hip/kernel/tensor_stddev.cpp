@@ -440,7 +440,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -466,7 +466,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -492,7 +492,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
