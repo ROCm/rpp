@@ -334,8 +334,8 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipMemcpyAsync(dstPtr, srcPtr2, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr2, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(crop_and_patch_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -352,8 +352,8 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipMemcpyAsync(dstPtr, srcPtr2, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr2, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
             hipLaunchKernelGGL(crop_and_patch_pln3_hip_tensor,
@@ -401,7 +401,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             hipLaunchKernelGGL(crop_and_patch_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -428,7 +428,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             hipLaunchKernelGGL(crop_and_patch_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
