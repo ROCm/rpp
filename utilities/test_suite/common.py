@@ -37,14 +37,27 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
-class BitDepth(Enum):
-    U8_U8  = 0
-    F16_F16 = 1
-    F32_F32 = 2
-    U8_F16  = 3
-    U8_F32  = 4
-    I8_I8   = 5
-    U8_I8   = 6
+class TestType(Enum):
+    """
+    Enum representing different test types.
+    """
+    UNIT_TEST = 0
+    PERFORMANCE_TEST = 1
+
+class BitDepthTestMode(Enum):
+    """
+    Enum representing bit-depth conversion formats.
+    Convention:
+      - The first type = input data type
+      - The second type = output data type
+    """
+    U8_TO_U8   = 0  # Input: U8 -> Output: U8
+    F16_TO_F16 = 1  # Input: F16 -> Output: F16
+    F32_TO_F32 = 2  # Input: F32 -> Output: F32
+    U8_TO_F16  = 3  # Input: U8 -> Output: F16
+    U8_TO_F32  = 4  # Input: U8 -> Output: F32
+    I8_TO_I8   = 5  # Input: I8 -> Output: I8
+    U8_TO_I8   = 6  # Input: U8 -> Output: I8
 
 bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
 
