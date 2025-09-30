@@ -323,8 +323,8 @@ int main(int argc, char **argv)
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 44100;
-                        outRateTensor[i] = 44100 * 1.15f;
+                        inRateTensor[i] = SAMPLE_RATE;
+                        outRateTensor[i] = SAMPLE_RATE * RESAMPLE_BUFFER_SCALE_FACTOR;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             if (testCase == NON_SILENT_REGION_DETECTION)
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
             else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HOST");
 
