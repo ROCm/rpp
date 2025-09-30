@@ -153,7 +153,7 @@ RppStatus snow_hip_batch(Rpp8u *srcPtr, Rpp8u *dstPtr, rpp::Handle& handle, Rppi
         plnpkdind = 3;
     Rpp32u max_height, max_width;
     max_size(handle.GetInitHandle()->mem.mgpu.csrcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.width, handle.GetBatchSize(), &max_height, &max_width);
-    hipMemcpy(dstPtr, srcPtr, nbatchSize * max_height * max_width * channel * sizeof(unsigned char), hipMemcpyDeviceToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(dstPtr, srcPtr, nbatchSize * max_height * max_width * channel * sizeof(unsigned char), hipMemcpyDeviceToDevice));
 
     hip_exec_snow_batch(srcPtr, dstPtr, handle, chnFormat, channel, plnpkdind, max_height, max_width);
 
