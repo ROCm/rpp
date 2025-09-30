@@ -247,7 +247,6 @@ void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int
 // Compares output with reference outputs and validates QA
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
-    fstream refFile;
     int fileMatch = 0;
 
     // read data from golden outputs
@@ -350,16 +349,15 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
         cout << "\nUnable to get the reference outputs for the file specified!" << endl;
         return;
     }
-    std::vector<Rpp32s> refData(bs * 2);
-    fin.read(reinterpret_cast<char*>(refData.data()), bs * 2 * sizeof(Rpp32s));
-    fin.close();
+    Rpp32s *refOutput = (Rpp32s *)malloc(bs * 2 * sizeof(Rpp32s));
+    fin.read(reinterpret_cast<char*>(refOutput), bs * 2 * sizeof(Rpp32s));
 
     for (int i = 0; i < bs; i++)
     {
         Rpp32s outBegin = detectedIndex[i];
         Rpp32s outLength = detectionLength[i];
-        Rpp32s refBegin = refData[i * 2];
-        Rpp32s refLength = refData[i * 2 + 1];
+        Rpp32s refBegin = refOutput[i * 2];
+        Rpp32s refLength = refOutput[i * 2 + 1];
 
         if ((outBegin == refBegin) && (outLength == refLength))
             fileMatch += 1;
@@ -384,6 +382,8 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
         qaResults << status << std::endl;
         qaResults.close();
     }
+
+    free(refOutput);
 }
 
 inline Rpp32f sinc(Rpp32f x)
