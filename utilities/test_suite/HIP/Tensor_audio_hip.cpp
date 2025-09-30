@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * RESAMPLE_BUFFER_SCALE_FACTOR;
+    Rpp64u resampleMaxBufferSize = static_cast<Rpp64u>(oBufferSize * RESAMPLE_BUFFER_SCALE_FACTOR);
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
