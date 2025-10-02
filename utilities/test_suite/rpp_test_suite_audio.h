@@ -35,9 +35,11 @@ SOFTWARE.
 #include <sndfile.h>
 using namespace std;
 
-#define AUDIO_MAX_HEIGHT             257  // Maximum height for mel filter bank and spectrogram set to 257 to ensure compatibility with test configuration, calculated as (nfft / 2) + 1 for a standard nfft of 512
-#define RESAMPLE_BUFFER_SCALE_FACTOR 1.16 // Scale factor to allocate a safe maximum buffer size for resampling, allowing for upsampling
+#define MEL_FILTER_BANK_MAX_HEIGHT   257  // Maximum height for mel filter bank set to 257 to ensure compatibility with test configuration
+#define RESAMPLE_BUFFER_SCALE_FACTOR 1.15 // Scale factor to allocate a safe maximum buffer size for resampling, allowing for upsampling
+#define SPECTROGRAM_MAX_HEIGHT       257  // Maximum height for spectrogram set to 257 to ensure compatibility with test configuration, calculated as (nfft / 2) + 1 for a standard nfft of 512
 #define SPECTROGRAM_MAX_WIDTH        3170 // Maximum width for a spectrogram, pre-calculated based on the longest audio file in the test dataset
+#define SAMPLE_RATE                  16000 //Sample rate of the input audio file
 
 std::map<int, string> audioAugmentationMap =
 {
@@ -60,14 +62,6 @@ enum Augmentation {
     SLICE = 5,
     RESAMPLE = 6,
     MEL_FILTER_BANK = 7
-};
-
-// Golden outputs for Non Silent Region Detection
-std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
-{
-    {"sample1", {0, 507150}},
-    {"sample2", {0, 88200}},
-    {"sample3", {0, 180810}}
 };
 
 // Cutoff values for audio kernels listed for HOST backend followed by HIP
@@ -253,7 +247,6 @@ void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int
 // Compares output with reference outputs and validates QA
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
-    fstream refFile;
     int fileMatch = 0;
 
     // read data from golden outputs
@@ -345,24 +338,26 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
 }
 
 // Compares output with reference outputs and validates QA for non silent region
-void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, string scriptPath, string dst)
 {
     int fileMatch = 0;
+    // read data from golden outputs
+    string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(!fin.is_open())
+    {
+        cout << "\nUnable to get the reference outputs for the file specified!" << endl;
+        return;
+    }
+    Rpp32s *refOutput = (Rpp32s *)malloc(bs * 2 * sizeof(Rpp32s));
+    fin.read(reinterpret_cast<char*>(refOutput), bs * 2 * sizeof(Rpp32s));
+
     for (int i = 0; i < bs; i++)
     {
-        string currentFileName = audioNames[i];
-        size_t lastIndex = currentFileName.find_last_of(".");
-        currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
-        std::vector<int> referenceOutput = NonSilentRegionReferenceOutputs[currentFileName];
-        if(referenceOutput.empty())
-        {
-            cout << "\nUnable to get the reference outputs for the file specified!" << endl;
-            break;
-        }
         Rpp32s outBegin = detectedIndex[i];
         Rpp32s outLength = detectionLength[i];
-        Rpp32s refBegin = referenceOutput[0];
-        Rpp32s refLength = referenceOutput[1];
+        Rpp32s refBegin = refOutput[i * 2];
+        Rpp32s refLength = refOutput[i * 2 + 1];
 
         if ((outBegin == refBegin) && (outLength == refLength))
             fileMatch += 1;
@@ -387,6 +382,8 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
         qaResults << status << std::endl;
         qaResults.close();
     }
+
+    free(refOutput);
 }
 
 inline Rpp32f sinc(Rpp32f x)

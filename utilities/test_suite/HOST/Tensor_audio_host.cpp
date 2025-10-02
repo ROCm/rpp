@@ -128,8 +128,8 @@ int main(int argc, char **argv)
     // set buffer sizes for src/dst
     if(testCase == MEL_FILTER_BANK)
     {
-        iBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-        oBufferSize = (Rpp64u)AUDIO_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
     }
     else
     {
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = AUDIO_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -323,8 +323,8 @@ int main(int argc, char **argv)
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 44100;
-                        outRateTensor[i] = 44100 * 1.15f;
+                        inRateTensor[i] = SAMPLE_RATE;
+                        outRateTensor[i] = SAMPLE_RATE * RESAMPLE_BUFFER_SCALE_FACTOR;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             if (testCase == NON_SILENT_REGION_DETECTION)
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
             else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HOST");
 
