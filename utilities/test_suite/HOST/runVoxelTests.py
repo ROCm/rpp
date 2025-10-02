@@ -80,9 +80,9 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
         print("\n------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    if testType == 0:
+    if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
-    elif testType == 1:
+    elif testType == TestType.PERFORMANCE_TEST.value:
         run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -179,13 +179,13 @@ if qaMode and batchSize != 3:
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     if qaMode:
         outFilePath = os.path.join(outFolderPath + "/QA_RESULTS_HOST_VOXEL_" + timestamp)
     else:
         outFilePath = os.path.join(outFolderPath + "/OUTPUT_VOXEL_HOST_" + timestamp)
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = os.path.join(outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
@@ -215,7 +215,7 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
-bitDepths = [BitDepth.U8_U8, BitDepth.F32_F32]
+bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
 noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
@@ -225,13 +225,13 @@ for case in caseList:
         continue
     for layout in list(Layout):
         dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", voxelAugmentationGroupMap, func_group_finder, voxelAugmentationMap)
-        if testType == 0 and qaMode == 0:
+        if testType == TestType.UNIT_TEST.value and not qaMode:
             if not os.path.isdir(dstPathTemp):
                 os.mkdir(dstPathTemp)
 
-        bitDepths = [BitDepth.U8_U8, BitDepth.F32_F32]
-        if testType == 0 and qaMode:
-            bitDepths = [BitDepth.F32_F32]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
+        if testType == TestType.UNIT_TEST.value and qaMode:
+            bitDepths = [BitDepthTestMode.F32_TO_F32]
         for bitDepth in bitDepths:
             run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout.value, case, numRuns, testType, qaMode, batchSize)
 
@@ -239,15 +239,15 @@ for case in caseList:
 nonQACaseList = ['6'] # Add cases present in supportedCaseList, but without QA support
 supportedCaseList = [key for key, values in voxelAugmentationMap.items() if "HOST" in values]
 
-if qaMode and testType == 0:
+if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_host")
 
-if (testType == 0 and qaMode == 0):   # Unit tests
+if (testType == TestType.UNIT_TEST.value and not qaMode):   # Unit tests
     create_layout_directories(dstPath)
-elif (testType == 1):   # Performance tests
+elif (testType == TestType.PERFORMANCE_TEST.value):   # Performance tests
     logFileList = get_log_file_list()
     functionalityGroupList = ["arithmetic_operations", "geometric_augmentations", "effects_augmentations"]
 

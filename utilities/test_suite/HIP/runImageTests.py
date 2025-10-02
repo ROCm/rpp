@@ -53,10 +53,10 @@ def get_log_file_list(preserveOutput):
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
-    bitDepths = list(BitDepth)
+    bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
     if qaMode:
-        bitDepths = [BitDepth.U8_U8, BitDepth.F32_F32]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
@@ -98,14 +98,14 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     with open(loggingFolder + "/Tensor_image_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
-        print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(additionalParam))
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPath, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
+        print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam))
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth.value), get_image_layout_type(layout, outputFormatToggle.value, "HIP"))
+        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth), get_image_layout_type(layout, outputFormatToggle, "HIP"))
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
-    for bitDepth in list(BitDepth):
+    for bitDepth in list(BitDepthTestMode):
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
@@ -256,13 +256,13 @@ if qaMode and batchSize != 3:
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     if qaMode:
         outFilePath = outFolderPath + "/QA_RESULTS_HIP_" + timestamp
     else:
         outFilePath = outFolderPath + "/OUTPUT_IMAGES_HIP_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
@@ -293,47 +293,47 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # Create folders based on testType and profilingOption
-if testType == 1 and profilingOption == "YES":
+if testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PKD3")
     os.makedirs(dstPath + "/Tensor_PLN1")
     os.makedirs(dstPath + "/Tensor_PLN3")
 
 supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
 
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
     if noCaseSupported:
         print("case numbers %s are not supported" % caseList)
     for case in caseList:
         if int(case) not in imageAugmentationMap:
             continue
-        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
         else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
+        if qaMode and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in list(Layout):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
-            if qaMode == 0:
+            if not qaMode:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
             run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
-    if qaMode == 0:
+    if not qaMode:
         create_layout_directories(dstPath)
 else:
-    if (testType == 1 and profilingOption == "NO"):
-        noCaseSupported = all(case not in imageAugmentationMap for case in caseList)
+    if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO"):
+        noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
         if noCaseSupported:
             print("case numbers %s are not supported" % caseList)
         for case in caseList:
@@ -350,7 +350,7 @@ else:
 
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
-    elif (testType == 1 and profilingOption == "YES"):
+    elif (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
 
         noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
@@ -369,7 +369,7 @@ else:
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
                 print("\n")
-                for bitDepth in list(BitDepth):
+                for bitDepth in list(BitDepthTestMode):
                     for outputFormatToggle in list(outputFormat):
                         # There is no layout toggle for PLN1 case, so skip this case
                         if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
@@ -482,7 +482,7 @@ else:
         except IOError:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
-if (testType == 1 and profilingOption == "NO"):
+if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO"):
     logFileList = get_log_file_list(preserveOutput)
 
     functionalityGroupList = [
@@ -502,7 +502,7 @@ if (testType == 1 and profilingOption == "NO"):
 # print the results of qa tests
 nonQACaseList = ['6', '8', '10', '11', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
-if qaMode and testType == 0:
+if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:

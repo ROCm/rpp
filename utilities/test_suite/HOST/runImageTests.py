@@ -52,10 +52,10 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    bitDepths = list(BitDepth)
+    bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
     if qaMode:
-        bitDepths = [BitDepth.U8_U8, BitDepth.F32_F32]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
@@ -97,7 +97,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    if qaMode == 1:
+    if qaMode:
         with open(loggingFolder + "/BatchPD_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
             process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
             read_from_subprocess_and_write_to_log(process, logFile)
@@ -110,9 +110,9 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
-    bitDepths = list(BitDepth)
+    bitDepths = list(BitDepthTestMode)
     if qaMode:
-        bitDepths = [BitDepth.U8_U8]
+        bitDepths = [BitDepthTestMode.U8_TO_U8]
     for bitDepth in bitDepths:
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
@@ -235,22 +235,22 @@ preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
-if qaMode and testType == 0 and batchSize != 3:
+if qaMode and testType == TestType.UNIT_TEST.value and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
-if qaMode and testType == 1 and batchSize != 8:
+if qaMode and testType == TestType.PERFORMANCE_TEST.value and batchSize != 8:
     print("Performance QA mode can only run with a batch size of 8.")
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     if qaMode:
         outFilePath = outFolderPath + "/QA_RESULTS_HOST_" + timestamp
     else:
         outFilePath = outFolderPath + "/OUTPUT_IMAGES_HOST_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp
@@ -281,7 +281,7 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HOST" in values]
-if testType == 0:
+if testType == TestType.UNIT_TEST.value:
     noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
@@ -289,28 +289,28 @@ if testType == 0:
     for case in caseList:
         if int(case) not in imageAugmentationMap:
             continue
-        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
         else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
+        if qaMode and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in list(Layout):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
-            if qaMode == 0:
+            if not qaMode:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
             run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-    if qaMode == 0:
+    if not qaMode:
         create_layout_directories(dstPath)
 else:
     noCaseSupported = all(int(case) not in imageAugmentationMap for case in caseList)
@@ -323,7 +323,7 @@ else:
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
         func_name = imageAugmentationMap[int(case)][0]
 
-        if qaMode == 1 and func_name != "ricap":
+        if qaMode and func_name != "ricap":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         elif func_name == "ricap" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
@@ -342,7 +342,7 @@ nonQAaugs = ["jitter", "noise", "fog", "rain", "warp_affine", "warp_perspective"
 # Find all case keys matching these names
 nonQACaseList = [str(k) for k, v in imageAugmentationMap.items() if v[0] in nonQAaugs]
 
-if qaMode and testType == 0:
+if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
@@ -350,10 +350,10 @@ if qaMode and testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_host")
 
 # unit tests and QA mode disabled
-if testType == 0 and qaMode == 0:
+if testType == TestType.UNIT_TEST.value and not qaMode:
     create_layout_directories(dstPath)
 # Performance tests
-elif (testType == 1 and qaMode == 1):
+elif (testType == TestType.PERFORMANCE_TEST.value and qaMode):
     columns = ['BatchPD_Augmentation_Type', 'Tensor_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
     tensorAugVariations = []
     batchPDAugVariations = []
@@ -492,7 +492,7 @@ elif (testType == 1 and qaMode == 1):
     print("- All APIs have been improved for performance ranging from " + str(0) + "% (almost same) to " + str(100) + "% faster.")
     print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
     print("\n-------------------------------------------------------------------\n")
-elif (testType == 1 and qaMode == 0):
+elif (testType == TestType.PERFORMANCE_TEST.value and not qaMode):
     logFileList = get_log_file_list(preserveOutput)
 
     functionalityGroupList = [

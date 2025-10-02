@@ -32,15 +32,26 @@ SOFTWARE.
 #define DEBUG_MODE 0
 using namespace std;
 
-enum BitDepth
+// This is a test-suite enum to specify the Bit-Depth Testing Mode. 
+// RPP supports different combinations of the following 7 testing modes 
+// of source and destination tensor bit depths, depending on the functionality being tested. 
+// The capability of each functionality is listed in the RPP API documentation.
+enum BitDepthTestMode
 {
-    U8_U8 = 0,
-    F16_F16 = 1,
-    F32_F32 = 2,
-    U8_F16 = 3,
-    U8_F32 = 4,
-    I8_I8 = 5,
-    U8_I8 = 6
+    U8_TO_U8  = 0,  // Input: U8  -> Output: U8
+    F16_TO_F16 = 1, // Input: F16 -> Output: F16
+    F32_TO_F32 = 2, // Input: F32 -> Output: F32
+    U8_TO_F16  = 3, // Input: U8  -> Output: F16
+    U8_TO_F32  = 4, // Input: U8  -> Output: F32
+    I8_TO_I8   = 5, // Input: I8  -> Output: I8
+    U8_TO_I8   = 6  // Input: U8  -> Output: I8
+};
+
+// Enum representing different test types
+enum testType
+{
+    UNIT_TEST = 0,
+    PERFORMANCE_TEST = 1
 };
 
 // Opens a folder and recursively search for files with given extension

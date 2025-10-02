@@ -165,13 +165,13 @@ void search_nii_files(const string& folder_path, vector<string>& niiFileNames, v
 
 // sets generic descriptor dimensions and strides of src/dst
 inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ,
-                                  int numChannels, int offsetInBytes, int layoutType, int inputBitDepth)
+                                  int numChannels, int offsetInBytes, int layoutType, int BitDepthTestMode)
 {
     descriptorPtr3D->numDims = 5;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    if(inputBitDepth == U8_U8)
+    if(BitDepthTestMode == U8_TO_U8)
         descriptorPtr3D->dataType = RpptDataType::U8;
-    else if(inputBitDepth == F32_F32)
+    else if(BitDepthTestMode == F32_TO_F32)
         descriptorPtr3D->dataType = RpptDataType::F32;
 
     if (layoutType == 0)
