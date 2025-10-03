@@ -360,7 +360,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    roiTensor,
                                    handle,
                                    numDims);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     }
 
     if(numDims == 4)

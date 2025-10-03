@@ -1407,8 +1407,8 @@ void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = srcGenericDescPtr->dims[0] * srcGenericDescPtr->dims[1] * globalThreads_x;
-            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along XY direction
@@ -1422,8 +1422,8 @@ void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             break;
         }
     }
@@ -1475,8 +1475,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along X direction
@@ -1512,8 +1512,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along XYZ direction
@@ -1528,8 +1528,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             break;
         }
     }
@@ -1807,7 +1807,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                            maxParamVolume,
                            isMean);
     }
-    hipStreamSynchronize(handle.GetStream());
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     return RPP_SUCCESS;
 }
 

@@ -279,7 +279,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                srcDims,
                                partialMaxArr);
         }
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     }
     Rpp32u blockSize = (computeMax) ? 256: 1;
     Rpp32f *inverseMagnitudeTensor = partialMaxArr + globalThreads_z * numBlocksPerSample;
@@ -292,7 +292,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                        numBlocksPerSample,
                        computeMax,
                        inverseMagnitudeTensor);
-    hipStreamSynchronize(handle.GetStream());
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     // launch kernel for todecibels
     if (numDims == 1)
