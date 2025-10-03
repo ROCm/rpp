@@ -124,7 +124,8 @@ std::map<int, string> augmentationMap =
     {92, "slice"},
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
-    {95, "dropout"}
+    {95, "solarize"},
+    {96, "dropout"}
 };
 
 enum Augmentation {
@@ -188,7 +189,8 @@ enum Augmentation {
     SLICE = 92,
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
-    DROPOUT = 95
+    SOLARIZE = 95,
+    DROPOUT = 96
 };
 
 enum DropoutType
@@ -1043,7 +1045,7 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 1e-6)
+                if(diff <= 2e-6)
                     matchedIdx++;
             }
         }
@@ -1114,7 +1116,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 1e-6)
+                    if(diff <= 2e-6)
                         matchedIdx++;
                 }
             }

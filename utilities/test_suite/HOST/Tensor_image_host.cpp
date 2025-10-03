@@ -1271,10 +1271,16 @@ int main(int argc, char **argv)
                     testCaseName = "box_filter";
                     Rpp32u kernelSize = additionalParam;
 
+                    if (borderType != RpptImageBorderType::REPLICATE)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1740,6 +1746,23 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case SOLARIZE:
+                {
+                    testCaseName = "solarize";
+
+                    Rpp32f thresholdTensor[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                        thresholdTensor[i] = 0.5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_solarize_host(input, srcDescPtr, output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case DROPOUT:
                 {
                     testCaseName = "dropout";
@@ -1760,7 +1783,7 @@ int main(int argc, char **argv)
                                 rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
-
+                            
                             break;
                         }
                         default:
@@ -1769,7 +1792,6 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
-
                     break;
                 }
                 default:
