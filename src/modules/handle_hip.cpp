@@ -41,7 +41,7 @@ namespace rpp {
 // We leak resources for now as there is no hipCtxRetain API
 hipCtx_t get_ctx()
 {
-    hipInit(0);
+    CHECK_RETURN_STATUS(hipInit(0));
     hipCtx_t ctx;
     auto status = 0;
     if(status != hipSuccess)
@@ -121,7 +121,7 @@ struct HandleImpl
     void elapsed_time(hipEvent_t start, hipEvent_t stop)
     {
         if(enable_profiling)
-            hipEventElapsedTime(&this->profiling_result, start, stop);
+            CHECK_RETURN_STATUS(hipEventElapsedTime(&this->profiling_result, start, stop));
     }
 
     std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
@@ -315,6 +315,9 @@ void Handle::rpp_destroy_object_gpu()
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem));
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
     CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
+
+    delete this->GetInitHandle();
+    this->impl = nullptr;
 }
 
 void Handle::rpp_destroy_object_host()
@@ -510,7 +513,7 @@ std::size_t Handle::GetGlobalMemorySize()
 std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
-    hipGetDeviceProperties(&props, this->impl->device);
+    CHECK_RETURN_STATUS(hipGetDeviceProperties(&props, this->impl->device));
     std::string name(props.gcnArchName);
     return name;
 }
