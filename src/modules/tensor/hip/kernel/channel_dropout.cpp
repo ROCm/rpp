@@ -233,7 +233,9 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
     // Generate channel mask on host
     uint8_t *channelMaskHost = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED; // Use a true random seed if requested, otherwise use the fixed seed for deterministic QA
-#pragma omp parallel for
+    Rpp32u numThreads = handle.GetNumThreads();
+
+#pragma omp parallel for num_threads(numThreads)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         std::mt19937 gen(seed + batchCount);
