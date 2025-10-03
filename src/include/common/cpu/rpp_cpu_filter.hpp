@@ -89,31 +89,52 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
 
     Rpp32f accum = 0.0f;
 
-    for (int i = 0; i < kernelSize; i++)
+    if((kernelSize != rowKernelLoopLimit) || (kernelSize != columnKernelLoopLimit))
     {
-        // Compute actual row for vertical clamping
-        Rpp32s rowOffset = (verticalDirection == 0)
-                            ? std::max(0, static_cast<Rpp32s>(i + rowKernelLoopLimit - kernelSize))   // clamp top
-                            : (verticalDirection == 1) ? std::min(rowKernelLoopLimit - 1, i) // raw kernel row index bottom padded region 
-                            : i ; // valid region without padding  
-
-        for (int j = 0; j < kernelSize; j++)
+        for (int i = 0; i < kernelSize; i++)
         {
-            // Compute actual column for horizontal clamping
-            Rpp32s colOffset = (horizontalDirection == -1)
-                                ? std::max(0, static_cast<Rpp32s>(j + columnKernelLoopLimit - kernelSize))   // clamp left
-                                : ((horizontalDirection == 1) || (columnKernelLoopLimit != kernelSize)) ? std::min(static_cast<Rpp32s>(columnKernelLoopLimit - 1), j) // raw kernel row index right padded region 
-                                : j ; // valid region without padding  
+            // Compute actual row for vertical clamping
+            Rpp32s rowOffset = (verticalDirection == 0)
+                                ? std::max(0, static_cast<Rpp32s>(i + rowKernelLoopLimit - kernelSize))   // clamp top
+                                : (verticalDirection == 1) ? std::min(rowKernelLoopLimit - 1, i) // raw kernel row index bottom padded region 
+                                : i ; // valid region without padding  
 
-            // Access and convert pixel
-            Rpp32f pixel;
-            if constexpr (std::is_same<T, Rpp8s>::value)
-                pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels] + 128);
-            else
-                pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels]);
+            for (int j = 0; j < kernelSize; j++)
+            {
+                // Compute actual column for horizontal clamping
+                Rpp32s colOffset = (horizontalDirection == -1)
+                                    ? std::max(0, static_cast<Rpp32s>(j + columnKernelLoopLimit - kernelSize))   // clamp left
+                                    : ((horizontalDirection == 1) || (columnKernelLoopLimit != kernelSize)) ? std::min(static_cast<Rpp32s>(columnKernelLoopLimit - 1), j) // raw kernel row index right padded region 
+                                    : j ; // valid region without padding  
 
-            // Apply filter
-            accum += pixel * filterTensor[i * kernelSize + j];
+                // Access and convert pixel
+                Rpp32f pixel;
+                if constexpr (std::is_same<T, Rpp8s>::value)
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels] + 128);
+                else
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[rowOffset][colOffset * channels]);
+
+                // Apply filter
+                accum += pixel * filterTensor[i * kernelSize + j];
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < kernelSize; i++)
+        {
+            // Direct pointer to the start of the kernel row in the source
+            // T *srcPtrCol = srcPtrTemp[i];
+            for (int j = 0; j < kernelSize; j++)
+            {
+                Rpp32f pixel;
+                if constexpr (std::is_same<T, Rpp8s>::value)
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels] + 128);
+                else
+                    pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels]);
+
+                accum += pixel * filterTensor[i * kernelSize + j];
+            }
         }
     }
 
