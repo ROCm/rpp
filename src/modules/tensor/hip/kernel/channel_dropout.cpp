@@ -257,7 +257,6 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
 
     if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NHWC && srcDescPtr->c == 3)
     {
-        int globalThreads_x = (dstDescPtr->w + 7) >> 3;
         hipLaunchKernelGGL(channel_dropout_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
