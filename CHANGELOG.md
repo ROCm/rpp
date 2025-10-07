@@ -2,7 +2,7 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 2.1.0 for ROCm 7.1.0
+## RPP 2.1.2 for ROCm 7.1.0
 
 ### Added
 * Solarize augmentation for HOST and HIP
