@@ -121,7 +121,7 @@ int main(int argc, char **argv)
         descriptorPtr3D->offsetInBytes = 0;
         descriptorPtr3D->dataType = RpptDataType::F32;
         descriptorPtr3D->dims[0] = batchSize;
-        descriptorPtr3D->dims[1] = (maxSrcWidth / 8) * 8 + 8; // Ensure a consistent dimension order between generic and typed descriptors to prevent errors.
+        descriptorPtr3D->dims[1] = (maxSrcWidth + 7) & ~7; // Ensure a consistent dimension order between generic and typed descriptors to prevent errors.
         descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
     }
 
@@ -320,11 +320,13 @@ int main(int argc, char **argv)
                     Rpp32f outRateTensor[batchSize];
                     Rpp32s srcDimsTensor[batchSize * 2];
 
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = SAMPLE_RATE;
-                        outRateTensor[i] = SAMPLE_RATE * RESAMPLE_BUFFER_SCALE_FACTOR;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];

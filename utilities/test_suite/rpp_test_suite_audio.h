@@ -39,7 +39,6 @@ using namespace std;
 #define RESAMPLE_BUFFER_SCALE_FACTOR 1.15 // Scale factor to allocate a safe maximum buffer size for resampling, allowing for upsampling
 #define SPECTROGRAM_MAX_HEIGHT       257  // Maximum height for spectrogram set to 257 to ensure compatibility with test configuration, calculated as (nfft / 2) + 1 for a standard nfft of 512
 #define SPECTROGRAM_MAX_WIDTH        3170 // Maximum width for a spectrogram, pre-calculated based on the longest audio file in the test dataset
-#define SAMPLE_RATE                  16000 //Sample rate of the input audio file
 
 std::map<int, string> audioAugmentationMap =
 {
