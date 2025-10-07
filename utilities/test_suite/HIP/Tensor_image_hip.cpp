@@ -515,9 +515,9 @@ int main(int argc, char **argv)
         if(additionalParam == 0)
         {
             CHECK_RETURN_STATUS(hipHostMalloc(&noiseProbabilityTensor, batchSize * sizeof(Rpp32f)));
-            CHECK_RETURN_STATUS(hipHostMalloc(&saltProbabilityTensor, batchSize * sizeof(RpptRGB)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&saltProbabilityTensor, batchSize * sizeof(Rpp32f)));
             CHECK_RETURN_STATUS(hipHostMalloc(&saltValueTensor, batchSize * sizeof(Rpp32f)));
-            CHECK_RETURN_STATUS(hipHostMalloc(&pepperValueTensor, batchSize * sizeof(RpptRGB)));
+            CHECK_RETURN_STATUS(hipHostMalloc(&pepperValueTensor, batchSize * sizeof(Rpp32f)));
         }
         else if(additionalParam == 1)
         {
@@ -2102,6 +2102,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(exposureFactor));
     if(gammaVal != NULL)
         CHECK_RETURN_STATUS(hipHostFree(gammaVal));
+    if(stdDevTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(stdDevTensor));
+    if(meanTensor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(meanTensor));
     if(testCase == NOISE)
     {
         if(additionalParam == 0)
@@ -2114,10 +2118,6 @@ int main(int argc, char **argv)
         else if(additionalParam == 2)
             CHECK_RETURN_STATUS(hipHostFree(shotNoiseFactorTensor));
     }
-    if(stdDevTensor != NULL)
-        CHECK_RETURN_STATUS(hipHostFree(stdDevTensor));
-    if(meanTensor != NULL)
-        CHECK_RETURN_STATUS(hipHostFree(meanTensor));
     if(mirror != NULL)
         CHECK_RETURN_STATUS(hipHostFree(mirror));
     if(testCase == WATER)
