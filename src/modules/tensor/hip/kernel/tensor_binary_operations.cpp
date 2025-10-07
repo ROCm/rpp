@@ -192,9 +192,12 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
                                                uint *dstDims,
                                                Operation op)
 {
-    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
+    uint id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // width
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
+
+    using VectorType1 = typename ArithmeticLoadStoreExecute<T1>::VectorType;
+    using VectorType2 = typename ArithmeticLoadStoreExecute<T2>::VectorType;
 
     uint* dstSampleDims = dstDims + id_z * RPPT_MAX_DIMS;
     uint* src1SampleStrides = srcStrides1 + id_z * RPPT_MAX_DIMS;
@@ -204,12 +207,51 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
     if (id_x >= dstSampleDims[1] || id_y >= dstSampleDims[0])
         return;
 
-    uint srcIdx1 = (id_z * src1SampleStrides[0]) + ((id_y) * src1SampleStrides[1]) + ((id_x) * src1SampleStrides[2]) + src1BeginOffsets[id_z];
-    uint srcIdx2 = (id_z * src2SampleStrides[0]) + ((id_y) * src2SampleStrides[1]) + (id_x * src2SampleStrides[2]) + src2BeginOffsets[id_z];
+    uint numRows = dstSampleDims[1] - id_x;
 
-    uint dstIdx = (id_z * dstSampleStrides[0]) + (id_y * dstSampleStrides[1]) + (id_x * dstSampleStrides[2]);
+    if(numRows >= 8)
+    {
+        uint srcBaseIdx1 = (id_z * src1SampleStrides[0]) + ((id_y) * src1SampleStrides[1]) + src1BeginOffsets[id_z];
+        uint srcBaseIdx2 = (id_z * src2SampleStrides[0]) + ((id_y) * src2SampleStrides[1]) + src2BeginOffsets[id_z];
 
-    dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+        uint dstBaseIdx = (id_z * dstSampleStrides[0]) + (id_y * dstSampleStrides[1]) + id_x;
+
+        T1 srcArr1[8], srcArr2[8];
+
+        #pragma unroll
+        for(int i1 = 0; i1 < 8; i1++)
+        {
+            uint srcIdx1 = srcBaseIdx1 + (id_x * src1SampleStrides[2]);
+            uint srcIdx2 = srcBaseIdx2 + (id_x * src2SampleStrides[2]);
+            srcArr1[i1] = srcPtr1[srcIdx1];
+            srcArr2[i1] = srcPtr2[srcIdx2];
+            id_x++;
+        }
+
+        VectorType1 src1_vec8, src2_vec8;
+        VectorType2 dst_vec8;
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr1, &src1_vec8);
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr2, &src2_vec8);
+        ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
+    }
+    else
+    {
+        uint srcBaseIdx1 = (id_z * src1SampleStrides[0]) + ((id_y) * src1SampleStrides[1]) + src1BeginOffsets[id_z];
+        uint srcBaseIdx2 = (id_z * src2SampleStrides[0]) + ((id_y) * src2SampleStrides[1]) + src2BeginOffsets[id_z];
+
+        uint dstBaseIdx = (id_z * dstSampleStrides[0]) + (id_y * dstSampleStrides[1]);
+
+        for(int i1 = 0; i1 < numRows; i1++)
+        {
+            uint srcIdx1 = srcBaseIdx1 + (id_x * src1SampleStrides[2]);
+            uint srcIdx2 = srcBaseIdx2 + (id_x * src2SampleStrides[2]);
+            uint dstIdx = dstBaseIdx + id_x;
+
+            id_x++;
+            dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+        }
+    }
 }
 
 template <typename T1, typename T2, typename Operation>
@@ -592,7 +634,7 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
     else if(dstDim == 2)
     {
         // NHW
-        int globalThreads_x = dstGenericDescPtr->dims[2];
+        int globalThreads_x = (dstGenericDescPtr->dims[2] + 7) >> 3;
         int globalThreads_y = dstGenericDescPtr->dims[1];
         int globalThreads_z = dstGenericDescPtr->dims[0];
 
