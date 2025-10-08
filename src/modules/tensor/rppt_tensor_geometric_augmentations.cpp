@@ -1816,7 +1816,6 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
                                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
