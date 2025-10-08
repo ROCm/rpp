@@ -193,6 +193,7 @@ RppStatus hip_exec_exposure_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
+                                   Rpp32f *exposureFactorTensor,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle)
@@ -215,7 +216,7 @@ RppStatus hip_exec_exposure_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           exposureFactorTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -230,7 +231,7 @@ RppStatus hip_exec_exposure_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           exposureFactorTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -246,7 +247,7 @@ RppStatus hip_exec_exposure_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               exposureFactorTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -261,7 +262,7 @@ RppStatus hip_exec_exposure_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               exposureFactorTensor,
                                roiTensorPtrSrc);
         }
     }
@@ -273,6 +274,7 @@ template RppStatus hip_exec_exposure_tensor<Rpp8u>(Rpp8u*,
                                                    RpptDescPtr,
                                                    Rpp8u*,
                                                    RpptDescPtr,
+                                                   Rpp32f*,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    rpp::Handle&);
@@ -281,6 +283,7 @@ template RppStatus hip_exec_exposure_tensor<half>(half*,
                                                   RpptDescPtr,
                                                   half*,
                                                   RpptDescPtr,
+                                                  Rpp32f*,
                                                   RpptROIPtr,
                                                   RpptRoiType,
                                                   rpp::Handle&);
@@ -289,6 +292,7 @@ template RppStatus hip_exec_exposure_tensor<Rpp32f>(Rpp32f*,
                                                     RpptDescPtr,
                                                     Rpp32f*,
                                                     RpptDescPtr,
+                                                    Rpp32f*,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     rpp::Handle&);
@@ -297,6 +301,7 @@ template RppStatus hip_exec_exposure_tensor<Rpp8s>(Rpp8s*,
                                                    RpptDescPtr,
                                                    Rpp8s*,
                                                    RpptDescPtr,
+                                                   Rpp32f*,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    rpp::Handle&);
