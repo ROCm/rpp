@@ -300,11 +300,13 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "resample";
 
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = SAMPLE_RATE;
-                        outRateTensor[i] = SAMPLE_RATE * RESAMPLE_BUFFER_SCALE_FACTOR;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
