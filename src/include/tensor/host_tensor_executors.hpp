@@ -842,6 +842,48 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams);
 
+// -------------------- solarize --------------------
+
+RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *thresholdTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *thresholdTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus solarize_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp16f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32f *thresholdTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8s *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *thresholdTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
 
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
@@ -1626,6 +1668,38 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
+// -------------------- posterize --------------------
+
+RppStatus posterize_char_host_tensor(Rpp8u *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp8u *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp8u *posterizeLevelBits,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+RppStatus posterize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp8u *posterizeLevelBits,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp16f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp8u *posterizeLevelBits,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------
@@ -1678,6 +1752,19 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
+
+// -------------------- median_filter --------------------
+
+template<typename T>
+RppStatus median_filter_generic_host_tensor(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32u kernelSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle);
 
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 

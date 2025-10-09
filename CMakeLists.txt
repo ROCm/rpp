@@ -469,12 +469,12 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime")
-set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
-set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: pandas, openpyxl, OpenCV & libsnd packages missing on RPM
+set(RPP_DEBIAN_PACKAGE_LIST  "hip-runtime-amd, openmp-extras-runtime")
+set(RPP_RPM_PACKAGE_LIST     "hip-runtime-amd, openmp-extras-runtime")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "hip-dev, openmp-extras-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "hip-devel, openmp-extras-devel, half")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "cmake, python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "cmake, python3-devel, python3-pip") # TBD: pandas, openpyxl, OpenCV & libsnd packages missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")
@@ -582,15 +582,11 @@ include(CPack)
 
 cpack_add_component(runtime
     DISPLAY_NAME "RPP Runtime Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends.
-RPP runtime package provides rpp library and license.txt")
+    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
 
 cpack_add_component(dev
     DISPLAY_NAME "RPP Develop Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
-RPP develop package provides rpp library, header files, and license.txt")
+    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
 
 cpack_add_component(test
     DISPLAY_NAME "RPP Test Package"

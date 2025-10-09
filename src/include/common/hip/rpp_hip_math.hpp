@@ -42,6 +42,20 @@ __device__ __forceinline__ void rpp_hip_math_max8(d_float8 *srcPtr_f8, float *ds
     *dstPtr = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(srcPtr_f8->f1[0], srcPtr_f8->f1[1]), srcPtr_f8->f1[2]), srcPtr_f8->f1[3]), srcPtr_f8->f1[4]), srcPtr_f8->f1[5]), srcPtr_f8->f1[6]), srcPtr_f8->f1[7]);
 }
 
+// d_float8 floor
+
+__device__ __forceinline__ void rpp_hip_math_floor8(d_float8 *srcPtr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = floorf(srcPtr_f8->f1[0]);
+    dstPtr_f8->f1[1] = floorf(srcPtr_f8->f1[1]);
+    dstPtr_f8->f1[2] = floorf(srcPtr_f8->f1[2]);
+    dstPtr_f8->f1[3] = floorf(srcPtr_f8->f1[3]);
+    dstPtr_f8->f1[4] = floorf(srcPtr_f8->f1[4]);
+    dstPtr_f8->f1[5] = floorf(srcPtr_f8->f1[5]);
+    dstPtr_f8->f1[6] = floorf(srcPtr_f8->f1[6]);
+    dstPtr_f8->f1[7] = floorf(srcPtr_f8->f1[7]);
+}
+
 // d_float16 floor
 
 __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_float16 *dstPtr_f16)
@@ -218,6 +232,19 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_u
         dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
 }
 
+// Used to do bitwise and of the scaled float image representations - Values scaled from 0 to 255 with constant mask
+__device__ __forceinline__ void rpp_hip_math_scaled_bitwiseAnd8(d_float8 *src_f8, d_uchar8 *src_mask_u8, d_float8 *dst_f8)
+{
+        dst_f8->f1[0] = (float)((uchar)nearbyintf(src_f8->f1[0]) & src_mask_u8->uc1[0]);
+        dst_f8->f1[1] = (float)((uchar)nearbyintf(src_f8->f1[1]) & src_mask_u8->uc1[1]);
+        dst_f8->f1[2] = (float)((uchar)nearbyintf(src_f8->f1[2]) & src_mask_u8->uc1[2]);
+        dst_f8->f1[3] = (float)((uchar)nearbyintf(src_f8->f1[3]) & src_mask_u8->uc1[3]);
+        dst_f8->f1[4] = (float)((uchar)nearbyintf(src_f8->f1[4]) & src_mask_u8->uc1[4]);
+        dst_f8->f1[5] = (float)((uchar)nearbyintf(src_f8->f1[5]) & src_mask_u8->uc1[5]);
+        dst_f8->f1[6] = (float)((uchar)nearbyintf(src_f8->f1[6]) & src_mask_u8->uc1[6]);
+        dst_f8->f1[7] = (float)((uchar)nearbyintf(src_f8->f1[7]) & src_mask_u8->uc1[7]);
+}
+
 // d_uchar8 bitwiseOR
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
@@ -271,15 +298,15 @@ __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
     return x;
 }
 
-__device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 x_f4)
+__device__ __forceinline__ float4 rpp_hip_math_inverse_sqrt4(float4 val_f4)
 {
-    float4 xHalf_f4 = (float4)0.5f * x_f4;
-    int4 i_i4 = *(int4 *)&x_f4;                                     // float bits in int
-    i_i4 = (int4) NEWTON_METHOD_INITIAL_GUESS - (i_i4 >> (int4)1);  // initial guess for Newton's method
-    x_f4 = *(float4 *)&i_i4;                                        // new bits to float
-    x_f4 = x_f4 * ((float4)1.5f - xHalf_f4 * x_f4 * x_f4);          // One round of Newton's method
+    float4 xHalf_f4 = MAKE_FLOAT4(0.5f) * val_f4;
+    int4 val_i4 = *(int4 *)&val_f4;                                     // float bits in int
+    val_i4 = MAKE_INT4(NEWTON_METHOD_INITIAL_GUESS) - (val_i4 >> MAKE_INT4(1));  // initial guess for Newton's method
+    val_f4 = *(float4 *)&val_i4;                                        // new bits to float
+    val_f4 = val_f4 * (MAKE_FLOAT4(1.5f) - xHalf_f4 * val_f4 * val_f4);          // One round of Newton's method
 
-    return x_f4;
+    return val_f4;
 }
 
 __device__ __forceinline__ void rpp_hip_math_sqrt8(d_float8 *pix_f8, d_float8 *pixSqrt_f8)
@@ -287,7 +314,7 @@ __device__ __forceinline__ void rpp_hip_math_sqrt8(d_float8 *pix_f8, d_float8 *p
     pixSqrt_f8->f4[0] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[0]);
     pixSqrt_f8->f4[1] = rpp_hip_math_inverse_sqrt4(pix_f8->f4[1]);
 
-    float4 one_f4 = (float4)1.0f;
+    float4 one_f4 = MAKE_FLOAT4(1.0f);
     pixSqrt_f8->f4[0] = one_f4 / pixSqrt_f8->f4[0];
     pixSqrt_f8->f4[1] = one_f4 / pixSqrt_f8->f4[1];
 }
@@ -301,7 +328,7 @@ __device__ __forceinline__ void rpp_hip_math_sqrt24(d_float24 *pix_f24, d_float2
     pixSqrt_f24->f4[4] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[4]);
     pixSqrt_f24->f4[5] = rpp_hip_math_inverse_sqrt4(pix_f24->f4[5]);
 
-    float4 one_f4 = (float4)1.0f;
+    float4 one_f4 = MAKE_FLOAT4(1.0f);
     pixSqrt_f24->f4[0] = one_f4 / pixSqrt_f24->f4[0];
     pixSqrt_f24->f4[1] = one_f4 / pixSqrt_f24->f4[1];
     pixSqrt_f24->f4[2] = one_f4 / pixSqrt_f24->f4[2];
@@ -344,6 +371,24 @@ __device__ __forceinline__ void rpp_hip_math_log1p(d_float8 *src_f8, d_float8 *d
     dst_f8->f1[5] = __logf((src_f8->f1[5]));
     dst_f8->f1[6] = __logf((src_f8->f1[6]));
     dst_f8->f1[7] = __logf((src_f8->f1[7]));
+}
+
+// Maximum of three float values
+__device__ __forceinline__ float rpp_hip_max3(const float3 &src_f3)
+{
+    return fmaxf(src_f3.x, fmaxf(src_f3.y, src_f3.z));
+}
+
+// Minimum of three float values
+__device__ __forceinline__ float rpp_hip_min3(const float3 &src_f3)
+{
+    return fminf(src_f3.x, fminf(src_f3.y, src_f3.z));
+}
+
+// Median of three float values
+__device__ __forceinline__ float rpp_hip_median3(const float3 &src_f3)
+{
+    return __builtin_amdgcn_fmed3f(src_f3.x, src_f3.y, src_f3.z);
 }
 
 #endif // RPP_HIP_MATH_HPP

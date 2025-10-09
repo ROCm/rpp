@@ -35,20 +35,20 @@ __device__ void spatter_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *d
 
 __device__ void spatter_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *mask_f8, d_float8 *maskInv_f8, float4 *pix_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    float4 pixNorm_f4 = *pix_f4 * FLOAT4_ONE_OVER_255;
     dst_f8->f4[0] = (src_f8->f4[0] * maskInv_f8->f4[0]) + (pixNorm_f4 * mask_f8->f4[0]);
     dst_f8->f4[1] = (src_f8->f4[1] * maskInv_f8->f4[1]) + (pixNorm_f4 * mask_f8->f4[1]);
 }
 
 __device__ void spatter_hip_compute(schar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *mask_f8, d_float8 *maskInv_f8, float4 *pix_f4)
 {
-    dst_f8->f4[0] = ((src_f8->f4[0] + (float4)128) * maskInv_f8->f4[0]) + (*pix_f4 * mask_f8->f4[0]) - (float4)128;
-    dst_f8->f4[1] = ((src_f8->f4[1] + (float4)128) * maskInv_f8->f4[1]) + (*pix_f4 * mask_f8->f4[1]) - (float4)128;
+    dst_f8->f4[0] = ((src_f8->f4[0] + FLOAT4_128) * maskInv_f8->f4[0]) + (*pix_f4 * mask_f8->f4[0]) - FLOAT4_128;
+    dst_f8->f4[1] = ((src_f8->f4[1] + FLOAT4_128) * maskInv_f8->f4[1]) + (*pix_f4 * mask_f8->f4[1]) - FLOAT4_128;
 }
 
 __device__ void spatter_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *mask_f8, d_float8 *maskInv_f8, float4 *pix_f4)
 {
-    float4 pixNorm_f4 = *pix_f4 * (float4) ONE_OVER_255;
+    float4 pixNorm_f4 = *pix_f4 * FLOAT4_ONE_OVER_255;
     dst_f8->f4[0] = (src_f8->f4[0] * maskInv_f8->f4[0]) + (pixNorm_f4 * mask_f8->f4[0]);
     dst_f8->f4[1] = (src_f8->f4[1] * maskInv_f8->f4[1]) + (pixNorm_f4 * mask_f8->f4[1]);
 }
@@ -81,9 +81,9 @@ __global__ void spatter_pkd_hip_tensor(T *srcPtr,
     d_float8 mask_f8, maskInv_f8;
     *(d_float8_s *)&mask_f8 = *(d_float8_s *)&spatterMaskPtr[maskIdx];
     *(d_float8_s *)&maskInv_f8 = *(d_float8_s *)&spatterMaskInvPtr[maskIdx];
-    float4 r_f4 = (float4)(spatterColor.x);
-    float4 g_f4 = (float4)(spatterColor.y);
-    float4 b_f4 = (float4)(spatterColor.z);
+    float4 r_f4 = MAKE_FLOAT4(spatterColor.x);
+    float4 g_f4 = MAKE_FLOAT4(spatterColor.y);
+    float4 b_f4 = MAKE_FLOAT4(spatterColor.z);
 
     d_float24 src_f24, dst_f24;
 
@@ -123,9 +123,9 @@ __global__ void spatter_pln_hip_tensor(T *srcPtr,
     d_float8 mask_f8, maskInv_f8;
     *(d_float8_s *)&mask_f8 = *(d_float8_s *)&spatterMaskPtr[maskIdx];
     *(d_float8_s *)&maskInv_f8 = *(d_float8_s *)&spatterMaskInvPtr[maskIdx];
-    float4 r_f4 = (float4)(spatterColor.x);
-    float4 g_f4 = (float4)(spatterColor.y);
-    float4 b_f4 = (float4)(spatterColor.z);
+    float4 r_f4 = MAKE_FLOAT4(spatterColor.x);
+    float4 g_f4 = MAKE_FLOAT4(spatterColor.y);
+    float4 b_f4 = MAKE_FLOAT4(spatterColor.z);
 
     d_float8 src_f8, dst_f8;
 
@@ -179,9 +179,9 @@ __global__ void spatter_pkd3_pln3_hip_tensor(T *srcPtr,
     d_float8 mask_f8, maskInv_f8;
     *(d_float8_s *)&mask_f8 = *(d_float8_s *)&spatterMaskPtr[maskIdx];
     *(d_float8_s *)&maskInv_f8 = *(d_float8_s *)&spatterMaskInvPtr[maskIdx];
-    float4 r_f4 = (float4)(spatterColor.x);
-    float4 g_f4 = (float4)(spatterColor.y);
-    float4 b_f4 = (float4)(spatterColor.z);
+    float4 r_f4 = MAKE_FLOAT4(spatterColor.x);
+    float4 g_f4 = MAKE_FLOAT4(spatterColor.y);
+    float4 b_f4 = MAKE_FLOAT4(spatterColor.z);
 
     d_float24 src_f24, dst_f24;
 
@@ -220,9 +220,9 @@ __global__ void spatter_pln3_pkd3_hip_tensor(T *srcPtr,
     d_float8 mask_f8, maskInv_f8;
     *(d_float8_s *)&mask_f8 = *(d_float8_s *)&spatterMaskPtr[maskIdx];
     *(d_float8_s *)&maskInv_f8 = *(d_float8_s *)&spatterMaskInvPtr[maskIdx];
-    float4 r_f4 = (float4)(spatterColor.x);
-    float4 g_f4 = (float4)(spatterColor.y);
-    float4 b_f4 = (float4)(spatterColor.z);
+    float4 r_f4 = MAKE_FLOAT4(spatterColor.x);
+    float4 g_f4 = MAKE_FLOAT4(spatterColor.y);
+    float4 b_f4 = MAKE_FLOAT4(spatterColor.z);
 
     d_float24 src_f24, dst_f24;
 

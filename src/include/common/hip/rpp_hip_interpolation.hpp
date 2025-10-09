@@ -148,7 +148,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(uchar *s
     uint2 src_u2;
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 + MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -174,7 +174,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(float *s
 {
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 +  MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -196,7 +196,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(schar *s
 {
     int2 src_i2, locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 +  MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -223,7 +223,7 @@ __device__ __forceinline__ void rpp_hip_interpolate1_bilinear_load_pln1(half *sr
     float2 srcUpper_f2, srcLower_f2;
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 +  MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -247,7 +247,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(uchar *s
     uint2 src_u2;
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 +  MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2, srcInterColLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -284,7 +284,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(float *s
     float3 src1_f3, src2_f3;
     int2 locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 +  MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2, srcInterColLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -320,7 +320,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(schar *s
 {
     int2 src_u2, locSrc1_i2, locSrc2_i2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1_i2);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 + MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2_i2);
     int2 srcInterRowLoc_i2, srcInterColLoc_i2;
     srcInterRowLoc_i2.x = locSrc1_i2.y * srcStrideH;
@@ -357,7 +357,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_load_pkd3(half *sr
     d_half3_s src1_h3, src2_h3;
     int2 locSrc1, locSrc2;
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc1);
-    *locSrcFloor_f2 = *locSrcFloor_f2 + (float2)1.0f;
+    *locSrcFloor_f2 = *locSrcFloor_f2 + MAKE_FLOAT2(1.0f);
     rpp_hip_roi_range_check(locSrcFloor_f2, roiPtrSrc_i4, &locSrc2);
     int2 srcInterRowLoc_i2, srcInterColLoc_i2;
     srcInterRowLoc_i2.x = locSrc1.y * srcStrideH;
@@ -433,7 +433,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_bilinear_pkd3(T *srcPtr, ui
     locSrcFloor_f2.y = floorf(locSrcY);
     if (checkRange && ((locSrcFloor_f2.x < roiPtrSrc_i4->x) || (locSrcFloor_f2.y < roiPtrSrc_i4->y) || (locSrcFloor_f2.x > roiPtrSrc_i4->z) || (locSrcFloor_f2.y > roiPtrSrc_i4->w)))
     {
-        *dst_f3 = (float3) 0.0f;
+        *dst_f3 = MAKE_FLOAT3(0.0f);
     }
     else
     {
@@ -590,7 +590,7 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_pkd3(T *sr
 
     if ((locSrc.x < roiPtrSrc_i4->x) || (locSrc.y < roiPtrSrc_i4->y) || (locSrc.x > roiPtrSrc_i4->z) || (locSrc.y > roiPtrSrc_i4->w))
     {
-        *dst_f3 = (float3) 0.0f;
+        *dst_f3 = MAKE_FLOAT3(0.0f);
     }
     else
     {

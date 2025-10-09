@@ -30,14 +30,14 @@ __device__ void non_linear_blend_gaussian_hip_compute(float &multiplier, int2 &h
     rowLocComponent = idXY_i2.y - halfDimsWH_i2.y;
     rowLocComponent *= (rowLocComponent * multiplier);
 
-    float4 rowLocComponent_f4 = (float4)rowLocComponent;
-    float4 multiplier_f4 = (float4)multiplier;
+    float4 rowLocComponent_f4 = MAKE_FLOAT4(rowLocComponent);
+    float4 multiplier_f4 = MAKE_FLOAT4(multiplier);
 
     d_float8 colLocComponent_f8;
     colLocComponent_f8.f4[0] = make_float4(idXY_i2.x, idXY_i2.x + 1, idXY_i2.x + 2, idXY_i2.x + 3);
-    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + (float4)4;
-    colLocComponent_f8.f4[0] -= (float4)halfDimsWH_i2.x;
-    colLocComponent_f8.f4[1] -= (float4)halfDimsWH_i2.x;
+    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + MAKE_FLOAT4(4);
+    colLocComponent_f8.f4[0] -= MAKE_FLOAT4(halfDimsWH_i2.x);
+    colLocComponent_f8.f4[1] -= MAKE_FLOAT4(halfDimsWH_i2.x);
     colLocComponent_f8.f4[0] = (colLocComponent_f8.f4[0] * colLocComponent_f8.f4[0] * multiplier_f4) + rowLocComponent_f4;
     colLocComponent_f8.f4[1] = (colLocComponent_f8.f4[1] * colLocComponent_f8.f4[1] * multiplier_f4) + rowLocComponent_f4;
 
