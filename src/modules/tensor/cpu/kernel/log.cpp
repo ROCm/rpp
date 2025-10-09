@@ -78,7 +78,7 @@ RppStatus log_generic_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 16;
         if (nDim == 1)
         {
-            alignedLength = length[0] & ~15;
+            alignedLength = length[0] & ~(vectorIncrement - 1);
             int vectorLoopCount = 0;
 #if __AVX2__
             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -101,7 +101,7 @@ RppStatus log_generic_host_tensor(Rpp8u *srcPtr,
         }
         else if(nDim == 2)
         {
-            alignedLength = length[1] & ~15;
+            alignedLength = length[1] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp8u *srcPtrTemp = srcPtr1;
@@ -132,7 +132,7 @@ RppStatus log_generic_host_tensor(Rpp8u *srcPtr,
         }
         else if(nDim == 3)
         {
-            alignedLength = length[2] & ~15;
+            alignedLength = length[2] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp8u *srcPtrRow = srcPtr1;
@@ -204,7 +204,7 @@ RppStatus log_generic_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrement = 16;
         if (nDim == 1)
         {
-            alignedLength = length[0] & ~15;
+            alignedLength = length[0] & ~(vectorIncrement - 1);
             int vectorLoopCount = 0;
 #if __AVX2__
             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -227,7 +227,7 @@ RppStatus log_generic_host_tensor(Rpp8s *srcPtr,
         }
         else if(nDim == 2)
         {
-            alignedLength = length[1] & ~15;
+            alignedLength = length[1] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp8s *srcPtrTemp = srcPtr1;
@@ -258,7 +258,7 @@ RppStatus log_generic_host_tensor(Rpp8s *srcPtr,
         }
         else if(nDim == 3)
         {
-            alignedLength = length[2] & ~15;
+            alignedLength = length[2] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp8s *srcPtrRow = srcPtr1;
@@ -330,7 +330,7 @@ RppStatus log_generic_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 16;
         if (nDim == 1)
         {
-            alignedLength = length[0] & ~15;
+            alignedLength = length[0] & ~(vectorIncrement - 1);
             int vectorLoopCount = 0;
 #if __AVX2__
             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -353,7 +353,7 @@ RppStatus log_generic_host_tensor(Rpp32f *srcPtr,
         }
         else if(nDim == 2)
         {
-            alignedLength = length[1] & ~15;
+            alignedLength = length[1] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp32f *srcPtrTemp = srcPtr1;
@@ -384,7 +384,7 @@ RppStatus log_generic_host_tensor(Rpp32f *srcPtr,
         }
         else if(nDim == 3)
         {
-            alignedLength = length[2] & ~15;
+            alignedLength = length[2] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp32f *srcPtrRow = srcPtr1;
@@ -456,7 +456,7 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 16;
         if (nDim == 1)
         {
-            alignedLength = length[0] & ~15;
+            alignedLength = length[0] & ~(vectorIncrement - 1);
             int vectorLoopCount = 0;
 #if __AVX2__
             for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -478,7 +478,7 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
         }
         else if(nDim == 2)
         {
-            alignedLength = length[1] & ~15;
+            alignedLength = length[1] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp16f *srcPtrTemp = srcPtr1;
@@ -508,7 +508,7 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
         }
         else if(nDim == 3)
         {
-            alignedLength = length[2] & ~15;
+            alignedLength = length[2] & ~(vectorIncrement - 1);
             for(int i = 0; i < length[0]; i++)
             {
                 Rpp16f *srcPtrRow = srcPtr1;
