@@ -114,7 +114,7 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
 
         VectorType dst_vec8;
         BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8((VectorType*)srcArr1, (VectorType*)srcArr2, &dst_vec8);
-        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
     else
     {
@@ -219,7 +219,7 @@ __global__ void tensor_or_tensor_2d_hip_tensor(T *srcPtr1,
 
         VectorType dst_vec8;
         BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8((VectorType*)srcArr1, (VectorType*)srcArr2, &dst_vec8);
-        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
     else
     {
@@ -323,7 +323,7 @@ __global__ void tensor_or_tensor_3d_hip_tensor(T *srcPtr1,
 
         VectorType dst_vec8;
         BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8((VectorType*)srcArr1, (VectorType*)srcArr2, &dst_vec8);
-        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
     else
     {
