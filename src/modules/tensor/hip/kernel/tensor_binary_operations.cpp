@@ -370,18 +370,18 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
 
     if(numRows >= 8)
     {
-        uint srcBaseIdx1 = (id_z * srcStrides1[0]) + ((id_y) * srcStrides1[1]) + src1BeginOffsets[id_z];
-        uint srcBaseIdx2 = (id_z * srcStrides2[0]) + ((id_y) * srcStrides2[1]) + src2BeginOffsets[id_z];
+        uint srcBaseIdx1 = (id_z * srcStrides1[1]) + ((id_y) * srcStrides1[2]) + src1BeginOffset;
+        uint srcBaseIdx2 = (id_z * srcStrides2[1]) + ((id_y) * srcStrides2[2]) + src2BeginOffset;
 
-        uint dstBaseIdx = (id_z * dstStrides[0]) + (id_y * dstStrides[1]) + id_x;
+        uint dstBaseIdx = (id_z * dstStrides[1]) + (id_y * dstStrides[2]) + id_x;
 
         T1 srcArr1[8], srcArr2[8];
 
         #pragma unroll
         for(int i1 = 0; i1 < 8; i1++)
         {
-            uint srcIdx1 = srcBaseIdx1 + (id_x * srcStrides1[2]);
-            uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[2]);
+            uint srcIdx1 = srcBaseIdx1 + (id_x * srcStrides1[3]);
+            uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[3]);
             srcArr1[i1] = srcPtr1[srcIdx1];
             srcArr2[i1] = srcPtr2[srcIdx2];
             id_x++;
@@ -396,15 +396,15 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
     }
     else
     {
-        uint srcBaseIdx1 = (id_z * srcStrides1[0]) + ((id_y) * srcStrides1[1]) + src1BeginOffsets[id_z];
-        uint srcBaseIdx2 = (id_z * srcStrides2[0]) + ((id_y) * srcStrides2[1]) + src2BeginOffsets[id_z];
+        uint srcBaseIdx1 = (id_z * srcStrides1[1]) + ((id_y) * srcStrides1[2]) + src1BeginOffset;
+        uint srcBaseIdx2 = (id_z * srcStrides2[1]) + ((id_y) * srcStrides2[2]) + src2BeginOffset;
 
-        uint dstBaseIdx = (id_z * dstStrides[0]) + (id_y * dstStrides[1]);
+        uint dstBaseIdx = (id_z * dstStrides[1]) + (id_y * dstStrides[2]);
 
         for(int i1 = 0; i1 < numRows; i1++)
         {
-            uint srcIdx1 = srcBaseIdx1 + (id_x * srcStrides1[2]);
-            uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[2]);
+            uint srcIdx1 = srcBaseIdx1 + (id_x * srcStrides1[3]);
+            uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[3]);
             uint dstIdx = dstBaseIdx + id_x;
 
             id_x++;
