@@ -185,11 +185,6 @@ __global__ void tensor_op_tensor_1d_hip_tensor(T1 *srcPtr1,
         }
     }
 
-    uint srcIdx1 = (id_z * src1SampleStrides[0]) + (id_x * src1SampleStrides[1]) + src1BeginOffsets[id_z];
-    uint srcIdx2 = (id_z * src2SampleStrides[0]) + (id_x * src2SampleStrides[1]) + src2BeginOffsets[id_z];
-    uint dstIdx = (id_z * dstSampleStrides[0]) + (id_x * dstSampleStrides[1]);
-
-    dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
 template <typename T1, typename T2, typename Operation>
