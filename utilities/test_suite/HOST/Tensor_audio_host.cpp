@@ -366,6 +366,7 @@ int main(int argc, char **argv)
                     Rpp32s numFilter = 80;
                     bool normalize = true;
                     // (height, width) for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     Rpp32s srcDimsTensor[] = {257, 3170, 257, 552, 257, 1131};
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
