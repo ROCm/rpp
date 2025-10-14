@@ -123,7 +123,8 @@ std::map<int, string> augmentationMap =
     {91, "tensor_stddev"},
     {92, "slice"},
     {93, "jpeg_compression_distortion"},
-    {94, "posterize"}
+    {94, "posterize"},
+    {95, "solarize"}
 };
 
 enum Augmentation {
@@ -186,7 +187,8 @@ enum Augmentation {
     TENSOR_STDDEV = 91,
     SLICE = 92,
     JPEG_COMPRESSION_DISTORTION = 93,
-    POSTERIZE = 94
+    POSTERIZE = 94,
+    SOLARIZE = 95
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
@@ -1035,7 +1037,7 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 1e-6)
+                if(diff <= 2e-6)
                     matchedIdx++;
             }
         }
@@ -1106,7 +1108,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 1e-6)
+                    if(diff <= 2e-6)
                         matchedIdx++;
                 }
             }

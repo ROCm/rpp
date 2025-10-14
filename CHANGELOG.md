@@ -2,19 +2,27 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 2.1.0 
+## RPP 2.1.0 for ROCm 7.1.0
 
 ### Added
-
+* Solarize augmentation for HOST and HIP
+* Hue and Saturation adjustment augmentations for HOST and HIP 
+* Find RPP - cmake module
+* Posterize augmentation for HOST and HIP
 
 ### Changed
+* HALF - Fix half.hpp path updates
+* Box filter - padding updates 
 
 
 ### Removed
-
+* Packaging - Remove Meta Package dependency for HIP
+* SLES 15 SP6 support
 
 ### Resolved issues
-
+* Test Suite - Fixes for accuracy
+* HIP Backend - Check return status warning fixes
+* Bugfix - HIP vector types init 
 
 ## RPP 2.0.0 for ROCm 7.0.0
 
