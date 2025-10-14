@@ -49,15 +49,6 @@ def get_log_file_list():
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln1_raw_performance_log.txt"
     ]
 
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number == 0:
-        return "arithmetic_operations"
-    elif case_number == 1:
-        return "geometric_augmentations"
-    else:
-        return "miscellaneous"
-
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
@@ -233,7 +224,7 @@ for case in caseList:
     if int(case) not in voxelAugmentationMap:
         continue
     for layout in range(3):
-        dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+        dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", voxelAugmentationGroupMap, func_group_finder)
         if testType == 0 and qaMode == 0:
             if not os.path.isdir(dstPathTemp):
                 os.mkdir(dstPathTemp)

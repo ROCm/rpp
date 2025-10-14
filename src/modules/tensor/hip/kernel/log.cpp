@@ -30,7 +30,7 @@ template <typename T>
 __device__ void log_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
 {
     if constexpr (std::is_same<T, schar>::value)
-        rpp_hip_math_add8_const(src_f8, src_f8, (float4)128);
+        rpp_hip_math_add8_const(src_f8, src_f8, FLOAT4_128);
 
     rpp_hip_math_log(src_f8, dst_f8);
 }

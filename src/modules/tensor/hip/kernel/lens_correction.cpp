@@ -29,8 +29,8 @@ SOFTWARE.
 
 __device__ __forceinline__ void camera_coordinates_hip_compute(d_float8 *cameraCoords_f8, int id_y, d_float8 *locDst_f8x, float3 *inverseMatrix)
 {
-    float4 inverseCoord1_f4 = static_cast<float4>(id_y * inverseMatrix->y + inverseMatrix->z);
-    float4 inverseCoord2_f4 = static_cast<float4>(inverseMatrix->x);
+    float4 inverseCoord1_f4 = MAKE_FLOAT4(id_y * inverseMatrix->y + inverseMatrix->z);
+    float4 inverseCoord2_f4 = MAKE_FLOAT4(inverseMatrix->x);
     cameraCoords_f8->f4[0] = inverseCoord1_f4 + locDst_f8x->f4[0] * inverseCoord2_f4;
     cameraCoords_f8->f4[1] = inverseCoord1_f4 + locDst_f8x->f4[1] * inverseCoord2_f4;
 }
@@ -45,7 +45,7 @@ __global__ void compute_inverse_matrix_hip_tensor(d_float9 *matTensor, d_float9 
     d_float9 *invMat_f9 = &invMatTensor[id_z];
 
     // initialize all values in invMat_f9 to zero
-    invMat_f9->f3[0] = static_cast<float3>(0.0f);
+    invMat_f9->f3[0] = MAKE_FLOAT3(0.0f);
     invMat_f9->f3[1] = invMat_f9->f3[0];
     invMat_f9->f3[2] = invMat_f9->f3[0];
 
@@ -94,11 +94,11 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
 
     uint dstIdx = id_z * remapTableStridesNH.x + id_y * remapTableStridesNH.y + id_x;
     d_float8 locDst_f8x;
-    locDst_f8x.f4[0] = static_cast<float4>(id_x) + make_float4(0, 1, 2, 3);
-    locDst_f8x.f4[1] = static_cast<float4>(id_x) + make_float4(4, 5, 6, 7);
+    locDst_f8x.f4[0] = MAKE_FLOAT4((float)id_x) + make_float4(0, 1, 2, 3);
+    locDst_f8x.f4[1] = MAKE_FLOAT4((float)id_x) + make_float4(4, 5, 6, 7);
 
-    float4 one_f4 = static_cast<float4>(1.0f);
-    float4 two_f4 = static_cast<float4>(2.0f);
+    float4 one_f4 = MAKE_FLOAT4(1.0f);
+    float4 two_f4 = MAKE_FLOAT4(2.0f);
     d_float8 z_f8, y_f8, x_f8;
     camera_coordinates_hip_compute(&z_f8, id_y, &locDst_f8x, &inverseMatrix_f9.f3[2]);          // float zCamera = id_y * inverseMatrix.f1[7] + inverseMatrix.f1[8] + id_x * inverseMatrix.f1[6]
     camera_coordinates_hip_compute(&y_f8, id_y, &locDst_f8x, &inverseMatrix_f9.f3[1]);          // float yCamera = id_y * inverseMatrix.f1[4] + inverseMatrix.f1[5] + id_x * inverseMatrix.f1[3]
@@ -119,12 +119,12 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     rpp_hip_math_multiply8(&r2Square_f8, &r2_f8, &r2Cube_f8);                                   // float r2Cube = r2Square * r2;
 
     d_float24 radialCoeff_f24;
-    radialCoeff_f24.f4[0] = static_cast<float4>(radialCoeff[0]);
-    radialCoeff_f24.f4[1] = static_cast<float4>(radialCoeff[1]);
-    radialCoeff_f24.f4[2] = static_cast<float4>(radialCoeff[2]);
-    radialCoeff_f24.f4[3] = static_cast<float4>(radialCoeff[3]);
-    radialCoeff_f24.f4[4] = static_cast<float4>(radialCoeff[4]);
-    radialCoeff_f24.f4[5] = static_cast<float4>(radialCoeff[5]);
+    radialCoeff_f24.f4[0] = MAKE_FLOAT4(radialCoeff[0]);
+    radialCoeff_f24.f4[1] = MAKE_FLOAT4(radialCoeff[1]);
+    radialCoeff_f24.f4[2] = MAKE_FLOAT4(radialCoeff[2]);
+    radialCoeff_f24.f4[3] = MAKE_FLOAT4(radialCoeff[3]);
+    radialCoeff_f24.f4[4] = MAKE_FLOAT4(radialCoeff[4]);
+    radialCoeff_f24.f4[5] = MAKE_FLOAT4(radialCoeff[5]);
 
     // float kr = (1 + (radialCoeff[2] * r2Cube) + (radialCoeff[1] * r2Square) + (radialCoeff[0]) * r2)) / (1 + (radialCoeff[5] * r2Cube) + (radialCoeff[4] * r2Square) + (radialCoeff[3]) *r2))
     kr1_f8.f4[0] = (one_f4 + (radialCoeff_f24.f4[2] * r2Cube_f8.f4[0]) + (radialCoeff_f24.f4[1] *  r2Square_f8.f4[0]) + (radialCoeff_f24.f4[0] *  r2_f8.f4[0]));
@@ -142,14 +142,14 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     rpp_hip_math_multiply8_const(&ySquare_f8, &ySquare_f8, two_f4);                             // ySquare = ySquare * 2;
 
     d_float16 cameraMatrix_f16;
-    cameraMatrix_f16.f4[0] = static_cast<float4>(cameraMatrix_f9.f1[0]);
-    cameraMatrix_f16.f4[1] = static_cast<float4>(cameraMatrix_f9.f1[2]);
-    cameraMatrix_f16.f4[2] = static_cast<float4>(cameraMatrix_f9.f1[4]);
-    cameraMatrix_f16.f4[3] = static_cast<float4>(cameraMatrix_f9.f1[5]);
+    cameraMatrix_f16.f4[0] = MAKE_FLOAT4(cameraMatrix_f9.f1[0]);
+    cameraMatrix_f16.f4[1] = MAKE_FLOAT4(cameraMatrix_f9.f1[2]);
+    cameraMatrix_f16.f4[2] = MAKE_FLOAT4(cameraMatrix_f9.f1[4]);
+    cameraMatrix_f16.f4[3] = MAKE_FLOAT4(cameraMatrix_f9.f1[5]);
 
     d_float8 tangentialCoeff_f8;
-    tangentialCoeff_f8.f4[0] = static_cast<float4>(tangentialCoeff[0]);
-    tangentialCoeff_f8.f4[1] = static_cast<float4>(tangentialCoeff[1]);
+    tangentialCoeff_f8.f4[0] = MAKE_FLOAT4(tangentialCoeff[0]);
+    tangentialCoeff_f8.f4[1] = MAKE_FLOAT4(tangentialCoeff[1]);
 
     // float colLoc = cameraMatrix[0] * (x * kr + tangentialCoeff[0] * xyMul2 + tangentialCoeff[1] * (r2 + 2 * xSquare)) + cameraMatrix[2];
     colLoc_f8.f4[0] = cameraMatrix_f16.f4[0] * ((x_f8.f4[0] * kr_f8.f4[0]) + (tangentialCoeff_f8.f4[0] * xyMul2_f8.f4[0]) + (tangentialCoeff_f8.f4[1] * (r2_f8.f4[0] + xSquare_f8.f4[0]))) + cameraMatrix_f16.f4[1];

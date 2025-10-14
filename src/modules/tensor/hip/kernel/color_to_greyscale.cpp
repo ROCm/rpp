@@ -69,9 +69,9 @@ __global__ void color_to_greyscale_pkd3_pln1_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     d_float12 channelWeights_f12;
-    channelWeights_f12.f4[0] = (float4) channelWeights_f3.x;
-    channelWeights_f12.f4[1] = (float4) channelWeights_f3.y;
-    channelWeights_f12.f4[2] = (float4) channelWeights_f3.z;
+    channelWeights_f12.f4[0] = MAKE_FLOAT4(channelWeights_f3.x);
+    channelWeights_f12.f4[1] = MAKE_FLOAT4(channelWeights_f3.y);
+    channelWeights_f12.f4[2] = MAKE_FLOAT4(channelWeights_f3.z);
 
     d_float24 src_f24;
     d_float8 dst_f8;
@@ -102,9 +102,9 @@ __global__ void color_to_greyscale_pln3_pln1_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     d_float12 channelWeights_f12;
-    channelWeights_f12.f4[0] = (float4) channelWeights_f3.x;
-    channelWeights_f12.f4[1] = (float4) channelWeights_f3.y;
-    channelWeights_f12.f4[2] = (float4) channelWeights_f3.z;
+    channelWeights_f12.f4[0] = MAKE_FLOAT4(channelWeights_f3.x);
+    channelWeights_f12.f4[1] = MAKE_FLOAT4(channelWeights_f3.y);
+    channelWeights_f12.f4[2] = MAKE_FLOAT4(channelWeights_f3.z);
 
     d_float24 src_f24;
     d_float8 dst_f8;

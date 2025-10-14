@@ -38,8 +38,8 @@ __device__ void exposure_hip_compute(float *srcPtr, d_float8 *pix_f8, float4 *ex
 
 __device__ void exposure_hip_compute(schar *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] + (float4)128) * *exposureParam_f4) - (float4)128;
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] + (float4)128) * *exposureParam_f4) - (float4)128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] + FLOAT4_128) * *exposureParam_f4) - FLOAT4_128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] + FLOAT4_128) * *exposureParam_f4) - FLOAT4_128;
 }
 
 __device__ void exposure_hip_compute(half *srcPtr, d_float8 *pix_f8, float4 *exposureParam_f4)
@@ -69,7 +69,7 @@ __global__ void exposure_pkd_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
-    float4 exposureParam_f4 = (float4)multiplyingFactor;
+    float4 exposureParam_f4 = MAKE_FLOAT4(multiplyingFactor);
 
     d_float8 pix_f8;
 
@@ -100,7 +100,7 @@ __global__ void exposure_pln_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
-    float4 exposureParam_f4 = (float4)multiplyingFactor;
+    float4 exposureParam_f4 = MAKE_FLOAT4(multiplyingFactor);
 
     d_float8 pix_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
@@ -146,7 +146,7 @@ __global__ void exposure_pkd3_pln3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
-    float4 exposureParam_f4 = (float4)multiplyingFactor;
+    float4 exposureParam_f4 = MAKE_FLOAT4(multiplyingFactor);
 
     d_float24 pix_f24;
 
@@ -178,7 +178,7 @@ __global__ void exposure_pln3_pkd3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float multiplyingFactor = powf(2.0f, exposureFactorTensor[id_z]);
-    float4 exposureParam_f4 = (float4)multiplyingFactor;
+    float4 exposureParam_f4 = MAKE_FLOAT4(multiplyingFactor);
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);

@@ -99,9 +99,9 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
         float windowScale = window->scale;
         float windowCenter = window->center;
         int lookupSize = window->lookupSize;
-        float4 windowScale_f4 = static_cast<float4>(windowScale);
-        float4 windowCenter_f4 = static_cast<float4>(windowCenter);
-        float4 increment_f4 = static_cast<float4>(8.0f);
+        float4 windowScale_f4 = MAKE_FLOAT4(windowScale);
+        float4 windowCenter_f4 = MAKE_FLOAT4(windowCenter);
+        float4 increment_f4 = MAKE_FLOAT4(8.0f);
         d_float8 locInit_f8;
         locInit_f8.f4[0] = make_float4(0, 1, 2, 3);
         locInit_f8.f4[1] = make_float4(4, 5, 6, 7);
@@ -130,10 +130,10 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
             float accum = 0.0f;
 
             d_float8 locInWindow_f8, accum_f8;
-            locInWindow_f8.f4[0] = static_cast<float4>(locBegin) + locInit_f8.f4[0];
-            locInWindow_f8.f4[1] = static_cast<float4>(locBegin) + locInit_f8.f4[1];
-            accum_f8.f4[0] = static_cast<float4>(0.0f);
-            accum_f8.f4[1] = static_cast<float4>(0.0f);
+            locInWindow_f8.f4[0] = MAKE_FLOAT4(locBegin) + locInit_f8.f4[0];
+            locInWindow_f8.f4[1] = MAKE_FLOAT4(locBegin) + locInit_f8.f4[1];
+            accum_f8.f4[0] = MAKE_FLOAT4(0.0f);
+            accum_f8.f4[1] = MAKE_FLOAT4(0.0f);
             for (; locInWindow + 7 < loc1; locInWindow += 8)
             {
                 d_float8 weights_f8;
@@ -231,7 +231,7 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
             if (loc1 + inBlockRounded > srcLength)
                 loc1 = srcLength - inBlockRounded;
             float locInWindow = loc0 - inPos;
-            int2 offsetLocs_i2 = make_int2(loc0, loc1) * static_cast<int2>(numChannels);    // offsetted loc0, loc1 values for multi channel case
+            int2 offsetLocs_i2 = make_int2(loc0, loc1) * MAKE_INT2(numChannels);    // offsetted loc0, loc1 values for multi channel case
 
             float accum[RPPT_MAX_AUDIO_CHANNELS] = {0.0f};
             for (int offsetLoc = offsetLocs_i2.x; offsetLoc < offsetLocs_i2.y; offsetLoc += numChannels, locInWindow++)

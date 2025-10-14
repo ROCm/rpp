@@ -54,17 +54,16 @@ The following table shows example outputs of some ROCm Performance Primitives (R
   "bitwise inclusive OR", |orig_road| |orig_dog|, |bitwise_or|
   "remap", |orig_road|, |remap|
 
-.. |orig_dog| image:: ../data/doxygenInputs/img150x150_2.png
+
+.. |orig_dog| image:: ../data/doxygenInputs/img150x150_2.png 
 
 .. |orig_flower| image:: ../data/doxygenInputs/img150x150_1.png
 
 .. |orig_road| image:: ../data/doxygenInputs/img150x150.png
 
 .. |orig_street| image:: ../data/doxygenInputs/img640x480.png
-                    :width: 50%
 
 .. |orig_question| image:: ../data/doxygenInputs/lens_img640x480.png
-    :width: 50%
 
 .. |brightness| image:: ../data/doxygenOutputs/color_augmentations_brightness_img150x150.png
 

@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE)
+        if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -192,6 +192,7 @@ int main(int argc, char **argv)
     string func = funcName;
     func += funcType;
 
+    RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
@@ -1078,6 +1079,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case HUE:
+                {
+                    testCaseName = "hue";
+
+                    Rpp32f hueShift[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        hueShift[i] = 60.0;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5) 
+                        rppt_hue_host(input, srcDescPtr, output, dstDescPtr, hueShift, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SATURATION:
+                {
+                    testCaseName = "saturation";
+
+                    Rpp32f saturationFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        saturationFactor[i] = 5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5) 
+                        rppt_saturation_host(input, srcDescPtr, output, dstDescPtr, saturationFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case CROP:
                 {
                     testCaseName = "crop";
@@ -1227,10 +1262,35 @@ int main(int argc, char **argv)
                     testCaseName = "box_filter";
                     Rpp32u kernelSize = additionalParam;
 
+                    if (borderType != RpptImageBorderType::REPLICATE)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case MEDIAN_FILTER:
+                {
+                    testCaseName = "median_filter";
+                    Rpp32u kernelSize = additionalParam;
+                    if (borderType != RpptImageBorderType::REPLICATE)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_median_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1654,6 +1714,41 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_jpeg_compression_distortion_host(input, srcDescPtr, output, dstDescPtr, qualityTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case POSTERIZE:
+                {
+                    testCaseName = "posterize";
+
+                    Rpp8u posterizeLevelBits[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        posterizeLevelBits[i] = 3;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_posterize_host(input, srcDescPtr, output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case SOLARIZE:
+                {
+                    testCaseName = "solarize";
+
+                    Rpp32f thresholdTensor[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                        thresholdTensor[i] = 0.5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_solarize_host(input, srcDescPtr, output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
