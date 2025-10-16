@@ -320,6 +320,7 @@ int main(int argc, char **argv)
                     Rpp32f outRateTensor[batchSize];
                     Rpp32s srcDimsTensor[batchSize * 2];
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     Rpp32u sampleRate = 16000;
                     Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
