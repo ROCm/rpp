@@ -320,6 +320,7 @@ int main(int argc, char **argv)
                     Rpp32f outRateTensor[batchSize];
                     Rpp32s srcDimsTensor[batchSize * 2];
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     Rpp32u sampleRate = 16000;
                     Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
@@ -366,6 +367,7 @@ int main(int argc, char **argv)
                     Rpp32s numFilter = 80;
                     bool normalize = true;
                     // (height, width) for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     Rpp32s srcDimsTensor[] = {257, 3170, 257, 552, 257, 1131};
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);

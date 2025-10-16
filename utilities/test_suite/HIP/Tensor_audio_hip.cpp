@@ -300,6 +300,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "resample";
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     Rpp32u sampleRate = 16000;
                     Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
@@ -349,6 +350,8 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
+                    // height & width for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     srcDimsTensor[0] = 257;
                     srcDimsTensor[1] = 3170;
                     srcDimsTensor[2] = 257;
