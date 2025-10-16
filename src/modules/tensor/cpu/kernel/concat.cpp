@@ -387,7 +387,35 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
     Rpp32u tensorDims = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
-    Rpp32u maxSize = 1;
+    // Calculate cumulative offsets for variable-sized tensors
+    std::vector<Rpp32u> src1Offsets(batchSize + 1, 0);
+    std::vector<Rpp32u> src2Offsets(batchSize + 1, 0);
+    std::vector<Rpp32u> dstOffsets(batchSize + 1, 0);
+    
+    for(int i = 0; i < batchSize; i++)
+    {
+        Rpp32u *roi1 = roiTensorSrc1 + i * tensorDims * 2;
+        Rpp32u *roi2 = roiTensorSrc2 + i * tensorDims * 2;
+        Rpp32u *length1 = &roi1[tensorDims];
+        Rpp32u *length2 = &roi2[tensorDims];
+        
+        // Calculate size of current tensor
+        Rpp32u size1 = 1, size2 = 1, dstSize = 1;
+        for(int j = 0; j < tensorDims; j++)
+        {
+            size1 *= length1[j];
+            size2 *= length2[j];
+            if(j == axisMask)
+                dstSize *= (length1[j] + length2[j]);
+            else
+                dstSize *= length1[j];
+        }
+        
+        src1Offsets[i + 1] = src1Offsets[i] + size1;
+        src2Offsets[i + 1] = src2Offsets[i] + size2;
+        dstOffsets[i + 1] = dstOffsets[i] + dstSize;
+    }
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
@@ -398,32 +426,61 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
         Rpp32u *length = &roi[tensorDims];
         Rpp32u *length1 = &roi1[tensorDims];
 
-        Rpp32f *srcPtrTemp = srcPtr1 + batchCount * srcPtr1GenericDescPtr->strides[0];
-        Rpp32f *srcPtrTemp1 = srcPtr2 + batchCount * srcPtr2GenericDescPtr->strides[0];
-        Rpp32f *dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
+        // Use cumulative offsets for variable-sized tensors
+        Rpp32f *srcPtrTemp = srcPtr1 + src1Offsets[batchCount];
+        Rpp32f *srcPtrTemp1 = srcPtr2 + src2Offsets[batchCount];
+        Rpp32f *dstPtrTemp = dstPtr + dstOffsets[batchCount];
 
         Rpp32u src1ReductionDims[3], srcTensor1Strides[3], src2ReductionDims[3], srcTensor2Strides[3], dstStride[3];
 
+        // Calculate strides based on actual tensor dimensions
+        Rpp32u localSrc1Strides[4] = {0}, localSrc2Strides[4] = {0}, localDstStrides[4] = {0};
+        localSrc1Strides[tensorDims] = 1;
+        localSrc2Strides[tensorDims] = 1;
+        localDstStrides[tensorDims] = 1;
+        
+        for(int i = tensorDims - 1; i >= 0; i--)
+        {
+            localSrc1Strides[i] = localSrc1Strides[i + 1] * length[i];
+            localSrc2Strides[i] = localSrc2Strides[i + 1] * length1[i];
+            if(i == axisMask)
+                localDstStrides[i] = localDstStrides[i + 1] * (length[i] + length1[i]);
+            else
+                localDstStrides[i] = localDstStrides[i + 1] * length[i];
+        }
+
+        // Create temporary descriptors with local strides
+        RpptGenericDesc localSrc1Desc = *srcPtr1GenericDescPtr;
+        RpptGenericDesc localSrc2Desc = *srcPtr2GenericDescPtr;
+        RpptGenericDesc localDstDesc = *dstGenericDescPtr;
+        
+        for(int i = 0; i < tensorDims; i++)
+        {
+            localSrc1Desc.strides[i + 1] = localSrc1Strides[i + 1];
+            localSrc2Desc.strides[i + 1] = localSrc2Strides[i + 1];
+            localDstDesc.strides[i + 1] = localDstStrides[i + 1];
+        }
+
         // Use the helper function to update strides and dimensions
-        updateStridesAndDims(tensorDims, axisMask, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr,
+        updateStridesAndDims(tensorDims, axisMask, &localSrc1Desc, &localSrc2Desc, &localDstDesc,
                              src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, length, length1);
 
         if (tensorDims == 2) // Called for 2D tensor cases
         {
             concat_2D_tensor(srcPtrTemp, srcPtrTemp1, rpp_load8_f32_to_f32_avx, rpp_store8_f32_to_f32_avx,
-            srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtrTemp, dstGenericDescPtr,
+            &localSrc1Desc, &localSrc2Desc, dstPtrTemp, &localDstDesc,
             src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, axisMask);
         }
         else if (tensorDims == 3) // Called for 3D tensor cases
         {
             concat_3D_tensor(srcPtrTemp, srcPtrTemp1, rpp_load8_f32_to_f32_avx, rpp_store8_f32_to_f32_avx,
-            srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtrTemp, dstGenericDescPtr,
+            &localSrc1Desc, &localSrc2Desc, dstPtrTemp, &localDstDesc,
             src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, axisMask);
         }
         else // Handle ND tensors
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr->strides, srcPtr2GenericDescPtr->strides,
-            dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length, length1, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, localSrc1Desc.strides, localSrc2Desc.strides,
+            localDstDesc.strides, dstPtrTemp, &localDstDesc, length, length1, tensorDims, 0, axisMask, tensorDims);
         }
     }
     return RPP_SUCCESS;

@@ -33,57 +33,103 @@ __global__ void concat_generic_hip_tensor(T *srcPtr1,
                                           uint *dstStrides,
                                           uint axis,
                                           uint numDims,
-                                          Rpp32u *roiTensor)
+                                          Rpp32u *roiTensor,
+                                          Rpp32u *srcOffsets,
+                                          Rpp32u *dstOffsets)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if(id_x >= dstStrides[0])
+    // Get ROI information for both source tensors
+    uint *roi1 = roiTensor + id_z * numDims * 4;  // First tensor ROI
+    uint *roi2 = roi1 + numDims * 2;              // Second tensor ROI
+    uint *begin1 = roi1;
+    uint *length1 = &roi1[numDims];
+    uint *begin2 = roi2;
+    uint *length2 = &roi2[numDims];
+    
+    // Calculate total elements for this batch
+    uint totalElements = 1;
+    for (int i = 0; i < numDims; i++)
+    {
+        if (i == axis)
+            totalElements *= (length1[i] + length2[i]);
+        else
+            totalElements *= length1[i];
+    }
+    
+    if(id_x >= totalElements)
         return;
 
-    uint *roi = roiTensor + id_z * numDims * 2;
-    uint *begin = roi;
-    uint *length = &roi[numDims];
-    uint dstIdx = (id_z * *dstStrides++);
-    uint srcIdx1 = (id_z * *srcTensor1Strides++);
-    uint srcIdx2 = (id_z * *srcTensor2Strides++);
+    // Get batch-specific offsets
+    uint srcOffset1 = srcOffsets[id_z * 2];
+    uint srcOffset2 = srcOffsets[id_z * 2 + 1];
+    uint dstOffset = dstOffsets[id_z];
+    
+    uint dstIdx = dstOffset;
+    uint srcIdx1 = srcOffset1;
+    uint srcIdx2 = srcOffset2;
     uint coords[RPPT_MAX_DIMS];
+
+    // Calculate strides for this specific batch
+    uint src1Strides[RPPT_MAX_DIMS];
+    uint src2Strides[RPPT_MAX_DIMS];
+    uint dstStridesLocal[RPPT_MAX_DIMS];
+    
+    for (int i = numDims - 1; i >= 0; i--)
+    {
+        if (i == numDims - 1)
+        {
+            src1Strides[i] = 1;
+            src2Strides[i] = 1;
+            dstStridesLocal[i] = 1;
+        }
+        else
+        {
+            src1Strides[i] = src1Strides[i + 1] * length1[i + 1];
+            src2Strides[i] = src2Strides[i + 1] * length2[i + 1];
+            if (i + 1 == axis)
+                dstStridesLocal[i] = dstStridesLocal[i + 1] * (length1[i + 1] + length2[i + 1]);
+            else
+                dstStridesLocal[i] = dstStridesLocal[i + 1] * length1[i + 1];
+        }
+    }
 
     uint temp = id_x;
     for (int i = 0; i < numDims; i++)
     {
-        coords[i] = temp / dstStrides[i];
-        temp %= dstStrides[i];
+        coords[i] = temp / dstStridesLocal[i];
+        temp %= dstStridesLocal[i];
         if(i < axis)
         {
-            dstIdx += coords[i] * dstStrides[i];
-            srcIdx1 += (coords[i] + begin[i]) * srcTensor1Strides[i];
-            srcIdx2 += (coords[i] + begin[i]) * srcTensor2Strides[i];
+            dstIdx += coords[i] * dstStridesLocal[i];
+            srcIdx1 += (coords[i] + begin1[i]) * src1Strides[i];
+            srcIdx2 += (coords[i] + begin2[i]) * src2Strides[i];
         }
         else if(i == axis)
         {
-            if(coords[i] < length[i])
+            if(coords[i] < length1[i])
             {
-                dstIdx += coords[i] * dstStrides[i];
-                srcIdx1 += (coords[i] + begin[i]) * srcTensor1Strides[i];
+                dstIdx += coords[i] * dstStridesLocal[i];
+                srcIdx1 += (coords[i] + begin1[i]) * src1Strides[i];
             }
             else
             {
-                uint shifted_coord = coords[i] - length[i];
-                dstIdx += coords[i] * dstStrides[i];
-                srcIdx2 += (shifted_coord + begin[i]) * srcTensor2Strides[i];
+                uint shifted_coord = coords[i] - length1[i];
+                dstIdx += coords[i] * dstStridesLocal[i];
+                srcIdx2 += (shifted_coord + begin2[i]) * src2Strides[i];
             }
         }
         else
         {
-            dstIdx += coords[i] * dstStrides[i];
-            srcIdx1 += coords[i] * srcTensor1Strides[i];
-            srcIdx2 += coords[i] * srcTensor2Strides[i];
+            dstIdx += coords[i] * dstStridesLocal[i];
+            srcIdx1 += coords[i] * src1Strides[i];
+            srcIdx2 += coords[i] * src2Strides[i];
         }
     }
 
     // Write to output tensor
-    if(coords[axis] < length[axis])
+    if(coords[axis] < length1[axis])
         dstPtr[dstIdx] = srcPtr1[srcIdx1];
     else
         dstPtr[dstIdx] = srcPtr2[srcIdx2];
@@ -296,6 +342,60 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
     }
     else
     {
+        // Calculate offsets for each batch element
+        Rpp32u batchSize = dstGenericDescPtr->dims[0];
+        Rpp32u *srcOffsets = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+        Rpp32u *dstOffsets = srcOffsets + batchSize * 2;
+        
+        Rpp32u srcOffset1 = 0, srcOffset2 = 0, dstOffset = 0;
+        for (int i = 0; i < batchSize; i++)
+        {
+            srcOffsets[i * 2] = srcOffset1;
+            srcOffsets[i * 2 + 1] = srcOffset2;
+            dstOffsets[i] = dstOffset;
+            
+            Rpp32u *roi1 = roiTensor + i * numDims * 4;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length1 = &roi1[numDims];
+            Rpp32u *length2 = &roi2[numDims];
+            
+            Rpp32u src1Size = 1, src2Size = 1, dstSize = 1;
+            for (int j = 0; j < numDims; j++)
+            {
+                src1Size *= length1[j];
+                src2Size *= length2[j];
+                if (j == axis)
+                    dstSize *= (length1[j] + length2[j]);
+                else
+                    dstSize *= length1[j];
+            }
+            srcOffset1 += src1Size;
+            srcOffset2 += src2Size;
+            dstOffset += dstSize;
+        }
+        
+        // Find max elements in any batch
+        Rpp32u maxElements = 0;
+        for (int i = 0; i < batchSize; i++)
+        {
+            Rpp32u *roi1 = roiTensor + i * numDims * 4;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length1 = &roi1[numDims];
+            Rpp32u *length2 = &roi2[numDims];
+            
+            Rpp32u elements = 1;
+            for (int j = 0; j < numDims; j++)
+            {
+                if (j == axis)
+                    elements *= (length1[j] + length2[j]);
+                else
+                    elements *= length1[j];
+            }
+            maxElements = (elements > maxElements) ? elements : maxElements;
+        }
+        
+        globalThreads_x = maxElements;
+        
         hipLaunchKernelGGL(concat_generic_hip_tensor,
                        dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                        dim3(1024, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
@@ -309,7 +409,9 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                        dstGenericDescPtr->strides,
                        axis,
                        dstGenericDescPtr->numDims - 1,
-                       roiTensor);
+                       roiTensor,
+                       srcOffsets,
+                       dstOffsets);
     }
 
     return RPP_SUCCESS;
