@@ -214,6 +214,9 @@ typedef enum
     RPP_TENSOR_OP_DIVIDE
 } RpptOp;
 
+/*! \brief RPPT Broadcast Mode type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPP_BROADCAST_ENABLE,
