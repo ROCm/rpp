@@ -2,6 +2,20 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
+## RPP 2.2.0 (Unreleased)
+
+### Added
+* 
+
+### Changed
+* CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
+
+### Removed
+* 
+
+### Resolved issues
+* 
+
 ## RPP 2.1.0 for ROCm 7.1.0
 
 ### Added
