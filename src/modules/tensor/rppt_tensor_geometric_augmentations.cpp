@@ -2390,7 +2390,7 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
 
     // Compute affine transformation matrix from rotate angle
-    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost;
+    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem;
     for(int idx = 0; idx < srcDescPtr->n; idx++)
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
