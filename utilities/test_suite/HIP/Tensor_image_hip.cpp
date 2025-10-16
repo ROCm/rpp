@@ -440,6 +440,10 @@ int main(int argc, char **argv)
     Rpp32f *perspectiveTensorPtr = NULL;
     if(testCase == WARP_PERSPECTIVE)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
+    
+    Rpp32f *affineTensorPtr = NULL;
+    if(testCase == WARP_AFFINE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&affineTensorPtr, batchSize * 6 * sizeof(Rpp32f)));
 
     Rpp32f *alpha = nullptr;
     if(testCase == RAIN)
@@ -590,6 +594,9 @@ int main(int argc, char **argv)
     Rpp8u *posterizeLevelBits = nullptr;
     if(testCase == POSTERIZE)
         CHECK_RETURN_STATUS(hipHostMalloc(&posterizeLevelBits, batchSize * sizeof(Rpp8u)));
+    Rpp32f *angle = nullptr;
+    if(testCase == ROTATE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&angle, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -956,7 +963,6 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32f angle[batchSize];
                     for (i = 0; i < batchSize; i++)
                         angle[i] = 50;
 
@@ -978,21 +984,19 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32f6 affineTensor_f6[batchSize];
-                    Rpp32f *affineTensor = (Rpp32f *)affineTensor_f6;
-                    for (i = 0; i < batchSize; i++)
+                    for (i = 0, j = 0; i < batchSize; i++, j += 6)
                     {
-                        affineTensor_f6[i].data[0] = 1.23;
-                        affineTensor_f6[i].data[1] = 0.5;
-                        affineTensor_f6[i].data[2] = 0;
-                        affineTensor_f6[i].data[3] = -0.8;
-                        affineTensor_f6[i].data[4] = 0.83;
-                        affineTensor_f6[i].data[5] = 0;
+                        affineTensorPtr[j + 0] = 1.23;
+                        affineTensorPtr[j + 1] = 0.5;
+                        affineTensorPtr[j + 2] = 0;
+                        affineTensorPtr[j + 3] = -0.8;
+                        affineTensorPtr[j + 4] = 0.83;
+                        affineTensorPtr[j + 5] = 0;
                     }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -2038,7 +2042,9 @@ int main(int argc, char **argv)
     if(testCase == GLITCH)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if(perspectiveTensorPtr != NULL)
-      CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
+        CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
+    if(affineTensorPtr != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(affineTensorPtr));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
@@ -2134,6 +2140,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(horizontalFlag));
         CHECK_RETURN_STATUS(hipHostFree(verticalFlag));
     }
+    if(testCase == ROTATE)
+        CHECK_RETURN_STATUS(hipHostFree(angle));
     if(testCase == COLOR_TEMPERATURE)
         CHECK_RETURN_STATUS(hipHostFree(adjustment));
     if(hueShift != NULL)
