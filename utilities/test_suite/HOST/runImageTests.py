@@ -309,7 +309,7 @@ if testType == TestType.UNIT_TEST.value:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
     if not qaMode:
         create_layout_directories(dstPath)
 else:
