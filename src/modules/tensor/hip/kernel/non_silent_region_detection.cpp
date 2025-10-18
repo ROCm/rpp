@@ -38,7 +38,7 @@ __host__ __device__ __forceinline__ int compute_pos_in_smem(int pos)
 __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
-    int2 offset_i2 = static_cast<int2>(offset);
+    int2 offset_i2 = MAKE_INT2(offset);
     int2 offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
     int threadIdxMul2 = 2 * hipThreadIdx_x;
     int blockDimMul2 = 2 * hipBlockDim_x;
@@ -52,11 +52,11 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
         int dMul2 = 2 * d;
         for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
         {
-            int2 pos_i2 = (offset_i2 * static_cast<int2>(idxMul2)) + offsetAB_i2;
+            int2 pos_i2 = (offset_i2 * MAKE_INT2(idxMul2)) + offsetAB_i2;
             input[compute_pos_in_smem(pos_i2.y)] += input[compute_pos_in_smem(pos_i2.x)];
         }
         offset <<= 1;
-        offset_i2 =  static_cast<int2>(offset);
+        offset_i2 =  MAKE_INT2(offset);
         offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
     }
 
@@ -71,7 +71,7 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
     for (int d = 1; d < bufferLength; d <<= 1)
     {
         offset >>= 1;
-        offset_i2 = static_cast<int2>(offset);
+        offset_i2 = MAKE_INT2(offset);
         offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
         __syncthreads();
         // syncthreads before proceeding to next iteration
@@ -79,7 +79,7 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
         int dMul2 = 2 * d;
         for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
         {
-            int2 pos_i2 = offset_i2 * static_cast<int2>(idxMul2) + offsetAB_i2;
+            int2 pos_i2 = offset_i2 * MAKE_INT2(idxMul2) + offsetAB_i2;
             int posA = compute_pos_in_smem(pos_i2.x);
             int posB = compute_pos_in_smem(pos_i2.y);
             float t = input[posA];

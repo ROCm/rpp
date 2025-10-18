@@ -47,6 +47,10 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         crop_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -109,6 +113,10 @@ RppStatus rppt_crop_and_patch_host(RppPtr_t srcPtr1,
                                    rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1558,6 +1566,70 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
                                                           rpp::deref(rppHandle));
         }
     }
+
+        return RPP_SUCCESS;
+}
+
+RppStatus rppt_jpeg_compression_distortion_host(RppPtr_t srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                RppPtr_t dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32s *qualityTensor,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        jpeg_compression_distortion_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                      srcDescPtr,
+                                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                      dstDescPtr,
+                                                      qualityTensor,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      layoutParams,
+                                                      rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        jpeg_compression_distortion_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                        srcDescPtr,
+                                                        reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                        dstDescPtr,
+                                                        qualityTensor,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        jpeg_compression_distortion_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                        srcDescPtr,
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                        dstDescPtr,
+                                                        qualityTensor,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        jpeg_compression_distortion_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                      srcDescPtr,
+                                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                      dstDescPtr,
+                                                      qualityTensor,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      layoutParams,
+                                                      rpp::deref(rppHandle));
+    }
+
     return RPP_SUCCESS;
 }
 
@@ -1678,6 +1750,11 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_crop_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -2491,6 +2568,11 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1,
                                   rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_crop_and_patch_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,

@@ -29,10 +29,11 @@ SOFTWARE.
 #include <thread>
 #include "device_name.hpp"
 #include "errors.hpp"
-#include "logger.hpp"
 #include "handle.hpp"
+#ifdef LEGACY_SUPPORT
 #include "kernel_cache.hpp"
 #include "binary_cache.hpp"
+#endif
 
 namespace rpp {
 
@@ -40,7 +41,7 @@ namespace rpp {
 // We leak resources for now as there is no hipCtxRetain API
 hipCtx_t get_ctx()
 {
-    hipInit(0);
+    CHECK_RETURN_STATUS(hipInit(0));
     hipCtx_t ctx;
     auto status = 0;
     if(status != hipSuccess)
@@ -101,7 +102,9 @@ struct HandleImpl
     StreamPtr stream = nullptr;
     int device = -1;
     Allocator allocator{};
+#ifdef LEGACY_SUPPORT
     KernelCache cache;
+#endif
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
@@ -118,7 +121,7 @@ struct HandleImpl
     void elapsed_time(hipEvent_t start, hipEvent_t stop)
     {
         if(enable_profiling)
-            hipEventElapsedTime(&this->profiling_result, start, stop);
+            CHECK_RETURN_STATUS(hipEventElapsedTime(&this->profiling_result, start, stop));
     }
 
     std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
@@ -245,7 +248,6 @@ Handle::Handle(size_t batchSize, rppAcceleratorQueue_t stream) : impl(new Handle
 
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
-    RPP_LOG_I(*this);
 }
 
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
@@ -313,6 +315,9 @@ void Handle::rpp_destroy_object_gpu()
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem));
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
     CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
+
+    delete this->GetInitHandle();
+    this->impl = nullptr;
 }
 
 void Handle::rpp_destroy_object_host()
@@ -372,6 +377,7 @@ void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction
     this->impl->allocator.context = allocatorContext;
 }
 
+#ifdef LEGACY_SUPPORT
 void Handle::EnableProfiling(bool enable)
 {
     this->impl->enable_profiling = enable;
@@ -480,6 +486,7 @@ bool Handle::IsProfilingEnabled() const
 {
     return this->impl->enable_profiling;
 }
+#endif
 
 std::size_t Handle::GetLocalMemorySize()
 {
@@ -506,14 +513,9 @@ std::size_t Handle::GetGlobalMemorySize()
 std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
-    hipGetDeviceProperties(&props, this->impl->device);
+    CHECK_RETURN_STATUS(hipGetDeviceProperties(&props, this->impl->device));
     std::string name(props.gcnArchName);
     return name;
-}
-
-std::ostream& Handle::Print(std::ostream& os) const
-{
-    return os;
 }
 
 // No HIP API that could return maximum memory allocation size for a single object.
@@ -540,6 +542,12 @@ std::size_t Handle::GetMaxComputeUnits()
         RPP_THROW_HIP_STATUS(status);
 
     return result;
+}
+
+#ifdef LEGACY_SUPPORT
+std::ostream& Handle::Print(std::ostream& os) const
+{
+    return os;
 }
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
@@ -578,5 +586,6 @@ shared<ConstData_t> Handle::CreateSubBuffer(ConstData_t data, std::size_t offset
     auto cdata = reinterpret_cast<const char*>(data);
     return {cdata + offset, null_deleter{}};
 }
+#endif
 
 } // namespace rpp

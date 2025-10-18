@@ -49,7 +49,7 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
     if (alignedChannels)
     {
         d_float8 outVal_f8;
-        outVal_f8.f4[0] = static_cast<float4>(0.0f);
+        outVal_f8.f4[0] = FLOAT4_ZERO;
         outVal_f8.f4[1] = outVal_f8.f4[0];
         for(; i < alignedChannels; i += 8, srcIdx += 8)
         {

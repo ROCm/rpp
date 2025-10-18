@@ -338,6 +338,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -387,6 +388,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += 8;
@@ -435,6 +437,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTemp += 24;
@@ -485,6 +488,7 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f32
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTempR += 8;
@@ -574,24 +578,12 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    Rpp32f srcPtrTemp_ps[24];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-
                     __m256 p[3];
 
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
-                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
-                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
-                    }
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += 24;
                     dstPtrTempR += 8;
@@ -636,24 +628,12 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                    Rpp32f dstPtrTemp_ps[25];
-
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
-                    }
-
                     __m256 p[3];
 
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < 24; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += 8;
                     srcPtrTempG += 8;
@@ -697,19 +677,12 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
-                    Rpp32f srcPtrTemp_ps[24], dstPtrTemp_ps[25];
-
-                    for(int cnt = 0; cnt < 24; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-
                     __m256 p[3];
 
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < 24; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
                     srcPtrTemp += 24;
                     dstPtrTemp += 24;
@@ -755,28 +728,12 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
-                    }
-
                     __m256 p[3];
 
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_temperature_24_host(p, pAdj);    // color_temperature adjustment
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < 8; cnt++)
-                    {
-                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
-                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
-                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
-                    }
+                    rpp_pixel_check_0to1(p, 3);     //boundary checks for f16
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTempR += 8;
                     srcPtrTempG += 8;

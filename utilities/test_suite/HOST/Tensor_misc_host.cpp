@@ -132,19 +132,20 @@ int main(int argc, char **argv)
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
     Rpp16s *inputI16 = NULL;
-    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
-    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
+    inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
     if(testCase == CONCAT)
     {
         for(int i = 0; i <= nDim; i++)
             iBufferSizeSecond *= srcDescriptorPtrNDSecond->dims[i];
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
+        inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
     }
 
     void *input, *inputSecond, *output;
     input = static_cast<Rpp32f *>(calloc(iBufferSizeInBytes, 1));
-    inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
+    if(testCase == CONCAT)
+        inputSecond = static_cast<Rpp32f *>(calloc(iBufferSizeSecondInBytes, 1));
     output = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
 
     // read input data
@@ -173,7 +174,7 @@ int main(int argc, char **argv)
     }
 
     // Convert inputs to correponding bit depth specified by user
-    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeInBytes, srcDescriptorPtrND, testCase);
+    convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, bitDepth, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -336,10 +337,14 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     free(inputF32);
+    if(testCase == CONCAT)
+        free(inputF32Second);
     free(outputF32);
     if(testCase == LOG1P)
         free(inputI16);
     free(input);
+    if(testCase == CONCAT)
+        free(inputSecond);
     free(output);
     free(roiTensor);
     if(meanTensor != nullptr)

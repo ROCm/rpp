@@ -33,19 +33,21 @@ else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 # Set AMD Clang as default compiler
-if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
-    set(CMAKE_CXX_COMPILER clang++)
-endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
 
 project(test_suite/HIP)
 
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
 if(NOT WIN32)
@@ -78,41 +80,42 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 ]]
 
 # find RPP
-find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
-find_path(RPP_INCLUDE_DIR NAMES rpp.h PATHS ${ROCM_PATH}/include/rpp)
+find_package(rpp 2.1.0 QUIET)
+if(rpp_FOUND)
+    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+    message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
+    message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+else()
+    message("-- ${Yellow}${PROJECT_NAME} requires rpp. Install rpp before running CTests")
+endif(rpp_FOUND)
 
-if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
-    set(RPP_FOUND TRUE)
-    message("-- ${White}${PROJECT_NAME}: Using RPP -- \n\tLibraries:${RPP_LIBRARY} \n\tIncludes:${RPP_INCLUDE_DIR}${ColourReset}")
-endif()
-
-if(NOT RPP_FOUND)
+if(NOT rpp_FOUND)
     message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running RPP Test Suite")
 else()
     # RPP installation - Backend check
-    set(RPP_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${RPP_INCLUDE_DIR}/rpp_backend.h)
-        file(READ ${RPP_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
+    set(rpp_BACKEND_HIP_FOUND 0)
+    if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h)
+        file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h RPP_BACKEND_FILE)
         string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+        set(rpp_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
     endif()
-    if(NOT DEFINED BACKEND AND RPP_BACKEND_HIP_FOUND)
+    if(NOT DEFINED BACKEND AND rpp_BACKEND_HIP_FOUND)
         set(BACKEND "HIP")
         message("-- ${Green}${PROJECT_NAME} is supported to build and run with RPP HIP backend installation${ColourReset}")
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
         message("-- ${Red}${PROJECT_NAME} is not supported to build and run with RPP HOST backend installation${ColourReset}")
     endif()
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${RPP_LIBRARY})
-    include_directories(${RPP_INCLUDE_DIR})
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rpp::rpp)
+    include_directories(${rpp_INCLUDE_DIR})
 
     # RPP HIP test suite works for RPP built with HIP backend
     if("${BACKEND}" STREQUAL "HIP")
 
         # RPP installation - Audio support check
         set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-        if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
-            file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
+        if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h)
+            file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
             string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
@@ -129,7 +132,7 @@ else()
             NAMES sndfile libsndfile
             PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
             PATH_SUFFIXES lib lib64)
-        find_package(OpenMP QUIET)
+        find_package(OpenMP COMPONENTS CXX QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
@@ -158,17 +161,20 @@ else()
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
 
                     # include and link directories
                     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                     link_directories(${ROCM_PATH}/lib /usr/local/lib)
                     link_directories(${ROCM_PATH}/lib/llvm/lib)
 
+                    if(NOT APPLE)
+                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+                    endif()
+
                     if(OpenMP_CXX_FOUND)
                         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenMP_CXX_LIBRARIES})
-                        message("-- ${White}${PROJECT_NAME}: Using OpenMP -- \n\tOpenMP_CXX_FLAGS:${OpenMP_CXX_FLAGS}\n\tOpenMP_CXX_LIBRARIES:${OpenMP_CXX_LIBRARIES}${ColourReset}")
+                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                         message("-- ${Green}${PROJECT_NAME} All Tensor HIP tests set to build with OpenMP${ColourReset}")
 
                         # HIP test set 1 - RPP Tensor-Image HIP test suite
@@ -188,9 +194,9 @@ else()
                                 #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln1.cpp) # OLD - To be deprecated and removed      # added only on HOST
                                 #     add_executable(BatchPD_hip_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
+                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
                                 # else()                                                                                                                                                        # added only on HOST
                                 #     message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")          # added only on HOST
                                 # endif(OPENPYXL_FOUND EQUAL 0)                                                                                                                                 # added only on HOST
@@ -253,4 +259,4 @@ else()
     else()
         message("-- ${Red}${PROJECT_NAME} is supported to build and run only with RPP HIP backend installation${ColourReset}")
     endif("${BACKEND}" STREQUAL "HIP")
-endif(NOT RPP_FOUND)
+endif(NOT rpp_FOUND)

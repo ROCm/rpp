@@ -37,8 +37,8 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 4
+caseMin = min(miscAugmentationMap.keys())
+caseMax = max(miscAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -186,13 +186,13 @@ if noCaseSupported:
 for case in caseList:
     if int(case) not in miscAugmentationMap:
         continue
-    if case == "0":
+    if miscAugmentationMap[int(case)][0] == "transpose":
         for transposeOrder in range(1, numDims):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder)
-    elif case == "1":
+    elif miscAugmentationMap[int(case)][0] == "normalize":
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
-    elif case == "3":
+    elif miscAugmentationMap[int(case)][0] == "concat":
         for axisMask in range(0, numDims):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
     else:

@@ -84,51 +84,56 @@ RppStatus rppt_copy_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** swap_channels ********************/
+/******************** channel_permute ********************/
 
-RppStatus rppt_swap_channels_host(RppPtr_t srcPtr,
-                                  RpptDescPtr srcDescPtr,
-                                  RppPtr_t dstPtr,
-                                  RpptDescPtr dstDescPtr,
-                                  rppHandle_t rppHandle)
+RppStatus rppt_channel_permute_host(RppPtr_t srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32u *permutationTensor,
+                                    rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        swap_channels_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        layoutParams,
-                                        rpp::deref(rppHandle));
+        channel_permute_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          permutationTensor,
+                                          layoutParams,
+                                          rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        swap_channels_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          layoutParams,
-                                          rpp::deref(rppHandle));
+        channel_permute_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            permutationTensor,
+                                            layoutParams,
+                                            rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        swap_channels_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          layoutParams,
-                                          rpp::deref(rppHandle));
+        channel_permute_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            permutationTensor,
+                                            layoutParams,
+                                            rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        swap_channels_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        layoutParams,
-                                        rpp::deref(rppHandle));
+        channel_permute_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          permutationTensor,
+                                          layoutParams,
+                                          rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -268,47 +273,52 @@ RppStatus rppt_copy_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-/******************** swap_channels ********************/
+/******************** channel_permute ********************/
 
-RppStatus rppt_swap_channels_gpu(RppPtr_t srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 RppPtr_t dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 rppHandle_t rppHandle)
+RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u *permutationTensor,
+                                   rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        hip_exec_swap_channels_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                      dstDescPtr,
-                                      rpp::deref(rppHandle));
+        hip_exec_channel_permute_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        permutationTensor,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        hip_exec_swap_channels_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                      srcDescPtr,
-                                      (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                      dstDescPtr,
-                                      rpp::deref(rppHandle));
+        hip_exec_channel_permute_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        permutationTensor,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_swap_channels_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                      srcDescPtr,
-                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                      dstDescPtr,
-                                      rpp::deref(rppHandle));
+        hip_exec_channel_permute_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        permutationTensor,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        hip_exec_swap_channels_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                      dstDescPtr,
-                                      rpp::deref(rppHandle));
+        hip_exec_channel_permute_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        permutationTensor,
+                                        rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

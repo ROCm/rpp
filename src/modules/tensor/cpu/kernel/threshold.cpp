@@ -26,7 +26,7 @@ SOFTWARE.
 
 inline void compute_threshold_8_host(__m256 *p, __m256 *pThresholdParams)
 {
-    p[0] = rpp_pixel_check_0to1_avx(_mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ))));
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));
 }
 inline void compute_threshold_16_host(__m256 *p, __m256 *pThresholdParams)
 {
@@ -39,7 +39,7 @@ inline void compute_threshold_24_host(__m256 *p, __m256 *pThresholdParams)
     pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ));
     pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[3],_CMP_LE_OQ));
     pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[2], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[2], pThresholdParams[5],_CMP_LE_OQ));
-    p[0] = rpp_pixel_check_0to1_avx(_mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2])));
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p1, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
     p[1] = p[0];
     p[2] = p[0];
 }
@@ -128,7 +128,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -427,7 +427,7 @@ RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -726,7 +726,7 @@ RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
@@ -1025,7 +1025,7 @@ RppStatus threshold_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
                     __m256 p[3];
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads

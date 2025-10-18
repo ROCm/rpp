@@ -945,34 +945,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../../README.md \
-                        ../../include/rpp.h \
-                        ../../include/rppi.h \
-                        ../../include/rppt.h \
-                        ../../include/rpp_version.h \
-                        ../../include/rppdefs.h \
-                        ../../include/rppi_advanced_augmentations.h \
-                        ../../include/rppi_arithmetic_operations.h \
-                        ../../include/rppi_color_model_conversions.h \
-                        ../../include/rppi_computer_vision.h \
-                        ../../include/rppi_filter_operations.h \
-                        ../../include/rppi_fused_functions.h \
-                        ../../include/rppi_geometry_transforms.h \
-                        ../../include/rppi_image_augmentations.h \
-                        ../../include/rppi_logical_operations.h \
-                        ../../include/rppi_morphological_transforms.h \
-                        ../../include/rppi_statistical_operations.h \
-                        ../../include/rppt_tensor_arithmetic_operations.h \
-                        ../../include/rppt_tensor_audio_augmentations.h \
-                        ../../include/rppt_tensor_color_augmentations.h \
-                        ../../include/rppt_tensor_data_exchange_operations.h \
-                        ../../include/rppt_tensor_effects_augmentations.h \
-                        ../../include/rppt_tensor_filter_augmentations.h \
-                        ../../include/rppt_tensor_geometric_augmentations.h \
-                        ../../include/rppt_tensor_bitwise_operations.h \
-                        ../../include/rppt_tensor_morphological_operations.h \
-                        ../../include/rppt_tensor_statistical_operations.h
-
+INPUT                  = ../../api
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

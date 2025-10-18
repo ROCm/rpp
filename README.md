@@ -46,7 +46,8 @@ Spectrogram kernel output represented as a image <br><br>
 * Linux
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
+  * SLES - `15 SP7`
+
 
 ### Hardware
 * **CPU**: [AMD64](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
@@ -56,24 +57,35 @@ Spectrogram kernel output represented as a image <br><br>
 > * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 > * `gfx908` or higher GPU required
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
+* Install ROCm `7.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
 ### Compiler
 * AMD Clang++ Version 18.0.0 or later - installed with ROCm
 > [!NOTE]
-> * For CPU only backend use Clang Version `5.0.1` and above
+> * For CPU only backend use Clang Version `5.0.1` or later
 >   ```shell
 >    sudo apt install clang
 >   ```
+> * To use GNU compiler or custom compilers use `-D CMAKE_CXX_COMPILER` during build
 
 ### Libraries
-* CMake Version `3.10` and above
+* CMake Version `3.10` or later
   ```shell
   sudo apt install cmake
   ```
-* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+* HIP
+  ```shell
+  sudo apt install hip-dev
+  ```
+
+* OpenMP
+  ```shell
+  sudo apt install openmp-extras-dev
+  ```
+
+* Half-precision floating-point library - Version `1.12.0` or later
   ```shell
   sudo apt install half
   ```
@@ -98,7 +110,7 @@ The installation process uses the following steps:
 
 * [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+* Install ROCm `7.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
 > [!IMPORTANT]
 > Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
@@ -189,8 +201,16 @@ mkdir rpp-test && cd rpp-test
 cmake /opt/rocm/share/rpp/test/
 ctest -VV
 ```
-> [!IMPORTANT]
-> [Test suite prerequisites](utilities/test_suite#prerequisites) are required to run tests
+> [!NOTE]
+> * **Ubuntu**: Install Nifti-Imaging to run all tests
+> ```
+> git clone https://github.com/NIFTI-Imaging/nifti_clib.git
+> cd nifti_clib
+> git reset --hard 84e323cc3cbb749b6a3eeef861894e444cf7d788
+> mkdir build && cd build && cmake ..
+> sudo make -j$nproc install
+> ```
+> * **SLES/RHEL**: Install [prerequisites](utilities/test_suite#prerequisites) to run all tests
 
 ## Test Functionalities
 
@@ -235,9 +255,9 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 * Linux distribution
   * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
-  * SLES - `15-SP5`
-* ROCm: rocm-core - `6.3.0.60300`
-* CMake - Version `3.16.3`+
-* AMD Clang++ - Version `18.0.0`
-* half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
+  * SLES - `15 SP7`
+* ROCm: rocm-core - `7.0.0`+
+* CMake - Version `3.10`+
+* AMD Clang++ - Version `18.0.0`+
+* Half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)

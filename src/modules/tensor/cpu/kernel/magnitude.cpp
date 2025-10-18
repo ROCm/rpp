@@ -337,9 +337,11 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
-                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1]))));    // magnitude computation
-                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2]))));    // magnitude computation
+                    p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                    p1[1] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1])));    // magnitude computation
+                    p1[2] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2])));    // magnitude computation
+                    //Boundary check for f32
+                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
@@ -398,9 +400,11 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
-                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1]))));    // magnitude computation
-                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2]))));    // magnitude computation
+                    p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                    p1[1] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1])));    // magnitude computation
+                    p1[2] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2])));    // magnitude computation
+                    //Boundary check for f32
+                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
@@ -466,7 +470,9 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
+                        p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                        //Boundary check for f32
+                        rpp_pixel_check_0to1(p1, 1);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
@@ -559,21 +565,15 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
-
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                    {
-                        srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1Temp[cnt]);
-                        srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2Temp[cnt]);
-                    }
-
                     __m256 p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp_ps, p1);    // simd loads
-                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp_ps, p2);    // simd loads
-                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
-                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1]))));    // magnitude computation
-                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2]))));    // magnitude computation
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
+                    p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                    p1[1] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1])));    // magnitude computation
+                    p1[2] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2])));    // magnitude computation
+                    //Boundary check for f16
+                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
@@ -628,26 +628,15 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
-
-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                    {
-                        srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1TempR[cnt]);
-                        srcPtr1Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr1TempG[cnt]);
-                        srcPtr1Temp_ps[cnt + 16] = static_cast<Rpp32f>(srcPtr1TempB[cnt]);
-
-                        srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2TempR[cnt]);
-                        srcPtr2Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr2TempG[cnt]);
-                        srcPtr2Temp_ps[cnt + 16] = static_cast<Rpp32f>(srcPtr2TempB[cnt]);
-                    }
-
                     __m256 p1[4], p2[4];
 
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1Temp_ps, srcPtr1Temp_ps + 8, srcPtr1Temp_ps + 16, p1);    // simd loads
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2Temp_ps, srcPtr2Temp_ps + 8, srcPtr2Temp_ps + 16, p2);    // simd loads
-                    p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
-                    p1[1] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1]))));    // magnitude computation
-                    p1[2] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2]))));    // magnitude computation
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                    p1[1] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[1], p1[1], _mm256_mul_ps(p2[1], p2[1])));    // magnitude computation
+                    p1[2] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[2], p1[2], _mm256_mul_ps(p2[2], p2[2])));    // magnitude computation
+                    //Boundary check for f16
+                    rpp_pixel_check_0to1(p1, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
@@ -709,19 +698,13 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8];
-
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
-                            srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1Temp[cnt]);
-                            srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2Temp[cnt]);
-                        }
-
                         __m256 p1[1], p2[1];
 
-                        rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp_ps, p1);    // simd loads
-                        rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp_ps, p2);    // simd loads
-                        p1[0] = rpp_pixel_check_0to1_avx(_mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0]))));    // magnitude computation
+                        rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr1Temp, p1);    // simd loads
+                        rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, p2);    // simd loads
+                        p1[0] = _mm256_sqrt_ps(_mm256_fmadd_ps(p1[0], p1[0], _mm256_mul_ps(p2[0], p2[0])));    // magnitude computation
+                        //Boundary check for f16
+                        rpp_pixel_check_0to1(p1, 1);
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
