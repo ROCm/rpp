@@ -1381,25 +1381,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case EMBOSS:
-                {
-                    testCaseName = "emboss";
-                    Rpp32u kernelSize = additionalParam;
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        strength[i] = 1.0f;
-                        bias[i] = 0.0f;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_emboss_gpu(d_input, srcDescPtr, d_output, dstDescPtr, strength, bias, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
                 case MAGNITUDE:
                 {
                     testCaseName = "magnitude";
@@ -1767,6 +1748,25 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_solarize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case EMBOSS:
+                {
+                    testCaseName = "emboss";
+                    Rpp32u kernelSize = additionalParam;
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        strength[i] = 1.0f;
+                        bias[i] = 0.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_emboss_gpu(d_input, srcDescPtr, d_output, dstDescPtr, strength, bias, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

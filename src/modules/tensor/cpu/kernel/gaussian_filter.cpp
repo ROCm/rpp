@@ -178,10 +178,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
-                            {
-                                pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
-                                pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
-                            }
+                                rpp_pixel_check_0to1(pDst, 2);
                             rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 14);
                             dstPtrTemp += 14;
@@ -236,10 +233,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                        {
-                            pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
-                            pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
-                        }
+                            rpp_pixel_check_0to1(pDst, 2);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
                         rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
@@ -292,10 +286,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                        {
-                            pDst[0] = rpp_pixel_check_0to1_avx(pDst[0]);
-                            pDst[1] = rpp_pixel_check_0to1_avx(pDst[1]);
-                        }
+                            rpp_pixel_check_0to1(pDst, 2);
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
@@ -366,10 +357,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
-                            {
-                                pResult[channelStride] = rpp_pixel_check_0to1_avx(pResult[channelStride]);
-                                pResult[channelStride + 1] = rpp_pixel_check_0to1_avx(pResult[channelStride + 1]);
-                            }
+                                rpp_pixel_check_0to1(pResult, 2);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
                         // convert result from pln to pkd format and store in output buffer

@@ -1753,7 +1753,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
-//----------- median_filter --------------------
+// -------------------- median_filter --------------------
 
 template<typename T>
 RppStatus median_filter_generic_host_tensor(T *srcPtr,
