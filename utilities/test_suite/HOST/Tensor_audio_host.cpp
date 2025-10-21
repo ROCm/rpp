@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     string scriptPath = argv[7];
 
     // validation checks
-    if (testType == 0 && batchSize != 3)
+    if (testType == UNIT_TEST && batchSize != 3)  // unit test mode
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
         }
 
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-        if (testType == 0)
+        if (testType == UNIT_TEST)  // unit test mode
         {
             if (testCase == NON_SILENT_REGION_DETECTION)
                 verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     // performance test mode
-    if (testType == 1)
+    if (testType == PERFORMANCE_TEST)
     {
         // display measured times
         maxWallTime *= 1000;

@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
     // Handle inputs
     const int MIN_ARG_COUNT = 11;
 
-    int layoutType, testCase, testType, qaFlag, numRuns, batchSize, inputBitDepth;
+    int layoutType, testCase, testType, qaFlag, numRuns, batchSize, BitDepthTestMode;
     char *headerFile, *dataFile, *dstPath;
 
     if (argc < MIN_ARG_COUNT)
@@ -47,10 +47,10 @@ int main(int argc, char * argv[])
     testType = atoi(argv[7]); // 0 - unit test / 1 - performance test
     qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
     batchSize = atoi(argv[9]);
-    inputBitDepth = atoi(argv[10]);
+    BitDepthTestMode = atoi(argv[10]);
     string scriptPath = argv[11];
 
-    bool nonQACase = (testCase == 6);
+    bool nonQACase = (testCase == GAUSSIAN_NOISE_VOXEL);
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return RPP_ERROR_NOT_IMPLEMENTED;
@@ -112,12 +112,12 @@ int main(int argc, char * argv[])
     // set src/dst generic tensor descriptors
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
-    set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, inputBitDepth);
+    set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, BitDepthTestMode);
 
     // update funcName based on bitdepth and layout
-    if(inputBitDepth == 0)
+    if(BitDepthTestMode == U8_TO_U8)
         funcName += "_u8_";
-    else if(inputBitDepth == 2)
+    else if(BitDepthTestMode == F32_TO_F32)
         funcName += "_f32_";
     int pln1OutTypeCase = 0, outputFormatToggle = 0;
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
     Rpp8u *inputU8 = NULL;
     Rpp8u *outputU8 = NULL;
     Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
-    if(inputBitDepth == 0)
+    if(BitDepthTestMode == U8_TO_U8)
     {
         inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
@@ -214,7 +214,7 @@ int main(int argc, char * argv[])
         convert_input_niftitype_to_Rpp32f_generic(niftiDataArray, niftiHeaderTemp, inputF32 , descriptorPtr3D);
 
         // Typecast input from F32 to U8 if input bitdepth requested is U8
-        if (inputBitDepth == 0)
+        if (BitDepthTestMode == U8_TO_U8)
         {
             for(int i = 0; i < iBufferSizeU8; i++)
                 inputU8[i] = std::min(std::max(static_cast<unsigned char>(inputF32[i]), static_cast<unsigned char>(0)), static_cast<unsigned char>(255));
@@ -238,7 +238,7 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    if(inputBitDepth == 2)
+                    if(BitDepthTestMode == F32_TO_F32)
                         rppt_fused_multiply_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -259,9 +259,9 @@ int main(int argc, char * argv[])
                     init_slice_voxel(descriptorPtr3D, roiGenericSrcPtr, roiTensor, anchorTensor, shapeTensor);
 
                     startWallTime = omp_get_wtime();
-                    if(inputBitDepth == 0)
+                    if(BitDepthTestMode == U8_TO_U8)
                         rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
-                    else if(inputBitDepth == 2)
+                    else if(BitDepthTestMode == F32_TO_F32)
                         rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
@@ -277,7 +277,7 @@ int main(int argc, char * argv[])
                         addTensor[i] = 40;
 
                     startWallTime = omp_get_wtime();
-                    if(inputBitDepth == 2)
+                    if(BitDepthTestMode == F32_TO_F32)
                         rppt_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -293,7 +293,7 @@ int main(int argc, char * argv[])
                         subtractTensor[i] = 40;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 2)
+                    if (BitDepthTestMode == F32_TO_F32)
                         rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -315,9 +315,9 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
-                    else if (inputBitDepth == 2)
+                    else if (BitDepthTestMode == F32_TO_F32)
                         rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -333,7 +333,7 @@ int main(int argc, char * argv[])
                         mulTensor[i] = 80;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 2)
+                    if (BitDepthTestMode == F32_TO_F32)
                         rppt_multiply_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -354,7 +354,7 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 2)
+                    if (BitDepthTestMode == F32_TO_F32)
                         rppt_gaussian_noise_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -382,7 +382,7 @@ int main(int argc, char * argv[])
         }
 
         wallTime *= 1000;
-        if(testType == 0)
+        if(testType == UNIT_TEST) // unit test mode
         {
             cout <<"\n\n";
             if(noOfIterations > 1)
@@ -404,7 +404,7 @@ int main(int argc, char * argv[])
                 refFile.close();
             }
 
-            if(inputBitDepth == 0)
+            if(BitDepthTestMode == U8_TO_U8)
             {
                 Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
 
@@ -449,7 +449,7 @@ int main(int argc, char * argv[])
             /*Compare the output of the function with golden outputs only if
             1.QA Flag is set
             2.input bit depth 2 (F32)*/
-            if(qaFlag && inputBitDepth == 2  && !(nonQACase))
+            if(qaFlag && BitDepthTestMode == F32_TO_F32  && !(nonQACase))
                 compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath, scriptPath);
             else
             {
@@ -516,7 +516,7 @@ int main(int argc, char * argv[])
         }
     }
 
-    if(testType == 1)
+    if(testType == PERFORMANCE_TEST) // performance test mode
     {
         // Display measured times
         maxWallTime *= 1000;
@@ -540,7 +540,7 @@ int main(int argc, char * argv[])
         free(shapeTensor);
     if(roiTensor != NULL)
         free(roiTensor);
-    if(inputBitDepth == 0)
+    if(BitDepthTestMode == U8_TO_U8)
     {
         if(inputU8 != NULL)
             free(inputU8);

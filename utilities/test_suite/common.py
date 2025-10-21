@@ -29,6 +29,7 @@ import datetime
 import shutil
 import pandas as pd
 import signal
+from enum import Enum
 
 try:
     from errno import FileExistsError
@@ -36,7 +37,38 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
+class TestType(Enum):
+    """
+    Enum representing different test types.
+    """
+    UNIT_TEST = 0
+    PERFORMANCE_TEST = 1
+
+class BitDepthTestMode(Enum):
+    """
+    Enum representing bit-depth conversion formats.
+    Convention:
+      - The first type = input data type
+      - The second type = output data type
+    """
+    U8_TO_U8   = 0  # Input: U8 -> Output: U8
+    F16_TO_F16 = 1  # Input: F16 -> Output: F16
+    F32_TO_F32 = 2  # Input: F32 -> Output: F32
+    U8_TO_F16  = 3  # Input: U8 -> Output: F16
+    U8_TO_F32  = 4  # Input: U8 -> Output: F32
+    I8_TO_I8   = 5  # Input: I8 -> Output: I8
+    U8_TO_I8   = 6  # Input: U8 -> Output: I8
+
 bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+
+class OutputFormat(Enum):
+    NON_TOGGLE = 0
+    TOGGLE = 1
+
+class Layout(Enum):
+    PKD3 = 0
+    PLN3 = 1
+    PLN1 = 2
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -132,21 +164,45 @@ miscAugmentationMap  = {
 }
 
 ImageAugmentationGroupMap = {
-    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 42, 43, 45, 81],
-    "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84, 94, 95],
-    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
-    "filter_augmentations" : [49, 51, 54],
-    "morphological_operations" : [40, 41],
-    "arithmetic_operations" : [61],
-    "logical_operations" : [65, 66, 67, 68],
-    "data_exchange_operations" : [70, 85, 86],
-    "statistical_operations" : [15, 87, 88, 89, 90, 91]
+    "color_augmentations": [
+        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
+    ],
+    "effects_augmentations": [
+        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize"
+    ],
+    "geometric_augmentations": [
+        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion"
+    ],
+    "filter_augmentations": [
+        "box_filter", "median_filter", "gaussian_filter"
+    ],
+    "morphological_operations": [
+        "erode", "dilate"
+    ],
+    "arithmetic_operations": [
+        "magnitude"
+    ],
+    "logical_operations": [
+        "bitwise_and", "bitwise_not", "bitwise_xor", "bitwise_or"
+    ],
+    "data_exchange_operations": [
+        "copy", "channel_permute", "color_to_greyscale"
+    ],
+    "statistical_operations": [
+        "threshold", "tensor_sum", "tensor_min", "tensor_max", "tensor_mean", "tensor_stddev"
+    ]
 }
 
 voxelAugmentationGroupMap = {
-    "arithmetic_operations" : [0, 2, 3, 5],
-    "effects_augmentations" : [6],
-    "geometric_augmentations" : [1, 4]
+    "arithmetic_operations": [
+        "fused_multiply_add_scalar", "add_scalar", "subtract_scalar", "multiply_scalar"
+    ],
+    "effects_augmentations": [
+        "gaussian_noise_voxel"
+    ],
+    "geometric_augmentations": [
+        "slice", "flip_voxel"
+    ]
 }
 
 def get_case_number(map, case):
@@ -249,9 +305,9 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
         return False
 
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap, func_group_finder):
+def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap, func_group_finder, augMap):
     if qaMode == 0:
-        functionality_group = func_group_finder(groupMap, int(case))
+        functionality_group = func_group_finder(groupMap, int(case), augMap)
         dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
@@ -259,15 +315,15 @@ def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap,
     return dst_folder_temp
 
 # Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder):
-    if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder)
+def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder, augMap):
+    if layout == Layout.PKD3:
+        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pkd3"
-    elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder)
+    elif layout == Layout.PLN3:
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pln3"
-    elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder)
+    elif layout == Layout.PLN1:
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder, augMap)
         log_file_layout = "pln1"
 
     return dstPathTemp, log_file_layout
@@ -280,9 +336,9 @@ def validate_path(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
 # Create layout directories within a destination path based on a layout dictionary
-def create_layout_directories(dst_path, layout_dict):
-    for layout in range(3):
-        current_layout = layout_dict[layout]
+def create_layout_directories(dst_path):
+    for layout in Layout:   # iterate over enum members
+        current_layout = layout.name   # get the string name like "PKD3"
         try:
             os.makedirs(dst_path + '/' + current_layout)
         except FileExistsError:
@@ -404,11 +460,11 @@ def read_from_subprocess_and_write_to_log(process, logFile):
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
-    if layout == 0:
+    if layout == Layout.PKD3:
         return "PKD3"
-    elif  layout == 1:
+    elif layout == Layout.PLN3:
         return "PLN3"
-    elif layout == 2:
+    elif layout == Layout.PLN1:
         return "PLN1"
 
 # Prints entire case list if user asks for help
@@ -428,10 +484,15 @@ def print_case_list(imageAugmentationMap, backendType, parser):
 
         sys.exit(0)
 
-# Functionality group finder
-def func_group_finder(groupMap, case_number):
+def func_group_finder(groupMap, case_number, augMap):
+    # get augmentation name for the given case number
+    if case_number not in augMap:
+        return "miscellaneous"
+    aug_name = augMap[case_number][0]  # first element is the name
+    
+    # check which group contains this name
     for key, value in groupMap.items():
-        if case_number in value:
+        if aug_name in value:
             return key
     return "miscellaneous"
 
@@ -456,13 +517,13 @@ def dataframe_to_markdown(df):
 
 def get_image_layout_type(layout, outputFormatToggle, backend):
     result = "Tensor_" + backend
-    if layout == 0:
+    if layout == Layout.PKD3:
         result += "_PKD3"
         if outputFormatToggle:
             result += "_toPLN3"
         else:
             result += "_toPKD3"
-    elif layout == 1:
+    elif layout == Layout.PLN3:
         result += "_PLN3"
         if outputFormatToggle:
             result += "_toPKD3"
@@ -494,9 +555,9 @@ def get_misc_func_name(testCase, nDim, additionalArg):
 
 def get_voxel_layout_type(layout, backend):
     result = "Tensor_" + backend
-    if layout == 0:
+    if layout == Layout.PKD3:
         result += "_PKD3_toPKD3"
-    elif layout == 1:
+    elif layout == Layout.PLN3:
         result += "_PLN3_toPLN3"
     else:
        result += "_PLN1_toPLN1"
