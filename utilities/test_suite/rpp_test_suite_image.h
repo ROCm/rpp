@@ -356,45 +356,45 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
 }
 
 // sets descriptor data types of src/dst
-inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void set_descriptor_data_type(int BitDepthTestMode, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    if (ip_bitDepth == 0)
+    if (BitDepthTestMode == U8_TO_U8)
     {
         funcName += "_u8_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::U8;
     }
-    else if (ip_bitDepth == 1)
+    else if (BitDepthTestMode == F16_TO_F16)
     {
         funcName += "_f16_";
         srcDescPtr->dataType = RpptDataType::F16;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 2)
+    else if (BitDepthTestMode == F32_TO_F32)
     {
         funcName += "_f32_";
         srcDescPtr->dataType = RpptDataType::F32;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 3)
+    else if (BitDepthTestMode == U8_TO_F16)
     {
         funcName += "_u8_f16_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 4)
+    else if (BitDepthTestMode == U8_TO_F32)
     {
         funcName += "_u8_f32_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 5)
+    else if (BitDepthTestMode == I8_TO_I8)
     {
         funcName += "_i8_";
         srcDescPtr->dataType = RpptDataType::I8;
         dstDescPtr->dataType = RpptDataType::I8;
     }
-    else if (ip_bitDepth == 6)
+    else if (BitDepthTestMode == U8_TO_I8)
     {
         funcName += "_u8_i8_";
         srcDescPtr->dataType = RpptDataType::U8;
@@ -644,15 +644,15 @@ inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batch
 }
 
 // Convert inputs to correponding bit depth specified by user
-inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int inputBitDepth, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
+inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int BitDepthTestMode, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
 {
-    if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
+    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32)
     {
         memcpy(input, inputu8, inputBufferSize);
         if(dualInputCase)
             memcpy(input_second, inputu8Second, inputBufferSize);
     }
-    else if (inputBitDepth == 1)
+    else if (BitDepthTestMode == F16_TO_F16)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp16f *inputf16Temp, *inputf16SecondTemp;
@@ -669,7 +669,7 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
                 *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
         }
     }
-    else if (inputBitDepth == 2)
+    else if (BitDepthTestMode == F32_TO_F32)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp32f *inputf32Temp, *inputf32SecondTemp;
@@ -686,7 +686,7 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
                 *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
         }
     }
-    else if (inputBitDepth == 5)
+    else if (BitDepthTestMode == I8_TO_I8)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp8s *inputi8Temp, *inputi8SecondTemp;
@@ -707,13 +707,13 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
 }
 
 // Reconvert other bit depths to 8u for output display purposes
-inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
+inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int BitDepthTestMode, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
 {
-    if (inputBitDepth == 0)
+    if (BitDepthTestMode == U8_TO_U8)
     {
         memcpy(outputu8, output, outputBufferSize);
     }
-    else if ((inputBitDepth == 1) || (inputBitDepth == 3))
+    else if ((BitDepthTestMode == F16_TO_F16) || (BitDepthTestMode == U8_TO_F16))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
@@ -724,7 +724,7 @@ inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inp
             outputTemp++;
         }
     }
-    else if ((inputBitDepth == 2) || (inputBitDepth == 4))
+    else if ((BitDepthTestMode == F32_TO_F32) || (BitDepthTestMode == U8_TO_F32))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
@@ -735,7 +735,7 @@ inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inp
             outputTemp++;
         }
     }
-    else if ((inputBitDepth == 5) || (inputBitDepth == 6))
+    else if ((BitDepthTestMode == I8_TO_I8) || (BitDepthTestMode == U8_TO_I8))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
@@ -1521,7 +1521,7 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
 }
 
 // Erase Region initializer for unit and performance testing
-void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth)
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode)
 {
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -1563,13 +1563,13 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx + 8] = 0;
             for (int j = 0; j < 9; j++)
             {
-                if (!inputBitDepth)
+                if (BitDepthTestMode == U8_TO_U8)
                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                else if (inputBitDepth == 1)
+                else if (BitDepthTestMode == F16_TO_F16)
                     colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 2)
+                else if (BitDepthTestMode == F32_TO_F32)
                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 5)
+                else if (BitDepthTestMode == I8_TO_I8)
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
@@ -1581,13 +1581,13 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx + 2] = 60;
             for (int j = 0; j < 3; j++)
             {
-                if (!inputBitDepth)
+                if (BitDepthTestMode == U8_TO_U8)
                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                else if (inputBitDepth == 1)
+                else if (BitDepthTestMode == F16_TO_F16)
                     colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 2)
+                else if (BitDepthTestMode == F32_TO_F32)
                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 5)
+                else if (BitDepthTestMode == I8_TO_I8)
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
