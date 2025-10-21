@@ -463,7 +463,7 @@ void inline init_mel_filter_bank(Rpp32f **inputf32, Rpp32f **outputf32, RpptDesc
 
     // Read source data
     read_from_bin_file(*inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
-    if(testType)
+    if(testType == PERFORMANCE_TEST)
     {
         replicate_last_sample_mel_filter_bank(*inputf32, numSamples, sampleSize, batchSize);
         replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);

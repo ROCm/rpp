@@ -75,7 +75,7 @@ def generate_performance_reports(RESULTS_DIR):
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepthTestMode.F32_TO_F32.value)), "HIP")
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -83,7 +83,7 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepthTestMode.F32_TO_F32.value)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -100,13 +100,13 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             output_str = output.decode('utf-8')
             logFile.write(output_str)
 
-        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HIP")
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepthTestMode.F32_TO_F32.value)), "HIP")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
-    if testType == 0:
+    if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
-    elif testType == 1 and profilingOption == "NO":
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
         print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
     else:
@@ -197,15 +197,15 @@ batchSize = args.batch_size
 outFilePath = " "
 
 # Override testType to 0 if testType is 1 and qaMode is 1
-if testType == 1 and qaMode == 1:
+if testType == TestType.PERFORMANCE_TEST.value and qaMode:
     print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
-    testType = 0
+    testType = TestType.UNIT_TEST
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     outFilePath = outFolderPath + "/QA_RESULTS_AUDIO_HIP_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp
@@ -258,7 +258,7 @@ for case in caseList:
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
 
-if testType == 0:
+if testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
@@ -266,17 +266,17 @@ if testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_hip")
 
 # Performance tests
-if testType == 1 and profilingOption == "NO":
+if testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
     logFileList = get_log_file_list()
     for logFile in logFileList:
         print_performance_tests_summary(logFile, "", numRuns)
-elif testType == 1 and profilingOption == "YES":
+elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
 
     CASE_NUM_LIST = caseList
-    BIT_DEPTH_LIST = [2]
+    BIT_DEPTH_LIST = [BitDepthTestMode.F32_TO_F32.value]
     OFT_LIST = [0]
 
     # Open csv file
