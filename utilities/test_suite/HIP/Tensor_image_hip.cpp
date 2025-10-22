@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     char *srcSecond = argv[2];
     string dst = argv[3];
 
-    int inputBitDepth = atoi(argv[4]);
+    int BitDepthTestMode = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
     int testCase = atoi(argv[6]);
     int numRuns = atoi(argv[8]);
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         cout << "\nInputs for this test case are:";
         cout << "\nsrc1 = " << argv[1];
         cout << "\nsrc2 = " << argv[2];
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ndst = " << argv[3];
         cout << "\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = " << argv[4];
         cout << "\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = " << argv[5];
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Set src/dst data types in tensor descriptors
-    set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
+    set_descriptor_data_type(BitDepthTestMode, funcName, srcDescPtr, dstDescPtr);
 
     // Other initializations
     int missingFuncFlag = 0;
@@ -633,7 +633,7 @@ int main(int argc, char **argv)
         }
 
         // Convert inputs to correponding bit depth specified by user
-        convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
+        convert_input_bitdepth(input, input_second, inputu8, inputu8Second, BitDepthTestMode, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
         //copy decoded inputs to hip buffers
         CHECK_RETURN_STATUS(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
@@ -688,7 +688,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -703,7 +703,7 @@ int main(int argc, char **argv)
                         gammaVal[i] = 1.9;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -718,7 +718,7 @@ int main(int argc, char **argv)
                         alpha[i] = 0.4;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -736,7 +736,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -750,7 +750,7 @@ int main(int argc, char **argv)
                     Rpp32f pixelationPercentage = 87.5;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_pixelate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -766,7 +766,7 @@ int main(int argc, char **argv)
                         kernelSizeTensor[i] = 5;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_jitter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -791,7 +791,7 @@ int main(int argc, char **argv)
                             }
 
                             startWallTime = omp_get_wtime();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                            if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                                 rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
@@ -808,7 +808,7 @@ int main(int argc, char **argv)
                             }
 
                             startWallTime = omp_get_wtime();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                            if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                                 rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
@@ -822,7 +822,7 @@ int main(int argc, char **argv)
                                 shotNoiseFactorTensor[i] = 80.0f;
 
                             startWallTime = omp_get_wtime();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                            if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                                 rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
@@ -849,7 +849,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -864,7 +864,7 @@ int main(int argc, char **argv)
                         exposureFactor[i] = 1.4;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -883,7 +883,7 @@ int main(int argc, char **argv)
                         alpha[i] = 0.4;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_rain_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -895,9 +895,9 @@ int main(int argc, char **argv)
                     testCaseName = "threshold";
                     Rpp32f normFactor = 1;
                     Rpp32f subtractionFactor = 0;
-                    if (inputBitDepth == 1 || inputBitDepth == 2)
+                    if (BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32)
                         normFactor = 255;
-                    else if (inputBitDepth == 5)
+                    else if (BitDepthTestMode == I8_TO_I8)
                         subtractionFactor = 128;
 
                     for (int i = 0; i < batchSize; i++)
@@ -910,7 +910,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_threshold_gpu(d_input, srcDescPtr, d_output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -928,7 +928,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -946,7 +946,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -967,7 +967,7 @@ int main(int argc, char **argv)
                         angle[i] = 50;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -995,7 +995,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1011,7 +1011,7 @@ int main(int argc, char **argv)
                     init_lens_correction(batchSize, srcDescPtr, cameraMatrix, distortionCoeffs, tableDescPtr);
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1042,7 +1042,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1064,7 +1064,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1079,7 +1079,7 @@ int main(int argc, char **argv)
                         stdDevTensor[i] = 50.0;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDevTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1099,7 +1099,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1110,9 +1110,9 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "erase";
 
-                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, BitDepthTestMode);
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1131,7 +1131,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_crop_and_patch_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, cropRoi, patchRoi, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1149,27 +1149,27 @@ int main(int argc, char **argv)
                     Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
                     Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
                     Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         for (j = 0; j < 256; j++)
                             lut8u[j] = (Rpp8u)(255 - j);
-                    else if (inputBitDepth == 3)
+                    else if (BitDepthTestMode == U8_TO_F16)
                         for (j = 0; j < 256; j++)
                             lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
-                    else if (inputBitDepth == 4)
+                    else if (BitDepthTestMode == U8_TO_F32)
                         for (j = 0; j < 256; j++)
                             lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
-                    else if (inputBitDepth == 5)
+                    else if (BitDepthTestMode == I8_TO_I8)
                         for (j = 0; j < 256; j++)
                             lut8s[j] = (Rpp8s)(255 - j - 128);
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 3)
+                    else if (BitDepthTestMode == U8_TO_F16)
                         rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 4)
+                    else if (BitDepthTestMode == U8_TO_F32)
                         rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 5)
+                    else if (BitDepthTestMode == I8_TO_I8)
                         rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1193,7 +1193,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_glitch_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1213,7 +1213,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1228,7 +1228,7 @@ int main(int argc, char **argv)
                         hueShift[i] = 60.0;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_hue_gpu(d_input, srcDescPtr, d_output, dstDescPtr, hueShift, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1243,7 +1243,7 @@ int main(int argc, char **argv)
                         saturationFactor[i] = 5;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_saturation_gpu(d_input, srcDescPtr, d_output, dstDescPtr, saturationFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1263,7 +1263,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1316,7 +1316,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1347,7 +1347,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1362,7 +1362,7 @@ int main(int argc, char **argv)
                         adjustment[i] = 70;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1377,7 +1377,7 @@ int main(int argc, char **argv)
                         intensity[i] = 6;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_vignette_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensity, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1390,7 +1390,7 @@ int main(int argc, char **argv)
                     Rpp32u kernelSize = additionalParam;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_erode_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1403,7 +1403,7 @@ int main(int argc, char **argv)
                     Rpp32u kernelSize = additionalParam;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1422,7 +1422,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1440,7 +1440,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_median_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1458,7 +1458,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1470,7 +1470,7 @@ int main(int argc, char **argv)
                     testCaseName = "magnitude";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1482,7 +1482,7 @@ int main(int argc, char **argv)
                     testCaseName = "phase";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_phase_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1494,7 +1494,7 @@ int main(int argc, char **argv)
                     testCaseName = "bitwise_and";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_bitwise_and_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1506,7 +1506,7 @@ int main(int argc, char **argv)
                     testCaseName = "bitwise_not";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_bitwise_not_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1518,7 +1518,7 @@ int main(int argc, char **argv)
                     testCaseName = "bitwise_xor";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_bitwise_xor_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1530,7 +1530,7 @@ int main(int argc, char **argv)
                     testCaseName = "bitwise_or";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
+                    if (BitDepthTestMode == U8_TO_U8)
                         rppt_bitwise_or_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1542,7 +1542,7 @@ int main(int argc, char **argv)
                     testCaseName = "copy";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
                     else
                         missingFuncFlag = 1;
@@ -1561,7 +1561,7 @@ int main(int argc, char **argv)
                     CHECK_RETURN_STATUS(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_remap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1598,7 +1598,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, meanTensor, stdDevTensor, mirror, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1616,7 +1616,7 @@ int main(int argc, char **argv)
                         init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1634,7 +1634,7 @@ int main(int argc, char **argv)
                     translateVector.y = 0.0;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1661,7 +1661,7 @@ int main(int argc, char **argv)
                     // spatterColor.B = 64;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1678,7 +1678,7 @@ int main(int argc, char **argv)
                         fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
@@ -1694,7 +1694,7 @@ int main(int argc, char **argv)
                     RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
                     else
                         missingFuncFlag = 1;
@@ -1709,7 +1709,7 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1721,7 +1721,7 @@ int main(int argc, char **argv)
                     testCaseName = "tensor_min";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_tensor_min_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1733,7 +1733,7 @@ int main(int argc, char **argv)
                     testCaseName = "tensor_max";
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1748,7 +1748,7 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_tensor_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1764,7 +1764,7 @@ int main(int argc, char **argv)
                     memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1786,7 +1786,7 @@ int main(int argc, char **argv)
                     init_slice(descriptorPtr3D, roiTensorPtrSrc, roiTensor, anchorTensor, shapeTensor);
 
                     startWallTime = omp_get_wtime();
-                    if((inputBitDepth == 0 || inputBitDepth == 2) && srcDescPtr->layout == dstDescPtr->layout)
+                    if((BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && srcDescPtr->layout == dstDescPtr->layout)
                         rppt_slice_gpu(d_input, descriptorPtr3D, d_output, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
@@ -1797,7 +1797,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "jpeg_compression_distortion";
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_jpeg_compression_distortion_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1812,7 +1812,7 @@ int main(int argc, char **argv)
                         posterizeLevelBits[i] = 3;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_posterize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, posterizeLevelBits, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1827,7 +1827,7 @@ int main(int argc, char **argv)
                         thresholdTensor[i] = 0.5;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         rppt_solarize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, thresholdTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
@@ -1856,7 +1856,7 @@ int main(int argc, char **argv)
         }
         wallTime *= 1000;
 
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
         {
             cout <<"\n\n";
             if(noOfIterations > 1)
@@ -1904,7 +1904,7 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && BitDepthTestMode == U8_TO_U8 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
                     if (testCase == TENSOR_SUM)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
@@ -1919,7 +1919,7 @@ int main(int argc, char **argv)
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
                 // Reconvert other bit depths to 8u for output display purposes
-                convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
+                convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
                 if(DEBUG_MODE && iterCount == 0)
@@ -1972,7 +1972,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && (inputBitDepth == 0 || inputBitDepth == 2) && (!(randomOutputCase) && !(nonQACase)))
+                if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (!(randomOutputCase) && !(nonQACase)))
                     compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
@@ -2004,7 +2004,7 @@ int main(int argc, char **argv)
         }
     }
     rppDestroy(handle, backend);
-    if(testType == 1)
+    if(testType == PERFORMANCE_TEST) // performance test mode
     {
         // Display measured times
         maxWallTime *= 1000;
