@@ -428,7 +428,7 @@ RppStatus resize_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst);                             // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
                     //Boundary checks for f32
-                    rpp_pixel_check_0to1(pDst,3);
+                    rpp_pixel_check_0to1(pDst, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -532,7 +532,7 @@ RppStatus resize_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_rmn_24_host(pDst, pRMNParams);
                     //Boundary checks for f32
-                    rpp_pixel_check_0to1(pDst, 4);
+                    rpp_pixel_check_0to1(pDst, 3);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst);   // Store dst pixels
                     dstPtrTemp += vectorIncrementPkd;
                 }
