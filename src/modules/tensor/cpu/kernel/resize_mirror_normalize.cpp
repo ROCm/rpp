@@ -347,7 +347,7 @@ RppStatus resize_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);     // Check if the dstImgSize exceeds dst buffer size
         Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Rpp32u maxHeightLimit = roi.xywhROI.roiHeight - 2; // subtract 2 to prevents bilinear out-of-bounds reads, ensuring correct edges & QA pass.
+        Rpp32u maxHeightLimit = roi.xywhROI.roiHeight - 2; // subtract 2 to prevent bilinear out-of-bounds reads, ensuring correct edges & QA pass.
         Rpp32u maxWidthLimit = (roi.xywhROI.roiWidth - 2) * srcDescPtr->strides.wStride;
         Rpp32s maxWidthLimitMinusStride = maxWidthLimit - srcDescPtr->strides.wStride;
         Rpp32f hOffset = (hRatio - 1) * 0.5f - INTERP_BILINEAR_KERNEL_RADIUS;
