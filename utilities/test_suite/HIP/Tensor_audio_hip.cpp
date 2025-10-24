@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     string scriptPath = argv[7];
 
     // validation checks
-    if (testType == 0 && batchSize != 3)
+    if (testType == UNIT_TEST && batchSize != 3) // unit test mode
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             wallTime = endWallTime - startWallTime;
@@ -385,7 +385,7 @@ int main(int argc, char **argv)
         }
 
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             CHECK_RETURN_STATUS(hipDeviceSynchronize());
@@ -415,7 +415,7 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     // performance test mode
-    if (testType == 1)
+    if (testType == PERFORMANCE_TEST) // performance test mode
     {
         // display measured times
         maxWallTime *= 1000;
