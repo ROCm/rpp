@@ -160,14 +160,13 @@ if (RPP_AUDIO_SUPPORT)
     find_package(FFTS QUIET)
     if(FFTS_FOUND)
         add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
-        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
         message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
     else()
-        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 0)  # Disable audio augmentations if FFTS not found
-        message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
+        set(RPP_AUDIO_SUPPORT OFF)              # Disable audio support if FFTS not found
+        message("-- ${Yellow}FFTS not found. ${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
     endif()
 else()
-    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 0)
+    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
 
 if (RPP_LEGACY_SUPPORT)
@@ -339,14 +338,7 @@ target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 if(RPP_AUDIO_SUPPORT)
-    if(FFTS_FOUND)
-        target_link_libraries(${PROJECT_NAME} FFTS::FFTS)
-        message("-- ${Green}${PROJECT_NAME} building with RPP_AUDIO_SUPPORT (FFTS found)${ColourReset}")
-    else()
-        message("-- ${Yellow}FFTS not found. ${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
-    endif()
-else()
-    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
+    target_link_libraries(${PROJECT_NAME} FFTS::FFTS)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 

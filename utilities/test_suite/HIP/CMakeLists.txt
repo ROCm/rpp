@@ -113,11 +113,11 @@ else()
     if("${BACKEND}" STREQUAL "HIP")
 
         # RPP installation - Audio support check
-        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
+        set(RPP_AUDIO_SUPPORT 0)
         if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h)
             file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
-            string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
-            set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
+            string(REGEX MATCH "RPP_AUDIO_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
+            set(RPP_AUDIO_SUPPORT ${CMAKE_MATCH_1})
         endif()
 
         # add find modules
@@ -223,7 +223,7 @@ else()
                         endif(NIFTI_FOUND)
 
                         # HIP test set 3 - RPP Tensor-Audio HIP test suite
-                        if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        if(RPP_AUDIO_SUPPORT)
                             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with RPP_AUDIO_SUPPORT set to ON${ColourReset}")
                             if(libsnd_LIBS)
@@ -238,7 +238,7 @@ else()
                             endif(libsnd_LIBS)
                         else()
                             message("-- ${Yellow}Warning: RPP_AUDIO_SUPPORT not found in RPP installation. It must be installed to build ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
-                        endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        endif(RPP_AUDIO_SUPPORT)
 
                         # HIP test set 4 - RPP Tensor-Misc HIP test suite
                         add_executable(Tensor_misc_hip Tensor_misc_hip.cpp)
