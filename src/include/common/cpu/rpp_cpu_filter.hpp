@@ -89,7 +89,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
 
     Rpp32f accum = 0.0f;
 
-    if((kernelSize != rowKernelLoopLimit) || (kernelSize != columnKernelLoopLimit))
+    if (rowKernelLoopLimit < kernelSize || columnKernelLoopLimit < kernelSize)
     {
         for (int i = 0; i < kernelSize; i++)
         {
@@ -132,7 +132,10 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
                     pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels] + 128);
                 else
                     pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels]);
-                accum += static_cast<Rpp64f>(pixel) * static_cast<Rpp64f>(filterTensor[i * kernelSize + j]);
+
+                // Apply filter
+                accum += pixel * filterTensor[i * kernelSize + j];
+                // accum = std::fmaf(pixel,filterTensor[i * kernelSize + j], accum);
             }
         }
     }
@@ -140,9 +143,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
     // Round if required and store result
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
         accum = nearbyintf(accum);
-
-    Rpp32f accum_f32 = static_cast<Rpp32f>(accum);
-    saturate_pixel(accum_f32, dstPtrTemp);
+    saturate_pixel(accum, dstPtrTemp);
 }
 
 // process padLength number of columns in each row
@@ -386,10 +387,9 @@ inline void permute_blend_add_3x3(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m2
     pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
     pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask1), pxMask[roatateMask1]), pFilter[1]);
     pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask2), pxMask[roatateMask2]), pFilter[2]);
-      // Add bias (128.0f)
-    __m256 bias = _mm256_set1_ps(0.0f);
-    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-    pDst = _mm256_add_ps(pDst, bias);  // Add bias to final result
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
 }
 
 inline void permute_blend_add_5x5_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
@@ -400,10 +400,14 @@ inline void permute_blend_add_5x5_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, 
     pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
     pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
     pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
 }
 
-inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
+inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte)
 {
     __m256 pTemp[5];
     pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
@@ -411,7 +415,11 @@ inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[2]);
     pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 1), avx_pxMaskRotate0To1), pFilter[3]);
     pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
 }
 
 inline void permute_blend_add_7x7_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
@@ -424,7 +432,13 @@ inline void permute_blend_add_7x7_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 15), avx_pxMaskRotate0To4), pFilter[4]);
     pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 31), avx_pxMaskRotate0To5), pFilter[5]);
     pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[6]);
-    pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
+    pDst = _mm256_add_ps(pDst, pTemp[5]);
+    pDst = _mm256_add_ps(pDst, pTemp[6]);
 }
 
 inline void permute_blend_add_7x7_pkd(__m256 &pDst, __m256 *pRow, __m256 pRow2, __m256 *pFilter)
@@ -437,7 +451,13 @@ inline void permute_blend_add_7x7_pkd(__m256 &pDst, __m256 *pRow, __m256 pRow2, 
     pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 15), avx_pxMaskRotate0To4), pFilter[4]);
     pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 127), avx_pxMaskRotate0To7), pFilter[5]);
     pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow2, 3), avx_pxMaskRotate0To2), pFilter[6]);
-    pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
+    pDst = _mm256_add_ps(pDst, pTemp[5]);
+    pDst = _mm256_add_ps(pDst, pTemp[6]);
 }
 
 inline void permute_blend_add_9x9_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
@@ -452,7 +472,15 @@ inline void permute_blend_add_9x9_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[6]);
     pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 127), avx_pxMaskRotate0To7), pFilter[7]);
     pTemp[8] = _mm256_mul_ps(pRow[1], pFilter[8]);
-    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
+    pDst = _mm256_add_ps(pDst, pTemp[5]);
+    pDst = _mm256_add_ps(pDst, pTemp[6]);
+    pDst = _mm256_add_ps(pDst, pTemp[7]);
+    pDst = _mm256_add_ps(pDst, pTemp[8]);
 }
 
 inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
@@ -467,7 +495,15 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow[3], 3), avx_pxMaskRotate0To2), pFilter[6]);
     pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow[3], 31), avx_pxMaskRotate0To5), pFilter[7]);
     pTemp[8] = _mm256_mul_ps(pRow[3], pFilter[8]);
-    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+    pDst = _mm256_add_ps(pDst, pTemp[0]);
+    pDst = _mm256_add_ps(pDst, pTemp[1]);
+    pDst = _mm256_add_ps(pDst, pTemp[2]);
+    pDst = _mm256_add_ps(pDst, pTemp[3]);
+    pDst = _mm256_add_ps(pDst, pTemp[4]);
+    pDst = _mm256_add_ps(pDst, pTemp[5]);
+    pDst = _mm256_add_ps(pDst, pTemp[6]);
+    pDst = _mm256_add_ps(pDst, pTemp[7]);
+    pDst = _mm256_add_ps(pDst, pTemp[8]);
 }
 
 // -------------------- Filter load functions for U8/I8 bitdepth --------------------
