@@ -132,8 +132,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
                     pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels] + 128);
                 else
                     pixel = static_cast<Rpp32f>(srcPtrTemp[i][j * channels]);
-
-                accum += pixel * filterTensor[i * kernelSize + j];
+                accum += static_cast<Rpp64f>(pixel) * static_cast<Rpp64f>(filterTensor[i * kernelSize + j]);
             }
         }
     }
@@ -142,7 +141,8 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
         accum = nearbyintf(accum);
 
-    saturate_pixel(accum, dstPtrTemp);
+    Rpp32f accum_f32 = static_cast<Rpp32f>(accum);
+    saturate_pixel(accum_f32, dstPtrTemp);
 }
 
 // process padLength number of columns in each row

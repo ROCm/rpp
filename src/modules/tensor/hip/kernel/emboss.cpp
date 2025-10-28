@@ -385,6 +385,8 @@ __global__ void emboss_3x3_pkd_tensor(T *srcPtr,
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -485,6 +487,8 @@ __global__ void emboss_5x5_pkd_tensor(T *srcPtr,
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -593,6 +597,8 @@ __global__ void emboss_7x7_pkd_tensor(T *srcPtr,
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -709,6 +715,8 @@ __global__ void emboss_9x9_pkd_tensor(T *srcPtr,
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -778,6 +786,8 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
@@ -821,6 +831,8 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
             emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
             emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
@@ -863,6 +875,8 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
             emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
             emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
@@ -934,6 +948,8 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
@@ -979,6 +995,8 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
             emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
             emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
@@ -1022,6 +1040,8 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
             emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
             emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
@@ -1097,6 +1117,8 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
@@ -1142,6 +1164,8 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
             emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
             emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
@@ -1188,6 +1212,8 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
             emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
             emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
@@ -1267,6 +1293,8 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
@@ -1316,6 +1344,8 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
             emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
             emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
 
@@ -1364,6 +1394,8 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
             emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
             emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
+            if constexpr (std::is_same<T, float>::value)
+                rpp_hip_pixel_check_0to1(&sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
     }
@@ -1459,6 +1491,8 @@ __global__ void emboss_3x3_pkd3_pln3_tensor(T *srcPtr,
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
@@ -1558,6 +1592,8 @@ __global__ void emboss_5x5_pkd3_pln3_tensor(T *srcPtr,
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
@@ -1666,6 +1702,8 @@ __global__ void emboss_7x7_pkd3_pln3_tensor(T *srcPtr,
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
@@ -1782,6 +1820,8 @@ __global__ void emboss_9x9_pkd3_pln3_tensor(T *srcPtr,
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
 }
@@ -1879,6 +1919,8 @@ __global__ void emboss_3x3_pln3_pkd3_tensor(T *srcPtr,
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         emboss_3x3_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -1982,6 +2024,8 @@ __global__ void emboss_5x5_pln3_pkd3_tensor(T *srcPtr,
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         emboss_5x5_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -2093,6 +2137,8 @@ __global__ void emboss_7x7_pln3_pkd3_tensor(T *srcPtr,
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         emboss_7x7_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }
@@ -2210,6 +2256,8 @@ __global__ void emboss_9x9_pln3_pkd3_tensor(T *srcPtr,
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         emboss_9x9_row_hip_compute(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
+        if constexpr (std::is_same<T, float>::value)
+            rpp_hip_pixel_check_0to1(&sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
 }

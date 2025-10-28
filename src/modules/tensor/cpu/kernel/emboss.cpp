@@ -389,7 +389,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                                 permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIdx + 1], pRow[rowIdx + 2], &pFilter[filterIndex], pxMaskPln);
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
-                                rpp_pixel_check_0to1(pResult, 2);
+                                rpp_pixel_check_0to1(pResult, 6);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -589,7 +589,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             if constexpr (std::is_same<T, Rpp32f>::value)
-                                rpp_pixel_check_0to1(pResultPln, 1);
+                                rpp_pixel_check_0to1(pResultPln, 3);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -1138,7 +1138,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
                             if constexpr (std::is_same<T, Rpp32f>::value)
-                                rpp_pixel_check_0to1(pResultPln, 1);
+                                rpp_pixel_check_0to1(pResultPln, 3);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
