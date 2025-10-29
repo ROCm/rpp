@@ -650,7 +650,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
-        Rpp32u hFlipFactor = (vectorIncrement - 3) * horizontalFlag;
+        Rpp32u hFlipFactor = (vectorIncrement - 3) * horizontalFlag; // subtract 3 for RGB channels
         Rpp32s srcPtrIncrementPerChannel = (horizontalFlag)? -vectorIncrementPerChannel : vectorIncrementPerChannel;
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
