@@ -84,7 +84,7 @@ int main(int argc, char **argv)
             cout << "\ndst = " << argv[3];
         cout << "\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = " << argv[4];
         cout << "\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = " << argv[5];
-        cout << "\ncase number (0:94) = " << argv[6];
+        cout << "\ncase number (0:96) = " << argv[6];
         cout << "\nnumber of times to run = " << argv[8];
         cout << "\ntest type - (0 = unit tests / 1 = performance tests) = " << argv[9];
         cout << "\nlayout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1) = " << argv[10];
