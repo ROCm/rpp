@@ -212,7 +212,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                            Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                             convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
@@ -271,7 +271,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
@@ -327,7 +327,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         int channel = c % 3;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -365,7 +365,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, padVertical);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, padVertical);
                             dstPtrTemp++;
                         }
                     }
@@ -407,7 +407,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         for (int c = 0; c < 3; c++)
                         {
                             convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
@@ -478,7 +478,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                            Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                             convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
@@ -533,7 +533,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
@@ -571,7 +571,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, padVertical);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, padVertical);
                             dstPtrTemp++;
                         }
                     }
@@ -609,7 +609,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
                             convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
@@ -670,7 +670,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         int channel = vectorLoopCount % 3;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -747,7 +747,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                            Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                             convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
@@ -807,7 +807,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
@@ -845,7 +845,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, padVertical);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, padVertical);
                             dstPtrTemp++;
                         }
                     }
@@ -883,7 +883,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
                             convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
@@ -946,7 +946,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         int channel = vectorLoopCount % 3;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -1022,7 +1022,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                            Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                             convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
@@ -1083,7 +1083,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
@@ -1120,7 +1120,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, -1, padVertical);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 0, padVertical);
                             dstPtrTemp++;
                         }
                     }
@@ -1159,7 +1159,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                            Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                             convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
@@ -1220,7 +1220,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        Rpp32s padHorizontal = vectorLoopCount < padLength ? -1 : vectorLoopCount > unpaddedWidth - 1 ? 1 : 0;
+                        Rpp32s padHorizontal = vectorLoopCount < padLength ? 0 : 1;
                         int channel = vectorLoopCount % 3;
                         convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padHorizontal, padVertical, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -1432,90 +1432,90 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
 }
 
 template RppStatus emboss_host_tensor<Rpp8u>(Rpp8u*,
-                                      RpptDescPtr,
-                                      Rpp8u*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                             RpptDescPtr,
+                                             Rpp8u*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32u,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             RppLayoutParams,
+                                             rpp::Handle&);
 template RppStatus emboss_host_tensor<Rpp32f>(Rpp32f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              RppLayoutParams,
+                                              rpp::Handle&);
 template RppStatus emboss_host_tensor<Rpp16f>(Rpp16f*,
-                                      RpptDescPtr,
-                                      Rpp16f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                              RpptDescPtr,
+                                              Rpp16f*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              RppLayoutParams,
+                                              rpp::Handle&);
 template RppStatus emboss_host_tensor<Rpp8s>(Rpp8s*,
-                                      RpptDescPtr,
-                                      Rpp8s*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                             RpptDescPtr,
+                                             Rpp8s*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32u,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             RppLayoutParams,
+                                             rpp::Handle&);
 template RppStatus emboss_generic_host_tensor<Rpp8u>(Rpp8u*,
-                                      RpptDescPtr,
-                                      Rpp8u*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                                     RpptDescPtr,
+                                                     Rpp8u*,
+                                                     RpptDescPtr,
+                                                     Rpp32f*,
+                                                     Rpp32f*,
+                                                     Rpp32u,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     RppLayoutParams,
+                                                     rpp::Handle&);
 template RppStatus emboss_generic_host_tensor<Rpp32f>(Rpp32f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                                      RpptDescPtr,
+                                                      Rpp32f*,
+                                                      RpptDescPtr,
+                                                      Rpp32f*,
+                                                      Rpp32f*,
+                                                      Rpp32u,
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      RppLayoutParams,
+                                                      rpp::Handle&);
 template RppStatus emboss_generic_host_tensor<Rpp16f>(Rpp16f*,
-                                      RpptDescPtr,
-                                      Rpp16f*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                                      RpptDescPtr,
+                                                      Rpp16f*,
+                                                      RpptDescPtr,
+                                                      Rpp32f*,
+                                                      Rpp32f*,
+                                                      Rpp32u,
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      RppLayoutParams,
+                                                      rpp::Handle&);
 template RppStatus emboss_generic_host_tensor<Rpp8s>(Rpp8s*,
-                                      RpptDescPtr,
-                                      Rpp8s*,
-                                      RpptDescPtr,
-                                      Rpp32f*,
-                                      Rpp32f*,
-                                      Rpp32u,
-                                      RpptROIPtr,
-                                      RpptRoiType,
-                                      RppLayoutParams,
-                                      rpp::Handle&);
+                                                     RpptDescPtr,
+                                                     Rpp8s*,
+                                                     RpptDescPtr,
+                                                     Rpp32f*,
+                                                     Rpp32f*,
+                                                     Rpp32u,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     RppLayoutParams,
+                                                     rpp::Handle&);
