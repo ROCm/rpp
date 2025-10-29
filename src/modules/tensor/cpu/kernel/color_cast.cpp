@@ -652,7 +652,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                     __m256 p[4];
+                    __m256 p[4];
 
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     compute_color_cast_24_host(p, pMul, pAdd);    // color_cast adjustment
@@ -663,9 +663,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
 
                     for(int cnt = 0; cnt < 12; cnt++)
-                    {
                         *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtrTemp + cnt);
-                    }
 
                     __m128 p[4];
 
@@ -727,7 +725,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256 p[1];
+                    __m256 p[4];
 
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
                     compute_color_cast_24_host(p, pMul, pAdd);    // color_cast adjustment
@@ -753,9 +751,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < 12; cnt++)
-                    {
                         *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                    }
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -809,9 +805,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
                     for(int cnt = 0; cnt < 12; cnt++)
-                    {
                         *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtrTemp + cnt);
-                    }
 
                     __m128 p[4];
 
@@ -822,9 +816,7 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
 
                     for(int cnt = 0; cnt < 12; cnt++)
-                    {
                         *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                    }
 #endif
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
