@@ -719,10 +719,9 @@ static inline __m256 log_ps(__m256 x)
     __m256 e;
     __m256i emm0;
     __m256 one = *(__m256 *)&avx_p1;
-    __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
-
     // cut off denormalized stuff
     x = _mm256_max_ps(x, *(__m256 *)&_ps_min_norm_pos_avx);
+    __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
 
     // part 1: x = frexpf(x, &e);
     emm0 = _mm256_srli_epi32(_mm256_castps_si256(x), 23);
@@ -781,10 +780,9 @@ static inline __m128 log_ps(__m128 x)
     __m128 e;
     __m128i emm0;
     __m128 one = *(__m128 *)&_ps_1;
-    __m128 invalid_mask = _mm_cmple_ps(x, xmm_p0);
-
     // cut off denormalized stuff
     x = _mm_max_ps(x, *(__m128 *)&_ps_min_norm_pos);
+    __m128 invalid_mask = _mm_cmple_ps(x, xmm_p0);
 
     // part 1: x = frexpf(x, &e);
     emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
@@ -869,10 +867,8 @@ inline Rpp32f rpp_hsum_ps(__m256 x)
 /* Computes inverse square root */
 inline Rpp32f rpp_rsqrt_ps(Rpp32f x)
 {
-    __m128 X = _mm_set_ss(x);
-    __m128 tmp = _mm_rsqrt_ss(X);
-    Rpp32f y = _mm_cvtss_f32(tmp);
-    return y * (1.5f - x * 0.5f * y * y);
+    //raw C version of scalar
+    return 1.0f / std::sqrt(x);
 }
 
 /* Compute inverse square root */
