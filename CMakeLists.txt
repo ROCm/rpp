@@ -160,6 +160,7 @@ if (RPP_AUDIO_SUPPORT)
     find_package(FFTS QUIET)
     if(FFTS_FOUND)
         add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
+        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
         message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
     else()
         set(RPP_AUDIO_SUPPORT OFF)              # Disable audio support if FFTS not found
