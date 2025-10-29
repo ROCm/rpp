@@ -124,12 +124,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = static_cast<Rpp64u>(oBufferSize * RESAMPLE_BUFFER_SCALE_FACTOR);
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -300,11 +300,14 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "resample";
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -347,12 +350,14 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
+                    // height & width for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     srcDimsTensor[0] = 257;
-                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[1] = 3170;
                     srcDimsTensor[2] = 257;
-                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[3] = 552;
                     srcDimsTensor[4] = 257;
-                    srcDimsTensor[5] = 214;
+                    srcDimsTensor[5] = 1131;
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
@@ -395,7 +400,7 @@ int main(int argc, char **argv)
             if (testCase != NON_SILENT_REGION_DETECTION)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
             else
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
