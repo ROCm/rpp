@@ -198,15 +198,19 @@ for case in caseList:
     if int(case) not in miscAugmentationMap:
         continue
     for numDims in numDimsList:
+        # Runs transpose functionality for all transposeOrder values ranging from 1 to numDims - 1
         if miscAugmentationMap[int(case)][0] == "transpose":
             for transposeOrder in range(1, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder)
+        # Runs normalize functionality for all axisMask values - 1 to 2^numDims - 1
         elif miscAugmentationMap[int(case)][0] == "normalize":
             for axisMask in range(1, pow(2, numDims)):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+        # Runs concat functionality for all axisMask values - 0 to numDims - 1
         elif miscAugmentationMap[int(case)][0] == "concat":
             for axisMask in range(0, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+        # Runs all other functionalities
         else:
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)
 
