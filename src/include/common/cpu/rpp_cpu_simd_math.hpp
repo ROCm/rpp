@@ -865,7 +865,7 @@ inline Rpp32f rpp_hsum_ps(__m256 x)
 }
 
 /* Computes inverse square root */
-inline Rpp32f rpp_rsqrt_ps(Rpp32f x)
+inline Rpp32f rpp_math_inverse_square_root(Rpp32f x)
 {
     //raw C version of scalar
     return 1.0f / std::sqrt(x);
@@ -915,14 +915,14 @@ inline void rpp_rsqrt_sse(Rpp32f *input, Rpp64s numElements, Rpp32f eps, Rpp32f 
     if (eps)
     {
         for (; i < numElements; i++)
-            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * mul;
+            input[i] = rpp_math_inverse_square_root(input[i] * rdiv + eps) * mul;
     }
     else
     {
         for (; i < numElements; i++)
         {
             Rpp32f x = input[i] * rdiv;
-            input[i] = x ? rpp_rsqrt_ps(x) * mul : 0;
+            input[i] = x ? rpp_math_inverse_square_root(x) * mul : 0;
         }
     }
 }
@@ -971,14 +971,14 @@ inline void rpp_rsqrt_avx(Rpp32f *input, Rpp32s numElements, Rpp32f eps, Rpp32f 
     if (eps)
     {
         for (; i < numElements; i++)
-            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * scale;
+            input[i] = rpp_math_inverse_square_root(input[i] * rdiv + eps) * scale;
     }
     else
     {
         for (; i < numElements; i++)
         {
             Rpp32f x = input[i] * rdiv;
-            input[i] = x ? rpp_rsqrt_ps(x) * scale : 0;
+            input[i] = x ? rpp_math_inverse_square_root(x) * scale : 0;
         }
     }
 }
