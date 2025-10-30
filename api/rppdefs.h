@@ -36,7 +36,11 @@ SOFTWARE.
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
 #endif // HIP_COMPILE
-#include <half/half.hpp>
+#if __has_include(<half/half.hpp>)
+    #include <half/half.hpp>
+#else
+    #include <half.hpp>
+#endif
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
@@ -463,6 +467,16 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
+
+/*! \brief RPPT Image Border Type
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    REPLICATE = 0,     // Similar to Nearest Neighbors Padding
+    CONSTANT,          // Unsupported Border Type
+    REFLECT_NO_EDGE    // Unsupported Border Type
+} RpptImageBorderType;
 
 /*! \brief RPPT Mel Scale Formula
  * \ingroup group_rppdefs

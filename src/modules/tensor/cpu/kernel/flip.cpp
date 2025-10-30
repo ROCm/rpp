@@ -343,6 +343,11 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u hFactor = roi.xywhROI.xy.x * layoutParams.bufferMultiplier;
         Rpp32u vFactor = roi.xywhROI.xy.y * srcDescPtr->strides.hStride;
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
+        constexpr Rpp32u RGB_CHANNELS = 3;     // Number of channels in RGB processing.
+        
+        // The subtraction of elementsToSkip (typically RGB_CHANNELS - 1) from hFlipFactor
+        // ensures correct alignment of the source pointer for the remaining elements.
+        constexpr Rpp32u elementsToSkip = RGB_CHANNELS - 1;    // Skip two elements to align with the processing logic for RGB channels.
 
         // Initialize load functions with default values
         auto load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_avx;
@@ -424,7 +429,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                srcPtrTemp += hFlipFactor;
+                srcPtrTemp += hFlipFactor - elementsToSkip;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = srcPtrTemp[0];
@@ -520,7 +525,7 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
-                srcPtrTemp += hFlipFactor;
+                srcPtrTemp += hFlipFactor - elementsToSkip;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     dstPtrTemp[0] = srcPtrTemp[0];

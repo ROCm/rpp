@@ -42,7 +42,7 @@ __global__ void fill_value_ncdhw_hip_tensor(T *dstPtr,
 
     uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
     d_float8 val_f8;
-    val_f8.f4[0] = (float4)(*fillValue);
+    val_f8.f4[0] = MAKE_FLOAT4(*fillValue);
     val_f8.f4[1] = val_f8.f4[0];
     for(int c = 0; c < channels; c++)
     {
@@ -68,7 +68,7 @@ __global__ void fill_value_ndhwc_hip_tensor(T *dstPtr,
 
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
     d_float24 val_f24;
-    val_f24.f4[0] = (float4)(*fillValue);
+    val_f24.f4[0] = MAKE_FLOAT4(*fillValue);
     val_f24.f4[1] = val_f24.f4[0];
     val_f24.f4[2] = val_f24.f4[0];
     val_f24.f4[3] = val_f24.f4[0];
@@ -360,7 +360,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    roiTensor,
                                    handle,
                                    numDims);
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     }
 
     if(numDims == 4)

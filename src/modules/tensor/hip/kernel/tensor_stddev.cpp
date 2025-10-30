@@ -192,7 +192,7 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    float4 accum_f4 = static_cast<float4>(0.0f);
+    float4 accum_f4 = FLOAT4_ZERO;
     while (id_x < xBufferLength)
     {
         uint srcIdx = ((id_z * xBufferLength) + id_x) * 4;
@@ -245,7 +245,7 @@ __global__ void tensor_variance_pln1_hip(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    float4 mean_f4 = static_cast<float4>(mean[id_z]);
+    float4 mean_f4 = MAKE_FLOAT4(mean[id_z]);
 
     __shared__ float partialVariance_smem[16][16];                                   // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     float *partialVarianceRowPtr_smem = &partialVariance_smem[hipThreadIdx_y][0];    // float pointer to beginning of each row in _smem
@@ -320,10 +320,10 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
     partialGVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialBVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
-    float4 meanR_f4 = static_cast<float4>(meanPtr_f4[id_z].x);
-    float4 meanG_f4 = static_cast<float4>(meanPtr_f4[id_z].y);
-    float4 meanB_f4 = static_cast<float4>(meanPtr_f4[id_z].z);
-    float4 meanTensor_f4 = static_cast<float4>(meanPtr_f4[id_z].w);
+    float4 meanR_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].x);
+    float4 meanG_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].y);
+    float4 meanB_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].z);
+    float4 meanTensor_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].w);
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
@@ -379,10 +379,10 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
     partialGVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialBVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
-    float4 meanR_f4 = static_cast<float4>(meanPtr_f4[id_z].x);
-    float4 meanG_f4 = static_cast<float4>(meanPtr_f4[id_z].y);
-    float4 meanB_f4 = static_cast<float4>(meanPtr_f4[id_z].z);
-    float4 meanTensor_f4 = static_cast<float4>(meanPtr_f4[id_z].w);
+    float4 meanR_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].x);
+    float4 meanG_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].y);
+    float4 meanB_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].z);
+    float4 meanTensor_f4 = MAKE_FLOAT4(meanPtr_f4[id_z].w);
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
@@ -440,7 +440,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -466,7 +466,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -492,7 +492,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream()));
         hipLaunchKernelGGL(tensor_variance_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
