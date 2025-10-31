@@ -1668,7 +1668,7 @@ int main(int argc, char **argv)
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
-                    Rpp32f *mean = TensorMeanReferenceOutputs[inputChannels].data();
+                    Rpp32f *mean = TensorMeanReferenceOutputs_U8[inputChannels].data();
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
@@ -1833,14 +1833,24 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && BitDepthTestMode == U8_TO_U8 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && ((BitDepthTestMode == U8_TO_U8) || (BitDepthTestMode == F32_TO_F32)) && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
                     if (testCase == TENSOR_SUM)
-                        compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    {
+                        if (BitDepthTestMode == U8_TO_U8)
+                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                        else if (BitDepthTestMode == F32_TO_F32)
+                            compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    }
                     else if (testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                         compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
-                        compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    {
+                        if (BitDepthTestMode == U8_TO_U8)
+                            compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                        else if (BitDepthTestMode == F32_TO_F32)
+                            compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    }
                 }
             }
             else
