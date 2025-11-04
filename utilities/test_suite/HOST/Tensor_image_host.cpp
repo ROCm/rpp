@@ -1783,7 +1783,6 @@ int main(int argc, char **argv)
                                 rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
                             else
                                 missingFuncFlag = 1;
-                            
                             break;
                         }
                         default:
