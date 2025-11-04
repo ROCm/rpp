@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
     // other initializations
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture;
+    RppStatus errorCodeCapture =  RPP_SUCCESS;
     int maxSrcChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;

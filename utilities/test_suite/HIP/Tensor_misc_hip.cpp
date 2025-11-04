@@ -204,7 +204,7 @@ int main(int argc, char **argv)
     bool externalMeanStd = true;
 
     Rpp32u missingFuncFlag = 0;
-    RppStatus errorCodeCapture;
+    RppStatus errorCodeCapture =  RPP_SUCCESS;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     string testCaseName;
