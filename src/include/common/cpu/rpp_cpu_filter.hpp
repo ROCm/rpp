@@ -130,7 +130,8 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
 // left border pixels in image which does not have required pixels in 3x3 kernel, process them separately
 template<typename T>
 inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptBorderVerticalDirection padVertical)
 {
     for (int k = 0; k < padLength; k++)
     {
@@ -141,7 +142,8 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
 
 template<typename T>
 inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptBorderVerticalDirection padVertical)
 {
     for (int c = 0; c < 3; c++)
     {
@@ -160,7 +162,8 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
 
 template<typename T>
 inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptBorderVerticalDirection padVertical)
 {
     for (int c = 0; c < 3; c++)
     {
