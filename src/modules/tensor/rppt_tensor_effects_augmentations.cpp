@@ -3151,9 +3151,9 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                dstDescPtr,
                                                dropoutProbability,
                                                randomSeed,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              rpp::deref(rppHandle));
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
