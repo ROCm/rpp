@@ -144,7 +144,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, swapOrder, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
             elif imageAugmentationMap[int(case)][0] == "dropout":
-                # Run all variants of dropout type functions with additional argument of dropoutType = channel (based on future requirements, functionalites can be added)
+                # Run all variants of dropout type functions with additional argument of dropoutType = channel (based on future requirements, functionalities can be added)
                 for dropoutType in range(1):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, dropoutType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
