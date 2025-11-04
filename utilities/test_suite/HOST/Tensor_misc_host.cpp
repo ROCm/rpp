@@ -303,7 +303,7 @@ int main(int argc, char **argv)
         }
         if (errorCodeCapture != RPP_SUCCESS)
         {
-            cout << "\nThe function returned an error status\n";
+            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
             return errorCodeCapture;
         }
 
