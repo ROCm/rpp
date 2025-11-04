@@ -160,7 +160,7 @@ int main(int argc, char * argv[])
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture =  RPP_SUCCESS;
+    RppStatus errorCodeCapture = RPP_SUCCESS;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0, wallTime = 0;
     int noOfIterations = (int)noOfFiles / batchSize;
     string testCaseName;
