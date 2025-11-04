@@ -58,7 +58,7 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
                                                RpptROIPtr roiTensorPtrSrc,
                                                float *filterTensor)
 {
-     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
+    int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
     int id_y_o = hipBlockIdx_y * tileSize.y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -124,8 +124,6 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -217,8 +215,6 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -318,8 +314,6 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -427,8 +421,6 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -492,8 +484,6 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f8);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -525,8 +515,6 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -556,8 +544,6 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
             gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
-            if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -623,8 +609,6 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f8);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -658,8 +642,6 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -691,8 +673,6 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
             gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -762,8 +742,6 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f8);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -799,8 +777,6 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -834,8 +810,6 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
             gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -909,8 +883,6 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f8);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
         else
@@ -948,8 +920,6 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -986,8 +956,6 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 7][hipThreadIdx_x8], &sum_f8, filter_row8);
             gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y + 8][hipThreadIdx_x8], &sum_f8, filter_row9);
-            if constexpr (std::is_same<T, float>::value)
-                rpp_hip_pixel_check_0to1(&sum_f8);
             if constexpr (std::is_same<T, Rpp8s>::value)
                 rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
             else
@@ -1074,8 +1042,6 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1167,8 +1133,6 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1268,8 +1232,6 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1377,8 +1339,6 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pln3<RoundToNearest>(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
         else
@@ -1468,8 +1428,6 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
         gaussian_row_hip_compute<3>(&src_smem[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -1565,8 +1523,6 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.x + 4][hipThreadIdx_x8], &sum_f24.f8[0], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.y + 4][hipThreadIdx_x8], &sum_f24.f8[1], filter_row5);
         gaussian_row_hip_compute<5>(&src_smem[hipThreadIdx_y_channel.z + 4][hipThreadIdx_x8], &sum_f24.f8[2], filter_row5);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -1670,8 +1626,6 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.x + 6][hipThreadIdx_x8], &sum_f24.f8[0], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.y + 6][hipThreadIdx_x8], &sum_f24.f8[1], filter_row7);
         gaussian_row_hip_compute<7>(&src_smem[hipThreadIdx_y_channel.z + 6][hipThreadIdx_x8], &sum_f24.f8[2], filter_row7);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
@@ -1783,8 +1737,6 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.x + 8][hipThreadIdx_x8], &sum_f24.f8[0], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.y + 8][hipThreadIdx_x8], &sum_f24.f8[1], filter_row9);
         gaussian_row_hip_compute<9>(&src_smem[hipThreadIdx_y_channel.z + 8][hipThreadIdx_x8], &sum_f24.f8[2], filter_row9);
-        if constexpr (std::is_same<T, float>::value)
-            rpp_hip_pixel_check_0to1(&sum_f24);
         if constexpr (std::is_same<T, Rpp8s>::value)
             rpp_hip_pack_float24_pln3_and_store24_pkd3<RoundToNearest>(dstPtr + dstIdx, &sum_f24);
         else
