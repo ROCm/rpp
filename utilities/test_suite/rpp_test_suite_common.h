@@ -56,7 +56,7 @@ enum testType
 };
 
 // Create a map from RppStatus to string representation
-std::map<RppStatus, std::string> rppStatusToString = {
+inline std::map<RppStatus, std::string> rppStatusToString = {
     {RPP_SUCCESS,                               "RPP_SUCCESS"},
     {RPP_ERROR,                                 "RPP_ERROR"},
     {RPP_ERROR_INVALID_ARGUMENTS,               "RPP_ERROR_INVALID_ARGUMENTS"},
