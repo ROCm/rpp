@@ -160,7 +160,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
@@ -214,7 +214,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
@@ -268,7 +268,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
@@ -326,7 +326,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     // left border pixels in image which does not have required pixels in 3x3 box, process them separately
@@ -418,7 +418,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
@@ -472,7 +472,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
@@ -527,7 +527,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
@@ -601,7 +601,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
@@ -672,7 +672,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
@@ -731,7 +731,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
@@ -790,7 +790,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
@@ -863,7 +863,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
@@ -934,7 +934,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                        RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
@@ -992,7 +992,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
@@ -1052,7 +1052,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -1123,7 +1123,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
@@ -1229,7 +1229,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                    RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
@@ -1261,7 +1261,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                 process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
@@ -1294,7 +1294,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
 
                 // process padLength number of columns in each row
                 for (int k = 0; k < padLength; k++)
@@ -1337,7 +1337,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::BOTTOM_EDGE : RpptBorderVerticalDirection::TOP_EDGE;
+                RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                 process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                 vectorLoopCount += padLength * 3;
                 // process remaining columns in each row
