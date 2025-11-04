@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
+    bool dropoutTypeCase = (dropoutTypeCases.find(testCase) != dropoutTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
@@ -147,6 +148,14 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
+    if (testCase == DROPOUT)
+    {
+        switch (additionalParam)
+        {
+            case CHANNEL:
+                funcName += "_channel"; break;
+        }
+    }
     if (funcName.empty())
     {
         if (testType == UNIT_TEST)  // unit test mode
@@ -1752,6 +1761,36 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
+                    break;
+                }
+                case DROPOUT:
+                {
+                    testCaseName = "dropout";
+
+                    switch(additionalParam)
+                    {
+                        case CHANNEL:
+                        {
+                            testCaseName = "channel_dropout";
+                            Rpp32f dropoutProbability[batchSize];
+                            bool randomSeed = qaFlag ? 0 : 1;
+                            for (i = 0; i < batchSize; i++)
+                                dropoutProbability[i] = 0.4f;
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+                            break;
+                        }
+                        default:
+                        {
+                            missingFuncFlag = 1;
+                            break;
+                        }
+                    }
                     break;
                 }
                 default:
