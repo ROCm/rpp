@@ -468,6 +468,24 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Border Padding Vertical Direction
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    TOP_EDGE = 0,
+    BOTTOM_EDGE
+} RpptBorderVerticalDirection;
+
+/*! \brief RPPT Border Padding Horizontal Direction
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    LEFT_EDGE = 0,
+    RIGHT_EDGE
+} RpptBorderHorizontalDirection;
+
 /*! \brief RPPT Image Border Type
  * \ingroup group_rppdefs
  */
