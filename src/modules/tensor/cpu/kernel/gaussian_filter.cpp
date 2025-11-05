@@ -145,7 +145,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         dstPtrTemp += padLength;
 #if __AVX2__
                         Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[6], pDst[2];
@@ -167,6 +167,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
 
+                            // In each pass, convolution filter is applied 14 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 14);
                             dstPtrTemp += 14;
                         }
@@ -223,6 +224,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
 
+                        // In each pass, convolution filter is applied 24 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -288,6 +290,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         __m128 pDstPln[6];
                         rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store24_float_pkd_pln(dstPtrTempChannels, pDstPln);
+                        // In each pass, convolution filter is applied 24 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
                     }
@@ -338,7 +341,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     }
 #if __AVX2__
                     Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
                         __m256 pResult[6];
@@ -355,6 +358,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
 
+                            // In each pass, convolution filter is applied 14 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -420,7 +424,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         dstPtrTemp += padLength;
 #if __AVX2__
                         Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[10], pDst[2];
@@ -442,6 +446,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
 
+                            // In each pass, convolution filter is applied 12 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                             dstPtrTemp += 12;
                         }
@@ -503,6 +508,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
 
+                        // In each pass, convolution filter is applied 16 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
                         dstPtrTemp += 16;
                     }
@@ -553,7 +559,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     }
 #if __AVX2__
                     Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -564,6 +570,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -635,6 +642,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
+                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
@@ -690,7 +698,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         dstPtrTemp += padLength;
 #if __AVX2__
                         Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[14], pDst;
@@ -709,6 +717,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
                         }
@@ -766,6 +775,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                        // In each pass, convolution filter is applied 8 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
                     }
@@ -816,7 +826,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     }
 #if __AVX2__
                     Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -827,6 +837,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -896,6 +907,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
+                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
@@ -952,7 +964,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         dstPtrTemp += padLength;
 #if __AVX2__
                         Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[18], pDst;
@@ -970,6 +982,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
                         }
@@ -1027,6 +1040,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                        // In each pass, convolution filter is applied 8 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
                     }
@@ -1076,7 +1090,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     }
 #if __AVX2__
                     Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -1087,6 +1101,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -1156,6 +1171,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
+                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
