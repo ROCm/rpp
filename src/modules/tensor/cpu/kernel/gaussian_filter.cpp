@@ -25,26 +25,6 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
-inline void rpp_store_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp8s *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp32f *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp16f *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
-}
-
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
 {
     Rpp32f expFactor = - (iSquare + (j * j)) * mulFactor;
@@ -178,7 +158,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
 
-                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp16f>::value)
+                                rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8s>::value)
+                                rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8u>::value)
+                                rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
                             increment_row_ptrs(srcPtrTemp, kernelSize, 14);
                             dstPtrTemp += 14;
                         }
@@ -445,7 +433,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_5x5_pln(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                             }
 
-                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp16f>::value)
+                                rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8s>::value)
+                                rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8u>::value)
+                                rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
                             increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                             dstPtrTemp += 12;
                         }
@@ -498,8 +494,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_5x5_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
 
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp16f>::value)
+                            rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8s>::value)
+                            rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8u>::value)
+                            rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
 #endif
