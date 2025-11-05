@@ -187,15 +187,15 @@ int main(int argc, char **argv)
     bool externalMeanStd = true;
 
     Rpp32u missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
+        RppStatus errorCodeCapture = RPP_SUCCESS;
         switch(testCase)
         {
             case TRANSPOSE:
@@ -297,13 +297,12 @@ int main(int argc, char **argv)
 
         if (missingFuncFlag == 1)
         {
-            std::cout<<"\n inside";
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
         }
         if (errorCodeCapture != RPP_SUCCESS)
         {
-            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
+            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << str(perfCount + 1) << " of " << str(numRuns) << " runs.\n";
             return errorCodeCapture;
         }
 

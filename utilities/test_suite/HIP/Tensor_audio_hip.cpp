@@ -72,7 +72,6 @@ int main(int argc, char **argv)
 
     // other initializations
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     int maxSrcChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;
@@ -194,6 +193,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)
@@ -385,7 +385,7 @@ int main(int argc, char **argv)
             }
             if (errorCodeCapture != RPP_SUCCESS)
             {
-                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
+                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << str(perfRunCount + 1) << " of " << str(numRuns) << " runs.\n";
                 return errorCodeCapture;
             }
 

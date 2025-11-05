@@ -164,7 +164,6 @@ int main(int argc, char **argv)
 
     // Other initializations
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     int i = 0, j = 0;
     int maxHeight = 0, maxWidth = 0;
     int maxDstHeight = 0, maxDstWidth = 0;
@@ -544,6 +543,7 @@ int main(int argc, char **argv)
 
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             switch (testCase)
             {
@@ -1763,7 +1763,7 @@ int main(int argc, char **argv)
             }
             if (errorCodeCapture != RPP_SUCCESS)
             {
-                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
+                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << str(perfRunCount + 1) << " of " << str(numRuns) << " runs.\n";
                 return errorCodeCapture;
             }
 
