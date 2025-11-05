@@ -895,10 +895,10 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Channel Dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
+/*! \brief Channel dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
  * \details The channel dropout augmentation function erases one or more user defined channel from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
- *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- *          dstPtr depth ranges - Will be same depth as srcPtr.
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html effects_augmentations_channel_dropout_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
