@@ -169,7 +169,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[6], pDst[2];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -222,7 +222,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256 pRow[12], pDst[3];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -285,7 +285,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256 pRow[12], pDst[3];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -358,7 +358,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[6];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
