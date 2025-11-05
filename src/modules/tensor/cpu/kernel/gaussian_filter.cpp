@@ -144,12 +144,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[6], pDst[2];
-                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -205,12 +205,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256 pRow[12], pDst[3];
-                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -268,12 +268,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256 pRow[12], pDst[3];
-                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -337,7 +337,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
@@ -346,7 +346,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[6];
-                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -419,12 +419,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[10], pDst[2];
-                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
@@ -481,11 +481,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -552,7 +552,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -560,7 +560,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[10];
-                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
@@ -617,12 +617,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -689,12 +689,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[14], pDst;
-                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -748,11 +748,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[28], pDst;
-                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
                             permute_blend_add_7x7_pkd(pDst, &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
@@ -815,7 +815,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -823,7 +823,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[14];
-                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
@@ -879,11 +879,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[28], pDst[2];
-                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
@@ -951,12 +951,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[18], pDst;
-                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1009,11 +1009,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[36], pDst;
-                        rpp_load_filter_NxN_pkd_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_filter_NxN_pkd_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
                             permute_blend_add_9x9_pkd(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1075,7 +1075,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -1083,7 +1083,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[18];
-                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padindex);
+                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1139,11 +1139,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     RpptBorderVerticalDirection padVertical = i < padLength ? RpptBorderVerticalDirection::TOP_EDGE : RpptBorderVerticalDirection::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[45], pDst[2];
-                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
+                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)
