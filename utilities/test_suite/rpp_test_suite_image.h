@@ -206,7 +206,7 @@ const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_F
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
-const unordered_set<int> dropoutTypeCases = {DROPOUT};
+const unordered_set<int> dropoutTypeCases = {CHANNEL};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
