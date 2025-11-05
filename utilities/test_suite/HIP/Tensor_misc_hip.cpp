@@ -204,7 +204,6 @@ int main(int argc, char **argv)
     bool externalMeanStd = true;
 
     Rpp32u missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     string testCaseName;
@@ -213,6 +212,7 @@ int main(int argc, char **argv)
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
+        RppStatus errorCodeCapture = RPP_SUCCESS;
         switch(testCase)
         {
             case TRANSPOSE:

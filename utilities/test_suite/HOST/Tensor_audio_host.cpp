@@ -72,7 +72,6 @@ int main(int argc, char **argv)
 
     // other initializations
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     int maxSrcChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;
@@ -183,6 +182,7 @@ int main(int argc, char **argv)
         read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)

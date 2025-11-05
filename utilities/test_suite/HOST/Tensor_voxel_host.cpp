@@ -63,8 +63,8 @@ int main(int argc, char * argv[])
         exit(0);
     }
 
-    string funcName = augmentationMap[testCase];
-    if (funcName.empty())
+    string func = augmentationMap[testCase];
+    if (func.empty())
     {
         if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
@@ -114,14 +114,14 @@ int main(int argc, char * argv[])
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, BitDepthTestMode);
 
-    // update funcName based on bitdepth and layout
+    // update func based on bitdepth and layout
     if(BitDepthTestMode == U8_TO_U8)
-        funcName += "_u8_";
+        func += "_u8_";
     else if(BitDepthTestMode == F32_TO_F32)
-        funcName += "_f32_";
+        func += "_f32_";
     int pln1OutTypeCase = 0, outputFormatToggle = 0;
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
-    funcName += funcType;
+    func += funcType;
 
     // set src/dst xyzwhd ROI tensors
     RpptROI3D *roiGenericSrcPtr = (RpptROI3D *) calloc(batchSize, sizeof(RpptROI3D));
@@ -155,7 +155,6 @@ int main(int argc, char * argv[])
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
-    RppStatus errorCodeCapture = RPP_SUCCESS;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0, wallTime = 0;
     int noOfIterations = (int)noOfFiles / batchSize;
     string testCaseName;
@@ -169,7 +168,7 @@ int main(int argc, char * argv[])
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
     }
 
-    cout << "\nRunning " << funcName << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         vector<string>::const_iterator dataFilePathStart = dataFilePath.begin() + (iterCount * batchSize);
@@ -223,6 +222,7 @@ int main(int argc, char * argv[])
 
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             switch (testCase)
             {
