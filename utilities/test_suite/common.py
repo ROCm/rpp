@@ -132,7 +132,7 @@ imageAugmentationMap = {
     93: ["jpeg_compression_distortion", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
-    96: ["dropout", "HOST", "HIP"]
+    96: ["channel_dropout", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {

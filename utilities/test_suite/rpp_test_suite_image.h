@@ -125,7 +125,7 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
-    {96, "dropout"}
+    {96, "channel_dropout"}
 };
 
 enum Augmentation {
@@ -190,15 +190,10 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
-    DROPOUT = 96
+    CHANNEL_DROPOUT = 96
 };
 
-enum DropoutType
-{
-    CHANNEL = 0,
-};
-
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, DROPOUT};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
@@ -206,7 +201,6 @@ const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_F
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
-const unordered_set<int> dropoutTypeCases = {CHANNEL};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
