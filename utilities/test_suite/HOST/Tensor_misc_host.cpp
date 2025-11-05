@@ -297,13 +297,12 @@ int main(int argc, char **argv)
 
         if (missingFuncFlag == 1)
         {
-            std::cout<<"\n inside";
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
         }
         if (errorCodeCapture != RPP_SUCCESS)
         {
-            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
+            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << str(perfCount + 1) << " of " << str(numRuns) << " runs.\n";
             return errorCodeCapture;
         }
 
