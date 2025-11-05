@@ -63,8 +63,8 @@ int main(int argc, char * argv[])
         exit(0);
     }
 
-    string func = augmentationMap[testCase];
-    if (func.empty())
+    string funcName = augmentationMap[testCase];
+    if (funcName.empty())
     {
         if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
@@ -113,14 +113,14 @@ int main(int argc, char * argv[])
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, BitDepthTestMode);
 
-    // update func based on bitdepth and layout
+    // update funcName based on bitdepth and layout
     if(BitDepthTestMode == U8_TO_U8)
-        func += "_u8_";
+        funcName += "_u8_";
     else if(BitDepthTestMode == F32_TO_F32)
-        func += "_f32_";
+        funcName += "_f32_";
     int pln1OutTypeCase = 0, outputFormatToggle = 0;
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HIP");
-    func += funcType;
+    funcName += funcType;
 
     // set src/dst xyzwhd ROI tensors
     void *pinnedMemROI;
@@ -177,7 +177,7 @@ int main(int argc, char * argv[])
         CHECK_RETURN_STATUS(hipMalloc(&d_outputU8, iBufferSizeU8));
     }
 
-    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
+    cout << "\nRunning " << funcName << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         vector<string>::const_iterator dataFilePathStart = dataFilePath.begin() + (iterCount * batchSize);
@@ -400,7 +400,7 @@ int main(int argc, char * argv[])
         }
         if (errorCodeCapture != RPP_SUCCESS)
         {
-            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
+            cout << "\nThe functionality " << funcName << " returned an error status " << rppStatusToString[errorCodeCapture] << "\n";
             return errorCodeCapture;
         }
 
