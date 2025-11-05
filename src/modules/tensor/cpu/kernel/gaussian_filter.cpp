@@ -202,7 +202,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
 
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -219,22 +219,33 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
-                        __m256 pRow[9], pDst[2];
+                        __m256 pRow[12], pDst[3];
                         rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                        pDst[2] = avx_p0;
+
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
                         {
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
 
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
-                        dstPtrTemp += 16;
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                        // convert result from pln to pkd format and store in output buffer
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_store24_f32_to_f32_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp16f>::value)
+                            rpp_store24_f32_to_f16_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8s>::value)
+                            rpp_store24_f32_to_i8_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8u>::value)
+                            rpp_store24_f32_to_u8_avx(dstPtrTemp, pDst);
+                        dstPtrTemp += 24;
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -253,7 +264,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -271,24 +282,26 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
                     Rpp32s padindex = (padVertical == RpptBorderVerticalDirection::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
-                        __m256 pRow[9], pDst[2];
+                        __m256 pRow[12], pDst[3];
                         rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padindex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                        pDst[2] = avx_p0;
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
                         {
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
 
-                        __m128 pDstPln[3];
-                        rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
-                        rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                        __m128 pDstPln[6];
+                        rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
+                        rpp_store24_float_pkd_pln(dstPtrTempChannels, pDstPln);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
                     }
 #endif
                     vectorLoopCount += padLength * 3;

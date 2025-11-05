@@ -466,22 +466,22 @@ inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load32_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
 
     if (rowKernelLoopLimit == 3)
     {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     }
     else if(padIndex == 0)
     {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[0], &pRow[4]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
     else
     {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_u8_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
 }
 
@@ -510,22 +510,22 @@ inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load32_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
 
     if (rowKernelLoopLimit == 3)
     {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     }
     else if(padIndex == 0)
     {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[0], &pRow[4]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
     else
     {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_i8_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
 }
 
@@ -554,22 +554,22 @@ inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_f32_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load32_f32_to_f32_avx(srcPtrTemp[0], &pRow[0]);
 
     if (rowKernelLoopLimit == 3)
     {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[2], &pRow[6]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     }
     else if(padIndex == 0)
     {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[0], &pRow[4]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
     else
     {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_f32_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
 }
 
@@ -598,22 +598,22 @@ inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_f16_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load32_f16_to_f32_avx(srcPtrTemp[0], &pRow[0]);
 
     if (rowKernelLoopLimit == 3)
     {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[2], &pRow[6]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     }
     else if(padIndex == 0)
     {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[0], &pRow[4]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
     else
     {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[6]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[1], &pRow[4]);
+        rpp_load32_f16_to_f32_avx(srcPtrTemp[1], &pRow[8]);
     }
 }
 
