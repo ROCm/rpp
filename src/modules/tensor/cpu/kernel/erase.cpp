@@ -222,7 +222,7 @@ RppStatus erase_host_tensor(T *srcPtr,
                 T userPixelR = colors[countMul3];
                 T userPixelG = colors[countMul3 + 1];
                 T userPixelB = colors[countMul3 + 2];
-                for(int i = 0; i < boxHeight; i++)
+                for (int i = 0; i < boxHeight; i++)
                 {
                     std::fill_n(dstPtrTempR, boxWidth, userPixelR);
                     std::fill_n(dstPtrTempG, boxWidth, userPixelG);
