@@ -104,8 +104,8 @@ inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] = srcSize[i].width;
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.width, handle.GetInitHandle()->mem.mgpu.csrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.width, handle.GetInitHandle()->mem.mgpu.csrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.csrcSize.height, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.csrcSize.width, 0, NULL, NULL);
@@ -121,8 +121,8 @@ inline void copy_dstSize(RppiSize *dstSize, rpp::Handle& handle)
            handle.GetInitHandle()->mem.mgpu.cdstSize.width[i] = dstSize[i].width;
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstSize.width, handle.GetInitHandle()->mem.mgpu.cdstSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstSize.height, handle.GetInitHandle()->mem.mgpu.cdstSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstSize.width, handle.GetInitHandle()->mem.mgpu.cdstSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.dstSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cdstSize.height, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.dstSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cdstSize.width, 0, NULL, NULL);
@@ -149,10 +149,10 @@ inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
     }
 
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, 0, NULL, NULL);
@@ -168,7 +168,7 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
         handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, CL_FALSE, 0, sizeof(Rpp32f) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, 0, NULL, NULL);
 #endif // backend
@@ -177,7 +177,7 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
 inline void copy_param_float3(float *param, rpp::Handle& handle, Rpp32u paramIndex)
 {
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.float3Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.float3Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 3, hipMemcpyHostToDevice));
 #endif
 }
 
@@ -188,7 +188,7 @@ inline void copy_param_uint(uint *param, rpp::Handle& handle, Rpp32u paramIndex)
         handle.GetInitHandle()->mem.mcpu.uintArr[paramIndex].uintmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.uintArr[paramIndex].uintmem, handle.GetInitHandle()->mem.mcpu.uintArr[paramIndex].uintmem, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.uintArr[paramIndex].uintmem, handle.GetInitHandle()->mem.mcpu.uintArr[paramIndex].uintmem, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.uintArr[paramIndex].uintmem, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.uintArr[paramIndex].uintmem, 0, NULL, NULL);
 #endif // backend
@@ -201,7 +201,7 @@ inline void copy_param_int(int *param, rpp::Handle& handle, Rpp32u paramIndex)
         handle.GetInitHandle()->mem.mcpu.intArr[paramIndex].intmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.intArr[paramIndex].intmem, handle.GetInitHandle()->mem.mcpu.intArr[paramIndex].intmem, sizeof(Rpp32s) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.intArr[paramIndex].intmem, handle.GetInitHandle()->mem.mcpu.intArr[paramIndex].intmem, sizeof(Rpp32s) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.intArr[paramIndex].intmem, CL_FALSE, 0, sizeof(Rpp32s) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.intArr[paramIndex].intmem, 0, NULL, NULL);
 #endif // backend
@@ -214,7 +214,7 @@ inline void copy_param_uchar(Rpp8u *param, rpp::Handle& handle, Rpp32u paramInde
         handle.GetInitHandle()->mem.mcpu.ucharArr[paramIndex].ucharmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.ucharArr[paramIndex].ucharmem, handle.GetInitHandle()->mem.mcpu.ucharArr[paramIndex].ucharmem, sizeof(Rpp8u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.ucharArr[paramIndex].ucharmem, handle.GetInitHandle()->mem.mcpu.ucharArr[paramIndex].ucharmem, sizeof(Rpp8u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.ucharArr[paramIndex].ucharmem, CL_FALSE, 0, sizeof(Rpp8u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.ucharArr[paramIndex].ucharmem, 0, NULL, NULL);
 #endif // backend
@@ -227,7 +227,7 @@ inline void copy_param_char(char *param, rpp::Handle& handle, Rpp32u paramIndex)
         handle.GetInitHandle()->mem.mcpu.charArr[paramIndex].charmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.charArr[paramIndex].charmem, handle.GetInitHandle()->mem.mcpu.charArr[paramIndex].charmem, sizeof(Rpp8s) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.charArr[paramIndex].charmem, handle.GetInitHandle()->mem.mcpu.charArr[paramIndex].charmem, sizeof(Rpp8s) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.charArr[paramIndex].charmem, CL_FALSE, 0, sizeof(Rpp8s) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.charArr[paramIndex].charmem, 0, NULL, NULL);
 #endif // backend
@@ -240,7 +240,7 @@ inline void copy_param_RpptRGB(RpptRGB *param, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mcpu.rgbArr.rgbmem[i] = param[i];
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem, handle.GetInitHandle()->mem.mcpu.rgbArr.rgbmem, sizeof(RpptRGB) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.rgbArr.rgbmem, handle.GetInitHandle()->mem.mcpu.rgbArr.rgbmem, sizeof(RpptRGB) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #endif // backend
 }
 
@@ -252,8 +252,8 @@ inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i] = maxSrcSize.width;
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, 0, NULL, NULL);
@@ -269,8 +269,8 @@ inline void copy_dstMaxSize(RppiSize maxDstSize, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width[i] = maxDstSize.width;
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxDstSize.height, handle.GetInitHandle()->mem.mgpu.cmaxDstSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxDstSize.width, handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxDstSize.height, handle.GetInitHandle()->mem.mgpu.cmaxDstSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxDstSize.width, handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxDstSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxDstSize.height, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxDstSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxDstSize.width, 0, NULL, NULL);
@@ -301,8 +301,8 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
         }
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcBatchIndex, handle.GetInitHandle()->mem.mcpu.srcBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.inc, handle.GetInitHandle()->mem.mcpu.inc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcBatchIndex, handle.GetInitHandle()->mem.mcpu.srcBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.inc, handle.GetInitHandle()->mem.mcpu.inc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcBatchIndex, CL_FALSE, 0, sizeof(Rpp64u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.srcBatchIndex, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.inc, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.inc, 0, NULL, NULL);
@@ -333,8 +333,8 @@ inline void get_dstBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
         }
     }
 #ifdef HIP_COMPILE
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstBatchIndex, handle.GetInitHandle()->mem.mcpu.dstBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
-    hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstInc, handle.GetInitHandle()->mem.mcpu.dstInc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstBatchIndex, handle.GetInitHandle()->mem.mcpu.dstBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.dstInc, handle.GetInitHandle()->mem.mcpu.dstInc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #elif defined(OCL_COMPILE)
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.dstBatchIndex, CL_FALSE, 0, sizeof(Rpp64u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.dstBatchIndex, 0, NULL, NULL);
     clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.dstInc, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.dstInc, 0, NULL, NULL);
