@@ -178,7 +178,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                            d_anchorBoxInfoTensor,
                            boxesInEachImage);
     }
-    else if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->c == 1))
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->c == 1))
     {
         hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
         hipLaunchKernelGGL(grid_dropout_pln1_hip_tensor,
@@ -191,7 +191,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                            d_anchorBoxInfoTensor,
                            boxesInEachImage);
     }
-    else if((dstDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->c == 3))
+    else if ((dstDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->c == 3))
     {
         // if src layout is NCHW, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NCHW)
@@ -245,28 +245,28 @@ template RppStatus hip_exec_grid_dropout_tensor<Rpp8u>(Rpp8u*,
                                                        rpp::Handle&);
 
 template RppStatus hip_exec_grid_dropout_tensor<half>(half*,
-                                                     RpptDescPtr,
-                                                     half*,
-                                                     RpptDescPtr,
-                                                     Rpp32u,
-                                                     Rpp32u,
-                                                     Rpp32f,
-                                                     bool,
-                                                     RpptROIPtr,
-                                                     RpptRoiType,
-                                                     rpp::Handle&);
+                                                      RpptDescPtr,
+                                                      half*,
+                                                      RpptDescPtr,
+                                                      Rpp32u,
+                                                      Rpp32u,
+                                                      Rpp32f,
+                                                      bool,
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      rpp::Handle&);
 
 template RppStatus hip_exec_grid_dropout_tensor<Rpp32f>(Rpp32f*,
-                                                         RpptDescPtr,
-                                                         Rpp32f*,
-                                                         RpptDescPtr,
-                                                         Rpp32u,
-                                                         Rpp32u,
-                                                         Rpp32f,
-                                                         bool,
-                                                         RpptROIPtr,
-                                                         RpptRoiType,
-                                                         rpp::Handle&);
+                                                        RpptDescPtr,
+                                                        Rpp32f*,
+                                                        RpptDescPtr,
+                                                        Rpp32u,
+                                                        Rpp32u,
+                                                        Rpp32f,
+                                                        bool,
+                                                        RpptROIPtr,
+                                                        RpptRoiType,
+                                                        rpp::Handle&);
 
 template RppStatus hip_exec_grid_dropout_tensor<Rpp8s>(Rpp8s*,
                                                        RpptDescPtr,
