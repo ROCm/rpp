@@ -220,7 +220,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             // Multiply with corresponding coeffs and add together to obtain the output pixel
             for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
             {
-                __m128 pOutputChannel[numVecs * 3];
+                __m128 pOutputChannel[(numVecs + 1) * 3];   // add 1 with numVecs for additional vector for transpose function with zero initalization 
                 set_zeros(pOutputChannel, numVecs * 3);
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
@@ -361,7 +361,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             // Multiply with corresponding coeffs and add together to obtain the output pixel
             for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
             {
-                __m128 pOutputChannel[numVecs * 3];
+                __m128 pOutputChannel[(numVecs + 1) * 3];   // add 1 with numVecs for additional vector for transpose function with zero initalization 
                 set_zeros(pOutputChannel, numVecs * 3);
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
@@ -391,7 +391,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
                 if(outputDescPtr->layout == RpptLayout::NCHW)       // For PLN3 outputs
                     rpp_resize_store_pln3(outRowPtrR + xStride, outRowPtrG + xStride, outRowPtrB + xStride, pOutputChannel);
-                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs
+                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs 
                     rpp_resize_store_pkd3(outRowPtrR + xStride, pOutputChannel);
             }
             Rpp32s k0 = 0;
