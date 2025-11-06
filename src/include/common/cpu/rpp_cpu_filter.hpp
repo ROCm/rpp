@@ -442,12 +442,16 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
 template<int FILTER_SIZE, typename T>
 inline void rpp_load_filter_NxN_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
     const int radius = FILTER_SIZE - rowKernelLoopLimit;
     int centerRowOffset = padIndex ? radius : 0;
 
     #pragma unroll
     for (int k = 0; k < FILTER_SIZE; k++)
     {
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
         int desiredIndex = centerRowOffset + (k - radius);
         int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
 
@@ -465,14 +469,18 @@ inline void rpp_load_filter_NxN_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s ro
 template<int FILTER_SIZE, typename T>
 inline void rpp_load_filter_NxN_pkd_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
     const int radius = FILTER_SIZE - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
+    int centerRowOffset = padIndex ? radius : 0;
 
     #pragma unroll
     for (int k = 0; k < FILTER_SIZE; k++)
     {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
+        int desiredIndex = centerRowOffset + (k - radius);
+        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
 
         if constexpr (std::is_same_v<T, Rpp8u>)
             rpp_load32_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
@@ -485,27 +493,31 @@ inline void rpp_load_filter_NxN_pkd_host(__m256 *pRow, T **srcPtrTemp, Rpp32s ro
     }
 }
 
+// Specialized load function for 9x9 PKD3 -> PLN3 case - Loads 40 pixels per row
 template<typename T>
 inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
     const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
+    int centerRowOffset = padIndex ? radius : 0;
 
     #pragma unroll
     for (int k = 0; k < 9; k++)
     {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
+        int desiredIndex = centerRowOffset + (k - radius);
+        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
 
-        if constexpr (std::is_same_v<T, Rpp8u>) {
+        if constexpr (std::is_same_v<T, Rpp8u>)
             rpp_load40_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-        } else if constexpr (std::is_same_v<T, Rpp8s>) {
+        else if constexpr (std::is_same_v<T, Rpp8s>)
             rpp_load40_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-        } else if constexpr (std::is_same_v<T, Rpp32f>) {
+        else if constexpr (std::is_same_v<T, Rpp32f>)
             rpp_load40_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-        } else if constexpr (std::is_same_v<T, Rpp16f>) {
+        else if constexpr (std::is_same_v<T, Rpp16f>)
             rpp_load40_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-        }
     }
 }
 
