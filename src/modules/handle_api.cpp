@@ -94,16 +94,4 @@ extern "C" rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction 
     return rpp::try_([&] { rpp::deref(handle).SetAllocator(allocator, deallocator, allocatorContext); });
 }
 
-#ifdef LEGACY_SUPPORT
-extern "C" rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time)
-{
-    return rpp::try_([&] { rpp::deref(time) = rpp::deref(handle).GetKernelTime(); });
-}
-
-extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
-{
-    return rpp::try_([&] { rpp::deref(handle).EnableProfiling(enable); });
-}
-#endif
-
 #endif // GPU_SUPPORT
