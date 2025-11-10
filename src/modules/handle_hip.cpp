@@ -30,10 +30,6 @@ SOFTWARE.
 #include "device_name.hpp"
 #include "errors.hpp"
 #include "handle.hpp"
-#ifdef LEGACY_SUPPORT
-#include "kernel_cache.hpp"
-#include "binary_cache.hpp"
-#endif
 
 namespace rpp {
 
@@ -102,9 +98,6 @@ struct HandleImpl
     StreamPtr stream = nullptr;
     int device = -1;
     Allocator allocator{};
-#ifdef LEGACY_SUPPORT
-    KernelCache cache;
-#endif
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
@@ -377,117 +370,6 @@ void Handle::SetAllocator(rppAllocatorFunction allocator, rppDeallocatorFunction
     this->impl->allocator.context = allocatorContext;
 }
 
-#ifdef LEGACY_SUPPORT
-void Handle::EnableProfiling(bool enable)
-{
-    this->impl->enable_profiling = enable;
-}
-
-void Handle::ResetKernelTime()
-{
-    this->impl->profiling_result = 0.0;
-}
-
-void Handle::AccumKernelTime(float curr_time)
-{
-    this->impl->profiling_result += curr_time;
-}
-
-float Handle::GetKernelTime() const
-{
-    return this->impl->profiling_result;
-}
-
-KernelInvoke Handle::AddKernel(const std::string& algorithm,
-                               const std::string& network_config,
-                               const std::string& program_name,
-                               const std::string& kernel_name,
-                               const std::vector<size_t>& vld,
-                               const std::vector<size_t>& vgd,
-                               const std::string& params,
-                               std::size_t cache_index,
-                               bool is_kernel_str,
-                               const std::string& kernel_src)
-{
-    auto obj = this->impl->cache.AddKernel(*this,
-                                           algorithm,
-                                           network_config,
-                                           program_name,
-                                           kernel_name,
-                                           vld,
-                                           vgd,
-                                           params,
-                                           cache_index,
-                                           is_kernel_str,
-                                           kernel_src);
-    return this->Run(obj);
-}
-
-bool Handle::HasKernel(const std::string& algorithm, const std::string& network_config) const
-{
-    return this->impl->cache.HasKernels(algorithm, network_config);
-}
-
-void Handle::ClearKernels(const std::string& algorithm, const std::string& network_config)
-{
-    this->impl->cache.ClearKernels(algorithm, network_config);
-}
-
-const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, const std::string& network_config)
-{
-    return this->impl->cache.GetKernels(algorithm, network_config);
-}
-
-KernelInvoke Handle::Run(Kernel k)
-{
-    this->impl->set_ctx();
-    if(this->impl->enable_profiling)
-        return k.Invoke(this->GetStream(), this->impl->elapsed_time_handler());
-    else
-        return k.Invoke(this->GetStream());
-}
-
-Program Handle::LoadProgram(const std::string& program_name,
-                            std::string params,
-                            bool is_kernel_str,
-                            const std::string& kernel_src)
-{
-    this->impl->set_ctx();
-
-    params += " -mcpu=" + this->GetDeviceName();
-    auto cache_file =
-        rpp::LoadBinary(this->GetDeviceName(), program_name, params, is_kernel_str);
-    if(cache_file.empty())
-    {
-        auto p =
-            HIPOCProgram{program_name, params, is_kernel_str, this->GetDeviceName(), kernel_src};
-
-        return p;
-    }
-    else
-    {
-        return HIPOCProgram{program_name, cache_file};
-    }
-}
-
-void Handle::Finish() const
-{
-    this->impl->set_ctx();
-    auto ev = make_hip_event();
-    hipEventRecord(ev.get(), this->GetStream());
-    auto status = hipEventSynchronize(ev.get()); // hipStreamSynchronize is broken, so we use hipEventSynchronize instead
-    if(status != hipSuccess)
-        RPP_THROW_HIP_STATUS(status, "Failed hip sychronization");
-}
-
-void Handle::Flush() const {}
-
-bool Handle::IsProfilingEnabled() const
-{
-    return this->impl->enable_profiling;
-}
-#endif
-
 std::size_t Handle::GetLocalMemorySize()
 {
     int result;
@@ -543,49 +425,5 @@ std::size_t Handle::GetMaxComputeUnits()
 
     return result;
 }
-
-#ifdef LEGACY_SUPPORT
-std::ostream& Handle::Print(std::ostream& os) const
-{
-    return os;
-}
-
-Allocator::ManageDataPtr Handle::Create(std::size_t sz)
-{
-    this->Finish();
-    return this->impl->allocator(sz);
-}
-
-Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
-{
-    this->Finish();
-    auto status = hipMemcpy(ddata.get(), data, sz, hipMemcpyHostToDevice);
-    if(status != hipSuccess)
-        RPP_THROW_HIP_STATUS(status, "Hip error writing to buffer: ");
-    return ddata;
-}
-
-void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz)
-{
-    this->Finish();
-    auto status = hipMemcpy(data, ddata.get(), sz, hipMemcpyDeviceToHost);
-    if(status != hipSuccess)
-        RPP_THROW_HIP_STATUS(status, "Hip error reading from buffer: ");
-}
-
-void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
-{
-    this->impl->set_ctx();
-    auto status = hipMemcpy(dest, src, size, hipMemcpyDeviceToDevice);
-    if(status != hipSuccess)
-        RPP_THROW_HIP_STATUS(status, "Hip error copying buffer: ");
-}
-
-shared<ConstData_t> Handle::CreateSubBuffer(ConstData_t data, std::size_t offset, std::size_t)
-{
-    auto cdata = reinterpret_cast<const char*>(data);
-    return {cdata + offset, null_deleter{}};
-}
-#endif
 
 } // namespace rpp
