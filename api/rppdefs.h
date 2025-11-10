@@ -201,50 +201,6 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
-#ifdef LEGACY_SUPPORT
-/*! \brief RPP Operations type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPP_SCALAR_OP_AND       = 1,
-    RPP_SCALAR_OP_OR,
-    RPP_SCALAR_OP_XOR,
-    RPP_SCALAR_OP_NAND,
-    RPP_SCALAR_OP_EQUAL,
-    RPP_SCALAR_OP_NOTEQUAL,
-    RPP_SCALAR_OP_LESS,
-    RPP_SCALAR_OP_LESSEQ,
-    RPP_SCALAR_OP_GREATER,
-    RPP_SCALAR_OP_GREATEREQ,
-    RPP_SCALAR_OP_ADD,
-    RPP_SCALAR_OP_SUBTRACT,
-    RPP_SCALAR_OP_MULTIPLY,
-    RPP_SCALAR_OP_DIVIDE,
-    RPP_SCALAR_OP_MODULUS,
-    RPP_SCALAR_OP_MIN,
-    RPP_SCALAR_OP_MAX,
-} RppOp;
-
-/*! \brief RPP BitDepth Conversion type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    U8_S8,
-    S8_U8,
-} RppConvertBitDepthMode;
-
-/*! \brief RPP polar point
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f rho;
-    Rpp32f theta;
-} RppPointPolar;
-#endif
-
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
  */
@@ -287,79 +243,6 @@ typedef struct
 } Rpp32f24;
 
 /******************** RPPI typedefs ********************/
-
-#ifdef LEGACY_SUPPORT
-/*! \brief RPPI Image color convert mode type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RGB_HSV                 = 1,
-    HSV_RGB
-} RppiColorConvertMode;
-
-/*! \brief RPPI Image fuzzy level type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_LOW,
-    RPPI_MEDIUM,
-    RPPI_HIGH
-} RppiFuzzyLevel;
-
-/*! \brief RPP Image axis type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_HORIZONTAL_AXIS,
-    RPPI_VERTICAL_AXIS,
-    RPPI_BOTH_AXIS
-} RppiAxis;
-
-/*! \brief RPPI Image blur type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    GAUSS3,
-    GAUSS5,
-    GAUSS3x1,
-    GAUSS1x3,
-    AVG3 = 10,
-    AVG5
-} RppiBlur;
-
-/*! \brief RPPI Image pad type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    ZEROPAD,
-    NOPAD
-} RppiPad;
-
-/*! \brief RPPI Image format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RGB,
-    HSV
-} RppiFormat;
-
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    int x;
-    int y;
-    int width;
-    int height;
-} RppiRect;
-#endif
 
 /*! \brief RPPI Image channel format type enum
  * \ingroup group_rppdefs
