@@ -1720,7 +1720,7 @@ inline void rpp_load24_f16pkd3_to_f32pln3_mirror_avx(Rpp16f *srcPtr, __m256 *p)
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]); /* Transpose the 4x4 matrix and forms [[R05 R06 R07 R08][B05 B06 B07 B08][G05 G06 G07 G08][R06 R07 R08 R09]] */
     p[0] = _mm256_setr_m128(p128[0], p128[4]); /* packs as R01-R08 */
     p[1] = _mm256_setr_m128(p128[1], p128[5]); /* packs as G01-G08 */
-    p[2] = _mm256_setr_m128(p128[2], p128[6]); /* packs as B01-R08 */
+    p[2] = _mm256_setr_m128(p128[2], p128[6]); /* packs as B01-B08 */
 
     p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
     p[1] = _mm256_permutevar8x32_ps(p[1], pxMask); /* shuffle as G08-G01 */
