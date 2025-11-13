@@ -158,7 +158,10 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
             }
             for(; vectorLoopCount < width; vectorLoopCount++)
             {
-                Rpp32f z = 1./zCamera, x = xCamera * z, y = yCamera * z;
+                Rpp32f xCam = std::fmaf(vectorLoopCount, invMat[0], xCamera);
+                Rpp32f yCam = std::fmaf(vectorLoopCount, invMat[3], yCamera);
+                Rpp32f zCam = std::fmaf(vectorLoopCount, invMat[6], zCamera);
+                Rpp32f z = 1./zCam, x = xCam * z, y = yCam * z;
                 Rpp32f xSquare = x * x, ySquare = y * y, r2 = xSquare + ySquare;
                 Rpp32f xyMul2 = 2 * x * y;
                 Rpp32f kr = std::fmaf(std::fmaf(std::fmaf(rCoeff[2], r2, rCoeff[1]), r2, rCoeff[0]), r2, 1) / std::fmaf(std::fmaf(std::fmaf(rCoeff[5], r2, rCoeff[4]), r2, rCoeff[3]), r2, 1);
@@ -166,9 +169,6 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
                 Rpp32f rowLoc = std::fmaf(fy, (std::fmaf(tCoeff[0], (std::fmaf(2, ySquare, r2)), std::fmaf(y, kr, (tCoeff[1] * xyMul2)))), v0);
                 *rowRemapTableRow++ = rowLoc;
                 *colRemapTableRow++ = colLoc;
-                xCamera += invMat[0];
-                yCamera += invMat[3];
-                zCamera += invMat[6];
             }
         }
     }
