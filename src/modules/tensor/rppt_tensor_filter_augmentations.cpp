@@ -319,8 +319,6 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -391,8 +389,6 @@ RppStatus rppt_median_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -464,8 +460,6 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 

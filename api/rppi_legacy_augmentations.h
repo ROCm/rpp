@@ -39,7 +39,7 @@ extern "C"
 // *param[in] maxSrcSize A single RppiSize which is the maxWidth and maxHeight for all images in the batch
 // *param[out] dstPtr Output image batch
 // *param[in] nbatchSize Batch size or the number of images in the batch
-// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
@@ -61,7 +61,7 @@ RppStatus rppi_fisheye_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, R
 // *param[out] dstPtr Output image batch
 // *param[in] snowValue Array containing an Rpp32f snow-value for each image in the batch (0 <= snowValue <= 1)
 // *param[in] nbatchSize Batch size or the number of images in the batch
-// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
@@ -83,7 +83,7 @@ RppStatus rppi_snow_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, Rppi
 // *param[out] dstPtr Output image batch
 // *param[in] hueShift Array containing an Rpp32f hue shift angle inn degrees for each image in the batch (hueShift[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
-// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error
@@ -103,7 +103,7 @@ RppStatus rppi_hueRGB_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 // *param[out] dstPtr Output image batch
 // *param[in] saturationFactor Array containing an Rpp32f saturation factor for each image in the batch (saturationFactor[n] >= 0)
 // *param[in] nbatchSize Batch size or the number of images in the batch
-// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : No error, Succesful completion
 // *retval RPP_ERROR : Error

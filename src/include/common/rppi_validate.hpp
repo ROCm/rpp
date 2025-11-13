@@ -32,9 +32,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "handle.hpp"
 
-#ifdef OCL_COMPILE
-#include <CL/cl.h>
-#elif defined (HIP_COMPILE)
+#ifdef HIP_COMPILE
 #include <hip/hip_runtime_api.h>
 #endif
 
@@ -95,9 +93,6 @@ inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
 #ifdef HIP_COMPILE
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.width, handle.GetInitHandle()->mem.mgpu.csrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#elif defined(OCL_COMPILE)
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.csrcSize.height, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.csrcSize.width, 0, NULL, NULL);
 #endif // backend
 }
 
@@ -124,11 +119,6 @@ inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#elif defined(OCL_COMPILE)
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.x, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.x, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.roiPoints.y, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.croiPoints.y, 0, NULL, NULL);
 #endif // backend
 }
 
@@ -140,8 +130,6 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
     }
 #ifdef HIP_COMPILE
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#elif defined(OCL_COMPILE)
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, CL_FALSE, 0, sizeof(Rpp32f) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, 0, NULL, NULL);
 #endif // backend
 }
 
@@ -155,9 +143,6 @@ inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
 #ifdef HIP_COMPILE
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#elif defined(OCL_COMPILE)
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, 0, NULL, NULL);
 #endif // backend
 }
 
@@ -186,9 +171,6 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
 #ifdef HIP_COMPILE
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcBatchIndex, handle.GetInitHandle()->mem.mcpu.srcBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.inc, handle.GetInitHandle()->mem.mcpu.inc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#elif defined(OCL_COMPILE)
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.srcBatchIndex, CL_FALSE, 0, sizeof(Rpp64u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.srcBatchIndex, 0, NULL, NULL);
-    clEnqueueWriteBuffer(handle.GetStream(), handle.GetInitHandle()->mem.mgpu.inc, CL_FALSE, 0, sizeof(Rpp32u) * handle.GetBatchSize(), handle.GetInitHandle()->mem.mcpu.inc, 0, NULL, NULL);
 #endif // backend
 }
 

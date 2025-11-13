@@ -26,8 +26,6 @@ project(modules)
 
 if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS batch_pd/hip/kernel/*.cpp)
-elseif( "${BACKEND}" STREQUAL "OCL")
-    file(GLOB RPP_KERNELS batch_pd/cl/kernel/*.cl)
 endif()
 
 if(RPP_LEGACY_SUPPORT)
@@ -180,26 +178,6 @@ if( "${BACKEND}" STREQUAL "HIP")
         list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
     endif()
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
-elseif( "${BACKEND}" STREQUAL "OCL")
-    # Add OpenCL kernels
-    file(GLOB MOD_CL_CPP "batch_pd/cl/*.cpp" )
-    file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
-    list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS} ${MOD_CL_CPP})
-    # Remove audio augmentations from the list of files to be compiled
-    if(NOT RPP_AUDIO_SUPPORT)
-        remove_audio_augmentations(Rpp_Source "${BACKEND}")
-    endif()
-    message("-- ${Green}OpenCL kernels added!${ColourReset}")
-    add_fma_property()
-    # Add OpenCL specific preprocessor flags
-    add_definitions(-DOCL_COMPILE)
-    add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
-    add_definitions(-DMOD_CL_PATH="${CMAKE_CURRENT_LIST_DIR}/batch_pd/cl/kernel/")
-
-    # Add OpenCL specific includes
-    set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND OCL_LOCAL_INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    set(INCLUDE_LIST ${ROCM_INC} ${OCL_LOCAL_INCLUDE_LIST} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
@@ -252,9 +230,4 @@ if( "${BACKEND}" STREQUAL "HIP")
         ${CMAKE_SOURCE_DIR}/src/include/common/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
-elseif( "${BACKEND}" STREQUAL "OCL")
-    target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cl
-    )
 endif()

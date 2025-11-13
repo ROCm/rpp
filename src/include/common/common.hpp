@@ -34,12 +34,6 @@ using ConstData_t   = const void*;
 using ManageDataPtr = RPP_MANAGE_PTR(void, hipFree);
 inline Data_t DataCast(void* p) { return p; }
 inline ConstData_t DataCast(const void* p) { return p; }
-#elif defined(OCL_COMPILE)
-using Data_t        = cl_mem;
-using ConstData_t   = Data_t;    // Const doesnt apply to cl_mem
-using ManageDataPtr = RPP_MANAGE_PTR(cl_mem, clReleaseMemObject);
-inline Data_t DataCast(void* p) { return reinterpret_cast<Data_t>(p); }
-inline ConstData_t DataCast(const void* p) { return reinterpret_cast<ConstData_t>(const_cast<void*>(p)); }
 #endif
 
 #endif    // GUARD_RPP_COMMON_HPP_

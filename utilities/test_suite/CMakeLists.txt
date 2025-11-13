@@ -266,9 +266,6 @@ else()
                         )
 
                     endif(HIP_FOUND)
-                elseif( "${BACKEND}" STREQUAL "OCL")
-                    # TBD: Add OCL Tests
-                    message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
                 endif()
             else()
                 message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since OpenMP is not found!${ColourReset}")

@@ -58,8 +58,6 @@ struct Exception : std::exception
     const char* what() const noexcept override { return message.c_str(); }
 };
 
-std::string OpenCLErrorMessage(int error, const std::string& msg = "");
-
 inline std::string HIPErrorMessage(int error, const std::string& msg = "")
 {
 #if defined (HIP_COMPILE)
@@ -73,8 +71,6 @@ inline std::string HIPErrorMessage(int error, const std::string& msg = "")
     {                                                                        \
         throw rpp::Exception(__VA_ARGS__).SetContext(__FILE__, __LINE__); \
     } while(false)
-#define RPP_THROW_CL_STATUS(...) \
-    RPP_THROW(rppStatusUnknownError, rpp::OpenCLErrorMessage(__VA_ARGS__))
 #define RPP_THROW_HIP_STATUS(...) \
     RPP_THROW(rppStatusUnknownError, rpp::HIPErrorMessage(__VA_ARGS__))
 

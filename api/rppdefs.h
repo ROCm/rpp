@@ -44,10 +44,6 @@ SOFTWARE.
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 
-#ifdef OCL_COMPILE
-#include <CL/cl.h>
-#endif
-
 #if _WIN32
 #include <intrin.h>
 #else
@@ -181,8 +177,7 @@ typedef enum
 typedef enum
 {
     RPP_HOST_BACKEND,
-    RPP_HIP_BACKEND,
-    RPP_OCL_BACKEND
+    RPP_HIP_BACKEND
 } RppBackend;
 
 /*! \brief RPP rppStatus_t type enums
@@ -844,115 +839,7 @@ typedef struct {
     Rpp32f *scratchBufferHost;
 } memCPU;
 
-#ifdef OCL_COMPILE
-
-/******************** OCL memory typedefs ********************/
-
-/*! \brief RPP OCL 32-bit float memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem floatmem;
-} clmemRpp32f;
-
-/*! \brief RPP OCL 64-bit double memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem doublemem;
-} clmemRpp64f;
-
-/*! \brief RPP OCL 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem uintmem;
-} clmemRpp32u;
-
-/*! \brief RPP OCL 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem intmem;
-} clmemRpp32s;
-
-/*! \brief RPP OCL 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem ucharmem;
-} clmemRpp8u;
-
-/*! \brief RPP OCL 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem charmem;
-} clmemRpp8s;
-
-/*! \brief RPP OCL 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem height;
-    cl_mem width;
-} clmemSize;
-
-/*! \brief RPP OCL 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem x;
-    cl_mem y;
-    cl_mem roiHeight;
-    cl_mem roiWidth;
-} clmemROI;
-
-/*! \brief RPP OCL memory management type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    memSize csrcSize;
-    memSize cdstSize;
-    memSize cmaxSrcSize;
-    memSize cmaxDstSize;
-    memROI croiPoints;
-    clmemSize srcSize;
-    clmemSize dstSize;
-    clmemSize maxSrcSize;
-    clmemSize maxDstSize;
-    clmemROI roiPoints;
-    clmemRpp32f floatArr[10];
-    clmemRpp64f doubleArr[10];
-    clmemRpp32u uintArr[10];
-    clmemRpp32s intArr[10];
-    clmemRpp8u ucharArr[10];
-    clmemRpp8s charArr[10];
-    cl_mem srcBatchIndex;
-    cl_mem dstBatchIndex;
-    cl_mem inc;
-    cl_mem dstInc;
-} memGPU;
-
-/*! \brief RPP OCL-HOST memory management
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    memCPU mcpu;
-    memGPU mgpu;
-} memMgmt;
-
-#elif defined(HIP_COMPILE)
+#ifdef HIP_COMPILE
 
 /******************** HIP memory typedefs ********************/
 
@@ -1032,7 +919,7 @@ typedef struct
     Rpp32u* roiWidth;
 } hipMemROI;
 
-/*! \brief RPP OCL memory management type struct
+/*! \brief RPP HIP memory management type struct
  * \ingroup group_rppdefs
  */
 typedef struct

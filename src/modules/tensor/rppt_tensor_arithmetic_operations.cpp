@@ -365,8 +365,6 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr,
                                  rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -397,8 +395,6 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr,
                                rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -429,8 +425,6 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -461,8 +455,6 @@ RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -528,8 +520,6 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -583,8 +573,6 @@ RppStatus rppt_log_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -609,8 +597,6 @@ RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
