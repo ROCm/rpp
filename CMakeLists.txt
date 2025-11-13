@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 cmake_minimum_required(VERSION 3.10)
+include( utils.cmake )
+set( CORE_TARGET "rpp" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -453,13 +457,15 @@ include(CTest)
 add_subdirectory(utilities/test_suite)
 
 # Set package information
+set(PKG_MAINTAINER_NM  "mivisionx support")
+set(PKG_MAINTAINER_EMAIL  "mivisionx.support@amd.com")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
-set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
+set(CPACK_PACKAGE_CONTACT "${PKG_MAINTAINER_NM} <${PKG_MAINTAINER_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rpp")
@@ -550,8 +556,10 @@ endif()
 if(ENABLE_ASAN_PACKAGING)
     # ASAN Package requires asan component with only libraries and license file
     set(CPACK_COMPONENTS_ALL asan)
+    set( COMP_TYPE "asan" )
 else()
     set(CPACK_COMPONENTS_ALL runtime dev test)
+    set( COMP_TYPE "runtime" )
 endif()
 
 if(APPLE)
@@ -577,6 +585,8 @@ else()
         message("-- ${White}AMD ROCm RPP Test Package -- ${CPACK_DEBIAN_TEST_PACKAGE_DEPENDS}${ColourReset}")
     endif()
 endif()
+
+configure__pkg( ${CORE_TARGET} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
 
 include(CPack)
 
