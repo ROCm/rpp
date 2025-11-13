@@ -970,8 +970,6 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1034,8 +1032,6 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1107,8 +1103,6 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1175,8 +1169,6 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1243,8 +1235,6 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1330,8 +1320,6 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1407,8 +1395,6 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1475,8 +1461,6 @@ RppStatus rppt_exposure_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1548,8 +1532,6 @@ RppStatus rppt_contrast_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1614,8 +1596,6 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1682,8 +1662,6 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 

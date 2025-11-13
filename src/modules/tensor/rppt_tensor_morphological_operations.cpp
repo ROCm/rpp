@@ -99,8 +99,6 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -167,8 +165,6 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 

@@ -193,8 +193,6 @@ RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -227,8 +225,6 @@ RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -261,8 +257,6 @@ RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -291,8 +285,6 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 

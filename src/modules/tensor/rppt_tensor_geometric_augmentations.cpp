@@ -1797,8 +1797,6 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1897,8 +1895,6 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -1968,8 +1964,6 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2037,8 +2031,6 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2106,8 +2098,6 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2223,8 +2213,6 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
     }
 
 return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2291,8 +2279,6 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2368,8 +2354,6 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
 }
 
 return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2449,8 +2433,6 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2516,8 +2498,6 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2567,8 +2547,6 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2644,8 +2622,6 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1,
                                        rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2696,8 +2672,6 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2777,8 +2751,6 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2865,8 +2837,6 @@ RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr,
                               rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -2923,8 +2893,6 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -3008,8 +2976,6 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
@@ -3066,8 +3032,6 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
