@@ -74,9 +74,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
 
-# RPP_LEGACY_SUPPORT - default = OFF
-option(RPP_LEGACY_SUPPORT     "Build RPP with Legacy Support"       OFF)
-
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 
@@ -159,15 +156,10 @@ if (RPP_AUDIO_SUPPORT)
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
 endif()
 
-if (RPP_LEGACY_SUPPORT)
-    add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
-endif()
-
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D RPP_LEGACY_SUPPORT=${RPP_LEGACY_SUPPORT} [Select RPP legacy support [options:ON/OFF](default:OFF)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
@@ -279,7 +271,6 @@ endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
-configure_file("${PROJECT_SOURCE_DIR}/api/rpp_legacy_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h")
 
 # Enable SIMD for HOST code (even in HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
@@ -345,9 +336,6 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        COMPONENT dev)
-install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h
