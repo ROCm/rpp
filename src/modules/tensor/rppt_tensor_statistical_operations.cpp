@@ -28,9 +28,9 @@ SOFTWARE.
 #include "kernel_dims.hpp"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** tensor_sum ********************/
 
@@ -584,7 +584,6 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
@@ -646,7 +645,6 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** tensor_min ********************/
@@ -658,7 +656,6 @@ RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (imageMinArrLength < srcDescPtr->n)   // min of single channel
@@ -708,7 +705,6 @@ RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** tensor_max ********************/
@@ -721,7 +717,6 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (imageMaxArrLength < srcDescPtr->n)   // max of single channel
@@ -771,7 +766,6 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
@@ -787,7 +781,6 @@ RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
                              Rpp32u *roiTensor,
                              rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
@@ -850,7 +843,6 @@ RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** tensor_mean ********************/
@@ -863,7 +855,6 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->c == 1 && tensorMeanArrLength < srcDescPtr->n) ||        // Stddev of single channel
         (srcDescPtr->c == 3 && tensorMeanArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
         return RPP_ERROR_NOT_ENOUGH_MEMORY;
@@ -922,7 +913,6 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** tensor_stddev ********************/
@@ -936,7 +926,6 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->c == 1 && tensorStddevArrLength < srcDescPtr->n) ||        // Stddev of single channel
         (srcDescPtr->c == 3 && tensorStddevArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
         return RPP_ERROR_NOT_ENOUGH_MEMORY;
@@ -999,7 +988,6 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** threshold ********************/
@@ -1014,7 +1002,6 @@ RppStatus rppt_threshold_gpu(RppPtr_t srcPtr,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1073,7 +1060,6 @@ RppStatus rppt_threshold_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

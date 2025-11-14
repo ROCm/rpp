@@ -169,9 +169,6 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
     add_fma_property()
 
-    # Add HIP specific preprocessor flags
-    add_definitions(-DHIP_COMPILE)
-
     # Add HIP specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
     if(RPP_LEGACY_SUPPORT)

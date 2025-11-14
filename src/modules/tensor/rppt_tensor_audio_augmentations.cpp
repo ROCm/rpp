@@ -29,9 +29,9 @@ SOFTWARE.
 #include "rppt_tensor_audio_augmentations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** non_silent_region_detection ********************/
 
@@ -340,7 +340,6 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
                                                Rpp32s resetInterval,
                                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
     if (tensorDims != 1)
         return RPP_ERROR_INVALID_SRC_DIMS;
@@ -363,7 +362,6 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-#endif // backend
 }
 
 /******************** to_decibels ********************/
@@ -378,7 +376,6 @@ RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr,
                                Rpp32f referenceMagnitude,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
     if (tensorDims != 1 && tensorDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
@@ -404,7 +401,6 @@ RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** down_mixing ********************/
@@ -417,7 +413,6 @@ RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr,
                                bool  normalizeWeights,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
     if (tensorDims != 1 && tensorDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
@@ -438,7 +433,6 @@ RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** pre_emphasis_filter ********************/
@@ -452,7 +446,6 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                        RpptAudioBorderType borderType,
                                        rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->numDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
 
@@ -472,7 +465,6 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-#endif // backend
 }
 
 /******************** mel_filter_bank ********************/
@@ -490,7 +482,6 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
                                    bool normalize,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
     if (tensorDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
@@ -521,7 +512,6 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-#endif // backend
 }
 
 /******************** resample ********************/
@@ -536,7 +526,6 @@ RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
                             RpptResamplingWindow &window,
                             rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
     if (tensorDims != 1 && tensorDims != 2)
         return RPP_ERROR_INVALID_SRC_DIMS;
@@ -559,7 +548,6 @@ RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-#endif // backend
 }
 
 /******************** spectrogram ********************/
@@ -578,7 +566,6 @@ RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr,
                                Rpp32s windowStep,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF))
         return RPP_ERROR_INVALID_DST_LAYOUT;
     Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
@@ -611,7 +598,6 @@ RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

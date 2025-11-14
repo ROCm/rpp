@@ -28,7 +28,7 @@ SOFTWARE.
 #include "rpp.h"
 #include "manage_ptr.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 using Data_t        = void*;
 using ConstData_t   = const void*;
 using ManageDataPtr = RPP_MANAGE_PTR(void, hipFree);

@@ -27,9 +27,9 @@ SOFTWARE.
 #include "rppt_tensor_arithmetic_operations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** fused_multiply_add_scalar ********************/
 
@@ -348,7 +348,6 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr,
                                 RpptRoi3DType roiType,
                                 rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -365,7 +364,6 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr,
                                  rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** add_scalar ********************/
@@ -379,7 +377,6 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr,
                               RpptRoi3DType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -395,7 +392,6 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr,
                                rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** subtract_scalar ********************/
@@ -409,7 +405,6 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr,
                                    RpptRoi3DType roiType,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -425,7 +420,6 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** multiply_scalar ********************/
@@ -439,7 +433,6 @@ RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr,
                                    RpptRoi3DType roiType,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -455,7 +448,6 @@ RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** magnitude ********************/
@@ -469,7 +461,6 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
-    #ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -520,7 +511,6 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** log ********************/
@@ -532,7 +522,6 @@ RppStatus rppt_log_gpu(RppPtr_t srcPtr,
                        Rpp32u *roiTensor,
                        rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
     else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8)) return RPP_ERROR_INVALID_DST_DATATYPE;
     else if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -573,7 +562,6 @@ RppStatus rppt_log_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
@@ -583,7 +571,6 @@ RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
                          Rpp32u *roiTensor,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcGenericDescPtr->dataType != RpptDataType::I16) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->dataType == RpptDataType::I16) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -597,7 +584,6 @@ RppStatus rppt_log1p_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

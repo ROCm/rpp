@@ -34,7 +34,7 @@ SOFTWARE.
 #include "object.hpp"
 #include "returns.hpp"
 
-#if defined (HIP_COMPILE)
+#if defined (GPU_SUPPORT)
 #include <hip/hip_runtime_api.h>
 #endif
 
@@ -60,7 +60,7 @@ struct Exception : std::exception
 
 inline std::string HIPErrorMessage(int error, const std::string& msg = "")
 {
-#if defined (HIP_COMPILE)
+#if defined (GPU_SUPPORT)
     return msg + " " + hipGetErrorString(static_cast<hipError_t>(error));
 #endif
     return msg;

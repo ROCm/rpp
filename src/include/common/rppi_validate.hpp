@@ -32,7 +32,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "handle.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include <hip/hip_runtime_api.h>
 #endif
 
@@ -90,7 +90,7 @@ inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
            handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] = srcSize[i].height;
            handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] = srcSize[i].width;
     }
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.width, handle.GetInitHandle()->mem.mgpu.csrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #endif // backend
@@ -114,7 +114,7 @@ inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mgpu.croiPoints.y[i] = roiPoints.y;
     }
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
@@ -128,7 +128,7 @@ inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramInde
     {
         handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem[i] = param[i];
     }
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #endif // backend
 }
@@ -140,7 +140,7 @@ inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
         handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] = maxSrcSize.height;
         handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i] = maxSrcSize.width;
     }
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #endif // backend
@@ -168,7 +168,7 @@ inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChn
                 handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i];
         }
     }
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcBatchIndex, handle.GetInitHandle()->mem.mcpu.srcBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.inc, handle.GetInitHandle()->mem.mcpu.inc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
 #endif // backend
