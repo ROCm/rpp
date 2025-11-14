@@ -24,22 +24,6 @@ SOFTWARE.
 
 project(modules)
 
-if( "${BACKEND}" STREQUAL "HIP")
-    file(GLOB RPP_KERNELS batch_pd/hip/kernel/*.cpp)
-endif()
-
-if(RPP_LEGACY_SUPPORT)
-    list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/rpp_kernels.h)
-    message("-- ${Green}${PROJECT_NAME} -- Adding custom commands to rpp_kernels${ColourReset}")
-    add_custom_command(
-        OUTPUT ${PROJECT_BINARY_DIR}/rpp_kernels.h
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS addkernels ${RPP_KERNELS} ${RPP_KERNEL_INCLUDES}
-        COMMAND ${WINE_CMD} $<TARGET_FILE:addkernels> -guard GUARD_RPP_KERNELS_HPP_ -target ${PROJECT_BINARY_DIR}/rpp_kernels.h -source ${RPP_KERNELS}
-        COMMENT "Inlining RPP kernels"
-        )
-endif()
-
 function(add_kernels KERNEL_FILES)
     set(INIT_KERNELS_LIST)
     foreach(KERNEL_FILE ${KERNEL_FILES})
@@ -126,16 +110,8 @@ set(CPPFILES "handle_api.cpp" "handle_host.cpp")
 file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${TENSOR_CPPFILES})
-# Addition of BatchPD Outer API CPP files based on RPP_LEGACY_SUPPORT enablement
-if(RPP_LEGACY_SUPPORT)
-    file(GLOB BATCH_PD_CPPFILES "batch_pd/*.cpp" )
-    list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
-    list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel.cpp)
-    list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
-else()
-    file(GLOB BATCH_PD_CPPFILES "legacy_dep/*.cpp" )
-    list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
-endif()
+file(GLOB BATCH_PD_CPPFILES "legacy_dep/*.cpp" )
+list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
 
 if("${TIME_INFO}" STREQUAL "1")
     add_definitions(-DTIME_INFO)
@@ -149,16 +125,9 @@ if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB MOD_HIP_CPP_TENSOR_KERNELS "tensor/hip/kernel/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_ERRORS_CPP} ${MOD_HIP_CPP_TENSOR_KERNELS} ${MOD_HOST_CPP_TENSOR_KERNELS})
-    # Add individual BatchPD kernel cpp files based on RPP_LEGACY_SUPPORT flag enablement
-    if(RPP_LEGACY_SUPPORT)
-        file(GLOB MOD_HIP_CPP_BATCHPD_FILES "batch_pd/hip/*.cpp" )
-        file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "batch_pd/hip/kernel/*.cpp" )
-        list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_FILES} ${MOD_HIP_CPP_BATCHPD_KERNELS})
-    else()
-        file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "legacy_dep/hip/kernel/*.cpp" )
-        file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
-        list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
-    endif()
+    file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "legacy_dep/hip/kernel/*.cpp" )
+    file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
+    list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
     # Remove audio augmentations from the list of files to be compiled
     if(NOT RPP_AUDIO_SUPPORT)
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
@@ -171,19 +140,14 @@ if( "${BACKEND}" STREQUAL "HIP")
 
     # Add HIP specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    if(RPP_LEGACY_SUPPORT)
-        list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
-    endif()
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS})
-    # Add individual BatchPD kernel cpp files based on LEGACY_SUPPORT flag enablement
-    if(NOT RPP_LEGACY_SUPPORT)
-        file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
-        list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
-    endif()
+
+    file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
+    list(APPEND Rpp_Source ${MOD_CPU_CPP_BATCHPD_KERNELS})
     # Remove audio augmentations from the list of files to be compiled
     if(NOT RPP_AUDIO_SUPPORT)
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
@@ -194,12 +158,6 @@ elseif( "${BACKEND}" STREQUAL "CPU")
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 add_compile_options("-Wno-unused-result")
-
-# Kernels and includes additions
-if(RPP_LEGACY_SUPPORT)
-    add_kernels("${RPP_KERNELS}")
-    add_kernel_includes("${RPP_KERNEL_INCLUDES}")
-endif()
 
 # Add library
 add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
@@ -212,8 +170,7 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
-        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu>
-        $<$<NOT:$<BOOL:${RPP_LEGACY_SUPPORT}>>:${CMAKE_SOURCE_DIR}/src/include/legacy_dep> # Adds include folder based on RPP_LEGACY_SUPPORT enablement
+        ${CMAKE_SOURCE_DIR}/src/include/legacy_dep
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/common/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor
@@ -223,7 +180,6 @@ target_include_directories( ${PROJECT_NAME}
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip>
         ${CMAKE_SOURCE_DIR}/src/include/common/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
