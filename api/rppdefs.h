@@ -33,9 +33,9 @@ SOFTWARE.
 
 #include <stddef.h>
 #include <cmath>
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 #if __has_include(<half/half.hpp>)
     #include <half/half.hpp>
 #else
@@ -70,7 +70,7 @@ typedef halfhpp Rpp16f;
   } \
 } while (0)
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
 #else
@@ -839,7 +839,7 @@ typedef struct {
     Rpp32f *scratchBufferHost;
 } memCPU;
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 
 /******************** HIP memory typedefs ********************/
 

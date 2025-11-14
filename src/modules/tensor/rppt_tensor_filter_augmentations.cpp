@@ -27,9 +27,9 @@ SOFTWARE.
 #include "rppt_tensor_filter_augmentations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** box_filter ********************/
 
@@ -263,7 +263,6 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -319,7 +318,6 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** median_filter ********************/
@@ -334,7 +332,6 @@ RppStatus rppt_median_filter_gpu(RppPtr_t srcPtr,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2)) return RPP_ERROR_LOW_OFFSET;
@@ -389,7 +386,6 @@ RppStatus rppt_median_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** gaussian_filter ********************/
@@ -404,7 +400,6 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
@@ -460,7 +455,6 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

@@ -27,9 +27,9 @@ SOFTWARE.
 #include "rppt_tensor_data_exchange_operations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** copy ********************/
 
@@ -229,7 +229,6 @@ RppStatus rppt_copy_gpu(RppPtr_t srcPtr,
                         RpptDescPtr dstDescPtr,
                         rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -268,7 +267,6 @@ RppStatus rppt_copy_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** channel_permute ********************/
@@ -280,7 +278,6 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
                                    Rpp32u *permutationTensor,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -320,7 +317,6 @@ RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** color_to_greyscale ********************/
@@ -332,7 +328,6 @@ RppStatus rppt_color_to_greyscale_gpu(RppPtr_t srcPtr,
                                       RpptSubpixelLayout srcSubpixelLayout,
                                       rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->c != 3)
         return RPP_ERROR_INVALID_SRC_CHANNELS;
@@ -393,7 +388,6 @@ RppStatus rppt_color_to_greyscale_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

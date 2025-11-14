@@ -26,7 +26,7 @@ SOFTWARE.
 #include "rppi_legacy_augmentations.h"
 #include "host_legacy_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_legacy_executors.hpp"
 #endif
 

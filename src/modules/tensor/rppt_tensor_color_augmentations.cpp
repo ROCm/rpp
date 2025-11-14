@@ -27,9 +27,9 @@ SOFTWARE.
 #include "rppt_tensor_color_augmentations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** brightness ********************/
 
@@ -915,7 +915,6 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -970,7 +969,6 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** gamma_correction ********************/
@@ -984,7 +982,6 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1032,7 +1029,6 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** blend ********************/
@@ -1047,7 +1043,6 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1103,7 +1098,6 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** hue ********************/
@@ -1117,7 +1111,6 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
                        RpptRoiType roiType,
                        rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1169,7 +1162,6 @@ RppStatus rppt_hue_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** saturation ********************/
@@ -1183,7 +1175,6 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3) return RPP_ERROR_INVALID_CHANNELS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1235,7 +1226,6 @@ RppStatus rppt_saturation_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** color_twist ********************/
@@ -1252,7 +1242,6 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
         return RPP_ERROR_INVALID_CHANNELS;
@@ -1320,7 +1309,6 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** color_cast ********************/
@@ -1335,7 +1323,6 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
         return RPP_ERROR_INVALID_CHANNELS;
@@ -1395,7 +1382,6 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** exposure ********************/
@@ -1409,7 +1395,6 @@ RppStatus rppt_exposure_gpu(RppPtr_t srcPtr,
                             RpptRoiType roiType,
                             rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1461,7 +1446,6 @@ RppStatus rppt_exposure_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** contrast ********************/
@@ -1476,7 +1460,6 @@ RppStatus rppt_contrast_gpu(RppPtr_t srcPtr,
                             RpptRoiType roiType,
                             rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1532,7 +1515,6 @@ RppStatus rppt_contrast_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** lut ********************/
@@ -1546,7 +1528,6 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
                        RpptRoiType roiType,
                        rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
         return RPP_ERROR_INVALID_SRC_DATATYPE;
 
@@ -1596,7 +1577,6 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 /******************** color_temperature ********************/
@@ -1610,7 +1590,6 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
                                      RpptRoiType roiType,
                                      rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
         return RPP_ERROR_INVALID_CHANNELS;
@@ -1662,7 +1641,6 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT
