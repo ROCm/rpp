@@ -31,10 +31,10 @@ SOFTWARE.
  * \brief RPP API to create and destroy RPP HOST/GPU handle.
  */
 
-#if RPP_BACKEND_HIP
+#if GPU_SUPPORT
 
 #include <hip/hip_runtime_api.h>
-/*! \brief Set rppAcceleratorQueue_t to hipStream_t if RPP_BACKEND_HIP \ingroup group_rpp */
+/*! \brief Set rppAcceleratorQueue_t to hipStream_t if GPU_SUPPORT \ingroup group_rpp */
 typedef hipStream_t rppAcceleratorQueue_t;
 
 #endif
