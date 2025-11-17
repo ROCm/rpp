@@ -79,9 +79,10 @@ inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
 
 template<typename T>
 inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
-                                                   Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
-                                                   Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32u channels = 1,
-                                                   Rpp32s padVertical = 1, Rpp32s padHorizontal = 1)
+                                              Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
+                                              Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32u channels = 1,
+                                              RpptImageBorderEdge padVertical = RpptImageBorderEdge::BOTTOM_EDGE,
+                                              RpptImageBorderEdge padHorizontal = RpptImageBorderEdge::RIGHT_EDGE)
 {
     Rpp32f accum = 0.0f;
     Rpp32s columnKernelLoopLimit = kernelSize;
@@ -94,7 +95,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
         for (int i = 0; i < kernelSize; i++)
         {
             // Compute actual row for vertical clamping
-            Rpp32s rowOffset = (padVertical == 0)
+            Rpp32s rowOffset = (padVertical == RpptImageBorderEdge::TOP_EDGE)
                                 ? std::max(0, static_cast<Rpp32s>(i + rowKernelLoopLimit - kernelSize)) // clamp top padded region 
                                 : std::min(rowKernelLoopLimit - 1, i); // clamp bottom padded region 
 
@@ -102,7 +103,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
             for (int j = 0; j < kernelSize; j++)
             {
                 // Compute actual column for horizontal clamping
-                Rpp32s colOffset = (padHorizontal == 0)
+                Rpp32s colOffset = (padHorizontal == RpptImageBorderEdge::LEFT_EDGE)
                                     ? std::max(0, static_cast<Rpp32s>(j + columnKernelLoopLimit - kernelSize))   // clamp left padded region 
                                     : std::min(static_cast<Rpp32s>(columnKernelLoopLimit - 1), j); // clamp right padded region 
 
@@ -145,25 +146,27 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
 // left border pixels in image which does not have required pixels in 3x3 kernel, process them separately
 template<typename T>
 inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptImageBorderEdge padVertical)
 {
     for (int k = 0; k < padLength; k++)
     {
-        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
         dstPtrTemp++;
     }
 }
 
 template<typename T>
 inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptImageBorderEdge padVertical)
 {
     for (int c = 0; c < 3; c++)
     {
         T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
-            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical, 0);
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical, RpptImageBorderEdge::LEFT_EDGE);
             dstPtrTempChannel += 3;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -175,13 +178,14 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
 
 template<typename T>
 inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor, Rpp32s padVertical)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor,
+                                                RpptImageBorderEdge padVertical)
 {
     for (int c = 0; c < 3; c++)
     {
         for (int k = 0; k < padLength; k++)
         {
-            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical, 0);
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical, RpptImageBorderEdge::LEFT_EDGE);
             dstPtrTempChannels[c] += 1;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -449,533 +453,90 @@ inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilte
     pDst = _mm256_fmadd_ps(pRow[3], pFilter[8], pDst);
 }
 
-// -------------------- Filter load functions for U8/I8 bitdepth --------------------
+// -------------------- Filter load functions for NxN kernels - 3x3, 5x5, 7x7 and 9x9 --------------------
 
-// load function for 3x3 kernel size
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+template<int FILTER_SIZE, typename T>
+inline void rpp_load_filter_NxN_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load16_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);   // top row
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[1], &pRow[2]);   // center row
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[2], &pRow[4]);   // bottom row
-    }
-    else if (padIndex == 0)
-    {
-        // replicate either top or center row as bottom row (nearest neighbor)
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[0], &pRow[2]);   // center row
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[1], &pRow[4]);   // bottom row
-    }
-    else
-    {
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[1], &pRow[2]);   // center row
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[1], &pRow[4]);   // bottom row
-    }
-}
-
-// load function for 5x5 kernel size
-inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-// load function for 7x7 kernel size
-inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-// load function for 9x9 kernel size
-inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
-    else if(padIndex == 0)
-    {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-    else
-    {
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_u8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-}
-
-inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius =9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius); // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load40_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-    }
-}
-
-// -------------------- Filter load functions for I8 bitdepth --------------------
-
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load16_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[2], &pRow[4]);
-    }
-    else if (padIndex == 0)
-    {
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[0], &pRow[2]);
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-    else
-    {
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-}
-
-inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
-    else if(padIndex == 0)
-    {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-    else
-    {
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-}
-
-// load function for 5x5 kernel size
-inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load40_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-    }
-}
-
-// -------------------- Filter load functions for F32 bitdepth --------------------
-
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load16_f32_to_f32_avx(srcPtrTemp[0], &pRow[0]); // top row
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[2], &pRow[4]);
-    }
-    else if (padIndex == 0)
-    {
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[0], &pRow[2]);
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-    else
-    {
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-}
-
-inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_f32_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
-    else if(padIndex == 0)
-    {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-    else
-    {
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-}
-
-inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load40_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-    }
-}
-
-// -------------------- Filter load functions for F16 bitdepth --------------------
-
-inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load16_f16_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[2], &pRow[4]);
-    }
-    else if (padIndex == 0)
-    {
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[0], &pRow[2]);
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-    else
-    {
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[1], &pRow[2]);
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[1], &pRow[4]);
-    }
-}
-
-
-inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
+    const int radius = FILTER_SIZE - rowKernelLoopLimit;
     int centerRowOffset = padIndex ? radius : 0;
-    for (int k = 0; k < 7; k++)
+
+    #pragma unroll
+    for (int k = 0; k < FILTER_SIZE; k++)
     {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
+        int desiredIndex = centerRowOffset + (k - radius);
+        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
+
+        if constexpr (std::is_same_v<T, Rpp8s>)
+            rpp_load16_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
+        else if constexpr (std::is_same_v<T, Rpp8u>)
+            rpp_load16_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
+        else if constexpr (std::is_same_v<T, Rpp16f>)
+            rpp_load16_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
+        else if constexpr (std::is_same_v<T, Rpp32f>)
+            rpp_load16_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
     }
 }
 
-inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+template<int FILTER_SIZE, typename T>
+inline void rpp_load_filter_NxN_pkd_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
+    const int radius = FILTER_SIZE - rowKernelLoopLimit;
+    int centerRowOffset = padIndex ? radius : 0;
+
+    #pragma unroll
+    for (int k = 0; k < FILTER_SIZE; k++)
+    {
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
+        int desiredIndex = centerRowOffset + (k - radius);
+        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
+
+        if constexpr (std::is_same_v<T, Rpp8u>)
+            rpp_load32_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
+        else if constexpr (std::is_same_v<T, Rpp8s>)
+            rpp_load32_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
+        else if constexpr (std::is_same_v<T, Rpp32f>)
+            rpp_load32_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
+        else if constexpr (std::is_same_v<T, Rpp16f>)
+            rpp_load32_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
+    }
+}
+
+// Specialized load function for 9x9 PKD3 -> PLN3 case - Loads 40 pixels per row
+template<typename T>
+inline void rpp_load_filter_9x9_pkd_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+{
+    // Determine the starting row offset based on whether padding is applied
+    // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0
     const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp   
+    int centerRowOffset = padIndex ? radius : 0;
+
+    #pragma unroll
     for (int k = 0; k < 9; k++)
     {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load16_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 2]);
+        // Calculate the desired row index relative to the calculated centerRowOffset of the filter
+        // This maps filter positions to actual row indices in the source data
+        int desiredIndex = centerRowOffset + (k - radius);
+        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1));
+
+        if constexpr (std::is_same_v<T, Rpp8u>)
+            rpp_load40_u8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
+        else if constexpr (std::is_same_v<T, Rpp8s>)
+            rpp_load40_i8_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
+        else if constexpr (std::is_same_v<T, Rpp32f>)
+            rpp_load40_f32_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
+        else if constexpr (std::is_same_v<T, Rpp16f>)
+            rpp_load40_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
     }
 }
 
-inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    // irrespective of row location, we need to load 1 rows for 3x3 kernel
-    rpp_load24_f16_to_f32_avx(srcPtrTemp[0], &pRow[0]);
-
-    if (rowKernelLoopLimit == 3)
-    {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
-    else if(padIndex == 0)
-    {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[0], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-    else
-    {
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[3]);
-        rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[6]);
-    }
-}
-
-inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 5 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 5; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 7 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 7; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load32_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 4]);
-    }
-}
-
-inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
-{
-    const int radius = 9 - rowKernelLoopLimit;
-    int centerRowOffset = padIndex ? radius : 0;    // The offset tells us where the center row is located within srcPtrTemp
-    for (int k = 0; k < 9; k++)
-    {
-        int desiredIndex = centerRowOffset + (k - radius);  // Calculate the desired index into srcPtrTemp relative to the center row
-        int clampedIndex = std::max(0, std::min(desiredIndex, rowKernelLoopLimit - 1)); // Clamp the index to the range of available valid rows [0, numValidRows - 1]
-        rpp_load40_f16_to_f32_avx(srcPtrTemp[clampedIndex], &pRow[k * 5]);
-    }
-}
 
 // -------------------- Filter load functions for U8/I8 bitdepth --------------------
 

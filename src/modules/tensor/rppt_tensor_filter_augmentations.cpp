@@ -254,6 +254,7 @@ RppStatus rppt_emboss_host(RppPtr_t srcPtr,
                            Rpp32f *strength,
                            Rpp32f *bias,
                            Rpp32u kernelSize,
+                           RpptImageBorderType borderType,
                            RpptROIPtr roiTensorPtrSrc,
                            RpptRoiType roiType,
                            rppHandle_t rppHandle)
@@ -261,6 +262,7 @@ RppStatus rppt_emboss_host(RppPtr_t srcPtr,
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -554,12 +556,14 @@ RppStatus rppt_emboss_gpu(RppPtr_t srcPtr,
                           Rpp32f *strength,
                           Rpp32f *bias,
                           Rpp32u kernelSize,
+                          RpptImageBorderType borderType,
                           RpptROIPtr roiTensorPtrSrc,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9)) return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2)) return RPP_ERROR_LOW_OFFSET;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))

@@ -25,26 +25,6 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
-inline void rpp_store_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp8s *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp32f *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
-}
-
-inline void rpp_store_filter_3x3_host(Rpp16f *dstPtrTemp, __m256 *pDst)
-{
-    rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
-}
-
 inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kernelSize)
 {
     Rpp32f clampedStrength = (strength > 2.0f) ? 2.0f : strength;
@@ -185,16 +165,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        Rpp32s padVertical = i < padLength ? 0 : 1;
+                        RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[7], pDst[2];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -204,7 +184,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_pixel_check_0to1(pDst, 2);
-                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp16f>::value)
+                                rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8s>::value)
+                                rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8u>::value)
+                                rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
+                            // In each pass, convolution filter is applied 14 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 14);
                             dstPtrTemp += 14;
                         }
@@ -228,7 +217,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -238,33 +227,44 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // Index that determines the values for padding - Based on the direction of padding
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
-                        __m256 pRow[9], pDst[2];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        __m256 pRow[12], pDst[3];
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
+                        pDst[2] = avx_p0;
 
-                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
                         {
-                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex],     pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             rpp_pixel_check_0to1(pDst, 2);
 
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
-                        dstPtrTemp += 16;
+                        // In each pass, convolution filter is applied 24 times
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                        // convert result from pln to pkd format and store in output buffer
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_store24_f32_to_f32_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp16f>::value)
+                            rpp_store24_f32_to_f16_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8s>::value)
+                            rpp_store24_f32_to_i8_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8u>::value)
+                            rpp_store24_f32_to_u8_avx(dstPtrTemp, pDst);
+                        dstPtrTemp += 24;
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -283,7 +283,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -296,30 +296,34 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256 pRow[9], pDst[2];
                         rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
+                        pDst[2] = avx_p0;
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
                         {
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex],     pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             rpp_pixel_check_0to1(pDst, 2);
-                        __m128 pDstPln[3];
-                        rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
-                        rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+
+                        __m128 pDstPln[6];
+                        rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
+                        rpp_store24_float_pkd_pln(dstPtrTempChannels, pDstPln);
+                        // In each pass, convolution filter is applied 24 times
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -354,7 +358,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     // left border pixels in image which does not have required pixels in 3x3 box, process them separately
@@ -362,13 +366,13 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
                         __m256 pResult[6];
@@ -376,7 +380,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[7];
-                            rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
@@ -387,6 +391,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_pixel_check_0to1(pResult, 6);
+                            // In each pass, convolution filter is applied 14 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -447,16 +452,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        Rpp32s padVertical = i < padLength ? 0 : 1;
+                        RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[10], pDst[2];
-                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
@@ -466,7 +471,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             }
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_pixel_check_0to1(pDst, 2);
-                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp16f>::value)
+                                rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8s>::value)
+                                rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                            else if constexpr (std::is_same<T, Rpp8u>::value)
+                                rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
+                            // In each pass, convolution filter is applied 12 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                             dstPtrTemp += 12;
                         }
@@ -502,15 +516,15 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -520,8 +534,17 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         }
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             rpp_pixel_check_0to1(pDst, 2);
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp16f>::value)
+                            rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8s>::value)
+                            rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8u>::value)
+                            rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
+                        // In each pass, convolution filter is applied 16 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
 #endif
@@ -558,32 +581,33 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[10];
-                            rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_pixel_check_0to1(pResultPln, 3);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -634,15 +658,15 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[20], pDst[2];
-                        rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_NxN_pkd_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
@@ -656,6 +680,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
+                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
@@ -706,16 +731,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        Rpp32s padVertical = i < padLength ? 0 : 1;
+                        RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[14], pDst;
-                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -732,6 +757,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
                         }
@@ -767,15 +793,15 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[28], pDst;
-                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
                             permute_blend_add_7x7_pkd(pDst, &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
@@ -791,6 +817,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                        // In each pass, convolution filter is applied 8 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
                     }
@@ -828,19 +855,19 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;                    
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -848,10 +875,11 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[14];
-                            rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -904,14 +932,14 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[28], pDst[2];
-                        rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_NxN_pkd_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
@@ -926,6 +954,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
+                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
@@ -977,16 +1006,16 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        Rpp32s padVertical = i < padLength ? 0 : 1;
+                        RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                        // process alignedLength number of columns in each row
+                        Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[18], pDst;
-                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1003,6 +1032,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             else if constexpr (std::is_same<T, Rpp8u>::value)
                                 rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             dstPtrTemp += 8;
                         }
@@ -1038,15 +1068,15 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pRow[36], pDst;
-                        rpp_load_filter_9x9_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_NxN_pkd_host<9>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
                             permute_blend_add_9x9_pkd(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
@@ -1063,6 +1093,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_store8_f32_to_u8_avx(dstPtrTemp, &pDst);
 
+                        // In each pass, convolution filter is applied 8 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         dstPtrTemp += 8;
                     }
@@ -1101,30 +1132,31 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
                             dstPtrTemp++;
                         }
                     }
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[18];
-                            rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
+                            rpp_load_filter_NxN_pln_host<9>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_pixel_check_0to1(pResultPln, 3);
+                            // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -1174,14 +1206,14 @@ RppStatus emboss_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
 #if __AVX2__
-                    Rpp32s padIndex = (padVertical == 1) ?  rowKernelLoopLimit - 1 : 0;
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[45], pDst[2];
-                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)
@@ -1283,7 +1315,7 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    Rpp32s padVertical = i < padLength ? 0 : 1;
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                     process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
@@ -1315,7 +1347,7 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                Rpp32s padVertical = i < padLength ? 0 : 1;
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                 process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
@@ -1348,14 +1380,14 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                Rpp32s padVertical = i < padLength ? 0 : 1;
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
 
                 // process padLength number of columns in each row
                 for (int k = 0; k < padLength; k++)
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, 0);
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
                         dstPtrTemp++;
                     }
                 }
@@ -1391,7 +1423,7 @@ RppStatus emboss_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                Rpp32s padVertical = i < padLength ? 0 : 1;
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
                 process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                 vectorLoopCount += padLength * 3;
                 // process remaining columns in each row
