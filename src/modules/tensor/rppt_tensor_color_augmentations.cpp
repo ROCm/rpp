@@ -919,6 +919,7 @@ RppStatus rppt_color_jitter(RppPtr_t srcPtr,
     {
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
+#endif
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
