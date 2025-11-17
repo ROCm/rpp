@@ -251,7 +251,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                            rpp_pixel_check_0to1(pDst, 2);
+                            rpp_pixel_check_0to1(pDst, 3);
 
                         // In each pass, convolution filter is applied 24 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
@@ -303,8 +303,8 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
-                        __m256 pRow[9], pDst[2];
-                        rpp_load_filter_3x3_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        __m256 pRow[12], pDst[3];
+                        rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
@@ -316,7 +316,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                            rpp_pixel_check_0to1(pDst, 2);
+                            rpp_pixel_check_0to1(pDst, 3);
 
                         __m128 pDstPln[6];
                         rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
