@@ -60,7 +60,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
@@ -108,7 +108,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
     for bitDepth in list(BitDepthTestMode):
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
@@ -372,7 +372,7 @@ else:
                 for bitDepth in list(BitDepthTestMode):
                     for outputFormatToggle in list(outputFormat):
                         # There is no layout toggle for PLN1 case, so skip this case
-                        if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
+                        if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                             continue
 
                         if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
