@@ -1873,7 +1873,7 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
     Rpp32f *resizedFogIntensityMaskPtr = resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
 
     // Resize the mask to the maximum size present in the batch
-    rppt_resize_host(&fogMask_1920_1080[0], fogMaskSrcDescPtr, resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
+    rppt_resize(&fogMask_1920_1080[0], fogMaskSrcDescPtr, resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle, RPP_HOST_BACKEND);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -2668,7 +2668,7 @@ RppStatus rppt_fog_gpu(RppPtr_t srcPtr,
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_fogAlphaMaskPtr, &fogMask_1920_1080[0], maskSizeInBytes * 2, hipMemcpyHostToDevice, rpp::deref(rppHandle).GetStream()));
 
     // Resize the mask to the maximum size present in the batch
-    rppt_resize_gpu(d_fogAlphaMaskPtr, fogMaskSrcDescPtr, d_resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
+    rppt_resize(d_fogAlphaMaskPtr, fogMaskSrcDescPtr, d_resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle, RPP_HIP_BACKEND);
     CHECK_RETURN_STATUS(hipStreamSynchronize(rpp::deref(rppHandle).GetStream()));
 
     // Resetting the batch size in handle to match the user passed batch size
