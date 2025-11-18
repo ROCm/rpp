@@ -473,9 +473,9 @@ int main(int argc, char **argv)
     if(testCase == COLOR_TWIST)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&brightness, batchSize * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&contrast, batchSize * sizeof(RpptRGB)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&contrast, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&hue, batchSize * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(RpptRGB)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&saturation, batchSize * sizeof(Rpp32f)));
     }
 
     Rpp32f *contrastFactor = nullptr;
