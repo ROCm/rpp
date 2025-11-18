@@ -114,15 +114,14 @@ int main(int argc, char * argv[])
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, BitDepthTestMode);
 
-    string func = funcName;
-    // update func based on bitdepth and layout
+    // update funcName based on bitdepth and layout
     if(BitDepthTestMode == U8_TO_U8)
-        func += "_u8_";
+        funcName += "_u8_";
     else if(BitDepthTestMode == F32_TO_F32)
-        func += "_f32_";
+        funcName += "_f32_";
     int pln1OutTypeCase = 0, outputFormatToggle = 0;
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
-    func += funcType;
+    funcName += funcType;
 
     // set src/dst xyzwhd ROI tensors
     RpptROI3D *roiGenericSrcPtr = (RpptROI3D *) calloc(batchSize, sizeof(RpptROI3D));
@@ -169,7 +168,7 @@ int main(int argc, char * argv[])
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
     }
 
-    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
+    cout << "\nRunning " << funcName << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         vector<string>::const_iterator dataFilePathStart = dataFilePath.begin() + (iterCount * batchSize);
@@ -223,7 +222,6 @@ int main(int argc, char * argv[])
 
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
-            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             switch (testCase)
             {
@@ -241,7 +239,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_fused_multiply_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_fused_multiply_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -262,9 +260,9 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(BitDepthTestMode == U8_TO_U8)
-                        errorCodeCapture = rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+                        rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else if(BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+                        rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -280,7 +278,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -296,7 +294,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -318,9 +316,9 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8)
-                        errorCodeCapture = rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if (BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -336,7 +334,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_multiply_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_multiply_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -357,7 +355,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        errorCodeCapture = rppt_gaussian_noise_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_gaussian_noise_voxel(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle, RPP_HOST_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -380,11 +378,6 @@ int main(int argc, char * argv[])
             {
                 cout << "\nThe functionality doesn't yet exist in RPP\n";
                 return RPP_ERROR_NOT_IMPLEMENTED;
-            }
-            if (errorCodeCapture != RPP_SUCCESS)
-            {
-                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
-                return errorCodeCapture;
             }
         }
 
