@@ -63,7 +63,7 @@ extern "C" {
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_gridmask(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_gridmask(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Spatter augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The spatter augmentation adds random spatter of a user-defined color, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -85,7 +85,7 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_spatter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_spatter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Salt and pepper noise augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The salt and pepper noise augmentation adds SnP noise based on user defined noise/salt probabilities, and user defined salt/pepper values for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -109,7 +109,7 @@ RppStatus rppt_spatter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *noiseProbabilityTensor, Rpp32f *saltProbabilityTensor, Rpp32f *saltValueTensor, Rpp32f *pepperValueTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *noiseProbabilityTensor, Rpp32f *saltProbabilityTensor, Rpp32f *saltValueTensor, Rpp32f *pepperValueTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Shot noise augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The shot noise augmentation adds Poisson/shot noise based on a user defined shotNoiseFactor, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -130,7 +130,7 @@ RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_shot_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *shotNoiseFactorTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_shot_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *shotNoiseFactorTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Gaussian noise augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The gaussian noise augmentation adds Gaussian noise based on user defined means and standard deviations, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -152,7 +152,7 @@ RppStatus rppt_shot_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_gaussian_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_gaussian_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Non linear blend augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The non linear blend augmentation adds standard deviation based non-linear alpha-blending, between two sets of batches of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -174,7 +174,7 @@ RppStatus rppt_gaussian_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Water augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The water augmentation adds a water effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -199,7 +199,7 @@ RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr 
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_water(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *amplitudeXTensor, Rpp32f *amplitudeYTensor, Rpp32f *frequencyXTensor, Rpp32f *frequencyYTensor, Rpp32f *phaseXTensor, Rpp32f *phaseYTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_water(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *amplitudeXTensor, Rpp32f *amplitudeYTensor, Rpp32f *frequencyXTensor, Rpp32f *frequencyYTensor, Rpp32f *phaseXTensor, Rpp32f *phaseYTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief RICAP (Random Image Crop And Patch) augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The RICAP (Random Image Crop And Patch) augmentation runs as per https://arxiv.org/abs/1811.09030 for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -268,7 +268,7 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 // NOTE: Pixel mismatch of 5% is expected between HIP and HOST Tensor variations due to usage of fastexpavx() instead of exp() in HOST Tensor.
-RppStatus rppt_vignette_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *vignetteIntensityTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_vignette(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *vignetteIntensityTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Jitter augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The jitter augmentation adds a jitter effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
@@ -331,7 +331,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_gaussian_noise_voxel(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_gaussian_noise_voxel(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle,  RppBackend executionBackend);
 
 /*! \brief Erase augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details This function erases one or more user defined regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>

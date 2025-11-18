@@ -947,14 +947,20 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
-        Rpp32u height = dstImgSizes[j].height;
+        Rpp32u height = dstImgSizes[j].height; // height * 2
         Rpp32u width = dstImgSizes[j].width;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
         Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
-        for (int k = 0; k < height; k++)
+        for (int k = 0; k < height/2; k++)
+        {
+            memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+            tempOutputRow += elementsInRow;
+            outputRow += elementsInRowMax;
+        }
+        for (int k = 0; k < height/2; k++)
         {
             memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
             tempOutputRow += elementsInRow;
