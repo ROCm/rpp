@@ -107,7 +107,7 @@ __global__ void emboss_3x3_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -196,7 +196,7 @@ __global__ void emboss_5x5_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -294,7 +294,7 @@ __global__ void emboss_7x7_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -400,7 +400,7 @@ __global__ void emboss_9x9_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -494,7 +494,7 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[6];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -529,7 +529,7 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -563,7 +563,7 @@ __global__ void emboss_3x3_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -631,7 +631,7 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[20];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -668,7 +668,7 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -703,7 +703,7 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -775,7 +775,7 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[42];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -814,7 +814,7 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -852,7 +852,7 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -928,7 +928,7 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
     float *filter_row9 = &filter_row1[72];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -969,7 +969,7 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -1009,7 +1009,7 @@ __global__ void emboss_9x9_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -1097,7 +1097,7 @@ __global__ void emboss_3x3_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -1187,7 +1187,7 @@ __global__ void emboss_5x5_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -1285,7 +1285,7 @@ __global__ void emboss_7x7_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -1391,7 +1391,7 @@ __global__ void emboss_9x9_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
@@ -1498,7 +1498,7 @@ __global__ void emboss_3x3_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1592,7 +1592,7 @@ __global__ void emboss_5x5_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1694,7 +1694,7 @@ __global__ void emboss_7x7_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1804,7 +1804,7 @@ __global__ void emboss_9x9_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
