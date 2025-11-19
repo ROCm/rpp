@@ -47,7 +47,6 @@ extern "C" {
 #include "rppt_tensor_statistical_operations.h"
 #include "rppt_tensor_audio_augmentations.h"
 #include "rppt_tensor_bitwise_operations.h"
-#include "rppi_legacy_augmentations.h"  // To be removed once legacy augmentations are supported with tensor API
 
 #ifdef __cplusplus
 }
