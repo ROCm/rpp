@@ -171,7 +171,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t 
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
-#if GPU_SUPPORT
+#if RPP_BACKEND_HIP
 
 /*! \brief Set accelerator stream given a RPP handle.
  * \details Function to set an accelerator stream previously created.
