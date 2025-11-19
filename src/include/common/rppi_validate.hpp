@@ -30,11 +30,6 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rppdefs.h"
-#include "handle.hpp"
-
-#ifdef GPU_SUPPORT
-#include <hip/hip_runtime_api.h>
-#endif
 
 inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
 {
@@ -60,121 +55,6 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     }
     return layoutParams;
 }
-
-inline void copy_host_maxSrcSize(RppiSize maxSrcSize, rpp::Handle& handle)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-        handle.GetInitHandle()->mem.mcpu.maxSrcSize[i].height = maxSrcSize.height;
-        handle.GetInitHandle()->mem.mcpu.maxSrcSize[i].width = maxSrcSize.width;
-    }
-}
-
-inline void copy_host_roi(RppiROI roiPoints, rpp::Handle& handle)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-        handle.GetInitHandle()->mem.mcpu.roiPoints[i].roiHeight = roiPoints.roiHeight;
-        handle.GetInitHandle()->mem.mcpu.roiPoints[i].roiWidth = roiPoints.roiWidth;
-        handle.GetInitHandle()->mem.mcpu.roiPoints[i].x = roiPoints.x;
-        handle.GetInitHandle()->mem.mcpu.roiPoints[i].y = roiPoints.y;
-    }
-}
-
-#ifdef GPU_SUPPORT
-
-inline void copy_srcSize(RppiSize *srcSize, rpp::Handle& handle)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-           handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] = srcSize[i].height;
-           handle.GetInitHandle()->mem.mgpu.csrcSize.width[i] = srcSize[i].width;
-    }
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.height, handle.GetInitHandle()->mem.mgpu.csrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcSize.width, handle.GetInitHandle()->mem.mgpu.csrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#endif // backend
-}
-
-inline void copy_roi(RppiROI roiPoints, rpp::Handle& handle)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-        if(roiPoints.roiHeight == 0 && roiPoints.roiWidth == 0)
-        {
-            handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i];
-            handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-        }
-        else
-        {
-            handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight[i] = roiPoints.roiHeight + roiPoints.y;
-            handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth[i] = roiPoints.roiWidth + roiPoints.x;
-        }
-        handle.GetInitHandle()->mem.mgpu.croiPoints.x[i] = roiPoints.x;
-        handle.GetInitHandle()->mem.mgpu.croiPoints.y[i] = roiPoints.y;
-    }
-
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiHeight, handle.GetInitHandle()->mem.mgpu.croiPoints.roiHeight, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.roiWidth, handle.GetInitHandle()->mem.mgpu.croiPoints.roiWidth, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.x, handle.GetInitHandle()->mem.mgpu.croiPoints.x, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.roiPoints.y, handle.GetInitHandle()->mem.mgpu.croiPoints.y, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#endif // backend
-}
-
-inline void copy_param_float(float *param, rpp::Handle& handle, Rpp32u paramIndex)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-        handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem[i] = param[i];
-    }
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.floatArr[paramIndex].floatmem, handle.GetInitHandle()->mem.mcpu.floatArr[paramIndex].floatmem, sizeof(Rpp32f) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#endif // backend
-}
-
-inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
-{
-    for(int i = 0; i < handle.GetBatchSize(); i++)
-    {
-        handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] = maxSrcSize.height;
-        handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i] = maxSrcSize.width;
-    }
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.height, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.maxSrcSize.width, handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#endif // backend
-}
-
-inline void get_srcBatchIndex(rpp::Handle& handle, unsigned int channel, RppiChnFormat chnFormat, bool is_padded = true)
-{
-    int i;
-    handle.GetInitHandle()->mem.mcpu.srcBatchIndex[0] = 0;
-    for(i = 0; i < handle.GetBatchSize() - 1; i++)
-    {
-        handle.GetInitHandle()->mem.mcpu.srcBatchIndex[i+1] = handle.GetInitHandle()->mem.mcpu.srcBatchIndex[i] + handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i] * channel;
-    }
-    for(i = 0; i < handle.GetBatchSize(); i++)
-    {
-        if(chnFormat != RPPI_CHN_PLANAR)
-        {
-            handle.GetInitHandle()->mem.mcpu.inc[i] = 1;
-        }
-        else
-        {
-            if(!is_padded)
-                handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.csrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.csrcSize.width[i];
-            else
-                handle.GetInitHandle()->mem.mcpu.inc[i] = handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.height[i] * handle.GetInitHandle()->mem.mgpu.cmaxSrcSize.width[i];
-        }
-    }
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.srcBatchIndex, handle.GetInitHandle()->mem.mcpu.srcBatchIndex, sizeof(Rpp64u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(handle.GetInitHandle()->mem.mgpu.inc, handle.GetInitHandle()->mem.mcpu.inc, sizeof(Rpp32u) * handle.GetBatchSize(), hipMemcpyHostToDevice));
-#endif // backend
-}
-
-#endif // GPU_SUPPORT
 
 inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPtr, RpptRoiType type)
 {
