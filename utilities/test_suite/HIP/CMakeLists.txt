@@ -189,17 +189,6 @@ else()
                                 add_executable(Tensor_image_hip Tensor_image_hip.cpp)
                                 target_link_libraries(Tensor_image_hip ${LINK_LIBRARY_LIST})
                                 message("-- ${White}Tensor_image_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
-                                # if (OPENPYXL_FOUND EQUAL 0)                                                                                                                                   # added only on HOST
-                                #     message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")                                                                                           # added only on HOST
-                                #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     add_executable(BatchPD_hip_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln1.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     add_executable(BatchPD_hip_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                # else()                                                                                                                                                        # added only on HOST
-                                #     message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")          # added only on HOST
-                                # endif(OPENPYXL_FOUND EQUAL 0)                                                                                                                                 # added only on HOST
                             else()
                                 message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Image tests successfully!${ColourReset}")
                             endif(OpenCV_FOUND)

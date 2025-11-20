@@ -24,41 +24,6 @@ SOFTWARE.
 
 project(modules)
 
-function(add_kernels KERNEL_FILES)
-    set(INIT_KERNELS_LIST)
-    foreach(KERNEL_FILE ${KERNEL_FILES})
-        if("${CMAKE_VERSION}" VERSION_LESS 3.0)
-            configure_file(${KERNEL_FILE} ${KERNEL_FILE}.delete)
-        else()
-            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${KERNEL_FILE})
-        endif()
-        get_filename_component(BASE_NAME ${KERNEL_FILE} NAME_WE)
-        string(TOUPPER "${BASE_NAME}" KEY_NAME)
-        string(MAKE_C_IDENTIFIER "${KEY_NAME}" VAR_NAME)
-        list(APPEND INIT_KERNELS_LIST "    { \"${KEY_NAME}\", std::string(reinterpret_cast<const char*>(${VAR_NAME}), ${VAR_NAME}_SIZE) }")
-    endforeach()
-    string(REPLACE ";" ",\n" INIT_KERNELS "${INIT_KERNELS_LIST}")
-    configure_file(batch_pd/kernel.cpp.in ${PROJECT_BINARY_DIR}/kernel.cpp)
-endfunction()
-
-function(add_kernel_includes KERNEL_FILES)
-    set(INIT_KERNELS_LIST)
-    foreach(KERNEL_FILE ${KERNEL_FILES})
-        if("${CMAKE_VERSION}" VERSION_LESS 3.0)
-            configure_file(${KERNEL_FILE} ${KERNEL_FILE}.delete)
-        else()
-            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${KERNEL_FILE})
-        endif()
-        get_filename_component(BASE_NAME ${KERNEL_FILE} NAME_WE)
-        get_filename_component(FILE_NAME ${KERNEL_FILE} NAME)
-        string(TOUPPER "${BASE_NAME}" KEY_NAME)
-        string(MAKE_C_IDENTIFIER "${KEY_NAME}" VAR_NAME)
-        list(APPEND INIT_KERNELS_LIST "    { \"${FILE_NAME}\", std::string(reinterpret_cast<const char*>(${VAR_NAME}), ${VAR_NAME}_SIZE) }")
-    endforeach()
-    string(REPLACE ";" ",\n" INIT_KERNELS "${INIT_KERNELS_LIST}")
-    configure_file(batch_pd/kernel_includes.cpp.in ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
-endfunction()
-
 function(remove_audio_augmentations SOURCE_LIST BACKEND)
     if( "${BACKEND}" STREQUAL "HIP")
         list(REMOVE_ITEM ${SOURCE_LIST}
@@ -110,8 +75,6 @@ set(CPPFILES "handle_api.cpp" "handle_host.cpp")
 file(GLOB TENSOR_CPPFILES "tensor/*.cpp" )
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${TENSOR_CPPFILES})
-file(GLOB BATCH_PD_CPPFILES "legacy_dep/*.cpp" )
-list(APPEND Rpp_Source ${BATCH_PD_CPPFILES})
 
 if("${TIME_INFO}" STREQUAL "1")
     add_definitions(-DTIME_INFO)
@@ -125,9 +88,6 @@ if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB MOD_HIP_CPP_TENSOR_KERNELS "tensor/hip/kernel/*.cpp" )
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HIP_CPP} ${MOD_HIP_ERRORS_CPP} ${MOD_HIP_CPP_TENSOR_KERNELS} ${MOD_HOST_CPP_TENSOR_KERNELS})
-    file(GLOB MOD_HIP_CPP_BATCHPD_KERNELS "legacy_dep/hip/kernel/*.cpp" )
-    file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
-    list(APPEND Rpp_Source ${MOD_HIP_CPP_BATCHPD_KERNELS} ${MOD_CPU_CPP_BATCHPD_KERNELS})
     # Remove audio augmentations from the list of files to be compiled
     if(NOT RPP_AUDIO_SUPPORT)
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
@@ -145,9 +105,6 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     file(GLOB MOD_HOST_CPP_TENSOR_KERNELS "tensor/cpu/kernel/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_TENSOR_KERNELS})
-
-    file(GLOB MOD_CPU_CPP_BATCHPD_KERNELS "legacy_dep/cpu/kernel/*.cpp" )
-    list(APPEND Rpp_Source ${MOD_CPU_CPP_BATCHPD_KERNELS})
     # Remove audio augmentations from the list of files to be compiled
     if(NOT RPP_AUDIO_SUPPORT)
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
@@ -170,7 +127,6 @@ target_include_directories( ${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/legacy_dep
         ${CMAKE_SOURCE_DIR}/src/include/common
         ${CMAKE_SOURCE_DIR}/src/include/common/cpu
         ${CMAKE_SOURCE_DIR}/src/include/tensor
