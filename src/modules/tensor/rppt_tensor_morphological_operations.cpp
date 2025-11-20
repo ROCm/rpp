@@ -185,5 +185,6 @@ RppStatus rppt_dilate(RppPtr_t srcPtr,
 
         return RPP_SUCCESS;
     }
+#endif
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
