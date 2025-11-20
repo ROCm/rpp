@@ -49,20 +49,20 @@ __device__ constexpr float CHROMA_OFFSET = 128.0f;
 __device__ constexpr int HISTOGRAM_BINS = 256;
 
 // Vectorized constants for SIMD operations
-__device__ const float4 yR_f4 = (float4)Y_FROM_R;
-__device__ const float4 yG_f4 = (float4)Y_FROM_G;
-__device__ const float4 yB_f4 = (float4)Y_FROM_B;
+__device__ const float4 yR_f4 = {Y_FROM_R, Y_FROM_R, Y_FROM_R, Y_FROM_R};
+__device__ const float4 yG_f4 = {Y_FROM_G, Y_FROM_G, Y_FROM_G, Y_FROM_G};
+__device__ const float4 yB_f4 = {Y_FROM_B, Y_FROM_B, Y_FROM_B, Y_FROM_B};
 
-__device__ const float4 cbR_f4 = (float4)CB_FROM_R;
-__device__ const float4 cbG_f4 = (float4)CB_FROM_G;
-__device__ const float4 cbB_f4 = (float4)CB_FROM_B;
+__device__ const float4 cbR_f4 = {CB_FROM_R ,CB_FROM_R, CB_FROM_R, CB_FROM_R};
+__device__ const float4 cbG_f4 = {CB_FROM_G ,CB_FROM_G, CB_FROM_G, CB_FROM_G};
+__device__ const float4 cbB_f4 = {CB_FROM_B ,CB_FROM_B, CB_FROM_B, CB_FROM_B};
 
-__device__ const float4 crR_f4 = (float4)CR_FROM_R;
-__device__ const float4 crG_f4 = (float4)CR_FROM_G;
-__device__ const float4 crB_f4 = (float4)CR_FROM_B;
+__device__ const float4 crR_f4 = {CR_FROM_R, CR_FROM_R, CR_FROM_R, CR_FROM_R};
+__device__ const float4 crG_f4 = {CR_FROM_G, CR_FROM_G, CR_FROM_G, CR_FROM_G};
+__device__ const float4 crB_f4 = {CR_FROM_B, CR_FROM_B, CR_FROM_B, CR_FROM_B};
 
-__device__ const float4 maxVal255_f4 = (float4)MAX_PIXEL_VALUE;
-__device__ const float4 maxVal128_f4 = (float4)CHROMA_OFFSET;
+__device__ const float4 maxVal255_f4 = {MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE, MAX_PIXEL_VALUE};
+__device__ const float4 maxVal128_f4 = {CHROMA_OFFSET, CHROMA_OFFSET, CHROMA_OFFSET, CHROMA_OFFSET};
 
 __device__ inline float4 clamp(float4 v, float lo, float hi)
 {
@@ -91,22 +91,22 @@ __device__ inline void rgb_to_ycbcr_hip_compute(d_float24 &rgb_f24, d_float8 &y_
 __device__ inline void ycbcr_to_rgb_hip_compute(d_float24 &rgb_f24, d_float8 &y_f8, d_float8 &cb_f8, d_float8 &cr_f8)
 {
     // Subtract 128 from Cb and Cr
-    cb_f8.f4[0] -= (float4)CHROMA_OFFSET;
-    cb_f8.f4[1] -= (float4)CHROMA_OFFSET;
-    cr_f8.f4[0] -= (float4)CHROMA_OFFSET;
-    cr_f8.f4[1] -= (float4)CHROMA_OFFSET;
+    cb_f8.f4[0] -= MAKE_FLOAT4(CHROMA_OFFSET);
+    cb_f8.f4[1] -= MAKE_FLOAT4(CHROMA_OFFSET);
+    cr_f8.f4[0] -= MAKE_FLOAT4(CHROMA_OFFSET);
+    cr_f8.f4[1] -= MAKE_FLOAT4(CHROMA_OFFSET);
 
     // R = Y + 1.402 * Cr
-    rgb_f24.f4[0] = clamp((y_f8.f4[0] + (float4)R_FROM_CR * cr_f8.f4[0]), 0.0f, MAX_PIXEL_VALUE);
-    rgb_f24.f4[1] = clamp((y_f8.f4[1] + (float4)R_FROM_CR * cr_f8.f4[1]), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[0] = clamp((y_f8.f4[0] + MAKE_FLOAT4(R_FROM_CR) * cr_f8.f4[0]), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[1] = clamp((y_f8.f4[1] + MAKE_FLOAT4(R_FROM_CR) * cr_f8.f4[1]), 0.0f, MAX_PIXEL_VALUE);
 
     // G = Y - 0.344136 * Cb - 0.714136 * Cr
-    rgb_f24.f4[2] = clamp((y_f8.f4[0] + ((float4)G_FROM_CB * cb_f8.f4[0]) + ((float4)G_FROM_CR * cr_f8.f4[0])), 0.0f, MAX_PIXEL_VALUE);
-    rgb_f24.f4[3] = clamp((y_f8.f4[1] + ((float4)G_FROM_CB * cb_f8.f4[1]) + ((float4)G_FROM_CR * cr_f8.f4[1])), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[2] = clamp((y_f8.f4[0] + (MAKE_FLOAT4(G_FROM_CB) * cb_f8.f4[0]) + (MAKE_FLOAT4(G_FROM_CR) * cr_f8.f4[0])), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[3] = clamp((y_f8.f4[1] + (MAKE_FLOAT4(G_FROM_CB) * cb_f8.f4[1]) + (MAKE_FLOAT4(G_FROM_CR) * cr_f8.f4[1])), 0.0f, MAX_PIXEL_VALUE);
 
     // B = Y + 1.772 * Cb
-    rgb_f24.f4[4] = clamp((y_f8.f4[0] + (float4)B_FROM_CB * cb_f8.f4[0]), 0.0f, MAX_PIXEL_VALUE);
-    rgb_f24.f4[5] = clamp((y_f8.f4[1] + (float4)B_FROM_CB * cb_f8.f4[1]), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[4] = clamp((y_f8.f4[0] + MAKE_FLOAT4(B_FROM_CB) * cb_f8.f4[0]), 0.0f, MAX_PIXEL_VALUE);
+    rgb_f24.f4[5] = clamp((y_f8.f4[1] + MAKE_FLOAT4(B_FROM_CB) * cb_f8.f4[1]), 0.0f, MAX_PIXEL_VALUE);
 }
 
 __global__ void collect_hist_pln_hip_tensor(const unsigned char *__restrict__ srcPtr,
@@ -238,6 +238,64 @@ __global__ void convert_rgb_pkd3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
     rpp_hip_pack_float8_and_store8(crPtr + dstIdx, &cr_f8);
 }
 
+__global__ void convert_rgb_pln3_to_ycbcr_pln3(unsigned char *__restrict__ srcPtr,
+                                               uint3 srcStridesNCH,
+                                               unsigned char *__restrict__ yPtr,
+                                               unsigned char *__restrict__ cbPtr,
+                                               unsigned char *__restrict__ crPtr,
+                                               uint2 dstStridesNH,
+                                               RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+        return;
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
+    
+    d_float24 rgb_f24;
+    d_float8 y_f8, cb_f8, cr_f8;
+    
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &rgb_f24);
+    rgb_to_ycbcr_hip_compute(rgb_f24, y_f8, cb_f8, cr_f8);
+    
+    rpp_hip_pack_float8_and_store8(yPtr + dstIdx, &y_f8);
+    rpp_hip_pack_float8_and_store8(cbPtr + dstIdx, &cb_f8);
+    rpp_hip_pack_float8_and_store8(crPtr + dstIdx, &cr_f8);
+}
+
+__global__ void convert_ycbcr_pln3_to_rgb_pln3(unsigned char *__restrict__ yPtr,
+                                               unsigned char *__restrict__ cbPtr,
+                                               unsigned char *__restrict__ crPtr,
+                                               uint2 srcStridesWH,
+                                               unsigned char *__restrict__ dstPtr,
+                                               uint3 dstStridesNCH,
+                                               RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+        return;
+
+    uint srcIdx = (id_z * srcStridesWH.y * srcStridesWH.x) + (id_y * srcStridesWH.x) + id_x;
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    d_float24 rgb_f24;
+    d_float8 y_f8, cb_f8, cr_f8;
+
+    rpp_hip_load8_and_unpack_to_float8(yPtr + srcIdx, &y_f8);
+    rpp_hip_load8_and_unpack_to_float8(cbPtr + srcIdx, &cb_f8);
+    rpp_hip_load8_and_unpack_to_float8(crPtr + srcIdx, &cr_f8);
+
+    ycbcr_to_rgb_hip_compute(rgb_f24, y_f8, cb_f8, cr_f8);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &rgb_f24);
+}
+
 __global__ void convert_ycbcr_pln3_to_rgb_pkd3(unsigned char *__restrict__ yPtr,
                                                unsigned char *__restrict__ cbPtr,
                                                unsigned char *__restrict__ crPtr,
@@ -309,9 +367,9 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
             int globalThreads_x, globalThreads_y, globalThreads_z;
             
             // Convert RGB to YCbCr
-            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
-                                     srcDescPtr->strides.hStride, srcDescPtr->h, srcDescPtr->n, 8);
-
+            globalThreads_x = (srcDescPtr->w + 7) >> 3;
+            globalThreads_y = dstDescPtr->h;
+            globalThreads_z = handle.GetBatchSize();
             hipLaunchKernelGGL(convert_rgb_pkd3_to_ycbcr_pln3,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
@@ -385,21 +443,155 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                               roiTensorPtrSrc);
 
             // Convert YCbCr back to RGB
-            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
-                                   dstDescPtr->w, dstDescPtr->h, dstDescPtr->n, 8);
+            globalThreads_x = (dstDescPtr->w + 7) >> 3;
+            globalThreads_y = dstDescPtr->h;
+            globalThreads_z = handle.GetBatchSize();
                 
-            hipLaunchKernelGGL(convert_ycbcr_pln3_to_rgb_pkd3,
+            if(dstDescPtr->layout == RpptLayout::NHWC)
+            {
+                                hipLaunchKernelGGL(convert_ycbcr_pln3_to_rgb_pkd3,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                    ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                yBuf, cbBuf, crBuf,
+                                make_uint2(srcDescPtr->w, srcDescPtr->h),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                roiTensorPtrSrc);
+            }
+            else if(dstDescPtr->layout == RpptLayout::NCHW)
+            {
+                                hipLaunchKernelGGL(convert_ycbcr_pln3_to_rgb_pln3,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                    ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                yBuf, cbBuf, crBuf,
+                                make_uint2(srcDescPtr->w, srcDescPtr->h),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                roiTensorPtrSrc);
+            }
+        }
+        else if(srcDescPtr->layout == RpptLayout::NCHW)
+        {
+            int globalThreads_x, globalThreads_y, globalThreads_z;
+            
+            // Convert RGB to YCbCr
+            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
+                                     srcDescPtr->w, srcDescPtr->h, srcDescPtr->n, 8);
+
+            hipLaunchKernelGGL(convert_rgb_pln3_to_ycbcr_pln3,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                   ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                   ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               yBuf, cbBuf, crBuf,
+                               make_uint2(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                               roiTensorPtrSrc);
+
+            // Zero histogram buffer
+            hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
+
+            // Collect histogram for Y channel
+            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
+                                   srcDescPtr->w, srcDescPtr->h, srcDescPtr->n);
+                                   
+            hipLaunchKernelGGL(collect_hist_pln_hip_tensor,
                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
                                    ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                               0,
                               handle.GetStream(),
-                              yBuf, cbBuf, crBuf,
-                              make_uint2(srcDescPtr->w, srcDescPtr->h),
-                              dstPtr,
-                              make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                              yBuf,
+                              roiTensorPtrSrc,
+                              make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                              d_hist);
+
+            // Build LUTs from histograms
+            std::vector<int> img_sizes(batchSize);
+            for (int b = 0; b < batchSize; ++b)
+            {
+                int w = roiTensorPtrSrc[b].xywhROI.roiWidth;
+                int h = roiTensorPtrSrc[b].xywhROI.roiHeight;
+                img_sizes[b] = w * h;
+            }
+            
+            int* d_img_sizes;
+            hipMalloc(&d_img_sizes, batchSize * sizeof(int));
+            hipMemcpyAsync(d_img_sizes, img_sizes.data(), batchSize * sizeof(int), hipMemcpyHostToDevice, handle.GetStream());
+
+            hipLaunchKernelGGL(build_lut_from_hist_kernel, 
+                              dim3(batchSize), 
+                              dim3(HISTOGRAM_BINS), 
+                              0, 
+                              handle.GetStream(),
+                              d_hist, d_lut, d_img_sizes, batchSize);
+                              
+            hipFree(d_img_sizes);
+
+            // Apply LUT to Y channel
+            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
+                                   dstDescPtr->w, dstDescPtr->h, dstDescPtr->n);
+
+            hipLaunchKernelGGL(apply_lut_pln1_hip_tensor,
+                              dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                   ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                   ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                              dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                              0,
+                              handle.GetStream(),
+                              yBuf,
+                              make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                              yBuf,
+                              make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                              d_lut,
                               roiTensorPtrSrc);
+
+            // Convert YCbCr back to RGB
+            calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
+                                   dstDescPtr->w, dstDescPtr->h, dstDescPtr->n, 8);
+                
+            if(dstDescPtr->layout == RpptLayout::NHWC)
+            {
+                                hipLaunchKernelGGL(convert_ycbcr_pln3_to_rgb_pkd3,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                    ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                yBuf, cbBuf, crBuf,
+                                make_uint2(srcDescPtr->w, srcDescPtr->h),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                roiTensorPtrSrc);
+            }
+            else if(dstDescPtr->layout == RpptLayout::NCHW)
+            {
+                                hipLaunchKernelGGL(convert_ycbcr_pln3_to_rgb_pln3,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                                    ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
+                                    ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                yBuf, cbBuf, crBuf,
+                                make_uint2(srcDescPtr->w, srcDescPtr->h),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                roiTensorPtrSrc);
+            }
         }
 
         hipFree(yuvBuf);
