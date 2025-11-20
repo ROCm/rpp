@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_log_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle);
+                    rppt_log(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log1p";
 
                 startWallTime = omp_get_wtime();
-                rppt_log1p_gpu(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle);
+                rppt_log1p(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
 
                 break;
             }

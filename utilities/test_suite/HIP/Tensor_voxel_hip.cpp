@@ -252,7 +252,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(BitDepthTestMode == F32_TO_F32)
-                        rppt_fused_multiply_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_fused_multiply_add_scalar(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -291,7 +291,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_add_scalar(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -307,7 +307,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        rppt_subtract_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_subtract_scalar(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -347,7 +347,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == F32_TO_F32)
-                        rppt_multiply_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_multiply_scalar(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
