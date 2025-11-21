@@ -1,7 +1,7 @@
 #[[
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,30 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+    message("-- examples/brightness: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+# Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+
 project(examples/brightness)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 
 # Set message options
 if(NOT WIN32)
@@ -42,14 +62,14 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
-find_package(hip QUIET)
+find_package(HIP QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 
 # OpenMP
-find_package(OpenMP REQUIRED)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+find_package(OpenMP COMPONENTS CXX REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 if(TurboJpeg_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp and TurboJpeg${ColourReset}")
@@ -59,19 +79,17 @@ else()
     message("-- ${Yellow}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
 
-if (hip_FOUND AND OpenCV_FOUND)
+if (HIP_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-
-    include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
+    include_directories(${HIP_INCLUDE_DIRS} ${HIP_INCLUDE_DIRS}/hip)
     include_directories(${OpenCV_INCLUDE_DIRS})
     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(brightness_hip brightness_hip.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
-    target_link_libraries(brightness_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
+    target_link_libraries(brightness_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${HIP_LIBRARIES} ${LINK_LIBRARY_LIST} hip::device)
+
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

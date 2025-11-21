@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "filesystem.h"
 #include "rpp.h"
 #include "rpp_test_suite_common.h"
 #include <sys/types.h>
@@ -41,6 +40,7 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <random>
 #include <map>
+#include <unordered_set>
 #include <iomanip>
 
 using namespace cv;
@@ -73,7 +73,9 @@ std::map<int, string> augmentationMap =
     {7, "snow"},
     {8, "noise"},
     {10, "fog"},
+    {11, "rain"},
     {13, "exposure"},
+    {15, "threshold"},
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
@@ -91,13 +93,20 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {39, "resize_crop_mirror"},
+    {40, "erode"},
+    {41, "dilate"},
+    {42, "hue"},
+    {43, "saturation"},
     {45, "color_temperature"},
     {46, "vignette"},
     {49, "box_filter"},
+    {51, "median_filter"},
     {54, "gaussian_filter"},
     {61, "magnitude"},
     {63, "phase"},
     {65, "bitwise_and"},
+    {66, "bitwise_not"},
+    {67, "bitwise_xor"},
     {68, "bitwise_or"},
     {70, "copy"},
     {79, "remap"},
@@ -106,15 +115,92 @@ std::map<int, string> augmentationMap =
     {82, "ricap"},
     {83, "gridmask"},
     {84, "spatter"},
-    {85, "swap_channels"},
+    {85, "channel_permute"},
     {86, "color_to_greyscale"},
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
     {90, "tensor_mean"},
     {91, "tensor_stddev"},
-    {92, "slice"}
+    {92, "slice"},
+    {93, "jpeg_compression_distortion"},
+    {94, "posterize"},
+    {95, "solarize"}
 };
+
+enum Augmentation {
+    BRIGHTNESS = 0,
+    GAMMA_CORRECTION = 1,
+    BLEND = 2,
+    CONTRAST = 4,
+    PIXELATE = 5,
+    JITTER = 6,
+    NOISE = 8,
+    FOG = 10,
+    RAIN = 11,
+    EXPOSURE = 13,
+    THRESHOLD = 15,
+    FLIP = 20,
+    RESIZE = 21,
+    ROTATE = 23,
+    WARP_AFFINE = 24,
+    LENS_CORRECTION = 26,
+    WARP_PERSPECTIVE = 28,
+    WATER = 29,
+    NON_LINEAR_BLEND = 30,
+    COLOR_CAST = 31,
+    ERASE = 32,
+    CROP_AND_PATCH = 33,
+    LOOK_UP_TABLE = 34,
+    GLITCH = 35,
+    COLOR_TWIST = 36,
+    CROP = 37,
+    CROP_MIRROR_NORMALIZE = 38,
+    RESIZE_CROP_MIRROR = 39,
+    ERODE = 40,
+    DILATE = 41,
+    HUE = 42,
+    SATURATION = 43,
+    COLOR_TEMPERATURE = 45,
+    VIGNETTE = 46,
+    BOX_FILTER = 49,
+    MEDIAN_FILTER = 51,
+    GAUSSIAN_FILTER = 54,
+    MAGNITUDE = 61,
+    PHASE = 63,
+    BITWISE_AND = 65,
+    BITWISE_NOT = 66,
+    BITWISE_XOR = 67,
+    BITWISE_OR = 68,
+    COPY = 70,
+    REMAP = 79,
+    RESIZE_MIRROR_NORMALIZE = 80,
+    COLOR_JITTER = 81,
+    RICAP = 82,
+    GRIDMASK = 83,
+    SPATTER = 84,
+    CHANNEL_PERMUTE = 85,
+    COLOR_TO_GREYSCALE = 86,
+    TENSOR_SUM = 87,
+    TENSOR_MIN = 88,
+    TENSOR_MAX = 89,
+    TENSOR_MEAN = 90,
+    TENSOR_STDDEV = 91,
+    SLICE = 92,
+    JPEG_COMPRESSION_DISTORTION = 93,
+    POSTERIZE = 94,
+    SOLARIZE = 95
+};
+
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
+const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
+const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
+const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};
+const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
+const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
+const unordered_set<int> noiseTypeCases = {NOISE};
+const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
@@ -271,45 +357,45 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
 }
 
 // sets descriptor data types of src/dst
-inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void set_descriptor_data_type(int BitDepthTestMode, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    if (ip_bitDepth == 0)
+    if (BitDepthTestMode == U8_TO_U8)
     {
         funcName += "_u8_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::U8;
     }
-    else if (ip_bitDepth == 1)
+    else if (BitDepthTestMode == F16_TO_F16)
     {
         funcName += "_f16_";
         srcDescPtr->dataType = RpptDataType::F16;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 2)
+    else if (BitDepthTestMode == F32_TO_F32)
     {
         funcName += "_f32_";
         srcDescPtr->dataType = RpptDataType::F32;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 3)
+    else if (BitDepthTestMode == U8_TO_F16)
     {
         funcName += "_u8_f16_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F16;
     }
-    else if (ip_bitDepth == 4)
+    else if (BitDepthTestMode == U8_TO_F32)
     {
         funcName += "_u8_f32_";
         srcDescPtr->dataType = RpptDataType::U8;
         dstDescPtr->dataType = RpptDataType::F32;
     }
-    else if (ip_bitDepth == 5)
+    else if (BitDepthTestMode == I8_TO_I8)
     {
         funcName += "_i8_";
         srcDescPtr->dataType = RpptDataType::I8;
         dstDescPtr->dataType = RpptDataType::I8;
     }
-    else if (ip_bitDepth == 6)
+    else if (BitDepthTestMode == U8_TO_I8)
     {
         funcName += "_u8_i8_";
         srcDescPtr->dataType = RpptDataType::U8;
@@ -559,15 +645,15 @@ inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batch
 }
 
 // Convert inputs to correponding bit depth specified by user
-inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int inputBitDepth, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
+inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int BitDepthTestMode, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
 {
-    if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
+    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32)
     {
         memcpy(input, inputu8, inputBufferSize);
         if(dualInputCase)
             memcpy(input_second, inputu8Second, inputBufferSize);
     }
-    else if (inputBitDepth == 1)
+    else if (BitDepthTestMode == F16_TO_F16)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp16f *inputf16Temp, *inputf16SecondTemp;
@@ -584,7 +670,7 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
                 *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
         }
     }
-    else if (inputBitDepth == 2)
+    else if (BitDepthTestMode == F32_TO_F32)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp32f *inputf32Temp, *inputf32SecondTemp;
@@ -601,7 +687,7 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
                 *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
         }
     }
-    else if (inputBitDepth == 5)
+    else if (BitDepthTestMode == I8_TO_I8)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp8s *inputi8Temp, *inputi8SecondTemp;
@@ -622,13 +708,13 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
 }
 
 // Reconvert other bit depths to 8u for output display purposes
-inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
+inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int BitDepthTestMode, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
 {
-    if (inputBitDepth == 0)
+    if (BitDepthTestMode == U8_TO_U8)
     {
         memcpy(outputu8, output, outputBufferSize);
     }
-    else if ((inputBitDepth == 1) || (inputBitDepth == 3))
+    else if ((BitDepthTestMode == F16_TO_F16) || (BitDepthTestMode == U8_TO_F16))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
@@ -639,7 +725,7 @@ inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inp
             outputTemp++;
         }
     }
-    else if ((inputBitDepth == 2) || (inputBitDepth == 4))
+    else if ((BitDepthTestMode == F32_TO_F32) || (BitDepthTestMode == U8_TO_F32))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
@@ -650,7 +736,7 @@ inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inp
             outputTemp++;
         }
     }
-    else if ((inputBitDepth == 5) || (inputBitDepth == 6))
+    else if ((BitDepthTestMode == I8_TO_I8) || (BitDepthTestMode == U8_TO_I8))
     {
         Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
         Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
@@ -931,6 +1017,36 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
     }
 }
 
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
+                Rpp32f diff = abs(*outVal - *outRefVal);
+                if(diff <= 2e-6)
+                    matchedIdx++;
+            }
+        }
+        if(matchedIdx == (height * width) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
 void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -967,13 +1083,48 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
     }
 }
 
-template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
+// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j * 3;
+                    Rpp32f diff = abs(*outVal - *outRefVal);
+                    if(diff <= 2e-6)
+                        matchedIdx++;
+                }
+            }
+        }
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
+
+inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
     string refFile = "";
     int refOutputWidth, refOutputHeight;
-    if(testCase == 26)
+    if(testCase == LENS_CORRECTION)
     {
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
@@ -987,7 +1138,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
-    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+    string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
         func += dataType[srcDescPtr->dataType];
@@ -999,53 +1150,77 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     std::string binFile = func + "Tensor";
-    if(dstDescPtr->layout == RpptLayout::NHWC)
+    if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
     else
     {
-        if (dstDescPtr->c == 3)
+        if (srcDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
+            func += "Tensor_PLN1";
+    }
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        func += "_to_PKD3";
+    else
+    {
+        if (dstDescPtr->c == 3)
+            func += "_to_PLN3";
+        else
         {
-            if(testCase == 86)
-            {
-                if(srcDescPtr->layout == RpptLayout::NHWC)
-                    func += "Tensor_PKD3";
-                else
-                    func += "Tensor_PLN3";
+            func += "_to_PLN1";
+            if(testCase == COLOR_TO_GREYSCALE)
                 pln1RefStride = 0;
-            }
-            else
-                func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
+
+    if(testCase == RESIZE ||testCase == ROTATE || testCase == WARP_AFFINE || testCase == WARP_PERSPECTIVE || testCase == REMAP)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
     }
-    else if(testCase == 8)
+    else if(testCase == NOISE)
     {
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == 49)
+    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER || testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
     }
+    else if(testCase == CHANNEL_PERMUTE)
+    {
+        func += "_permOrder" + std::to_string(additionalParam);
+        binFile += "_permOrder" + std::to_string(additionalParam);
+    }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
+    if(dstDescPtr->dataType == RpptDataType::U8)
+    {
+        Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+        read_bin_file(refFile, binaryContent);
 
-    Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
-    read_bin_file(refFile, binaryContent);
-
-    if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
     else
-        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    {
+        Rpp32f* binaryContent = (Rpp32f *)malloc(binOutputSize * sizeof(Rpp32f));
+        read_bin_file(refFile, binaryContent);
+
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        else
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        free(binaryContent);
+    }
 
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1068,7 +1243,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
-    free(binaryContent);
 }
 
 // compares reduction type functions outputs
@@ -1096,15 +1270,15 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     T *refOutput;
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    if(testCase == 88)
+    if(testCase == TENSOR_MIN)
         refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
-    else if(testCase == 89)
+    else if(testCase == TENSOR_MAX)
         refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
-    else if(testCase == 87)
+    else if(testCase == TENSOR_SUM)
         refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
-    else if(testCase == 90)
+    else if(testCase == TENSOR_MEAN)
         refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
-    else if(testCase == 91)
+    else if(testCase == TENSOR_STDDEV)
         refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)
@@ -1348,7 +1522,7 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
 }
 
 // Erase Region initializer for unit and performance testing
-void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth)
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode)
 {
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -1390,13 +1564,13 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx + 8] = 0;
             for (int j = 0; j < 9; j++)
             {
-                if (!inputBitDepth)
+                if (BitDepthTestMode == U8_TO_U8)
                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                else if (inputBitDepth == 1)
+                else if (BitDepthTestMode == F16_TO_F16)
                     colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 2)
+                else if (BitDepthTestMode == F32_TO_F32)
                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 5)
+                else if (BitDepthTestMode == I8_TO_I8)
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
@@ -1408,13 +1582,13 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx + 2] = 60;
             for (int j = 0; j < 3; j++)
             {
-                if (!inputBitDepth)
+                if (BitDepthTestMode == U8_TO_U8)
                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                else if (inputBitDepth == 1)
+                else if (BitDepthTestMode == F16_TO_F16)
                     colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 2)
+                else if (BitDepthTestMode == F32_TO_F32)
                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                else if (inputBitDepth == 5)
+                else if (BitDepthTestMode == I8_TO_I8)
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
@@ -1440,4 +1614,19 @@ void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *
     tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
     tableDescPtr->strides.hStride = srcDescPtr->w;
     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+}
+
+// fill the permutation values used for transpose
+void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
+{
+    Rpp8u mapping[][3] = {
+        {0, 1, 2}, // axisMask 0 → R, G, B
+        {0, 2, 1}, // axisMask 1 → R, B, G
+        {1, 0, 2}, // axisMask 2 → G, R, B
+        {1, 2, 0}, // axisMask 3 → G, B, R
+        {2, 0, 1}, // axisMask 4 → B, R, G
+        {2, 1, 0}  // axisMask 5 → B, G, R
+    };
+    for(int i = 0; i < 3; i++)
+        permTensor[i] = mapping[permOrder][i];
 }

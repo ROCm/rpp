@@ -1,7 +1,7 @@
 #[[
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,19 +23,31 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.10)
-project(test_suite/HOST)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
     set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- test_suite-HOST: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+# Set AMD Clang as default compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS ON)
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
 
+project(test_suite/HOST)
+
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
-list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
 if(NOT WIN32)
@@ -67,42 +79,48 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 ]]
 
 # find RPP
-find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
-find_path(RPP_INCLUDE_DIR NAMES rpp.h PATHS ${ROCM_PATH}/include/rpp)
+find_package(rpp 2.1.0 QUIET)
+if(rpp_FOUND)
+    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+    message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
+    message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+else()
+    message("-- ${Yellow}${PROJECT_NAME} requires rpp. Install rpp before running CTests")
+endif(rpp_FOUND)
 
-if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
-    set(RPP_FOUND TRUE)
-    message("-- ${White}${PROJECT_NAME}: Using RPP -- \n\tLibraries:${RPP_LIBRARY} \n\tIncludes:${RPP_INCLUDE_DIR}${ColourReset}")
-endif()
-
-if(NOT RPP_FOUND)
+if(NOT rpp_FOUND)
     message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running RPP Test Suite")
 else()
     # RPP installation - Backend check
-    set(RPP_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${RPP_INCLUDE_DIR}/rpp_backend.h)
-        file(READ ${RPP_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
+    set(rpp_BACKEND_HIP_FOUND 0)
+    if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h)
+        file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h RPP_BACKEND_FILE)
         string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(RPP_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
+        set(rpp_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
     endif()
-    if(NOT DEFINED BACKEND AND RPP_BACKEND_HIP_FOUND)
+    if(NOT DEFINED BACKEND AND rpp_BACKEND_HIP_FOUND)
         set(BACKEND "HIP")
         message("-- ${Green}${PROJECT_NAME} is supported to build and run with RPP HIP backend installation${ColourReset}")
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
         message("-- ${Green}${PROJECT_NAME} is supported to build and run with RPP HOST backend installation${ColourReset}")
     endif()
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rpp::rpp)
+    include_directories(${rpp_INCLUDE_DIR})
 
     # RPP HOST test suite works for RPP built with HIP or HOST backend
     if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "CPU")
 
         # RPP installation - Audio support check
         set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-        if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
-            file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
+        if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h)
+            file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
             string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
             set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
         endif()
+
+        # add find modules
+        list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
         # find required libraries
         set(Python3_FIND_VIRTUALENV FIRST)
@@ -112,9 +130,10 @@ else()
             NAMES sndfile libsndfile
             PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
             PATH_SUFFIXES lib lib64)
-        find_package(OpenMP QUIET)
+        find_package(OpenMP COMPONENTS CXX QUIET)
         find_package(OpenCV QUIET)
         find_package(TurboJpeg QUIET)
+        find_package(StdFilesystem QUIET)
 
         # find required python3-pip imports
         execute_process(
@@ -140,18 +159,11 @@ else()
                 include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
                 link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
-                # set flags
-                if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-                    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-                elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
-                    set(CMAKE_CXX_COMPILER clang++)
+                if(NOT APPLE)
+                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
                 endif()
-                set(CMAKE_CXX_STANDARD 17)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
 
-                if(OpenMP_FOUND)
-                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
+                if(OpenMP_CXX_FOUND)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
@@ -164,16 +176,16 @@ else()
                         if(OpenCV_FOUND)
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with OpenCV${ColourReset}")
-                            add_executable(Tensor_host Tensor_host.cpp)
-                            target_link_libraries(Tensor_host -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            add_executable(Tensor_image_host Tensor_image_host.cpp)
+                            target_link_libraries(Tensor_image_host -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                             if (OPENPYXL_FOUND EQUAL 0)
                                 message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")
                                 add_executable(BatchPD_host_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp) # OLD - To be deprecated and removed
                                 add_executable(BatchPD_host_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
-                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
+                                target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed
                             else()
                                 message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")
                             endif(OPENPYXL_FOUND EQUAL 0)
@@ -191,7 +203,7 @@ else()
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HOST tests set to build with OpenCV${ColourReset}")
                             add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-                            target_link_libraries(Tensor_voxel_host -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_voxel_host ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                         endif(OpenCV_FOUND)
@@ -208,10 +220,7 @@ else()
                             link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HOST tests set to build with libsnd${ColourReset}")
                             add_executable(Tensor_audio_host Tensor_audio_host.cpp)
-                            if(NOT APPLE)
-                                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
-                            endif(NOT APPLE)
-                            target_link_libraries(Tensor_audio_host -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
+                            target_link_libraries(Tensor_audio_host ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST})
                         else()
                             message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                         endif(libsnd_LIBS)
@@ -221,11 +230,11 @@ else()
 
                     # HOST test set 4 - RPP Tensor-Misc HOST test suite
                     add_executable(Tensor_misc_host Tensor_misc_host.cpp)
-                    target_link_libraries(Tensor_misc_host -lrpp pthread ${LINK_LIBRARY_LIST})
+                    target_link_libraries(Tensor_misc_host ${LINK_LIBRARY_LIST})
 
                 else()
                     message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
-                endif(OpenMP_FOUND)
+                endif(OpenMP_CXX_FOUND)
             else()
                 message("-- ${Red}${PROJECT_NAME} Error: Pandas for Python3 must be installed to run any RPP test_suite performance tests with profiling successfully${ColourReset}")
             endif(PANDAS_FOUND EQUAL 0)
@@ -233,4 +242,4 @@ else()
             message("-- ${Red}${PROJECT_NAME} Error: Python3 must be installed to run any RPP test_suite tests successfully${ColourReset}")
         endif(Python3_FOUND)
     endif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "CPU")
-endif(NOT RPP_FOUND)
+endif(NOT rpp_FOUND)

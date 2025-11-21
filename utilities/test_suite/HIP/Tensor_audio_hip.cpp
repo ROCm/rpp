@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     string scriptPath = argv[7];
 
     // validation checks
-    if (testType == 0 && batchSize != 3)
+    if (testType == UNIT_TEST && batchSize != 3) // unit test mode
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -105,14 +105,14 @@ int main(int argc, char **argv)
     Rpp32u offsetInBytes = 0;
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
-    if(testCase == 3)
+    if(testCase == DOWN_MIXING)
     {
         srcDescPtr->numDims = 3;
         maxDstChannels = 1;
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
     // set buffer sizes for src/dst
-    if(testCase == 7)
+    if(testCase == MEL_FILTER_BANK)
     {
         iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
         oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -124,13 +124,13 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
-    if (testCase == 6)
+    Rpp64u resampleMaxBufferSize = static_cast<Rpp64u>(oBufferSize * RESAMPLE_BUFFER_SCALE_FACTOR);
+    if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
-    if (testCase == 4)
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
+    if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
     // allocate hip buffers for input & output
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
-    if(testCase == 0)
+    if(testCase == NON_SILENT_REGION_DETECTION)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
@@ -165,21 +165,22 @@ int main(int argc, char **argv)
     // declare pointer of type RpptResamplingWindow used for resample augmentation
     Rpp32f *inRateTensor = nullptr, *outRateTensor = nullptr;
     RpptResamplingWindow *window = nullptr;
-    if (testCase == 6)
+    if (testCase == RESAMPLE)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
     }
 
     Rpp32f *coeff = nullptr;
-    if(testCase == 2)
+    if(testCase == PRE_EMPHASIS_FILTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    RppBackend backend = RppBackend::RPP_HIP_BACKEND;
+    rppCreate(&handle, batchSize, 0, stream, backend);
 
     int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
@@ -196,7 +197,7 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 0:
+                case NON_SILENT_REGION_DETECTION:
                 {
                     testCaseName = "non_silent_region_detection";
                     Rpp32f cutOffDB = -60.0;
@@ -209,7 +210,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 1:
+                case TO_DECIBELS:
                 {
                     testCaseName = "to_decibels";
                     Rpp32f cutOffDB = std::log(1e-20);
@@ -227,7 +228,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 2:
+                case PRE_EMPHASIS_FILTER:
                 {
                     testCaseName = "pre_emphasis_filter";
                     for (int i = 0; i < batchSize; i++)
@@ -243,7 +244,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 3:
+                case DOWN_MIXING:
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
@@ -261,7 +262,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 4:
+                case SPECTROGRAM:
                 {
                     testCaseName = "spectrogram";
                     bool centerWindows = true;
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength,
                                      windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
 
                     // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
@@ -295,15 +296,18 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 6:
+                case RESAMPLE:
                 {
                     testCaseName = "resample";
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -336,7 +340,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 7:
+                case MEL_FILTER_BANK:
                 {
                     testCaseName = "mel_filter_bank";
 
@@ -346,12 +350,14 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
+                    // height & width for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     srcDimsTensor[0] = 257;
-                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[1] = 3170;
                     srcDimsTensor[2] = 257;
-                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[3] = 552;
                     srcDimsTensor[4] = 257;
-                    srcDimsTensor[5] = 214;
+                    srcDimsTensor[5] = 1131;
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
@@ -374,7 +380,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             wallTime = endWallTime - startWallTime;
@@ -384,24 +390,24 @@ int main(int argc, char **argv)
         }
 
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-            if (testCase != 0)
+            if (testCase != NON_SILENT_REGION_DETECTION)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
             else
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
             1. DEBUG_MODE is enabled
             2. Current iteration is 1st iteration
             3. Test case is not 0 */
-            if (DEBUG_MODE && iterCount == 0 && testCase != 0)
+            if (DEBUG_MODE && iterCount == 0 && testCase != NON_SILENT_REGION_DETECTION)
             {
                 std::ofstream refFile;
                 refFile.open(func + ".csv");
@@ -411,10 +417,10 @@ int main(int argc, char **argv)
             }
         }
     }
-    rppDestroyGPU(handle);
+    rppDestroy(handle, backend);
 
     // performance test mode
-    if (testType == 1)
+    if (testType == PERFORMANCE_TEST) // performance test mode
     {
         // display measured times
         maxWallTime *= 1000;
@@ -452,6 +458,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
     if (outRateTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
-        
+
     return 0;
 }
