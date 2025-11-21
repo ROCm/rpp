@@ -181,14 +181,14 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
 
     for (int i = 0; i < HISTOGRAM_BINS; i++)
     {
-        cdf_accum += hist[i];    // prefix sum
+        cdf_accum += hist[i];
         cdf[i] = cdf_accum;
 
         if (min_cdf == 0 && cdf[i] != 0)
             min_cdf = cdf[i];
     }
 
-    // denominator = N - mincdf   (avoid divide-by-zero)
+    // denominator = N - mincdf
     float denominator = std::max((float)(img_size - min_cdf), 1.0f);
     bool is_uniform = (min_cdf == img_size);
     int vectorLoopCount = 0;
@@ -198,6 +198,8 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     __m256i is_uniform_mask = _mm256_set1_epi32(is_uniform ? -1 : 0);
     __m256i is_not_uniform_mask = _mm256_set1_epi32(is_uniform ? 0 : -1);
     __m256 min_cdf_ps = _mm256_set1_ps((float)min_cdf);
+    __m256i idxIncrement = _mm256_setr_epi32(0,1,2,3,4,5,6,7);
+    __m256i avx_p8 = _mm256_set1_epi32(8);
 
     for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount += 8)
     {
@@ -205,22 +207,22 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
         __m128i result128;
         cdf_i = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
         __m256 cdf_f = _mm256_cvtepi32_ps(cdf_i);
-        __m256 num = _mm256_mul_ps(_mm256_sub_ps(cdf_f, min_cdf_ps), avx_p255);   // num = (cdf[i] - mincdf) * 255.0
-        __m256 eq = _mm256_div_ps(num, denom);  // eq = num / denominator
-        v = _mm256_cvtps_epi32(eq); // v = (int)round(eq)
-        v = _mm256_min_epi32(_mm256_max_epi32(v, avx_p0), avx_p255);
-        idx = _mm256_setr_epi32(vectorLoopCount, vectorLoopCount + 1, vectorLoopCount + 2, vectorLoopCount + 3, vectorLoopCount + 4, vectorLoopCount + 5, vectorLoopCount + 6, vectorLoopCount + 7);
+        __m256 num = _mm256_mul_ps(_mm256_sub_ps(cdf_f, min_cdf_ps), avx_p255);                         // num = (cdf[i] - mincdf) * 255.0
+        __m256 eq = _mm256_div_ps(num, denom);                                                          // eq = num / denominator
+        v = _mm256_cvtps_epi32(eq);                                                                     // v = (int)round(eq)
+        v = _mm256_min_epi32(_mm256_max_epi32(v, avx_p0), avx_p255);                                    // v = std::min(std::max(v, 0), RPP_MAX_8U);
         lut_vec = _mm256_or_si256( _mm256_and_si256(is_uniform_mask, idx), _mm256_and_si256(is_not_uniform_mask, v));
         result128 = _mm_packus_epi16(_mm_packs_epi32( _mm256_castsi256_si128(lut_vec), _mm256_extracti128_si256(lut_vec, 1)), xmm_p0);
         _mm_storel_epi64((__m128i *)(lut + vectorLoopCount), result128);
+        idx = _mm256_add_epi32(idx, avx_p8);
     }
 #else
     for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount++)
     {
-        float num = (float)(cdf[vectorLoopCount] - min_cdf) * RPP_MAX_8U;
-        float eq = num / denominator;
+        Rpp32f num = (Rpp32f)(cdf[vectorLoopCount] - min_cdf) * RPP_MAX_8U;
+        Rpp32f eq = num / denominator;
 
-        int v = (int)round(eq);
+        Rpp8u v = (Rpp8u)round(eq);
         v = std::min(std::max(v, 0), RPP_MAX_8U);
 
         lut[vectorLoopCount] = (is_uniform * (Rpp8u)vectorLoopCount) + ((1 - is_uniform) * (Rpp8u)v);
