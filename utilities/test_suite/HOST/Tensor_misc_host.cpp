@@ -282,7 +282,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log1p";
 
                 startWallTime = omp_get_wtime();
-                rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle, RPP_HOST_BACKEND);
+                rppt_log1p(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle, RPP_HOST_BACKEND);
 
                 break;
             }
