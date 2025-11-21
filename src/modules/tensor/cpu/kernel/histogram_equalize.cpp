@@ -85,7 +85,7 @@ inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
     saturate_pixel(B, dstB);
 }
 
-
+#if __AVX2__
 inline void rgb_to_ycbcr_compute_avx(__m256 &pR, __m256 &pG, __m256 &pB,
                                      __m256 &pY, __m256 &pU, __m256 &pV)
 {
@@ -143,6 +143,7 @@ inline void ycbcr_to_rgb_avx(__m256 *p)
     ycbcr_to_rgb_compute_avx(y0, cb0, cr0, p[0], p[2], p[4]);   // R0, G0, B0
     ycbcr_to_rgb_compute_avx(y1, cb1, cr1, p[1], p[3], p[5]);   // R1, G1, B1
 }
+#endif
 
 inline void collect_hist_pln_tensor_host(Rpp8u *srcPtr,
                                          Rpp32u *hist,
@@ -189,19 +190,42 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
 
     // denominator = N - mincdf   (avoid divide-by-zero)
     float denominator = std::max((float)(img_size - min_cdf), 1.0f);
-
     bool is_uniform = (min_cdf == img_size);
+    int vectorLoopCount = 0;
 
-    for (int i = 0; i < HISTOGRAM_BINS; i++)
+#if __AVX2__
+    __m256 denom = _mm256_set1_ps(denominator);
+    __m256i is_uniform_mask = _mm256_set1_epi32(is_uniform ? -1 : 0);
+    __m256i is_not_uniform_mask = _mm256_set1_epi32(is_uniform ? 0 : -1);
+    __m256 min_cdf_ps = _mm256_set1_ps((float)min_cdf);
+
+    for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount += 8)
     {
-        float num = (float)(cdf[i] - min_cdf) * RPP_MAX_8U;
+        __m256i cdf_i, v, idx, lut_vec;
+        __m128i result128;
+        cdf_i = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
+        __m256 cdf_f = _mm256_cvtepi32_ps(cdf_i);
+        __m256 num = _mm256_mul_ps(_mm256_sub_ps(cdf_f, min_cdf_ps), avx_p255);   // num = (cdf[i] - mincdf) * 255.0
+        __m256 eq = _mm256_div_ps(num, denom);  // eq = num / denominator
+        v = _mm256_cvtps_epi32(eq); // v = (int)round(eq)
+        v = _mm256_min_epi32(_mm256_max_epi32(v, avx_p0), avx_p255);
+        idx = _mm256_setr_epi32(vectorLoopCount, vectorLoopCount + 1, vectorLoopCount + 2, vectorLoopCount + 3, vectorLoopCount + 4, vectorLoopCount + 5, vectorLoopCount + 6, vectorLoopCount + 7);
+        lut_vec = _mm256_or_si256( _mm256_and_si256(is_uniform_mask, idx), _mm256_and_si256(is_not_uniform_mask, v));
+        result128 = _mm_packus_epi16(_mm_packs_epi32( _mm256_castsi256_si128(lut_vec), _mm256_extracti128_si256(lut_vec, 1)), xmm_p0);
+        _mm_storel_epi64((__m128i *)(lut + vectorLoopCount), result128);
+    }
+#else
+    for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount++)
+    {
+        float num = (float)(cdf[vectorLoopCount] - min_cdf) * RPP_MAX_8U;
         float eq = num / denominator;
 
         int v = (int)round(eq);
         v = std::min(std::max(v, 0), RPP_MAX_8U);
 
-        lut[i] = (is_uniform * (Rpp8u)i) + ((1 - is_uniform) * (Rpp8u)v);
+        lut[vectorLoopCount] = (is_uniform * (Rpp8u)vectorLoopCount) + ((1 - is_uniform) * (Rpp8u)v);
     }
+#endif
 }
 
 inline void apply_lut_tensor(const Rpp8u *src,
@@ -274,9 +298,11 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u hist[HISTOGRAM_BINS] = {0};
         Rpp8u lutBatch[HISTOGRAM_BINS];
 
+#if __AVX2__
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32u alignedLength = (bufferLength / vectorIncrementPerChannel) * vectorIncrementPerChannel;
+#endif
 
         // Histogram Equalise without fused output-layout toggle (NCHW -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -300,6 +326,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -314,7 +341,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                     rgb_to_ycbcr_compute(srcPtrTempR++, srcPtrTempG++, srcPtrTempB++, yPtr++, cbPtr++, crPtr++);
 
@@ -336,6 +363,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -350,6 +378,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                     ycbcr_to_rgb_compute(yPtr++, cbPtr++, crPtr++, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++);
 
@@ -378,6 +407,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -392,6 +422,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                     rgb_to_ycbcr_compute(srcPtrTempR++, srcPtrTempG++, srcPtrTempB++, yPtr++, cbPtr++, crPtr++);
 
@@ -411,6 +442,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -422,6 +454,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                 {
                     ycbcr_to_rgb_compute(yPtr++, cbPtr++, crPtr++, dstPtrTemp, dstPtrTemp + 1, dstPtrTemp + 2);
@@ -449,6 +482,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -461,6 +495,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                 {
                     rgb_to_ycbcr_compute(srcPtrTemp, srcPtrTemp + 1, srcPtrTemp + 2, yPtr++, cbPtr++, crPtr++);
@@ -483,6 +518,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
@@ -497,6 +533,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                     ycbcr_to_rgb_compute(yPtr++, cbPtr++, crPtr++, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++);
 
@@ -521,6 +558,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6], pY, pU, pV;
@@ -533,6 +571,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     cbPtr += vectorIncrementPerChannel;
                     crPtr += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                 {
                     rgb_to_ycbcr_compute(srcPtrTemp, srcPtrTemp + 1, srcPtrTemp + 2, yPtr++, cbPtr++, crPtr++);
@@ -552,6 +591,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6], pY, pU, pV;
@@ -564,6 +604,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     crPtr += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roiWidth; vectorLoopCount++)
                 {
                     ycbcr_to_rgb_compute(yPtr++, cbPtr++, crPtr++, dstPtrTemp, dstPtrTemp + 1, dstPtrTemp + 2);
