@@ -1,5 +1,28 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
+/*
+MIT License
+
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#include "hip_tensor_executors.hpp"
 
 __device__ __constant__ float4 TWO_F4 = static_cast<float4>(2.0);
 __device__ __constant__ float4 ONE_F4 = static_cast<float4>(1.0);
@@ -297,3 +320,35 @@ RppStatus hip_exec_fisheye_tensor(T *srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus hip_exec_fisheye_tensor<Rpp8u>(Rpp8u*,
+                                         RpptDescPtr,
+                                         Rpp8u*,
+                                         RpptDescPtr,
+                                         RpptROIPtr,
+                                         RpptRoiType,
+                                         rpp::Handle&);
+
+RppStatus hip_exec_fisheye_tensor<half>(half*,
+                                        RpptDescPtr,
+                                        half*,
+                                        RpptDescPtr,
+                                        RpptROIPtr,
+                                        RpptRoiType,
+                                        rpp::Handle&);
+
+RppStatus hip_exec_fisheye_tensor<Rpp32f>(Rpp32f*,
+                                          RpptDescPtr,
+                                          Rpp32f*,
+                                          RpptDescPtr,
+                                          RpptROIPtr,
+                                          RpptRoiType,
+                                          rpp::Handle&);
+
+RppStatus hip_exec_fisheye_tensor<Rpp8s>(Rpp8s*,
+                                         RpptDescPtr,
+                                         Rpp8s*,
+                                         RpptDescPtr,
+                                         RpptROIPtr,
+                                         RpptRoiType,
+                                         rpp::Handle&);

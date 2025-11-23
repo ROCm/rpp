@@ -2587,6 +2587,44 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                                                         RppLayoutParams srcLayoutParams,
                                                         rpp::Handle& handle);
 
+// -------------------- fisheye --------------------
+
+RppStatus fisheye_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp8u *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
+RppStatus fisheye_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp16f *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus fisheye_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      Rpp32f *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
+RppStatus fisheye_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp8s *dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle);
+
 /**************************************** STATISTICAL OPERATIONS ****************************************/
 
 // -------------------- normalize --------------------

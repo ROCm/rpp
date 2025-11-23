@@ -848,6 +848,17 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle);
 
+// -------------------- fisheye --------------------
+
+template <typename T>
+RppStatus hip_exec_fisheye_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rpp::Handle& handle);
+
 /**************************************** MORPHOLOGICAL OPERATIONS ****************************************/
 
 template <typename T>
