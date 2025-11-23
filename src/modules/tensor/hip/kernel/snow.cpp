@@ -406,3 +406,47 @@ RppStatus hip_exec_snow_tensor(T *srcPtr,
 
     return RPP_SUCCESS;
 }
+
+template RppStatus hip_exec_snow_tensor<Rpp8u>(Rpp8u*,
+                                               RpptDescPtr,
+                                               Rpp8u*,
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               Rpp32f*,
+                                               Rpp32s*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
+
+template RppStatus hip_exec_snow_tensor<half>(half*,
+                                              RpptDescPtr,
+                                              half*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32s*,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              rpp::Handle&);
+
+template RppStatus hip_exec_snow_tensor<Rpp32f>(Rpp32f*,
+                                                RpptDescPtr,
+                                                Rpp32f*,
+                                                RpptDescPtr,
+                                                Rpp32f*,
+                                                Rpp32f*,
+                                                Rpp32s*,
+                                                RpptROIPtr,
+                                                RpptRoiType,
+                                                rpp::Handle&);
+
+template RppStatus hip_exec_snow_tensor<Rpp8s>(Rpp8s*,
+                                               RpptDescPtr,
+                                               Rpp8s*,
+                                               RpptDescPtr,
+                                               Rpp32f*,
+                                               Rpp32f*,
+                                               Rpp32s*,
+                                               RpptROIPtr,
+                                               RpptRoiType,
+                                               rpp::Handle&);
