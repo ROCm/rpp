@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,8 +35,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 7
+caseMin = min(audioAugmentationMap.keys())
+caseMax = max(audioAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -48,7 +48,7 @@ def get_log_file_list():
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HOST")
+    log_detected(result, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepthTestMode.F32_TO_F32.value)), "HOST")
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -56,13 +56,13 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         logFile.write("./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(2)), "HOST")
+        log_detected(process, errorLog, audioAugmentationMap[int(case)][0], get_bit_depth(int(BitDepthTestMode.F32_TO_F32.value)), "HOST")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    if testType == 0:
+    if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
-    elif testType == 1:
+    elif testType == TestType.PERFORMANCE_TEST.value:
         print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
@@ -146,15 +146,15 @@ batchSize = args.batch_size
 outFilePath = " "
 
 # Override testType to 0 if testType is 1 and qaMode is 1
-if testType == 1 and qaMode == 1:
+if testType == TestType.PERFORMANCE_TEST.value and qaMode:
     print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
-    testType = 0
+    testType = TestType.UNIT_TEST.value
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     outFilePath = outFolderPath + "/QA_RESULTS_AUDIO_HOST_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
@@ -194,7 +194,7 @@ if noCaseSupported:
 
 for case in caseList:
     if "--input_path" not in sys.argv:
-        if case == "3":
+        if audioAugmentationMap[int(case)][0] == "down_mixing":
             srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
         else:
             srcPath = inFilePath
@@ -205,16 +205,17 @@ for case in caseList:
 
 # print the results of qa tests
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+supportedCaseList = [key for key, values in audioAugmentationMap.items() if "HOST" in values]
 
-if testType == 0:
+if testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(audioAugmentationMap.keys()), nonQACaseList, "Tensor_audio_host")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_host")
 
 # Performance tests
-if (testType == 1):
+if (testType == TestType.PERFORMANCE_TEST.value):
     log_file_list = get_log_file_list()
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
@@ -226,4 +227,3 @@ if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     if(errorLog[0]["notExecutedFunctionality"] != 0):
         print(str(errorLog[0]["notExecutedFunctionality"]) + " functionality variants requested by test_suite_audio_host were not executed since these sub-variants are not currently supported in RPP.\n")
     print("-----------------------------------------------------------------------------------------------")
-

@@ -2,35 +2,98 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 1.9.10
+## RPP 2.2.0 (Unreleased)
+
+### Added
+* 
+
+### Changed
+* CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
+
+### Removed
+* 
+
+### Resolved issues
+* 
+
+## RPP 2.1.0 for ROCm 7.1.0
+
+### Added
+* Solarize augmentation for HOST and HIP
+* Hue and Saturation adjustment augmentations for HOST and HIP 
+* Find RPP - cmake module
+* Posterize augmentation for HOST and HIP
+
+### Changed
+* HALF - Fix half.hpp path updates
+* Box filter - padding updates 
+
+
+### Removed
+* Packaging - Remove Meta Package dependency for HIP
+* SLES 15 SP6 support
+
+### Resolved issues
+* Test Suite - Fixes for accuracy
+* HIP Backend - Check return status warning fixes
+* Bugfix - HIP vector types init 
+
+## RPP 2.0.0 for ROCm 7.0.0
+
+### Added
+* Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
+* JPEG Compression Distortion augmentation on HIP backend. (#538)
+* `log1p`, defined as `log (1 + x)`, tensor augmentation support on HOST (CPU) and HIP backends.
+* JPEG Compression Distortion augmentation on HOST (CPU) backend. (#531)
 
 ### Changed
 
-* RPP Tensor Gaussian Filter support on HOST
-* RPP Fog augmentation on HOST and HIP
-* RPP Rain augmentation on HOST and HIP
-* RPP Warp Perspective on HOST and HIP
-* RPP Tensor Bitwise-XOR support on HOST and HIP
-* RPP Threshold on HOST and HIP
-* RPP Tensor Fisheye support on HOST and HIP
+* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
+* RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
+* TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
+* Changed API of swap_channels augmentation to be called channel_permute, which now accepts one new argument, "permutationTensor" (pointer to a unsigned int tensor) that provides the permutation order to swap the RGB channels of each input image in the batch in any order. (#547)
+  * Old API - `RppStatus rppt_swap_channels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle);`
+  * New API - `RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor , rppHandle_t rppHandle);`
 
-## (Unreleased) RPP 1.9.4
+### Removed
+
+* Older versions of RPP handle creation inlcuding `rppCreateWithBatchSize()`, `rppCreateWithStream()`, and `rppCreateWithStreamAndBatchSize()` are now removed and replaced with `rppCreate()`.
+* Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
+
+### Resolved issues
+
+* Test package - debian packages will install required dependencies
+
+## RPP 1.9.10 for ROCm 6.4.0
+
+### Added
+
+* RPP Tensor Gaussian Filter support on HOST (CPU) backend. (#478)
+* RPP Fog augmentation on HOST (CPU) and HIP backends. (#446)
+* RPP Rain augmentation on HOST(CPU) and HIP backends. (#463)
+* RPP Warp Perspective on HOST (CPU) and HIP backends. (#451)
+* RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
+* RPP Threshold on HOST (CPU) and HIP backends. (#456)
+* RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
+* RPP Audio Support for Spectrogram on HIP backend. (#433)
+* RPP Audio Support for Mel Filter Bank on HIP backend. (#421)
 
 ### Changed
+
 * AMD Clang is now the default CXX and C compiler
-* RPP Tensor Box Filter support on HOST
+* AMD RPP can now pass HOST (CPU) build with g++ (#517)
+* Test Suite case numbers have been replaced with ENUMs for all augmentations to enhance test suite readability (#499)
+* Test suite updated to return error codes from RPP API and display them (#483)
+* Internal to RPP working - Restructure half.hpp and hip_fp16.h includes in one common header (#459)
 
-## (Unreleased) RPP 1.9.3
+### Resolved issues
 
-### Changed
-
-* RPP Audio Support HIP - Spectrogram
-
-## (Unreleased) RPP 1.9.2
-
-### Changed
-
-* RPP Audio Support HIP - Mel Filter Bank
+* CXX Compiler: Fixed HOST (CPU) g++ issues. (#517)
+* Deprecation warning fixed for the "'sprintf' is deprecated" warning. (#512)
+* Test suite build fix - RPP Test Suite Pre-requisite instructions updated to lock to a specific 'nifti_clib' commit as stated in ReadME - https://github.com/ROCm/rpp/tree/develop/utilities/test_suite#prerequisites (#506)
+* Fixed broken image links for pixelate and jitter (#461)
+* Internal to RPP working - Bugfix for Log Tensor in stride updation in log_recursive function (#479)
 
 ## RPP 1.9.1 for ROCm 6.3.0
 

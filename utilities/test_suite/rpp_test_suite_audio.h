@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,10 @@ SOFTWARE.
 #include <sndfile.h>
 using namespace std;
 
-#define MEL_FILTER_BANK_MAX_HEIGHT 257 // Maximum height for mel filter bank set to 257 to ensure compatibility with test configuration
+#define MEL_FILTER_BANK_MAX_HEIGHT   257  // Maximum height for mel filter bank set to 257 to ensure compatibility with test configuration
+#define RESAMPLE_BUFFER_SCALE_FACTOR 1.15 // Scale factor to allocate a safe maximum buffer size for resampling, allowing for upsampling
+#define SPECTROGRAM_MAX_HEIGHT       257  // Maximum height for spectrogram set to 257 to ensure compatibility with test configuration, calculated as (nfft / 2) + 1 for a standard nfft of 512
+#define SPECTROGRAM_MAX_WIDTH        3170 // Maximum width for a spectrogram, pre-calculated based on the longest audio file in the test dataset
 
 std::map<int, string> audioAugmentationMap =
 {
@@ -60,24 +63,16 @@ enum Augmentation {
     MEL_FILTER_BANK = 7
 };
 
-// Golden outputs for Non Silent Region Detection
-std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
+// Cutoff values for audio kernels listed for HOST backend followed by HIP
+static const std::map<string, std::vector<double>> audioCutOff =
 {
-    {"sample1", {0, 35840}},
-    {"sample2", {0, 33680}},
-    {"sample3", {0, 34160}}
-};
-
-// Cutoff values for audio HIP kernels
-std::map<string, double> audioHIPCutOff =
-{
-    {"to_decibels", 1e-6},
-    {"pre_emphasis_filter", 1e-6},
-    {"down_mixing", 1e-6},
-    {"spectrogram", 1e-3},
-    {"slice", 1e-20},
-    {"resample", 1e-6},
-    {"mel_filter_bank", 1e-5}
+    {"to_decibels", {1e-20, 1e-6}},
+    {"pre_emphasis_filter", {1e-20, 1e-6}},
+    {"down_mixing", {1e-20, 1e-6}},
+    {"spectrogram", {1e-20, 1e-3}},
+    {"slice",  {1e-20, 1e-20}},
+    {"resample", {1e-7, 1e-6}},
+    {"mel_filter_bank", {1e-20, 1e-5}}
 };
 
 // sets descriptor dimensions and strides of src/dst
@@ -251,7 +246,6 @@ void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int
 // Compares output with reference outputs and validates QA
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
-    fstream refFile;
     int fileMatch = 0;
 
     // read data from golden outputs
@@ -277,8 +271,15 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-    double cutoff = (backend == "HOST") ? 1e-20 : audioHIPCutOff[testCase];
 
+    auto mapIterator = audioCutOff.find(testCase);
+    if (mapIterator == audioCutOff.end())
+    {
+        std::cout << "\nError: Test case '" << testCase << "' not found in audioCutOff map.\n";
+        return;
+    }
+    const auto& cutoffVector = mapIterator->second;
+    double cutoff = (backend == "HOST") ? cutoffVector[0] : cutoffVector[1];
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
@@ -336,24 +337,26 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
 }
 
 // Compares output with reference outputs and validates QA for non silent region
-void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, string scriptPath, string dst)
 {
     int fileMatch = 0;
+    // read data from golden outputs
+    string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(!fin.is_open())
+    {
+        cout << "\nUnable to get the reference outputs for the file specified!" << endl;
+        return;
+    }
+    Rpp32s *refOutput = (Rpp32s *)malloc(bs * 2 * sizeof(Rpp32s));
+    fin.read(reinterpret_cast<char*>(refOutput), bs * 2 * sizeof(Rpp32s));
+
     for (int i = 0; i < bs; i++)
     {
-        string currentFileName = audioNames[i];
-        size_t lastIndex = currentFileName.find_last_of(".");
-        currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
-        std::vector<int> referenceOutput = NonSilentRegionReferenceOutputs[currentFileName];
-        if(referenceOutput.empty())
-        {
-            cout << "\nUnable to get the reference outputs for the file specified!" << endl;
-            break;
-        }
         Rpp32s outBegin = detectedIndex[i];
         Rpp32s outLength = detectionLength[i];
-        Rpp32s refBegin = referenceOutput[0];
-        Rpp32s refLength = referenceOutput[1];
+        Rpp32s refBegin = refOutput[i * 2];
+        Rpp32s refLength = refOutput[i * 2 + 1];
 
         if ((outBegin == refBegin) && (outLength == refLength))
             fileMatch += 1;
@@ -378,6 +381,8 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
         qaResults << status << std::endl;
         qaResults.close();
     }
+
+    free(refOutput);
 }
 
 inline Rpp32f sinc(Rpp32f x)
@@ -456,7 +461,7 @@ void inline init_mel_filter_bank(Rpp32f **inputf32, Rpp32f **outputf32, RpptDesc
 
     // Read source data
     read_from_bin_file(*inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
-    if(testType)
+    if(testType == PERFORMANCE_TEST)
     {
         replicate_last_sample_mel_filter_bank(*inputf32, numSamples, sampleSize, batchSize);
         replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);

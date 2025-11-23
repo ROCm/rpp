@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     string scriptPath = argv[7];
 
     // validation checks
-    if (testType == 0 && batchSize != 3)
+    if (testType == UNIT_TEST && batchSize != 3)  // unit test mode
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
         descriptorPtr3D->offsetInBytes = 0;
         descriptorPtr3D->dataType = RpptDataType::F32;
         descriptorPtr3D->dims[0] = batchSize;
-        descriptorPtr3D->dims[1] = maxSrcWidth;
+        descriptorPtr3D->dims[1] = (maxSrcWidth + 7) & ~7; // Ensure a consistent dimension order between generic and typed descriptors to prevent errors.
         descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
     }
 
@@ -138,12 +138,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * RESAMPLE_BUFFER_SCALE_FACTOR;
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -169,7 +169,8 @@ int main(int argc, char **argv)
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, batchSize, numThreads);
+    RppBackend backend = RppBackend::RPP_HOST_BACKEND;
+    rppCreate(&handle, batchSize, numThreads, nullptr, backend);
 
     int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
@@ -319,11 +320,14 @@ int main(int argc, char **argv)
                     Rpp32f outRateTensor[batchSize];
                     Rpp32s srcDimsTensor[batchSize * 2];
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -363,7 +367,8 @@ int main(int argc, char **argv)
                     Rpp32s numFilter = 80;
                     bool normalize = true;
                     // (height, width) for each tensor in a batch for given QA inputs.
-                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214};
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
+                    Rpp32s srcDimsTensor[] = {257, 3170, 257, 552, 257, 1131};
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
@@ -383,7 +388,7 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
             }
 
             wallTime = endWallTime - startWallTime;
@@ -393,10 +398,10 @@ int main(int argc, char **argv)
         }
 
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-        if (testType == 0)
+        if (testType == UNIT_TEST)  // unit test mode
         {
             if (testCase == NON_SILENT_REGION_DETECTION)
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
             else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HOST");
 
@@ -415,10 +420,10 @@ int main(int argc, char **argv)
             }
         }
     }
-    rppDestroyHost(handle);
+    rppDestroy(handle, backend);
 
     // performance test mode
-    if (testType == 1)
+    if (testType == PERFORMANCE_TEST)
     {
         // display measured times
         maxWallTime *= 1000;

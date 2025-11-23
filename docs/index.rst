@@ -30,7 +30,10 @@ The RPP public repository is located at `https://github.com/ROCm/rpp <https://gi
 
   .. grid-item-card:: Reference
 
+    * :doc:`RPP environment variables <./reference/rpp-env-variables>`
     * :doc:`Supported RPP functionalities and variants <./reference/rpp-supported-functionalities>`
+    * :doc:`RPP functionality and variant example outputs <./reference/rpp-supported-func-and-var-examples>`
+
     * RPP API reference
 
       * :doc:`RPP header files <./doxygen/html/files>`

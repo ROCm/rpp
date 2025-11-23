@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,8 +39,8 @@ qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 92
+caseMin = min(imageAugmentationMap.keys())
+caseMax = max(imageAugmentationMap.keys())
 errorLog = [{"notExecutedFunctionality" : 0}]
 
 # Get a list of log files based on a flag for preserving output
@@ -52,77 +52,90 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    bitDepths = range(7)
-    outputFormatToggles = [0, 1]
+    bitDepths = list(BitDepthTestMode)
+    outputFormatToggles = list(OutputFormat)
     if qaMode:
-        bitDepths = [0]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == 2 and outputFormatToggle == 1:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
-            if case == "49" or case == "54":
+            if imageAugmentationMap[int(case)][0] in {"box_filter", "median_filter", "gaussian_filter"}:
                 for kernelSize in range(3, 10, 2):
-                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize) + " 0")
-                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
-            elif case == "8":
+                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(kernelSize) + " 0")
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
+            elif imageAugmentationMap[int(case)][0] == "noise":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
-                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType) + " 0")
-                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
-            elif case == "21" or case == "23" or case == "24" or case == "79" or case == "28":
+                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(noiseType) + " 0")
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
+            elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "remap", "warp_perspective"}:
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
-                if case =='79' or case == "28":
+                if imageAugmentationMap[int(case)][0] in {"remap", "warp_perspective"}:
                     interpolationRange = 2
                 for interpolationType in range(interpolationRange):
-                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType) + " 0")
-                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(interpolationType) + " 0")
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
+            elif imageAugmentationMap[int(case)][0] == "channel_permute":
+                swapOrderRange = 6
+                # Run all 6 channel swap permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R) by varying swapOrder (0 to 5)
+                for swapOrder in range(swapOrderRange):
+                    print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(swapOrder))
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(swapOrder), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
             else:
-                print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout) + " 0")
-                result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                print("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout) + " 0")
+                result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
 
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    if qaMode == 1:
+    if qaMode:
         with open(loggingFolder + "/BatchPD_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
-            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
             read_from_subprocess_and_write_to_log(process, logFile)
-            log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
-    with open(loggingFolder + "/Tensor_image_host" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
-        logFile.write("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+            log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
+    with open(loggingFolder + "/Tensor_image_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_image_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(additionalParam) + " 0\n")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_image_host", srcPath1, srcPath2, dstPath, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
-        
+        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
+
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
-    bitDepths = range(7)
+    bitDepths = list(BitDepthTestMode)
     if qaMode:
-        bitDepths = [0]
+        bitDepths = [BitDepthTestMode.U8_TO_U8]
     for bitDepth in bitDepths:
-        for outputFormatToggle in range(2):
+        for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == 2 and outputFormatToggle == 1:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
-            if case == "49" or case == "54":
+            if imageAugmentationMap[int(case)][0] in {"box_filter", "median_filter", "gaussian_filter"}:
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-            elif case == "8":
+            elif imageAugmentationMap[int(case)][0] == "noise":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
-            elif case == "21" or case == "23" or case == "24" or case == "28" or case == "79":
+            elif imageAugmentationMap[int(case)][0] in {"resize", "rotate", "warp_affine", "remap", "warp_perspective"}:
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
+            elif imageAugmentationMap[int(case)][0] == "channel_permute":
+                swapOrderRange = 6
+                # Run all variants of swap channel functions with additional argument of swapOrder (0 - 5)
+                for swapOrder in range(swapOrderRange):
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, swapOrder, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
@@ -222,22 +235,22 @@ preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
-if qaMode and testType == 0 and batchSize != 3:
+if qaMode and testType == TestType.UNIT_TEST.value and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
-if qaMode and testType == 1 and batchSize != 8:
+if qaMode and testType == TestType.PERFORMANCE_TEST.value and batchSize != 8:
     print("Performance QA mode can only run with a batch size of 8.")
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     if qaMode:
         outFilePath = outFolderPath + "/QA_RESULTS_HOST_" + timestamp
     else:
         outFilePath = outFolderPath + "/OUTPUT_IMAGES_HOST_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp
@@ -267,38 +280,38 @@ os.chdir(buildFolderPath + "/build")
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-if testType == 0:
-    noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
+supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HOST" in values]
+if testType == TestType.UNIT_TEST.value:
+    noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
         exit(0)
     for case in caseList:
         if int(case) not in imageAugmentationMap:
             continue
-        if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        if imageAugmentationMap[int(case)][0] == "ricap" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
         else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and (case != "82" and case != "26"):
+        if qaMode and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+        for layout in list(Layout):
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
-            if qaMode == 0:
+            if not qaMode:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
-    if qaMode == 0:
-        create_layout_directories(dstPath, layoutDict)
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
+    if not qaMode:
+        create_layout_directories(dstPath)
 else:
     noCaseSupported = all(int(case) not in imageAugmentationMap for case in caseList)
     if noCaseSupported:
@@ -308,38 +321,39 @@ else:
         if int(case) not in imageAugmentationMap:
             continue
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and case != "82":
+        func_name = imageAugmentationMap[int(case)][0]
+
+        if qaMode and func_name != "ricap":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+        elif func_name == "ricap" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        elif case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+        elif func_name == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
-        else:
-            srcPath1 = inFilePath1
-            srcPath2 = inFilePath2
-        for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
-            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+        for layout in list(Layout):
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
+            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
-# print the results of qa tests
-nonQACaseList = ['6', '8', '10', '11', '24', '28', '54', '84'] # Add cases present in supportedCaseList, but without QA support
+# List of augmentation names without QA support
+nonQAaugs = ["jitter", "noise", "fog", "rain", "warp_affine", "warp_perspective", "gaussian_filter", "spatter"]
 
-if qaMode and testType == 0:
+# Find all case keys matching these names
+nonQACaseList = [str(k) for k, v in imageAugmentationMap.items() if v[0] in nonQAaugs]
+
+if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, list(imageAugmentationMap.keys()), nonQACaseList, "Tensor_host")
+        print("---------------------------------- Results of QA Test - Tensor_image_host ----------------------------------\n")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_host")
 
-layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled
-if testType == 0 and qaMode == 0:
-    create_layout_directories(dstPath, layoutDict)
+if testType == TestType.UNIT_TEST.value and not qaMode:
+    create_layout_directories(dstPath)
 # Performance tests
-elif (testType == 1 and qaMode == 1):
+elif (testType == TestType.PERFORMANCE_TEST.value and qaMode):
     columns = ['BatchPD_Augmentation_Type', 'Tensor_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
     tensorAugVariations = []
     batchPDAugVariations = []
@@ -478,7 +492,7 @@ elif (testType == 1 and qaMode == 1):
     print("- All APIs have been improved for performance ranging from " + str(0) + "% (almost same) to " + str(100) + "% faster.")
     print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
     print("\n-------------------------------------------------------------------\n")
-elif (testType == 1 and qaMode == 0):
+elif (testType == TestType.PERFORMANCE_TEST.value and not qaMode):
     logFileList = get_log_file_list(preserveOutput)
 
     functionalityGroupList = [
