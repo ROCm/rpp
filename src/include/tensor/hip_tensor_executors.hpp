@@ -560,21 +560,6 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
-
-// -------------------- snow --------------------
-
-template <typename T>
-RppStatus hip_exec_snow_tensor(T *srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               T *dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               Rpp32f *brightnessCoefficient,
-                               Rpp32f *snowThreshold,
-                               Rpp32s *darkMode,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rpp::Handle& handle);
-
 // -------------------- spatter --------------------
 
 template <typename T>
@@ -634,6 +619,20 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle);
+
+// -------------------- snow --------------------
+
+template <typename T>
+RppStatus hip_exec_snow_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *brightnessCoefficient,
+                               Rpp32f *snowThreshold,
+                               Rpp32s *darkMode,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
 
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 

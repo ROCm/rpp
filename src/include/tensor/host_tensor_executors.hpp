@@ -1610,57 +1610,6 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RppLayoutParams layoutParams,
                                 rpp::Handle& handle);
 
-// -------------------- snow --------------------
-
-RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp8u *dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32f *brightnessCoefficientTensor,
-                                 Rpp32f *snowThresholdTensor,
-                                 Rpp32s *darkModeTensor,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams,
-                                 rpp::Handle& handle);
-
-
-RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   Rpp32f *brightnessCoefficientTensor,
-                                   Rpp32f *snowThresholdTensor,
-                                   Rpp32s *darkModeTensor,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams,
-                                   rpp::Handle& handle);
-
-RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp16f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   Rpp32f *brightnessCoefficientTensor,
-                                   Rpp32f *snowThresholdTensor,
-                                   Rpp32s *darkModeTensor,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams,
-                                   rpp::Handle& handle);
-
-RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp8s *dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32f *brightnessCoefficientTensor,
-                                 Rpp32f *snowThresholdTensor,
-                                 Rpp32s *darkModeTensor,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams,
-                                 rpp::Handle& handle);
-
 // -------------------- rain --------------------
 
 RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -1750,6 +1699,57 @@ RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RpptRoiType roiType,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
+
+// -------------------- snow --------------------
+
+RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8u *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *brightnessCoefficientTensor,
+                                 Rpp32f *snowThresholdTensor,
+                                 Rpp32s *darkModeTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
+
+RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32f *brightnessCoefficientTensor,
+                                   Rpp32f *snowThresholdTensor,
+                                   Rpp32s *darkModeTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp16f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32f *brightnessCoefficientTensor,
+                                   Rpp32f *snowThresholdTensor,
+                                   Rpp32s *darkModeTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8s *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *brightnessCoefficientTensor,
+                                 Rpp32f *snowThresholdTensor,
+                                 Rpp32s *darkModeTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
 
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 

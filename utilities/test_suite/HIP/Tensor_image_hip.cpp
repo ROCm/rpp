@@ -428,7 +428,7 @@ int main(int argc, char **argv)
     Rpp32f *brightnessCoefficient = nullptr;
     Rpp32f *snowThreshold = nullptr;
     Rpp32s *darkMode = nullptr;
-    if(testCase == 7)
+    if(testCase == SNOW)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&brightnessCoefficient, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&snowThreshold, batchSize * sizeof(Rpp32f)));
