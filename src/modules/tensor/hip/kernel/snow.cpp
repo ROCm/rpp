@@ -1,6 +1,5 @@
-#include <hip/hip_runtime.h>
-#include "rpp_hip_common.hpp"
-#include "rpp_cpu_common.hpp"
+#include "hip_tensor_executors.hpp"
+#include <random>
 
 __device__ __forceinline__ void snow_1GRAY_hip_compute(float *pixel, float *brightnessCoefficient, float *snowThreshold, int *darkMode)
 {
