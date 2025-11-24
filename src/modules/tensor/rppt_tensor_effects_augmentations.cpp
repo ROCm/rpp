@@ -1562,8 +1562,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                      rppHandle_t rppHandle,
                      RppBackend executionBackend)
 {
-    if(srcDescPtr->n == 1)
-        return RPP_ERROR;
+    if(srcDescPtr->n == 1) return RPP_ERROR;
     if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0], srcDescPtr, roiType) == -1) ||
         (check_roi_out_of_bounds(&roiPtrInputCropRegion[1], srcDescPtr, roiType) == -1) ||
         (check_roi_out_of_bounds(&roiPtrInputCropRegion[2], srcDescPtr, roiType) == -1) ||
@@ -1962,8 +1961,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
 
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-    if (pixelationPercentage < 0 || pixelationPercentage > 100)
-        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (pixelationPercentage < 0 || pixelationPercentage > 100) return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();

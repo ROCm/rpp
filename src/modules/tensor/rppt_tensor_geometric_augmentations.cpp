@@ -500,8 +500,7 @@ RppStatus rppt_warp_affine(RppPtr_t srcPtr,
                            rppHandle_t rppHandle,
                            RppBackend executionBackend)
 {
-    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR)) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1078,8 +1077,7 @@ RppStatus rppt_resize_mirror_normalize(RppPtr_t srcPtr,
                                        rppHandle_t rppHandle,
                                        RppBackend executionBackend)
 {
-    if (interpolationType != RpptInterpolationType::BILINEAR)
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if (interpolationType != RpptInterpolationType::BILINEAR) return RPP_ERROR_NOT_IMPLEMENTED;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     rpp::Handle &handle = rpp::deref(rppHandle);
@@ -1293,8 +1291,7 @@ RppStatus rppt_resize_crop_mirror(RppPtr_t srcPtr,
                                   rppHandle_t rppHandle,
                                   RppBackend executionBackend)
 {
-    if (interpolationType != RpptInterpolationType::BILINEAR)
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if (interpolationType != RpptInterpolationType::BILINEAR) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1433,8 +1430,7 @@ RppStatus rppt_rotate(RppPtr_t srcPtr,
                       rppHandle_t rppHandle,
                       RppBackend executionBackend)
 {
-    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR)) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1959,8 +1955,7 @@ RppStatus rppt_remap(RppPtr_t srcPtr,
                      rppHandle_t rppHandle,
                      RppBackend executionBackend)
 {
-    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -2444,8 +2439,7 @@ RppStatus rppt_warp_perspective(RppPtr_t srcPtr,
                                 rppHandle_t rppHandle,
                                 RppBackend executionBackend)
 {
-    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-        return RPP_ERROR_NOT_IMPLEMENTED;
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR)) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
@@ -2747,17 +2741,13 @@ RppStatus rppt_concat(RppPtr_t srcPtr1,
                       RppBackend executionBackend)
 {
     Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
-    if(srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims)
-        return RPP_ERROR_INVALID_SRC_DIMS;
-    if (srcPtr1GenericDescPtr->layout != dstGenericDescPtr->layout)
-        return RPP_ERROR_LAYOUT_MISMATCH;
-    if (axisMask >= srcPtr1GenericDescPtr->numDims)
-        return RPP_ERROR_INVALID_AXIS;
+    if(srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims) return RPP_ERROR_INVALID_SRC_DIMS;
+    if (srcPtr1GenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_LAYOUT_MISMATCH;
+    if (axisMask >= srcPtr1GenericDescPtr->numDims) return RPP_ERROR_INVALID_AXIS;
     for(int i = 0 ;i < tensorDim ; i++)
-    {
         if((i != axisMask) && (srcPtr1GenericDescPtr->dims[i] != srcPtr2GenericDescPtr->dims[i]))
             return RPP_ERROR_INVALID_DIM_LENGTHS;
-    }
+
     if ((srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType) || (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType))
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
