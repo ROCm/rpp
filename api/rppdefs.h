@@ -239,15 +239,6 @@ typedef struct
 
 /******************** RPPI typedefs ********************/
 
-/*! \brief RPPI Image channel format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_CHN_PLANAR,
-    RPPI_CHN_PACKED
-} RppiChnFormat;
-
 /*! \brief RPPI Image size(Width/Height dimensions) type struct
  * \ingroup group_rppdefs
  */
