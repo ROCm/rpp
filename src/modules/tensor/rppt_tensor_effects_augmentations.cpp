@@ -2270,15 +2270,19 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
         RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+        // Do the setup required for resizing the fog mask based on max size in the batch
 
+        // Initialize and set descriptor for original fog mask
         RpptDesc fogMaskSrcDesc;
         RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
         set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);
 
+        // Initialize and set descriptor for resized fog mask
         RpptDesc fogMaskDstDesc;
         RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
         set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
+        // Fill the ROI and dstImageSize values required for resize api call
         RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *> (handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
         RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
         for (Rpp32s i = 0; i < 2; i++)
@@ -2290,6 +2294,7 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         Rpp32f *resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f *>(internalRoiTensorPtrSrc + 2);
         Rpp32f *resizedFogIntensityMaskPtr = resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
 
+        // Resize the mask to the maximum size present in the batch
         rppt_resize(&fogMask_1920_1080[0], fogMaskSrcDescPtr, resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle, RPP_HOST_BACKEND);
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -2358,14 +2363,19 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
+        // Do the setup required for resizing the fog mask based on max size in the batch
+
+        // Initialize and set descriptor for original fog mask
         RpptDesc fogMaskSrcDesc;
         RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
         set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);
 
+        // Initialize and set descriptor for resized fog mask
         RpptDesc fogMaskDstDesc;
         RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
         set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
+        // Fill the ROI and dstImageSize values required for resize api call
         RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
         RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
         for (Rpp32s i = 0; i < 2; i++)
@@ -2375,11 +2385,14 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         }
         RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
 
+        // Set batch size to 2 for computing resized alpha and intensity masks using single resize call
         rppSetBatchSize(rppHandle, 2);
 
+        // Compute the mask size
         Rpp32u maskSize = FOG_MAX_HEIGHT * FOG_MAX_WIDTH;
         Rpp32u maskSizeInBytes = maskSize * sizeof(Rpp32f);
 
+        // Copying fog alpha mask from host to device asynchronously
         Rpp32f *d_fogAlphaMaskPtr, *d_fogIntensityMaskPtr, *d_resizedFogAlphaMaskPtr, *d_resizedFogIntensityMaskPtr;
         d_fogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         d_resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(d_fogAlphaMaskPtr + (2 * maskSize));
@@ -2387,9 +2400,11 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
 
         CHECK_RETURN_STATUS(hipMemcpyAsync(d_fogAlphaMaskPtr, &fogMask_1920_1080[0], maskSizeInBytes * 2, hipMemcpyHostToDevice, handle.GetStream()));
 
+        // Resize the mask to the maximum size present in the batch
         rppt_resize(d_fogAlphaMaskPtr, fogMaskSrcDescPtr, d_resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle, RPP_HIP_BACKEND);
         CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
+        // Resetting the batch size in handle to match the user passed batch size
         rppSetBatchSize(rppHandle, srcDescPtr->n);
 
         Rpp32u *maskLocOffsetX, *maskLocOffsetY;
