@@ -133,7 +133,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;  // planar = 1, Packed =3 
 
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);

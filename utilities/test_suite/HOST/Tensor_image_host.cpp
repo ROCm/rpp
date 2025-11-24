@@ -1502,10 +1502,10 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    if(qaFlag)
+                    // if(qaFlag)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
-                    else
-                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                    // else
+                    //     init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
