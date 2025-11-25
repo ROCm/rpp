@@ -237,28 +237,6 @@ typedef struct
     Rpp32f data[24];
 } Rpp32f24;
 
-/******************** RPPI typedefs ********************/
-
-/*! \brief RPPI Image size(Width/Height dimensions) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    unsigned int width;
-    unsigned int height;
-} RppiSize;
-
-/*! \brief RPPI Image 2D ROI (XYWH format) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    unsigned int x;
-    unsigned int y;
-    unsigned int roiWidth;
-    unsigned int roiHeight;
-} RppiROI;
-
 /******************** RPPT typedefs ********************/
 
 /*! \brief RPPT Tensor datatype enum
@@ -731,102 +709,10 @@ struct SlaneyMelScale : public BaseMelScale
 
 /******************** HOST memory typedefs ********************/
 
-/*! \brief RPP HOST 32-bit float memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f *floatmem;
-} memRpp32f;
-
-/*! \brief RPP HOST 64-bit double memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp64f *doublemem;
-} memRpp64f;
-
-/*! \brief RPP HOST 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *uintmem;
-} memRpp32u;
-
-/*! \brief RPP HOST 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32s *intmem;
-} memRpp32s;
-
-/*! \brief RPP HOST 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8u *ucharmem;
-} memRpp8u;
-
-/*! \brief RPP HOST 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8s *charmem;
-} memRpp8s;
-
-/*! \brief RPP HOST RGB memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    RpptRGB* rgbmem;
-} memRpptRGB;
-
-/*! \brief RPP HOST 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *height;
-    Rpp32u *width;
-} memSize;
-
-/*! \brief RPP HOST 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *x;
-    Rpp32u *y;
-    Rpp32u *roiHeight;
-    Rpp32u *roiWidth;
-} memROI;
-
 /*! \brief RPP HOST memory type struct
  * \ingroup group_rppdefs
  */
 typedef struct {
-    RppiSize *srcSize;
-    RppiSize *dstSize;
-    RppiSize *maxSrcSize;
-    RppiSize *maxDstSize;
-    RppiROI *roiPoints;
-    memRpp32f floatArr[10];
-    memRpp64f doubleArr[10];
-    memRpp32u uintArr[10];
-    memRpp32s intArr[10];
-    memRpp8u ucharArr[10];
-    memRpp8s charArr[10];
-    memRpptRGB rgbArr;
-    Rpp64u *srcBatchIndex;
-    Rpp64u *dstBatchIndex;
-    Rpp32u *inc;
-    Rpp32u *dstInc;
     Rpp32f *scratchBufferHost;
 } memCPU;
 
@@ -842,102 +728,12 @@ typedef struct
     Rpp32f* floatmem;
 } hipMemRpp32f;
 
-/*! \brief RPP HIP 64-bit double memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp64f* doublemem;
-} hipMemRpp64f;
-
-/*! \brief RPP HIP 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* uintmem;
-} hipMemRpp32u;
-
-/*! \brief RPP HIP 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32s* intmem;
-} hipMemRpp32s;
-
-/*! \brief RPP HIP 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8u* ucharmem;
-} hipMemRpp8u;
-
-/*! \brief RPP HIP 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8s* charmem;
-} hipMemRpp8s;
-
-/*! \brief RPP HIP RGB memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    RpptRGB* rgbmem;
-} hipMemRpptRGB;
-
-/*! \brief RPP HIP 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* height;
-    Rpp32u* width;
-} hipMemSize;
-
-/*! \brief RPP HIP 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* x;
-    Rpp32u* y;
-    Rpp32u* roiHeight;
-    Rpp32u* roiWidth;
-} hipMemROI;
-
 /*! \brief RPP HIP memory management type struct
  * \ingroup group_rppdefs
  */
 typedef struct
 {
-    memSize csrcSize;
-    memSize cdstSize;
-    memSize cmaxSrcSize;
-    memSize cmaxDstSize;
-    memROI croiPoints;
-    hipMemSize srcSize;
-    hipMemSize dstSize;
-    hipMemSize maxSrcSize;
-    hipMemSize maxDstSize;
-    hipMemROI roiPoints;
-    hipMemRpp32f floatArr[10];
-    hipMemRpp32f float3Arr[10];
-    hipMemRpp64f doubleArr[10];
-    hipMemRpp32u uintArr[10];
-    hipMemRpp32s intArr[10];
-    hipMemRpp8u ucharArr[10];
-    hipMemRpp8s charArr[10];
-    hipMemRpptRGB rgbArr;
     hipMemRpp32f scratchBufferHip;
-    Rpp64u* srcBatchIndex;
-    Rpp64u* dstBatchIndex;
-    Rpp32u* inc;
-    Rpp32u* dstInc;
     hipMemRpp32f scratchBufferPinned;
 } memGPU;
 
