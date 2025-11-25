@@ -118,18 +118,43 @@ __global__ void collect_hist_pln_hip_tensor(const unsigned char *__restrict__ sr
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-        return;
-
-    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    // Each block handles pixels from a single batch entry since LOCAL_THREADS_Z = 1
     uint histOffset = id_z * HISTOGRAM_BINS;
-    uint8_t pixVal = srcPtr[srcIdx];
-    atomicAdd(&hist[histOffset + pixVal], 1);
+    RpptRoiXywh roi = roiTensorPtrSrc[id_z].xywhROI;
+
+    int totalThreads = blockDim.x * blockDim.y * blockDim.z;
+    int linearTid = (hipThreadIdx_z * blockDim.y * blockDim.x) + (hipThreadIdx_y * blockDim.x) + hipThreadIdx_x;
+
+    __shared__ unsigned int hist_s[HISTOGRAM_BINS];
+
+    // Initialize shared histogram
+    for (int i = linearTid; i < HISTOGRAM_BINS; i += totalThreads)
+        hist_s[i] = 0;
+    __syncthreads();
+
+    bool withinBounds = (id_y < roi.roiHeight) && (id_x < roi.roiWidth);
+    if (withinBounds)
+    {
+        uint srcIdx = (id_z * srcStridesNCH.x) +
+                      ((id_y + roi.xy.y) * srcStridesNCH.z) +
+                      (id_x + roi.xy.x);
+        uint8_t pixVal = srcPtr[srcIdx];
+        atomicAdd(&hist_s[pixVal], 1);
+    }
+    __syncthreads();
+
+    // Accumulate shared histogram into global histogram
+    for (int i = linearTid; i < HISTOGRAM_BINS; i += totalThreads)
+    {
+        unsigned int count = hist_s[i];
+        if (count)
+            atomicAdd(&hist[histOffset + i], count);
+    }
 }
 
 __global__ void build_lut_from_hist_kernel(const unsigned int* __restrict__ hist,
                                           unsigned char* __restrict__ lut,
-                                          const int* __restrict__ img_sizes,
+                                          RpptROIPtr roiTensorPtrSrc,
                                           int batchSize)
 {
     int batch = blockIdx.x;
@@ -153,7 +178,7 @@ __global__ void build_lut_from_hist_kernel(const unsigned int* __restrict__ hist
     for (int i = tid; i < HISTOGRAM_BINS; i += blockDim.x)
     {
         unsigned int val = hist[batch * HISTOGRAM_BINS + i];
-        atomicAdd(&cdf_shared[i], val);
+        cdf_shared[i] = val;
     }
     __syncthreads();
 
@@ -172,7 +197,9 @@ __global__ void build_lut_from_hist_kernel(const unsigned int* __restrict__ hist
     __syncthreads();
 
     // Build equalization lookup table
-    int N = img_sizes[batch];
+    int roiWidth = roiTensorPtrSrc[batch].xywhROI.roiWidth;
+    int roiHeight = roiTensorPtrSrc[batch].xywhROI.roiHeight;
+    int N = roiWidth * roiHeight;
     for (int i = tid; i < HISTOGRAM_BINS; i += blockDim.x)
     {
         // Branchless computation to avoid thread divergence
@@ -403,26 +430,12 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                               d_hist);
 
             // Build LUTs from histograms
-            std::vector<int> img_sizes(batchSize);
-            for (int b = 0; b < batchSize; ++b)
-            {
-                int w = roiTensorPtrSrc[b].xywhROI.roiWidth;
-                int h = roiTensorPtrSrc[b].xywhROI.roiHeight;
-                img_sizes[b] = w * h;
-            }
-            
-            int* d_img_sizes;
-            hipMalloc(&d_img_sizes, batchSize * sizeof(int));
-            hipMemcpyAsync(d_img_sizes, img_sizes.data(), batchSize * sizeof(int), hipMemcpyHostToDevice, handle.GetStream());
-
             hipLaunchKernelGGL(build_lut_from_hist_kernel, 
                               dim3(batchSize), 
                               dim3(HISTOGRAM_BINS), 
                               0, 
                               handle.GetStream(),
-                              d_hist, d_lut, d_img_sizes, batchSize);
-                              
-            hipFree(d_img_sizes);
+                              d_hist, d_lut, roiTensorPtrSrc, batchSize);
 
             // Apply LUT to Y channel
             calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
@@ -519,26 +532,12 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                               d_hist);
 
             // Build LUTs from histograms
-            std::vector<int> img_sizes(batchSize);
-            for (int b = 0; b < batchSize; ++b)
-            {
-                int w = roiTensorPtrSrc[b].xywhROI.roiWidth;
-                int h = roiTensorPtrSrc[b].xywhROI.roiHeight;
-                img_sizes[b] = w * h;
-            }
-            
-            int* d_img_sizes;
-            hipMalloc(&d_img_sizes, batchSize * sizeof(int));
-            hipMemcpyAsync(d_img_sizes, img_sizes.data(), batchSize * sizeof(int), hipMemcpyHostToDevice, handle.GetStream());
-
             hipLaunchKernelGGL(build_lut_from_hist_kernel, 
                               dim3(batchSize), 
                               dim3(HISTOGRAM_BINS), 
                               0, 
                               handle.GetStream(),
-                              d_hist, d_lut, d_img_sizes, batchSize);
-                              
-            hipFree(d_img_sizes);
+                              d_hist, d_lut, roiTensorPtrSrc, batchSize);
 
             // Apply LUT to Y channel
             calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
@@ -620,33 +619,19 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                       d_hist);
 
     // Build LUTs
-    std::vector<int> img_sizes(batchSize);
-    for (int b = 0; b < batchSize; ++b)
-    {
-        int w = roiTensorPtrSrc[b].xywhROI.roiWidth;
-        int h = roiTensorPtrSrc[b].xywhROI.roiHeight;
-        img_sizes[b] = w * h;
-    }
-    
-    int* d_img_sizes;
-    hipMalloc(&d_img_sizes, batchSize * sizeof(int));
-    hipMemcpyAsync(d_img_sizes, img_sizes.data(), batchSize * sizeof(int), hipMemcpyHostToDevice, handle.GetStream());
-
     hipLaunchKernelGGL(build_lut_from_hist_kernel, 
                       dim3(batchSize), 
                       dim3(HISTOGRAM_BINS), 
                       0, 
                       handle.GetStream(),
-                      d_hist, d_lut, d_img_sizes, batchSize);
-                      
-    hipFree(d_img_sizes);
+                      d_hist, d_lut, roiTensorPtrSrc, batchSize);
 
     // Apply LUT
     calculate_global_threads(globalThreads_x, globalThreads_y, globalThreads_z,
                            dstDescPtr->w, dstDescPtr->h, dstDescPtr->n);
 
     hipLaunchKernelGGL(apply_lut_pln1_hip_tensor,
-                      dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), 
                            ceil((float)globalThreads_y/LOCAL_THREADS_Y), 
                            ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
