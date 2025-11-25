@@ -41,9 +41,8 @@ RppStatus rppt_copy(RppPtr_t srcPtr,
                     RppBackend executionBackend)
 {
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
-    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
-    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
@@ -143,13 +142,13 @@ RppStatus rppt_channel_permute(RppPtr_t srcPtr,
                                rppHandle_t rppHandle,
                                RppBackend executionBackend)
 {
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
             channel_permute_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -271,13 +270,12 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr,
         channelWeights[2] = RGB_TO_GREY_WEIGHT_RED;
     }
 
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
             color_to_greyscale_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,

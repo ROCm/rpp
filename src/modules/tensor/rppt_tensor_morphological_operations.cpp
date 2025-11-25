@@ -47,6 +47,8 @@ RppStatus rppt_erode(RppPtr_t srcPtr,
                      rppHandle_t rppHandle,
                      RppBackend executionBackend)
 {
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
@@ -124,6 +126,8 @@ RppStatus rppt_dilate(RppPtr_t srcPtr,
                       rppHandle_t rppHandle,
                       RppBackend executionBackend)
 {
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
