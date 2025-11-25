@@ -135,28 +135,6 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-
-        this->initHandle->nbatchSize = this->nBatchSize;
-        this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-        this->initHandle->mem.mcpu.dstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-        this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-        this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
-        this->initHandle->mem.mcpu.roiPoints = (RppiROI *)malloc(sizeof(RppiROI) * this->nBatchSize);
-        this->initHandle->mem.mcpu.srcBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-        this->initHandle->mem.mcpu.dstBatchIndex = (Rpp64u *)malloc(sizeof(Rpp64u) * this->nBatchSize);
-        this->initHandle->mem.mcpu.inc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mcpu.dstInc = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-
-        for(int i = 0; i < 10; i++)
-        {
-            this->initHandle->mem.mcpu.floatArr[i].floatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * this->nBatchSize);
-            this->initHandle->mem.mcpu.uintArr[i].uintmem = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-            this->initHandle->mem.mcpu.intArr[i].intmem = (Rpp32s *)malloc(sizeof(Rpp32s) * this->nBatchSize);
-            this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
-            this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
-        }
-
-        this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
         this->initHandle->mem.mcpu.scratchBufferHost = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
@@ -165,47 +143,6 @@ struct HandleImpl
         this->initHandle = new InitHandle();
         this->PreInitializeBufferCPU();
 
-        this->initHandle->mem.mgpu.csrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.csrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cdstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cdstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cmaxSrcSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cmaxSrcSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cmaxDstSize.height = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.cmaxDstSize.width = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.croiPoints.x = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.croiPoints.y = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.croiPoints.roiHeight = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        this->initHandle->mem.mgpu.croiPoints.roiWidth = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcSize.height), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcSize.width), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstSize.height), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstSize.width), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.height), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.width), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.height), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.width), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.x), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.y), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiHeight), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiWidth), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.inc), sizeof(Rpp32u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstInc), sizeof(Rpp32u) * this->nBatchSize));
-
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcBatchIndex), sizeof(Rpp64u) * this->nBatchSize));
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstBatchIndex), sizeof(Rpp64u) * this->nBatchSize));
-
-        for(int i = 0; i < 10; i++)
-        {
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.floatArr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize));
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.uintArr[i].uintmem), sizeof(Rpp32u) * this->nBatchSize));
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.intArr[i].intmem), sizeof(Rpp32s) * this->nBatchSize));
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.ucharArr[i].ucharmem), sizeof(Rpp8u) * this->nBatchSize));
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.charArr[i].charmem), sizeof(Rpp8s) * this->nBatchSize));
-            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.float3Arr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize * 3));
-        }
-
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize));
 #ifdef AUDIO_SUPPORT
         // If AUDIO_SUPPORT is enabled, 'scratchBufferHip' needed to run RNNT training successfully are larger.
         // Current max allocation size = sizeof(Rpp32f) * 372877312, which is based on Spectrogram requirements
@@ -265,47 +202,6 @@ void Handle::rpp_destroy_object_gpu()
 {
     this->rpp_destroy_object_host();
 
-    free(this->GetInitHandle()->mem.mgpu.csrcSize.height);
-    free(this->GetInitHandle()->mem.mgpu.csrcSize.width);
-    free(this->GetInitHandle()->mem.mgpu.cdstSize.height);
-    free(this->GetInitHandle()->mem.mgpu.cdstSize.width);
-    free(this->GetInitHandle()->mem.mgpu.cmaxSrcSize.height);
-    free(this->GetInitHandle()->mem.mgpu.cmaxSrcSize.width);
-    free(this->GetInitHandle()->mem.mgpu.cmaxDstSize.height);
-    free(this->GetInitHandle()->mem.mgpu.cmaxDstSize.width);
-    free(this->GetInitHandle()->mem.mgpu.croiPoints.x);
-    free(this->GetInitHandle()->mem.mgpu.croiPoints.y);
-    free(this->GetInitHandle()->mem.mgpu.croiPoints.roiHeight);
-    free(this->GetInitHandle()->mem.mgpu.croiPoints.roiWidth);
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcSize.height));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcSize.width));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstSize.height));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstSize.width));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.height));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.width));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.height));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.width));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.x));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.y));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiHeight));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiWidth));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.inc));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstInc));
-
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcBatchIndex));
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstBatchIndex));
-
-    for(int i = 0; i < 10; i++)
-    {
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.floatArr[i].floatmem));
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.uintArr[i].uintmem));
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.intArr[i].intmem));
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.ucharArr[i].ucharmem));
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.charArr[i].charmem));
-        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.float3Arr[i].floatmem));
-    }
-
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem));
     CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
     CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
 
@@ -315,26 +211,6 @@ void Handle::rpp_destroy_object_gpu()
 
 void Handle::rpp_destroy_object_host()
 {
-    free(this->GetInitHandle()->mem.mcpu.srcSize);
-    free(this->GetInitHandle()->mem.mcpu.dstSize);
-    free(this->GetInitHandle()->mem.mcpu.maxSrcSize);
-    free(this->GetInitHandle()->mem.mcpu.maxDstSize);
-    free(this->GetInitHandle()->mem.mcpu.roiPoints);
-    free(this->GetInitHandle()->mem.mcpu.srcBatchIndex);
-    free(this->GetInitHandle()->mem.mcpu.dstBatchIndex);
-    free(this->GetInitHandle()->mem.mcpu.inc);
-    free(this->GetInitHandle()->mem.mcpu.dstInc);
-
-    for(int i = 0; i < 10; i++)
-    {
-        free(this->GetInitHandle()->mem.mcpu.floatArr[i].floatmem);
-        free(this->GetInitHandle()->mem.mcpu.uintArr[i].uintmem);
-        free(this->GetInitHandle()->mem.mcpu.intArr[i].intmem);
-        free(this->GetInitHandle()->mem.mcpu.ucharArr[i].ucharmem);
-        free(this->GetInitHandle()->mem.mcpu.charArr[i].charmem);
-    }
-
-    free(this->GetInitHandle()->mem.mcpu.rgbArr.rgbmem);
     free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
 }
 
