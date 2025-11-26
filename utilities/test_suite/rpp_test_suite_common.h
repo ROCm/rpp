@@ -28,6 +28,7 @@ SOFTWARE.
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <map>
 
 #define DEBUG_MODE 0
 using namespace std;
@@ -53,6 +54,38 @@ enum testType
     UNIT_TEST = 0,
     PERFORMANCE_TEST = 1
 };
+
+// Create a map from RppStatus to string representation
+inline std::map<RppStatus, std::string> rppStatusToString = {
+    {RPP_SUCCESS,                               "RPP_SUCCESS"},
+    {RPP_ERROR,                                 "RPP_ERROR"},
+    {RPP_ERROR_INVALID_ARGUMENTS,               "RPP_ERROR_INVALID_ARGUMENTS"},
+    {RPP_ERROR_LOW_OFFSET,                      "RPP_ERROR_LOW_OFFSET"},
+    {RPP_ERROR_ZERO_DIVISION,                   "RPP_ERROR_ZERO_DIVISION"},
+    {RPP_ERROR_HIGH_SRC_DIMENSION,              "RPP_ERROR_HIGH_SRC_DIMENSION"},
+    {RPP_ERROR_NOT_IMPLEMENTED,                 "RPP_ERROR_NOT_IMPLEMENTED"},
+    {RPP_ERROR_INVALID_SRC_CHANNELS,            "RPP_ERROR_INVALID_SRC_CHANNELS"},
+    {RPP_ERROR_INVALID_DST_CHANNELS,            "RPP_ERROR_INVALID_DST_CHANNELS"},
+    {RPP_ERROR_INVALID_SRC_LAYOUT,              "RPP_ERROR_INVALID_SRC_LAYOUT"},
+    {RPP_ERROR_INVALID_DST_LAYOUT,              "RPP_ERROR_INVALID_DST_LAYOUT"},
+    {RPP_ERROR_INVALID_SRC_DATATYPE,            "RPP_ERROR_INVALID_SRC_DATATYPE"},
+    {RPP_ERROR_INVALID_DST_DATATYPE,            "RPP_ERROR_INVALID_DST_DATATYPE"},
+    {RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE,     "RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE"},
+    {RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH,  "RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH"},
+    {RPP_ERROR_INVALID_PARAMETER_DATATYPE,      "RPP_ERROR_INVALID_PARAMETER_DATATYPE"},
+    {RPP_ERROR_NOT_ENOUGH_MEMORY,               "RPP_ERROR_NOT_ENOUGH_MEMORY"},
+    {RPP_ERROR_OUT_OF_BOUND_SRC_ROI,            "RPP_ERROR_OUT_OF_BOUND_SRC_ROI"},
+    {RPP_ERROR_LAYOUT_MISMATCH,                 "RPP_ERROR_LAYOUT_MISMATCH"},
+    {RPP_ERROR_INVALID_CHANNELS,                "RPP_ERROR_INVALID_CHANNELS"},
+    {RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH,      "RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH"},
+    {RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE, "RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE"},
+    {RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE,"RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE"},
+    {RPP_ERROR_INVALID_SRC_DIMS,                "RPP_ERROR_INVALID_SRC_DIMS"},
+    {RPP_ERROR_INVALID_DST_DIMS,                "RPP_ERROR_INVALID_DST_DIMS"},
+    {RPP_ERROR_INVALID_DIM_LENGTHS,             "RPP_ERROR_INVALID_DIM_LENGTHS"},
+    {RPP_ERROR_INVALID_AXIS,                    "RPP_ERROR_INVALID_AXIS"}
+};
+
 
 // Opens a folder and recursively search for files with given extension
 void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
