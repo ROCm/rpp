@@ -913,6 +913,8 @@ RppStatus rppt_resize(RppPtr_t srcPtr,
                                             srcLayoutParams,
                                             handle);
             }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else if(interpolationType == RpptInterpolationType::BILINEAR)
         {
@@ -964,6 +966,8 @@ RppStatus rppt_resize(RppPtr_t srcPtr,
                                                    srcLayoutParams,
                                                    handle);
             }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
         {
@@ -1037,9 +1041,9 @@ RppStatus rppt_resize(RppPtr_t srcPtr,
                                              interpolationType,
                                              handle);
             }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
-        else
-            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }

@@ -1964,6 +1964,20 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
+        RpptXorwowStateBoxMuller xorwowInitialState;
+        xorwowInitialState.x[0] = 0x75BCD15 + seed;
+        xorwowInitialState.x[1] = 0x159A55E5 + seed;
+        xorwowInitialState.x[2] = 0x1F123BB5 + seed;
+        xorwowInitialState.x[3] = 0x5491333 + seed;
+        xorwowInitialState.x[4] = 0x583F19 + seed;
+        xorwowInitialState.counter = 0x64F0C9 + seed;
+        xorwowInitialState.boxMullerFlag = 0;
+        xorwowInitialState.boxMullerExtra = 0.0f;
+
+        RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
+        d_xorwowInitialStatePtr = reinterpret_cast<RpptXorwowStateBoxMuller *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
+
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
             hip_exec_jitter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1971,7 +1985,7 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
                                    kernelSizeTensor,
-                                   seed,
+                                   d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
@@ -1980,22 +1994,22 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
         {
             hip_exec_jitter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                    srcDescPtr,
-                                   reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
                                    kernelSizeTensor,
-                                   seed,
+                                   d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            hip_exec_jitter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            hip_exec_jitter_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                    srcDescPtr,
-                                   reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
                                    kernelSizeTensor,
-                                   seed,
+                                   d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
@@ -2007,7 +2021,7 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
                                    kernelSizeTensor,
-                                   seed,
+                                   d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
