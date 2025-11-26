@@ -216,7 +216,7 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
         for (int i = 0; i < HISTOGRAM_BINS; ++i) lut[i] = (Rpp8u)i;
         return;
     }
-
+    const float mult_scalar = 255.0f / denominator;
     int vectorLoopCount = 0;
 
 #if __AVX2__
