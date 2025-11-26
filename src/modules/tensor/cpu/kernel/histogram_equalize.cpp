@@ -86,63 +86,85 @@ inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
 }
 
 #if __AVX2__
-inline void rgb_to_ycbcr_compute_avx(__m256 &pR, __m256 &pG, __m256 &pB,
-                                     __m256 &pY, __m256 &pU, __m256 &pV)
-{
-    // // Y = (R * cYR) + (G * cYG) + (B * cYB)
-    pY = _mm256_fmadd_ps(pR, pCYR, _mm256_fmadd_ps(pG, pCYG, _mm256_mul_ps(pB, pCYB)));
-
-    // U = (R * cUR) + (G * cUG) + (B * cUB) + 128
-    pU = _mm256_fmadd_ps(pR, pCUR, _mm256_fmadd_ps(pG, pCUG, _mm256_fmadd_ps(pB, pCUB, avx_p128)));
-
-    // V = (R * cVR) + (G * cVG) + (B * cVB) + 128
-    pV = _mm256_fmadd_ps(pR, pCVR, _mm256_fmadd_ps(pG, pCVG, _mm256_fmadd_ps(pB, pCVB, avx_p128)));
-
-    pY = _mm256_min_ps(_mm256_max_ps(pY, avx_p0), avx_p255);
-    pU = _mm256_min_ps(_mm256_max_ps(pU, avx_p0), avx_p255);
-    pV = _mm256_min_ps(_mm256_max_ps(pV, avx_p0), avx_p255);
-}
-
-inline void ycbcr_to_rgb_compute_avx(__m256 &pY, __m256 &pU, __m256 &pV,
-                                     __m256 &pR, __m256 &pG, __m256 &pB)
-{
-    __m256 U = _mm256_sub_ps(pU, avx_p128);
-    __m256 V = _mm256_sub_ps(pV, avx_p128);
-
-    // R = Y + 1.402 * V
-    pR = _mm256_fmadd_ps(V, pC1_402, pY);
-
-    // G = Y - (0.344136 * U + 0.714136 * V)
-    pG = _mm256_fnmadd_ps(U, pC0_344,
-           _mm256_fnmadd_ps(V, pC0_714, pY));
-
-    // B = Y + 1.772 * U
-    pB = _mm256_fmadd_ps(U, pC1_772, pY);
-
-    pR = _mm256_min_ps(_mm256_max_ps(pR, avx_p0), avx_p255);
-    pG = _mm256_min_ps(_mm256_max_ps(pG, avx_p0), avx_p255);
-    pB = _mm256_min_ps(_mm256_max_ps(pB, avx_p0), avx_p255);
-}
 
 inline void rgb_to_ycbcr_avx(__m256 *p)
 {
-    __m256 r0 = p[0], r1 = p[1];
-    __m256 g0 = p[2], g1 = p[3];
-    __m256 b0 = p[4], b1 = p[5];
+    // ---------------- Block 0 ----------------
+    // Y = R*cYR + G*cYG + B*cYB
+    __m256 y0 = _mm256_fmadd_ps(p[0], pCYR,
+                     _mm256_fmadd_ps(p[2], pCYG,
+                         _mm256_mul_ps(p[4], pCYB)));
 
-    rgb_to_ycbcr_compute_avx(r0, g0, b0, p[0], p[2], p[4]);  // Y0, Cb0, Cr0
-    rgb_to_ycbcr_compute_avx(r1, g1, b1, p[1], p[3], p[5]);  // Y1, Cb1, Cr1
+    // U = R*cUR + G*cUG + B*cUB + 128
+    __m256 u0 = _mm256_fmadd_ps(p[0], pCUR,
+                     _mm256_fmadd_ps(p[2], pCUG,
+                         _mm256_fmadd_ps(p[4], pCUB, avx_p128)));
+
+    // V = R*cVR + G*cVG + B*cVB + 128
+    __m256 v0 = _mm256_fmadd_ps(p[0], pCVR,
+                     _mm256_fmadd_ps(p[2], pCVG,
+                         _mm256_fmadd_ps(p[4], pCVB, avx_p128)));
+
+    // Clamp 0..255
+    p[0] = _mm256_min_ps(_mm256_max_ps(y0, avx_p0), avx_p255);
+    p[2] = _mm256_min_ps(_mm256_max_ps(u0, avx_p0), avx_p255);
+    p[4] = _mm256_min_ps(_mm256_max_ps(v0, avx_p0), avx_p255);
+
+    // ---------------- Block 1 ----------------
+    // Y = R*cYR + G*cYG + B*cYB
+    __m256 y1 = _mm256_fmadd_ps(p[1], pCYR,
+                     _mm256_fmadd_ps(p[3], pCYG,
+                         _mm256_mul_ps(p[5], pCYB)));
+
+    // U = R*cUR + G*cUG + B*cUB + 128
+    __m256 u1 = _mm256_fmadd_ps(p[1], pCUR,
+                     _mm256_fmadd_ps(p[3], pCUG,
+                         _mm256_fmadd_ps(p[5], pCUB, avx_p128)));
+
+    // V = R*cVR + G*cVG + B*cVB + 128
+    __m256 v1 = _mm256_fmadd_ps(p[1], pCVR,
+                     _mm256_fmadd_ps(p[3], pCVG,
+                         _mm256_fmadd_ps(p[5], pCVB, avx_p128)));
+
+    // Clamp 0..255
+    p[1] = _mm256_min_ps(_mm256_max_ps(y1, avx_p0), avx_p255);
+    p[3] = _mm256_min_ps(_mm256_max_ps(u1, avx_p0), avx_p255);
+    p[5] = _mm256_min_ps(_mm256_max_ps(v1, avx_p0), avx_p255);
 }
 
 inline void ycbcr_to_rgb_avx(__m256 *p)
 {
-    __m256 y0 = p[0], y1 = p[1];
-    __m256 cb0 = p[2], cb1 = p[3];
-    __m256 cr0 = p[4], cr1 = p[5];
+    // ---- First 8 pixels (block 0) ----
+    __m256 U0 = _mm256_sub_ps(p[2], avx_p128);
+    __m256 V0 = _mm256_sub_ps(p[4], avx_p128);
 
-    ycbcr_to_rgb_compute_avx(y0, cb0, cr0, p[0], p[2], p[4]);   // R0, G0, B0
-    ycbcr_to_rgb_compute_avx(y1, cb1, cr1, p[1], p[3], p[5]);   // R1, G1, B1
+    __m256 r0 = _mm256_fmadd_ps(V0, pC1_402, p[0]);
+
+    __m256 g0 = _mm256_fnmadd_ps(V0, pC0_714,
+                  _mm256_fnmadd_ps(U0, pC0_344, p[0]));
+
+    __m256 b0 = _mm256_fmadd_ps(U0, pC1_772, p[0]);
+
+    p[0] = _mm256_min_ps(_mm256_max_ps(r0, avx_p0), avx_p255);
+    p[2] = _mm256_min_ps(_mm256_max_ps(g0, avx_p0), avx_p255);
+    p[4] = _mm256_min_ps(_mm256_max_ps(b0, avx_p0), avx_p255);
+
+    // ---- Second 8 pixels (block 1) ----
+    __m256 U1 = _mm256_sub_ps(p[3], avx_p128);
+    __m256 V1 = _mm256_sub_ps(p[5], avx_p128);
+
+    __m256 r1 = _mm256_fmadd_ps(V1, pC1_402, p[1]);
+
+    __m256 g1 = _mm256_fnmadd_ps(V1, pC0_714,
+                  _mm256_fnmadd_ps(U1, pC0_344, p[1]));
+
+    __m256 b1 = _mm256_fmadd_ps(U1, pC1_772, p[1]);
+
+    p[1] = _mm256_min_ps(_mm256_max_ps(r1, avx_p0), avx_p255);
+    p[3] = _mm256_min_ps(_mm256_max_ps(g1, avx_p0), avx_p255);
+    p[5] = _mm256_min_ps(_mm256_max_ps(b1, avx_p0), avx_p255);
 }
+
 #endif
 
 inline void collect_hist_pln_tensor_host(Rpp8u *srcPtr,
@@ -151,7 +173,6 @@ inline void collect_hist_pln_tensor_host(Rpp8u *srcPtr,
                                          Rpp32u roiHeight,
                                          Rpp32u rowStride)
 {
-#pragma omp parallel for
     for (int y = 0; y < roiHeight; y++)
     {
         Rpp8u *srcRow = srcPtr + y * rowStride;
@@ -165,7 +186,6 @@ inline void collect_hist_y_buffer(const Rpp8u *yBuf,
                                   Rpp32u *hist,
                                   Rpp32u pixels)
 {
-#pragma omp parallel for
     for (Rpp32u i = 0; i < pixels; i++)
         hist[yBuf[i]]++;
 }
@@ -191,58 +211,67 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     // denominator = N - mincdf
     float denominator = std::max((float)(img_size - min_cdf), 1.0f);
     bool is_uniform = (min_cdf == img_size);
+
+    if (is_uniform) {
+        for (int i = 0; i < HISTOGRAM_BINS; ++i) lut[i] = (Rpp8u)i;
+        return;
+    }
+
     int vectorLoopCount = 0;
 
 #if __AVX2__
-    __m256 denom = _mm256_set1_ps(denominator);
-    __m256i is_uniform_mask = _mm256_set1_epi32(is_uniform ? -1 : 0);
-    __m256i is_not_uniform_mask = _mm256_set1_epi32(is_uniform ? 0 : -1);
-    __m256 min_cdf_ps = _mm256_set1_ps((float)min_cdf);
-    __m256i idxIncrement = _mm256_setr_epi32(0,1,2,3,4,5,6,7);
-    __m256i avx_p8 = _mm256_set1_epi32(8);
+    const float mult_scalar = 255.0f / denominator;
 
-    for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount += 8)
+    __m256 v_min_cdf = _mm256_set1_ps((float)min_cdf);
+    __m256 v_mult    = _mm256_set1_ps(mult_scalar);
+    for (; vectorLoopCount <= HISTOGRAM_BINS; vectorLoopCount += 16)
     {
-        __m256i cdf_i, v, idx, lut_vec;
-        __m128i result128;
-        cdf_i = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
-        __m256 cdf_f = _mm256_cvtepi32_ps(cdf_i);
-        __m256 num = _mm256_mul_ps(_mm256_sub_ps(cdf_f, min_cdf_ps), avx_p255);                         // num = (cdf[i] - mincdf) * 255.0
-        __m256 eq = _mm256_div_ps(num, denom);                                                          // eq = num / denominator
-        v = _mm256_cvtps_epi32(eq);                                                                     // v = (int)round(eq)
-        v = _mm256_min_epi32(_mm256_max_epi32(v, avx_p0), avx_p255);                                    // v = std::min(std::max(v, 0), RPP_MAX_8U);
-        lut_vec = _mm256_or_si256( _mm256_and_si256(is_uniform_mask, idx), _mm256_and_si256(is_not_uniform_mask, v));
-        result128 = _mm_packus_epi16(_mm_packs_epi32( _mm256_castsi256_si128(lut_vec), _mm256_extracti128_si256(lut_vec, 1)), xmm_p0);
-        _mm_storel_epi64((__m128i *)(lut + vectorLoopCount), result128);
-        idx = _mm256_add_epi32(idx, avx_p8);
+        __m256i ci0 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
+        __m256  cf0 = _mm256_cvtepi32_ps(ci0);
+        __m256  r0  = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf0, v_min_cdf), v_mult), avx_p255);
+        __m256i ri0 = _mm256_cvtps_epi32(r0);
+
+        __m256i ci1 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount + 8));
+        __m256  cf1 = _mm256_cvtepi32_ps(ci1);
+        __m256  r1  = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf1, v_min_cdf), v_mult), avx_p255);
+        __m256i ri1 = _mm256_cvtps_epi32(r1);
+
+        __m128i lo32_0 = _mm256_castsi256_si128(ri0);
+        __m128i hi32_0 = _mm256_extracti128_si256(ri0, 1);
+        __m128i lo32_1 = _mm256_castsi256_si128(ri1);
+        __m128i hi32_1 = _mm256_extracti128_si256(ri1, 1);
+        
+        __m128i pack16_0 = _mm_packs_epi32(lo32_0, hi32_0);
+        __m128i pack16_1 = _mm_packs_epi32(lo32_1, hi32_1);
+        
+        __m128i pack8 = _mm_packus_epi16(pack16_0, pack16_1);
+        
+        _mm_storeu_si128((__m128i*)(lut + vectorLoopCount), pack8);
     }
 #else
     for (; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount++)
     {
-        Rpp32f num = (Rpp32f)(cdf[vectorLoopCount] - min_cdf) * RPP_MAX_8U;
-        Rpp32f eq = num / denominator;
-
-        Rpp8u v = (Rpp8u)round(eq);
-        v = std::min(std::max(v, 0), RPP_MAX_8U);
-
-        lut[vectorLoopCount] = (is_uniform * (Rpp8u)vectorLoopCount) + ((1 - is_uniform) * (Rpp8u)v);
+        Rpp32f eq = ((Rpp32f)cdf[vectorLoopCount] - (Rpp32f)min_cdf) * mult_scalar;
+        if (eq > 255.0f) eq = 255.0f;
+        if (eq < 0.0f)   eq = 0.0f;
+        lut[vectorLoopCount] = (Rpp8u)round(eq);
     }
 #endif
 }
 
 inline void apply_lut_tensor(const Rpp8u *src,
-                                Rpp8u *dst,
-                                Rpp32u roiWidth,
-                                Rpp32u roiHeight,
-                                const Rpp8u *lut,
-                                Rpp32u srcRowStride,
-                                Rpp32u dstRowStride)
+                             Rpp8u *dst,
+                             Rpp32u roiWidth,
+                             Rpp32u roiHeight,
+                             const Rpp8u *lut,
+                             Rpp32u srcRowStride,
+                             Rpp32u dstRowStride)
 {
 #pragma omp parallel for
     for (Rpp32u y = 0; y < roiHeight; y++)
     {
-        const Rpp8u *srcRow = src + y * srcRowStride;
-        Rpp8u *dstRow = dst + y * dstRowStride;
+        const Rpp8u* srcRow = src + y * srcRowStride;
+        Rpp8u* dstRow = dst + y * dstRowStride;
 
         for (Rpp32u x = 0; x < roiWidth; x++)
             dstRow[x] = lut[srcRow[x]]; // Apply LUT only to the Y channel value
@@ -258,7 +287,6 @@ inline void histogram_equalize_host_compute(const Rpp8u *srcY, Rpp8u *dstY, Rpp3
     build_lut_from_hist_host(hist, lut, pixels); // build LUT from historgarm 
     apply_lut_tensor(srcY, dstY, roiWidth, roiHeight, lut, roiWidth, roiWidth); // apply LUT
 }
-
 
 RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                RpptDescPtr srcDescPtr,
@@ -292,11 +320,15 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u roiWidth = roi.xywhROI.roiWidth;
         Rpp32u roiHeight = roi.xywhROI.roiHeight;
 
-        Rpp32u pixels = roiWidth * roiHeight;        
-        Rpp8u *yBuf = (Rpp8u *)malloc(pixels * sizeof(Rpp8u));
-        Rpp8u *dstYBuf = (Rpp8u *)malloc(pixels * sizeof(Rpp8u));
-        Rpp8u *cbBuf = (Rpp8u *)malloc(pixels * sizeof(Rpp8u));
-        Rpp8u *crBuf = (Rpp8u *)malloc(pixels * sizeof(Rpp8u));
+        Rpp32u pixels = roiWidth * roiHeight;
+
+        Rpp8u *scratchBase = reinterpret_cast<Rpp8u *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
+
+        Rpp8u *yBuf = scratchBase + batchCount * (pixels * 3);
+        Rpp8u *cbBuf = yBuf + pixels;
+        Rpp8u *crBuf = cbBuf + pixels;
+        Rpp8u *dstYBuf = crBuf + pixels;
+
         Rpp32u hist[HISTOGRAM_BINS] = {0};
         Rpp8u lutBatch[HISTOGRAM_BINS];
 
@@ -477,7 +509,9 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             yPtr = yBuf;
             cbPtr = cbBuf;
             crPtr = crBuf;
+#if __AVX2__
             alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+#endif
             for(int i = 0; i < roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp;
@@ -553,7 +587,9 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             yPtr = yBuf;
             cbPtr = cbBuf;
             crPtr = crBuf;
+#if __AVX2__
             alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+#endif
             for(int i = 0; i < roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp;
@@ -625,10 +661,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             build_lut_from_hist_host(hist, lutBatch, pixels);
             apply_lut_tensor(srcPtr, dstPtr, roiWidth, roiHeight, lutBatch, srcDescPtr->strides.hStride, dstDescPtr->strides.hStride);
         }
-        free(yBuf);
-        free(cbBuf);
-        free(crBuf);
-        free(dstYBuf);
+
     }
 
     return RPP_SUCCESS;
