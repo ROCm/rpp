@@ -384,135 +384,68 @@ RppStatus rppt_rain(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rp
  */
 RppStatus rppt_pixelate(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t intermediateScratchBufferPtr, Rpp32f pixelationPercentage, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
-/*! \brief Fog augmentation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Fog augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img640x480.png Sample Input
  * \image html effects_augmentations_fog_img640x480.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP/HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP/HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in HOST memory, of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
- * \param [in] grayFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in HOST memory, of size batchSize, with 0 <= grayFactor <= 1 for each image in batch)
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in HOST/pinned/HIP memory, of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
+ * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in HOST/pinned/HIP memory, of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST/pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] rppHandle RPP HOST/HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor,Rpp32f *grayFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_fog(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor, Rpp32f *greyFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Fog augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
- * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img640x480.png Sample Input
- * \image html effects_augmentations_fog_img640x480.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
- * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
- * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_fog_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *intensityFactor, Rpp32f *greyFactor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
-
-/*! \brief Posterize augmentation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Posterize augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The posterize augmentation adds a posterize effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html effects_augmentations_posterize_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP/HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP/HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in HOST memory, of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in pinned/HOST memory, of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HIP/HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_posterize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *posterizeLevelBits, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_posterize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *posterizeLevelBits, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Posterize augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The posterize augmentation adds a posterize effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.png Sample Input
- * \image html effects_augmentations_posterize_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in pinned memory, of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HIP memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
- * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_posterize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *posterizeLevelBits, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif
-
-/*! \brief Solarize augmentation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Solarize augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The solarize augmentation inverts pixel values above a specified threshold for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html effects_augmentations_solarize_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP/HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP/HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] thresholdTensor threshold values for solarize effect (1D tensor in HOST memory, of size batchSize, with 0 <= threshold <= 1 for each image in batch)
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] thresholdTensor threshold values for solarize effect (1D tensor in pinned/HOST memory, of size batchSize, with 0 <= threshold <= 1 for each image in batch)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HIP/HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_solarize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f* thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_solarize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f* thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Solarize augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The solarize augmentation inverts pixel values above a specified threshold for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.png Sample Input
- * \image html effects_augmentations_solarize_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] thresholdTensor threshold values for solarize effect (1D tensor in Pinned memory, of size batchSize, with 0 <= threshold <= 1 for each image in batch)
- * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
- * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
 
 /*! @}
  */
