@@ -104,6 +104,8 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr,
                                         layoutParams,
                                         handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -159,6 +161,8 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr,
                                        roiType,
                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -242,6 +246,8 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
                                              layoutParams,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -294,6 +300,8 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
                                           roiType,
                                           handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -380,6 +388,8 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
                                         layoutParams,
                                         handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -437,6 +447,8 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
                                             roiType,
                                             handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }

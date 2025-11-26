@@ -121,6 +121,9 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
                                        layoutParams,
                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -186,6 +189,9 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
                                      roiType,
                                      handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -275,6 +281,9 @@ RppStatus rppt_spatter(RppPtr_t srcPtr,
                                       layoutParams,
                                       handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -360,9 +369,12 @@ RppStatus rppt_spatter(RppPtr_t srcPtr,
                                     roiType,
                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostX));
         CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostY));
+
         return RPP_SUCCESS;
     }
 #endif
@@ -466,6 +478,9 @@ RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr,
                                                     layoutParams,
                                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -543,6 +558,9 @@ RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr,
                                                   roiType,
                                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -631,6 +649,9 @@ RppStatus rppt_shot_noise(RppPtr_t srcPtr,
                                          layoutParams,
                                          handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -698,6 +719,9 @@ RppStatus rppt_shot_noise(RppPtr_t srcPtr,
                                        roiType,
                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -787,6 +811,9 @@ RppStatus rppt_gaussian_noise(RppPtr_t srcPtr,
                                              layoutParams,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -858,6 +885,9 @@ RppStatus rppt_gaussian_noise(RppPtr_t srcPtr,
                                            roiType,
                                            handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1058,6 +1088,9 @@ RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1,
                                                layoutParams,
                                                handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1111,6 +1144,9 @@ RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1,
                                              roiType,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1213,6 +1249,9 @@ RppStatus rppt_water(RppPtr_t srcPtr,
                                     layoutParams,
                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1282,6 +1321,9 @@ RppStatus rppt_water(RppPtr_t srcPtr,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1358,6 +1400,9 @@ RppStatus rppt_vignette(RppPtr_t srcPtr,
                                        layoutParams,
                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1407,6 +1452,9 @@ RppStatus rppt_vignette(RppPtr_t srcPtr,
                                     roiType,
                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1492,6 +1540,8 @@ RppStatus rppt_erase(RppPtr_t srcPtr,
                               layoutParams,
                               handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1550,6 +1600,8 @@ RppStatus rppt_erase(RppPtr_t srcPtr,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1634,6 +1686,8 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                                     layoutParams,
                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1684,6 +1738,8 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1761,6 +1817,8 @@ RppStatus rppt_glitch(RppPtr_t srcPtr,
                                      layoutParams,
                                      handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1811,6 +1869,8 @@ RppStatus rppt_glitch(RppPtr_t srcPtr,
                                    roiType,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1896,6 +1956,8 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
                                      layoutParams,
                                      handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -1950,6 +2012,8 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
                                    roiType,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2100,6 +2164,8 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                         srcLayoutParams,
                                         handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2259,6 +2325,8 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    handle);
             CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2376,6 +2444,8 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
                                   layoutParams,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2493,6 +2563,8 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
                                 roiType,
                                 handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2591,6 +2663,8 @@ RppStatus rppt_rain(RppPtr_t srcPtr,
                                    layoutParams,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2657,6 +2731,8 @@ RppStatus rppt_rain(RppPtr_t srcPtr,
                                  roiType,
                                  handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2726,6 +2802,8 @@ RppStatus rppt_posterize(RppPtr_t srcPtr,
                                           layoutParams,
                                           handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2765,6 +2843,8 @@ RppStatus rppt_posterize(RppPtr_t srcPtr,
                                       roiType,
                                       handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2846,6 +2926,8 @@ RppStatus rppt_solarize(RppPtr_t srcPtr,
                                        layoutParams,
                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }
@@ -2896,6 +2978,8 @@ RppStatus rppt_solarize(RppPtr_t srcPtr,
                                      roiType,
                                      handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
 
         return RPP_SUCCESS;
     }

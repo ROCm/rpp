@@ -100,6 +100,9 @@ RppStatus rppt_crop(RppPtr_t srcPtr,
                                    layoutParams,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -145,6 +148,9 @@ RppStatus rppt_crop(RppPtr_t srcPtr,
                                  roiType,
                                  handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -231,6 +237,9 @@ RppStatus rppt_crop_and_patch(RppPtr_t srcPtr1,
                                              layoutParams,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -288,6 +297,9 @@ RppStatus rppt_crop_and_patch(RppPtr_t srcPtr1,
                                            roiType,
                                            handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -401,6 +413,9 @@ RppStatus rppt_crop_mirror_normalize(RppPtr_t srcPtr,
                                                      layoutParams,
                                                      handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -484,6 +499,9 @@ RppStatus rppt_crop_mirror_normalize(RppPtr_t srcPtr,
                                                   roiType,
                                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -616,6 +634,9 @@ RppStatus rppt_warp_affine(RppPtr_t srcPtr,
                                                        handle);
             }
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -669,6 +690,9 @@ RppStatus rppt_warp_affine(RppPtr_t srcPtr,
                                         roiType,
                                         handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -751,6 +775,9 @@ RppStatus rppt_flip(RppPtr_t srcPtr,
                                    layoutParams,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -804,6 +831,9 @@ RppStatus rppt_flip(RppPtr_t srcPtr,
                                  roiType,
                                  handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1008,6 +1038,9 @@ RppStatus rppt_resize(RppPtr_t srcPtr,
                                              handle);
             }
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1061,6 +1094,9 @@ RppStatus rppt_resize(RppPtr_t srcPtr,
                                    roiType,
                                    handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1183,6 +1219,9 @@ RppStatus rppt_resize_mirror_normalize(RppPtr_t srcPtr,
                                                        srcLayoutParams,
                                                        handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1278,6 +1317,9 @@ RppStatus rppt_resize_mirror_normalize(RppPtr_t srcPtr,
                                                     roiType,
                                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1361,6 +1403,9 @@ RppStatus rppt_resize_crop_mirror(RppPtr_t srcPtr,
                                                  srcLayoutParams,
                                                  handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1418,6 +1463,9 @@ RppStatus rppt_resize_crop_mirror(RppPtr_t srcPtr,
                                                roiType,
                                                handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1562,6 +1610,9 @@ RppStatus rppt_rotate(RppPtr_t srcPtr,
                                                        handle);
             }
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1625,6 +1676,9 @@ RppStatus rppt_rotate(RppPtr_t srcPtr,
                                         roiType,
                                         handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -1701,6 +1755,9 @@ RppStatus rppt_phase(RppPtr_t srcPtr1,
                                     layoutParams,
                                     handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -1750,6 +1807,9 @@ RppStatus rppt_phase(RppPtr_t srcPtr1,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -2094,6 +2154,9 @@ RppStatus rppt_remap(RppPtr_t srcPtr,
                                                  handle);
             }
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -2155,6 +2218,9 @@ RppStatus rppt_remap(RppPtr_t srcPtr,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -2252,6 +2318,9 @@ RppStatus rppt_lens_correction(RppPtr_t srcPtr,
                                              layoutParams,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -2323,6 +2392,9 @@ RppStatus rppt_lens_correction(RppPtr_t srcPtr,
                                   roiType,
                                   handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -2564,6 +2636,9 @@ RppStatus rppt_warp_perspective(RppPtr_t srcPtr,
                                                               handle);
             }
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -2617,6 +2692,9 @@ RppStatus rppt_warp_perspective(RppPtr_t srcPtr,
                                              roiType,
                                              handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif
@@ -2693,6 +2771,9 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                           layoutParams,
                                                           handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -2738,6 +2819,9 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                 roiType,
                                                 handle);
         }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #endif

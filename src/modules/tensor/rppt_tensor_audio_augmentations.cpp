@@ -146,9 +146,8 @@ RppStatus rppt_to_decibels(RppPtr_t srcPtr,
                                     handle);
         }
         else
-        {
-            return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
-        }
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
