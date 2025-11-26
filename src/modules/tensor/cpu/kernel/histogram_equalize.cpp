@@ -64,9 +64,9 @@ inline void rgb_to_ycbcr_compute(Rpp8u *srcR, Rpp8u *srcG, Rpp8u *srcB,
     Rpp32f uF = fmaf(r, cUR, fmaf(g, cUG, fmaf(b, cUB, 128.0f)));
     Rpp32f vF = fmaf(r, cVR, fmaf(g, cVG, fmaf(b, cVB, 128.0f)));
 
-    saturate_pixel(yF, dstY);
-    saturate_pixel(uF, dstCb);
-    saturate_pixel(vF, dstCr);
+    *dstY = (yF  < 0 ? 0 : (yF  > 255 ? 255 : yF  + 0.5f));
+    *dstCb = (uF < 0 ? 0 : (uF > 255 ? 255 : uF + 0.5f));
+    *dstCr = (vF < 0 ? 0 : (vF > 255 ? 255 : vF + 0.5f));
 }
 
 inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
@@ -80,9 +80,9 @@ inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
     Rpp32f G = Y - 0.344136f * U - 0.714136f * V;
     Rpp32f B = Y + 1.772f * U;
 
-    saturate_pixel(R, dstR);
-    saturate_pixel(G, dstG);
-    saturate_pixel(B, dstB);
+    *dstR = (Rpp8u)(R < 0 ? 0 : (R > 255 ? 255 : (Rpp8u)(R + 0.5f)));
+    *dstG = (Rpp8u)(G < 0 ? 0 : (G > 255 ? 255 : (Rpp8u)(G + 0.5f)));
+    *dstB = (Rpp8u)(B < 0 ? 0 : (B > 255 ? 255 : (Rpp8u)(B + 0.5f)));
 }
 
 #if __AVX2__
@@ -176,7 +176,6 @@ inline void collect_hist_pln_tensor_host(Rpp8u *srcPtr,
     for (int y = 0; y < roiHeight; y++)
     {
         Rpp8u *srcRow = srcPtr + y * rowStride;
-
         for (int x = 0; x < roiWidth; x++)
             hist[srcRow[x]]++;
     }
@@ -220,8 +219,6 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     int vectorLoopCount = 0;
 
 #if __AVX2__
-    const float mult_scalar = 255.0f / denominator;
-
     __m256 v_min_cdf = _mm256_set1_ps((float)min_cdf);
     __m256 v_mult    = _mm256_set1_ps(mult_scalar);
     for (; vectorLoopCount <= HISTOGRAM_BINS; vectorLoopCount += 16)
@@ -267,7 +264,6 @@ inline void apply_lut_tensor(const Rpp8u *src,
                              Rpp32u srcRowStride,
                              Rpp32u dstRowStride)
 {
-#pragma omp parallel for
     for (Rpp32u y = 0; y < roiHeight; y++)
     {
         const Rpp8u* srcRow = src + y * srcRowStride;
@@ -661,7 +657,6 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             build_lut_from_hist_host(hist, lutBatch, pixels);
             apply_lut_tensor(srcPtr, dstPtr, roiWidth, roiHeight, lutBatch, srcDescPtr->strides.hStride, dstDescPtr->strides.hStride);
         }
-
     }
 
     return RPP_SUCCESS;
