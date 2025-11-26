@@ -62,9 +62,9 @@ RppStatus rppt_fused_multiply_add_scalar(RppPtr_t srcPtr,
 
         if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
         {
-            fused_multiply_add_scalar_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+            fused_multiply_add_scalar_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                                          srcGenericDescPtr,
-                                                         (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                         reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                          dstGenericDescPtr,
                                                          mulTensor,
                                                          addTensor,
@@ -78,9 +78,9 @@ RppStatus rppt_fused_multiply_add_scalar(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        hip_exec_fused_multiply_add_scalar_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+        hip_exec_fused_multiply_add_scalar_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                                  srcGenericDescPtr,
-                                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                                  dstGenericDescPtr,
                                                  roiGenericPtrSrc,
                                                  mulTensor,

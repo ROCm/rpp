@@ -195,7 +195,7 @@ RppStatus rppt_tensor_min(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
-            tensor_min_f16_f16_host((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            tensor_min_f16_f16_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      static_cast<Rpp16f*>(minArr),
                                      minArrLength,
@@ -205,7 +205,7 @@ RppStatus rppt_tensor_min(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
-            tensor_min_f32_f32_host((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            tensor_min_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      static_cast<Rpp32f*>(minArr),
                                      minArrLength,
@@ -248,7 +248,7 @@ RppStatus rppt_tensor_min(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
-            hip_exec_tensor_min((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            hip_exec_tensor_min(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                 srcDescPtr,
                                 static_cast<Rpp32f*>(minArr),
                                 roiTensorPtrSrc,
@@ -310,7 +310,7 @@ RppStatus rppt_tensor_max(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
-            tensor_max_f16_f16_host((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            tensor_max_f16_f16_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      static_cast<Rpp16f*>(maxArr),
                                      maxArrLength,
@@ -320,7 +320,7 @@ RppStatus rppt_tensor_max(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
-            tensor_max_f32_f32_host((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            tensor_max_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      static_cast<Rpp32f*>(maxArr),
                                      maxArrLength,
@@ -363,7 +363,7 @@ RppStatus rppt_tensor_max(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
-            hip_exec_tensor_max((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            hip_exec_tensor_max(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                 srcDescPtr,
                                 static_cast<Rpp32f*>(maxArr),
                                 roiTensorPtrSrc,
