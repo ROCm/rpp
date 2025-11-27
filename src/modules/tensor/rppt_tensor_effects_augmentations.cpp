@@ -2265,7 +2265,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                 internalRoiTensorPtrSrc[i].xywhROI.xy.x = (internalRoiTensorPtrSrc[i].xywhROI.xy.x * (100 - pixelationPercentage)) / 100;
                 internalRoiTensorPtrSrc[i].xywhROI.xy.y = (internalRoiTensorPtrSrc[i].xywhROI.xy.y * (100 - pixelationPercentage)) / 100;
             }
-            hip_exec_resize_tensor(reinterpret_cast<half*>static_cast<Rpp8u*>(interDstPtr),
+            hip_exec_resize_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(interDstPtr)),
                                    interDescPtr,
                                    reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
