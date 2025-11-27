@@ -235,9 +235,8 @@ __device__ inline void quantize(float* value, float* coeff, float qScale)
 {
     for(int i = 0; i < 8; i++)
     {
-        float qCoeff = coeff[i] * qScale;  // Runtime multiplication (same as HOST)
-        qCoeff = fmaxf(1.0f, fminf(qCoeff, 255.0f));  // Clamp between 1 and 255
-        value[i] = qCoeff * roundf(value[i] / qCoeff);  // Same formula as HOST
+        float qCoeff = coeff[i] * qScale;  // Runtime multiplication (matches HOST)
+        value[i] = qCoeff * roundf(value[i] / qCoeff);  // Matches HOST AVX2 (no clamping)
     }
 }
 
