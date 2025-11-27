@@ -239,7 +239,7 @@ RppStatus rppt_tensor_min(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
-            hip_exec_tensor_min((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            hip_exec_tensor_min(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                 srcDescPtr,
                                 static_cast<half*>(minArr),
                                 roiTensorPtrSrc,
@@ -354,7 +354,7 @@ RppStatus rppt_tensor_max(RppPtr_t srcPtr,
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
-            hip_exec_tensor_max((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            hip_exec_tensor_max(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                 srcDescPtr,
                                 static_cast<half*>(maxArr),
                                 roiTensorPtrSrc,
