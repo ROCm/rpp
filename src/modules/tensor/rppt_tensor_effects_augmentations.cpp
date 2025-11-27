@@ -1694,13 +1694,16 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
+        Rpp32u *permutationHipTensor = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+        CHECK_RETURN_STATUS(hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice));
+
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
             hip_exec_ricap_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
-                                  permutationTensor,
+                                  permutationHipTensor,
                                   roiPtrInputCropRegion,
                                   roiType,
                                   handle);
@@ -1711,7 +1714,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
-                                  permutationTensor,
+                                  permutationHipTensor,
                                   roiPtrInputCropRegion,
                                   roiType,
                                   handle);
@@ -1722,7 +1725,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
-                                  permutationTensor,
+                                  permutationHipTensor,
                                   roiPtrInputCropRegion,
                                   roiType,
                                   handle);
@@ -1733,7 +1736,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
-                                  permutationTensor,
+                                  permutationHipTensor,
                                   roiPtrInputCropRegion,
                                   roiType,
                                   handle);
