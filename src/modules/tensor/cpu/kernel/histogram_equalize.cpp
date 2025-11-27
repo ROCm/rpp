@@ -35,6 +35,10 @@ const float cUB =  0.500000f;
 const float cVR =  0.500000f;
 const float cVG = -0.418688f;
 const float cVB = -0.081312f;
+const float cR_V =  1.402000f;
+const float cG_U =  0.344136f;
+const float cG_V =  0.714136f;
+const float cB_U =  1.772000f;
 
 // YCbCr conversion coefficients
 const __m256 pCYR = _mm256_set1_ps(cYR);
@@ -48,10 +52,10 @@ const __m256 pCVG = _mm256_set1_ps(cVG);
 const __m256 pCVB = _mm256_set1_ps(cVB);
 
 // YCbCr to RGB conversion coefficients
-const __m256 pC1_402  = _mm256_set1_ps(1.402f);
-const __m256 pC0_344  = _mm256_set1_ps(0.344136f);
-const __m256 pC0_714  = _mm256_set1_ps(0.714136f);
-const __m256 pC1_772  = _mm256_set1_ps(1.772f);
+const __m256 pCRV = _mm256_set1_ps(cR_V);
+const __m256 pCGU = _mm256_set1_ps(cG_U);
+const __m256 pCGV = _mm256_set1_ps(cG_V);
+const __m256 pCBU = _mm256_set1_ps(cB_U);
 
 inline void rgb_to_ycbcr_compute(Rpp8u *srcR, Rpp8u *srcG, Rpp8u *srcB,
                                  Rpp8u *dstY, Rpp8u *dstCb, Rpp8u *dstCr)
@@ -60,13 +64,13 @@ inline void rgb_to_ycbcr_compute(Rpp8u *srcR, Rpp8u *srcG, Rpp8u *srcB,
     Rpp32f g = (Rpp32f)(*srcG);
     Rpp32f b = (Rpp32f)(*srcB);
 
-    Rpp32f yF = fmaf(r, cYR, fmaf(g, cYG, b * cYB));
-    Rpp32f uF = fmaf(r, cUR, fmaf(g, cUG, fmaf(b, cUB, 128.0f)));
-    Rpp32f vF = fmaf(r, cVR, fmaf(g, cVG, fmaf(b, cVB, 128.0f)));
+    Rpp32f yF = fmaf(r, cYR, fmaf(g, cYG, b * cYB));                 // Y  = 0.299*R + 0.587*G + 0.114*B
+    Rpp32f uF = fmaf(r, cUR, fmaf(g, cUG, fmaf(b, cUB, 128.0f)));    // Cb = -0.168736*R - 0.331264*G + 0.500*B + 128
+    Rpp32f vF = fmaf(r, cVR, fmaf(g, cVG, fmaf(b, cVB, 128.0f)));    // Cr = 0.500*R - 0.418688*G - 0.081312*B + 128
 
-    *dstY = (yF  < 0 ? 0 : (yF  > 255 ? 255 : yF  + 0.5f));
-    *dstCb = (uF < 0 ? 0 : (uF > 255 ? 255 : uF + 0.5f));
-    *dstCr = (vF < 0 ? 0 : (vF > 255 ? 255 : vF + 0.5f));
+    *dstY = (yF  < 0 ? 0 : (yF > 255 ? 255 : std::nearbyintf(yF)));
+    *dstCb = (uF < 0 ? 0 : (uF > 255 ? 255 : std::nearbyintf(uF)));
+    *dstCr = (vF < 0 ? 0 : (vF > 255 ? 255 : std::nearbyintf(vF)));
 }
 
 inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
@@ -76,57 +80,33 @@ inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
     Rpp32f U = (Rpp32f)(*srcCb) - 128.0f;
     Rpp32f V = (Rpp32f)(*srcCr) - 128.0f;
 
-    Rpp32f R = Y + 1.402f * V;
-    Rpp32f G = Y - 0.344136f * U - 0.714136f * V;
-    Rpp32f B = Y + 1.772f * U;
+    Rpp32f R = Y + cR_V * V;
+    Rpp32f G = Y - cG_U * U - cG_V * V;
+    Rpp32f B = Y + cB_U * U;
 
-    *dstR = (Rpp8u)(R < 0 ? 0 : (R > 255 ? 255 : (Rpp8u)(R + 0.5f)));
-    *dstG = (Rpp8u)(G < 0 ? 0 : (G > 255 ? 255 : (Rpp8u)(G + 0.5f)));
-    *dstB = (Rpp8u)(B < 0 ? 0 : (B > 255 ? 255 : (Rpp8u)(B + 0.5f)));
+    *dstR = (Rpp8u)(R < 0 ? 0 : (R > 255 ? 255 : std::nearbyintf(R)));
+    *dstG = (Rpp8u)(G < 0 ? 0 : (G > 255 ? 255 : std::nearbyintf(G)));
+    *dstB = (Rpp8u)(B < 0 ? 0 : (B > 255 ? 255 : std::nearbyintf(B)));
 }
 
 #if __AVX2__
 
 inline void rgb_to_ycbcr_avx(__m256 *p)
 {
-    // ---------------- Block 0 ----------------
-    // Y = R*cYR + G*cYG + B*cYB
-    __m256 y0 = _mm256_fmadd_ps(p[0], pCYR,
-                     _mm256_fmadd_ps(p[2], pCYG,
-                         _mm256_mul_ps(p[4], pCYB)));
+    // --- Block 0 (first 8 pixels) ---
+    __m256 y0 = _mm256_fmadd_ps(p[0], pCYR, _mm256_fmadd_ps(p[2], pCYG, _mm256_mul_ps(p[4], pCYB)));                // Y = R*cYR + G*cYG + B*cYB
+    __m256 u0 = _mm256_fmadd_ps(p[0], pCUR, _mm256_fmadd_ps(p[2], pCUG, _mm256_fmadd_ps(p[4], pCUB, avx_p128)));    // U = R*cUR + G*cUG + B*cUB + 128
+    __m256 v0 = _mm256_fmadd_ps(p[0], pCVR, _mm256_fmadd_ps(p[2], pCVG, _mm256_fmadd_ps(p[4], pCVB, avx_p128)));    // V = R*cVR + G*cVG + B*cVB + 128
 
-    // U = R*cUR + G*cUG + B*cUB + 128
-    __m256 u0 = _mm256_fmadd_ps(p[0], pCUR,
-                     _mm256_fmadd_ps(p[2], pCUG,
-                         _mm256_fmadd_ps(p[4], pCUB, avx_p128)));
-
-    // V = R*cVR + G*cVG + B*cVB + 128
-    __m256 v0 = _mm256_fmadd_ps(p[0], pCVR,
-                     _mm256_fmadd_ps(p[2], pCVG,
-                         _mm256_fmadd_ps(p[4], pCVB, avx_p128)));
-
-    // Clamp 0..255
     p[0] = _mm256_min_ps(_mm256_max_ps(y0, avx_p0), avx_p255);
     p[2] = _mm256_min_ps(_mm256_max_ps(u0, avx_p0), avx_p255);
     p[4] = _mm256_min_ps(_mm256_max_ps(v0, avx_p0), avx_p255);
 
-    // ---------------- Block 1 ----------------
-    // Y = R*cYR + G*cYG + B*cYB
-    __m256 y1 = _mm256_fmadd_ps(p[1], pCYR,
-                     _mm256_fmadd_ps(p[3], pCYG,
-                         _mm256_mul_ps(p[5], pCYB)));
+    // --- Block 1 (next 8 pixels) ---
+    __m256 y1 = _mm256_fmadd_ps(p[1], pCYR, _mm256_fmadd_ps(p[3], pCYG, _mm256_mul_ps(p[5], pCYB)));                // Y = R*cYR + G*cYG + B*cYB
+    __m256 u1 = _mm256_fmadd_ps(p[1], pCUR, _mm256_fmadd_ps(p[3], pCUG, _mm256_fmadd_ps(p[5], pCUB, avx_p128)));    // U = R*cUR + G*cUG + B*cUB + 128
+    __m256 v1 = _mm256_fmadd_ps(p[1], pCVR, _mm256_fmadd_ps(p[3], pCVG, _mm256_fmadd_ps(p[5], pCVB, avx_p128)));    // V = R*cVR + G*cVG + B*cVB + 128
 
-    // U = R*cUR + G*cUG + B*cUB + 128
-    __m256 u1 = _mm256_fmadd_ps(p[1], pCUR,
-                     _mm256_fmadd_ps(p[3], pCUG,
-                         _mm256_fmadd_ps(p[5], pCUB, avx_p128)));
-
-    // V = R*cVR + G*cVG + B*cVB + 128
-    __m256 v1 = _mm256_fmadd_ps(p[1], pCVR,
-                     _mm256_fmadd_ps(p[3], pCVG,
-                         _mm256_fmadd_ps(p[5], pCVB, avx_p128)));
-
-    // Clamp 0..255
     p[1] = _mm256_min_ps(_mm256_max_ps(y1, avx_p0), avx_p255);
     p[3] = _mm256_min_ps(_mm256_max_ps(u1, avx_p0), avx_p255);
     p[5] = _mm256_min_ps(_mm256_max_ps(v1, avx_p0), avx_p255);
@@ -134,31 +114,25 @@ inline void rgb_to_ycbcr_avx(__m256 *p)
 
 inline void ycbcr_to_rgb_avx(__m256 *p)
 {
-    // ---- First 8 pixels (block 0) ----
-    __m256 U0 = _mm256_sub_ps(p[2], avx_p128);
-    __m256 V0 = _mm256_sub_ps(p[4], avx_p128);
+    // --- Block 0 (first 8 pixels) ---
+    __m256 U0 = _mm256_sub_ps(p[2], avx_p128);  // U = Cb - 128
+    __m256 V0 = _mm256_sub_ps(p[4], avx_p128);  // V = Cr - 128
 
-    __m256 r0 = _mm256_fmadd_ps(V0, pC1_402, p[0]);
-
-    __m256 g0 = _mm256_fnmadd_ps(V0, pC0_714,
-                  _mm256_fnmadd_ps(U0, pC0_344, p[0]));
-
-    __m256 b0 = _mm256_fmadd_ps(U0, pC1_772, p[0]);
+    __m256 r0 = _mm256_fmadd_ps(V0, pCRV, p[0]);                                // R = Y + 1.402 * V
+    __m256 g0 = _mm256_fnmadd_ps(V0, pCGV, _mm256_fnmadd_ps(U0, pCGU, p[0]));   // G = Y - 0.714136 * V - 0.344136*U
+    __m256 b0 = _mm256_fmadd_ps(U0, pCBU, p[0]);                                // B = Y + 1.772 * U
 
     p[0] = _mm256_min_ps(_mm256_max_ps(r0, avx_p0), avx_p255);
     p[2] = _mm256_min_ps(_mm256_max_ps(g0, avx_p0), avx_p255);
     p[4] = _mm256_min_ps(_mm256_max_ps(b0, avx_p0), avx_p255);
 
-    // ---- Second 8 pixels (block 1) ----
-    __m256 U1 = _mm256_sub_ps(p[3], avx_p128);
-    __m256 V1 = _mm256_sub_ps(p[5], avx_p128);
+    // --- Block 1 (next 8 pixels) ---
+    __m256 U1 = _mm256_sub_ps(p[3], avx_p128);  // U = Cb - 128
+    __m256 V1 = _mm256_sub_ps(p[5], avx_p128);  // V = Cr - 128
 
-    __m256 r1 = _mm256_fmadd_ps(V1, pC1_402, p[1]);
-
-    __m256 g1 = _mm256_fnmadd_ps(V1, pC0_714,
-                  _mm256_fnmadd_ps(U1, pC0_344, p[1]));
-
-    __m256 b1 = _mm256_fmadd_ps(U1, pC1_772, p[1]);
+    __m256 r1 = _mm256_fmadd_ps(V1, pCRV, p[1]);                                // R = Y + 1.402 * V
+    __m256 g1 = _mm256_fnmadd_ps(V1, pCGV, _mm256_fnmadd_ps(U1, pCGU, p[1]));   // G = Y - 0.714136 * V - 0.344136*U
+    __m256 b1 = _mm256_fmadd_ps(U1, pCBU, p[1]);                                // B = Y + 1.772 * U
 
     p[1] = _mm256_min_ps(_mm256_max_ps(r1, avx_p0), avx_p255);
     p[3] = _mm256_min_ps(_mm256_max_ps(g1, avx_p0), avx_p255);
@@ -207,12 +181,13 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
             min_cdf = cdf[i];
     }
 
-    // denominator = N - mincdf
+    // denominator = pixels - mincdf
     float denominator = std::max((float)(img_size - min_cdf), 1.0f);
     bool is_uniform = (min_cdf == img_size);
 
     if (is_uniform) {
-        for (int i = 0; i < HISTOGRAM_BINS; ++i) lut[i] = (Rpp8u)i;
+        for (int i = 0; i < HISTOGRAM_BINS; ++i)
+            lut[i] = i;
         return;
     }
     const float mult_scalar = 255.0f / denominator;
@@ -223,26 +198,26 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     __m256 v_mult    = _mm256_set1_ps(mult_scalar);
     for (; vectorLoopCount <= HISTOGRAM_BINS; vectorLoopCount += 16)
     {
+        // Load CDF[0..7] → convert to float
         __m256i ci0 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
         __m256  cf0 = _mm256_cvtepi32_ps(ci0);
         __m256  r0  = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf0, v_min_cdf), v_mult), avx_p255);
         __m256i ri0 = _mm256_cvtps_epi32(r0);
 
+        // Load CDF[8..15] → convert to float
         __m256i ci1 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount + 8));
         __m256  cf1 = _mm256_cvtepi32_ps(ci1);
         __m256  r1  = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf1, v_min_cdf), v_mult), avx_p255);
         __m256i ri1 = _mm256_cvtps_epi32(r1);
 
-        __m128i lo32_0 = _mm256_castsi256_si128(ri0);
-        __m128i hi32_0 = _mm256_extracti128_si256(ri0, 1);
-        __m128i lo32_1 = _mm256_castsi256_si128(ri1);
-        __m128i hi32_1 = _mm256_extracti128_si256(ri1, 1);
-        
-        __m128i pack16_0 = _mm_packs_epi32(lo32_0, hi32_0);
-        __m128i pack16_1 = _mm_packs_epi32(lo32_1, hi32_1);
-        
+        // Convert 32-bit → 16-bit
+         __m128i pack16_0 = _mm_packs_epi32(_mm256_castsi256_si128(ri0), _mm256_extracti128_si256(ri0, 1));
+        __m128i pack16_1 = _mm_packs_epi32(_mm256_castsi256_si128(ri1), _mm256_extracti128_si256(ri1, 1));
+
+        // Convert 16-bit → 8-bit
         __m128i pack8 = _mm_packus_epi16(pack16_0, pack16_1);
-        
+
+        // Store 16 LUT entries
         _mm_storeu_si128((__m128i*)(lut + vectorLoopCount), pack8);
     }
 #else
@@ -324,9 +299,6 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u *cbBuf = yBuf + pixels;
         Rpp8u *crBuf = cbBuf + pixels;
         Rpp8u *dstYBuf = crBuf + pixels;
-
-        Rpp32u hist[HISTOGRAM_BINS] = {0};
-        Rpp8u lutBatch[HISTOGRAM_BINS];
 
 #if __AVX2__
         Rpp32u vectorIncrement = 48;
@@ -650,6 +622,9 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Histogram Equalise without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u hist[HISTOGRAM_BINS];
+            memset(hist, 0, HISTOGRAM_BINS * sizeof(Rpp32u));
+            Rpp8u lutBatch[HISTOGRAM_BINS];
             Rpp8u *srcPtr, *dstPtr;
             srcPtr = srcPtrChannel;
             dstPtr = dstPtrChannel;
