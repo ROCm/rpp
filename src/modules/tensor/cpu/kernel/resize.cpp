@@ -391,7 +391,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
                 Rpp32s xStride = outLocCol * outputDescPtr->strides.wStride;
                 if(outputDescPtr->layout == RpptLayout::NCHW)       // For PLN3 outputs
                     rpp_resize_store_pln3(outRowPtrR + xStride, outRowPtrG + xStride, outRowPtrB + xStride, pOutputChannel);
-                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs 
+                else if(outputDescPtr->layout == RpptLayout::NHWC)  // For PKD3 outputs
                     rpp_resize_store_pkd3(outRowPtrR + xStride, pOutputChannel);
             }
             Rpp32s k0 = 0;
