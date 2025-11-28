@@ -212,6 +212,7 @@ int main(int argc, char **argv)
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
+        RppStatus errorCodeCapture = RPP_SUCCESS;
         switch(testCase)
         {
             case TRANSPOSE:
@@ -225,7 +226,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_transpose(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, permTensor, roiTensor, handle, RPP_HIP_BACKEND);
+                    errorCodeCapture = rppt_transpose(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, permTensor, roiTensor, handle, RPP_HIP_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -273,7 +274,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_normalize(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle, RPP_HIP_BACKEND);
+                    errorCodeCapture = rppt_normalize(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle, RPP_HIP_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -285,7 +286,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_log(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
+                    errorCodeCapture = rppt_log(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -296,7 +297,7 @@ int main(int argc, char **argv)
                 testCaseName  = "concat";
                 startWallTime = omp_get_wtime();
                 if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_concat(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle, RPP_HIP_BACKEND);
+                    errorCodeCapture = rppt_concat(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle, RPP_HIP_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -307,7 +308,7 @@ int main(int argc, char **argv)
                 testCaseName  = "log1p";
 
                 startWallTime = omp_get_wtime();
-                rppt_log1p(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
+                errorCodeCapture = rppt_log1p(d_inputI16, srcDescriptorPtrND, d_output, dstDescriptorPtrND, roiTensor, handle, RPP_HIP_BACKEND);
 
                 break;
             }
@@ -324,6 +325,11 @@ int main(int argc, char **argv)
         {
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        if (errorCodeCapture != RPP_SUCCESS)
+        {
+            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
+            return errorCodeCapture;
         }
 
         wallTime = endWallTime - startWallTime;
