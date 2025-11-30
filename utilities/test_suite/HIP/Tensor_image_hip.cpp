@@ -1610,7 +1610,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "ricap";
 
-                    Rpp32u permutationTensor[batchSize * 4];
+                    Rpp32u *permutationTensor = nullptr;
+                    CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 4 * batchSize * sizeof(Rpp32u)));
                     if(qaFlag)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
