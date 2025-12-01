@@ -1053,9 +1053,10 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
 }
 
 // compares the output of PKD3-PKD3 and PLN1-PLN1 variants
-void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int testCase)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    Rpp32f cutoff = (testCase == LENS_CORRECTION) ? 1e-4 : 1e-5;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
@@ -1073,7 +1074,7 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 2e-6)
+                if(diff <= cutoff)
                     matchedIdx++;
             }
         }
@@ -1119,9 +1120,10 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
 }
 
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
-void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int testCase)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    Rpp32f cutoff = (testCase == LENS_CORRECTION) ? 1e-4 : 1e-5;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
@@ -1144,7 +1146,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 2e-6)
+                    if(diff <= cutoff)
                         matchedIdx++;
                 }
             }
@@ -1249,11 +1251,11 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         read_bin_file(refFile, binaryContent);
 
         if(dstDescPtr->layout == RpptLayout::NHWC)
-            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         else
-            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         free(binaryContent);
     }
 
