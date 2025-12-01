@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
+#include "rpp_cpu_simd_math.hpp"
+#include "rpp_cpu_interpolation.hpp"
 
 inline void compute_fisheye_src_loc_avx(__m256 &pDstY, __m256 &pDstX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pHeight, __m256 &pWidth)
 {

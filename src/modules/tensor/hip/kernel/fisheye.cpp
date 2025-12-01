@@ -23,9 +23,8 @@ SOFTWARE.
 */
 
 #include "hip_tensor_executors.hpp"
-
-__device__ __constant__ float4 TWO_F4 = static_cast<float4>(2.0);
-__device__ __constant__ float4 ONE_F4 = static_cast<float4>(1.0);
+#include "rpp_hip_math.hpp"
+#include "rpp_hip_interpolation.hpp"
 
 // -------------------- Set 0 - fisheye kernel device helpers --------------------
 
@@ -54,11 +53,14 @@ __device__ void fisheye_roi_and_srclocs_hip_compute(int2 *idxy_i2, int2 *widthHe
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
 
+    float4 two_f4 = MAKE_FLOAT4(2.0);
+    float4 one_f4 = MAKE_FLOAT4(1.0);
+
     // compute the normalized x and y coordinates
-    normY_f8.f4[0] = static_cast<float4>(((static_cast<float>(2 * idxy_i2->y) / widthHeight_i2->y)) - 1);
+    normY_f8.f4[0] = MAKE_FLOAT4(((static_cast<float>(2 * idxy_i2->y) / widthHeight_i2->y)) - 1);
     normY_f8.f4[1] = normY_f8.f4[0];    
-    normX_f8.f4[0] = (TWO_F4 * (static_cast<float4>(idxy_i2->x) + increment_f8.f4[0]) / static_cast<float4>(widthHeight_i2->x)) - ONE_F4;
-    normX_f8.f4[1] = (TWO_F4 * (static_cast<float4>(idxy_i2->x) + increment_f8.f4[1]) / static_cast<float4>(widthHeight_i2->x)) - ONE_F4;
+    normX_f8.f4[0] = (two_f4 * (MAKE_FLOAT4(idxy_i2->x) + increment_f8.f4[0]) / MAKE_FLOAT4(widthHeight_i2->x)) - one_f4;
+    normX_f8.f4[1] = (two_f4 * (MAKE_FLOAT4(idxy_i2->x) + increment_f8.f4[1]) / MAKE_FLOAT4(widthHeight_i2->x)) - one_f4;
     
     // compute the euclidean distance using the normalized x and y coordinates
     dist_f8.f4[0] = ((normX_f8.f4[0] * normX_f8.f4[0]) + (normY_f8.f4[0] * normY_f8.f4[0]));
@@ -102,10 +104,10 @@ __global__ void fisheye_pkd_hip_tensor(T *srcPtr,
    
     // initialize the src location values with invalid values
     d_float16 locSrc_f16;
-    locSrc_f16.f8[0].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[0].f4[1] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[1] = static_cast<float4>(-1);
+    locSrc_f16.f8[0].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[0].f4[1] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[1] = MAKE_FLOAT4(-1);
     
     // compute the src location values for the given dst locations
     fisheye_roi_and_srclocs_hip_compute(&idxy_i2, &widthHeight_i2, &srcRoi_i4, &locSrc_f16);
@@ -141,10 +143,10 @@ __global__ void fisheye_pln_hip_tensor(T *srcPtr,
    
     // initialize the src location values with invalid values
     d_float16 locSrc_f16;
-    locSrc_f16.f8[0].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[0].f4[1] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[1] = static_cast<float4>(-1);
+    locSrc_f16.f8[0].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[0].f4[1] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[1] = MAKE_FLOAT4(-1);
     
     // compute the src location values for the given dst locations
     fisheye_roi_and_srclocs_hip_compute(&idxy_i2, &widthHeight_i2, &srcRoi_i4, &locSrc_f16);
@@ -192,10 +194,10 @@ __global__ void fisheye_pkd3_pln3_hip_tensor(T *srcPtr,
    
     // initialize the src location values with invalid values
     d_float16 locSrc_f16;
-    locSrc_f16.f8[0].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[0].f4[1] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[1] = static_cast<float4>(-1);
+    locSrc_f16.f8[0].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[0].f4[1] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[1] = MAKE_FLOAT4(-1);
     
     // compute the src location values for the given dst locations
     fisheye_roi_and_srclocs_hip_compute(&idxy_i2, &widthHeight_i2, &srcRoi_i4, &locSrc_f16);
@@ -230,10 +232,10 @@ __global__ void fisheye_pln3_pkd3_hip_tensor(T *srcPtr,
    
     // initialize the src location values with invalid values
     d_float16 locSrc_f16;
-    locSrc_f16.f8[0].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[0].f4[1] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[0] = static_cast<float4>(-1);
-    locSrc_f16.f8[1].f4[1] = static_cast<float4>(-1);
+    locSrc_f16.f8[0].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[0].f4[1] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[0] = MAKE_FLOAT4(-1);
+    locSrc_f16.f8[1].f4[1] = MAKE_FLOAT4(-1);
     
     // compute the src location values for the given dst locations
     fisheye_roi_and_srclocs_hip_compute(&idxy_i2, &widthHeight_i2, &srcRoi_i4, &locSrc_f16);
@@ -321,34 +323,34 @@ RppStatus hip_exec_fisheye_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_fisheye_tensor<Rpp8u>(Rpp8u*,
-                                         RpptDescPtr,
-                                         Rpp8u*,
-                                         RpptDescPtr,
-                                         RpptROIPtr,
-                                         RpptRoiType,
-                                         rpp::Handle&);
+template RppStatus hip_exec_fisheye_tensor<Rpp8u>(Rpp8u*,
+                                                  RpptDescPtr,
+                                                  Rpp8u*,
+                                                  RpptDescPtr,
+                                                  RpptROIPtr,
+                                                  RpptRoiType,
+                                                  rpp::Handle&);
 
-RppStatus hip_exec_fisheye_tensor<half>(half*,
-                                        RpptDescPtr,
-                                        half*,
-                                        RpptDescPtr,
-                                        RpptROIPtr,
-                                        RpptRoiType,
-                                        rpp::Handle&);
+template RppStatus hip_exec_fisheye_tensor<half>(half*,
+                                                 RpptDescPtr,
+                                                 half*,
+                                                 RpptDescPtr,
+                                                 RpptROIPtr,
+                                                 RpptRoiType,
+                                                 rpp::Handle&);
 
-RppStatus hip_exec_fisheye_tensor<Rpp32f>(Rpp32f*,
-                                          RpptDescPtr,
-                                          Rpp32f*,
-                                          RpptDescPtr,
-                                          RpptROIPtr,
-                                          RpptRoiType,
-                                          rpp::Handle&);
+template RppStatus hip_exec_fisheye_tensor<Rpp32f>(Rpp32f*,
+                                                   RpptDescPtr,
+                                                   Rpp32f*,
+                                                   RpptDescPtr,
+                                                   RpptROIPtr,
+                                                   RpptRoiType,
+                                                   rpp::Handle&);
 
-RppStatus hip_exec_fisheye_tensor<Rpp8s>(Rpp8s*,
-                                         RpptDescPtr,
-                                         Rpp8s*,
-                                         RpptDescPtr,
-                                         RpptROIPtr,
-                                         RpptRoiType,
-                                         rpp::Handle&);
+template RppStatus hip_exec_fisheye_tensor<Rpp8s>(Rpp8s*,
+                                                  RpptDescPtr,
+                                                  Rpp8s*,
+                                                  RpptDescPtr,
+                                                  RpptROIPtr,
+                                                  RpptRoiType,
+                                                  rpp::Handle&);
