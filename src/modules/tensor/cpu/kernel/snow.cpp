@@ -385,7 +385,9 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * ONE_OVER_255;
                     pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * ONE_OVER_255;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
-
+                    pixel.R *= 255.0f;
+                    pixel.G *= 255.0f;
+                    pixel.B *= 255.0f;
                     dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R)));
                     dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
                     dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));

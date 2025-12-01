@@ -127,19 +127,19 @@ __device__ __forceinline__ void snow_8GRAY_hip_compute(d_float8 *pix_f8, float *
 
 __device__ __forceinline__ void snow_hip_compute(uchar *srcPtr, d_float24 *pix_f24, float *brightnessCoefficient, float *snowThreshold, int *darkMode)
 {
-    float4 normalizer_f4 = static_cast<float4>(ONE_OVER_255);
+    float4 normalizer_f4 = MAKE_FLOAT4(ONE_OVER_255);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     snow_8RGB_hip_compute(pix_f24, brightnessCoefficient, snowThreshold, darkMode);
-    normalizer_f4 = static_cast<float4>(255.0f);
+    normalizer_f4 = MAKE_FLOAT4(255.0f);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     rpp_hip_pixel_check_0to255(pix_f24);
 }
 __device__ __forceinline__ void snow_hip_compute(uchar *srcPtr, d_float8 *pix_f8, float *brightnessCoefficient, float *snowThreshold, int *darkMode)
 {
-    float4 normalizer_f4 = static_cast<float4>(ONE_OVER_255);
+    float4 normalizer_f4 = MAKE_FLOAT4(ONE_OVER_255);
     rpp_hip_math_multiply8_const(pix_f8, pix_f8, normalizer_f4);
     snow_8GRAY_hip_compute(pix_f8, brightnessCoefficient, snowThreshold, darkMode);
-    normalizer_f4 = static_cast<float4>(255.0f);
+    normalizer_f4 = MAKE_FLOAT4(255.0f);
     rpp_hip_math_multiply8_const(pix_f8, pix_f8, normalizer_f4);
     rpp_hip_pixel_check_0to255(pix_f8);
 }
@@ -165,24 +165,24 @@ __device__ __forceinline__ void snow_hip_compute(half *srcPtr, d_float8 *pix_f8,
 }
 __device__ __forceinline__ void snow_hip_compute(schar *srcPtr, d_float24 *pix_f24, float *brightnessCoefficient, float *snowThreshold, int *darkMode)
 {
-    float4 i8Offset_f4 = static_cast<float4>(128.0f);
-    float4 normalizer_f4 = static_cast<float4>(ONE_OVER_255);
+    float4 i8Offset_f4 = MAKE_FLOAT4(128.0f);
+    float4 normalizer_f4 = MAKE_FLOAT4(ONE_OVER_255);
     rpp_hip_math_add24_const(pix_f24, pix_f24, i8Offset_f4);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     snow_8RGB_hip_compute(pix_f24, brightnessCoefficient, snowThreshold, darkMode);
-    normalizer_f4 = static_cast<float4>(255.0f);
+    normalizer_f4 = MAKE_FLOAT4(255.0f);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     rpp_hip_pixel_check_0to255(pix_f24);
     rpp_hip_math_subtract24_const(pix_f24, pix_f24, i8Offset_f4);
 }
 __device__ __forceinline__ void snow_hip_compute(schar *srcPtr, d_float8 *pix_f8, float *brightnessCoefficient, float *snowThreshold, int *darkMode)
 {
-    float4 i8Offset_f4 = static_cast<float4>(128.0f);
-    float4 normalizer_f4 = static_cast<float4>(ONE_OVER_255);
+    float4 i8Offset_f4 = MAKE_FLOAT4(128.0f);
+    float4 normalizer_f4 = MAKE_FLOAT4(ONE_OVER_255);
     rpp_hip_math_add8_const(pix_f8, pix_f8, i8Offset_f4);
     rpp_hip_math_multiply8_const(pix_f8, pix_f8, normalizer_f4);
     snow_8GRAY_hip_compute(pix_f8, brightnessCoefficient, snowThreshold, darkMode);
-    normalizer_f4 = static_cast<float4>(255.0f);
+    normalizer_f4 = MAKE_FLOAT4(255.0f);
     rpp_hip_math_multiply8_const(pix_f8, pix_f8, normalizer_f4);
     rpp_hip_pixel_check_0to255(pix_f8);
     rpp_hip_math_subtract8_const(pix_f8, pix_f8, i8Offset_f4);
