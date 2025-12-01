@@ -391,19 +391,20 @@ int main(int argc, char * argv[])
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
+
+            if (missingFuncFlag == 1)
+            {
+                cout << "\nThe functionality doesn't yet exist in RPP\n";
+                return RPP_ERROR_NOT_IMPLEMENTED;
+            }
+            if (errorCodeCapture != RPP_SUCCESS)
+            {
+                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
+                return errorCodeCapture;
+            }
         }
 
         wallTime *= 1000;
-        if (missingFuncFlag == 1)
-        {
-            cout << "\nThe functionality doesn't yet exist in RPP\n";
-            return RPP_ERROR_NOT_IMPLEMENTED;
-        }
-        if (errorCodeCapture != RPP_SUCCESS)
-        {
-            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
-            return errorCodeCapture;
-        }
 
         // Copy output buffer to host
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
