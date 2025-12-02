@@ -598,6 +598,12 @@ int main(int argc, char **argv)
     if(testCase == ROTATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&angle, batchSize * sizeof(Rpp32f)));
 
+    Rpp32u *permutationTensor = nullptr;
+    if(testCase == CHANNEL_PERMUTE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
+    if(testCase == RICAP)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 4 * batchSize * sizeof(Rpp32u)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -1610,8 +1616,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "ricap";
 
-                    Rpp32u *permutationTensor = nullptr;
-                    CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 4 * batchSize * sizeof(Rpp32u)));
                     if(qaFlag)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
@@ -1623,6 +1627,7 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
                     break;
+
                 }
                 case GRIDMASK:
                 {
@@ -1674,8 +1679,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "channel_permute";
 
-                    Rpp32u *permutationTensor = nullptr;
-                    CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
                     for(int i = 0; i < batchSize; i++)
                         fill_perm_values(&permutationTensor[i * 3], qaFlag, additionalParam);
 
@@ -1684,8 +1687,6 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_channel_permute_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, handle);
                     else
                         missingFuncFlag = 1;
-
-                    CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
 
                     break;
                 }
@@ -2160,6 +2161,8 @@ int main(int argc, char **argv)
     if (maxTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
+    if (permutationTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
     return 0;
 }
