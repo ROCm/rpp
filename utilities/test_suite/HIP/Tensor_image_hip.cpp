@@ -2163,6 +2163,6 @@ int main(int argc, char **argv)
     if (posterizeLevelBits != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
     if (permutationTensor != nullptr)
-        CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
+        CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
     return 0;
 }
