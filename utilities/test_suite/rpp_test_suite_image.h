@@ -973,9 +973,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         }
 
         fs::path pathObj(outputImagePath);
-        size_t pos = outputImagePath.rfind(".jpg");
-        if (pos != std::string::npos) {
-            outputImagePath.replace(pos, 4, ".png"); // Replace ".jpg" with ".png"
         }
         if (fs::exists(pathObj))
         {

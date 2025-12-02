@@ -1634,9 +1634,6 @@ inline void rpp_load48_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
-    // p128 [0] = r1, g1, b1, r2
-    // p128 [1] = r2, g2, b2, r3
-    // 
     p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
     p128[1] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 3))));
     p128[2] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 6))));
