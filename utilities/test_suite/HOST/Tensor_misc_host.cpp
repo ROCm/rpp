@@ -211,9 +211,10 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
+        RppStatus errorCodeCapture = RPP_SUCCESS;
         switch(testCase)
         {
             case TRANSPOSE:
@@ -228,7 +229,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                    errorCodeCapture = rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -266,7 +267,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
+                    errorCodeCapture = rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -278,7 +279,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_F32)
-                    rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
+                    errorCodeCapture = rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -290,7 +291,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
+                    errorCodeCapture = rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -302,7 +303,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == I16_TO_F32)
-                    rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
+                    errorCodeCapture = rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -320,6 +321,11 @@ int main(int argc, char **argv)
         {
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        if (errorCodeCapture != RPP_SUCCESS)
+        {
+            cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfCount + 1 << " of " << numRuns << " runs.\n";
+            return errorCodeCapture;
         }
 
         wallTime = endWallTime - startWallTime;
