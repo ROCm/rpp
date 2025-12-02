@@ -146,8 +146,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] noiseProbailityTensor noiseProbaility values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in HOST memory, of size batchSize with 0 <= noiseProbailityTensor[i] <= 1 for each image in batch)
- * \param [in] saltProbailityTensor saltProbaility values to decide if a given destination noise-pixel is salt or pepper (1D tensor in HOST memory, of size batchSize with 0 <= saltProbailityTensor[i] <= 1 for each image in batch)
+ * \param [in] noiseProbabilityTensor noiseProbability values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in HOST memory, of size batchSize with 0 <= noiseProbabilityTensor[i] <= 1 for each image in batch)
+ * \param [in] saltProbabilityTensor saltProbability values to decide if a given destination noise-pixel is salt or pepper (1D tensor in HOST memory, of size batchSize with 0 <= saltProbabilityTensor[i] <= 1 for each image in batch)
  * \param [in] saltValueTensor A user-defined salt noise value (1D tensor in HOST memory, of size batchSize with 0 <= saltValueTensor[i] <= 1 for each image in batch)
  * \param [in] pepperValueTensor A user-defined pepper noise value (1D tensor in HOST memory, of size batchSize with 0 <= pepperValueTensor[i] <= 1 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
@@ -171,8 +171,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] noiseProbailityTensor noiseProbaility values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in pinned memory, of size batchSize with 0 <= noiseProbailityTensor[i] <= 1 for each image in batch)
- * \param [in] saltProbailityTensor saltProbaility values to decide if a given destination noise-pixel is salt or pepper (1D tensor in pinned memory, of size batchSize with 0 <= saltProbailityTensor[i] <= 1 for each image in batch)
+ * \param [in] noiseProbabilityTensor noiseProbability values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in pinned memory, of size batchSize with 0 <= noiseProbabilityTensor[i] <= 1 for each image in batch)
+ * \param [in] saltProbabilityTensor saltProbability values to decide if a given destination noise-pixel is salt or pepper (1D tensor in pinned memory, of size batchSize with 0 <= saltProbabilityTensor[i] <= 1 for each image in batch)
  * \param [in] saltValueTensor A user-defined salt noise value (1D tensor in pinned memory, of size batchSize with 0 <= saltValueTensor[i] <= 1 for each image in batch)
  * \param [in] pepperValueTensor A user-defined pepper noise value (1D tensor in pinned memory, of size batchSize with 0 <= pepperValueTensor[i] <= 1 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
