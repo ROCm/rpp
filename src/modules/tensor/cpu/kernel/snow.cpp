@@ -1191,9 +1191,9 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrChannel);
-                    pixel.G = static_cast<Rpp32f>(*srcPtrChannel);
-                    pixel.B = static_cast<Rpp32f>(*srcPtrChannel);
+                    pixel.R = static_cast<Rpp32f>(*srcPtrTemp);
+                    pixel.G = static_cast<Rpp32f>(*srcPtrTemp);
+                    pixel.B = static_cast<Rpp32f>(*srcPtrTemp);
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
                     srcPtrTemp++;
