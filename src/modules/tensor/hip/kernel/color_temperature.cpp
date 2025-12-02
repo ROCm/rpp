@@ -173,6 +173,7 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                             RpptDescPtr srcDescPtr,
                                             T *dstPtr,
                                             RpptDescPtr dstDescPtr,
+                                            Rpp32s *adjustmentValueTensor,
                                             RpptROIPtr roiTensorPtrSrc,
                                             RpptRoiType roiType,
                                             rpp::Handle& handle)
@@ -197,7 +198,7 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               adjustmentValueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -211,7 +212,7 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               adjustmentValueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -225,7 +226,7 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               adjustmentValueTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -239,7 +240,7 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.intArr[0].intmem,
+                               adjustmentValueTensor,
                                roiTensorPtrSrc);
         }
     }
@@ -248,33 +249,37 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
 }
 
 template RppStatus hip_exec_color_temperature_tensor<Rpp8u>(Rpp8u*,
-                                            RpptDescPtr,
-                                            Rpp8u*,
-                                            RpptDescPtr,
-                                            RpptROIPtr,
-                                            RpptRoiType,
-                                            rpp::Handle&);
+                                                            RpptDescPtr,
+                                                            Rpp8u*,
+                                                            RpptDescPtr,
+                                                            Rpp32s*,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            rpp::Handle&);
 
 template RppStatus hip_exec_color_temperature_tensor<half>(half*,
-                                            RpptDescPtr,
-                                            half*,
-                                            RpptDescPtr,
-                                            RpptROIPtr,
-                                            RpptRoiType,
-                                            rpp::Handle&);
+                                                           RpptDescPtr,
+                                                           half*,
+                                                           RpptDescPtr,
+                                                           Rpp32s*,
+                                                           RpptROIPtr,
+                                                           RpptRoiType,
+                                                           rpp::Handle&);
 
 template RppStatus hip_exec_color_temperature_tensor<Rpp32f>(Rpp32f*,
-                                            RpptDescPtr,
-                                            Rpp32f*,
-                                            RpptDescPtr,
-                                            RpptROIPtr,
-                                            RpptRoiType,
-                                            rpp::Handle&);
+                                                             RpptDescPtr,
+                                                             Rpp32f*,
+                                                             RpptDescPtr,
+                                                             Rpp32s*,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             rpp::Handle&);
 
 template RppStatus hip_exec_color_temperature_tensor<Rpp8s>(Rpp8s*,
-                                            RpptDescPtr,
-                                            Rpp8s*,
-                                            RpptDescPtr,
-                                            RpptROIPtr,
-                                            RpptRoiType,
-                                            rpp::Handle&);
+                                                            RpptDescPtr,
+                                                            Rpp8s*,
+                                                            RpptDescPtr,
+                                                            Rpp32s*,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            rpp::Handle&);

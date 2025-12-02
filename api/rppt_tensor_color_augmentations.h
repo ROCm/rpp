@@ -74,8 +74,8 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] alphaTensor alpha values for brightness calculation (1D tensor in pinned/HOST memory, of size batchSize, with 0 <= alpha <= 20 for each image in batch)
- * \param [in] betaTensor beta values for brightness calculation (1D tensor in pinned/HOST memory, of size batchSize, with 0 <= beta <= 255 for each image in batch)
+ * \param [in] alphaTensor alpha values for brightness calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= alpha <= 20 for each image in batch)
+ * \param [in] betaTensor beta values for brightness calculation (1D tensor in pinned/HIP memory, of size batchSize, with 0 <= beta <= 255 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -117,7 +117,7 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] gammaTensor gamma values for gamma correction calculation (1D tensor in pinned/HOST memory, of size batchSize with gamma >= 0 for each image in batch)
+ * \param [in] gammaTensor gamma values for gamma correction calculation (1D tensor in pinned/HIP memory, of size batchSize with gamma >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -163,7 +163,7 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDes
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] alphaTensor alpha values for alpha-blending (1D tensor in pinned/HOST memory, of size batchSize with the transparency factor transparency factor 0 <= alpha <= 1 for each image in batch)
+ * \param [in] alphaTensor alpha values for alpha-blending (1D tensor in pinned/HIP memory, of size batchSize with the transparency factor transparency factor 0 <= alpha <= 1 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -292,10 +292,10 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] brightnessTensor brightness modification parameter for color_twist calculation (1D tensor in pinned/HOST memory, of size batchSize with 0 < brightnessTensor[i] <= 20 for each image in batch)
- * \param [in] contrastTensor contrast modification parameter for color_twist calculation (1D tensor in pinned/HOST memory, of size batchSize with 0 < contrastTensor[i] <= 255 for each image in batch)
- * \param [in] hueTensor hue modification parameter for color_twist calculation (1D tensor in pinned/HOST memory, of size batchSize with 0 <= hueTensor[i] <= 359 for each image in batch)
- * \param [in] saturationTensor saturation modification parameter for color_twist calculation (1D tensor in pinned/HOST memory, of size batchSize with saturationTensor[i] >= 0 for each image in batch)
+ * \param [in] brightnessTensor brightness modification parameter for color_twist calculation (1D tensor in pinned/HIP memory, of size batchSize with 0 < brightnessTensor[i] <= 20 for each image in batch)
+ * \param [in] contrastTensor contrast modification parameter for color_twist calculation (1D tensor in pinned/HIP memory, of size batchSize with 0 < contrastTensor[i] <= 255 for each image in batch)
+ * \param [in] hueTensor hue modification parameter for color_twist calculation (1D tensor in pinned/HIP memory, of size batchSize with 0 <= hueTensor[i] <= 359 for each image in batch)
+ * \param [in] saturationTensor saturation modification parameter for color_twist calculation (1D tensor in pinned/HIP memory, of size batchSize with saturationTensor[i] >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -361,8 +361,8 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] rgbTensor R/G/B values for color casting calculation (2D tensor in pinned/HOST memory, of size sizeof(RpptRGB) * batchSize with 0 <= rgbTensor[n].<R/G/B> <= 255 for each image in batch)
- * \param [in] alphaTensor alpha values for color casting calculation (1D tensor in pinned/HOST memory, of size sizeof(Rpp32f) * batchSize with alphaTensor[i] >= 0 for each image in batch)
+ * \param [in] rgbTensor R/G/B values for color casting calculation (2D tensor in pinned/HIP memory, of size sizeof(RpptRGB) * batchSize with 0 <= rgbTensor[n].<R/G/B> <= 255 for each image in batch)
+ * \param [in] alphaTensor alpha values for color casting calculation (1D tensor in pinned/HIP memory, of size sizeof(Rpp32f) * batchSize with alphaTensor[i] >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -404,7 +404,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] exposureFactorTensor exposure factor values for exposure adjustment (1D tensor in pinned/HOST memory, of size batchSize, with exposureFactorTensor[n] >= 0 for each image in the batch)
+ * \param [in] exposureFactorTensor exposure factor values for exposure adjustment (1D tensor in pinned/HIP memory, of size batchSize, with exposureFactorTensor[n] >= 0 for each image in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -447,8 +447,8 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor in pinned/HOST memory, of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
- * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor in pinned/HIP memory, of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
+ * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor in pinned/HIP memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -511,7 +511,7 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] adjustmentValueTensor adjustment values for color temperature calculation (1D tensor of size batchSize with -100 <= adjustmentValueTensor[i] >= 100 for each image in batch)
+ * \param [in] adjustmentValueTensor adjustment values for color temperature calculation (1D tensor in HOST memory, of size batchSize with -100 <= adjustmentValueTensor[i] >= 100 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -532,7 +532,7 @@ RppStatus rppt_color_temperature_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, R
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] adjustmentValueTensor adjustment values for color temperature calculation (1D tensor of size batchSize with -100 <= adjustmentValueTensor[i] >= 100 for each image in batch)
+ * \param [in] adjustmentValueTensor adjustment values for color temperature calculation (1D tensor in pinned/HIP memory, of size batchSize with -100 <= adjustmentValueTensor[i] >= 100 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
