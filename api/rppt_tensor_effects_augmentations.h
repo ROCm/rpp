@@ -361,7 +361,7 @@ RppStatus rppt_water_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param[in] amplitudeXTensor amplitudeX values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
  * \param[in] amplitudeYTensor amplitudeY values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
  * \param[in] frequencyXTensor frequencyX values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
- * \param[in] frequencyXTensor frequencyY values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
+ * \param[in] frequencyYTensor frequencyY values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
  * \param[in] phaseXTensor phaseX values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
  * \param[in] phaseYTensor phaseY values for water effect (1D tensor in pinned/HIP memory, of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
