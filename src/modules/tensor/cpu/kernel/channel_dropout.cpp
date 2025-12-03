@@ -31,7 +31,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
                                       Rpp32f *dropoutProbability,
-                                      bool randomSeed,
+                                      Rpp8u *maskBasePtr,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       RppLayoutParams layoutParams,
@@ -39,7 +39,6 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
-    uint8_t *scratchBuffer = reinterpret_cast<uint8_t *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -53,19 +52,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        uint8_t *maskPtr = scratchBuffer + batchCount * srcDescPtr->c;
-        int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED; // Use a true random seed if requested, otherwise use the fixed seed for deterministic QA
-        std::mt19937 rng(seed + batchCount);
-        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]); // Distribution for the probability of keeping (not dropping) a channel
-        bool atLeastOneChannelKept = false;
-        for (Rpp32u c = 0; c < dstDescPtr->c; c++)
-        {
-            maskPtr[c] = keepDist(rng);
-            atLeastOneChannelKept |= maskPtr[c];
-        }
-
-        if (!atLeastOneChannelKept)
-            maskPtr[rng() % dstDescPtr->c] = 1;
+        uint8_t *maskPtr = maskBasePtr + batchCount * srcDescPtr->c;
 
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -241,7 +228,7 @@ template RppStatus channel_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                       Rpp8u*,
                                                       RpptDescPtr,
                                                       Rpp32f*,
-                                                      bool,
+                                                      Rpp8u*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,
@@ -252,7 +239,7 @@ template RppStatus channel_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                        Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
-                                                       bool,
+                                                       Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        RppLayoutParams,
@@ -263,7 +250,7 @@ template RppStatus channel_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                        Rpp16f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
-                                                       bool,
+                                                       Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        RppLayoutParams,
@@ -274,7 +261,7 @@ template RppStatus channel_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                       Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp32f*,
-                                                      bool,
+                                                      Rpp8u*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,

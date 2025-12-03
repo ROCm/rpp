@@ -1496,6 +1496,28 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
             return RPP_ERROR_INVALID_ARGUMENTS;
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
+    Rpp8u seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
+    Rpp8u *maskBasePtr = reinterpret_cast<uint8_t *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
+    Rpp8u channels = srcDescPtr->c;
+
+    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+
+        Rpp8u *maskPtr = maskBasePtr + batchCount * channels;
+        bool atLeastOne = false;
+
+        for (int c = 0; c < channels; c++)
+        {
+            maskPtr[c] = keepDist(rng);
+            atLeastOne |= maskPtr[c];
+        }
+
+        if (!atLeastOne)
+            maskPtr[rng() % channels] = 1;
+    }
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         channel_dropout_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1503,7 +1525,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
                                     dropoutProbability,
-                                    randomSeed,
+                                    maskBasePtr,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -1516,7 +1538,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      dropoutProbability,
-                                     randomSeed,
+                                     maskBasePtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1529,7 +1551,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      dropoutProbability,
-                                     randomSeed,
+                                     maskBasePtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1542,7 +1564,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
                                     dropoutProbability,
-                                    randomSeed,
+                                    maskBasePtr,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -3147,6 +3169,29 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
+    
+    Rpp8u seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
+    Rpp8u *maskBasePtr = reinterpret_cast<uint8_t *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    Rpp8u channels = srcDescPtr->c;
+
+    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+
+        Rpp8u *maskPtr = maskBasePtr + batchCount * channels;
+        bool atLeastOne = false;
+
+        for (int c = 0; c < channels; c++)
+        {
+            maskPtr[c] = keepDist(rng);
+            atLeastOne |= maskPtr[c];
+        }
+
+        if (!atLeastOne)
+            maskPtr[rng() % channels] = 1;
+    }
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         return hip_exec_channel_dropout_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -3154,7 +3199,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
                                                dstDescPtr,
                                                dropoutProbability,
-                                               randomSeed,
+                                               maskBasePtr,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -3166,7 +3211,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                reinterpret_cast<half *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
                                                dropoutProbability,
-                                               randomSeed,
+                                               maskBasePtr,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -3178,7 +3223,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
                                                dropoutProbability,
-                                               randomSeed,
+                                               maskBasePtr,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
@@ -3190,7 +3235,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                                static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
                                                dstDescPtr,
                                                dropoutProbability,
-                                               randomSeed,
+                                               maskBasePtr,
                                                roiTensorPtrSrc,
                                                roiType,
                                                rpp::deref(rppHandle));
