@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     if(testCase == CONCAT)
     {
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputSecond = calloc(iBufferSizeSecond, get_size_of_data_type(srcDescriptorPtrNDSecond->dataType));
+        inputSecond = calloc(iBufferSizeSecondInBytes, 1);
         CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, iBufferSizeSecondInBytes));
     }
     // read input data
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    rppt_transpose_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                    errorCodeCapture = rppt_transpose_gpu(d_input, srcDescriptorPtrND, d_output, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
