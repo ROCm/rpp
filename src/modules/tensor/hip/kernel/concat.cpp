@@ -76,9 +76,12 @@ __global__ void concat_generic_hip_tensor(T *srcPtr1,
     uint src2Strides[RPPT_MAX_DIMS];
     uint dstStridesLocal[RPPT_MAX_DIMS];
     
-    for (int i = numDims - 1; i >= 0; i--)
+    if (numDims == 0)
+        return;
+    
+    for (int i = (int)numDims - 1; i >= 0; i--)
     {
-        if (i == numDims - 1)
+        if (i == (int)numDims - 1)
         {
             src1Strides[i] = 1;
             src2Strides[i] = 1;
@@ -143,6 +146,7 @@ __global__ void concat_2d_hip_tensor(T *srcPtr1,
                                      T *dstPtr,
                                      uint *dstStrides,
                                      uint *dims,
+                                     uint *dims1,
                                      Rpp32u *roiTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -151,9 +155,9 @@ __global__ void concat_2d_hip_tensor(T *srcPtr1,
     if(id_x >= dims[1] || id_y >= dims[0])
         return;
 
-    uint dstIdx = id_y * dstStrides[1] + id_x;
-    uint srcIdx1 = id_y * srcTensor1Strides[1] + id_x;
-    uint srcIdx2 = id_y * srcTensor2Strides[1] + id_x;
+    uint dstIdx = id_y * dstStrides[1] + id_x * dstStrides[0];
+    uint srcIdx1 = id_y * srcTensor1Strides[1] + id_x * srcTensor1Strides[0];
+    uint srcIdx2 = id_y * srcTensor2Strides[1] + id_x * srcTensor2Strides[0];
 
     d_float8 src_f8, src2_f8;
     if((dims[1] - id_x) >= 8)
@@ -161,14 +165,14 @@ __global__ void concat_2d_hip_tensor(T *srcPtr1,
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &src_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + srcTensor1Strides[1], &src_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + dims[1] * dstStrides[0], &src_f8);
     }
     else
     {
         for(int i = 0; i < (dims[1] - id_x); i++)
         {
-            dstPtr[dstIdx + i] = srcPtr1[srcIdx1 + i];
-            dstPtr[dstIdx + srcTensor1Strides[1] + i] = srcPtr2[srcIdx2 + i];
+            dstPtr[dstIdx + i * dstStrides[0]] = srcPtr1[srcIdx1 + i * srcTensor1Strides[0]];
+            dstPtr[dstIdx + dims[1] * dstStrides[0] + i * dstStrides[0]] = srcPtr2[srcIdx2 + i * srcTensor2Strides[0]];
         }
     }
 }
@@ -181,6 +185,7 @@ __global__ void concat_3d_hip_tensor(T *srcPtr1,
                                      T *dstPtr,
                                      uint *dstStrides,
                                      uint *dims,
+                                     uint *dims1,
                                      Rpp32u *roiTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -200,14 +205,14 @@ __global__ void concat_3d_hip_tensor(T *srcPtr1,
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &src_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + srcTensor1Strides[2], &src_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx + dims[2], &src_f8);
     }
     else
     {
-        for(int i = 0; i < (dstStrides[2] - id_x); i++)
+        for(int i = 0; i < (dims[2] - id_x); i++)
         {
             dstPtr[dstIdx + i] = srcPtr1[srcIdx1 + i];
-            dstPtr[dstIdx + srcTensor1Strides[2] + i] = srcPtr2[srcIdx2 + i];
+            dstPtr[dstIdx + dims[2] + i] = srcPtr2[srcIdx2 + i];
         }
     }
 }
@@ -231,6 +236,40 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
 
     if(numDims == 2)
     {
+        // Calculate cumulative offsets for variable-sized tensors
+        Rpp32u batchSize = dstGenericDescPtr->dims[0];
+        Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+        Rpp32u *src1Offsets = offsetBuffer;
+        Rpp32u *src2Offsets = offsetBuffer + batchSize;
+        Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
+        
+        Rpp32u cumOffset1 = 0, cumOffset2 = 0, cumDstOffset = 0;
+        for (int i = 0; i < batchSize; i++)
+        {
+            src1Offsets[i] = cumOffset1;
+            src2Offsets[i] = cumOffset2;
+            dstOffsets[i] = cumDstOffset;
+            
+            Rpp32u *roi1 = roiTensor + i * numDims * 2;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length1 = &roi1[numDims];
+            Rpp32u *length2 = &roi2[numDims];
+            
+            Rpp32u size1 = 1, size2 = 1, dstSize = 1;
+            for (int j = 0; j < numDims; j++)
+            {
+                size1 *= length1[j];
+                size2 *= length2[j];
+                if (j == axis)
+                    dstSize *= (length1[j] + length2[j]);
+                else
+                    dstSize *= length1[j];
+            }
+            cumOffset1 += size1;
+            cumOffset2 += size2;
+            cumDstOffset += dstSize;
+        }
+        
         if(axis == 0)
         {
             srcPtr1GenericDescPtr->strides[1] = srcPtr1GenericDescPtr->strides[0];
@@ -246,21 +285,27 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[2];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[2];
         }
-        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
+        for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
-            Rpp32u *roi = roiTensor + batchCount * numDims * 2;
-            Rpp32u *begin = roi;
-            Rpp32u *length = &roi[numDims];
-            Rpp32u *dims = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+            Rpp32u *roi1 = roiTensor + batchCount * numDims * 2;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length = &roi1[numDims];
+            Rpp32u *length1 = &roi2[numDims];
+            Rpp32u *dims = offsetBuffer + batchSize * 3;
+            Rpp32u *dims1 = dims + 2;
             if(axis == 0)
             {
                 dims[0] = 1;
                 dims[1] = length[0] * length[1];
+                dims1[0] = 1;
+                dims1[1] = length1[0] * length1[1];
             }
             else if(axis == 1)
             {
                 dims[0] = length[0];
                 dims[1] = length[1];
+                dims1[0] = length1[0];
+                dims1[1] = length1[1];
             }
             globalThreads_x = dims[1];
             globalThreads_y = dims[0];
@@ -269,18 +314,53 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr1 + (batchCount * dims[0] * dims[1]),
-                               srcPtr2 + (batchCount * dims[0] * dims[1]),
+                               srcPtr1 + src1Offsets[batchCount],
+                               srcPtr2 + src2Offsets[batchCount],
                                srcPtr1GenericDescPtr->strides,
                                srcPtr2GenericDescPtr->strides,
-                               dstPtr + (batchCount * dims[0] * dims[1] * 2),
+                               dstPtr + dstOffsets[batchCount],
                                dstGenericDescPtr->strides,
                                dims,
-                               roi);
+                               dims1,
+                               roi1);
         }
     }
     else if(numDims == 3)
     {
+        // Calculate cumulative offsets for variable-sized tensors
+        Rpp32u batchSize = dstGenericDescPtr->dims[0];
+        Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+        Rpp32u *src1Offsets = offsetBuffer;
+        Rpp32u *src2Offsets = offsetBuffer + batchSize;
+        Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
+        
+        Rpp32u cumOffset1 = 0, cumOffset2 = 0, cumDstOffset = 0;
+        for (int i = 0; i < batchSize; i++)
+        {
+            src1Offsets[i] = cumOffset1;
+            src2Offsets[i] = cumOffset2;
+            dstOffsets[i] = cumDstOffset;
+            
+            Rpp32u *roi1 = roiTensor + i * numDims * 2;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length1 = &roi1[numDims];
+            Rpp32u *length2 = &roi2[numDims];
+            
+            Rpp32u size1 = 1, size2 = 1, dstSize = 1;
+            for (int j = 0; j < numDims; j++)
+            {
+                size1 *= length1[j];
+                size2 *= length2[j];
+                if (j == axis)
+                    dstSize *= (length1[j] + length2[j]);
+                else
+                    dstSize *= length1[j];
+            }
+            cumOffset1 += size1;
+            cumOffset2 += size2;
+            cumDstOffset += dstSize;
+        }
+        
         if(axis == 0)
         {
             srcPtr1GenericDescPtr->strides[2] = srcPtr1GenericDescPtr->strides[0];
@@ -299,28 +379,38 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[1];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
         }
-        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
+        for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
-            Rpp32u *roi = roiTensor + batchCount * numDims * 2;
-            Rpp32u *begin = roi;
-            Rpp32u *length = &roi[numDims];
-            Rpp32u *dims = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+            Rpp32u *roi1 = roiTensor + batchCount * numDims * 2;
+            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *length = &roi1[numDims];
+            Rpp32u *length1 = &roi2[numDims];
+            Rpp32u *dims = offsetBuffer + batchSize * 3;
+            Rpp32u *dims1 = dims + 3;
             if(axis == 0)
             {
                 dims[0] = dims[1] = 1;
                 dims[2] = length[0] * length[1] * length[2];
+                dims1[0] = dims1[1] = 1;
+                dims1[2] = length1[0] * length1[1] * length1[2];
             }
             else if(axis == 1)
             {
                 dims[0] = 1;
                 dims[1] = length[0];
                 dims[2] = length[1] * length[2];
+                dims1[0] = 1;
+                dims1[1] = length1[0];
+                dims1[2] = length1[1] * length1[2];
             }
             else if(axis == 2)
             {
                 dims[0] = length[0];
                 dims[1] = length[1];
                 dims[2] = length[2];
+                dims1[0] = length1[0];
+                dims1[1] = length1[1];
+                dims1[2] = length1[2];
             }
             globalThreads_x = dims[2];
             globalThreads_y = dims[1];
@@ -330,14 +420,15 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr1 + (batchCount * dims[0] * dims[1] * dims[2]),
-                               srcPtr2 + (batchCount * dims[0] * dims[1] * dims[2]),
+                               srcPtr1 + src1Offsets[batchCount],
+                               srcPtr2 + src2Offsets[batchCount],
                                srcPtr1GenericDescPtr->strides,
                                srcPtr2GenericDescPtr->strides,
-                               dstPtr + (batchCount * dims[0] * dims[1] * dims[2] * 2),
+                               dstPtr + dstOffsets[batchCount],
                                dstGenericDescPtr->strides,
                                dims,
-                               &roiTensor[batchCount * 6]);
+                               dims1,
+                               roi1);
         }
     }
     else
@@ -348,6 +439,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         Rpp32u *dstOffsets = srcOffsets + batchSize * 2;
         
         Rpp32u srcOffset1 = 0, srcOffset2 = 0, dstOffset = 0;
+        Rpp32u maxElements = 0;
         for (int i = 0; i < batchSize; i++)
         {
             srcOffsets[i * 2] = srcOffset1;
@@ -372,26 +464,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             srcOffset1 += src1Size;
             srcOffset2 += src2Size;
             dstOffset += dstSize;
-        }
-        
-        // Find max elements in any batch
-        Rpp32u maxElements = 0;
-        for (int i = 0; i < batchSize; i++)
-        {
-            Rpp32u *roi1 = roiTensor + i * numDims * 4;
-            Rpp32u *roi2 = roi1 + numDims * 2;
-            Rpp32u *length1 = &roi1[numDims];
-            Rpp32u *length2 = &roi2[numDims];
-            
-            Rpp32u elements = 1;
-            for (int j = 0; j < numDims; j++)
-            {
-                if (j == axis)
-                    elements *= (length1[j] + length2[j]);
-                else
-                    elements *= length1[j];
-            }
-            maxElements = (elements > maxElements) ? elements : maxElements;
+            maxElements = (dstSize > maxElements) ? dstSize : maxElements;
         }
         
         globalThreads_x = maxElements;
