@@ -218,7 +218,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32f *dropoutProbability,
-                                          Rpp8u *maskBasePtr,
+                                          Rpp8u *d_maskPtr,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle &handle)
@@ -241,7 +241,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           maskBasePtr,
+                           d_maskPtr,
                            roiTensorPtrSrc);
     }
     else if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NCHW && srcDescPtr->c == 3)
@@ -255,7 +255,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                           maskBasePtr,
+                           d_maskPtr,
                            roiTensorPtrSrc);
     }
     else if (srcDescPtr->layout == RpptLayout::NCHW && dstDescPtr->layout == RpptLayout::NHWC && srcDescPtr->c == 3)
@@ -270,7 +270,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           maskBasePtr,
+                           d_maskPtr,
                            roiTensorPtrSrc);
     }
     else
@@ -285,7 +285,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           maskBasePtr,
+                           d_maskPtr,
                            roiTensorPtrSrc);
     }
     return RPP_SUCCESS;

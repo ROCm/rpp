@@ -658,7 +658,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32f *dropoutProbability,
-                                          Rpp8u *maskBasePtr,
+                                          Rpp8u *d_maskPtr,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
