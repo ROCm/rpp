@@ -26,9 +26,9 @@ SOFTWARE.
 #include "rpp_cpu_simd_math.hpp"
 #include "rpp_cpu_interpolation.hpp"
 
+#if __AVX2__
 inline void compute_fisheye_src_loc_avx(__m256 &pDstY, __m256 &pDstX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pHeight, __m256 &pWidth)
 {
-#if __AVX2__
     __m256 pNormX, pNormY, pDist;
     pNormX = _mm256_sub_ps(_mm256_div_ps(_mm256_mul_ps(avx_p2, pDstX), pWidth), avx_p1);        //  (static_cast<Rpp32f>((2.0 * dstX)) / width) - 1;
     pNormY = _mm256_sub_ps(_mm256_div_ps(_mm256_mul_ps(avx_p2, pDstY), pHeight), avx_p1);       //  (static_cast<Rpp32f>((2.0 * dstY)) / height) - 1;
@@ -53,8 +53,8 @@ inline void compute_fisheye_src_loc_avx(__m256 &pDstY, __m256 &pDstX, __m256 &pS
     pSrcX = _mm256_blendv_ps(avx_pMinus1, pSrcX, pMask2);
     pSrcY = _mm256_blendv_ps(avx_pMinus1, pSrcY, pMask2);
     pDstX = _mm256_add_ps(pDstX, avx_p8);
-#endif
 }
+#endif
 
 inline void compute_fisheye_src_loc(Rpp32f dstY, Rpp32f dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32s &height, Rpp32s &width)
 {
