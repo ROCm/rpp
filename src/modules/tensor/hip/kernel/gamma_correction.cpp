@@ -239,6 +239,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            RpptDescPtr srcDescPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
+                                           Rpp32f *gammaTensor,
                                            RpptROIPtr roiTensorPtrSrc,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle)
@@ -257,7 +258,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                        0,
                        handle.GetStream(),
                        gammaLUT,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
+                       gammaTensor);
 
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
@@ -332,6 +333,7 @@ template RppStatus hip_exec_gamma_correction_tensor<Rpp8u>(Rpp8u*,
                                                            RpptDescPtr,
                                                            Rpp8u*,
                                                            RpptDescPtr,
+                                                           Rpp32f*,
                                                            RpptROIPtr,
                                                            RpptRoiType,
                                                            rpp::Handle&);
@@ -340,6 +342,7 @@ template RppStatus hip_exec_gamma_correction_tensor<half>(half*,
                                                           RpptDescPtr,
                                                           half*,
                                                           RpptDescPtr,
+                                                          Rpp32f*,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
@@ -348,6 +351,7 @@ template RppStatus hip_exec_gamma_correction_tensor<Rpp32f>(Rpp32f*,
                                                             RpptDescPtr,
                                                             Rpp32f*,
                                                             RpptDescPtr,
+                                                            Rpp32f*,
                                                             RpptROIPtr,
                                                             RpptRoiType,
                                                             rpp::Handle&);
@@ -356,6 +360,7 @@ template RppStatus hip_exec_gamma_correction_tensor<Rpp8s>(Rpp8s*,
                                                            RpptDescPtr,
                                                            Rpp8s*,
                                                            RpptDescPtr,
+                                                           Rpp32f*,
                                                            RpptROIPtr,
                                                            RpptRoiType,
                                                            rpp::Handle&);

@@ -59,7 +59,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"box_filter", "median_filter", "gaussian_filter"}:
@@ -122,7 +122,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
     for bitDepth in bitDepths:
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
-            if layout == Layout.PLN1 and outputFormatToggle == OutputFormat.TOGGLE:
+            if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
             if imageAugmentationMap[int(case)][0] in {"box_filter", "median_filter", "gaussian_filter"}:
                 for kernelSize in range(3, 10, 2):
@@ -345,7 +345,7 @@ else:
             srcPath2 = lensCorrectionInFilePath
         for layout in list(Layout):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
-            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
 
 # List of augmentation names without QA support
 nonQAaugs = ["jitter", "noise", "fog", "rain", "warp_affine", "warp_perspective", "gaussian_filter", "spatter"]
