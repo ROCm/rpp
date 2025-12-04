@@ -104,7 +104,7 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -189,7 +189,7 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -282,7 +282,7 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -383,7 +383,7 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -473,7 +473,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -504,7 +504,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -533,7 +533,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -596,7 +596,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -629,7 +629,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -660,7 +660,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -727,7 +727,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -762,7 +762,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -795,7 +795,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -866,7 +866,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -903,7 +903,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -938,7 +938,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1022,7 +1022,7 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -1107,7 +1107,7 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1200,7 +1200,7 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -1301,7 +1301,7 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1406,7 +1406,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1495,7 +1495,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1592,7 +1592,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));;
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1697,7 +1697,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1))
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
