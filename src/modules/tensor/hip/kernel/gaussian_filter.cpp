@@ -1592,7 +1592,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));;
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
