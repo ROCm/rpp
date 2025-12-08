@@ -73,7 +73,7 @@ __global__ void hue_pkd_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
+    float hueParam = fmodf(fmodf(hueTensor[id_z], 360.0f) + 360.0f, 360.0f) * (6.0f/360.0f);
 
     d_float24 pix_f24;
 
@@ -102,7 +102,7 @@ __global__ void hue_pln_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
+    float hueParam = fmodf(fmodf(hueTensor[id_z], 360.0f) + 360.0f, 360.0f) * (6.0f/360.0f);
 
     d_float24 pix_f24;
 
@@ -129,7 +129,7 @@ __global__ void hue_pkd3_pln3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
+    float hueParam = fmodf(fmodf(hueTensor[id_z], 360.0f) + 360.0f, 360.0f) * (6.0f/360.0f);
 
     d_float24 pix_f24;
 
@@ -156,7 +156,7 @@ __global__ void hue_pln3_pkd3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float hueParam = (((int)hueTensor[id_z]) % 360) * (6.0f/360.0f);
+    float hueParam = fmodf(fmodf(hueTensor[id_z], 360.0f) + 360.0f, 360.0f) * (6.0f/360.0f);
 
     d_float24 pix_f24;
 
