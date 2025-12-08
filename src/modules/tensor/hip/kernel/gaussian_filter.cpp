@@ -1994,13 +1994,14 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
+                                          Rpp32f *stdDevTensor,
                                           Rpp32u kernelSize,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -2016,7 +2017,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     float *filterTensor = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hip_exec_create_gaussian_kernel(filterTensor,
                                     kernelSize,
-                                    handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                    stdDevTensor,
                                     handle);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -2306,6 +2307,7 @@ template RppStatus hip_exec_gaussian_filter_tensor<Rpp8u>(Rpp8u*,
                                                           RpptDescPtr,
                                                           Rpp8u*,
                                                           RpptDescPtr,
+                                                          Rpp32f*,
                                                           Rpp32u,
                                                           RpptROIPtr,
                                                           RpptRoiType,
@@ -2315,6 +2317,7 @@ template RppStatus hip_exec_gaussian_filter_tensor<half>(half*,
                                                          RpptDescPtr,
                                                          half*,
                                                          RpptDescPtr,
+                                                         Rpp32f*,
                                                          Rpp32u,
                                                          RpptROIPtr,
                                                          RpptRoiType,
@@ -2324,6 +2327,7 @@ template RppStatus hip_exec_gaussian_filter_tensor<Rpp32f>(Rpp32f*,
                                                            RpptDescPtr,
                                                            Rpp32f*,
                                                            RpptDescPtr,
+                                                           Rpp32f*,
                                                            Rpp32u,
                                                            RpptROIPtr,
                                                            RpptRoiType,
@@ -2333,6 +2337,7 @@ template RppStatus hip_exec_gaussian_filter_tensor<Rpp8s>(Rpp8s*,
                                                           RpptDescPtr,
                                                           Rpp8s*,
                                                           RpptDescPtr,
+                                                          Rpp32f*,
                                                           Rpp32u,
                                                           RpptROIPtr,
                                                           RpptRoiType,

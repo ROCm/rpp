@@ -50,7 +50,7 @@ endif()
 
 # RPP Version
 # NOTE: package version and rpp_version.h is generated with this version
-set(VERSION "2.2.0")
+set(VERSION "2.2.1")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -234,7 +234,7 @@ if("${BACKEND}" STREQUAL "HIP")
 
     # Set supported GPU Targets
     if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx950;gfx1200;gfx1201")
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1151;gfx1102;gfx950;gfx1200;gfx1201")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -379,7 +379,7 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets LIBRARY DESTINATI
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/ 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev
         PATTERN "*.h.in" EXCLUDE)
@@ -393,7 +393,7 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} 
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 
 # install Test
@@ -452,10 +452,10 @@ install(FILES
 )
 
 # Install the export set for use with the install-tree
-install(EXPORT ${PROJECT_NAME}-targets 
+install(EXPORT ${PROJECT_NAME}-targets
     FILE ${PROJECT_NAME}-targets.cmake
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" 
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT dev
 )
 
