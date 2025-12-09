@@ -125,7 +125,6 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
-    {96, "channel_dropout"},
     {97, "cutout_dropout"},
     {98, "grid_dropout"}
 };
@@ -192,7 +191,6 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
-    CHANNEL_DROPOUT = 96,
     CUTOUT_DROPOUT = 97,
     GRID_DROPOUT = 98
 };
