@@ -65,6 +65,7 @@ __global__ void warp_perspective_bilinear_pkd_hip_tensor(T *srcPtr,
                                                          uint2 srcStridesNH,
                                                          T *dstPtr,
                                                          uint2 dstStridesNH,
+                                                         uint2 dstDimsWH,
                                                          d_float9 *perspectiveTensor,
                                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -72,7 +73,7 @@ __global__ void warp_perspective_bilinear_pkd_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -96,6 +97,7 @@ __global__ void warp_perspective_bilinear_pln_hip_tensor(T *srcPtr,
                                                          T *dstPtr,
                                                          uint3 dstStridesNCH,
                                                          int channelsDst,
+                                                         uint2 dstDimsWH,
                                                          d_float9 *perspectiveTensor,
                                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -103,7 +105,7 @@ __global__ void warp_perspective_bilinear_pln_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -140,6 +142,7 @@ __global__ void warp_perspective_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
                                                                uint2 srcStridesNH,
                                                                T *dstPtr,
                                                                uint3 dstStridesNCH,
+                                                               uint2 dstDimsWH,
                                                                d_float9 *perspectiveTensor,
                                                                RpptROIPtr roiTensorPtrSrc)
 {
@@ -147,7 +150,7 @@ __global__ void warp_perspective_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -170,6 +173,7 @@ __global__ void warp_perspective_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
                                                                uint3 srcStridesNCH,
                                                                T *dstPtr,
                                                                uint2 dstStridesNH,
+                                                               uint2 dstDimsWH,
                                                                d_float9 *perspectiveTensor,
                                                                RpptROIPtr roiTensorPtrSrc)
 {
@@ -177,7 +181,7 @@ __global__ void warp_perspective_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -202,6 +206,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
                                                                  uint2 srcStridesNH,
                                                                  T *dstPtr,
                                                                  uint2 dstStridesNH,
+                                                                 uint2 dstDimsWH,
                                                                  d_float9 *perspectiveTensor,
                                                                  RpptROIPtr roiTensorPtrSrc)
 {
@@ -209,7 +214,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -233,6 +238,7 @@ __global__ void warp_perspective_nearest_neighbor_pln_hip_tensor(T *srcPtr,
                                                                  T *dstPtr,
                                                                  uint3 dstStridesNCH,
                                                                  int channelsDst,
+                                                                 uint2 dstDimsWH,
                                                                  d_float9 *perspectiveTensor,
                                                                  RpptROIPtr roiTensorPtrSrc)
 {
@@ -240,7 +246,7 @@ __global__ void warp_perspective_nearest_neighbor_pln_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -277,6 +283,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr
                                                                        uint2 srcStridesNH,
                                                                        T *dstPtr,
                                                                        uint3 dstStridesNCH,
+                                                                       uint2 dstDimsWH,
                                                                        d_float9 *perspectiveTensor,
                                                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -284,7 +291,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -307,6 +314,7 @@ __global__ void warp_perspective_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr
                                                                        uint3 srcStridesNCH,
                                                                        T *dstPtr,
                                                                        uint2 dstStridesNH,
+                                                                       uint2 dstDimsWH,
                                                                        d_float9 *perspectiveTensor,
                                                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -314,7 +322,7 @@ __global__ void warp_perspective_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
         return;
     }
@@ -365,6 +373,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
         }
@@ -380,6 +389,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                dstDescPtr->c,
+                               make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
         }
@@ -396,6 +406,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                    dstPtr,
                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
             }
@@ -411,6 +422,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                    dstPtr,
                                    make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
             }
@@ -429,6 +441,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
         }
@@ -444,6 +457,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                dstDescPtr->c,
+                               make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
         }
@@ -460,6 +474,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                    dstPtr,
                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
             }
@@ -475,6 +490,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                    dstPtr,
                                    make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
             }
