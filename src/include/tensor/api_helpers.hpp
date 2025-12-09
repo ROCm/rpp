@@ -46,7 +46,7 @@ inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32
 // Dropout Region initializer for unit and performance testing
 void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, void *colorBuffer, int inputBitDepth, bool randomSeed, int dropoutType)
 {
-    int seed = randomSeed ? std::random_device{}() : 42;
+    int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
@@ -118,7 +118,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
 
 inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32u &maxHoleW, Rpp32u &maxHoleH, Rpp32f holeRatio, bool randomOffset)
 {
-    int seed = randomOffset ? std::random_device{}() : 42;
+    int seed = randomOffset ? std::random_device{}() : DROPOUT_FIXED_SEED;
     std::mt19937 rng(seed);
 
     for(int i=0; i< batchCount; i++)

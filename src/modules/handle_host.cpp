@@ -69,6 +69,8 @@ void Handle::rpp_destroy_object_host()
     free(this->GetInitHandle()->mem.mcpu.maxDstSize);
     free(this->GetInitHandle()->mem.mcpu.roiPoints);
     free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
+    delete this->GetInitHandle();
+    this->impl = nullptr;
 }
 
 size_t Handle::GetBatchSize() const

@@ -84,6 +84,10 @@ typedef struct { d_schar8_s sc8[3];                                             
 typedef union { schar sc1[8];   char4 sc4[2];                                                   }   d_schar8;
 typedef union { schar sc1[24];  char4 sc4[6];  char3 sc3[8];    d_schar8 sc8[3];                }   d_schar24;
 
+// Structures that help differentiate rounding requirements
+struct NoRounding {};
+struct RoundToNearest {};
+
 // Helper macros to create vector types (float2/3/4, int2/4, uint2/4) with all components initialized to the same scalar value
 #define MAKE_FLOAT4(val) make_float4(val, val, val, val)
 #define MAKE_UINT4(val) make_uint4(val, val, val, val)
@@ -381,6 +385,7 @@ __device__ __forceinline__ uint rpp_hip_pack(float4 src)
 
 // Packing to I8s
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
 {
     char4 dst_c4;
@@ -392,31 +397,16 @@ __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
     return *(uint *)&dst_c4;
 }
 
-// Packing to Uints
-
-__device__ __forceinline__ uint4 rpp_hip_pack_uint4(uchar4 src)
+template <>
+__device__ __forceinline__ uint rpp_hip_pack_i8<RoundToNearest>(float4 src)
 {
-    uint4 dst_ui4;
-    dst_ui4.w = (uint)(src.w);
-    dst_ui4.z = (uint)(src.z);
-    dst_ui4.y = (uint)(src.y);
-    dst_ui4.x = (uint)(src.x);
+    char4 dst_c4;
+    dst_c4.w = (schar)(__builtin_rintf(src.w));
+    dst_c4.z = (schar)(__builtin_rintf(src.z));
+    dst_c4.y = (schar)(__builtin_rintf(src.y));
+    dst_c4.x = (schar)(__builtin_rintf(src.x));
 
-    return *(uint4 *)&dst_ui4;
-}
-
-// Packing to Ints
-
-__device__ __forceinline__ void rpp_hip_pack_int8(d_schar8_s *src_sc8, d_int8 *srcPtr_i8)
-{
-    srcPtr_i8->i1[0] = int(src_sc8->sc1[0]);
-    srcPtr_i8->i1[1] = int(src_sc8->sc1[1]);
-    srcPtr_i8->i1[2] = int(src_sc8->sc1[2]);
-    srcPtr_i8->i1[3] = int(src_sc8->sc1[3]);
-    srcPtr_i8->i1[4] = int(src_sc8->sc1[4]);
-    srcPtr_i8->i1[5] = int(src_sc8->sc1[5]);
-    srcPtr_i8->i1[6] = int(src_sc8->sc1[6]);
-    srcPtr_i8->i1[7] = int(src_sc8->sc1[7]);
+    return *(uint *)&dst_c4;
 }
 
 // -------------------- Set 2 - Un-Packing --------------------
@@ -1048,11 +1038,12 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(float *dstPtr, d_
 
 // I8 stores without layout toggle (8 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(schar *dstPtr, d_float8 *dstPtr_f8)
 {
     uint2 dst_ui2;
-    dst_ui2.x = rpp_hip_pack_i8(dstPtr_f8->f4[0]);
-    dst_ui2.y = rpp_hip_pack_i8(dstPtr_f8->f4[1]);
+    dst_ui2.x = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f8->f4[0]);
+    dst_ui2.y = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f8->f4[1]);
     *(uint2 *)dstPtr = dst_ui2;
 }
 
@@ -1095,16 +1086,17 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(float
 
 // I8 stores without layout toggle PKD3 to PKD3 (24 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(schar *dstPtr, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
 
-    dst_ui6.ui1[0] = rpp_hip_pack_i8(dstPtr_f24->f4[0]);    // write R00G00B00R01
-    dst_ui6.ui1[1] = rpp_hip_pack_i8(dstPtr_f24->f4[1]);    // write G01B01R02G02
-    dst_ui6.ui1[2] = rpp_hip_pack_i8(dstPtr_f24->f4[2]);    // write B02R03G03B03
-    dst_ui6.ui1[3] = rpp_hip_pack_i8(dstPtr_f24->f4[3]);    // write R04G04B04R05
-    dst_ui6.ui1[4] = rpp_hip_pack_i8(dstPtr_f24->f4[4]);    // write G05B05R06G06
-    dst_ui6.ui1[5] = rpp_hip_pack_i8(dstPtr_f24->f4[5]);    // write B06R07G07B07
+    dst_ui6.ui1[0] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[0]);    // write R00G00B00R01
+    dst_ui6.ui1[1] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[1]);    // write G01B01R02G02
+    dst_ui6.ui1[2] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[2]);    // write B02R03G03B03
+    dst_ui6.ui1[3] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[3]);    // write R04G04B04R05
+    dst_ui6.ui1[4] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[4]);    // write G05B05R06G06
+    dst_ui6.ui1[5] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[5]);    // write B06R07G07B07
 
     *(d_uint6_s *)dstPtr = *(d_uint6_s *)&dst_ui6;
 }
@@ -1164,16 +1156,17 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pln3(float
 
 // I8 stores without layout toggle PLN3 to PLN3 (24 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pln3(schar *dstPtr, uint increment, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
 
-    dst_ui6.ui1[0] = rpp_hip_pack_i8(dstPtr_f24->f4[0]);    // write R00-R03
-    dst_ui6.ui1[1] = rpp_hip_pack_i8(dstPtr_f24->f4[1]);    // write R04-R07
-    dst_ui6.ui1[2] = rpp_hip_pack_i8(dstPtr_f24->f4[2]);    // write G00-G03
-    dst_ui6.ui1[3] = rpp_hip_pack_i8(dstPtr_f24->f4[3]);    // write G04-G07
-    dst_ui6.ui1[4] = rpp_hip_pack_i8(dstPtr_f24->f4[4]);    // write B00-B03
-    dst_ui6.ui1[5] = rpp_hip_pack_i8(dstPtr_f24->f4[5]);    // write B04-B07
+    dst_ui6.ui1[0] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[0]);    // write R00-R03
+    dst_ui6.ui1[1] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[1]);    // write R04-R07
+    dst_ui6.ui1[2] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[2]);    // write G00-G03
+    dst_ui6.ui1[3] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[3]);    // write G04-G07
+    dst_ui6.ui1[4] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[4]);    // write B00-B03
+    dst_ui6.ui1[5] = rpp_hip_pack_i8<RoundingPolicy>(dstPtr_f24->f4[5]);    // write B04-B07
 
     *(uint2 *)dstPtr = dst_ui6.ui2[0];
     dstPtr += increment;
@@ -1244,16 +1237,17 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(float
 
 // I8 stores with layout toggle PLN3 to PKD3 (24 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar *dstPtr, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
 
-    dst_ui6.ui1[0] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 8], dstPtr_f24->f1[16], dstPtr_f24->f1[ 1]));    // write R00G00B00R01
-    dst_ui6.ui1[1] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 9], dstPtr_f24->f1[17], dstPtr_f24->f1[ 2], dstPtr_f24->f1[10]));    // write G01B01R02G02
-    dst_ui6.ui1[2] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[18], dstPtr_f24->f1[ 3], dstPtr_f24->f1[11], dstPtr_f24->f1[19]));    // write B02R03G03B03
-    dst_ui6.ui1[3] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 4], dstPtr_f24->f1[12], dstPtr_f24->f1[20], dstPtr_f24->f1[ 5]));    // write R04G04B04R05
-    dst_ui6.ui1[4] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[13], dstPtr_f24->f1[21], dstPtr_f24->f1[ 6], dstPtr_f24->f1[14]));    // write G05B05R06G06
-    dst_ui6.ui1[5] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[22], dstPtr_f24->f1[ 7], dstPtr_f24->f1[15], dstPtr_f24->f1[23]));    // write B06R07G07B07
+    dst_ui6.ui1[0] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 8], dstPtr_f24->f1[16], dstPtr_f24->f1[ 1]));    // write R00G00B00R01
+    dst_ui6.ui1[1] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 9], dstPtr_f24->f1[17], dstPtr_f24->f1[ 2], dstPtr_f24->f1[10]));    // write G01B01R02G02
+    dst_ui6.ui1[2] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[18], dstPtr_f24->f1[ 3], dstPtr_f24->f1[11], dstPtr_f24->f1[19]));    // write B02R03G03B03
+    dst_ui6.ui1[3] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 4], dstPtr_f24->f1[12], dstPtr_f24->f1[20], dstPtr_f24->f1[ 5]));    // write R04G04B04R05
+    dst_ui6.ui1[4] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[13], dstPtr_f24->f1[21], dstPtr_f24->f1[ 6], dstPtr_f24->f1[14]));    // write G05B05R06G06
+    dst_ui6.ui1[5] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[22], dstPtr_f24->f1[ 7], dstPtr_f24->f1[15], dstPtr_f24->f1[23]));    // write B06R07G07B07
 
     *(d_uint6_s *)dstPtr = *(d_uint6_s *)&dst_ui6;
 }
@@ -1300,6 +1294,7 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar
 
 // I8 stores with layout toggle PLN3 to PKD3 (24 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar *dstPtr, float **srcPtrs_uc8)
 {
 
@@ -1310,12 +1305,12 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(schar
 
     d_uint6 dst_ui6;
 
-    dst_ui6.ui1[0] = rpp_hip_pack_i8(make_float4(srcPtrR_f8->f4[0].x, srcPtrG_f8->f4[0].x, srcPtrB_f8->f4[0].x, srcPtrR_f8->f4[0].y));
-    dst_ui6.ui1[1] = rpp_hip_pack_i8(make_float4(srcPtrG_f8->f4[0].y, srcPtrB_f8->f4[0].y, srcPtrR_f8->f4[0].z, srcPtrG_f8->f4[0].z));
-    dst_ui6.ui1[2] = rpp_hip_pack_i8(make_float4(srcPtrB_f8->f4[0].z, srcPtrR_f8->f4[0].w, srcPtrG_f8->f4[0].w, srcPtrB_f8->f4[0].w));
-    dst_ui6.ui1[3] = rpp_hip_pack_i8(make_float4(srcPtrR_f8->f4[1].x, srcPtrG_f8->f4[1].x, srcPtrB_f8->f4[1].x, srcPtrR_f8->f4[1].y));
-    dst_ui6.ui1[4] = rpp_hip_pack_i8(make_float4(srcPtrG_f8->f4[1].y, srcPtrB_f8->f4[1].y, srcPtrR_f8->f4[1].z, srcPtrG_f8->f4[1].z));
-    dst_ui6.ui1[5] = rpp_hip_pack_i8(make_float4(srcPtrB_f8->f4[1].z, srcPtrR_f8->f4[1].w, srcPtrG_f8->f4[1].w, srcPtrB_f8->f4[1].w));
+    dst_ui6.ui1[0] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrR_f8->f4[0].x, srcPtrG_f8->f4[0].x, srcPtrB_f8->f4[0].x, srcPtrR_f8->f4[0].y));
+    dst_ui6.ui1[1] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrG_f8->f4[0].y, srcPtrB_f8->f4[0].y, srcPtrR_f8->f4[0].z, srcPtrG_f8->f4[0].z));
+    dst_ui6.ui1[2] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrB_f8->f4[0].z, srcPtrR_f8->f4[0].w, srcPtrG_f8->f4[0].w, srcPtrB_f8->f4[0].w));
+    dst_ui6.ui1[3] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrR_f8->f4[1].x, srcPtrG_f8->f4[1].x, srcPtrB_f8->f4[1].x, srcPtrR_f8->f4[1].y));
+    dst_ui6.ui1[4] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrG_f8->f4[1].y, srcPtrB_f8->f4[1].y, srcPtrR_f8->f4[1].z, srcPtrG_f8->f4[1].z));
+    dst_ui6.ui1[5] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(srcPtrB_f8->f4[1].z, srcPtrR_f8->f4[1].w, srcPtrG_f8->f4[1].w, srcPtrB_f8->f4[1].w));
 
     *(d_uint6_s *)dstPtr = *(d_uint6_s *)&dst_ui6;
 }
@@ -1411,16 +1406,17 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(float
 
 // I8 stores with layout toggle PKD3 to PLN3 (24 I8 pixels)
 
+template <typename RoundingPolicy = NoRounding>
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(schar *dstPtr, uint increment, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
 
-    dst_ui6.ui1[0] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 3], dstPtr_f24->f1[ 6], dstPtr_f24->f1[ 9]));    // write R00-R03
-    dst_ui6.ui1[1] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[12], dstPtr_f24->f1[15], dstPtr_f24->f1[18], dstPtr_f24->f1[21]));    // write R04-R07
-    dst_ui6.ui1[2] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 1], dstPtr_f24->f1[ 4], dstPtr_f24->f1[ 7], dstPtr_f24->f1[10]));    // write G00-G03
-    dst_ui6.ui1[3] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[13], dstPtr_f24->f1[16], dstPtr_f24->f1[19], dstPtr_f24->f1[22]));    // write G04-G07
-    dst_ui6.ui1[4] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[ 2], dstPtr_f24->f1[ 5], dstPtr_f24->f1[ 8], dstPtr_f24->f1[11]));    // write B00-B03
-    dst_ui6.ui1[5] = rpp_hip_pack_i8(make_float4(dstPtr_f24->f1[14], dstPtr_f24->f1[17], dstPtr_f24->f1[20], dstPtr_f24->f1[23]));    // write B04-B07
+    dst_ui6.ui1[0] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 3], dstPtr_f24->f1[ 6], dstPtr_f24->f1[ 9]));    // write R00-R03
+    dst_ui6.ui1[1] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[12], dstPtr_f24->f1[15], dstPtr_f24->f1[18], dstPtr_f24->f1[21]));    // write R04-R07
+    dst_ui6.ui1[2] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 1], dstPtr_f24->f1[ 4], dstPtr_f24->f1[ 7], dstPtr_f24->f1[10]));    // write G00-G03
+    dst_ui6.ui1[3] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[13], dstPtr_f24->f1[16], dstPtr_f24->f1[19], dstPtr_f24->f1[22]));    // write G04-G07
+    dst_ui6.ui1[4] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[ 2], dstPtr_f24->f1[ 5], dstPtr_f24->f1[ 8], dstPtr_f24->f1[11]));    // write B00-B03
+    dst_ui6.ui1[5] = rpp_hip_pack_i8<RoundingPolicy>(make_float4(dstPtr_f24->f1[14], dstPtr_f24->f1[17], dstPtr_f24->f1[20], dstPtr_f24->f1[23]));    // write B04-B07
 
     *(uint2 *)dstPtr = dst_ui6.ui2[0];
     dstPtr += increment;
@@ -1818,82 +1814,7 @@ __device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *pixpln3Pt
     *pixpln3Ptr_T24 = pixpkd3_T24;
 }
 
-// ------------------------- Set 8 - Loads to uint / int --------------------------
-
-__device__ __forceinline__ void rpp_hip_load8_to_uint8(uchar *srcPtr, d_uint8 *srcPtr_ui8)
-{
-    d_uchar8 src_uc8;
-    *(d_uchar8_s *)&src_uc8 = *(d_uchar8_s *)srcPtr;
-
-    srcPtr_ui8->ui4[0] = rpp_hip_pack_uint4(src_uc8.uc4[0]);
-    srcPtr_ui8->ui4[1] = rpp_hip_pack_uint4(src_uc8.uc4[1]);
-}
-
-__device__ __forceinline__ void rpp_hip_load8_to_int8(schar *srcPtr, d_int8 *srcPtr_i8)
-{
-    d_schar8_s src_sc8;
-    *reinterpret_cast<d_schar8_s *>(&src_sc8) = *reinterpret_cast<d_schar8_s *>(srcPtr);
-
-    rpp_hip_pack_int8(&src_sc8, srcPtr_i8);
-}
-
-__device__ __forceinline__ void rpp_hip_load24_pln3_to_uint24_pln3(uchar *srcPtr, uint increment, d_uint24 *srcPtr_ui24)
-{
-    d_uchar24 src_uc24;
-    *(d_uchar8_s *)&src_uc24.uc8[0] = *(d_uchar8_s *)srcPtr;
-    srcPtr += increment;
-    *(d_uchar8_s *)&src_uc24.uc8[1] = *(d_uchar8_s *)srcPtr;
-    srcPtr += increment;
-    *(d_uchar8_s *)&src_uc24.uc8[2] = *(d_uchar8_s *)srcPtr;
-
-    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
-    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
-    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
-    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
-    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
-    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
-}
-
-__device__ __forceinline__ void rpp_hip_load24_pln3_to_int24_pln3(schar *srcPtr, uint increment, d_int24 *srcPtr_i24)
-{
-    d_schar24_s src_sc24;
-    *(d_schar8_s *)&src_sc24.sc8[0] = *(d_schar8_s *)srcPtr;
-    srcPtr += increment;
-    *(d_schar8_s *)&src_sc24.sc8[1] = *(d_schar8_s *)srcPtr;
-    srcPtr += increment;
-    *(d_schar8_s *)&src_sc24.sc8[2] = *(d_schar8_s *)srcPtr;
-
-    rpp_hip_pack_int8(&src_sc24.sc8[0], &srcPtr_i24->i8[0]);     // write R00-R07
-    rpp_hip_pack_int8(&src_sc24.sc8[1], &srcPtr_i24->i8[1]);     // write G00-G07
-    rpp_hip_pack_int8(&src_sc24.sc8[2], &srcPtr_i24->i8[2]);     // write B00-B07
-}
-
-__device__ __forceinline__ void rpp_hip_load24_pkd3_to_uint24_pln3(uchar *srcPtr, d_uint24 *srcPtr_ui24)
-{
-    d_uchar24 src_uc24;
-    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&src_uc24);
-
-    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
-    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
-    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
-    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
-    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
-    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
-}
-
-__device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr, d_int24 *srcPtr_i24)
-{
-    d_schar24_s src_sc24;
-    src_sc24 = *(d_schar24_s *)srcPtr;
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24sc1s_s *)&src_sc24);
-
-    rpp_hip_pack_int8(&src_sc24.sc8[0], &srcPtr_i24->i8[0]);     // write R00-R07
-    rpp_hip_pack_int8(&src_sc24.sc8[1], &srcPtr_i24->i8[1]);     // write G00-G07
-    rpp_hip_pack_int8(&src_sc24.sc8[2], &srcPtr_i24->i8[2]);     // write B00-B07
-}
-
-// ------------------------- Set 9 - Stores from uchar8 --------------------------
+// ------------------------- Set 8 - Stores from uchar8 --------------------------
 
 __device__ __forceinline__ void rpp_hip_pack_uchar8_and_store8(uchar *dstPtr, d_uchar8 *dstPtr_f8)
 {
@@ -2031,7 +1952,6 @@ template <typename T>
 struct FilterDispatchFloat
 {
     using SharedType = float;
-    using SupportType = float3;
     __device__ __forceinline__ static void rpp_hip_load24_pkd3_to_pln3(T* src, float** dst) { rpp_hip_load24_pkd3_to_float24_pln3(src, dst); }
     __device__ __forceinline__ static void rpp_hip_load8(T* src, float* dst) { rpp_hip_load8_and_unpack_to_float8(src, (d_float8*)dst); }
 };
