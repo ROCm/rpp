@@ -131,7 +131,8 @@ imageAugmentationMap = {
     92: ["slice", "HOST", "HIP"],
     93: ["jpeg_compression_distortion", "HIP"],
     94: ["posterize", "HOST", "HIP"],
-    95: ["solarize", "HOST", "HIP"]
+    95: ["solarize", "HOST", "HIP"],
+    96: ["emboss","HOST","HIP"],
 }
 
 audioAugmentationMap = {
@@ -174,7 +175,7 @@ ImageAugmentationGroupMap = {
         "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion"
     ],
     "filter_augmentations": [
-        "box_filter", "median_filter", "gaussian_filter"
+        "box_filter", "median_filter", "gaussian_filter", "emboss"
     ],
     "morphological_operations": [
         "erode", "dilate"

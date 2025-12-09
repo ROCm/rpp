@@ -25,58 +25,83 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
-inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
+inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kernelSize)
 {
-    Rpp32f expFactor = - (iSquare + (j * j)) * mulFactor;
-    expFactor = std::exp(expFactor);
-    return expFactor;
-}
+    Rpp32f clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
-inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kernelSize)
-{
-    int kernelHalfSize = kernelSize / 2;
-    Rpp32f mulFactor = 1.0f / (2.0f * stdDev * stdDev);
-    int rowIdx = 0;
-
-    // Compute values for only top left quarter and replicate the values
-    for (int i = -kernelHalfSize; i <= 0; i++, rowIdx += kernelSize)
+    if (kernelSize == 3)
     {
-        int iSquare = i * i;
-        for (int j = -kernelHalfSize; j <= 0; j++)
-        {
-            filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
-        }
-        if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
-            std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
+        Rpp32f kernel[9] = {
+            -2.0f, -1.0f,  0.0f,
+            -1.0f,  1.0f,  1.0f,
+             0.0f,  1.0f,  2.0f
+        };
+        for (int i = 0; i < 9; i++)
+            filter[i] = kernel[i] * clampedStrength;
     }
-
-    // Normalize the kernel
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-        kernelSum += filter[i];
-    kernelSum = 1.0f / kernelSum;
-
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-        filter[i] *= kernelSum;
+    else if (kernelSize == 5)
+    {
+        Rpp32f kernel[25] = {
+            -3, -3, -2, -1,  0,
+            -3, -2, -1,  0,  1,
+            -2, -1,  1,  1,  2,
+            -1,  0,  1,  2,  3,
+             0,  1,  2,  3,  3
+        };
+        for (int i = 0; i < 25; i++)
+            filter[i] = kernel[i] * clampedStrength;
+    }
+    else if (kernelSize == 7)
+    {
+        Rpp32f kernel[49] = {
+            -4, -5, -4, -3, -2, -1,  0,
+            -5, -3, -3, -2, -1,  0,  1,
+            -4, -3, -2, -1,  0,  1,  2,
+            -3, -2, -1,  1,  1,  2,  3,
+            -2, -1,  0,  1,  2,  3,  4,
+            -1,  0,  1,  2,  3,  3,  5,
+             0,  1,  2,  3,  4,  5,  4
+        };
+        for (int i = 0; i < 49; i++)
+            filter[i] = kernel[i] * clampedStrength;
+    }
+    else if (kernelSize == 9)
+    {
+        Rpp32f kernel[81] = {
+            -5, -7, -6, -5, -4, -3, -2, -1,  0,
+            -7, -4, -5, -4, -3, -2, -1,  0,  1,
+            -6, -5, -3, -3, -2, -1,  0,  1,  2,
+            -5, -4, -3, -2, -1,  0,  1,  2,  3,
+            -4, -3, -2, -1,  1,  1,  2,  3,  4,
+            -3, -2, -1,  0,  1,  2,  3,  4,  5,
+            -2, -1,  0,  1,  2,  3,  3,  5,  6,
+            -1,  0,  1,  2,  3,  4,  5,  4,  7,
+             0,  1,  2,  3,  4,  5,  6,  7,  5
+        };
+        for (int i = 0; i < 81; i++)
+            filter[i] = kernel[i] * clampedStrength;
+    }
+    flip_kernel(filter, kernelSize);
 }
 
 template<typename T>
-RppStatus gaussian_filter_host_tensor(T *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      T *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      Rpp32f *stdDevTensor,
-                                      Rpp32u kernelSize,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle)
+RppStatus emboss_host_tensor(T *srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             T *dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *strength,
+                             Rpp32f *bias,
+                             Rpp32u kernelSize,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             RppLayoutParams layoutParams,
+                             rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
-        return gaussian_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+        return emboss_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, strength, bias, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
     // set the required masks array needed for shuffle operations
 #if __AVX2__
@@ -104,7 +129,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
-        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        create_emboss_kernel_host(filterTensor, strength[batchCount], kernelSize);
 #if __AVX2__
         int size = kernelSize * kernelSize;
         __m256 pFilter[size];
@@ -118,7 +143,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
             dstPtrRow = dstPtrChannel;
 
-            // gaussian filter without fused output-layout toggle (NCHW -> NCHW)
+            // emboss without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
                 /* exclude 2 * padLength number of columns from alignedLength calculation
@@ -148,16 +173,17 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
-                            __m256 pRow[6], pDst[2];
+                            __m256 pRow[7], pDst[2];
                             rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
                                 permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPln);
                             }
-
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_pixel_check_0to1(pDst, 2);
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -192,7 +218,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
-
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -206,6 +231,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
+                    // Index that determines the values for padding - Based on the direction of padding
                     Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
@@ -223,6 +249,9 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
+
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 3);
 
                         // In each pass, convolution filter is applied 24 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
@@ -282,10 +311,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[2] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
                         {
-                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex],     pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
                         }
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 3);
 
                         __m128 pDstPln[6];
                         rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -312,7 +343,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                     since padLength number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
+                Rpp32u alignedLength =((bufferLength - (2 * padLength)) / 14) * 14;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -348,16 +379,18 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             int channelStride = c * 2;
-                            __m256 pRow[6];
+                            __m256 pRow[7];
                             rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                                int rowIdx = k * 2;
+                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIdx], pRow[rowIdx + 1], &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIdx + 1], pRow[rowIdx + 2], &pFilter[filterIndex], pxMaskPln);
                             }
-
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_pixel_check_0to1(pResult, 6);
                             // In each pass, convolution filter is applied 14 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
@@ -396,7 +429,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
             dstPtrRow = dstPtrChannel;
 
-            // gaussian filter without fused output-layout toggle (NCHW -> NCHW)
+            // emboss without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
@@ -436,7 +469,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_5x5_pln(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                                 permute_blend_add_5x5_pln(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                             }
-
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_pixel_check_0to1(pDst, 2);
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
                             else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -498,7 +532,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_5x5_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
                             permute_blend_add_5x5_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
-
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 2);
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -570,6 +605,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_pixel_check_0to1(pResultPln, 3);
                             // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
@@ -637,7 +674,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_5x5_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
                             permute_blend_add_5x5_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
-
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 2);
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
@@ -668,7 +706,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
             dstPtrRow = dstPtrChannel;
 
-            // gaussian filter without fused output-layout toggle (NCHW -> NCHW)
+            // emboss without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
@@ -706,10 +744,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pDst = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                                 permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
-
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
+                            {
+                                rpp_pixel_check_0to1(&pDst, 1);
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
+                            }
                             else if constexpr (std::is_same<T, Rpp16f>::value)
                                 _mm_storeu_si128((__m128i *)dstPtrTemp, _mm256_cvtps_ph(pDst, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
                             else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -765,9 +805,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
                             permute_blend_add_7x7_pkd(pDst, &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
-
                         if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            rpp_pixel_check_0to1(&pDst, 1);
                             _mm256_storeu_ps(dstPtrTemp, pDst);
+                        }
                         else if constexpr (std::is_same<T, Rpp16f>::value)
                             _mm_storeu_si128((__m128i *)dstPtrTemp, _mm256_cvtps_ph(pDst, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
                         else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -826,7 +868,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     }
 #if __AVX2__
                     Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
-                    // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -842,7 +884,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            rpp_pixel_check_0to1(pResultPln, 3);
                             rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResultPln);
+                        }
                         else if constexpr (std::is_same<T, Rpp16f>::value)
                             rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
@@ -902,6 +947,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_7x7_pkd(pDst[0], &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
                             permute_blend_add_7x7_pkd(pDst[1], &pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                         }
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 2);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -974,7 +1021,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 permute_blend_add_9x9_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
+                            {
+                                rpp_pixel_check_0to1(&pDst, 1);
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
+                            }
                             else if constexpr (std::is_same<T, Rpp16f>::value)
                                 _mm_storeu_si128((__m128i *)dstPtrTemp, _mm256_cvtps_ph(pDst, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
                             else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -1032,7 +1082,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_9x9_pkd(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
+                        {
+                            rpp_pixel_check_0to1(&pDst, 1);
                             _mm256_storeu_ps(dstPtrTemp, pDst);
+                        }
                         else if constexpr (std::is_same<T, Rpp16f>::value)
                             _mm_storeu_si128((__m128i *)dstPtrTemp, _mm256_cvtps_ph(pDst, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
                         else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -1057,7 +1110,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
             }
-            // gaussian filter with fused output-layout toggle (NCHW -> NHWC)
+            // emboss with fused output-layout toggle (NCHW -> NHWC)
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
@@ -1101,6 +1154,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
                                 permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
+                            if constexpr (std::is_same<T, Rpp32f>::value)
+                                rpp_pixel_check_0to1(pResultPln, 3);
                             // In each pass, convolution filter is applied 8 times
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
@@ -1166,12 +1221,13 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             permute_blend_add_9x9_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
                             permute_blend_add_9x9_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
-
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_pixel_check_0to1(pDst, 2);
+                        
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
-                        // In each pass, convolution filter is applied 12 times
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
@@ -1197,16 +1253,17 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 }
 
 template<typename T>
-RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
-                                              RpptDescPtr srcDescPtr,
-                                              T *dstPtr,
-                                              RpptDescPtr dstDescPtr,
-                                              Rpp32f *stdDevTensor,
-                                              Rpp32u kernelSize,
-                                              RpptROIPtr roiTensorPtrSrc,
-                                              RpptRoiType roiType,
-                                              RppLayoutParams layoutParams,
-                                              rpp::Handle& handle)
+RppStatus emboss_generic_host_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *strength,
+                                     Rpp32f *bias,
+                                     Rpp32u kernelSize,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -1238,7 +1295,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
         for (int k = 0; k < kernelSize; k++)
             srcPtrRow[k] = srcPtrChannel + k * srcDescPtr->strides.hStride;
         dstPtrRow = dstPtrChannel;
-        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        create_emboss_kernel_host(filterTensor, strength[batchCount], kernelSize);
         if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             for (int c = 0; c < srcDescPtr->c; c++)
@@ -1386,83 +1443,91 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-template RppStatus gaussian_filter_host_tensor<Rpp8u>(Rpp8u*,
+template RppStatus emboss_host_tensor<Rpp8u>(Rpp8u*,
+                                             RpptDescPtr,
+                                             Rpp8u*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32u,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             RppLayoutParams,
+                                             rpp::Handle&);
+template RppStatus emboss_host_tensor<Rpp32f>(Rpp32f*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              RppLayoutParams,
+                                              rpp::Handle&);
+template RppStatus emboss_host_tensor<Rpp16f>(Rpp16f*,
+                                              RpptDescPtr,
+                                              Rpp16f*,
+                                              RpptDescPtr,
+                                              Rpp32f*,
+                                              Rpp32f*,
+                                              Rpp32u,
+                                              RpptROIPtr,
+                                              RpptRoiType,
+                                              RppLayoutParams,
+                                              rpp::Handle&);
+template RppStatus emboss_host_tensor<Rpp8s>(Rpp8s*,
+                                             RpptDescPtr,
+                                             Rpp8s*,
+                                             RpptDescPtr,
+                                             Rpp32f*,
+                                             Rpp32f*,
+                                             Rpp32u,
+                                             RpptROIPtr,
+                                             RpptRoiType,
+                                             RppLayoutParams,
+                                             rpp::Handle&);
+template RppStatus emboss_generic_host_tensor<Rpp8u>(Rpp8u*,
+                                                     RpptDescPtr,
+                                                     Rpp8u*,
+                                                     RpptDescPtr,
+                                                     Rpp32f*,
+                                                     Rpp32f*,
+                                                     Rpp32u,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     RppLayoutParams,
+                                                     rpp::Handle&);
+template RppStatus emboss_generic_host_tensor<Rpp32f>(Rpp32f*,
                                                       RpptDescPtr,
-                                                      Rpp8u*,
+                                                      Rpp32f*,
                                                       RpptDescPtr,
+                                                      Rpp32f*,
                                                       Rpp32f*,
                                                       Rpp32u,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,
                                                       rpp::Handle&);
-template RppStatus gaussian_filter_host_tensor<Rpp32f>(Rpp32f*,
-                                                       RpptDescPtr,
-                                                       Rpp32f*,
-                                                       RpptDescPtr,
-                                                       Rpp32f*,
-                                                       Rpp32u,
-                                                       RpptROIPtr,
-                                                       RpptRoiType,
-                                                       RppLayoutParams,
-                                                       rpp::Handle&);
-template RppStatus gaussian_filter_host_tensor<Rpp16f>(Rpp16f*,
-                                                       RpptDescPtr,
-                                                       Rpp16f*,
-                                                       RpptDescPtr,
-                                                       Rpp32f*,
-                                                       Rpp32u,
-                                                       RpptROIPtr,
-                                                       RpptRoiType,
-                                                       RppLayoutParams,
-                                                       rpp::Handle&);
-template RppStatus gaussian_filter_host_tensor<Rpp8s>(Rpp8s*,
+template RppStatus emboss_generic_host_tensor<Rpp16f>(Rpp16f*,
                                                       RpptDescPtr,
-                                                      Rpp8s*,
+                                                      Rpp16f*,
                                                       RpptDescPtr,
+                                                      Rpp32f*,
                                                       Rpp32f*,
                                                       Rpp32u,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       RppLayoutParams,
                                                       rpp::Handle&);
-template RppStatus gaussian_filter_generic_host_tensor<Rpp8u>(Rpp8u*,
-                                                              RpptDescPtr,
-                                                              Rpp8u*,
-                                                              RpptDescPtr,
-                                                              Rpp32f*,
-                                                              Rpp32u,
-                                                              RpptROIPtr,
-                                                              RpptRoiType,
-                                                              RppLayoutParams,
-                                                              rpp::Handle&);
-template RppStatus gaussian_filter_generic_host_tensor<Rpp32f>(Rpp32f*,
-                                                               RpptDescPtr,
-                                                               Rpp32f*,
-                                                               RpptDescPtr,
-                                                               Rpp32f*,
-                                                               Rpp32u,
-                                                               RpptROIPtr,
-                                                               RpptRoiType,
-                                                               RppLayoutParams,
-                                                               rpp::Handle&);
-template RppStatus gaussian_filter_generic_host_tensor<Rpp16f>(Rpp16f*,
-                                                               RpptDescPtr,
-                                                               Rpp16f*,
-                                                               RpptDescPtr,
-                                                               Rpp32f*,
-                                                               Rpp32u,
-                                                               RpptROIPtr,
-                                                               RpptRoiType,
-                                                               RppLayoutParams,
-                                                               rpp::Handle&);
-template RppStatus gaussian_filter_generic_host_tensor<Rpp8s>(Rpp8s*,
-                                                              RpptDescPtr,
-                                                              Rpp8s*,
-                                                              RpptDescPtr,
-                                                              Rpp32f*,
-                                                              Rpp32u,
-                                                              RpptROIPtr,
-                                                              RpptRoiType,
-                                                              RppLayoutParams,
-                                                              rpp::Handle&);
+template RppStatus emboss_generic_host_tensor<Rpp8s>(Rpp8s*,
+                                                     RpptDescPtr,
+                                                     Rpp8s*,
+                                                     RpptDescPtr,
+                                                     Rpp32f*,
+                                                     Rpp32f*,
+                                                     Rpp32u,
+                                                     RpptROIPtr,
+                                                     RpptRoiType,
+                                                     RppLayoutParams,
+                                                     rpp::Handle&);
