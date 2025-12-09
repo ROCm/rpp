@@ -629,17 +629,17 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32s hStrideSrcIncrement = srcDescPtr->strides.hStride;
 
         // Initialize load functions with default values
-        auto load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_avx;
-        auto load24FnPlnPln = &rpp_load24_f32pln3_to_f32pln3_avx;
-        auto load8Fn = &rpp_load8_f32_to_f32_avx;
+        auto load24FnPkdPln = &rpp_load24_f16pkd3_to_f32pln3_avx;
+        auto load24FnPlnPln = &rpp_load24_f16pln3_to_f32pln3_avx;
+        auto load8Fn = &rpp_load8_f16_to_f32_avx;
 
         //Update the load functions, hFactor, vFactor and hStrideSrcIncrement based on the flags enabled
         if(horizontalFlag == 1)
         {
             hFactor += (roi.xywhROI.roiWidth - vectorIncrementPerChannel) * layoutParams.bufferMultiplier;
-            load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_mirror_avx;
-            load24FnPlnPln = &rpp_load24_f32pln3_to_f32pln3_mirror_avx;
-            load8Fn = &rpp_load8_f32_to_f32_mirror_avx;
+            load24FnPkdPln = &rpp_load24_f16pkd3_to_f32pln3_mirror_avx;
+            load24FnPlnPln = &rpp_load24_f16pln3_to_f32pln3_mirror_avx;
+            load8Fn = &rpp_load8_f16_to_f32_mirror_avx;
         }
         if(verticalFlag == 1)
         {
@@ -650,7 +650,7 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
-        Rpp32u hFlipFactor = (vectorIncrement - 1) * horizontalFlag;
+        Rpp32u hFlipFactor = (vectorIncrement - 3) * horizontalFlag; // subtract 3 for RGB channels
         Rpp32s srcPtrIncrementPerChannel = (horizontalFlag)? -vectorIncrementPerChannel : vectorIncrementPerChannel;
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
@@ -698,22 +698,10 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[6];
+                    __m256 p[3];
 
-                    Rpp32f srcPtrTemp_ps[24];
-                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-
-                    rpp_simd_load(load24FnPkdPln, srcPtrTemp_ps, p);     // simd loads
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                    {
-                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
-                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
-                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
-                    }
+                    rpp_simd_load(load24FnPkdPln, srcPtrTemp, p);     // simd loads
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -760,22 +748,11 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256 p[6];
+                    __m256 p[3];
 
-                    Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
-                    Rpp32f dstPtrTemp_ps[25];
-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                    {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
-                    }
+                    rpp_simd_load(load24FnPlnPln, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
-                    rpp_simd_load(load24FnPlnPln, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);    // simd loads
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
                     srcPtrTempR += srcPtrIncrementPerChannel;
                     srcPtrTempG += srcPtrIncrementPerChannel;
                     srcPtrTempB += srcPtrIncrementPerChannel;
@@ -821,17 +798,11 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[6];
+                    __m256 p[3];
 
-                    Rpp32f srcPtrTemp_ps[24], dstPtrTemp_ps[25];
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                    rpp_simd_load(load24FnPkdPln, srcPtrTemp, p);    // simd loads
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
-                    rpp_simd_load(load24FnPkdPln, srcPtrTemp_ps, p);    // simd loads
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);    // simd stores
-
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
                     srcPtrTemp += srcPtrIncrement;
                     dstPtrTemp += vectorIncrement;
                 }
@@ -869,17 +840,10 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        __m256 p[2];
+                        __m256 p[1];
 
-                        Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                            srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-
-                        rpp_simd_load(load8Fn, srcPtrTemp_ps, p);    // simd loads
-                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p);    // simd stores
-
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                            dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                        rpp_simd_load(load8Fn, srcPtrTemp, p);    // simd loads
+                        rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p);    // simd stores
 
                         srcPtrTemp += srcPtrIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;

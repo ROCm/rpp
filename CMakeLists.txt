@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 cmake_minimum_required(VERSION 3.10)
+include( utils.cmake )
+set( CORE_TARGET "rpp" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -36,17 +40,17 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS ON)
-if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/bin/amdclang++")
-    set(CMAKE_C_COMPILER ${ROCM_PATH}/bin/amdclang)
-    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/amdclang++)
-elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/bin/amdclang++")
+if(NOT DEFINED CMAKE_CXX_COMPILER AND EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
+    set(CMAKE_C_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang)
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/lib/llvm/bin/amdclang++)
+elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/amdclang++")
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 endif()
 
 # RPP Version
 # NOTE: package version and rpp_version.h is generated with this version
-set(VERSION "2.1.0")
+set(VERSION "2.2.1")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -221,7 +225,7 @@ if("${BACKEND}" STREQUAL "HIP")
 
     # Set supported GPU Targets
     if(NOT GPU_TARGETS AND NOT AMDGPU_TARGETS)
-        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102;gfx950;gfx1200;gfx1201")
+        set(DEFAULT_GPU_TARGETS "gfx908;gfx90a;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1151;gfx1102;gfx950;gfx1200;gfx1201")
     endif()
 
     # Set AMD GPU_TARGETS
@@ -370,7 +374,7 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets LIBRARY DESTINATI
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/ 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/api/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev
         PATTERN "*.h.in" EXCLUDE)
@@ -384,7 +388,7 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME} 
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
 
 # install Test
@@ -439,10 +443,10 @@ install(FILES
 )
 
 # Install the export set for use with the install-tree
-install(EXPORT ${PROJECT_NAME}-targets 
+install(EXPORT ${PROJECT_NAME}-targets
     FILE ${PROJECT_NAME}-targets.cmake
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" 
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT dev
 )
 
@@ -453,13 +457,15 @@ include(CTest)
 add_subdirectory(utilities/test_suite)
 
 # Set package information
+set(PKG_MAINTAINER_NM  "mivisionx support")
+set(PKG_MAINTAINER_EMAIL  "mivisionx.support@amd.com")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
-set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
+set(CPACK_PACKAGE_CONTACT "${PKG_MAINTAINER_NM} <${PKG_MAINTAINER_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rpp")
@@ -469,12 +475,12 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, openmp-extras-runtime")
-set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, openmp-extras-runtime")
-set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev, openmp-extras-dev, half")
-set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel, openmp-extras-devel, half")
-set(RPP_DEBIAN_TEST_PACKAGE_LIST  "python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
-set(RPP_RPM_TEST_PACKAGE_LIST     "python3-devel, python3-pip") # TBD: pandas, openpyxl, OpenCV & libsnd packages missing on RPM
+set(RPP_DEBIAN_PACKAGE_LIST  "hip-runtime-amd, openmp-extras-runtime")
+set(RPP_RPM_PACKAGE_LIST     "hip-runtime-amd, openmp-extras-runtime")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "hip-dev, openmp-extras-dev, half")
+set(RPP_RPM_DEV_PACKAGE_LIST     "hip-devel, openmp-extras-devel, half")
+set(RPP_DEBIAN_TEST_PACKAGE_LIST  "cmake, python3-dev, python3-pip, python3-pandas, python3-openpyxl, libopencv-dev, libsndfile1-dev")
+set(RPP_RPM_TEST_PACKAGE_LIST     "cmake, python3-devel, python3-pip") # TBD: pandas, openpyxl, OpenCV & libsnd packages missing on RPM
 
 # Add OS specific dependencies
 if(EXISTS "/etc/os-release")
@@ -550,8 +556,10 @@ endif()
 if(ENABLE_ASAN_PACKAGING)
     # ASAN Package requires asan component with only libraries and license file
     set(CPACK_COMPONENTS_ALL asan)
+    set( COMP_TYPE "asan" )
 else()
     set(CPACK_COMPONENTS_ALL runtime dev test)
+    set( COMP_TYPE "runtime" )
 endif()
 
 if(APPLE)
@@ -577,6 +585,8 @@ else()
         message("-- ${White}AMD ROCm RPP Test Package -- ${CPACK_DEBIAN_TEST_PACKAGE_DEPENDS}${ColourReset}")
     endif()
 endif()
+
+configure__pkg( ${CORE_TARGET} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
 
 include(CPack)
 
