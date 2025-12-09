@@ -160,7 +160,7 @@ RppStatus fisheye_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
@@ -206,7 +206,7 @@ RppStatus fisheye_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -245,7 +245,7 @@ RppStatus fisheye_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -292,7 +292,7 @@ RppStatus fisheye_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
@@ -387,7 +387,7 @@ RppStatus fisheye_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
@@ -433,7 +433,7 @@ RppStatus fisheye_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -472,7 +472,7 @@ RppStatus fisheye_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -520,7 +520,7 @@ RppStatus fisheye_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
@@ -615,7 +615,7 @@ RppStatus fisheye_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
@@ -661,7 +661,7 @@ RppStatus fisheye_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -700,7 +700,7 @@ RppStatus fisheye_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -748,7 +748,7 @@ RppStatus fisheye_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
@@ -843,7 +843,7 @@ RppStatus fisheye_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
@@ -889,7 +889,7 @@ RppStatus fisheye_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -928,7 +928,7 @@ RppStatus fisheye_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
@@ -975,7 +975,7 @@ RppStatus fisheye_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp32f srcX, srcY, cosFactor;
+                    Rpp32f srcX, srcY;
                     dstX = static_cast<Rpp32f>(vectorLoopCount);
                     compute_fisheye_src_loc(dstY, dstX, srcY, srcX, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
