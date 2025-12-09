@@ -1700,20 +1700,6 @@ RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
 
-// -------------------- channel_dropout --------------------
-
-template<typename T>
-RppStatus channel_dropout_host_tensor(T *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      T *dstPtr,
-                                      RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropoutProbability,
-                                      Rpp8u *maskPtr,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams,
-                                      rpp::Handle& handle);
-
 // -------------------- grid_dropot --------------------
 
 template<typename T>
