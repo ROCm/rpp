@@ -894,6 +894,7 @@ RppStatus rppt_fisheye_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
  */
 RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
