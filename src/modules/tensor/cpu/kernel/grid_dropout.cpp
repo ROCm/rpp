@@ -128,7 +128,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         }
 
         // grid_dropout with fused output-layout toggle (NCHW -> NHWC)
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
@@ -186,7 +186,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         }
 
         // grid_dropout without fused output-layout toggle 3 channel(NCHW -> NCHW)
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             // To copy ROI region in Image
             for(int c = 0; c < layoutParams.channelParam; c++)
@@ -195,7 +195,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 srcPtrRow = srcPtrChannel;
                 dstPtrRow = dstPtrChannel;
 
-                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     memcpy(dstPtrRow, srcPtrRow, bufferLength);
                     srcPtrRow += srcDescPtr->strides.hStride;
@@ -233,7 +233,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
             }
         }
         // grid_dropout without fused output-layout toggle 1 channel(NCHW -> NCHW)
-        else if((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             // To copy ROI region in Image
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
