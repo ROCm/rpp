@@ -66,8 +66,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         std::random_device rd;  
-        std::mt19937 gen(rd()); 
-        Rpp8u rd_seed = 42; // use gen() for random noise without QA
+        std::mt19937 gen(rd());
         Rpp32u numBoxes = numBoxesTensor[batchCount];
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * numBoxes;
 
@@ -129,7 +128,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, rd_seed);
+                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
                         if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value) 
                         {
                             dstPtrTempR[j] = static_cast<T>(generate_random_float(seed + 0));
@@ -203,7 +202,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, rd_seed);
+                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
                         if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
                         {
                             dstPtrRow[0] = static_cast<T>(generate_random_float(seed + 0));
@@ -267,7 +266,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, rd_seed);
+                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
                         if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value) 
                         {
                             dstPtrTempR[j] = static_cast<T>(generate_random_float(seed + 0));
@@ -322,7 +321,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, rd_seed);
+                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
                         if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
                             dstPtrTemp[j] = static_cast<T>(generate_random_float(seed));
                         else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -363,7 +362,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, rd_seed);
+                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
                         if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
                         {
                             dstPtrRow[0] = static_cast<T>(generate_random_float(seed + 0));

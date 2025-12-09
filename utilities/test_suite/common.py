@@ -99,7 +99,7 @@ imageAugmentationMap = {
     92: ["slice", "HOST", "HIP"],
     93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
-    95: ["dropout", "HOST", "HIP"]
+    99: ["random_erase", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
