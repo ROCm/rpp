@@ -65,8 +65,6 @@ RppStatus random_erase_host_tensor(T *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        std::random_device rd;  
-        std::mt19937 gen(rd());
         Rpp32u numBoxes = numBoxesTensor[batchCount];
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * numBoxes;
 
