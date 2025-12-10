@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -71,11 +71,11 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
         hue /= 6.0f;
     }
     // Modify Lightness
-    if(l >= lower_threshold && l <= upper_threshold && darkMode ==1)
+    if(l >= lower_threshold && l <= upper_threshold && darkMode == 1)
 	    l = l * (1.0f + (brightnessFactor - 1.0f) * (1.0f - (l - lower_threshold) / (upper_threshold - lower_threshold)));
 
     if(l <= snowCoefficient && !((hue>=0.514 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196)))
-        l = l * (brightnessCoefficient);
+        l = l * brightnessCoefficient;
 
     // HSL to RGB with brightness/contrast adjustment
     Rpp32f hueCoefficient[3];
