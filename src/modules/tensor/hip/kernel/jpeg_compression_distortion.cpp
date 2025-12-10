@@ -966,14 +966,13 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
 
     // Scale input values to 0-255 range for DCT processing
     scale_to_dct_range(srcPtr, (d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
-    __syncthreads();
-
+ 
     // Doing -128 as part of DCT,
     // // ----------- Step 2: Forward DCT -----------
     dct_fwd_8x8_1d(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], true);
     __syncthreads();
 
-    // // ----------- Step3 Column-wise DCT -----------
+    // // ----------- Step 3: Column-wise DCT -----------
     int col = (hipThreadIdx_x * 16) + hipThreadIdx_y;
     // Process all 128 columns
     if((col < 128) && (col < alignedWidth))
@@ -1015,7 +1014,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    // Inverse DCT
+    // Row-wise Inverse DCT 
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], true);
     __syncthreads();
 
