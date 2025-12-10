@@ -885,10 +885,10 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in HOST memory, of size batchSize with 1 < brightnessCoefficient[i] <= 4 for each image in batch)
  * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in HOST memory, of size batchSize with 0 < snowThresholdTensor[i] <= 1 for each image in batch)
- * \param [in] darkMode darkMode  values to set dark mode on/off (1D tensor in HOST memory, of size batchSize, with darkModeTensor[i] = 0/1)
+ * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in HOST memory, of size batchSize, with darkModeTensor[i] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
@@ -908,10 +908,10 @@ RppStatus rppt_snow_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in pinned/HIP memory, of size batchSize with 1 < brightnessCoefficient[i] <= 4 for each image in batch)
  * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in pinned/HIP memory, of size batchSize with 0 < snowThreshold[i] <= 1 for each image in batch)
- * \param [in] darkMode darkMode  values to set dark mode on/off (1D tensor in pinned/HIP memory, of size batchSize, with darkModeTensor[i] = 0/1)
+ * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in pinned/HIP memory, of size batchSize, with darkModeTensor[i] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
