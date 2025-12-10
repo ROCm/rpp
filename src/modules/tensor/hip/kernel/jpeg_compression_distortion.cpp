@@ -240,6 +240,15 @@ __device__ inline void quantize(float* value, float* coeff, float qScale)
     }
 }
 
+// Compute quality factor for JPEG quantization based on quality parameter
+__device__ inline Rpp32f get_quality_factor(Rpp32s quality)
+{
+    quality = max(1, min(100, quality));
+    const Rpp32f lowerCompression  = 2.0f - (quality / 50.0f);
+    const Rpp32f higherCompression = 50.0f / quality;
+    return (quality < 50) ? higherCompression : lowerCompression;
+}
+
 // Scale input values to 0-255 range for DCT processing
 __device__ inline void scale_to_dct_range(uchar *srcPtr, d_float8 *values)
 {
@@ -455,11 +464,13 @@ __global__ void jpeg_compression_distortion_pkd3_hip_tensor(T *srcPtr,
                                                             RpptROIPtr roiTensorPtrSrc,
                                                             float *tableY,
                                                             float *tableCbCr,
-                                                            float qScale)
+                                                            Rpp32s *qualityTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
     int hipThreadIdx_x4 = hipThreadIdx_x * 4;
@@ -545,11 +556,13 @@ __global__ void jpeg_compression_distortion_pln3_hip_tensor(T *srcPtr,
                                                             RpptROIPtr roiTensorPtrSrc,
                                                             float *tableY,
                                                             float *tableCbCr,
-                                                            float qScale)
+                                                            Rpp32s *qualityTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
     int hipThreadIdx_x4 = hipThreadIdx_x * 4;
@@ -664,11 +677,13 @@ __global__ void jpeg_compression_distortion_pkd3_pln3_hip_tensor( T *srcPtr,
                                                                   RpptROIPtr roiTensorPtrSrc,
                                                                   float *tableY,
                                                                   float *tableCbCr,
-                                                                  float qScale)
+                                                                  Rpp32s *qualityTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
     int hipThreadIdx_x4 = hipThreadIdx_x * 4;
@@ -761,11 +776,13 @@ __global__ void jpeg_compression_distortion_pln3_pkd3_hip_tensor( T *srcPtr,
                                                                   RpptROIPtr roiTensorPtrSrc,
                                                                   float *tableY,
                                                                   float *tableCbCr,
-                                                                  float qScale)
+                                                                  Rpp32s *qualityTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
     int hipThreadIdx_x4 = hipThreadIdx_x * 4;
@@ -890,11 +907,13 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
                                                             uint3 dstStridesNCH,
                                                             RpptROIPtr roiTensorPtrSrc,
                                                             float *tableY,
-                                                            float qScale)
+                                                            Rpp32s *qualityTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
     int hipThreadIdx_x4 = hipThreadIdx_x * 4;
@@ -1036,6 +1055,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                T *dstPtr,
                                                RpptDescPtr dstDescPtr,
+                                               Rpp32s *qualityTensor,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                rpp::Handle& handle)
@@ -1047,10 +1067,6 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
-    int quality = 50;
-    quality = std::clamp<int>(quality, 1, 100);
-    float qScale = (quality < 50) ? (50.0f / quality) : (2.0f - (2 * quality / 100.0f));
-    
     // Allocate pinned memory and copy tables (no prescaling - matches HOST reference)
     Rpp32f *tableY = reinterpret_cast<Rpp32f *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     Rpp32f *tableCbCr = tableY + 64;
@@ -1071,7 +1087,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            roiTensorPtrSrc,
                            tableY,
                            tableCbCr,
-                           qScale);
+                           qualityTensor);
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 3))
@@ -1088,7 +1104,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            roiTensorPtrSrc,
                            tableY,
                            tableCbCr,
-                           qScale);
+                           qualityTensor);
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
@@ -1104,7 +1120,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc,
                            tableY,
-                           qScale);
+                           qualityTensor);
     }
 
     if((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1121,7 +1137,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            roiTensorPtrSrc,
                            tableY,
                            tableCbCr,
-                           qScale);
+                           qualityTensor);
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -1138,7 +1154,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            roiTensorPtrSrc,
                            tableY,
                            tableCbCr,
-                           qScale);
+                           qualityTensor);
     }
     return RPP_SUCCESS;
 }
@@ -1147,6 +1163,7 @@ template RppStatus hip_exec_jpeg_compression_distortion<Rpp8u>(Rpp8u*,
                                                                RpptDescPtr,
                                                                Rpp8u*,
                                                                RpptDescPtr,
+                                                               Rpp32s*,
                                                                RpptROIPtr,
                                                                RpptRoiType,
                                                                rpp::Handle&);
@@ -1155,6 +1172,7 @@ template RppStatus hip_exec_jpeg_compression_distortion<Rpp32f>(Rpp32f*,
                                                                 RpptDescPtr,
                                                                 Rpp32f*,
                                                                 RpptDescPtr,
+                                                                Rpp32s*,
                                                                 RpptROIPtr,
                                                                 RpptRoiType,
                                                                 rpp::Handle&);
@@ -1163,6 +1181,7 @@ template RppStatus hip_exec_jpeg_compression_distortion<half>(half*,
                                                               RpptDescPtr,
                                                               half*,
                                                               RpptDescPtr,
+                                                              Rpp32s*,
                                                               RpptROIPtr,
                                                               RpptRoiType,
                                                               rpp::Handle&);
@@ -1171,6 +1190,7 @@ template RppStatus hip_exec_jpeg_compression_distortion<Rpp8s>(Rpp8s*,
                                                                RpptDescPtr,
                                                                Rpp8s*,
                                                                RpptDescPtr,
+                                                               Rpp32s*,
                                                                RpptROIPtr,
                                                                RpptRoiType,
                                                                rpp::Handle&);
