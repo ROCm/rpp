@@ -74,9 +74,7 @@ __global__ void warp_perspective_bilinear_pkd_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
@@ -106,9 +104,7 @@ __global__ void warp_perspective_bilinear_pln_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -151,9 +147,7 @@ __global__ void warp_perspective_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -182,9 +176,7 @@ __global__ void warp_perspective_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
@@ -215,9 +207,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
@@ -247,9 +237,7 @@ __global__ void warp_perspective_nearest_neighbor_pln_hip_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -292,9 +280,7 @@ __global__ void warp_perspective_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -323,9 +309,7 @@ __global__ void warp_perspective_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
