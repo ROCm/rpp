@@ -37,9 +37,11 @@ SOFTWARE.
 #define PI_OVER_180                     0.0174532925
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
+#define ONE_OVER_3                      0.33333333333334f
+#define ONE_OVER_6                      0.16666666666667f
 #define TWO_OVER_3                      0.66666666666667f
 #define RPP_128_OVER_255                0.50196078431f
-#define RPPMIN2(a,b)                    ((a < b) ? a : b)
+#define RPPMIN2(a,b)                    (((a) < (b)) ? (a) : (b))
 #define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
 #define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)

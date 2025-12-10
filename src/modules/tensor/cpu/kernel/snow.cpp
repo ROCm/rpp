@@ -72,7 +72,7 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
     }
     // Modify Lightness
     if(l >= lower_threshold && l <= upper_threshold && darkMode == 1)
-	    l = l * (1.0f + (brightnessFactor - 1.0f) * (1.0f - (l - lower_threshold) / (upper_threshold - lower_threshold)));
+        l = l * (1.0f + (brightnessFactor - 1.0f) * (1.0f - (l - lower_threshold) / (upper_threshold - lower_threshold)));
 
     if(l <= snowCoefficient && !((hue>=0.514 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196)))
         l = l * brightnessCoefficient;
@@ -91,7 +91,7 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
     }
     if(hue < ONE_OVER_3)
     {
-        hueCoefficient[0] = 6.0f * (ONE_OVER_3 -hue );
+        hueCoefficient[0] = 6.0f * (ONE_OVER_3 - hue );
         hueCoefficient[1] = 6.0f * hue;
         hueCoefficient[2] = 0.0f;
     }
@@ -170,7 +170,7 @@ inline void compute_snow_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __
     pMask[1] = _mm256_cmp_ps(pSnowParams[2], avx_p1, _CMP_EQ_OQ);                                                           // Temporarily store darkmode == 1.0f comparison
     pMask[3] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // if(l >= lower_threshold && l <= upper_threshold && darkMode ==1)
     pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, _mm256_add_ps(avx_p1, _mm256_mul_ps(_mm256_sub_ps(pBrightnessFactor, avx_p1), _mm256_sub_ps(avx_p1, _mm256_div_ps(_mm256_sub_ps(pL, pLowerThreshold),pDiffThreshold))))), pMask[3]);  // l = l * (1 + (brightnessFactor - 1) * (1 - (l - lower_threshold) / (upper_threshold - lower_threshold)));
-    pMask[0] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.514f), _CMP_GE_OQ);                                                         // Temporarily store hue>=0.514 comparision
+    pMask[0] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.514f), _CMP_GE_OQ);                                                         // Temporarily store hue >=0.514 comparision
     pMask[1] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.63f), _CMP_LE_OQ);                                                        // Temporarily store hue <= 0.63 comparison
     pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue>=0.5 && hue <= 0.56) comparison
     pMask[1] = _mm256_cmp_ps(pS, _mm256_set1_ps(0.196f), _CMP_GE_OQ);                                                       // Temporarily store (sat >= 0.196) comparison
@@ -327,14 +327,11 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
                     pixel.B *= 255.0f;
-                    *dstPtrTempR = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R)));
-                    *dstPtrTempG = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
-                    *dstPtrTempB = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));
+                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R)));
+                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
+                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));
 
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -381,9 +378,9 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * ONE_OVER_255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * ONE_OVER_255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * ONE_OVER_255;
+                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR++) * ONE_OVER_255;
+                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG++) * ONE_OVER_255;
+                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB++) * ONE_OVER_255;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
@@ -392,9 +389,6 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
                     dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));
 
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -499,23 +493,16 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * ONE_OVER_255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * ONE_OVER_255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * ONE_OVER_255;
+                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR++) * ONE_OVER_255;
+                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG++) * ONE_OVER_255;
+                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB++) * ONE_OVER_255;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
                     pixel.B *= 255.0f;
-                    *dstPtrTempR = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R)));
-                    *dstPtrTempG = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
-                    *dstPtrTempB = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R)));
+                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G)));
+                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B)));
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -662,14 +649,11 @@ RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
                     pixel.G = srcPtrTemp[1];
                     pixel.B = srcPtrTemp[2];
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
-                    *dstPtrTempR = RPPPIXELCHECKF32(pixel.R);
-                    *dstPtrTempG = RPPPIXELCHECKF32(pixel.G);
-                    *dstPtrTempB = RPPPIXELCHECKF32(pixel.B);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(pixel.R);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(pixel.G);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(pixel.B);
 
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -714,17 +698,14 @@ RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = *srcPtrTempR;
-                    pixel.G = *srcPtrTempG;
-                    pixel.B = *srcPtrTempB;
+                    pixel.R = *srcPtrTempR++;
+                    pixel.G = *srcPtrTempG++;
+                    pixel.B = *srcPtrTempB++;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     dstPtrTemp[0] = RPPPIXELCHECKF32(pixel.R);
                     dstPtrTemp[1] = RPPPIXELCHECKF32(pixel.G);
                     dstPtrTemp[2] = RPPPIXELCHECKF32(pixel.B);
 
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -822,20 +803,13 @@ RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = *srcPtrTempR;
-                    pixel.G = *srcPtrTempG;
-                    pixel.B = *srcPtrTempB;
+                    pixel.R = *srcPtrTempR++;
+                    pixel.G = *srcPtrTempG++;
+                    pixel.B = *srcPtrTempB++;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
-                    *dstPtrTempR = RPPPIXELCHECKF32(pixel.R);
-                    *dstPtrTempG = RPPPIXELCHECKF32(pixel.G);
-                    *dstPtrTempB = RPPPIXELCHECKF32(pixel.B);
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(pixel.R);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(pixel.G);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(pixel.B);
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -977,14 +951,11 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
                     pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]);
                     pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]);
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
-                    *dstPtrTempR = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
-                    *dstPtrTempG = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G));
-                    *dstPtrTempB = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B));
 
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1029,17 +1000,14 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR);
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG);
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB);
+                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR++);
+                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG++);
+                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB++);
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
                     dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G));
                     dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B));
 
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -1137,20 +1105,13 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR);
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG);
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB);
+                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR++);
+                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG++);
+                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB++);
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
-                    *dstPtrTempR = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
-                    *dstPtrTempG = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G));
-                    *dstPtrTempB = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B));
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B));
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -1298,14 +1259,11 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
                     pixel.B *= 255.0f;
-                    *dstPtrTempR = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R - 128.0f));
-                    *dstPtrTempG = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G - 128.0f));
-                    *dstPtrTempB = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B - 128.0f));
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R - 128.0f));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G - 128.0f));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B - 128.0f));
 
                     srcPtrTemp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1352,9 +1310,9 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR) + 128.0f) * ONE_OVER_255;
-                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG) + 128.0f) * ONE_OVER_255;
-                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB) + 128.0f) * ONE_OVER_255;
+                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR++) + 128.0f) * ONE_OVER_255;
+                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG++) + 128.0f) * ONE_OVER_255;
+                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB++) + 128.0f) * ONE_OVER_255;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
@@ -1363,9 +1321,6 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G - 128.0f));
                     dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B - 128.0f));
 
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
                     dstPtrTemp += 3;
                 }
 
@@ -1469,23 +1424,16 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR) + 128.0f) * ONE_OVER_255;
-                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG) + 128.0f) * ONE_OVER_255;
-                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB) + 128.0f) * ONE_OVER_255;
+                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR++) + 128.0f) * ONE_OVER_255;
+                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG++) + 128.0f) * ONE_OVER_255;
+                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB++) + 128.0f) * ONE_OVER_255;
                     compute_snow_host(&pixel, brightnessCoefficient, snowThreshold, darkMode);
                     pixel.R *= 255.0f;
                     pixel.G *= 255.0f;
                     pixel.B *= 255.0f;
-                    *dstPtrTempR = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R - 128.0f));
-                    *dstPtrTempG = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G - 128.0f));
-                    *dstPtrTempB = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B - 128.0f));
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R - 128.0f));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G - 128.0f));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B - 128.0f));
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
