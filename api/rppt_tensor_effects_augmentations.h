@@ -884,7 +884,7 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D Rpp32f tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
- * \param [in] randomSeed randomSeed single bool to control the random number generator's seed ( 0 - Fixed seed for QA , 1 - random seed generated for randomness)
+ * \param [in] seed randomSeed to control the random number generator's value for randomization
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
@@ -892,7 +892,7 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, Rpp32f seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Channel dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
@@ -906,7 +906,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] dropoutProbability dropout probability for channel dropout calculation (1D Rpp32f tensor in HOST memory, of size batchSize with 0 <= dropProb[i] <= 1 for each image in batch)
- * \param [in] randomSeed randomSeed single bool to control the random number generator's seed ( 0 - Fixed seed for QA , 1 - random seed generated for randomness)
+ * \param [in] seed randomSeed to control the random number generator's value for randomization
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -914,7 +914,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, bool randomSeed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *dropoutProbability, Rpp32f seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}

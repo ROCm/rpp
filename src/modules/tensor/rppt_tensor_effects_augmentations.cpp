@@ -1484,7 +1484,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     RppPtr_t dstPtr,
                                     RpptDescPtr dstDescPtr,
                                     Rpp32f *dropoutProbability,
-                                    bool randomSeed,
+                                    Rpp32f seed,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
@@ -1497,7 +1497,6 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     Rpp32u numThreads = rpp::deref(rppHandle).GetNumThreads();
-    Rpp32u seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
     Rpp8u *maskPtr = reinterpret_cast<uint8_t *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
 
     omp_set_dynamic(0);
@@ -3157,7 +3156,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
                                    Rpp32f *dropoutProbability,
-                                   bool randomSeed,
+                                   Rpp32f seed,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
@@ -3172,7 +3171,6 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
     Rpp32u numThreads = rpp::deref(rppHandle).GetNumThreads();
-    Rpp32u seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
     Rpp8u *maskPtr = reinterpret_cast<Rpp8u *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
 
     // Generate masks on HOST scratchBuffer
