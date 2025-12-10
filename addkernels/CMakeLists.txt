@@ -1,7 +1,7 @@
 #[[
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,4 +25,3 @@ SOFTWARE.
 set(ADD_KERNELS_SOURCE include_inliner.cpp addkernels.cpp)
 
 add_executable(addkernels EXCLUDE_FROM_ALL ${ADD_KERNELS_SOURCE})
-

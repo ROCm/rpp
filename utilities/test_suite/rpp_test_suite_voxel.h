@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,14 +30,15 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <time.h>
-#include <filesystem.h>
 #include <omp.h>
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
 #include <map>
+#include <iomanip>
 #include "rpp.h"
 #include "nifti1.h"
+#include "rpp_test_suite_common.h"
 
 using namespace std;
 typedef int16_t NIFTI_DATATYPE;
@@ -69,20 +70,15 @@ std::map<int, string> augmentationMap =
     {6, "gaussian_noise_voxel"}
 };
 
-void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
-{
-    int remainingFiles = batchCount - (noOfFiles % batchCount);
-    std::string filePath = lastFilePath;
-    std::string fileName = lastFileName;
-    if (noOfFiles > 0 && ( noOfFiles < batchCount || noOfFiles % batchCount != 0 ))
-    {
-        for (int i = 0; i < remainingFiles; i++)
-        {
-            filePathVector.push_back(filePath);
-            fileNamesVector.push_back(fileName);
-        }
-    }
-}
+enum Augmentation {
+    FUSED_MULTIPLY_ADD_SCALAR = 0,
+    SLICE = 1,
+    ADD_SCALAR = 2,
+    SUBTRACT_SCALAR = 3,
+    FLIP_VOXEL = 4,
+    MULTIPLY_SCALAR = 5,
+    GAUSSIAN_NOISE_VOXEL = 6
+};
 
 // Opens a folder and recursively search for .nii files
 void open_folder(const string& folderPath, vector<string>& niiFileNames, vector<string>& niiFilePath)
@@ -169,13 +165,13 @@ void search_nii_files(const string& folder_path, vector<string>& niiFileNames, v
 
 // sets generic descriptor dimensions and strides of src/dst
 inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ,
-                                  int numChannels, int offsetInBytes, int layoutType, int inputBitDepth)
+                                  int numChannels, int offsetInBytes, int layoutType, int BitDepthTestMode)
 {
     descriptorPtr3D->numDims = 5;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    if(inputBitDepth == 0)
+    if(BitDepthTestMode == U8_TO_U8)
         descriptorPtr3D->dataType = RpptDataType::U8;
-    else if(inputBitDepth == 2)
+    else if(BitDepthTestMode == F32_TO_F32)
         descriptorPtr3D->dataType = RpptDataType::F32;
 
     if (layoutType == 0)
