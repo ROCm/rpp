@@ -69,7 +69,7 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
@@ -97,14 +97,14 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -153,7 +153,7 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -182,14 +182,14 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -244,7 +244,7 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -275,14 +275,14 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -343,7 +343,7 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -376,14 +376,14 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -453,7 +453,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
@@ -466,14 +466,14 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[6];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -497,14 +497,14 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -526,14 +526,14 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -575,7 +575,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -589,14 +589,14 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[20];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -622,14 +622,14 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -653,14 +653,14 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -704,7 +704,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -720,14 +720,14 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[42];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -755,14 +755,14 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -788,14 +788,14 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -841,7 +841,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -859,14 +859,14 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     float *filter_row9 = &filter_row1[72];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -896,14 +896,14 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -931,14 +931,14 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -988,7 +988,7 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1015,14 +1015,14 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -1071,7 +1071,7 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1100,14 +1100,14 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1162,7 +1162,7 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1193,14 +1193,14 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
@@ -1261,7 +1261,7 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1294,14 +1294,14 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1370,7 +1370,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1395,7 +1395,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1406,7 +1406,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1457,7 +1457,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1484,7 +1484,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1495,7 +1495,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1552,7 +1552,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1581,7 +1581,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1592,7 +1592,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1655,7 +1655,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1686,7 +1686,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i >= roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1697,7 +1697,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
