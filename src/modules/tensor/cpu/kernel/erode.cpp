@@ -26,7 +26,67 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 #include "rpp_cpu_filter.hpp"
 
-// generic raw c code for erode 
+// -------------------- Erode load wrappers using shared kernel functions --------------------
+
+// Wrappers for U8/I8 types
+template<typename T>
+inline void rpp_load_erode_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 3) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 5) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 7) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 9) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+// Wrappers for F32/F16 types
+template<typename T>
+inline void rpp_load_erode_float_3x3_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 3) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_float_5x5_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 5) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_float_7x7_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 7) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+template<typename T>
+inline void rpp_load_erode_float_9x9_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    Rpp32s padIndex = (rowKernelLoopLimit < 9) ? (rowKernelLoopLimit - 1) : 0;
+    rpp_load_kernel_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+}
+
+// generic raw c code for erode
 template<typename T>
 inline void erode_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                  Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
@@ -2770,3 +2830,43 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
     }
     return RPP_SUCCESS;
 }
+
+template RppStatus erode_char_host_tensor<Rpp8u>(Rpp8u*,
+                                                 RpptDescPtr,
+                                                 Rpp8u*,
+                                                 RpptDescPtr,
+                                                 Rpp32u,
+                                                 RpptROIPtr,
+                                                 RpptRoiType,
+                                                 RppLayoutParams,
+                                                 rpp::Handle&);
+
+template RppStatus erode_char_host_tensor<Rpp8s>(Rpp8s*,
+                                                 RpptDescPtr,
+                                                 Rpp8s*,
+                                                 RpptDescPtr,
+                                                 Rpp32u,
+                                                 RpptROIPtr,
+                                                 RpptRoiType,
+                                                 RppLayoutParams,
+                                                 rpp::Handle&);
+
+template RppStatus erode_float_host_tensor<Rpp32f>(Rpp32f*,
+                                                   RpptDescPtr,
+                                                   Rpp32f*,
+                                                   RpptDescPtr,
+                                                   Rpp32u,
+                                                   RpptROIPtr,
+                                                   RpptRoiType,
+                                                   RppLayoutParams,
+                                                   rpp::Handle&);
+
+template RppStatus erode_float_host_tensor<Rpp16f>(Rpp16f*,
+                                                   RpptDescPtr,
+                                                   Rpp16f*,
+                                                   RpptDescPtr,
+                                                   Rpp32u,
+                                                   RpptROIPtr,
+                                                   RpptRoiType,
+                                                   RppLayoutParams,
+                                                   rpp::Handle&);
