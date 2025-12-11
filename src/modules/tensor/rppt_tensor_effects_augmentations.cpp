@@ -1483,41 +1483,15 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     RpptDescPtr srcDescPtr,
                                     RppPtr_t dstPtr,
                                     RpptDescPtr dstDescPtr,
-                                    Rpp32f *dropoutProbability,
-                                    Rpp32f seed,
+                                    Rpp8u *channelTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
 {
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-    for(int i = 0; i < srcDescPtr->n; i++)
-        if(dropoutProbability[i] < 0 || dropoutProbability[i] > 1)
-            return RPP_ERROR_INVALID_ARGUMENTS;
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
-    Rpp32u numThreads = rpp::deref(rppHandle).GetNumThreads();
-    Rpp8u *maskPtr = reinterpret_cast<uint8_t *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
-
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
-    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
-    {
-        std::mt19937 rng(seed + batchCount);
-        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
-
-        Rpp8u *maskPtrTemp = maskPtr + batchCount * srcDescPtr->c;
-        bool atLeastOne = false;
-
-        for (int channel = 0; channel < srcDescPtr->c; channel++)
-        {
-            maskPtrTemp[channel] = keepDist(rng);
-            atLeastOne |= maskPtrTemp[channel];
-        }
-
-        if (!atLeastOne)
-            maskPtrTemp[rng() % srcDescPtr->c] = 1;
-    }
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1525,8 +1499,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     srcDescPtr,
                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
-                                    dropoutProbability,
-                                    maskPtr,
+                                    channelTensor,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -1538,8 +1511,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
-                                     dropoutProbability,
-                                     maskPtr,
+                                     channelTensor,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1551,8 +1523,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                      srcDescPtr,
                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
-                                     dropoutProbability,
-                                     maskPtr,
+                                     channelTensor,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
@@ -1564,8 +1535,7 @@ RppStatus rppt_channel_dropout_host(RppPtr_t srcPtr,
                                     srcDescPtr,
                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                     dstDescPtr,
-                                    dropoutProbability,
-                                    maskPtr,
+                                    channelTensor,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams,
@@ -3155,8 +3125,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   Rpp32f *dropoutProbability,
-                                   Rpp32f seed,
+                                   Rpp8u *maskPtr,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
@@ -3164,85 +3133,53 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-    for(int i = 0; i < srcDescPtr->n; i++)
-        if(dropoutProbability[i] < 0 || dropoutProbability[i] > 1)
-            return RPP_ERROR_INVALID_ARGUMENTS;
-
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
-
-    Rpp32u numThreads = rpp::deref(rppHandle).GetNumThreads();
-    Rpp8u *maskPtr = reinterpret_cast<Rpp8u *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
-
-    // Generate masks on HOST scratchBuffer
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
-    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
-    {
-        std::mt19937 rng(seed + batchCount);
-        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
-
-        Rpp8u *maskPtrTemp = maskPtr + batchCount * srcDescPtr->c;
-        bool atLeastOne = false;
-
-        for (int channel = 0; channel < srcDescPtr->c; channel++)
-        {
-            maskPtrTemp[channel] = keepDist(rng);
-            atLeastOne |= maskPtrTemp[channel];
-        }
-
-        if (!atLeastOne)
-            maskPtrTemp[rng() % srcDescPtr->c] = 1;
-    }
 
     Rpp8u *d_maskPtr = reinterpret_cast<Rpp8u *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_maskPtr, maskPtr, (srcDescPtr->n * srcDescPtr->c * sizeof(Rpp8u)), hipMemcpyHostToDevice, rpp::deref(rppHandle).GetStream()));
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        return hip_exec_channel_dropout_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
-                                               srcDescPtr,
-                                               static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
-                                               dstDescPtr,
-                                               dropoutProbability,
-                                               d_maskPtr,
-                                               roiTensorPtrSrc,
-                                               roiType,
-                                               rpp::deref(rppHandle));
+        hip_exec_channel_dropout_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        d_maskPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        return hip_exec_channel_dropout_tensor(reinterpret_cast<half *>(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes),
-                                               srcDescPtr,
-                                               reinterpret_cast<half *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
-                                               dstDescPtr,
-                                               dropoutProbability,
-                                               d_maskPtr,
-                                               roiTensorPtrSrc,
-                                               roiType,
-                                               rpp::deref(rppHandle));
+        hip_exec_channel_dropout_tensor(reinterpret_cast<half *>(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        reinterpret_cast<half *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        d_maskPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        return hip_exec_channel_dropout_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes),
-                                               srcDescPtr,
-                                               reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
-                                               dstDescPtr,
-                                               dropoutProbability,
-                                               d_maskPtr,
-                                               roiTensorPtrSrc,
-                                               roiType,
-                                               rpp::deref(rppHandle));
+        hip_exec_channel_dropout_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        d_maskPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        return hip_exec_channel_dropout_tensor(static_cast<Rpp8s *>(srcPtr) + srcDescPtr->offsetInBytes,
-                                               srcDescPtr,
-                                               static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
-                                               dstDescPtr,
-                                               dropoutProbability,
-                                               d_maskPtr,
-                                               roiTensorPtrSrc,
-                                               roiType,
-                                               rpp::deref(rppHandle));
+        hip_exec_channel_dropout_tensor(static_cast<Rpp8s *>(srcPtr) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        d_maskPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

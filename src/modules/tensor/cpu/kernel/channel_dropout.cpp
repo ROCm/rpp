@@ -23,15 +23,13 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
-#include <random>
 
 template<typename T>
 RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp32f *dropoutProbability,
-                                      Rpp8u *maskPtr,
+                                      Rpp8u *channelTensor,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       RppLayoutParams layoutParams,
@@ -52,7 +50,7 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp8u *channelMask = maskPtr + batchCount * srcDescPtr->c;
+        Rpp8u *channelMask = channelTensor + batchCount * srcDescPtr->c;
 
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -227,7 +225,6 @@ template RppStatus channel_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                       RpptDescPtr,
                                                       Rpp8u*,
                                                       RpptDescPtr,
-                                                      Rpp32f*,
                                                       Rpp8u*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
@@ -238,7 +235,6 @@ template RppStatus channel_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
                                                        RpptDescPtr,
-                                                       Rpp32f*,
                                                        Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
@@ -249,7 +245,6 @@ template RppStatus channel_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                        RpptDescPtr,
                                                        Rpp16f*,
                                                        RpptDescPtr,
-                                                       Rpp32f*,
                                                        Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
@@ -260,7 +255,6 @@ template RppStatus channel_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp8s*,
                                                       RpptDescPtr,
-                                                      Rpp32f*,
                                                       Rpp8u*,
                                                       RpptROIPtr,
                                                       RpptRoiType,

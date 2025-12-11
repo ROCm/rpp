@@ -1596,6 +1596,30 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
     }
 }
 
+void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbability, int batchSize, int channels, int seed)
+{
+    int numThreads = omp_get_max_threads();
+    omp_set_dynamic(0);
+
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < batchSize; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        Rpp8u *maskPtrTemp = dropoutTensor + (batchCount * channels);
+        bool atLeastOne = false;
+
+        for (int channel = 0; channel < channels; channel++)
+        {
+            maskPtrTemp[channel] = keepDist(rng);
+            atLeastOne |= maskPtrTemp[channel];
+        }
+
+        if (!atLeastOne)
+            maskPtrTemp[rng() % channels] = 1;
+    }
+}
+
 // Lens correction initializer for unit and performance testing
 void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *cameraMatrix, Rpp32f *distortionCoeffs, RpptDescPtr tableDescPtr)
 {
