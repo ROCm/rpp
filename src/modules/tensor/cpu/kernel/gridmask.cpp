@@ -1173,8 +1173,6 @@ RppStatus gridmask_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Gridmask without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            // Rpp32u alignedLength = bufferLength & ~3;
-
             Rpp16f *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
@@ -1252,8 +1250,6 @@ RppStatus gridmask_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Gridmask without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            // Rpp32u alignedLength = bufferLength & ~3;
-
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
