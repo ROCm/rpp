@@ -606,7 +606,7 @@ int main(int argc, char **argv)
 
     Rpp8u *dropoutTensor = nullptr;
     if(testCase == CHANNEL_DROPOUT)
-        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * 3 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
