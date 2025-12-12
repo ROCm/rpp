@@ -606,7 +606,7 @@ int main(int argc, char **argv)
 
     Rpp8u *dropoutTensor = nullptr;
     if(testCase == CHANNEL_DROPOUT)
-        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -1849,7 +1849,6 @@ int main(int argc, char **argv)
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     for (i = 0; i < batchSize; i++)
                         dropoutProbability[i] = 0.4f;
-                    Rpp8u dropoutTensor[batchSize * 3];
                     generate_channel_dropout_mask(dropoutTensor, dropoutProbability, batchSize, srcDescPtr->c, seed);
 
                     startWallTime = omp_get_wtime();

@@ -1763,7 +1763,7 @@ int main(int argc, char **argv)
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     for (i = 0; i < batchSize; i++)
                         dropoutProbability[i] = 0.4f;
-                    Rpp8u dropoutTensor[batchSize * 3];
+                    Rpp8u dropoutTensor[batchSize * srcDescPtr->c];
                     generate_channel_dropout_mask(dropoutTensor, dropoutProbability, batchSize, srcDescPtr->c, seed);
 
                     startWallTime = omp_get_wtime();

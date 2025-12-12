@@ -93,7 +93,7 @@ __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
                                                uint2 srcStridesNH,
                                                T *dstPtr,
                                                uint2 dstStridesNH,
-                                               uint8_t *channelMask,
+                                               uint8_t *dropoutTensor,
                                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -107,7 +107,7 @@ __global__ void channel_dropout_pkd_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float24 dst_f24;
-    uint8_t *maskTensor = channelMask + id_z * 3;
+    uint8_t *maskTensor = dropoutTensor + id_z * 3;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
     compute_dropout_f24(dst_f24, maskTensor, srcPtr);
@@ -121,7 +121,7 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
                                                T *dstPtr,
                                                uint3 dstStridesNCH,
                                                int channelsDst,
-                                               uint8_t *channelMask,
+                                               uint8_t *dropoutTensor,
                                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -135,7 +135,7 @@ __global__ void channel_dropout_pln_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float8 dst_f8;
-    uint8_t *maskTensor = channelMask + id_z * channelsDst;
+    uint8_t *maskTensor = dropoutTensor + id_z * channelsDst;
     
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &dst_f8);
     compute_dropout_f8(dst_f8, maskTensor, srcPtr);
@@ -163,7 +163,7 @@ __global__ void channel_dropout_pkd3_pln3_hip_tensor(T *srcPtr,
                                                     uint2 srcStridesNH,
                                                     T *dstPtr,
                                                     uint3 dstStridesNCH,
-                                                    uint8_t *channelMask,
+                                                    uint8_t *dropoutTensor,
                                                     RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -177,7 +177,7 @@ __global__ void channel_dropout_pkd3_pln3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     d_float24 dst_f24;
-    uint8_t *maskTensor = channelMask + id_z * 3;
+    uint8_t *maskTensor = dropoutTensor + id_z * 3;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
     compute_dropout_f24(dst_f24, maskTensor, srcPtr);
@@ -190,7 +190,7 @@ __global__ void channel_dropout_pln3_pkd3_hip_tensor(T *srcPtr,
                                                      uint3 srcStridesNCH,
                                                      T *dstPtr,
                                                      uint2 dstStridesNH,
-                                                     uint8_t *channelMask,
+                                                     uint8_t *dropoutTensor,
                                                      RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -204,7 +204,7 @@ __global__ void channel_dropout_pln3_pkd3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float24 dst_f24;
-    uint8_t *maskTensor = channelMask + id_z * 3;
+    uint8_t *maskTensor = dropoutTensor + id_z * 3;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
     compute_dropout_f24(dst_f24, maskTensor, srcPtr);
@@ -217,13 +217,13 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
-                                          Rpp8u *d_dropoutTensor,
+                                          Rpp8u *dropoutTensor,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle &handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -240,7 +240,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           d_dropoutTensor,
+                           dropoutTensor,
                            roiTensorPtrSrc);
     }
     else if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NCHW && srcDescPtr->c == 3)
@@ -254,7 +254,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                           d_dropoutTensor,
+                           dropoutTensor,
                            roiTensorPtrSrc);
     }
     else if (srcDescPtr->layout == RpptLayout::NCHW && dstDescPtr->layout == RpptLayout::NHWC && srcDescPtr->c == 3)
@@ -269,7 +269,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           d_dropoutTensor,
+                           dropoutTensor,
                            roiTensorPtrSrc);
     }
     else
@@ -284,7 +284,7 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           d_dropoutTensor,
+                           dropoutTensor,
                            roiTensorPtrSrc);
     }
     return RPP_SUCCESS;

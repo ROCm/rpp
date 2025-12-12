@@ -3135,15 +3135,13 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
-    Rpp8u *d_dropoutTensor = reinterpret_cast<Rpp8u *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_dropoutTensor, dropoutTensor, (srcDescPtr->n * srcDescPtr->c * sizeof(Rpp8u)), hipMemcpyHostToDevice, rpp::deref(rppHandle).GetStream()));
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_channel_dropout_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
                                         srcDescPtr,
                                         static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        d_dropoutTensor,
+                                        dropoutTensor,
                                         roiTensorPtrSrc,
                                         roiType,
                                         rpp::deref(rppHandle));
@@ -3154,7 +3152,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         reinterpret_cast<half *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
-                                        d_dropoutTensor,
+                                        dropoutTensor,
                                         roiTensorPtrSrc,
                                         roiType,
                                         rpp::deref(rppHandle));
@@ -3165,7 +3163,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
-                                        d_dropoutTensor,
+                                        dropoutTensor,
                                         roiTensorPtrSrc,
                                         roiType,
                                         rpp::deref(rppHandle));
@@ -3176,7 +3174,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        d_dropoutTensor,
+                                        dropoutTensor,
                                         roiTensorPtrSrc,
                                         roiType,
                                         rpp::deref(rppHandle));
