@@ -329,7 +329,7 @@ inline void blend_shuffle_add_9x9_host(__m128i *px128, __m128i *pxMask, Rpp32u *
 
 // perform required blend permute min multiplication operations for 3x3 kernel size
 template <int blendMask1, int blendMask2> 
-inline void blend_permute_min_3x3_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
+inline void blend_permute_min_3x3_host(__m256 *pSrc, __m256 *pDst, __m256i *pxMask, Rpp32u *index)
 {
     /*  For PLN inputs                                                                          | For PKD inputs
         pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
@@ -341,7 +341,7 @@ inline void blend_permute_min_3x3_host(__m256 *pSrc, __m256 *pDst, __m256 pConvo
 
 // perform required blend permute min multiplication operations for 5x5 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4> 
-inline void blend_permute_min_5x5_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
+inline void blend_permute_min_5x5_host(__m256 *pSrc, __m256 *pDst, __m256i *pxMask, Rpp32u *index)
 {
    /*   For PLN inputs                                                                          | For PKD inputs
         pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
@@ -358,7 +358,7 @@ inline void blend_permute_min_5x5_host(__m256 *pSrc, __m256 *pDst, __m256 pConvo
 
 // perform required blend permute min multiplication operations for 7x7 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6>  
-inline void blend_permute_min_7x7_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
+inline void blend_permute_min_7x7_host(__m256 *pSrc, __m256 *pDst, __m256i *pxMask, Rpp32u *index)
 {
     /*  For PLN inputs                                                                          | For PKD inputs
         pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
@@ -379,7 +379,7 @@ inline void blend_permute_min_7x7_host(__m256 *pSrc, __m256 *pDst, __m256 pConvo
 
 // perform required blend permute min multiplication operations for 9x9 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6, int blendMask7>  
-inline void blend_permute_min_9x9_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
+inline void blend_permute_min_9x9_host(__m256 *pSrc, __m256 *pDst, __m256i *pxMask, Rpp32u *index)
 {
     /*  For PLN inputs                                                                          | For PKD inputs
         pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
@@ -1176,7 +1176,7 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp16f **src
 
 // load function for 3x3 kernel size
 template<typename T>
-inline void rpp_load_kernel_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1189,7 +1189,7 @@ inline void rpp_load_kernel_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s
 
 // load function for 5x5 kernel size
 template<typename T>
-inline void rpp_load_kernel_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1203,7 +1203,7 @@ inline void rpp_load_kernel_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s
 
 // load function for 7x7 kernel size
 template<typename T>
-inline void rpp_load_kernel_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1218,7 +1218,7 @@ inline void rpp_load_kernel_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s
 
 // load function for 9x9 kernel size
 template<typename T>
-inline void rpp_load_kernel_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
@@ -1235,7 +1235,7 @@ inline void rpp_load_kernel_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s
 // -------------------- Filter load functions for F32 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_kernel_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1247,7 +1247,7 @@ inline void rpp_load_kernel_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rp
 }
 
 // load function for 5x5 kernel size
-inline void rpp_load_kernel_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1260,7 +1260,7 @@ inline void rpp_load_kernel_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rp
 }
 
 // load function for 7x7 kernel size
-inline void rpp_load_kernel_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1274,7 +1274,7 @@ inline void rpp_load_kernel_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rp
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_kernel_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
@@ -1291,7 +1291,7 @@ inline void rpp_load_kernel_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rp
 // -------------------- Filter load functions for F16 bitdepth --------------------
 
 // load function for 3x3 kernel size
-inline void rpp_load_kernel_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1303,7 +1303,7 @@ inline void rpp_load_kernel_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rp
 }
 
 // load function for 5x5 kernel size
-inline void rpp_load_kernel_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1316,7 +1316,7 @@ inline void rpp_load_kernel_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rp
 }
 
 // load function for 7x7 kernel size
-inline void rpp_load_kernel_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1330,7 +1330,7 @@ inline void rpp_load_kernel_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rp
 }
 
 // load function for 9x9 kernel size
-inline void rpp_load_kernel_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
@@ -1342,6 +1342,79 @@ inline void rpp_load_kernel_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rp
         pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
     for (int k = rowKernelLoopLimit; k < 9; k++)
         pRow[k] = pRow[padIndex];
+}
+
+template <typename T>
+struct MorphLoadInfo;
+
+template <>
+struct MorphLoadInfo<Rpp8u>
+{
+    using VecType = __m256i;
+
+    static inline VecType load(void *ptr) { return _mm256_loadu_si256((__m256i*)ptr); }
+};
+
+template <>
+struct MorphLoadInfo<Rpp8s>
+{
+    using VecType = __m256i;
+
+    static inline VecType load(void *ptr) { return _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i*)ptr)); }
+};
+
+template <>
+struct MorphLoadInfo<Rpp32f>
+{
+    using VecType = __m256;
+
+    static inline VecType load(void *ptr) { return _mm256_loadu_ps((float*)ptr); }
+};
+
+template <>
+struct MorphLoadInfo<Rpp16f>
+{
+    using VecType = __m256;
+
+    static inline VecType load(void *ptr) { return _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps((float*)ptr))); }
+};
+
+struct MorphPad_Erode
+{
+    static inline __m256i pad_int() { return _mm256_set1_epi8((char)255); }
+    static inline __m256  pad_float() { return avx_p1; }
+};
+
+struct MorphPad_Dilate
+{
+    static inline __m256i pad_int() { return _mm256_set1_epi8((char)0); }
+    static inline __m256  pad_float() { return _mm256_set1_ps(0.0f); }
+};
+
+template <int KernelSize, typename T, typename PadPolicy>
+inline void rpp_morphological_load_NxN(typename MorphLoadInfo<T>::VecType *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    using Info = MorphLoadInfo<T>;
+    using Vec  = typename Info::VecType;
+
+    constexpr int PreloadRows = (KernelSize + 1) / 2;
+
+    // Load initial rows
+    for (int k = 0; k < PreloadRows; ++k)
+        pxRow[k] = Info::load(srcPtrTemp[k]);
+
+    // Load valid remaining rows
+    for (int k = PreloadRows; k < rowKernelLoopLimit; ++k)
+        pxRow[k] = Info::load(srcPtrTemp[k]);
+
+    // Pad beyond valid range
+    for (int k = rowKernelLoopLimit; k < KernelSize; ++k)
+    {
+        if constexpr (std::is_same_v<Vec, __m256i>)
+            pxRow[k] = PadPolicy::pad_int();
+        else
+            pxRow[k] = PadPolicy::pad_float();
+    }
 }
 
 #endif // RPP_CPU_FILTER_HPP

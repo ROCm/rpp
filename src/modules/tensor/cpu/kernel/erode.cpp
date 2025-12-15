@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,76 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
-// -------------------- Erode load wrappers using shared kernel functions --------------------
-
-// Wrappers for U8/I8 types
-template<typename T>
-inline void rpp_load_erode_char_3x3_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 3) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_char_5x5_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 5) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_char_7x7_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 7) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_char_9x9_host(__m256i *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 9) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-// Wrappers for F32/F16 types
-template<typename T>
-inline void rpp_load_erode_float_3x3_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 3) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_float_5x5_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 5) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_float_7x7_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 7) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-template<typename T>
-inline void rpp_load_erode_float_9x9_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
-{
-    Rpp32s padIndex = (rowKernelLoopLimit < 9) ? (rowKernelLoopLimit - 1) : 0;
-    rpp_load_kernel_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
-}
-
-// generic raw c code for erode
+// generic raw c code for erode 
 template<typename T>
 inline void erode_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                  Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
-                                 Rpp32f kernelSizeInverseSquare, Rpp32u channels = 1)
+                                 Rpp32u channels = 1)
 {
+    // Initialize result to maximum value
     T result;
     if constexpr (std::is_same<T, Rpp8u>::value)
         result = static_cast<T>(255);
@@ -105,7 +45,7 @@ inline void erode_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnInd
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
     for (int i = 0; i < rowKernelLoopLimit; i++)
         for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-            result  = std::min<T>(result, srcPtrTemp[i][k]);
+            result = std::min<T>(result, srcPtrTemp[i][k]);
     *dstPtrTemp = result;
 }
 
@@ -113,11 +53,11 @@ inline void erode_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnInd
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < padLength; k++)
     {
-        erode_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+        erode_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
         dstPtrTemp++;
     }
 }
@@ -126,14 +66,14 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int c = 0; c < 3; c++)
     {
         T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
-            erode_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            erode_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
             dstPtrTempChannel += 3;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -147,13 +87,13 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int c = 0; c < 3; c++)
     {
         for (int k = 0; k < padLength; k++)
         {
-            erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
             dstPtrTempChannels[c] += 1;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -325,7 +265,6 @@ RppStatus erode_char_host_tensor(T *srcPtr,
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
         // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
@@ -364,14 +303,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[3], pxRowHalf[2], pxResult;
-                            rpp_load_erode_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_3x3_host(pxRow, &pxRowHalf[0]);
@@ -400,7 +339,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -426,14 +365,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3], pxRowHalf[2], pxResult;
-                        rpp_load_erode_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_3x3_host(pxRow, &pxRowHalf[0]);
@@ -462,7 +401,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -489,13 +428,13 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3], pxRowHalf[2];
-                        rpp_load_erode_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_3x3_host(pxRow, &pxRowHalf[0]);
@@ -531,7 +470,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -566,7 +505,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -578,7 +517,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[3], pxRowHalf[2];
-                            rpp_load_erode_char_3x3_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_3x3_host(pxRow, &pxRowHalf[0]);
@@ -622,7 +561,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -664,14 +603,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
-                            rpp_load_erode_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_5x5_host(pxRow, &pxRowHalf[0]);
@@ -696,7 +635,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -722,14 +661,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
                         __m256i pxRow[5], pxRowHalf[2], pxResult;
-                        rpp_load_erode_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_5x5_host(pxRow, &pxRowHalf[0]);
@@ -755,7 +694,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -782,13 +721,13 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
                         __m256i pxRow[5], pxRowHalf[2];
-                        rpp_load_erode_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_5x5_host(pxRow, &pxRowHalf[0]);
@@ -822,7 +761,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -858,7 +797,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -870,7 +809,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
-                            rpp_load_erode_char_5x5_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_5x5_host(pxRow, &pxRowHalf[0]);
@@ -910,7 +849,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -952,14 +891,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
-                            rpp_load_erode_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_7x7_host(pxRow, &pxRowHalf[0]);
@@ -984,7 +923,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1023,7 +962,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1035,7 +974,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
-                            rpp_load_erode_char_7x7_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1075,7 +1014,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1101,14 +1040,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256i pxRow[7], pxRowHalf[2];
-                        rpp_load_erode_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1130,7 +1069,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1157,13 +1096,13 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256i pxRow[7], pxRowHalf[2];
-                        rpp_load_erode_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_min_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1192,7 +1131,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1230,14 +1169,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                         {
                             __m256i pxRow[9], pxRowHalf[2];
-                            rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1259,7 +1198,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1287,13 +1226,13 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // load first 32 elements elements
                     __m256i pxRow[9];
                     if (alignedLength)
-                        rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
@@ -1309,7 +1248,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
-                        rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         unpacklo_and_min_9x9_host(pxRow, &pxRowHalf[0]);
                         unpackhi_and_min_9x9_host(pxRow, &pxRowHalf[1]);
 
@@ -1333,7 +1272,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1368,7 +1307,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1380,7 +1319,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[9], pxRowHalf[2];
-                            rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_min_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1414,7 +1353,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1443,14 +1382,14 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         // load first 32 elements elements
                         __m256i pxRow[9], pxRowHalf[2];
-                        rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // get the accumalated result for first 8 elements
                         unpacklo_and_min_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1463,7 +1402,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
-                        rpp_load_erode_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         unpacklo_and_min_9x9_host(pxRow, &pxRowHalf[0]);
                         unpackhi_and_min_9x9_host(pxRow, &pxRowHalf[1]);
 
@@ -1494,7 +1433,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1550,9 +1489,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
-        const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
         // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
@@ -1591,23 +1528,23 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[3], pTemp[3], pDst[2];
-                            rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_3x3(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_min_3x3_host<1, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_min_3x3_host<1, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_3x3_host<1, 3>(&pTemp[0], &pDst[0], pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_3x3_host<1, 3>(&pTemp[1], &pDst[1], pxMaskPln, blendRegisterOrder);
                             rpp_store16_float(dstPtrTemp, pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 6);
@@ -1617,7 +1554,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1643,26 +1580,26 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[3], pTemp[3], pDst[2];
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_min_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_3x3_host<7, 63>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_3x3_host<7, 63>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
@@ -1671,7 +1608,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1697,25 +1634,25 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[3], pTemp[3], pDst[2];
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_min_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_3x3_host<7, 63>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_3x3_host<7, 63>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -1729,7 +1666,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1764,7 +1701,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1777,16 +1714,16 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[3], pTemp[3];
-                            rpp_load_erode_float_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_3x3(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_erode_float_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_min_3x3_host<1, 3>(&pTemp[0], &pResult[channelStride], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_min_3x3_host<1, 3>(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_3x3_host<1, 3>(&pTemp[0], &pResult[channelStride], pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_3x3_host<1, 3>(&pTemp[1], &pResult[channelStride + 1], pxMaskPln, blendRegisterOrder);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 6);
                         }
 
@@ -1804,7 +1741,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1845,23 +1782,23 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[5], pDst[2], pTemp[3];
-                            rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_5x5(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_5x5(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_min_5x5_host<1, 3, 7, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_min_5x5_host<1, 3, 7, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_5x5_host<1, 3, 7, 15>(&pTemp[0], &pDst[0], pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_5x5_host<1, 3, 7, 15>(&pTemp[1], &pDst[1], pxMaskPln, blendRegisterOrder);
 
                             rpp_store16_float(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 4);
@@ -1871,7 +1808,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1899,7 +1836,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
@@ -1907,20 +1844,20 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         // compute min of loaded values from 9 rows
                         __m256 pRow[5], pDst[2], pTemp[4];
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
@@ -1930,7 +1867,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1966,7 +1903,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1978,13 +1915,13 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[5], pTemp[2];
-                            rpp_load_erode_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_5x5(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_erode_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_5x5(pRow, &pTemp[1]);
-                            blend_permute_min_5x5_host<1, 3, 7, 15>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_5x5_host<1, 3, 7, 15>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
 
                         // convert result from pln to pkd format and store in output buffer
@@ -2001,7 +1938,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2030,27 +1967,27 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         // compute min of loaded values from 9 rows
                         __m256 pRow[5], pDst[2], pTemp[4];
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2064,7 +2001,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2106,20 +2043,20 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[7], pTemp[2], pDst;
-                            rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_7x7(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_min_7x7_host<1, 3, 7, 15, 31, 63>(&pTemp[0], &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_7x7_host<1, 3, 7, 15, 31, 63>(&pTemp[0], &pDst, pxMaskPln, blendRegisterOrder);
 
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2133,7 +2070,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2161,21 +2098,21 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     __m256 pRow[7], pTemp[4];
                     if (alignedLength)
                     {
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[2]);
                     }
 
@@ -2184,11 +2121,11 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         // compute min of loaded values from 7 rows
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(pTemp, &pDst, pxMaskPkd, blendRegisterOrder);
 
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2206,7 +2143,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2242,7 +2179,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -2254,13 +2191,13 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[7], pTemp[2];
-                            rpp_load_erode_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_7x7(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_erode_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_min_7x7_host<1, 3, 7, 15, 31, 63>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_7x7_host<1, 3, 7, 15, 31, 63>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2276,7 +2213,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2305,31 +2242,31 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[7], pTemp[5];
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[2]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_7x7(pRow, &pTemp[3]);
                         pTemp[4] = avx_p0;
 
                         __m256 pDst[2];
-                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2345,7 +2282,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2386,12 +2323,12 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         __m256 pRow[9];
                         if (alignedLength)
-                            rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
@@ -2401,9 +2338,9 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                             min_rows_9x9(pRow, &pTemp[0]);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
 
-                            rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             min_rows_9x9(pRow, &pTemp[1]);
-                            blend_permute_min_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pDst, pxMaskPln, blendRegisterOrder);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -2416,7 +2353,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2444,21 +2381,21 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     __m256 pRow[9], pTemp[4];
                     if (alignedLength)
                     {
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[2]);
                     }
 
@@ -2467,11 +2404,11 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         // compute min of loaded values from 9 rows
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(pTemp, &pDst, pxMaskPkd, blendRegisterOrder);
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -2487,7 +2424,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2522,7 +2459,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -2535,14 +2472,14 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                         {
                             // compute min of loaded values from 9 rows
                             __m256 pRow[9], pTemp[2];
-                            rpp_load_erode_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_9x9(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_erode_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             min_rows_9x9(pRow, &pTemp[1]);
 
-                            blend_permute_min_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_min_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2557,7 +2494,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2586,34 +2523,34 @@ RppStatus erode_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[9], pTemp[5];
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[2]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[3]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_erode_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Erode>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         min_rows_9x9(pRow, &pTemp[4]);
 
                         __m256 pDst[2];
-                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2629,7 +2566,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2672,7 +2609,6 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
 
         Rpp32u padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
@@ -2703,14 +2639,14 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
 
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2735,14 +2671,14 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    erode_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
@@ -2774,7 +2710,7 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp++;
                     }
                 }
@@ -2785,7 +2721,7 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        erode_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2811,14 +2747,14 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     int channel = vectorLoopCount % 3;
-                    erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    erode_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }
