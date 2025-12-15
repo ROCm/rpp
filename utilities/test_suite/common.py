@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,12 +28,15 @@ import sys
 import datetime
 import shutil
 import pandas as pd
+import signal
 
 try:
     from errno import FileExistsError
 except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
+
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -43,12 +46,16 @@ imageAugmentationMap = {
     5: ["pixelate", "HOST", "HIP"],
     6: ["jitter", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
+    10: ["fog", "HOST", "HIP"],
+    11: ["rain", "HOST", "HIP"],
     13: ["exposure", "HOST", "HIP"],
+    15: ["threshold", "HOST", "HIP"],
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
+    28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
     30: ["non_linear_blend", "HOST", "HIP"],
     31: ["color_cast", "HOST", "HIP"],
@@ -60,14 +67,20 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    41: ["dilate", "HOST", "HIP"],
+    40: ["erode", "HIP"],
+    41: ["dilate", "HIP"],
+    42: ["hue", "HOST", "HIP"],
+    43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
-    49: ["box_filter", "HIP"],
-    54: ["gaussian_filter", "HIP"],
+    49: ["box_filter", "HIP", "HOST"],
+    51: ["median_filter", "HOST", "HIP"],
+    54: ["gaussian_filter", "HOST", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
     65: ["bitwise_and", "HOST", "HIP"],
+    66: ["bitwise_not", "HOST", "HIP"],
+    67: ["bitwise_xor", "HOST", "HIP"],
     68: ["bitwise_or", "HOST", "HIP"],
     70: ["copy", "HOST", "HIP"],
     79: ["remap", "HOST", "HIP"],
@@ -76,14 +89,17 @@ imageAugmentationMap = {
     82: ["ricap", "HOST", "HIP"],
     83: ["gridmask", "HOST", "HIP"],
     84: ["spatter", "HOST", "HIP"],
-    85: ["swap_channels", "HOST", "HIP"],
+    85: ["channel_permute", "HOST", "HIP"],
     86: ["color_to_greyscale", "HOST", "HIP"],
     87: ["tensor_sum", "HOST", "HIP"],
     88: ["tensor_min", "HOST", "HIP"],
     89: ["tensor_max", "HOST", "HIP"],
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
-    92: ["slice", "HOST", "HIP"]
+    92: ["slice", "HOST", "HIP"],
+    93: ["jpeg_compression_distortion", "HIP"],
+    94: ["posterize", "HOST", "HIP"],
+    95: ["solarize", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -91,10 +107,10 @@ audioAugmentationMap = {
     1: ["to_decibels", "HOST", "HIP"],
     2: ["pre_emphasis_filter", "HOST", "HIP"],
     3: ["down_mixing", "HOST", "HIP"],
-    4: ["spectrogram", "HOST"],
-    5: ["slice", "HOST"],
+    4: ["spectrogram", "HOST", "HIP"],
+    5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST"]
+    7: ["mel_filter_bank", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
@@ -110,23 +126,65 @@ voxelAugmentationMap = {
 miscAugmentationMap  = {
     0: ["transpose","HOST", "HIP"],
     1: ["normalize", "HOST", "HIP"],
-    2: ["log", "HOST", "HIP"]
+    2: ["log", "HOST", "HIP"],
+    3: ["concat","HOST","HIP"],
+    4: ["log1p", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {
-    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
-    "effects_augmentations" : [5, 6, 8, 29, 30, 32, 35, 46, 82, 83, 84],
-    "geometric_augmentations" : [20, 21, 23, 24, 26, 33, 37, 38, 39, 63, 79, 80, 92],
-    "filter_augmentations" : [49, 54],
+    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 42, 43, 45, 81],
+    "effects_augmentations" : [5, 6, 8, 10, 11, 29, 30, 32, 35, 46, 82, 83, 84, 94, 95],
+    "geometric_augmentations" : [20, 21, 23, 24, 26, 28, 33, 37, 38, 39, 63, 79, 80, 92, 93],
+    "filter_augmentations" : [49, 51, 54],
+    "morphological_operations" : [40, 41],
     "arithmetic_operations" : [61],
-    "logical_operations" : [65, 68],
+    "logical_operations" : [65, 66, 67, 68],
     "data_exchange_operations" : [70, 85, 86],
-    "statistical_operations" : [87, 88, 89, 90, 91],
-    "morphological_operations" : [41]
+    "arithmetic_operations" : [0, 2, 3, 5],
+    "effects_augmentations" : [6],
+    "geometric_augmentations" : [1, 4]
+}
+
+def get_case_number(map, case):
+    # Check if the input is numeric (case number)
+    if case.isdigit():
+        return str(case)
+
+    # Otherwise, treat it as a case name and find the corresponding number
+    for caseNum, info in map.items():
+        if case.lower() == info[0].lower():
+            return str(caseNum)
+    raise ValueError(f"Invalid case name or number: {case}")
+
+StatusMap = {
+    0: "RPP_SUCCESS",
+    -1: "RPP_ERROR",
+    -2: "RPP_ERROR_INVALID_ARGUMENTS",
+    -3: "RPP_ERROR_LOW_OFFSET",
+    -4: "RPP_ERROR_ZERO_DIVISION",
+    -5: "RPP_ERROR_HIGH_SRC_DIMENSION",
+    -6: "RPP_ERROR_NOT_IMPLEMENTED",
+    -7: "RPP_ERROR_INVALID_SRC_CHANNELS",
+    -8: "RPP_ERROR_INVALID_DST_CHANNELS",
+    -9: "RPP_ERROR_INVALID_SRC_LAYOUT",
+    -10: "RPP_ERROR_INVALID_DST_LAYOUT",
+    -11: "RPP_ERROR_INVALID_SRC_DATATYPE",
+    -12: "RPP_ERROR_INVALID_DST_DATATYPE",
+    -13: "RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE",
+    -14: "RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH",
+    -15: "RPP_ERROR_INVALID_PARAMETER_DATATYPE",
+    -16: "RPP_ERROR_NOT_ENOUGH_MEMORY",
+    -17: "RPP_ERROR_OUT_OF_BOUND_SRC_ROI",
+    -18: "RPP_ERROR_LAYOUT_MISMATCH",
+    -19: "RPP_ERROR_INVALID_CHANNELS",
+    -20: "RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH",
+    -21: "RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE",
+    -22: "RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE",
+    -23: "RPP_ERROR_INVALID_SRC_DIMS",
+    -24: "RPP_ERROR_INVALID_DST_DIMS",
 }
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
-def validate_and_remove_files(path):
     if not path:  # check if a string is empty
         print("Folder path is empty.")
         exit()
@@ -186,9 +244,9 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
         return False
 
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path, func_group_finder):
+def directory_name_generator(qaMode, affinity, layoutType, case, path, groupMap, func_group_finder):
     if qaMode == 0:
-        functionality_group = func_group_finder(int(case))
+        functionality_group = func_group_finder(groupMap, int(case))
         dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
@@ -196,15 +254,15 @@ def directory_name_generator(qaMode, affinity, layoutType, case, path, func_grou
     return dst_folder_temp
 
 # Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath, backend, func_group_finder):
+def process_layout(layout, qaMode, case, dstPath, backend, groupMap, func_group_finder):
     if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pkd3", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pkd3"
     elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln3", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pln3"
     elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, func_group_finder)
+        dstPathTemp = directory_name_generator(qaMode, backend, "pln1", case, dstPath, groupMap, func_group_finder)
         log_file_layout = "pln1"
 
     return dstPathTemp, log_file_layout
@@ -366,8 +424,8 @@ def print_case_list(imageAugmentationMap, backendType, parser):
         sys.exit(0)
 
 # Functionality group finder
-def func_group_finder(case_number):
-    for key, value in ImageAugmentationGroupMap.items():
+def func_group_finder(groupMap, case_number):
+    for key, value in groupMap.items():
         if case_number in value:
             return key
     return "miscellaneous"
@@ -390,3 +448,86 @@ def dataframe_to_markdown(df):
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
 
     return md
+
+def get_image_layout_type(layout, outputFormatToggle, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3"
+        if outputFormatToggle:
+            result += "_toPLN3"
+        else:
+            result += "_toPKD3"
+    elif layout == 1:
+        result += "_PLN3"
+        if outputFormatToggle:
+            result += "_toPKD3"
+        else:
+            result += "_toPLN3"
+    else:
+       result += "_PLN1"
+       result += "_toPLN1"
+    return result
+
+def get_misc_func_name(testCase, nDim, additionalArg):
+    axisMaskCase = 0
+    permOrderCase = 0
+    if testCase == 1:
+        axisMaskCase = 1
+    elif testCase == 0:
+        permOrderCase = 1
+    additionalParam = 1
+    if axisMaskCase or permOrderCase:
+        additionalParam = additionalArg
+    axisMask = additionalParam
+    permOrder = additionalParam
+    result = ""
+    if (axisMaskCase):
+        result = result + str(nDim) + "d" + "_axisMask" + str(axisMask)
+    if (permOrderCase):
+        result = result + str(nDim) + "d" + "_permOrder" + str(permOrder)
+    return result
+
+def get_voxel_layout_type(layout, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3_toPKD3"
+    elif layout == 1:
+        result += "_PLN3_toPLN3"
+    else:
+       result += "_PLN1_toPLN1"
+    return result
+
+def get_bit_depth(bitDepth):
+    result = str(bitDepthDict[bitDepth])
+    return result
+
+def get_signal_name_from_return_code(returnCode):
+    result = ""
+    if returnCode < 0:
+        signalNum = -returnCode
+        result = result + " ( "
+        for signame, signum in signal.__dict__.items():
+            if isinstance(signum, int) and signum == signalNum:
+                signalName = signame
+                break
+        result = result + signalName + " ) "
+    elif(returnCode > 127):
+        signalNum = returnCode - 256
+        if signalNum in StatusMap.keys():
+            result = result + " ( " + StatusMap[signalNum] + " ) "
+    return result
+
+def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        if exitCode == 250:
+            errorLog[0]["notExecutedFunctionality"] += 1
+        else:
+            if exitCode > 127:
+                errorData = "Returned non-zero exit status : " + str(exitCode - 256) + " " + stderrData.decode()
+            else:
+                errorData = "Returned non-zero exit status : " + str(exitCode) + " " + stderrData.decode()
+            msg = caseName + functionBitDepth + functionSpecificName + " - " + errorData + get_signal_name_from_return_code(exitCode)
+            errorLog.append(msg)

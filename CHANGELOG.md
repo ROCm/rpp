@@ -2,61 +2,124 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.15.3 (unreleased)
+## RPP 2.1.0 for ROCm 7.1.0
 
-### Changes
+### Added
+* Solarize augmentation for HOST and HIP
+* Hue and Saturation adjustment augmentations for HOST and HIP 
+* Find RPP - cmake module
+* Posterize augmentation for HOST and HIP
 
-* RPP Tensor Dilate support on HOST
+### Changed
+* HALF - Fix half.hpp path updates
+* Box filter - padding updates 
+
+
+### Removed
+* Packaging - Remove Meta Package dependency for HIP
+* SLES 15 SP6 support
+
+### Resolved issues
+* Test Suite - Fixes for accuracy
+* HIP Backend - Check return status warning fixes
+* Bugfix - HIP vector types init 
+
+## RPP 2.0.0 for ROCm 7.0.0
+
+### Added
+* Bitwise NOT, Bitwise AND, Bitwise OR augmentations on HOST (CPU) and HIP backends. (#520)
+* Tensor Concat augmentation on HOST (CPU) and HIP backends. (#530)
+* JPEG Compression Distortion augmentation on HIP backend. (#538)
+* `log1p`, defined as `log (1 + x)`, tensor augmentation support on HOST (CPU) and HIP backends.
+* JPEG Compression Distortion augmentation on HOST (CPU) backend. (#531)
+
+### Changed
+
+* All handle creation and destruction APIs have been consolidated to `rppCreate()`, for handle initialization, and `rppDestroy()`,  for handle destruction (#513)
+* RPP function category "logical_operations" more appropriately renamed to "bitwise_operations". (#520)
+* TurboJPEG package installation enabled for RPP Test Suite with `sudo apt-get install libturbojpeg0-dev`. Instructions updated in utilities/test_suite/README.md. (#518)
+* Changed API of swap_channels augmentation to be called channel_permute, which now accepts one new argument, "permutationTensor" (pointer to a unsigned int tensor) that provides the permutation order to swap the RGB channels of each input image in the batch in any order. (#547)
+  * Old API - `RppStatus rppt_swap_channels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle);`
+  * New API - `RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor , rppHandle_t rppHandle);`
+
+### Removed
+
+* Older versions of RPP handle creation inlcuding `rppCreateWithBatchSize()`, `rppCreateWithStream()`, and `rppCreateWithStreamAndBatchSize()` are now removed and replaced with `rppCreate()`.
+* Older versions of RPP handle destruction API including `rppDestroyGPU()` and `rppDestroyHost()` are now removed and replaced with `rppDestroy()`.
+
+### Resolved issues
+
+* Test package - debian packages will install required dependencies
+
+## RPP 1.9.10 for ROCm 6.4.0
+
+### Added
+
+* RPP Tensor Gaussian Filter support on HOST (CPU) backend. (#478)
+* RPP Fog augmentation on HOST (CPU) and HIP backends. (#446)
+* RPP Rain augmentation on HOST(CPU) and HIP backends. (#463)
+* RPP Warp Perspective on HOST (CPU) and HIP backends. (#451)
+* RPP Tensor Bitwise-XOR support on HOST (CPU) and HIP backends. (#464)
+* RPP Threshold on HOST (CPU) and HIP backends. (#456)
+* RPP Tensor Box Filter support on HOST (CPU) backend.(#425)
+* RPP Audio Support for Spectrogram on HIP backend. (#433)
+* RPP Audio Support for Mel Filter Bank on HIP backend. (#421)
+
+### Changed
+
+* AMD Clang is now the default CXX and C compiler
+* AMD RPP can now pass HOST (CPU) build with g++ (#517)
+* Test Suite case numbers have been replaced with ENUMs for all augmentations to enhance test suite readability (#499)
+* Test suite updated to return error codes from RPP API and display them (#483)
+* Internal to RPP working - Restructure half.hpp and hip_fp16.h includes in one common header (#459)
+
+### Resolved issues
+
+* CXX Compiler: Fixed HOST (CPU) g++ issues. (#517)
+* Deprecation warning fixed for the "'sprintf' is deprecated" warning. (#512)
+* Test suite build fix - RPP Test Suite Pre-requisite instructions updated to lock to a specific 'nifti_clib' commit as stated in ReadME - https://github.com/ROCm/rpp/tree/develop/utilities/test_suite#prerequisites (#506)
+* Fixed broken image links for pixelate and jitter (#461)
+* Internal to RPP working - Bugfix for Log Tensor in stride updation in log_recursive function (#479)
 
 ## RPP 1.9.1 for ROCm 6.3.0
- 
-### Changes
- 
-* Test - Prerequisites Updates
-* RPP Glitch on HOST and HIP
-* AMD Advanced - Build Flag
-* RPP Audio Support HIP - Resample
-* RPP Audio Support HIP - Pre emphasis filter
-* RPP Pixelate - HOST and HIP
-* RPP Audio Support HIP - Down-mixing 
-* RPP Audio Support HIP - To Decibels
-* RPP Audio Support HIP - Non silent region
 
-### Removals
- 
-* TurboJPEG - older version
- 
-### Optimizations
- 
-* macOS - Build fix 
-* Docs - changed roiTensorSrc to roiTensorPtrSrc in documentation
-* Test Suite - updates 
- 
+### Added
+
+* RPP Glitch has been added to the HOST and HIP backend.
+* RPP Pixelate has been added to the HOST and HIP backend.
+* The following audio support was added to the HIP backend:
+  * Resample
+  * Pre emphasis filter
+  * Down-mixing
+  * To Decibels
+  * Non silent region
+
+### Changed
+
+* Test prerequisites have been updated.
+
+### Removed
+
+* Older versions of TurboJPEG have been removed.
+
+### Optimized
+
+* Updated the test suite
+
 ### Resolved issues
- 
-* RPP Test Suite - augmentations fix 
-* Copy - bugfix for `NCDHW` layout
-* MIVisionX compatibility fix - Resample and pre-emphasis filter
-* Docs - fix broken image links
- 
+
+* macOS build
+* RPP Test Suite: augmentations fix
+* Copy: bugfix for `NCDHW` layout
+* MIVisionX compatibility fix: Resample and pre-emphasis filter
+
 ### Known issues
 
-* Package only supports HIP backend
- 
+* Package installation only supports the HIP backend.
+
 ### Upcoming changes
- 
-* Optimized audio augmentations 
 
-### Tested configurations
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RHEL - `8`/`9`
-* ROCm: rocm-core - `6.3.0.60300`
-* Clang - Version `5.0.1`+
-* CMake - Version `3.16.3`+
-* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+* Optimized audio augmentations
 
 
 ## RPP 1.8.0 for ROCm 6.2.0

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,12 +30,12 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <time.h>
-#include <filesystem.h>
 #include <omp.h>
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
 #include <map>
+#include <iomanip>
 #include "rpp.h"
 #include "nifti1.h"
 
@@ -67,6 +67,16 @@ std::map<int, string> augmentationMap =
     {4, "flip_voxel"},
     {5, "multiply_scalar"},
     {6, "gaussian_noise_voxel"}
+};
+
+enum Augmentation {
+    FUSED_MULTIPLY_ADD_SCALAR = 0,
+    SLICE = 1,
+    ADD_SCALAR = 2,
+    SUBTRACT_SCALAR = 3,
+    FLIP_VOXEL = 4,
+    MULTIPLY_SCALAR = 5,
+    GAUSSIAN_NOISE_VOXEL = 6
 };
 
 void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)

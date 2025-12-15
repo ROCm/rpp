@@ -1,7 +1,7 @@
 #[[
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ SOFTWARE.
 ]]
 
 find_path(HALF_INCLUDE_DIRS
-    NAMES half/half.hpp
+    NAMES half/half.hpp half.hpp
     HINTS
     $ENV{HALF_DIR}
     $ENV{ROCM_PATH}/include
