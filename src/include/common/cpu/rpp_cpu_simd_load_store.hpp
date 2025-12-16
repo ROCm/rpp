@@ -1703,6 +1703,30 @@ inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_permutevar8x32_ps(p[2], pxMask); /* shuffle as B08-B01 */
 }
 
+inline void rpp_load24_f16pkd3_to_f32pln3_mirror_avx(Rpp16f *srcPtr, __m256 *p)
+{
+    __m128 p128[8];
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+    // Usage of SSE to load values instead of AVX to avoid negative performance effects of cross lane shuffling
+    p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr)))); /* loads R01|G01|B01|R02 */
+    p128[1] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 3)))); /* loads R02|G02|B02|R03 */
+    p128[2] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 6)))); /* loads R03|G03|B03|R04 */
+    p128[3] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 9)))); /* loads R04|G04|B04|R05 */
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]); /* Transpose the 4x4 matrix and forms [[R01 R02 R03 R04][B01 B02 B03 B04][G01 G02 G03 G04][R02 R03 R04 R05]] */
+    p128[4] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 12)))); /* loads R05|G05|B05|R06 */
+    p128[5] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 15)))); /* loads R06|G06|B06|R07 */
+    p128[6] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 18)))); /* loads R07|G07|B07|R08 */
+    p128[7] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 21)))); /* loads R08|G08|B08|R09 */
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]); /* Transpose the 4x4 matrix and forms [[R05 R06 R07 R08][B05 B06 B07 B08][G05 G06 G07 G08][R06 R07 R08 R09]] */
+    p[0] = _mm256_setr_m128(p128[0], p128[4]); /* packs as R01-R08 */
+    p[1] = _mm256_setr_m128(p128[1], p128[5]); /* packs as G01-G08 */
+    p[2] = _mm256_setr_m128(p128[2], p128[6]); /* packs as B01-B08 */
+
+    p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
+    p[1] = _mm256_permutevar8x32_ps(p[1], pxMask); /* shuffle as G08-G01 */
+    p[2] = _mm256_permutevar8x32_ps(p[2], pxMask); /* shuffle as B08-B01 */
+}
+
 inline void rpp_store24_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
 {
     _mm256_storeu_ps(dstPtrR, p[0]);
@@ -1796,6 +1820,19 @@ inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *sr
     p[0] = _mm256_loadu_ps(srcPtrR); /* loads pixels R01-R08 */
     p[1] = _mm256_loadu_ps(srcPtrG); /* loads pixels G01-G08 */
     p[2] = _mm256_loadu_ps(srcPtrB); /* loads pixels G01-B08 */
+
+    p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
+    p[1] = _mm256_permutevar8x32_ps(p[1], pxMask); /* shuffle as G08-G01 */
+    p[2] = _mm256_permutevar8x32_ps(p[2], pxMask); /* shuffle as B08-B01 */
+}
+
+inline void rpp_load24_f16pln3_to_f32pln3_mirror_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
+{
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+
+    p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR)))); /* loads pixels R01-R08 */
+    p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG)))); /* loads pixels G01-G08 */
+    p[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB)))); /* loads pixels G01-B08 */
 
     p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
     p[1] = _mm256_permutevar8x32_ps(p[1], pxMask); /* shuffle as G08-G01 */
@@ -1931,6 +1968,14 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
     __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
 
     p[0] = _mm256_loadu_ps(srcPtr);
+    p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
+}
+
+inline void rpp_load8_f16_to_f32_mirror_avx(Rpp16f *srcPtr, __m256 *p)
+{
+    __m256i pxMask = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+
+    p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
     p[0] = _mm256_permutevar8x32_ps(p[0], pxMask); /* shuffle as R08-R01 */
 }
 
