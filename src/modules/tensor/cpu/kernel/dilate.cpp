@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
 // generic raw c code for dilate 
 template<typename T>
 inline void dilate_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                   Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
-                                  Rpp32f kernelSizeInverseSquare, Rpp32u channels = 1)
+                                  Rpp32u channels = 1)
 {
+    // Initialize result to minimum value
     T result;
     if constexpr (std::is_same<T, Rpp8u>::value)
         result = static_cast<T>(0);
@@ -45,7 +45,7 @@ inline void dilate_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIn
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
     for (int i = 0; i < rowKernelLoopLimit; i++)
         for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-            result  = std::max<T>(result, srcPtrTemp[i][k]);
+            result = std::max<T>(result, srcPtrTemp[i][k]);
     *dstPtrTemp = result;
 }
 
@@ -53,11 +53,11 @@ inline void dilate_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIn
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int k = 0; k < padLength; k++)
     {
-        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
         dstPtrTemp++;
     }
 }
@@ -66,14 +66,14 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int c = 0; c < 3; c++)
     {
         T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
-            dilate_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            dilate_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
             dstPtrTempChannel += 3;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -87,13 +87,13 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
 // left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit)
 {
     for (int c = 0; c < 3; c++)
     {
         for (int k = 0; k < padLength; k++)
         {
-            dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
             dstPtrTempChannels[c] += 1;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -265,7 +265,6 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
         // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
@@ -304,14 +303,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[3], pxRowHalf[2], pxResult;
-                            rpp_load_dilate_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
@@ -340,7 +339,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -366,14 +365,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3], pxRowHalf[2], pxResult;
-                        rpp_load_dilate_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
@@ -402,7 +401,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -429,13 +428,13 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3], pxRowHalf[2];
-                        rpp_load_dilate_char_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
@@ -471,7 +470,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -506,7 +505,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -518,7 +517,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[3], pxRowHalf[2];
-                            rpp_load_dilate_char_3x3_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
@@ -562,7 +561,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -604,14 +603,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
-                            rpp_load_dilate_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
@@ -636,7 +635,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -662,14 +661,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
                         __m256i pxRow[5], pxRowHalf[2], pxResult;
-                        rpp_load_dilate_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
@@ -695,7 +694,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -722,13 +721,13 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
                         __m256i pxRow[5], pxRowHalf[2];
-                        rpp_load_dilate_char_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
@@ -762,7 +761,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -798,7 +797,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -810,7 +809,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
-                            rpp_load_dilate_char_5x5_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
@@ -850,7 +849,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -892,14 +891,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
-                            rpp_load_dilate_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
@@ -924,7 +923,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -963,7 +962,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -975,7 +974,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
-                            rpp_load_dilate_char_7x7_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1015,7 +1014,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1041,14 +1040,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256i pxRow[7], pxRowHalf[2];
-                        rpp_load_dilate_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1070,7 +1069,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1097,13 +1096,13 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256i pxRow[7], pxRowHalf[2];
-                        rpp_load_dilate_char_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
                         unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
@@ -1132,7 +1131,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1170,14 +1169,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                         {
                             __m256i pxRow[9], pxRowHalf[2];
-                            rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1199,7 +1198,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1227,13 +1226,13 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // load first 32 elements elements
                     __m256i pxRow[9];
                     if (alignedLength)
-                        rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
@@ -1249,7 +1248,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
-                        rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
                         unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
 
@@ -1273,7 +1272,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1308,7 +1307,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1320,7 +1319,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[9], pxRowHalf[2];
-                            rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
                             unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1354,7 +1353,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1383,14 +1382,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         // load first 32 elements elements
                         __m256i pxRow[9], pxRowHalf[2];
-                        rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // get the accumalated result for first 8 elements
                         unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
@@ -1403,7 +1402,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
-                        rpp_load_dilate_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
                         unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
 
@@ -1434,7 +1433,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1490,9 +1489,8 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
+
 #if __AVX2__
-        const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
         // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
@@ -1531,23 +1529,23 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[3], pTemp[3], pDst[2];
-                            rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_3x3(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_max_3x3_host<1, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_max_3x3_host<1, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_3x3_host<1, 3>(&pTemp[0], &pDst[0], pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_3x3_host<1, 3>(&pTemp[1], &pDst[1], pxMaskPln, blendRegisterOrder);
                             rpp_store16_float(dstPtrTemp, pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 6);
@@ -1557,7 +1555,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1583,26 +1581,26 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[3], pTemp[3], pDst[2];
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_max_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_3x3_host<7, 63>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_3x3_host<7, 63>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
@@ -1611,7 +1609,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1637,25 +1635,25 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[3], pTemp[3], pDst[2];
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_max_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_3x3_host<7, 63>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_3x3_host<7, 63>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -1669,7 +1667,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1704,7 +1702,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1717,16 +1715,16 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         {
                             int channelStride = c * 2;
                             __m256 pRow[3], pTemp[3];
-                            rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_3x3(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_dilate_float_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_max_3x3_host<1, 3>(&pTemp[0], &pResult[channelStride], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_max_3x3_host<1, 3>(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_3x3_host<1, 3>(&pTemp[0], &pResult[channelStride], pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_3x3_host<1, 3>(&pTemp[1], &pResult[channelStride + 1], pxMaskPln, blendRegisterOrder);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 6);
                         }
 
@@ -1744,7 +1742,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1785,23 +1783,23 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[5], pDst[2], pTemp[3];
-                            rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_5x5(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_5x5(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_max_5x5_host<1, 3, 7, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
-                            blend_permute_max_5x5_host<1, 3, 7, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_5x5_host<1, 3, 7, 15>(&pTemp[0], &pDst[0], pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_5x5_host<1, 3, 7, 15>(&pTemp[1], &pDst[1], pxMaskPln, blendRegisterOrder);
 
                             rpp_store16_float(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 4);
@@ -1811,7 +1809,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1839,7 +1837,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     // process remaining columns in each row
@@ -1847,20 +1845,20 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         // compute max of loaded values from 9 rows
                         __m256 pRow[5], pDst[2], pTemp[4];
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
@@ -1870,7 +1868,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1906,7 +1904,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -1918,13 +1916,13 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[5], pTemp[2];
-                            rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_5x5(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_5x5(pRow, &pTemp[1]);
-                            blend_permute_max_5x5_host<1, 3, 7, 15>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_5x5_host<1, 3, 7, 15>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
 
                         // convert result from pln to pkd format and store in output buffer
@@ -1941,7 +1939,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1970,27 +1968,27 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         // compute max of loaded values from 9 rows
                         __m256 pRow[5], pDst[2], pTemp[4];
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_5x5_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2004,7 +2002,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2046,20 +2044,20 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[7], pTemp[2], pDst;
-                            rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_7x7(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                            rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_max_7x7_host<1, 3, 7, 15, 31, 63>(&pTemp[0], &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_7x7_host<1, 3, 7, 15, 31, 63>(&pTemp[0], &pDst, pxMaskPln, blendRegisterOrder);
 
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2073,7 +2071,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2101,21 +2099,21 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     __m256 pRow[7], pTemp[4];
                     if (alignedLength)
                     {
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[2]);
                     }
 
@@ -2124,11 +2122,11 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         // compute max of loaded values from 7 rows
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(pTemp, &pDst, pxMaskPkd, blendRegisterOrder);
 
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2146,7 +2144,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2182,7 +2180,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -2194,13 +2192,13 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256 pRow[7], pTemp[2];
-                            rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_7x7(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_max_7x7_host<1, 3, 7, 15, 31, 63>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_7x7_host<1, 3, 7, 15, 31, 63>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2216,7 +2214,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2245,31 +2243,31 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[7], pTemp[5];
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[2]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_7x7(pRow, &pTemp[3]);
                         pTemp[4] = avx_p0;
 
                         __m256 pDst[2];
-                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2285,7 +2283,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2326,12 +2324,12 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp += padLength;
 #if __AVX2__
                         __m256 pRow[9];
                         if (alignedLength)
-                            rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
@@ -2341,9 +2339,9 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                             max_rows_9x9(pRow, &pTemp[0]);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
 
-                            rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                             max_rows_9x9(pRow, &pTemp[1]);
-                            blend_permute_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pDst, pxMaskPln, blendRegisterOrder);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -2356,7 +2354,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2384,21 +2382,21 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
                     __m256 pRow[9], pTemp[4];
                     if (alignedLength)
                     {
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[2]);
                     }
 
@@ -2407,11 +2405,11 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         // compute max of loaded values from 9 rows
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(pTemp, &pDst, pxMaskPkd, blendRegisterOrder);
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -2427,7 +2425,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2462,7 +2460,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             dstPtrTemp++;
                         }
                     }
@@ -2475,14 +2473,14 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         {
                             // compute max of loaded values from 9 rows
                             __m256 pRow[9], pTemp[2];
-                            rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_9x9(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
-                            rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             max_rows_9x9(pRow, &pTemp[1]);
 
-                            blend_permute_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pResultPln[c], pxMaskPln, blendRegisterOrder);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2497,7 +2495,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2526,34 +2524,34 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
 #if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[9], pTemp[5];
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[0]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[1]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[2]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[3]);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        rpp_load_dilate_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pRow, srcPtrTemp, rowKernelLoopLimit);
                         max_rows_9x9(pRow, &pTemp[4]);
 
                         __m256 pDst[2];
-                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
-                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[0], &pDst[0], pxMaskPkd, blendRegisterOrder);
+                        blend_permute_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[1], &pDst[1], pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2569,7 +2567,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2612,7 +2610,6 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
 
         Rpp32u padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
@@ -2643,14 +2640,14 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
 
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2675,14 +2672,14 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    dilate_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
@@ -2714,7 +2711,7 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         dstPtrTemp++;
                     }
                 }
@@ -2725,7 +2722,7 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dilate_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                         increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2751,14 +2748,14 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit);
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     int channel = vectorLoopCount % 3;
-                    dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    dilate_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }
@@ -2770,3 +2767,43 @@ RppStatus dilate_generic_host_tensor(T *srcPtr,
     }
     return RPP_SUCCESS;
 }
+
+template RppStatus dilate_char_host_tensor<Rpp8u>(Rpp8u*,
+                                                  RpptDescPtr,
+                                                  Rpp8u*,
+                                                  RpptDescPtr,
+                                                  Rpp32u,
+                                                  RpptROIPtr,
+                                                  RpptRoiType,
+                                                  RppLayoutParams,
+                                                  rpp::Handle&);
+
+template RppStatus dilate_char_host_tensor<Rpp8s>(Rpp8s*,
+                                                  RpptDescPtr,
+                                                  Rpp8s*,
+                                                  RpptDescPtr,
+                                                  Rpp32u,
+                                                  RpptROIPtr,
+                                                  RpptRoiType,
+                                                  RppLayoutParams,
+                                                  rpp::Handle&);
+
+template RppStatus dilate_float_host_tensor<Rpp32f>(Rpp32f*,
+                                                    RpptDescPtr,
+                                                    Rpp32f*,
+                                                    RpptDescPtr,
+                                                    Rpp32u,
+                                                    RpptROIPtr,
+                                                    RpptRoiType,
+                                                    RppLayoutParams,
+                                                    rpp::Handle&);
+
+template RppStatus dilate_float_host_tensor<Rpp16f>(Rpp16f*,
+                                                    RpptDescPtr,
+                                                    Rpp16f*,
+                                                    RpptDescPtr,
+                                                    Rpp32u,
+                                                    RpptROIPtr,
+                                                    RpptRoiType,
+                                                    RppLayoutParams,
+                                                    rpp::Handle&);
