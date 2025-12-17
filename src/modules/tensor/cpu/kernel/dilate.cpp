@@ -1953,7 +1953,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 12) * 12;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -2024,7 +2024,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 8) * 8;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
