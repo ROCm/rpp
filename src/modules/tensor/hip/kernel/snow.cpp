@@ -314,7 +314,7 @@ __global__ void snow_pln3_pkd3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float brightCoeff = brightnessCoefficient[id_z];
-    float snowThresh = ((snowThreshold[id_z] * 127.5f) + 85.0f) * ONE_OVER_255;
+    float snowThresh = fmaf(snowThreshold[id_z], 0.5f, 0.333333333f);
     int dark = darkMode[id_z];
 
     d_float24 pix_f24;
