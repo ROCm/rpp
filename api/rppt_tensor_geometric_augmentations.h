@@ -899,9 +899,6 @@ RppStatus rppt_fisheye_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! @}
- */
-
 #ifdef __cplusplus
 }
 #endif
