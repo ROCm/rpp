@@ -33,14 +33,13 @@ inline void compute_snow_host_gray(Rpp32f &pixel,
 {
     const Rpp32f lower_threshold = 0.0f;
     const Rpp32f upper_threshold = 0.39215686f;
+    const Rpp32f thresholdDiff = 0.39215686f; // upper_threshold - lower_threshold
     const Rpp32f brightnessFactor = 2.5f;
 
     // Dark mode enhancement
     if (darkMode == 1 && pixel >= lower_threshold && pixel <= upper_threshold)
     {
-        pixel *= (1.0f + (brightnessFactor - 1.0f) *
-             (1.0f - (pixel - lower_threshold) /
-             (upper_threshold - lower_threshold)));
+        pixel *= std::fmaf(-pixel / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
     }
 
     // Snow brightness
@@ -55,9 +54,10 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
     // RGB to HSL
     Rpp32f hue, sat, l, add;
     Rpp32f rf, gf, bf, cmax, cmin, delta;
-    Rpp32f lower_threshold = 0.0f;
-    Rpp32f upper_threshold = 0.39215686f;
-    Rpp32f brightnessFactor = 2.5f;
+    const Rpp32f lower_threshold = 0.0f;
+    const Rpp32f upper_threshold = 0.39215686f;
+    const Rpp32f thresholdDiff = 0.39215686f; // upper_threshold - lower_threshold
+    const Rpp32f brightnessFactor = 2.5f;
     rf = pixel->R;
     gf = pixel->G;
     bf = pixel->B;
@@ -96,7 +96,7 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
     }
     // Modify Lightness
     if(l >= lower_threshold && l <= upper_threshold && darkMode == 1)
-        l = l * (1.0f + (brightnessFactor - 1.0f) * (1.0f - (l - lower_threshold) / (upper_threshold - lower_threshold)));
+        l = l * std::fmaf(-l / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
     if(l <= snowCoefficient && !((hue>=0.514 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196)))
         l = l * brightnessCoefficient;
@@ -193,7 +193,9 @@ inline void compute_snow_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __
     pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (l >= lower_threshold && l <= upper_threshold) comparision
     pMask[1] = _mm256_cmp_ps(pSnowParams[2], avx_p1, _CMP_EQ_OQ);                                                           // Temporarily store darkmode == 1.0f comparison
     pMask[3] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // if(l >= lower_threshold && l <= upper_threshold && darkMode ==1)
-    pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, _mm256_add_ps(avx_p1, _mm256_mul_ps(_mm256_sub_ps(pBrightnessFactor, avx_p1), _mm256_sub_ps(avx_p1, _mm256_div_ps(_mm256_sub_ps(pL, pLowerThreshold),pDiffThreshold))))), pMask[3]);  // l = l * (1 + (brightnessFactor - 1) * (1 - (l - lower_threshold) / (upper_threshold - lower_threshold)));
+    __m256 pLDivDiff = _mm256_div_ps(pL, pDiffThreshold);                                                                  // l / thresholdDiff
+    __m256 pBrightnessScale = _mm256_fmsub_ps(_mm256_sub_ps(avx_p1, pBrightnessFactor), pLDivDiff, pBrightnessFactor);     // brightnessFactor - (brightnessFactor - 1) * l/thresholdDiff
+    pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, pBrightnessScale), pMask[3]);                                              // l = l * scale
     pMask[0] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.514f), _CMP_GE_OQ);                                                         // Temporarily store hue >= 0.514 comparision
     pMask[1] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.63f), _CMP_LE_OQ);                                                        // Temporarily store hue <= 0.63 comparison
     pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue>=0.5 && hue <= 0.63) comparison
@@ -255,7 +257,9 @@ inline void compute_snow_8_host(__m256 *p, __m256 *pSnowParams)
     pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (l >= lower_threshold && l <= upper_threshold) comparison
     pMask[1] = _mm256_cmp_ps(pSnowParams[2], avx_p1, _CMP_EQ_OQ);                                                           // Temporarily store darkmode == 1.0f comparison
     pMask[3] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // if(l >= lower_threshold && l <= upper_threshold && darkMode ==1)
-    pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, _mm256_add_ps(avx_p1, _mm256_mul_ps(_mm256_sub_ps(pBrightnessFactor, avx_p1), _mm256_sub_ps(avx_p1, _mm256_div_ps(_mm256_sub_ps(pL, pLowerThreshold),pDiffThreshold))))), pMask[3]);  // l = l * (1 + (brightnessFactor - 1) * (1 - (l - lower_threshold) / (upper_threshold - lower_threshold)));
+    __m256 pLDivDiff = _mm256_div_ps(pL, pDiffThreshold);                                                                  // l / thresholdDiff
+    __m256 pBrightnessScale = _mm256_fmsub_ps(_mm256_sub_ps(avx_p1, pBrightnessFactor), pLDivDiff, pBrightnessFactor);     // brightnessFactor - (brightnessFactor - 1) * l/thresholdDiff
+    pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, pBrightnessScale), pMask[3]);                                              // l = l * scale
     pMask[0] = _mm256_cmp_ps(pL, pSnowParams[1], _CMP_LE_OQ);                                                               // Temporarily store (l <= *snowCoefficient) comparison
     p[0] = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, pSnowParams[0]), pMask[0]);                                               // l = l * (*brightnessCoefficient);
 }
@@ -284,7 +288,7 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f brightnessCoefficient = brightnessCoefficientTensor[batchCount];
-        Rpp32f snowThreshold = ((snowThresholdTensor[batchCount] * 127.5f) + 85.0f) * ONE_OVER_255;
+        Rpp32f snowThreshold = std::fmaf(snowThresholdTensor[batchCount], 0.5f, 0.333333333f);
         Rpp32s darkMode = darkModeTensor[batchCount];
 
         Rpp8u *srcPtrImage, *dstPtrImage;
@@ -608,7 +612,7 @@ RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f brightnessCoefficient = brightnessCoefficientTensor[batchCount];
-        Rpp32f snowThreshold = ((snowThresholdTensor[batchCount] * (127.5)) + 85) * ONE_OVER_255;
+        Rpp32f snowThreshold = std::fmaf(snowThresholdTensor[batchCount], 0.5f, 0.333333333f);
         Rpp32s darkMode = darkModeTensor[batchCount];
 
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -908,7 +912,7 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f brightnessCoefficient = brightnessCoefficientTensor[batchCount];
-        Rpp32f snowThreshold = ((snowThresholdTensor[batchCount] * (127.5)) + 85) * ONE_OVER_255;
+        Rpp32f snowThreshold = std::fmaf(snowThresholdTensor[batchCount], 0.5f, 0.333333333f);
         Rpp32s darkMode = darkModeTensor[batchCount];
 
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -1207,7 +1211,7 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f brightnessCoefficient = brightnessCoefficientTensor[batchCount];
-        Rpp32f snowThreshold = ((snowThresholdTensor[batchCount] * (127.5)) + 85) * ONE_OVER_255;
+        Rpp32f snowThreshold = std::fmaf(snowThresholdTensor[batchCount], 0.5f, 0.333333333f);
         Rpp32s darkMode = darkModeTensor[batchCount];
 
         Rpp8s *srcPtrImage, *dstPtrImage;

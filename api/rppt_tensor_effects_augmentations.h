@@ -874,7 +874,7 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 #endif // GPU_SUPPORT
 
 /*! \brief Snow augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details The Snow augmentation does a  modification of brightness on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The Snow augmentation adds a snowed-in effect on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img640x480_1.png Sample Input
@@ -897,7 +897,7 @@ RppStatus rppt_snow_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 
 #ifdef GPU_SUPPORT
 /*! \brief Snow augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The Snow augmentation does a modification of brightness on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The Snow augmentation adds a snowed-in effect on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img640x480_1.png Sample Input
@@ -906,9 +906,9 @@ RppStatus rppt_snow_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in pinned/HIP memory, of size batchSize with 1 < brightnessCoefficient[i] <= 4 for each image in batch)
- * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in pinned/HIP memory, of size batchSize with 0 < snowThreshold[i] <= 1 for each image in batch)
- * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in pinned/HIP memory, of size batchSize, with darkModeTensor[i] = 0/1)
+ * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in pinned memory, of size batchSize with 1 < brightnessCoefficient[i] <= 4 for each image in batch)
+ * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in pinned memory, of size batchSize with 0 < snowThreshold[i] <= 1 for each image in batch)
+ * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in pinned memory, of size batchSize, with darkModeTensor[i] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>

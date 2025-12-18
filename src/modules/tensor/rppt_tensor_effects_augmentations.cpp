@@ -1490,6 +1490,16 @@ RppStatus rppt_snow_host(RppPtr_t srcPtr,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
 {
+    for(int i = 0; i < srcDescPtr->n; i++)
+    {
+        if (brightnessCoefficient[i] <= 1.0f || brightnessCoefficient[i] > 4.0f)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        if (snowThreshold[i] <= 0.0f || snowThreshold[i] > 1.0f)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        if (darkMode[i] != 0 && darkMode[i] != 1)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+    }
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -3099,6 +3109,16 @@ RppStatus rppt_snow_gpu(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    for(int i = 0; i < srcDescPtr->n; i++)
+    {
+        if (brightnessCoefficient[i] <= 1.0f || brightnessCoefficient[i] > 4.0f)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        if (snowThreshold[i] <= 0.0f || snowThreshold[i] > 1.0f)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        if (darkMode[i] != 0 && darkMode[i] != 1)
+            return RPP_ERROR_INVALID_ARGUMENTS;
+    }
+
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_snow_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,

@@ -5,28 +5,30 @@
 __device__ __forceinline__ void snow_1GRAY_hip_compute(float *pixel, float brightnessCoefficient, float snowThreshold, int darkMode)
 {
     float lightness = *pixel;
-    float lowerThreshold = 0.0f;
-    float upperThreshold = 0.39215686f;
-    float brightnessFactor = 2.5f;
+    const float lowerThreshold = 0.0f;
+    const float upperThreshold = 0.39215686f;
+    const float thresholdDiff = 0.39215686f; // upperThreshold - lowerThreshold
+    const float brightnessFactor = 2.5f;
+    
     //Lighter the darken images
     if(lightness >= lowerThreshold && lightness <= upperThreshold && (darkMode == 1))
-        lightness = lightness * fmaf((brightnessFactor - 1.0f), (1.0f - (lightness - lowerThreshold) / (upperThreshold - lowerThreshold)), 1.0f);
+        lightness = lightness * fmaf(-lightness / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
     // Modify Lightness 
     if(lightness <= snowThreshold)
         lightness = lightness * brightnessCoefficient;
 
     *pixel = lightness;
-
 }
 __device__ __forceinline__ void snow_1RGB_hip_compute(float *pixelR, float *pixelG, float *pixelB, float brightnessCoefficient, float snowThreshold, int darkMode)
 {
     // RGB to HSL
     float hue, sat, lightness;
     float rf, gf, bf, cmax, cmin, delta;
-    float lowerThreshold = 0.0f;
-    float upperThreshold = 0.39215686f;
-    float brightnessFactor = 2.5f;
+    const float lowerThreshold = 0.0f;
+    const float upperThreshold = 0.39215686f;
+    const float thresholdDiff = 0.39215686f; // upperThreshold - lowerThreshold
+    const float brightnessFactor = 2.5f;
 
     rf = *pixelR;
     gf = *pixelG;
@@ -56,7 +58,7 @@ __device__ __forceinline__ void snow_1RGB_hip_compute(float *pixelR, float *pixe
 
     //Lighter the darken images
     if(lightness >= lowerThreshold && lightness <= upperThreshold && (darkMode == 1))
-        lightness = lightness * fmaf((brightnessFactor - 1.0f), (1.0f - (lightness - lowerThreshold) / (upperThreshold - lowerThreshold)), 1.0f);
+        lightness = lightness * fmaf(-lightness / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
     // Modify L 
     if(lightness <= snowThreshold && !((hue >= 0.514f && hue <= 0.63f) && (sat >= 0.196f) && (lightness >= 0.196f)))
@@ -209,7 +211,7 @@ __global__ void snow_pkd_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float brightCoeff = brightnessCoefficient[id_z];
-    float snowThresh = ((snowThreshold[id_z] * 127.5f) + 85.0f) * ONE_OVER_255;
+    float snowThresh = fmaf(snowThreshold[id_z], 0.5f, 0.333333333f);
     int dark = darkMode[id_z];
 
     d_float24 pix_f24;
@@ -241,7 +243,7 @@ __global__ void snow_pln_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float brightCoeff = brightnessCoefficient[id_z];
-    float snowThresh = ((snowThreshold[id_z] * 127.5f) + 85.0f) * ONE_OVER_255;
+    float snowThresh = fmaf(snowThreshold[id_z], 0.5f, 0.333333333f);
     int dark = darkMode[id_z];
 
     if (channelsDst == 3)
@@ -281,7 +283,7 @@ __global__ void snow_pkd3_pln3_hip_tensor(T *srcPtr,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float brightCoeff = brightnessCoefficient[id_z];
-    float snowThresh = ((snowThreshold[id_z] * 127.5f) + 85.0f) * ONE_OVER_255;
+    float snowThresh = fmaf(snowThreshold[id_z], 0.5f, 0.333333333f);
     int dark = darkMode[id_z];
 
     d_float24 pix_f24;
