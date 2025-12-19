@@ -221,7 +221,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
             {
                 __m128 pOutputChannel[(numVecs + 1) * 3];   // add 1 with numVecs for additional vector for transpose function with zero initialization 
-                set_zeros(pOutputChannel, numVecs * 3);
+                set_zeros(pOutputChannel, (numVecs + 1) * 3);
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
                 __m128 *pOutputB = pOutputChannel + (numVecs * 2);
@@ -362,7 +362,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
             {
                 __m128 pOutputChannel[(numVecs + 1) * 3];   // add 1 with numVecs for additional vector for transpose function with zero initialization 
-                set_zeros(pOutputChannel, numVecs * 3);
+                set_zeros(pOutputChannel, (numVecs + 1) * 3);
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
                 __m128 *pOutputB = pOutputChannel + (numVecs * 2);
