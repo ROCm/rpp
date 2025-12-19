@@ -38,15 +38,11 @@ inline void compute_snow_host_gray(Rpp32f &pixel,
 
     // Dark mode enhancement
     if (darkMode == 1 && pixel >= lower_threshold && pixel <= upper_threshold)
-    {
         pixel *= std::fmaf(-pixel / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
-    }
 
     // Snow brightness
     if (pixel <= snowCoefficient)
-    {
         pixel *= brightnessCoefficient;
-    }
 }
 
 inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient, Rpp32f snowCoefficient, Rpp32s darkMode)
