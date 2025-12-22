@@ -126,7 +126,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                                        rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
 
