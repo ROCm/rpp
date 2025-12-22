@@ -195,7 +195,7 @@ RppStatus hip_exec_max_batch(Rpp8u *srcPtr1, Rpp8u *srcPtr2, Rpp8u *dstPtr, rpp:
 
 // helpers
 
-RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc, rpp::Handle& handle);
+RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc, rpp::Handle& handle);
 
 
 #endif //RPP_HIP_HOST_DECLS_H

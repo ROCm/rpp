@@ -2,20 +2,17 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 2.2.1 (Unreleased)
+## RPP 2.2.1 for ROCm 7.2.0
 
 ### Added
-*
+* HOST and HIP - pinned buffers API support
 
 ### Changed
 * CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
 * Mem Copy eliminated - Helper functions responsible for these copies copy_param_float(), copy_param_uint() have been removed and buffers now consistently use pinned/HIP memory
 
-### Removed
-*
-
 ### Resolved issues
-*
+* Test Suite - Error Code Capture updates
 
 ## RPP 2.1.0 for ROCm 7.1.0
 

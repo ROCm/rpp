@@ -40,7 +40,7 @@ static __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
     roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y - 1);
 }
 
-static RppStatus hip_exec_roi_converison_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
+static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
                                                       rpp::Handle& handle)
 {
     int localThreads_x = 256;
