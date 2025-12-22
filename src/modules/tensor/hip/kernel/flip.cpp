@@ -280,6 +280,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                RpptDescPtr srcDescPtr,
                                T *dstPtr,
                                RpptDescPtr dstDescPtr,
+                               Rpp32u *horizontalTensor,
+                               Rpp32u *verticalTensor,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rpp::Handle& handle)
@@ -303,8 +305,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            make_uint2(dstDescPtr->w, dstDescPtr->h),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                           horizontalTensor,
+                           verticalTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -320,8 +322,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            make_uint2(dstDescPtr->w, dstDescPtr->h),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                           horizontalTensor,
+                           verticalTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -338,8 +340,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                               horizontalTensor,
+                               verticalTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -355,8 +357,8 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                               horizontalTensor,
+                               verticalTensor,
                                roiTensorPtrSrc);
         }
     }
@@ -368,6 +370,8 @@ template RppStatus hip_exec_flip_tensor<Rpp8u>(Rpp8u*,
                                                RpptDescPtr,
                                                Rpp8u*,
                                                RpptDescPtr,
+                                               Rpp32u*,
+                                               Rpp32u*,
                                                RpptROIPtr,
                                                RpptRoiType,
                                                rpp::Handle&);
@@ -376,6 +380,8 @@ template RppStatus hip_exec_flip_tensor<half>(half*,
                                               RpptDescPtr,
                                               half*,
                                               RpptDescPtr,
+                                              Rpp32u*,
+                                              Rpp32u*,
                                               RpptROIPtr,
                                               RpptRoiType,
                                               rpp::Handle&);
@@ -384,6 +390,8 @@ template RppStatus hip_exec_flip_tensor<Rpp32f>(Rpp32f*,
                                                 RpptDescPtr,
                                                 Rpp32f*,
                                                 RpptDescPtr,
+                                                Rpp32u*,
+                                                Rpp32u*,
                                                 RpptROIPtr,
                                                 RpptRoiType,
                                                 rpp::Handle&);
@@ -392,6 +400,8 @@ template RppStatus hip_exec_flip_tensor<Rpp8s>(Rpp8s*,
                                                RpptDescPtr,
                                                Rpp8s*,
                                                RpptDescPtr,
+                                               Rpp32u*,
+                                               Rpp32u*,
                                                RpptROIPtr,
                                                RpptRoiType,
                                                rpp::Handle&);
