@@ -304,7 +304,7 @@ RppStatus snow_u8_u8_host_tensor(Rpp8u *srcPtr,
         __m256 pSnowParams[3];
         pSnowParams[0] = _mm256_set1_ps(brightnessCoefficient);
         pSnowParams[1] = _mm256_set1_ps(snowThreshold);
-        pSnowParams[2] = _mm256_set1_ps(static_cast<float>(darkMode));
+        pSnowParams[2] = _mm256_set1_ps(static_cast<Rpp32f>(darkMode));
 #endif
 
         // Snow with fused output-layout toggle (NHWC -> NCHW)
@@ -628,7 +628,7 @@ RppStatus snow_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m256 pSnowParams[3];
         pSnowParams[0] = _mm256_set1_ps(brightnessCoefficient);
         pSnowParams[1] = _mm256_set1_ps(snowThreshold);
-        pSnowParams[2] = _mm256_set1_ps(static_cast<float>(darkMode));
+        pSnowParams[2] = _mm256_set1_ps(static_cast<Rpp32f>(darkMode));
 #endif
 
         // Snow with fused output-layout toggle (NHWC -> NCHW)
@@ -928,7 +928,7 @@ RppStatus snow_f16_f16_host_tensor(Rpp16f *srcPtr,
         __m256 pSnowParams[3];
         pSnowParams[0] = _mm256_set1_ps(brightnessCoefficient);
         pSnowParams[1] = _mm256_set1_ps(snowThreshold);
-        pSnowParams[2] = _mm256_set1_ps(static_cast<float>(darkMode));
+        pSnowParams[2] = _mm256_set1_ps(static_cast<Rpp32f>(darkMode));
 #endif
 
         // Snow with fused output-layout toggle (NHWC -> NCHW)
@@ -1227,7 +1227,7 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
         __m256 pSnowParams[3];
         pSnowParams[0] = _mm256_set1_ps(brightnessCoefficient);
         pSnowParams[1] = _mm256_set1_ps(snowThreshold);
-        pSnowParams[2] = _mm256_set1_ps(static_cast<float>(darkMode));
+        pSnowParams[2] = _mm256_set1_ps(static_cast<Rpp32f>(darkMode));
 #endif
 
         // Snow with fused output-layout toggle (NHWC -> NCHW)
