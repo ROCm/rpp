@@ -78,6 +78,7 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
     }
+
     // reset source to initial position
     for (int k = 0; k < kernelSize; k++)
         srcPtrTemp[k] = srcPtrRow[k];
@@ -463,7 +464,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
+                        increment_row_ptrs(dstPtrTempChannels, dstDescPtr->c, 8);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -476,7 +477,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, dstDescPtr->c, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -754,7 +755,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 18);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 6);
+                        increment_row_ptrs(dstPtrTempChannels, dstDescPtr->c, 6);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -767,7 +768,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, dstDescPtr->c, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -1124,7 +1125,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                        increment_row_ptrs(dstPtrTempChannels, dstDescPtr->c, 4);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -1137,7 +1138,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, dstDescPtr->c, dstDescPtr->strides.hStride);
                 }
             }
         }
@@ -1491,7 +1492,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
 #if __AVX2__
-        // set the register order needed for blend operations 
+        // set the register order needed for blend operations
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
             std::fill_n(blendRegisterOrder, 7, 0);
@@ -1660,7 +1661,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
-                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                        increment_row_ptrs(dstPtrTempChannels, dstDescPtr->c, 4);
                     }
 #endif
                     vectorLoopCount += padLength * 3;
@@ -1673,14 +1674,14 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
                     }
                     // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
-                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                    increment_row_ptrs(dstPtrChannels, dstDescPtr->c, dstDescPtr->strides.hStride);
                 }
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1953,7 +1954,7 @@ RppStatus dilate_float_host_tensor(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 12) * 12;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
