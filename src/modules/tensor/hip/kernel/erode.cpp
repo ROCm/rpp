@@ -33,16 +33,9 @@ __device__ void erode_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
     #pragma unroll
     for (int k = 0; k < 8; k++)
     {
-        float minVal;
-        if constexpr (std::is_same_v<T, Rpp8u>)
-            minVal = 255.0f;
-        else if constexpr (std::is_same_v<T, Rpp8s>)
-            minVal = 127.0f;
-        else if constexpr (std::is_same_v<T, Rpp32f> || std::is_same_v<T, Rpp16f>)
-            minVal = 1.0f;
-        #pragma unroll
-        for (int j = 0; j < filterSize; j++)
-            minVal = fminf(minVal, (float)srcPtr[k + j]);
+        float minVal = static_cast<float>(srcPtr[k]);
+        for (int j = 1; j < filterSize; j++)
+            minVal = fminf(minVal, static_cast<float>(srcPtr[k + j]));
         dst_f8->f1[k] = fminf(dst_f8->f1[k], minVal);
     }
 }
@@ -102,9 +95,10 @@ __global__ void erode_3x3_pkd_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));            int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
+            int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -672,10 +666,7 @@ __global__ void erode_7x7_pln_hip_tensor(T *srcPtr,
         erode_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
         erode_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
         erode_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-        if constexpr (std::is_same<T, Rpp8s>::value)
-            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
-        else
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -929,7 +920,7 @@ __global__ void erode_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1008,7 +999,7 @@ __global__ void erode_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx]; // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1093,7 +1084,7 @@ __global__ void erode_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1184,7 +1175,7 @@ __global__ void erode_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }

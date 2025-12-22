@@ -1986,7 +1986,7 @@ int main(int argc, char **argv)
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
                     convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-    
+
                 // Check if the ROI values for each input is within the bounds of the max buffer allocated
                 RpptROI roiDefault;
                 RpptROIPtr roiPtrDefault = &roiDefault;
