@@ -27,7 +27,7 @@ SOFTWARE.
 
 constexpr Rpp32s HISTOGRAM_BINS = 256;
 
-// BT.601 full-range RGB to YCbCr coefficients
+// Coefficients for RGB to YCbCr Conversion
 const Rpp32f coeffYR = 0.299000f;
 const Rpp32f coeffYG = 0.587000f;
 const Rpp32f coeffYB = 0.114000f;
@@ -38,7 +38,7 @@ const Rpp32f coeffCrR = 0.500000f;
 const Rpp32f coeffCrG = -0.418688f;
 const Rpp32f coeffCrB = -0.081312f;
 
-// BT.601 full-range YCbCr to RGB coefficients
+// Coefficients for YCbCr to RGB Conversion
 const Rpp32f coeffRCr = 1.402000f;
 const Rpp32f coeffGCb = 0.344136f;
 const Rpp32f coeffGCr = 0.714136f;
@@ -75,9 +75,9 @@ inline void rgb_to_ycbcr_compute(Rpp8u *srcR, Rpp8u *srcG, Rpp8u *srcB,
     Rpp32f cbVal = fmaf(r, coeffCbR, fmaf(g, coeffCbG, fmaf(b, coeffCbB, 128.0f)));
     Rpp32f crVal = fmaf(r, coeffCrR, fmaf(g, coeffCrG, fmaf(b, coeffCrB, 128.0f)));
 
-    *dstY = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(yVal)));
-    *dstCb = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(cbVal)));
-    *dstCr = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(crVal)));
+    *dstY = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(yVal)));
+    *dstCb = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(cbVal)));
+    *dstCr = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(crVal)));
 }
 
 // Scalar YCbCr to RGB conversion
@@ -92,9 +92,9 @@ inline void ycbcr_to_rgb_compute(Rpp8u *srcY, Rpp8u *srcCb, Rpp8u *srcCr,
     Rpp32f g = yVal - coeffGCb * cbVal - coeffGCr * crVal;
     Rpp32f b = yVal + coeffBCb * cbVal;
 
-    *dstR = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(r)));
-    *dstG = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(g)));
-    *dstB = static_cast<Rpp8u>(RPPPRANGECHECK(std::nearbyintf(b)));
+    *dstR = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(r)));
+    *dstG = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(g)));
+    *dstB = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(b)));
 }
 
 #if __AVX2__

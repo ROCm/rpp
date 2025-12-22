@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-// BT.601 full-range RGB to YCbCr coefficients
+// Coefficients for RGB to YCbCr Conversion
 __device__ constexpr float coeffYR = 0.299f;
 __device__ constexpr float coeffYG = 0.587f;
 __device__ constexpr float coeffYB = 0.114f;
@@ -37,7 +37,7 @@ __device__ constexpr float coeffCrR = 0.5f;
 __device__ constexpr float coeffCrG = -0.418688f;
 __device__ constexpr float coeffCrB = -0.081312f;
 
-// BT.601 full-range YCbCr to RGB coefficients
+// Coefficients for YCbCr to RGB Conversion
 __device__ constexpr float coeffRCr = 1.402f;
 __device__ constexpr float coeffGCb = -0.344136f;
 __device__ constexpr float coeffGCr = -0.714136f;
