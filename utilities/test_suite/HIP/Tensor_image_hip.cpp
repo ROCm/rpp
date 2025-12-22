@@ -606,6 +606,15 @@ int main(int argc, char **argv)
     Rpp32s *qualityTensor = nullptr;
     if(testCase == JPEG_COMPRESSION_DISTORTION)
         CHECK_RETURN_STATUS(hipHostMalloc(&qualityTensor, batchSize * sizeof(Rpp32s)));
+    Rpp32f *angle = nullptr;
+    if(testCase == ROTATE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&angle, batchSize * sizeof(Rpp32f)));
+
+    Rpp32u *permutationTensor = nullptr;
+    if(testCase == CHANNEL_PERMUTE)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
+    if(testCase == RICAP)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 4 * batchSize * sizeof(Rpp32u)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
@@ -2171,5 +2180,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
     if (qualityTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(qualityTensor));
+    if (permutationTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
     return 0;
 }
