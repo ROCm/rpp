@@ -1859,9 +1859,15 @@ int main(int argc, char **argv)
                     bool randomOffset = false;
                     randomOffset = qaFlag ? false : randomOffset;
 
+                    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    std::vector<RpptRoiLtrb> anchorBoxInfoTensor(totalBoxes);
+                    Rpp32u maxHoleW = 0, maxHoleH = 0;
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor.data(), roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
+
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                       errorCodeCapture = rppt_grid_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, numGridsPerColumn, numGridsPerRow, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
+                       errorCodeCapture = rppt_grid_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor.data(), boxesInEachImage, maxHoleW, maxHoleH, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

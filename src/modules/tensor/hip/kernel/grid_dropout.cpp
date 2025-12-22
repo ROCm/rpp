@@ -114,30 +114,24 @@ __global__ void grid_dropout_pln1_hip_tensor(T *dstPtr,
 // -------------------- Set 1 - Kernel Executors --------------------
 template <typename T>
 RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
-                                RpptDescPtr srcDescPtr,
-                                T *dstPtr,
-                                RpptDescPtr dstDescPtr,
-                                Rpp32u numGridsPerColumn,
-                                Rpp32u numGridsPerRow,
-                                Rpp32f holeRatio,
-                                bool randomOffset,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rpp::Handle& handle)
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       const RpptRoiLtrb *anchorBoxInfoTensor,
+                                       Rpp32u boxesInEachImage,
+                                       Rpp32u maxHoleW,
+                                       Rpp32u maxHoleH,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
 
-    RpptRoiLtrb *anchorBoxInfoTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb)));
     RpptRoiLtrb *d_anchorBoxInfoTensor;
     hipMalloc(&d_anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb));
-
-    Rpp32u maxHoleW = 0, maxHoleH = 0;
-    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
     hipMemcpy(d_anchorBoxInfoTensor, anchorBoxInfoTensor, totalBoxes * sizeof(RpptRoiLtrb), hipMemcpyHostToDevice);
 
     int globalThreads_x = maxHoleW;
@@ -228,7 +222,6 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     }
 
     CHECK_RETURN_STATUS(hipFree(d_anchorBoxInfoTensor));
-    CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
     return RPP_SUCCESS;
 }
 
@@ -236,10 +229,10 @@ template RppStatus hip_exec_grid_dropout_tensor<Rpp8u>(Rpp8u*,
                                                        RpptDescPtr,
                                                        Rpp8u*,
                                                        RpptDescPtr,
+                                                       const RpptRoiLtrb*,
                                                        Rpp32u,
                                                        Rpp32u,
-                                                       Rpp32f,
-                                                       bool,
+                                                       Rpp32u,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        rpp::Handle&);
@@ -248,10 +241,10 @@ template RppStatus hip_exec_grid_dropout_tensor<half>(half*,
                                                       RpptDescPtr,
                                                       half*,
                                                       RpptDescPtr,
+                                                      const RpptRoiLtrb*,
                                                       Rpp32u,
                                                       Rpp32u,
-                                                      Rpp32f,
-                                                      bool,
+                                                      Rpp32u,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       rpp::Handle&);
@@ -260,10 +253,10 @@ template RppStatus hip_exec_grid_dropout_tensor<Rpp32f>(Rpp32f*,
                                                         RpptDescPtr,
                                                         Rpp32f*,
                                                         RpptDescPtr,
+                                                        const RpptRoiLtrb*,
                                                         Rpp32u,
                                                         Rpp32u,
-                                                        Rpp32f,
-                                                        bool,
+                                                        Rpp32u,
                                                         RpptROIPtr,
                                                         RpptRoiType,
                                                         rpp::Handle&);
@@ -272,10 +265,10 @@ template RppStatus hip_exec_grid_dropout_tensor<Rpp8s>(Rpp8s*,
                                                        RpptDescPtr,
                                                        Rpp8s*,
                                                        RpptDescPtr,
+                                                       const RpptRoiLtrb*,
                                                        Rpp32u,
                                                        Rpp32u,
-                                                       Rpp32f,
-                                                       bool,
+                                                       Rpp32u,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        rpp::Handle&);

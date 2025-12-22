@@ -30,10 +30,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   Rpp32u numGridsPerColumn,
-                                   Rpp32u numGridsPerRow,
-                                   Rpp32f holeRatio,
-                                   bool randomOffset,
+                                   const RpptRoiLtrb *anchorBoxInfoTensor,
+                                   Rpp32u boxesInEachImage,
+                                   Rpp32u maxHoleW,
+                                   Rpp32u maxHoleH,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    RppLayoutParams layoutParams,
@@ -42,11 +42,6 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
-    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
-    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
-    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * numGridsPerRow * numGridsPerColumn];
-    Rpp32u maxHoleW = 0, maxHoleH = 0;
-    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
     T fillValue{};
     if (std::is_same<T, Rpp8s>::value)
         fillValue = -128;
@@ -60,7 +55,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32u numBoxes = boxesInEachImage;
-        RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * numBoxes;
+        const RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * numBoxes;
 
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -313,10 +308,10 @@ template RppStatus grid_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                    RpptDescPtr,
                                                    Rpp8u*,
                                                    RpptDescPtr,
+                                                   const RpptRoiLtrb*,
                                                    Rpp32u,
                                                    Rpp32u,
-                                                   Rpp32f,
-                                                   bool,
+                                                   Rpp32u,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    RppLayoutParams,
@@ -326,10 +321,10 @@ template RppStatus grid_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                     RpptDescPtr,
                                                     Rpp16f*,
                                                     RpptDescPtr,
+                                                    const RpptRoiLtrb*,
                                                     Rpp32u,
                                                     Rpp32u,
-                                                    Rpp32f,
-                                                    bool,
+                                                    Rpp32u,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     RppLayoutParams,
@@ -339,10 +334,10 @@ template RppStatus grid_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                     RpptDescPtr,
                                                     Rpp32f*,
                                                     RpptDescPtr,
+                                                    const RpptRoiLtrb*,
                                                     Rpp32u,
                                                     Rpp32u,
-                                                    Rpp32f,
-                                                    bool,
+                                                    Rpp32u,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     RppLayoutParams,
@@ -352,10 +347,10 @@ template RppStatus grid_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                    RpptDescPtr,
                                                    Rpp8s*,
                                                    RpptDescPtr,
+                                                   const RpptRoiLtrb*,
                                                    Rpp32u,
                                                    Rpp32u,
-                                                   Rpp32f,
-                                                   bool,
+                                                   Rpp32u,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    RppLayoutParams,
