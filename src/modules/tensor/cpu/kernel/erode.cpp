@@ -1257,7 +1257,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         unpack_and_min_host<9>(pxRow, pxRowHalf);
 
                         // get the accumalated result for first 8 elements
-                        __m128i px128[8], pxTemp[7], pxDst[4];
+                        __m128i px128[8], pxTemp[7], pxDst[2];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
                         blend_shuffle_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
@@ -1267,7 +1267,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                         unpack_and_min_host<9>(pxRow, pxRowHalf);
 
                         // get the accumalated result for next 24 elements
-                        extract_4sse_registers(pxRowHalf, &px128[2]);
+                        extract_4sse_registers(pxRowHalf, &px128[4]);
                         blend_shuffle_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[1], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[2], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_min_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[3], pxMaskPkd, blendRegisterOrder);
