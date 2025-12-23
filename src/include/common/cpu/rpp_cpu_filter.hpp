@@ -1360,7 +1360,7 @@ struct MorphLoadInfo<Rpp8s>
 {
     using VecType = __m256i;
 
-    static inline VecType load(void *ptr) { return _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i*)ptr)); }
+    static inline VecType load(void *ptr) { return _mm256_loadu_si256((__m256i*)ptr); }
 };
 
 template <>

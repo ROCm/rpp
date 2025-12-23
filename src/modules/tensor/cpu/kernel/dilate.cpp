@@ -107,92 +107,32 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
 
 // -------------------- Set 0 dilate compute functions --------------------
 
-// unpack lower half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
-inline void unpacklo_and_max_3x3_host(__m256i *pxRow, __m256i *pxDst)
+// unpack halves from K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+template <const int K>
+inline void unpack_and_max_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[i], avx_px0));
+    pxDst[1] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[1] = _mm256_max_epi16(pxDst[1], _mm256_unpackhi_epi8(pxRow[i], avx_px0));
 }
 
-// unpack higher half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
-inline void unpackhi_and_max_3x3_host(__m256i *pxRow, __m256i *pxDst)
+// unpack and sign extend halves of K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+template <const int K>
+inline void unpack_signext_and_max_host(__m256i *pxRow, __m256i *pxDst)
 {
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-}
-
-// unpack lower half of 5 256 bit registers and add (used for 5x5 kernel size U8/I8 variants)
-inline void unpacklo_and_max_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-}
-
-// unpack higher half of 5 256 bit registers and add (used for 5x5 kernel size U8/I8 variants)
-inline void unpackhi_and_max_5x5_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-}
-
-// unpack lower half of 7 256 bit registers and add (used for 7x7 kernel size U8/I8 variants)
-inline void unpacklo_and_max_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-}
-
-// unpack higher half of 7 256 bit registers and add (used for 7x7 kernel size U8/I8 variants)
-inline void unpackhi_and_max_7x7_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-}
-
-// unpack lower half of 9 256 bit registers and add (used for 9x9 kernel size U8/I8 variants)
-inline void unpacklo_and_max_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[7], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[8], avx_px0));
-}
-
-// unpack higher half of 9 256 bit registers and add (used for 9x9 kernel size U8/I8 variants)
-inline void unpackhi_and_max_9x9_host(__m256i *pxRow, __m256i *pxDst)
-{
-    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[7], avx_px0));
-    pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[8], avx_px0));
+    pxDst[0] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[0], avx_px0), 8), 8);
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[0] = _mm256_max_epi16(pxDst[0], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpacklo_epi8(pxRow[i], avx_px0), 8), 8));
+    pxDst[1] = _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[0], avx_px0), 8), 8);
+    #pragma unroll
+    for (int i = 1; i < K; i++)
+        pxDst[1] = _mm256_max_epi16(pxDst[1], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[i], avx_px0), 8), 8));
 }
 
 // add 3 256 bit registers (used for 3x3 kernel size F32/F16 variants)
@@ -314,8 +254,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_3x3_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<3>(pxRow, pxRowHalf);
+                            }
 
                             // perform blend and shuffle operations to get required order and add them
                             __m128i pxTemp[4];
@@ -325,8 +271,16 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             blend_shuffle_max_3x3_host<1, 3>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
                             
                             __m128i pxDst[2];
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
                             
                             pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             if constexpr (std::is_same<T, Rpp8s>::value)
@@ -376,8 +330,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_3x3_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<3>(pxRow, pxRowHalf);
+                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
@@ -387,8 +347,16 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         blend_shuffle_max_3x3_host<7, 63>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         __m128i pxDst[2];
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        }
 
                         pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                         if constexpr (std::is_same<T, Rpp8s>::value)
@@ -438,8 +406,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_3x3_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<3>(pxRow, pxRowHalf);
+                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
@@ -449,8 +423,16 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         blend_shuffle_max_3x3_host<7, 63>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         __m128i pxDst[2];
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        }
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             pxDst[0] = _mm_sub_epi8(pxDst[0], xmm_pxConvertI8);
@@ -521,8 +503,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_3x3_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_3x3_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<3>(pxRow, pxRowHalf);
+                            }
 
                             // perform blend and shuffle operations for the first 8 output values to get required order and add them
                             __m128i pxTemp[4];
@@ -532,8 +520,16 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             blend_shuffle_max_3x3_host<1, 3>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             __m128i pxDst[2];
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
 
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
@@ -614,16 +610,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_5x5_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<5>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
+
                             pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             if constexpr (std::is_same<T, Rpp8s>::value)
                                 pxResult = _mm256_sub_epi8(pxResult, avx_pxConvertI8);
@@ -672,8 +684,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_5x5_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<5>(pxRow, pxRowHalf);
+                        }
 
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -681,8 +699,18 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        }
+
                         pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                         if constexpr (std::is_same<T, Rpp8s>::value)
                             pxResult = _mm256_sub_epi8(pxResult, avx_pxConvertI8);
@@ -731,8 +759,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_5x5_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<5>(pxRow, pxRowHalf);
+                        }
 
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -740,8 +774,18 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_5x5_host<7, 63, 1, 15>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
-                        pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                        pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                        }
+
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             pxDst[0] = _mm_sub_epi8(pxDst[0], xmm_pxConvertI8);
@@ -813,16 +857,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_5x5_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_5x5_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<5>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_5x5_host<1, 3, 7, 15>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
+
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
                         }
@@ -902,16 +962,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_7x7_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<7>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
+
                             pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             if constexpr (std::is_same<T, Rpp8s>::value)
                                 pxResult = _mm256_sub_epi8(pxResult, avx_pxConvertI8);
@@ -978,16 +1054,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_7x7_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<7>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
-                            pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
-                            pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                pxDst[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packs_epi16(pxTemp[2], xmm_px0);
+                            }
+                            else
+                            {
+                                pxDst[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+                                pxDst[1] = _mm_packus_epi16(pxTemp[2], xmm_px0);
+                            }
+
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
                         }
@@ -1051,14 +1143,25 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_7x7_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<7>(pxRow, pxRowHalf);
+                        }
 
                         __m128i pxTemp[4], pxResult;
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
-                        pxResult = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                            pxResult = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                        else
+                            pxResult = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
                         if constexpr (std::is_same<T, Rpp8s>::value)
                             pxResult = _mm_sub_epi8(pxResult, xmm_pxConvertI8);
 
@@ -1106,14 +1209,25 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-                        unpacklo_and_max_7x7_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_7x7_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<7>(pxRow, pxRowHalf);
+                        }
 
                         __m128i pxTemp[4], pxResult[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
-                        pxResult[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
+                         if constexpr (std::is_same<T, Rpp8s>::value)
+                            pxResult[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                        else
+                            pxResult[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
                         pxResult[1] = xmm_px0;
                         if constexpr (std::is_same<T, Rpp8s>::value)
                             pxResult[0] = _mm_sub_epi8(pxResult[0], xmm_pxConvertI8);
@@ -1180,14 +1294,25 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<9>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
-                            pxDst = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                                pxDst = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            else
+                                pxDst = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
                             if constexpr (std::is_same<T, Rpp8s>::value)
                                 pxDst = _mm_sub_epi8(pxDst, xmm_pxConvertI8);
 
@@ -1239,8 +1364,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
                         __m256i pxRowHalf[2], pxResult;
-                        unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<9>(pxRow, pxRowHalf);
+                        }
 
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[2];
@@ -1250,8 +1381,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
-                        unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<9>(pxRow, pxRowHalf);
+                        }
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
@@ -1260,8 +1397,17 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[3], pxMaskPkd, blendRegisterOrder);
 
                         // compute final result
-                        pxDst[0] = _mm_packus_epi16(px128[0], px128[1]);
-                        pxDst[1] = _mm_packus_epi16(px128[2], px128[3]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(px128[0], px128[1]);
+                            pxDst[1] = _mm_packs_epi16(px128[2], px128[3]);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(px128[0], px128[1]);
+                            pxDst[1] = _mm_packus_epi16(px128[2], px128[3]);
+                        }
+
                         pxResult = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                         if constexpr (std::is_same<T, Rpp8s>::value)
                             pxResult = _mm256_sub_epi8(pxResult, avx_pxConvertI8);
@@ -1323,14 +1469,25 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
-                            unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                            unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                            {
+                                unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                            }
+                            else
+                            {
+                                unpack_and_max_host<9>(pxRow, pxRowHalf);
+                            }
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
-                            pxResultPln[c] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
+                            if constexpr (std::is_same<T, Rpp8s>::value)
+                                pxResultPln[c] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
+                            else
+                                pxResultPln[c] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
+
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 16);
                         }
                         if constexpr (std::is_same<T, Rpp8s>::value)
@@ -1393,8 +1550,14 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         // get the accumalated result for first 8 elements
-                        unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<9>(pxRow, pxRowHalf);
+                        }
 
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[2];
@@ -1404,16 +1567,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
-                        unpacklo_and_max_9x9_host(pxRow, &pxRowHalf[0]);
-                        unpackhi_and_max_9x9_host(pxRow, &pxRowHalf[1]);
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
+                        }
+                        else
+                        {
+                            unpack_and_max_host<9>(pxRow, pxRowHalf);
+                        }
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[1], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[2], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[3], pxMaskPkd, blendRegisterOrder);
-                        pxDst[0] = _mm_packus_epi16(px128[0], px128[1]);
-                        pxDst[1] = _mm_packus_epi16(px128[2], px128[3]);
+
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                        {
+                            pxDst[0] = _mm_packs_epi16(px128[0], px128[1]);
+                            pxDst[1] = _mm_packs_epi16(px128[2], px128[3]);
+                        }
+                        else
+                        {
+                            pxDst[0] = _mm_packus_epi16(px128[0], px128[1]);
+                            pxDst[1] = _mm_packus_epi16(px128[2], px128[3]);
+                        }
+
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             pxDst[0] = _mm_sub_epi8(pxDst[0], xmm_pxConvertI8);
