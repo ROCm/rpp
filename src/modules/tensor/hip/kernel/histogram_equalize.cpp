@@ -191,8 +191,8 @@ __global__ void build_lut_from_hist_kernel(const unsigned int *__restrict__ hist
 
     for(int i = tid; i < HISTOGRAM_BINS; i += blockDim.x)
     {
-        float denominator = fmaxf((float)(numPixels - minCdfShared), 1.0f);
-        unsigned char equalizedVal = (unsigned char)(roundf((float)((cdfShared[i] - minCdfShared) * maxPixelVal) / denominator));
+        float denominator = fmaxf(static_cast<float>(numPixels - minCdfShared), 1.0f);
+        unsigned char equalizedVal = static_cast<unsigned char>(roundf(static_cast<float>((cdfShared[i] - minCdfShared) * maxPixelVal) / denominator));
 
         unsigned char isUniform = (minCdfShared == numPixels);
         lut[batch * HISTOGRAM_BINS + i] = isUniform * i + (1 - isUniform) * equalizedVal;

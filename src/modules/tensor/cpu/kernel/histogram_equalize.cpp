@@ -204,12 +204,12 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     __m256 pMult = _mm256_set1_ps(multScalar);
     for(; vectorLoopCount <= HISTOGRAM_BINS - 16; vectorLoopCount += 16)
     {
-        __m256i ci0 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount));
+        __m256i ci0 = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(cdf + vectorLoopCount));
         __m256 cf0 = _mm256_cvtepi32_ps(ci0);
         __m256 r0 = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf0, pMinCdf), pMult), avx_p255);
         __m256i ri0 = _mm256_cvtps_epi32(r0);
 
-        __m256i ci1 = _mm256_loadu_si256((__m256i const*)(cdf + vectorLoopCount + 8));
+        __m256i ci1 = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(cdf + vectorLoopCount + 8));
         __m256 cf1 = _mm256_cvtepi32_ps(ci1);
         __m256 r1 = _mm256_min_ps(_mm256_mul_ps(_mm256_sub_ps(cf1, pMinCdf), pMult), avx_p255);
         __m256i ri1 = _mm256_cvtps_epi32(r1);
@@ -218,7 +218,7 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
         __m128i pack16_1 = _mm_packs_epi32(_mm256_castsi256_si128(ri1), _mm256_extracti128_si256(ri1, 1));
         __m128i pack8 = _mm_packus_epi16(pack16_0, pack16_1);
 
-        _mm_storeu_si128((__m128i*)(lut + vectorLoopCount), pack8);
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(lut + vectorLoopCount), pack8);
     }
 #endif
     for(; vectorLoopCount < HISTOGRAM_BINS; vectorLoopCount++)
@@ -271,7 +271,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                RppLayoutParams layoutParams,
                                                rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
