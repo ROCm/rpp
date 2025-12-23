@@ -1397,17 +1397,20 @@ inline void rpp_morphological_load_NxN(typename MorphLoadInfo<T>::VecType *pxRow
     using Info = MorphLoadInfo<T>;
     using Vec  = typename Info::VecType;
 
-    constexpr int PreloadRows = (KernelSize + 1) / 2;
+    constexpr int preLoadRows = (KernelSize + 1) / 2;
 
     // Load initial rows
-    for (int k = 0; k < PreloadRows; ++k)
+    #pragma unroll
+    for (int k = 0; k < preLoadRows; ++k)
         pxRow[k] = Info::load(srcPtrTemp[k]);
 
     // Load valid remaining rows
-    for (int k = PreloadRows; k < rowKernelLoopLimit; ++k)
+    #pragma unroll
+    for (int k = preLoadRows; k < rowKernelLoopLimit; ++k)
         pxRow[k] = Info::load(srcPtrTemp[k]);
 
     // Pad beyond valid range
+    #pragma unroll
     for (int k = rowKernelLoopLimit; k < KernelSize; ++k)
     {
         if constexpr (std::is_same_v<Vec, __m256i>)

@@ -107,7 +107,7 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
 
 // -------------------- Set 0 dilate compute functions --------------------
 
-// unpack halves from K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+// unpack halves from K 256 bit registers and max (used for KxK kernel size U8/I8 variants)
 template <const int K>
 inline void unpack_and_max_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -121,7 +121,7 @@ inline void unpack_and_max_host(__m256i *pxRow, __m256i *pxDst)
         pxDst[1] = _mm256_max_epi16(pxDst[1], _mm256_unpackhi_epi8(pxRow[i], avx_px0));
 }
 
-// unpack and sign extend halves of K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+// unpack and sign extend halves of K 256 bit registers and max (used for KxK kernel size U8/I8 variants)
 template <const int K>
 inline void unpack_signext_and_max_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -135,21 +135,21 @@ inline void unpack_signext_and_max_host(__m256i *pxRow, __m256i *pxDst)
         pxDst[1] = _mm256_max_epi16(pxDst[1], _mm256_srai_epi16(_mm256_slli_epi16(_mm256_unpackhi_epi8(pxRow[i], avx_px0), 8), 8));
 }
 
-// add 3 256 bit registers (used for 3x3 kernel size F32/F16 variants)
+// max 3 256 bit registers (used for 3x3 kernel size F32/F16 variants)
 inline void max_rows_3x3(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_max_ps(pRow[0], pRow[1]);
     pDst[0] = _mm256_max_ps(pDst[0], pRow[2]);
 }
 
-// add 5 256 bit registers (used for 5x5 kernel size F32/F16 variants)
+// max 5 256 bit registers (used for 5x5 kernel size F32/F16 variants)
 inline void max_rows_5x5(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_max_ps(_mm256_max_ps(pRow[0], pRow[1]), pRow[2]);
     pDst[0] = _mm256_max_ps(pDst[0], _mm256_max_ps(pRow[3], pRow[4]));
 }
 
-// add 7 256 bit registers (used for 7x7 kernel size F32/F16 variants)
+// max 7 256 bit registers (used for 7x7 kernel size F32/F16 variants)
 inline void max_rows_7x7(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_max_ps(_mm256_max_ps(pRow[0], pRow[1]), pRow[2]);
@@ -157,7 +157,7 @@ inline void max_rows_7x7(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_max_ps(pDst[0], pRow[6]);
 }
 
-// add 9 256 bit registers (used for 9x9 kernel size F32/F16 variants)
+// max 9 256 bit registers (used for 9x9 kernel size F32/F16 variants)
 inline void max_rows_9x9(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_max_ps(_mm256_max_ps(pRow[0], pRow[1]), pRow[2]);
@@ -253,7 +253,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[3], pxRowHalf[2], pxResult;
                             rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                            // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
@@ -263,7 +263,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                                 unpack_and_max_host<3>(pxRow, pxRowHalf);
                             }
 
-                            // perform blend and shuffle operations to get required order and add them
+                            // perform blend and shuffle operations to get required order and max of them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
@@ -329,7 +329,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[3], pxRowHalf[2], pxResult;
                         rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
@@ -339,7 +339,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             unpack_and_max_host<3>(pxRow, pxRowHalf);
                         }
 
-                        // perform blend and shuffle operations for the first 8 output values to get required order and add them
+                        // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                         __m128i pxTemp[4];
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         blend_shuffle_max_3x3_host<7, 63>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
@@ -405,7 +405,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[3], pxRowHalf[2];
                         rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
@@ -415,7 +415,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             unpack_and_max_host<3>(pxRow, pxRowHalf);
                         }
 
-                        // perform blend and shuffle operations for the first 8 output values to get required order and add them
+                        // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                         __m128i pxTemp[4];
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         blend_shuffle_max_3x3_host<7, 63>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
@@ -502,7 +502,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[3], pxRowHalf[2];
                             rpp_morphological_load_NxN<3, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
-                            // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
@@ -512,7 +512,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                                 unpack_and_max_host<3>(pxRow, pxRowHalf);
                             }
 
-                            // perform blend and shuffle operations for the first 8 output values to get required order and add them
+                            // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
@@ -609,7 +609,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
                             rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                            // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
@@ -683,7 +683,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[5], pxRowHalf[2], pxResult;
                         rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
@@ -758,7 +758,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[5], pxRowHalf[2];
                         rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
@@ -856,7 +856,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[5], pxRowHalf[2], pxResult;
                             rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
-                            // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
@@ -961,7 +961,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
                             rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                            // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
@@ -1053,7 +1053,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[7], pxRowHalf[2], pxResult;
                             rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
-                            // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
@@ -1142,7 +1142,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[7], pxRowHalf[2];
                         rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
@@ -1208,7 +1208,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[7], pxRowHalf[2];
                         rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+                        // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
@@ -1293,7 +1293,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[9], pxRowHalf[2];
                             rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                            // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
@@ -1468,7 +1468,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             __m256i pxRow[9], pxRowHalf[2];
                             rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
-                            // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and add
+                            // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
                             {
                                 unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
@@ -1549,7 +1549,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxRow[9], pxRowHalf[2];
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // get the accumalated result for first 8 elements
+                        // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
                         {
                             unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
