@@ -424,27 +424,27 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
     if (dstDescPtr->c == 3)
         return RPP_ERROR_INVALID_DST_CHANNELS;
 
-    size_t elementSize = (srcDescPtr->dataType == RpptDataType::F32) ? 4 :
-                     (srcDescPtr->dataType == RpptDataType::F16) ? 2 : 1;
-
-    size_t dataSize = dstDescPtr->strides.nStride * dstDescPtr->n * elementSize;
-
-    // convert image to grey scale if input is RGB image
-    void *tempPtr;
-    CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
+    RpptDescPtr inputDesc = srcDescPtr; 
+    void *tempPtr = nullptr;
     if (srcDescPtr->c == 3)
     {
+        size_t elementSize = (srcDescPtr->dataType == RpptDataType::F32) ? 4 : 
+                                (srcDescPtr->dataType == RpptDataType::F16) ? 2 : 1;
+        size_t dataSize = dstDescPtr->strides.nStride * dstDescPtr->n * elementSize;
+
+        CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
+    
         RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
-        rppt_color_to_greyscale_gpu(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);
+        rppt_color_to_greyscale_gpu(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);        
+        inputDesc = dstDescPtr; 
     }
-    else
-        CHECK_RETURN_STATUS(hipMemcpy(tempPtr, srcPtr, dataSize, hipMemcpyDeviceToDevice));
+    srcPtr = (tempPtr == nullptr) ? srcPtr : tempPtr;
     hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        hip_exec_sobel_filter_tensor(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                     dstDescPtr,
+        hip_exec_sobel_filter_tensor(static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes,
+                                     inputDesc,
                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      sobelType,
@@ -455,8 +455,8 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        hip_exec_sobel_filter_tensor((half*) (static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                     dstDescPtr,
+        hip_exec_sobel_filter_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
+                                     inputDesc,
                                      (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      sobelType,
@@ -467,8 +467,8 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_sobel_filter_tensor((Rpp32f*) (static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                     dstDescPtr,
+        hip_exec_sobel_filter_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
+                                     inputDesc,
                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      sobelType,
@@ -479,8 +479,8 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        hip_exec_sobel_filter_tensor(static_cast<Rpp8s*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                     dstDescPtr,
+        hip_exec_sobel_filter_tensor(static_cast<Rpp8s*>(srcPtr) + inputDesc->offsetInBytes,
+                                     inputDesc,
                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      sobelType,
@@ -490,7 +490,8 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
                                      rpp::deref(rppHandle));
     }
 
-    CHECK_RETURN_STATUS(hipFree(tempPtr));
+    if (tempPtr != nullptr)
+        CHECK_RETURN_STATUS(hipFree(tempPtr));
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;

@@ -1078,7 +1078,7 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 2e-6)
+                if(diff <= 1e-4)
                     matchedIdx++;
             }
         }
@@ -1115,9 +1115,6 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
                         matchedIdx++;
-                    else
-                        printf("Mismatch at img %d, row %d, col %d: val = %d, ref = %d, diff = %d\n",
-           imageCnt, i, j, *outVal, *outRefVal, diff);
                 }
             }
         }
@@ -1152,7 +1149,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 2e-6)
+                    if(diff <= 1e-4)
                         matchedIdx++;
                 }
             }

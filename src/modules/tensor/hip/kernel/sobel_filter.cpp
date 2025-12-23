@@ -61,10 +61,15 @@ __device__ __constant__ float sobel7x7YHip[49] = {-1,   -6,  -15,  -20,  -15,   
 
 __device__ __forceinline__ void sobel_filter_bidirection_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    rpp_hip_math_multiply8(src1_f8, src1_f8, src1_f8);
-    rpp_hip_math_multiply8(src2_f8, src2_f8, src2_f8);
-    rpp_hip_math_add8(src1_f8, src2_f8, dst_f8);
-    rpp_hip_math_sqrt8(dst_f8, dst_f8);
+    #pragma unroll
+    for (int i = 0; i < 4; i++)
+    {
+        float2 x = src1_f8->f2[i];
+        float2 y = src2_f8->f2[i];
+
+        dst_f8->f2[i].x = sqrtf(fmaf(x.x, x.x, y.x * y.x));
+        dst_f8->f2[i].y = sqrtf(fmaf(x.y, x.y, y.y * y.y));
+    }
 }
 
 template <int filterSize, typename T>
@@ -105,7 +110,7 @@ __global__ void sobel_filter_3x3_pln_bidirection_tensor(T *srcPtr,
 
     d_float8 sum_f8x, sum_f8y, sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -140,8 +145,23 @@ __global__ void sobel_filter_3x3_pln_bidirection_tensor(T *srcPtr,
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8y, filterRowY1);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8y, filterRowY2);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8y, filterRowY3);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+        {
+            rpp_hip_pixel_check_0to255(&sum_f8x);
+            rpp_hip_pixel_check_0to255(&sum_f8y);
+        }
+        else
+        {
+            rpp_hip_pixel_check_0to1(&sum_f8x);
+            rpp_hip_pixel_check_0to1(&sum_f8y);
+        }
         sobel_filter_bidirection_hip_compute(&sum_f8x, &sum_f8y, &sum_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -212,8 +232,23 @@ __global__ void sobel_filter_5x5_pln_bidirection_tensor(T *srcPtr,
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8y, filterRowY3);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8y, filterRowY4);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8y, filterRowY5);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+        {
+            rpp_hip_pixel_check_0to255(&sum_f8x);
+            rpp_hip_pixel_check_0to255(&sum_f8y);
+        }
+        else
+        {
+            rpp_hip_pixel_check_0to1(&sum_f8x);
+            rpp_hip_pixel_check_0to1(&sum_f8y);
+        }
         sobel_filter_bidirection_hip_compute(&sum_f8x, &sum_f8y, &sum_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -292,8 +327,23 @@ __global__ void sobel_filter_7x7_pln_bidirection_tensor(T *srcPtr,
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8y, filterRowY5);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8y, filterRowY6);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8y, filterRowY7);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+        {
+            rpp_hip_pixel_check_0to255(&sum_f8x);
+            rpp_hip_pixel_check_0to255(&sum_f8y);
+        }
+        else
+        {
+            rpp_hip_pixel_check_0to1(&sum_f8x);
+            rpp_hip_pixel_check_0to1(&sum_f8y);
+        }
         sobel_filter_bidirection_hip_compute(&sum_f8x, &sum_f8y, &sum_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -323,7 +373,7 @@ __global__ void sobel_filter_3x3_pln_x_gradient_tensor(T *srcPtr,
 
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -350,9 +400,14 @@ __global__ void sobel_filter_3x3_pln_x_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
-        rpp_hip_pixel_check_0to255(&sum_f8);
-        rpp_hip_adjust_range(dstPtr, &sum_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        else if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -378,6 +433,7 @@ __global__ void sobel_filter_5x5_pln_x_gradient_tensor(T *srcPtr,
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
     int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
+
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -411,7 +467,14 @@ __global__ void sobel_filter_5x5_pln_x_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -474,7 +537,14 @@ __global__ void sobel_filter_7x7_pln_x_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -503,7 +573,7 @@ __global__ void sobel_filter_3x3_pln_y_gradient_tensor(T *srcPtr,
     
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
-    __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
+    __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -530,7 +600,14 @@ __global__ void sobel_filter_3x3_pln_y_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
         sobel_row_hip_compute<3>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -589,7 +666,14 @@ __global__ void sobel_filter_5x5_pln_y_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 3][hipThreadIdx_x8], &sum_f8, filter_row4);
         sobel_row_hip_compute<5>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -652,7 +736,14 @@ __global__ void sobel_filter_7x7_pln_y_gradient_tensor(T *srcPtr,
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8, filter_row5);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8, filter_row6);
         sobel_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8, filter_row7);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        if constexpr (std::is_same<T, Rpp8u>::value)
+            rpp_hip_pixel_check_0to255(&sum_f8);
+        if constexpr (std::is_same<T, Rpp32f>::value)
+            rpp_hip_pixel_check_0to1(&sum_f8);
+        if constexpr (std::is_same<T, Rpp8s>::value)
+            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
+        else
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 }
 
@@ -681,165 +772,168 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
     tileSize.y = 16 - padLengthTwice;
     bool combined = (sobelType == 2);
 
-    if (kernelSize == 3)
+    // if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
     {
-        if(combined)
+        if (kernelSize == 3)
         {
-            hipLaunchKernelGGL(sobel_filter_3x3_pln_bidirection_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else
-        {
-            if(!sobelType)
+            if(combined)
             {
-                hipLaunchKernelGGL(sobel_filter_3x3_pln_x_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                hipLaunchKernelGGL(sobel_filter_3x3_pln_bidirection_tensor,
+                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstDescPtr->c,
+                                padLength,
+                                tileSize,
+                                roiTensorPtrSrc);
             }
             else
             {
-                hipLaunchKernelGGL(sobel_filter_3x3_pln_y_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                if(!sobelType)
+                {
+                    hipLaunchKernelGGL(sobel_filter_3x3_pln_x_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
+                else
+                {
+                    hipLaunchKernelGGL(sobel_filter_3x3_pln_y_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
             }
         }
-    }
-    else if (kernelSize == 5)
-    {
-        if(combined)
+        else if (kernelSize == 5)
         {
-            hipLaunchKernelGGL(sobel_filter_5x5_pln_bidirection_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else
-        {
-            if(!sobelType)
+            if(combined)
             {
-                hipLaunchKernelGGL(sobel_filter_5x5_pln_x_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-            else
-            {
-                hipLaunchKernelGGL(sobel_filter_5x5_pln_y_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-        }
-    }
-    else if (kernelSize == 7)
-    {
-        if(combined)
-        {
-            hipLaunchKernelGGL(sobel_filter_7x7_pln_bidirection_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else
-        {
-            if(!sobelType)
-            {
-                hipLaunchKernelGGL(sobel_filter_7x7_pln_x_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                hipLaunchKernelGGL(sobel_filter_5x5_pln_bidirection_tensor,
+                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstDescPtr->c,
+                                padLength,
+                                tileSize,
+                                roiTensorPtrSrc);
             }
             else
             {
-                hipLaunchKernelGGL(sobel_filter_7x7_pln_y_gradient_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   dstDescPtr->c,
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                if(!sobelType)
+                {
+                    hipLaunchKernelGGL(sobel_filter_5x5_pln_x_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
+                else
+                {
+                    hipLaunchKernelGGL(sobel_filter_5x5_pln_y_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
+            }
+        }
+        else if (kernelSize == 7)
+        {
+            if(combined)
+            {
+                hipLaunchKernelGGL(sobel_filter_7x7_pln_bidirection_tensor,
+                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstDescPtr->c,
+                                padLength,
+                                tileSize,
+                                roiTensorPtrSrc);
+            }
+            else
+            {
+                if(!sobelType)
+                {
+                    hipLaunchKernelGGL(sobel_filter_7x7_pln_x_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
+                else
+                {
+                    hipLaunchKernelGGL(sobel_filter_7x7_pln_y_gradient_tensor,
+                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                    0,
+                                    handle.GetStream(),
+                                    srcPtr,
+                                    make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                    dstPtr,
+                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                    dstDescPtr->c,
+                                    padLength,
+                                    tileSize,
+                                    roiTensorPtrSrc);
+                }
             }
         }
     }
