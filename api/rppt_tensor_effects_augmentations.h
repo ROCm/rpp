@@ -874,7 +874,7 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 #endif // GPU_SUPPORT
 
 /*! \brief Cutout dropout augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details Cutout dropout function erases one random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details Cutout dropout function erases random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -883,10 +883,10 @@ RppStatus rppt_solarize_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor Precomputed cutout erase regions for the batch, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
- * \param [in] colorsTensor Pointer to erase color values for each erase region
- * \param [in] numBoxesTensor Pointer to number of erase regions per image in the batch
- * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] anchorBoxInfoTensor Precomputed cutout erase regions for the batch in HOST memory, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
+ * \param [in] colorsTensor Pointer to erase color values for each erase region in HOST memory (Data Type - RppPtr_t).
+ * \param [in] numBoxesTensor Pointer to number of erase regions per image in the batch in HOST memory (Data Type - Rpp32u*)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -897,7 +897,7 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
 
 #ifdef GPU_SUPPORT
 /*! \brief Cutout dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details Cutout dropout function erases one random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details Cutout dropout function erases random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  *          srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  *          dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -906,10 +906,10 @@ RppStatus rppt_cutout_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor Precomputed cutout erase regions for the batch, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
- * \param [in] colorsTensor Pointer to erase color values for each erase region
- * \param [in] numBoxesTensor Pointer to number of erase regions per image in the batch
- * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] anchorBoxInfoTensor Precomputed cutout erase regions for the batch in HIP Pinned Host memory, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
+ * \param [in] colorsTensor Pointer to erase color values for each erase region in HIP Device memory
+ * \param [in] numBoxesTensor Pointer to number of erase regions per image in the batch in HIP Pinned Host memory (Data Type - Rpp32u*)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -929,11 +929,11 @@ RppStatus rppt_cutout_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor Precomputed grid erase regions for the batch, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
- * \param [in] boxesInEachImage Number of grid boxes per image
- * \param [in] maxHoleW Maximum hole width across all grid boxes
- * \param [in] maxHoleH Maximum hole height across all grid boxes
- * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] anchorBoxInfoTensor Precomputed grid erase regions for the batch in HOST memory, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage).
+ * \param [in] boxesInEachImage Number of grid boxes per image (Data Type - Rpp32u)
+ * \param [in] maxHoleW Maximum hole width across all grid boxes (Data Type - Rpp32u)
+ * \param [in] maxHoleH Maximum hole height across all grid boxes (Data Type - Rpp32u)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in HOST memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -953,11 +953,11 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor Precomputed grid erase regions for the batch, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
- * \param [in] boxesInEachImage Number of grid boxes per image
- * \param [in] maxHoleW Maximum hole width across all grid boxes
- * \param [in] maxHoleH Maximum hole height across all grid boxes
- * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] anchorBoxInfoTensor Precomputed grid erase regions for the batch in Pinned memory, stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
+ * \param [in] boxesInEachImage Number of grid boxes per image (Data Type - Rpp32u)
+ * \param [in] maxHoleW Maximum hole width across all grid boxes (Data Type - Rpp32u)
+ * \param [in] maxHoleH Maximum hole height across all grid boxes (Data Type - Rpp32u)
+ * \param [in] roiTensorPtrSrc ROI data for each image in source tensor in pinned memory (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.

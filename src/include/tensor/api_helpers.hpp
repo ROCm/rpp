@@ -27,7 +27,6 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rppdefs.h"
-#include <random>
 
 // sets descriptor dimensions and strides for descriptor used for fog augmentation
 inline void set_fog_mask_descriptor(RpptDescPtr descPtr, Rpp32s batchSize, Rpp32s maxHeight, Rpp32s maxWidth, Rpp32s numChannels)
