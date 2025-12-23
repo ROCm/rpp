@@ -106,7 +106,7 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
 
 // -------------------- Set 0 erode compute functions --------------------
 
-// unpack halves from K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+// unpack halves from K 256 bit registers and min (used for KxK kernel size U8/I8 variants)
 template <const int K>
 inline void unpack_and_min_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -121,7 +121,7 @@ inline void unpack_and_min_host(__m256i *pxRow, __m256i *pxDst)
 
 }
 
-// unpack and sign extend halves of K 256 bit registers and add (used for KxK kernel size U8/I8 variants)
+// unpack and sign extend halves of K 256 bit registers and min (used for KxK kernel size U8/I8 variants)
 template <const int K>
 inline void unpack_signext_and_min_host(__m256i *pxRow, __m256i *pxDst)
 {
