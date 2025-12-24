@@ -1345,10 +1345,10 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp
 }
 
 template <typename T>
-struct MorphLoadInfo;
+struct MorphVecLoader;
 
 template <>
-struct MorphLoadInfo<Rpp8u>
+struct MorphVecLoader<Rpp8u>
 {
     using VecType = __m256i;
 
@@ -1356,7 +1356,7 @@ struct MorphLoadInfo<Rpp8u>
 };
 
 template <>
-struct MorphLoadInfo<Rpp8s>
+struct MorphVecLoader<Rpp8s>
 {
     using VecType = __m256i;
 
@@ -1364,7 +1364,7 @@ struct MorphLoadInfo<Rpp8s>
 };
 
 template <>
-struct MorphLoadInfo<Rpp32f>
+struct MorphVecLoader<Rpp32f>
 {
     using VecType = __m256;
 
@@ -1372,7 +1372,7 @@ struct MorphLoadInfo<Rpp32f>
 };
 
 template <>
-struct MorphLoadInfo<Rpp16f>
+struct MorphVecLoader<Rpp16f>
 {
     using VecType = __m256;
 
@@ -1392,22 +1392,22 @@ struct MorphPad_Dilate
 };
 
 template <int KernelSize, typename T, typename PadPolicy>
-inline void rpp_morphological_load_NxN(typename MorphLoadInfo<T>::VecType *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+inline void rpp_morphological_load_NxN(typename MorphVecLoader<T>::VecType *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
-    using Info = MorphLoadInfo<T>;
-    using Vec  = typename Info::VecType;
+    using Loader = MorphVecLoader<T>;
+    using Vec  = typename Loader::VecType;
 
     constexpr int preLoadRows = (KernelSize + 1) / 2;
 
     // Load initial rows
     #pragma unroll
     for (int k = 0; k < preLoadRows; ++k)
-        pxRow[k] = Info::load(srcPtrTemp[k]);
+        pxRow[k] = Loader::load(srcPtrTemp[k]);
 
     // Load valid remaining rows
     #pragma unroll
     for (int k = preLoadRows; k < rowKernelLoopLimit; ++k)
-        pxRow[k] = Info::load(srcPtrTemp[k]);
+        pxRow[k] = Loader::load(srcPtrTemp[k]);
 
     // Pad beyond valid range
     #pragma unroll
