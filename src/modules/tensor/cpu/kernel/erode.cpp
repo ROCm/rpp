@@ -78,6 +78,7 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
     }
+    
     // reset source to initial position
     for (int k = 0; k < kernelSize; k++)
         srcPtrTemp[k] = srcPtrRow[k];
