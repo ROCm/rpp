@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     string scriptPath = argv[7];
 
     // validation checks
-    if (testType == 0 && batchSize != 3)
+    if (testType == UNIT_TEST && batchSize != 3) // unit test mode
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
             cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
@@ -124,12 +124,12 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = static_cast<Rpp64u>(oBufferSize * RESAMPLE_BUFFER_SCALE_FACTOR);
     if (testCase == RESAMPLE)
         oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
-    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = SPECTROGRAM_MAX_HEIGHT * SPECTROGRAM_MAX_WIDTH * dstDescPtr->n;
     if (testCase == SPECTROGRAM)
         oBufferSize = spectrogramMaxBufferSize;
 
@@ -193,6 +193,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)
@@ -206,7 +207,7 @@ int main(int argc, char **argv)
                     Rpp32s resetInterval = 8192;
 
                     startWallTime = omp_get_wtime();
-                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+                    errorCodeCapture = rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
 
                     break;
                 }
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    errorCodeCapture = rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
 
                     break;
                 }
@@ -240,7 +241,7 @@ int main(int argc, char **argv)
                     RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                     startWallTime = omp_get_wtime();
-                    rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
+                    errorCodeCapture = rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
 
                     break;
                 }
@@ -258,7 +259,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+                    errorCodeCapture = rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
@@ -292,7 +293,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
+                    errorCodeCapture = rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
 
                     break;
                 }
@@ -300,11 +301,14 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "resample";
 
+                    // SampleRate is calculated for updated test samples in test suite. Subject to change based on the input test sample.
+                    Rpp32u sampleRate = 16000;
+                    Rpp32f upsampleRatio = 1.15f;
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
+                        inRateTensor[i] = sampleRate;
+                        outRateTensor[i] = sampleRate * upsampleRatio;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
@@ -333,7 +337,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+                    errorCodeCapture = rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
 
                     break;
                 }
@@ -347,19 +351,21 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
+                    // height & width for each tensor in a batch for given QA inputs.
+                    // Dimensions are calculated for updated test samples in test suite. Subject to change based on the input test sample.
                     srcDimsTensor[0] = 257;
-                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[1] = 3170;
                     srcDimsTensor[2] = 257;
-                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[3] = 552;
                     srcDimsTensor[4] = 257;
-                    srcDimsTensor[5] = 214;
+                    srcDimsTensor[5] = 1131;
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
                     CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
-                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+                    errorCodeCapture = rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
@@ -375,7 +381,12 @@ int main(int argc, char **argv)
             if (missingFuncFlag == 1)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
-                return -1;
+                return RPP_ERROR_NOT_IMPLEMENTED;
+            }
+            if (errorCodeCapture != RPP_SUCCESS)
+            {
+                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
+                return errorCodeCapture;
             }
 
             wallTime = endWallTime - startWallTime;
@@ -385,7 +396,7 @@ int main(int argc, char **argv)
         }
 
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-        if (testType == 0)
+        if (testType == UNIT_TEST) // unit test mode
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             CHECK_RETURN_STATUS(hipDeviceSynchronize());
@@ -395,7 +406,7 @@ int main(int argc, char **argv)
             if (testCase != NON_SILENT_REGION_DETECTION)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
             else
-                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, scriptPath, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
@@ -415,7 +426,7 @@ int main(int argc, char **argv)
     rppDestroy(handle, backend);
 
     // performance test mode
-    if (testType == 1)
+    if (testType == PERFORMANCE_TEST) // performance test mode
     {
         // display measured times
         maxWallTime *= 1000;
