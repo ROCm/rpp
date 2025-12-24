@@ -33,16 +33,9 @@ __device__ void dilate_row_hip_compute(T *srcPtr, d_float8 *dst_f8)
     #pragma unroll
     for (int k = 0; k < 8; k++)
     {
-        float maxVal;
-        if constexpr (std::is_same_v<T, Rpp8u>)
-            maxVal = 0.0f;
-        else if constexpr (std::is_same_v<T, Rpp8s>)
-            maxVal = -128.0f;
-        else if constexpr (std::is_same_v<T, Rpp32f> || std::is_same_v<T, Rpp16f>)
-            maxVal = 0.0f;
-        #pragma unroll
+        float maxVal = static_cast<float>(srcPtr[k]);
         for (int j = 0; j < filterSize; j++)
-            maxVal = fmaxf(maxVal, (float)srcPtr[k + j]);
+            maxVal = fmaxf(maxVal, static_cast<float>(srcPtr[k + j]));
         dst_f8->f1[k] = fmaxf(dst_f8->f1[k], maxVal);
     }
 }
@@ -104,7 +97,7 @@ __global__ void dilate_3x3_pkd_hip_tensor(T *srcPtr,
         {
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));            int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -672,10 +665,7 @@ __global__ void dilate_7x7_pln_hip_tensor(T *srcPtr,
         dilate_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 4][hipThreadIdx_x8], &sum_f8);
         dilate_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 5][hipThreadIdx_x8], &sum_f8);
         dilate_row_hip_compute<7>(&src_smem[hipThreadIdx_y + 6][hipThreadIdx_x8], &sum_f8);
-        if constexpr (std::is_same<T, Rpp8s>::value)
-            rpp_hip_pack_float8_and_store8<RoundToNearest>(dstPtr + dstIdx, &sum_f8);
-        else
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
 
     if (channelsDst == 3)
@@ -929,7 +919,7 @@ __global__ void dilate_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1008,7 +998,7 @@ __global__ void dilate_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx]; // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1093,7 +1083,7 @@ __global__ void dilate_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
@@ -1184,7 +1174,7 @@ __global__ void dilate_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
             int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
-            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
+            src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
