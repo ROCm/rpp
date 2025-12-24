@@ -34,18 +34,27 @@ SOFTWARE.
 using namespace std;
 
 // This is a test-suite enum to specify the Bit-Depth Testing Mode. 
-// RPP supports different combinations of the following 7 testing modes 
-// of source and destination tensor bit depths, depending on the functionality being tested. 
+// RPP supports different combinations of the following 9 testing modes
+// of source and destination tensor bit depths, depending on the functionality being tested.
 // The capability of each functionality is listed in the RPP API documentation.
 enum BitDepthTestMode
 {
-    U8_TO_U8  = 0,  // Input: U8  -> Output: U8
-    F16_TO_F16 = 1, // Input: F16 -> Output: F16
-    F32_TO_F32 = 2, // Input: F32 -> Output: F32
-    U8_TO_F16  = 3, // Input: U8  -> Output: F16
-    U8_TO_F32  = 4, // Input: U8  -> Output: F32
-    I8_TO_I8   = 5, // Input: I8  -> Output: I8
-    U8_TO_I8   = 6  // Input: U8  -> Output: I8
+    U8_TO_U8   = 0,  // Input: U8  -> Output: U8
+    F16_TO_F16 = 1,  // Input: F16 -> Output: F16
+    F32_TO_F32 = 2,  // Input: F32 -> Output: F32
+    U8_TO_F16  = 3,  // Input: U8  -> Output: F16
+    U8_TO_F32  = 4,  // Input: U8  -> Output: F32
+    I8_TO_I8   = 5,  // Input: I8  -> Output: I8
+    U8_TO_I8   = 6,  // Input: U8  -> Output: I8
+    I16_TO_I16 = 7,  // Input: I16 -> Output: I16
+    U16_TO_U16 = 8,  // Input: U16 -> Output: U16
+    I32_TO_I32 = 9,  // Input: I32 -> Output: I32
+    U32_TO_U32 = 10, // Input: U32 -> Output: U32
+    I8_TO_F32  = 11, // Input: I8  -> Output: F32
+    I16_TO_F32 = 12, // Input: I16 -> Output: F32
+    U16_TO_F32 = 13, // Input: U16 -> Output: F32
+    U32_TO_F32 = 14, // Input: U32 -> Output: F32
+    I32_TO_F32 = 15  // Input: I32 -> Output: F32
 };
 
 // Enum representing different test types
