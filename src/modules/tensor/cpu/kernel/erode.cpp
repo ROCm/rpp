@@ -263,7 +263,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                                 unpack_and_min_host<3>(pxRow, pxRowHalf);
                             }
 
-                            // perform blend and shuffle operations to get required order and add them
+                            // perform blend and shuffle operations to get required order and min of them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_min_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
