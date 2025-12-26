@@ -255,13 +255,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<3>(pxRow, pxRowHalf);
-                            }
 
                             // perform blend and shuffle operations to get required order and max of them
                             __m128i pxTemp[4];
@@ -331,13 +327,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<3>(pxRow, pxRowHalf);
-                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                         __m128i pxTemp[4];
@@ -407,13 +399,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<3>(pxRow, pxRowHalf);
-                        }
 
                         // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                         __m128i pxTemp[4];
@@ -504,13 +492,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower half and higher half of each of 3 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<3>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<3>(pxRow, pxRowHalf);
-                            }
 
                             // perform blend and shuffle operations for the first 8 output values to get required order and max of them
                             __m128i pxTemp[4];
@@ -611,13 +595,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<5>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
@@ -685,13 +665,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<5>(pxRow, pxRowHalf);
-                        }
 
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -760,13 +736,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<5>(pxRow, pxRowHalf);
-                        }
 
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -858,13 +830,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<5>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<5>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
@@ -963,13 +931,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<7>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
@@ -1055,13 +1019,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<7>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
@@ -1144,13 +1104,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<7>(pxRow, pxRowHalf);
-                        }
 
                         __m128i pxTemp[4], pxResult;
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -1210,13 +1166,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<7>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<7>(pxRow, pxRowHalf);
-                        }
 
                         __m128i pxTemp[4], pxResult[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
@@ -1294,13 +1246,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<9>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
@@ -1364,13 +1312,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                     {
                         __m256i pxRowHalf[2], pxResult;
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
-                        }
 
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[2];
@@ -1381,13 +1325,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
-                        }
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
@@ -1469,13 +1409,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                             // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                             if constexpr (std::is_same<T, Rpp8s>::value)
-                            {
                                 unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                            }
                             else
-                            {
                                 unpack_and_max_host<9>(pxRow, pxRowHalf);
-                            }
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
@@ -1550,13 +1486,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
 
                         // unpack lower half and higher half of each of 9 loaded row values from 8 bit to 16 bit and max
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
-                        }
 
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[2];
@@ -1567,13 +1499,9 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
                         rpp_morphological_load_NxN<9, T, MorphPad_Dilate>(pxRow, srcPtrTemp, rowKernelLoopLimit);
                         if constexpr (std::is_same<T, Rpp8s>::value)
-                        {
                             unpack_signext_and_max_host<9>(pxRow, pxRowHalf);
-                        }
                         else
-                        {
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
-                        }
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
