@@ -74,11 +74,14 @@ def generate_performance_reports(RESULTS_DIR):
     dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
     print(dfPrint_noIndices)
 
-def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg):
+def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    bitDepths = list(BitDepthTestMode)
+    if testType == TestType.UNIT_TEST.value:
+        bitDepths = [BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
-        print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg))
-        result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-        log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
+        print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
+        result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth.value), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+        log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_misc_func_name(int(case), numDims, additionalArg))
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg):
@@ -100,25 +103,18 @@ def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
-    bitDepths = [0, 2]
-    if int(case) == 2:   
-        bitDepths = [2, 4]
-    elif int(case) == 4:
-        bitDepths = [11]
-    elif int(case) in (5, 6, 7) and testType == 1:
-            bitDepths = [0, 5, 7, 8, 9, 10]
-    elif testType == 1:
-        bitDepths = [0, 1, 2, 5]
-    if testType == 0:
-        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg)
-    elif testType == 1 and profilingOption == "NO":
+    if testType == TestType.UNIT_TEST.value:
+        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
         print("\n")
+        bitDepths = list(BitDepthTestMode)
         for bitDepth in bitDepths:
-            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
-    elif testType == 1 and profilingOption == "YES":
+            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
         print("\n")
+        bitDepths = list(BitDepthTestMode)
         for bitDepth in bitDepths:
-            run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
+            run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -201,7 +197,7 @@ broadcast = args.broadcast
 preserveOutput = args.preserve_output
 outFilePath = " "
 
-if testType == 0 and batchSize != 3:
+if testType == TestType.UNIT_TEST.value and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
@@ -209,10 +205,10 @@ if preserveOutput == 0:
     validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HIP")
     validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HIP")
 
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     outFilePath = outFolderPath + '/QA_RESULTS_MISC_HIP_' + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
     outFilePath = outFolderPath + '/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_' + timestamp
@@ -260,13 +256,13 @@ for case in caseList:
         else:
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, "", profilingOption)
 
-if (testType == 1 and profilingOption == "YES"):
+if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
 
     CASE_NUM_LIST = caseList
-    BIT_DEPTH_LIST = [2]
+    BIT_DEPTH_LIST = [BitDepthTestMode.F32_TO_F32]
     OFT_LIST = [0]
 
     # Open csv file
@@ -307,7 +303,7 @@ for num in caseList:
     if int(num) in miscAugmentationMap:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
-if testType == 0:
+if testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
@@ -315,7 +311,7 @@ if testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_hip")
 
 # Performance tests
-if (testType == 1 and profilingOption == "NO"):
+if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO"):
     logFileList = get_log_file_list()
     functionalityGroupList = ["statiscal_operations"]
 
