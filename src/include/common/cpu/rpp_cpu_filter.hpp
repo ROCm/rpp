@@ -1351,7 +1351,6 @@ template <>
 struct MorphVecLoader<Rpp8u>
 {
     using VecType = __m256i;
-
     static inline VecType load(void *ptr) { return _mm256_loadu_si256((__m256i*)ptr); }
 };
 
@@ -1359,7 +1358,6 @@ template <>
 struct MorphVecLoader<Rpp8s>
 {
     using VecType = __m256i;
-
     static inline VecType load(void *ptr) { return _mm256_loadu_si256((__m256i*)ptr); }
 };
 
@@ -1367,7 +1365,6 @@ template <>
 struct MorphVecLoader<Rpp32f>
 {
     using VecType = __m256;
-
     static inline VecType load(void *ptr) { return _mm256_loadu_ps((float*)ptr); }
 };
 
@@ -1375,7 +1372,6 @@ template <>
 struct MorphVecLoader<Rpp16f>
 {
     using VecType = __m256;
-
     static inline VecType load(void *ptr) { return _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps((float*)ptr))); }
 };
 
@@ -1392,13 +1388,13 @@ struct MorphPad_Dilate
     static inline __m256  pad_float() { return avx_p0; }
 };
 
-template <int KernelSize, typename T, typename PadPolicy>
+template <int kernelSize, typename T, typename padPolicy>
 inline void rpp_morphological_load_NxN(typename MorphVecLoader<T>::VecType *pxRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     using Loader = MorphVecLoader<T>;
     using Vec  = typename Loader::VecType;
 
-    constexpr int preLoadRows = (KernelSize + 1) / 2;
+    constexpr int preLoadRows = (kernelSize + 1) / 2;
 
     // Load initial rows
     #pragma unroll
@@ -1412,12 +1408,12 @@ inline void rpp_morphological_load_NxN(typename MorphVecLoader<T>::VecType *pxRo
 
     // Pad beyond valid range
     #pragma unroll
-    for (int k = rowKernelLoopLimit; k < KernelSize; ++k)
+    for (int k = rowKernelLoopLimit; k < kernelSize; ++k)
     {
         if constexpr (std::is_same_v<Vec, __m256i>)
-            pxRow[k] = PadPolicy::pad_int();
+            pxRow[k] = padPolicy::pad_int();
         else
-            pxRow[k] = PadPolicy::pad_float();
+            pxRow[k] = padPolicy::pad_float();
     }
 }
 
