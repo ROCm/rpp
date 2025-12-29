@@ -292,9 +292,9 @@ __device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_floa
         medianVal_f3.z = rpp_hip_median3(row2_f3);
         maxVal_f3.z = rpp_hip_max3(row2_f3);
 
-        float maxOfMin = rpp_hip_min3(make_float3(minVal_f3.x, minVal_f3.y, minVal_f3.z));
+        float maxOfMin = rpp_hip_max3(make_float3(minVal_f3.x, minVal_f3.y, minVal_f3.z));
         float median   = rpp_hip_median3(make_float3(medianVal_f3.x, medianVal_f3.y, medianVal_f3.z));
-        float minOfMax = rpp_hip_max3(make_float3(maxVal_f3.x, maxVal_f3.y, maxVal_f3.z));
+        float minOfMax = rpp_hip_min3(make_float3(maxVal_f3.x, maxVal_f3.y, maxVal_f3.z));
 
         median_f8->f1[px] = rpp_hip_median3(make_float3(minOfMax, median, maxOfMin));
     }
@@ -1922,7 +1922,7 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
                                         rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + kernelSize + 7) >> 3;
     int globalThreads_y = dstDescPtr->h + kernelSize;

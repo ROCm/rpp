@@ -49,15 +49,15 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
-    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))
+    print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth.value))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth.value), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
+    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_voxel_layout_type(layout, "HIP"))
     print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
    with open(loggingFolder + "/Tensor_voxel_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
-        logFile.write("./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
+        logFile.write("./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth.value) + "\n")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth.value), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -74,7 +74,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
             else:
                 logFile.write(output)
 
-        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_voxel_layout_type(layout, "HIP"))
         print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -83,26 +83,26 @@ def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerP
     if not os.path.exists(directory_path):
         os.mkdir(directory_path)
 
-    bitDepths = [0, 2]
+    bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
         with open(loggingFolder + "/Tensor_voxel_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
-            logFile.write("\nrocprof --basenames on --timestamp on --stats -o " + dstPathTemp + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth) + "\n")
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', dstPath + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + ".csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+            logFile.write("\nrocprof --basenames on --timestamp on --stats -o " + dstPathTemp + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth.value) + "\n")
+            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', dstPath + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + ".csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth.value), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
                     break
                 print(output.strip())
                 logFile.write(output.decode('utf-8'))
-        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_voxel_layout_type(layout, "HIP"))
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption = 'NO'):
-    if testType == 0:
+    if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
-    elif testType == 1 and profilingOption == "NO":
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
         run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
-    elif testType == 1 and profilingOption == "YES":
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
         run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -204,13 +204,13 @@ if qaMode and batchSize != 3:
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     if qaMode:
         outFilePath = outFolderPath + "/QA_RESULTS_HIP_VOXEL_" + timestamp
     else:
         outFilePath = outFolderPath + "/OUTPUT_VOXEL_HIP_" + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
@@ -241,13 +241,13 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
 # Create folders based on testType and profilingOption
-if testType == 1 and profilingOption == "YES":
+if testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PKD3")
     os.makedirs(dstPath + "/Tensor_PLN1")
     os.makedirs(dstPath + "/Tensor_PLN3")
 
-bitDepths = [0, 2]
-if (testType == 0 or (testType == 1 and profilingOption == "NO")):
+bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
+if (testType == TestType.UNIT_TEST.value or (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO")):
     noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
         print("\ncase numbers %s are not supported" % caseList)
@@ -255,18 +255,18 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
     for case in caseList:
         if int(case) not in voxelAugmentationMap:
             continue
-        for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
-            if testType == 0 and qaMode == 0:
+        for layout in list(Layout):
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder, voxelAugmentationMap)
+            if testType == TestType.UNIT_TEST.value and not qaMode:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            bitDepths = [0, 2]
-            if testType == 0 and qaMode:
-                bitDepths = [2]
+            bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
+            if testType == TestType.UNIT_TEST.value and qaMode:
+                bitDepths = [BitDepthTestMode.F32_TO_F32]
             for bitDepth in bitDepths:
-                run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
-elif (testType == 1 and profilingOption == "YES"):
+                run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout.value, case, numRuns, testType, qaMode, batchSize)
+elif (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
     noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)
     if noCaseSupported:
@@ -275,9 +275,9 @@ elif (testType == 1 and profilingOption == "YES"):
     for case in caseList:
         if int(case) not in voxelAugmentationMap:
             continue
-        for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder)
-            run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption)
+        for layout in list(Layout):
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", voxelAugmentationGroupMap, func_group_finder, voxelAugmentationMap)
+            run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout.value, case, numRuns, testType, qaMode, batchSize, profilingOption)
 
         RESULTS_DIR = ""
         RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
@@ -289,7 +289,7 @@ elif (testType == 1 and profilingOption == "YES"):
         TYPE_LIST = ["Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
         TENSOR_TYPE_LIST = ["Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
         CASE_NUM_LIST = caseList
-        BIT_DEPTH_LIST = [0, 2]
+        BIT_DEPTH_LIST = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
         OFT_LIST = [0]
         d_counter = {"Tensor_PKD3":0, "Tensor_PLN1":0, "Tensor_PLN3":0}
 
@@ -343,17 +343,16 @@ elif (testType == 1 and profilingOption == "YES"):
 nonQACaseList = ['6'] # Add cases present in supportedCaseList, but without QA support
 supportedCaseList = [key for key, values in imageAugmentationMap.items() if "HIP" in values]
 
-if qaMode and testType == 0:
+if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_voxel_hip ----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_hip")
 
-layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
-if (testType == 0 and qaMode == 0): # Unit tests
-    create_layout_directories(dstPath, layoutDict)
-elif (testType == 1 and profilingOption == "NO"): # Performance tests
+if (testType == TestType.UNIT_TEST.value and not qaMode): # Unit tests
+    create_layout_directories(dstPath)
+elif (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO"): # Performance tests
     logFileList = get_log_file_list(preserveOutput)
     functionalityGroupList = ["arithmetic_operations", "geometric_augmentations", "effects_augmentations"]
 
