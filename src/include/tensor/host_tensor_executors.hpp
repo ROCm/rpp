@@ -1700,7 +1700,7 @@ RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
 
-// -------------------- random_erasing --------------------
+// -------------------- random_erase --------------------
 
 template <typename T>
 RppStatus random_erase_host_tensor(T *srcPtr,

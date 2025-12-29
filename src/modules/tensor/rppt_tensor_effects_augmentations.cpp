@@ -1477,7 +1477,7 @@ RppStatus rppt_solarize_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** random_erasing ********************/
+/******************** random_erase ********************/
 
 RppStatus rppt_random_erase_host(RppPtr_t srcPtr,
                                  RpptDescPtr srcDescPtr,
