@@ -1483,17 +1483,12 @@ RppStatus rppt_random_erase_host(RppPtr_t srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  RppPtr_t dstPtr,
                                  RpptDescPtr dstDescPtr,
-                                 Rpp32u boxesInEachImage,
-                                 bool randomSeed,
+                                 RpptRoiLtrb *anchorBoxInfoTensor,
+                                 Rpp32u *numBoxesTensor,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)
 {
-    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
-    Rpp32u numBoxesTensor[srcDescPtr->n * boxesInEachImage];
-    void *colorsTensor = reinterpret_cast<Rpp32f *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
-    init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 3);
-
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

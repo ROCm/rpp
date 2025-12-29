@@ -1760,11 +1760,15 @@ int main(int argc, char **argv)
                     testCaseName = "random_erase";
                     Rpp32u boxesInEachImage = 1;
                     bool randomSeed = false;
+                    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
+                    Rpp32u numBoxesTensor[srcDescPtr->n * boxesInEachImage];
+                    void *colorsTensor = reinterpret_cast<Rpp32f *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
+                    init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 3);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                        errorCodeCapture = rppt_random_erase_host(input, srcDescPtr, output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
+                        errorCodeCapture = rppt_random_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, numBoxesTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

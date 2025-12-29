@@ -1710,9 +1710,9 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                                    RpptRoiLtrb *anchorBoxInfoTensor,
                                    Rpp32u *numBoxesTensor,
                                    RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     RppLayoutParams layoutParams,
-                                     rpp::Handle& handle);
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
 
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
