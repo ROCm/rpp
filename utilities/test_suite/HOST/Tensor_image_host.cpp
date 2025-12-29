@@ -1759,10 +1759,10 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "random_erase";
                     Rpp32u boxesInEachImage = 1;
-                    bool randomSeed = false;
+                    bool randomSeed = qaFlag ? false : true;
                     RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
                     Rpp32u numBoxesTensor[srcDescPtr->n * boxesInEachImage];
-                    void *colorsTensor = reinterpret_cast<Rpp32f *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
+                    void *colorsTensor;
                     init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 3);
 
                     startWallTime = omp_get_wtime();

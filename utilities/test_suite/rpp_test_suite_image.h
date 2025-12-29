@@ -1597,30 +1597,24 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth, bool randomSeed, int dropoutType)
+void inline init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, void *colorBuffer, Rpp8u inputBitDepth, bool randomSeed, Rpp8u dropoutType)
 {
     int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
-    std::uniform_real_distribution<float> w_ratio(0.2f, 0.4f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
-    std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
 
-    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
-    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
-    Rpp32f *colors32f = reinterpret_cast<Rpp32f *>(colorBuffer);
-    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
-
+    Rpp32u totalElements = maxBoxesPerImage * batchSize * channels;
     if (inputBitDepth == 0)
-        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp8u));
+        colorBuffer = malloc(totalElements * sizeof(Rpp8u));
+    else if (inputBitDepth == 2) 
+        colorBuffer = malloc(totalElements * sizeof(Rpp16f));
     else if (inputBitDepth == 1)
-        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp16f));
-    else if (inputBitDepth == 2)
-        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp32f));
-    else if (inputBitDepth == 5)
-        colorBuffer = (Rpp32f*)malloc(maxBoxesPerImage * batchSize * channels * sizeof(Rpp8s));
+        colorBuffer = malloc(totalElements * sizeof(Rpp32f));
+    else if (inputBitDepth == 3) 
+        colorBuffer = malloc(totalElements * sizeof(Rpp8s));
 
     for (int i = 0; i < batchSize; i++)
     {
@@ -1631,9 +1625,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
         std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
 
         if (dropoutType == 3) // Random Erasing
-        {
             curr_wh_ratio = &wh_ratio_random;
-        }
 
         int boxOffset = i * maxBoxesPerImage;
         int validBoxCount = 0;
@@ -1672,13 +1664,13 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
             {
                 Rpp32f dropoutColor = 0.0f;
                 if (inputBitDepth == 0)
-                    colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
-                else if (inputBitDepth == 1)
-                    colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                    static_cast<Rpp8u*>(colorBuffer)[colorOffset + c] = (Rpp8u)dropoutColor;
                 else if (inputBitDepth == 2)
-                    colors32f[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
-                else if (inputBitDepth == 5)
-                    colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+                    static_cast<Rpp16f*>(colorBuffer)[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                else if (inputBitDepth == 1)
+                    static_cast<Rpp32f*>(colorBuffer)[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
+                else if (inputBitDepth == 3)
+                    static_cast<Rpp8s*>(colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
             }
             validBoxCount++;
         }

@@ -3126,23 +3126,13 @@ RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 RppPtr_t dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp32u boxesInEachImage,
-                                bool randomSeed,
+                                RpptRoiLtrb *anchorBoxInfoTensor,
+                                Rpp32u *numBoxesTensor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-
-    void *colorsTensor;
-    RpptRoiLtrb *anchorBoxInfoTensor;
-    Rpp32u *numBoxesTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&colorsTensor, srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMemset(colorsTensor, 0, srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * boxesInEachImage * sizeof(RpptRoiLtrb)));
-    CHECK_RETURN_STATUS(hipHostMalloc(&numBoxesTensor, srcDescPtr->n * sizeof(Rpp32u)));
-
-    init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 3);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_random_erase_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -3191,10 +3181,6 @@ RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr,
                                      roiType,
                                      rpp::deref(rppHandle));
     }
-
-    CHECK_RETURN_STATUS(hipHostFree(colorsTensor));
-    CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
-    CHECK_RETURN_STATUS(hipHostFree(numBoxesTensor));
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
