@@ -660,7 +660,7 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                                          RpptRoiLtrb *anchorBoxInfoTensor,
                                          U *colorsTensor,
                                          Rpp32u *numBoxesTensor,
-                                         int maxBoxesPerImage,
+                                         Rpp32u maxBoxesPerImage,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          rpp::Handle& handle);
