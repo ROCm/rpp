@@ -68,7 +68,6 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (interpolationTypeCases.find(testCase) != interpolationTypeCases.end());
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
-    bool dropoutTypeCase = (dropoutTypeCases.find(testCase) != dropoutTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
@@ -148,22 +147,6 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
-    if (testCase == DROPOUT)
-    {
-        switch (additionalParam)
-        {
-            case CHANNEL:
-                funcName += "_channel"; break;
-            case CUTOUT:
-                funcName += "_cutout"; break;
-            case GRID:
-                funcName += "_grid"; break;
-            case RANDOM_ERASE:
-                funcName += "_random_erase"; break;
-            case COARSE:
-                funcName += "_coarse"; break;
-        }
-    }
     if (funcName.empty())
     {
         if (testType == 0)
@@ -1748,97 +1731,23 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case DROPOUT:
+                case COARSE_DROPOUT:
                 {
-                    testCaseName = "dropout";
+                    testCaseName = "coarse";
+                    Rpp32u maxBoxesPerImage = 8;
+                    bool randomSeed = qaFlag ? false : true;
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * maxBoxesPerImage];
+                    Rpp32u numOfBoxes[batchSize];
+                    size_t colorCount = batchSize * maxBoxesPerImage * srcDescPtr->c;
+                    Rpp32f *colorBuffer = (Rpp32f *)malloc(colorCount * sizeof(Rpp32f));
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 4);
 
-                    switch(additionalParam)
-                    {
-                        case CHANNEL:
-                        {
-                            testCaseName = "channel_dropout";
-                            Rpp32f dropoutProbability[batchSize];
-                            bool randomSeed = qaFlag ? 0 : 1;
-                            for (i = 0; i < batchSize; i++)
-                                dropoutProbability[i] = 0.4f;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_channel_dropout_host(input, srcDescPtr, output, dstDescPtr, dropoutProbability, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                            break;
-                        }
-                        case CUTOUT:
-                        {
-                            testCaseName = "cutout_dropout";
-                            Rpp32u boxesInEachImage = 1;
-                            bool randomSeed = qaFlag ? 0 : 1;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_cutout_dropout_host(input, srcDescPtr, output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                            break;
-                        }
-                        case GRID:
-                        {
-                            testCaseName = "grid_dropout";
-                            Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
-                            Rpp32f holeRatio = 0.4f;
-                            bool randomOffset = false;
-                            randomOffset = qaFlag ? false : randomOffset;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                               rppt_grid_dropout_host(input, srcDescPtr, output, dstDescPtr, numGridsPerColumn, numGridsPerRow, holeRatio, randomOffset, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                            break;
-                        }
-                        case RANDOM_ERASE:
-                        {
-                            testCaseName = "random_erase";
-                            Rpp32u boxesInEachImage = 1;
-                            bool randomSeed = false;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_random_erase_host(input, srcDescPtr, output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                            break;
-                        }
-                        case COARSE:
-                        {
-                            testCaseName = "coarse";
-                            Rpp32u boxesInEachImage = 8;
-                            bool randomSeed = false;
-
-                            startWallTime = omp_get_wtime();
-                            startCpuTime = clock();
-                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                                rppt_coarse_dropout_host(input, srcDescPtr, output, dstDescPtr, boxesInEachImage, randomSeed, roiTensorPtrSrc, roiTypeSrc, handle);
-                            else
-                                missingFuncFlag = 1;
-
-                            break;
-                        }
-                        default:
-                        {
-                            missingFuncFlag = 1;
-                            break;
-                        }
-                    }
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_coarse_dropout_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, maxBoxesPerImage, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
