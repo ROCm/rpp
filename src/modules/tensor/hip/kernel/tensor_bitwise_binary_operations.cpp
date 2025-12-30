@@ -2,33 +2,7 @@
 #include "rpp_hip_math.hpp"
 #include <omp.h>
 
-// -------------------- Set 1 - scalar helper kernels --------------------
-
-// Functor for bitwise AND operation
-template <typename T>
-struct BitwiseAnd {
-    __device__ __forceinline__ T operator()(T a, T b) const {
-        return a & b;
-    }
-};
-
-// Functor for bitwise OR operation
-template <typename T>
-struct BitwiseOr {
-    __device__ __forceinline__ T operator()(T a, T b) const {
-        return a | b;
-    }
-};
-
-// Functor for bitwise XOR operation
-template <typename T>
-struct BitwiseXor {
-    __device__ __forceinline__ T operator()(T a, T b) const {
-        return a ^ b;
-    }
-};
-
-// -------------------- Set 2 - vector helper kernels --------------------
+// -------------------- Set 1 - vector helper kernels --------------------
 
 // Structures to Dispatch load/store functions for uchar/ushort/uint types
 template <typename T> struct BitwiseLoadStoreExecute;
@@ -58,11 +32,31 @@ template<> struct BitwiseLoadStoreExecute<uint>
 };
 
 // Structures used to dispatch execution of bitwise operations (AND, OR, XOR)
-template<typename VectorType, typename OpInstance> struct BitwiseOperationExecute;
+template<typename VectorType, typename Operation> struct BitwiseOperationExecute;
 
-template<typename VectorType, typename T> struct BitwiseOperationExecute<VectorType, BitwiseOr<T>>  { __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_bitwiseOr8 (a, b, c);} };
-template<typename VectorType, typename T> struct BitwiseOperationExecute<VectorType, BitwiseXor<T>> { __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_bitwiseXor8(a, b, c);} };
-template<typename VectorType, typename T> struct BitwiseOperationExecute<VectorType, BitwiseAnd<T>> { __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c){ rpp_hip_math_bitwiseAnd8(a, b, c);} };
+template<typename VectorType> struct BitwiseOperationExecute<VectorType, BitwiseOr>
+{
+    __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c)
+    {
+        rpp_hip_math_bitwise_op8<BitwiseOr>(a, b, c);
+    }
+};
+
+template<typename VectorType> struct BitwiseOperationExecute<VectorType, BitwiseXor>
+{
+    __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c)
+    {
+        rpp_hip_math_bitwise_op8<BitwiseXor>(a, b, c);
+    }
+};
+
+template<typename VectorType> struct BitwiseOperationExecute<VectorType, BitwiseAnd>
+{
+    __device__ __forceinline__ static void rpp_hip_math_bitwiseOp8(VectorType *a, VectorType *b, VectorType *c)
+    {
+        rpp_hip_math_bitwise_op8<BitwiseAnd>(a, b, c);
+    }
+};
 
 // -------------------- Set 2 - bitwise operation kernels --------------------
 
@@ -88,7 +82,7 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
     uint* src2SampleStrides = srcStrides2 + id_z * RPPT_MAX_DIMS;
     uint* dstSampleStrides = dstStrides + id_z * RPPT_MAX_DIMS;
 
-    if (id_x >= dstSampleDims[0])
+    if(id_x >= dstSampleDims[0])
         return;
 
     uint numRows = dstSampleDims[0] - id_x;
@@ -130,7 +124,7 @@ __global__ void tensor_or_tensor_1d_hip_tensor(T *srcPtr1,
             uint dstIdx = dstBaseIdx + id_x;
 
             id_x++;
-            dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+            dstPtr[dstIdx] = Operation::op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
         }
     }
 }
@@ -156,7 +150,7 @@ __global__ void tensor_or_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
     uint beginX2 = roi2[0];
     uint width = roi2[1];
 
-    if (id_x >= width)
+    if(id_x >= width)
         return;
 
     uint srcIdx1 = (id_z * strides) + id_x + beginX1;
@@ -193,7 +187,7 @@ __global__ void tensor_or_tensor_2d_hip_tensor(T *srcPtr1,
     uint* src2SampleStrides = srcStrides2 + id_z * RPPT_MAX_DIMS;
     uint* dstSampleStrides = dstStrides + id_z * RPPT_MAX_DIMS;
 
-    if (id_x >= dstSampleDims[1] || id_y >= dstSampleDims[0])
+    if(id_x >= dstSampleDims[1] || id_y >= dstSampleDims[0])
         return;
 
     uint numRows = dstSampleDims[1] - id_x;
@@ -235,7 +229,7 @@ __global__ void tensor_or_tensor_2d_hip_tensor(T *srcPtr1,
             uint dstIdx = dstBaseIdx + id_x;
 
             id_x++;
-            dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+            dstPtr[dstIdx] = Operation::op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
         }
     }
 }
@@ -265,7 +259,7 @@ __global__ void tensor_or_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
     uint height = roi2[2];
     uint width = roi2[3];
 
-    if (id_x >= width || id_y >= height)
+    if(id_x >= width || id_y >= height)
         return;
 
     uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
@@ -297,7 +291,7 @@ __global__ void tensor_or_tensor_3d_hip_tensor(T *srcPtr1,
 
     using VectorType = typename BitwiseLoadStoreExecute<T>::VectorType;
 
-    if (id_x >= dstDims[2] || id_y >= dstDims[1] || id_z >= dstDims[0])
+    if(id_x >= dstDims[2] || id_y >= dstDims[1] || id_z >= dstDims[0])
         return;
 
     uint numRows = dstDims[2] - id_x;
@@ -339,7 +333,7 @@ __global__ void tensor_or_tensor_3d_hip_tensor(T *srcPtr1,
             uint dstIdx = dstBaseIdx + id_x;
 
             id_x++;
-            dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+            dstPtr[dstIdx] = Operation::op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
         }
     }
 }
@@ -372,7 +366,7 @@ __global__ void tensor_or_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
     uint lengthY2 = roi2[4];
     uint lengthX2 = roi2[5];
 
-    if (id_x >= lengthX2 || id_y >= lengthY2 || id_z >= lengthZ2)
+    if(id_x >= lengthX2 || id_y >= lengthY2 || id_z >= lengthZ2)
         return;
 
     uint srcIdx1 = ((id_z + beginZ1) * stridesDH.x) + ((id_y + beginY1) * stridesDH.y) + id_x + beginX1;
@@ -424,7 +418,7 @@ __global__ void tensor_or_tensor_nd_hip_tensor(T *srcPtr1,
     srcIdx1 += src1BeginOffsets[id_z];
     srcIdx2 += src2BeginOffsets[id_z];
 
-    dstPtr[dstIdx] = op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
+    dstPtr[dstIdx] = Operation::op(srcPtr1[srcIdx1], srcPtr2[srcIdx2]);
 }
 
 template <typename T, typename Operation>
@@ -457,14 +451,14 @@ __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
     strides++;
     uint coords[RPPT_MAX_DIMS];
 
-    for (int i = 0; i < numDims; i++)
+    for(int i = 0; i < numDims; i++)
     {
         coords[i] = (id_x / strides[i]) % src1Dims[i];
         if(coords[i] >= length[i])
             return;
     }
 
-    for (int i = 0; i < numDims; i++)
+    for(int i = 0; i < numDims; i++)
     {
         dstIdx += (coords[i] * strides[i]);
         srcIdx1 += (begin1[i] + (coords[i] * strides[i]));
@@ -527,7 +521,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(batchSize)
-    for (int i = 0; i < batchSize; i++)
+    for(int i = 0; i < batchSize; i++)
     {
         bool incompatibleDims = false;
 
@@ -563,9 +557,9 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         memcpy(dstSampleStrides + 1, dstStrides + 1, minDim * sizeof(Rpp32u));
 
         // Compute begin offsets based on ROIs & check incompatibility of dimensions
-        for (int j = 0; j < minDim; j++)
+        for(int j = 0; j < minDim; j++)
         {
-            if ((src1SampleDims[j] != src2SampleDims[j]) && (src1SampleDims[j] != 1) && (src2SampleDims[j] != 1))
+            if((src1SampleDims[j] != src2SampleDims[j]) && (src1SampleDims[j] != 1) && (src2SampleDims[j] != 1))
                 incompatibleDims = true;
 
             dstSampleDims[j] = std::max(src1SampleDims[j], src2SampleDims[j]);
@@ -574,7 +568,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         }
 
         // Handle cases of mismatching num dims
-        if (src1NDim < src2NDim)
+        if(src1NDim < src2NDim)
         {
             int extraDims = dstDim - minDim;
             memset(src1SampleDims + minDim, 1, extraDims * sizeof(Rpp32u));
@@ -585,7 +579,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
             memcpy(src2SampleStrides + minDim + 1, src2Strides + minDim + 1, extraDims * sizeof(Rpp32u));
             memcpy(dstSampleStrides  + minDim + 1, dstStrides  + minDim + 1, extraDims * sizeof(Rpp32u));
         }
-        else if (src1NDim > src2NDim)
+        else if(src1NDim > src2NDim)
         {
             int extraDims = dstDim - minDim;
             memcpy(src1SampleDims + minDim, src1Dims + minDim, extraDims * sizeof(Rpp32u));
@@ -599,10 +593,10 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
 
         // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
         // Setting stride to zero will allow for repetition of values operated required for broadcasting
-        for (int j = 0; j < minDim; j++) {
-            if ((src1SampleDims[j] != dstSampleDims[j]) && (src1SampleDims[j] == 1))
+        for(int j = 0; j < minDim; j++) {
+            if((src1SampleDims[j] != dstSampleDims[j]) && (src1SampleDims[j] == 1))
                 src1SampleStrides[j + 1] = 0;
-            if ((src2SampleDims[j] != dstSampleDims[j]) && (src2SampleDims[j] == 1))
+            if((src2SampleDims[j] != dstSampleDims[j]) && (src2SampleDims[j] == 1))
                 src2SampleStrides[j + 1] = 0;
         }
     }
@@ -690,8 +684,8 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
                                srcPtr2 + (batchCount * srcGenericDescPtr2->strides[0]),
                                d_src1BroadcastStrides + batchCount * RPPT_MAX_DIMS,
                                d_src2BroadcastStrides + batchCount * RPPT_MAX_DIMS,
-                               *(d_src1BeginOffsets + batchCount),
-                               *(d_src2BeginOffsets + batchCount),
+                               src1BeginOffsets[batchCount],
+                               src2BeginOffsets[batchCount],
                                dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                d_dstBroadcastStrides + batchCount * RPPT_MAX_DIMS,
                                d_dstBroadcastDims + batchCount * RPPT_MAX_DIMS,
@@ -850,13 +844,13 @@ RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
         switch(tensorOp)
         {
             case RPP_TENSOR_OP_AND:
-                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_OR:
-                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_XOR:
-                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
         }
     }
@@ -865,13 +859,13 @@ RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
         switch(tensorOp)
         {
             case RPP_TENSOR_OP_AND:
-                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseAnd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_OR:
-                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseOr(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_XOR:
-                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor<T>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                hip_exec_tensor_non_broadcast_binary_bitwise_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, BitwiseXor(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
         }
     }
