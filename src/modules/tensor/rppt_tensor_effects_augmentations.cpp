@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <random>
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rpp_cpu_random.hpp"
 #include "api_helpers.hpp"
 #include "fog_mask.hpp"

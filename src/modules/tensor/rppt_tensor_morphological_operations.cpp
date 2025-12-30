@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_morphological_operations.h"
 
 #ifdef GPU_SUPPORT

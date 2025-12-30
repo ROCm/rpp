@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
 #include "kernel_dims.hpp"
 #include "host_tensor_executors.hpp"
