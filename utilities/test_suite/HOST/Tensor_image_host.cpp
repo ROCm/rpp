@@ -1760,10 +1760,10 @@ int main(int argc, char **argv)
                     testCaseName = "random_erase";
                     Rpp32u boxesInEachImage = 1;
                     bool randomSeed = qaFlag ? false : true;
-                    RpptRoiLtrb anchorBoxInfoTensor[srcDescPtr->n * boxesInEachImage];
-                    Rpp32u numBoxesTensor[srcDescPtr->n * boxesInEachImage];
-                    void *colorsTensor;
-                    init_dropout_erase(srcDescPtr->n, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorsTensor, srcDescPtr->dataType, randomSeed, 3);
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
+                    Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
+                    Rpp32f colorBuffer[batchSize * srcDescPtr->c * boxesInEachImage];
+                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 3);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

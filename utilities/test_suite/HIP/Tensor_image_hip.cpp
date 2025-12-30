@@ -608,10 +608,10 @@ int main(int argc, char **argv)
     if(testCase == RANDOM_ERASE)
     {
         boxesInEachImage = 1;
-        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, srcDescPtr->n * boxesInEachImage * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, srcDescPtr->n * boxesInEachImage * sizeof(RpptRoiLtrb)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, srcDescPtr->n * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * srcDescPtr->c * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
     }
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";

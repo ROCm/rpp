@@ -378,7 +378,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                             dstPtrRow[1] = static_cast<T>(generate_random_int(seed + 1));
                             dstPtrRow[2] = static_cast<T>(generate_random_int(seed + 2));
                         }
-                        dstPtrRow += srcDescPtr->c;
+                        dstPtrRow += dstDescPtr->c;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }

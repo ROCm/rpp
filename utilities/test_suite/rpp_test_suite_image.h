@@ -1597,24 +1597,19 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, void *colorBuffer, Rpp8u inputBitDepth, bool randomSeed, Rpp8u dropoutType)
+void inline init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp32f *colorBuffer, Rpp8u inputBitDepth, bool randomSeed, Rpp8u dropoutType)
 {
-    int seed = randomSeed ? std::random_device{}() : 42;
+    int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
 
-    Rpp32u totalElements = maxBoxesPerImage * batchSize * channels;
-    if (inputBitDepth == 0)
-        colorBuffer = malloc(totalElements * sizeof(Rpp8u));
-    else if (inputBitDepth == 2) 
-        colorBuffer = malloc(totalElements * sizeof(Rpp16f));
-    else if (inputBitDepth == 1)
-        colorBuffer = malloc(totalElements * sizeof(Rpp32f));
-    else if (inputBitDepth == 3) 
-        colorBuffer = malloc(totalElements * sizeof(Rpp8s));
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = colorBuffer;
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
 
     for (int i = 0; i < batchSize; i++)
     {
@@ -1664,13 +1659,13 @@ void inline init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u
             {
                 Rpp32f dropoutColor = 0.0f;
                 if (inputBitDepth == 0)
-                    static_cast<Rpp8u*>(colorBuffer)[colorOffset + c] = (Rpp8u)dropoutColor;
+                    reinterpret_cast<Rpp8u*>(colorBuffer)[colorOffset + c] = (Rpp8u)dropoutColor;
                 else if (inputBitDepth == 2)
-                    static_cast<Rpp16f*>(colorBuffer)[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                    reinterpret_cast<Rpp16f*>(colorBuffer)[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
                 else if (inputBitDepth == 1)
-                    static_cast<Rpp32f*>(colorBuffer)[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
+                    colorBuffer[colorOffset + c] = (Rpp32f)(dropoutColor * ONE_OVER_255);
                 else if (inputBitDepth == 3)
-                    static_cast<Rpp8s*>(colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+                    reinterpret_cast<Rpp8s*>(colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
             }
             validBoxCount++;
         }
