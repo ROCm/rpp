@@ -216,7 +216,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            dstPtr,
-                           make_uint3(dstDescPtr->strides.nStride,dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            d_anchorBoxInfoTensor,
                            boxesInEachImage);
     }

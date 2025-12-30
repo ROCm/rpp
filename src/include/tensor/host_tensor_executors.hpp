@@ -1700,7 +1700,7 @@ RppStatus posterize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle);
 
-// -------------------- grid_dropot --------------------
+// -------------------- grid_dropout --------------------
 
 template<typename T>
 RppStatus grid_dropout_host_tensor(T *srcPtr,
