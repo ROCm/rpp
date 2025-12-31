@@ -227,7 +227,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -370,7 +370,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -461,7 +461,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -739,7 +739,8 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
     }
 
     std::string status = funcName + ": ";
-    std::cout << std::endl << "Results for Test case: " << funcName << std::endl;    if(fileMatch == batchSize)
+    std::cout << std::endl << "Results for Test case: " << funcName << std::endl;
+    if(fileMatch == batchSize)
     {
         std::cout << "\nPASSED!" << std::endl;
         status += "PASSED";
@@ -749,7 +750,6 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
         std::cout << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
-
     free(refOutput);
 
     // Append the QA results to file

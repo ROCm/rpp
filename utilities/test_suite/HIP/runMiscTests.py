@@ -105,17 +105,17 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         bitDepths = [2, 4]
     elif int(case) == 4:
         bitDepths = [11]
-    elif int(case) in (5, 6, 7) and testType == 1:
+    elif int(case) in (5, 6, 7) and testType == TestType.PERFORMANCE_TEST.value:
             bitDepths = [0, 5, 7, 8, 9, 10]
-    elif testType == 1:
+    elif testType == TestType.PERFORMANCE_TEST.value:
         bitDepths = [0, 1, 2, 5]
-    if testType == 0:
+    if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg)
-    elif testType == 1 and profilingOption == "NO":
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
         print("\n")
         for bitDepth in bitDepths:
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
-    elif testType == 1 and profilingOption == "YES":
+    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
         print("\n")
         for bitDepth in bitDepths:
             run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
@@ -140,7 +140,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
+        print("Starting case# and Ending case# must be in the [" + str(caseMin) + ":" + str(caseMax) + "] range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -201,7 +201,7 @@ broadcast = args.broadcast
 preserveOutput = args.preserve_output
 outFilePath = " "
 
-if testType == 0 and batchSize != 3:
+if testType == TestType.UNIT_TEST.value and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
@@ -209,10 +209,10 @@ if preserveOutput == 0:
     validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HIP")
     validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HIP")
 
-if(testType == 0):
+if(testType == TestType.UNIT_TEST.value):
     outFilePath = outFolderPath + '/QA_RESULTS_MISC_HIP_' + timestamp
     numRuns = 1
-elif(testType == 1):
+elif(testType == TestType.PERFORMANCE_TEST.value):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
     outFilePath = outFolderPath + '/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_' + timestamp
@@ -236,7 +236,6 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HIP" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
-broadcastableCases = ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor"] # Add other broadcast functions here
 
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
@@ -245,22 +244,27 @@ for case in caseList:
     if int(case) not in miscAugmentationMap:
         continue
     for numDims in numDimsList:
+        # Runs transpose functionality for all transposeOrder values ranging from 1 to numDims - 1
         if miscAugmentationMap[int(case)][0] == "transpose":
             for transposeOrder in range(1, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder, profilingOption)
+        # Runs normalize functionality for all axisMask values - 1 to 2^numDims - 1
         elif miscAugmentationMap[int(case)][0] == "normalize":
             for axisMask in range(1, pow(2, numDims)):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
+        # Runs concat functionality for all axisMask values - 0 to numDims - 1
         elif miscAugmentationMap[int(case)][0] == "concat":
             for axisMask in range(0, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
-        elif miscAugmentationMap[int(case)][0] in broadcastableCases:
+        # Runs tensor operations for all broadcast values
+        elif miscAugmentationMap[int(case)][0] in ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor"]:
             for broadcastFlag in broadcast:
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, broadcastFlag, profilingOption)
+        # Runs all other functionalities
         else:
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, "", profilingOption)
 
-if (testType == 1 and profilingOption == "YES"):
+if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
@@ -307,7 +311,7 @@ for num in caseList:
     if int(num) in miscAugmentationMap:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
-if testType == 0:
+if testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
@@ -315,7 +319,7 @@ if testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_hip")
 
 # Performance tests
-if (testType == 1 and profilingOption == "NO"):
+if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO"):
     logFileList = get_log_file_list()
     functionalityGroupList = ["statiscal_operations"]
 
