@@ -123,21 +123,13 @@ __global__ void random_erase_pln_hip_tensor(T *dstPtr,
             id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
             if constexpr (std::is_same<T, Rpp8u>::value)
-            {
                 dstPtr[dstIdx] = static_cast<Rpp8u>(generate_random_int(seed));
-            }
             else if constexpr (std::is_same<T, Rpp8s>::value)
-            {
                 dstPtr[dstIdx] = static_cast<Rpp8s>(generate_random_int(seed) - 128);  // Centered around 0
-            }
             else if constexpr (std::is_same<T, Rpp32f>::value)
-            {
                 dstPtr[dstIdx] = generate_random_float(seed);
-            }
             else if constexpr (std::is_same<T, half>::value)
-            {
                 dstPtr[dstIdx] = __float2half(generate_random_float(seed));
-            }
             break;
         }
     }

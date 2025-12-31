@@ -23,24 +23,6 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
-#include <random>
-
-inline uint generate_seed(uint x, uint y, uint z, uint seed)
-{
-    return ((x * 73856093) ^ (y * 19349663) ^ (z * 83492791)) * seed;
-}
-
-inline float generate_random_float(uint seed)
-{
-    seed = (1103515245u * seed + 12345u);
-    return static_cast<float>(seed & 0xFFFFFF) / static_cast<float>(0x1000000);
-}
-
-inline uint generate_random_int(uint seed)
-{
-    seed = (1103515245 * seed + 12345);
-    return (seed >> 16) & 0xFF;
-}
 
 template <typename T>
 RppStatus random_erase_host_tensor(T *srcPtr,
@@ -49,6 +31,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                                    RpptDescPtr dstDescPtr,
                                    RpptRoiLtrb *anchorBoxInfoTensor,
                                    Rpp32u *numBoxesTensor,
+                                   T *noiseBuffer,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    RppLayoutParams layoutParams,
@@ -56,6 +39,8 @@ RppStatus random_erase_host_tensor(T *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
+    T *noisePtr = static_cast<T *>(noiseBuffer);
+    Rpp32u noiseBufferSize = 255 * 255 * srcDescPtr->c;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -76,6 +61,7 @@ RppStatus random_erase_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier * sizeof(T);
+        int noiseIdx = 0;
 
         // Erase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -126,25 +112,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
-                        if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value) 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_float(seed + 0));
-                            dstPtrTempG[j] = static_cast<T>(generate_random_float(seed + 1));
-                            dstPtrTempB[j] = static_cast<T>(generate_random_float(seed + 2));
-                        } 
-                        else if constexpr (std::is_same<T, Rpp8s>::value) 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_int(seed + 0) - 128);
-                            dstPtrTempG[j] = static_cast<T>(generate_random_int(seed + 1) - 128);
-                            dstPtrTempB[j] = static_cast<T>(generate_random_int(seed + 2) - 128);
-                        }
-                        else 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_int(seed + 0));
-                            dstPtrTempG[j] = static_cast<T>(generate_random_int(seed + 1));
-                            dstPtrTempB[j] = static_cast<T>(generate_random_int(seed + 2));
-                        }
+                        dstPtrTempR[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrTempG[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrTempB[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
                     }
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
@@ -200,24 +175,13 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
-                        if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
-                        {
-                            dstPtrRow[0] = static_cast<T>(generate_random_float(seed + 0));
-                            dstPtrRow[1] = static_cast<T>(generate_random_float(seed + 1));
-                            dstPtrRow[2] = static_cast<T>(generate_random_float(seed + 2));
-                        }
-                        else if constexpr (std::is_same<T, Rpp8s>::value) {
-                            dstPtrRow[0] = static_cast<T>(generate_random_int(seed + 0) - 128);
-                            dstPtrRow[1] = static_cast<T>(generate_random_int(seed + 1) - 128);
-                            dstPtrRow[2] = static_cast<T>(generate_random_int(seed + 2) - 128);
-                        }
-                        else
-                        {
-                            dstPtrRow[0] = static_cast<T>(generate_random_int(seed + 0));
-                            dstPtrRow[1] = static_cast<T>(generate_random_int(seed + 1));
-                            dstPtrRow[2] = static_cast<T>(generate_random_int(seed + 2));
-                        }
+                        dstPtrRow[0] = noisePtr[noiseIdx % noiseBufferSize]; // R
+                        noiseIdx++;
+                        dstPtrRow[1] = noisePtr[noiseIdx % noiseBufferSize]; // G
+                        noiseIdx++;
+                        dstPtrRow[2] = noisePtr[noiseIdx % noiseBufferSize]; // B
+                        noiseIdx++;
+
                         dstPtrRow += dstDescPtr->c;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -264,25 +228,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
-                        if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value) 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_float(seed + 0));
-                            dstPtrTempG[j] = static_cast<T>(generate_random_float(seed + 1));
-                            dstPtrTempB[j] = static_cast<T>(generate_random_float(seed + 2));
-                        } 
-                        else if constexpr (std::is_same<T, Rpp8s>::value) 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_int(seed + 0) - 128);
-                            dstPtrTempG[j] = static_cast<T>(generate_random_int(seed + 1) - 128);
-                            dstPtrTempB[j] = static_cast<T>(generate_random_int(seed + 2) - 128);
-                        }
-                        else 
-                        {
-                            dstPtrTempR[j] = static_cast<T>(generate_random_int(seed + 0));
-                            dstPtrTempG[j] = static_cast<T>(generate_random_int(seed + 1));
-                            dstPtrTempB[j] = static_cast<T>(generate_random_int(seed + 2));
-                        }
+                        dstPtrTempR[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrTempG[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrTempB[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
                     }
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
@@ -319,13 +272,8 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 {
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
-                        if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
-                            dstPtrTemp[j] = static_cast<T>(generate_random_float(seed));
-                        else if constexpr (std::is_same<T, Rpp8s>::value)
-                            dstPtrTemp[j] = static_cast<T>(generate_random_int(seed) - 128);
-                        else
-                            dstPtrTemp[j] = static_cast<T>(generate_random_int(seed));
+                        dstPtrTemp[j] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
@@ -360,24 +308,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        uint seed = generate_seed(x1 + j, y1 + i, batchCount, DROPOUT_FIXED_SEED);
-                        if constexpr (std::is_floating_point<T>::value || std::is_same<T, Rpp16f>::value)
-                        {
-                            dstPtrRow[0] = static_cast<T>(generate_random_float(seed + 0));
-                            dstPtrRow[1] = static_cast<T>(generate_random_float(seed + 1));
-                            dstPtrRow[2] = static_cast<T>(generate_random_float(seed + 2));
-                        }
-                        else if constexpr (std::is_same<T, Rpp8s>::value) {
-                            dstPtrRow[0] = static_cast<T>(generate_random_int(seed + 0) - 128);
-                            dstPtrRow[1] = static_cast<T>(generate_random_int(seed + 1) - 128);
-                            dstPtrRow[2] = static_cast<T>(generate_random_int(seed + 2) - 128);
-                        }
-                        else
-                        {
-                            dstPtrRow[0] = static_cast<T>(generate_random_int(seed + 0));
-                            dstPtrRow[1] = static_cast<T>(generate_random_int(seed + 1));
-                            dstPtrRow[2] = static_cast<T>(generate_random_int(seed + 2));
-                        }
+                        dstPtrRow[0] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrRow[1] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
+                        
+                        dstPtrRow[2] = noisePtr[noiseIdx % noiseBufferSize];
+                        noiseIdx++;
                         dstPtrRow += dstDescPtr->c;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -395,6 +333,7 @@ template RppStatus random_erase_host_tensor<Rpp8u>(Rpp8u*,
                                                    RpptDescPtr,
                                                    RpptRoiLtrb*,
                                                    Rpp32u*,
+                                                   Rpp8u*,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    RppLayoutParams,
@@ -406,6 +345,7 @@ template RppStatus random_erase_host_tensor<Rpp16f>(Rpp16f*,
                                                     RpptDescPtr,
                                                     RpptRoiLtrb*,
                                                     Rpp32u*,
+                                                    Rpp16f*,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     RppLayoutParams,
@@ -417,6 +357,7 @@ template RppStatus random_erase_host_tensor<Rpp32f>(Rpp32f*,
                                                     RpptDescPtr,
                                                     RpptRoiLtrb*,
                                                     Rpp32u*,
+                                                    Rpp32f*,
                                                     RpptROIPtr,
                                                     RpptRoiType,
                                                     RppLayoutParams,
@@ -428,6 +369,7 @@ template RppStatus random_erase_host_tensor<Rpp8s>(Rpp8s*,
                                                    RpptDescPtr,
                                                    RpptRoiLtrb*,
                                                    Rpp32u*,
+                                                   Rpp8s*,
                                                    RpptROIPtr,
                                                    RpptRoiType,
                                                    RppLayoutParams,

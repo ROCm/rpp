@@ -1596,6 +1596,22 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
     }
 }
 
+void fill_noise_buffer(void *noiseBuffer, Rpp32u size, Rpp8u inputBitDepth, bool randomSeed)
+{
+    int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
+    std::mt19937 rng(seed);
+    std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
+    std::uniform_int_distribution<int> dist_i(0, 255);
+
+    for (Rpp32u i = 0; i < size; i++)
+    {
+        if (inputBitDepth == 0)      ((Rpp8u*)noiseBuffer)[i]  = (Rpp8u)dist_i(rng);
+        else if (inputBitDepth == 1) ((Rpp32f*)noiseBuffer)[i] = (Rpp32f)dist_f(rng);
+        else if (inputBitDepth == 2) ((Rpp16f*)noiseBuffer)[i] = (Rpp16f)dist_f(rng);
+        else if (inputBitDepth == 5) ((Rpp8s*)noiseBuffer)[i]  = (Rpp8s)(dist_i(rng) - 128);
+    }
+}
+
 // Dropout Region initializer for unit and performance testing
 void inline init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp32f *colorBuffer, Rpp8u inputBitDepth, bool randomSeed, Rpp8u dropoutType)
 {
