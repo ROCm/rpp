@@ -1842,7 +1842,7 @@ int main(int argc, char **argv)
                     testCaseName = "cutout_dropout";
                     boxesInEachImage = 1;
                     bool randomSeed = qaFlag ? 0 : 1;
-                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 1);
+                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, randomSeed, 1, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)

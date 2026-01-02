@@ -1599,12 +1599,11 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, void *colorBuffer, int inputBitDepth, bool randomSeed, int dropoutType)
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, int inputBitDepth, bool randomSeed, int dropoutType, void *colorBuffer = NULL)
 {
-    int seed = randomSeed ? std::random_device{}() : 42;
+    const int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
-    std::uniform_real_distribution<float> h_ratio(0.2f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
 
     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
@@ -1614,48 +1613,38 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
 
     for (int i = 0; i < batchSize; i++)
     {
-        int roiW = roiTensorPtrSrc[i].xywhROI.roiWidth;
-        int roiH = roiTensorPtrSrc[i].xywhROI.roiHeight;
+        const auto &roi = roiTensorPtrSrc[i].xywhROI;
+        const float roiW = static_cast<float>(roi.roiWidth);
+        const float roiH = static_cast<float>(roi.roiHeight);
+        const float roiX = static_cast<float>(roi.xy.x);
+        const float roiY = static_cast<float>(roi.xy.y);
 
-        int actualBoxCount = 1;
-        std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
-
-        int boxOffset = i * maxBoxesPerImage;
-        int validBoxCount = 0;
-
-        for (int b = 0; b < actualBoxCount; b++)
+        float boxW, boxH;
+        if (dropoutType == 1) // Cutout: Perfect square
         {
-            float boxW, boxH;
+            float squareSize = wh_ratio_cutout(rng) * std::min(roiW, roiH);
+            boxW = boxH = std::max(1.0f, squareSize);
+        }
+        else // Standard Dropout / Random Erase
+        {
+            boxW = std::max(1.0f, wh_ratio_cutout(rng) * roiW);
+            boxH = std::max(1.0f, wh_ratio_cutout(rng) * roiH);
+        }
 
-            if (dropoutType == 1) // Cutout: Perfect square
-            {
-                float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
-                boxW = boxH = std::max(1.0f, squareSize);
-            }
-            else
-            {
-                float sizeRatioW = (*curr_wh_ratio)(rng);
-                float sizeRatioH = (*curr_wh_ratio)(rng);
-                boxW = std::max(1.0f, sizeRatioW * roiW);
-                boxH = std::max(1.0f, sizeRatioH * roiH);
-            }
+        const float x_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
+        const float y_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
 
-            // Ensure box is always inside ROI and not at (0,0)
-            float x_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
-            float y_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
+        RpptRoiLtrb &box = anchorBoxInfoTensor[i * maxBoxesPerImage];
+        box.lt.x = static_cast<Rpp32u>(roiX + x_start);
+        box.lt.y = static_cast<Rpp32u>(roiY + y_start);
+        box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW);
+        box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH);
 
-            float roiX = roiTensorPtrSrc[i].xywhROI.xy.x;
-            float roiY = roiTensorPtrSrc[i].xywhROI.xy.y;
-
-            anchorBoxInfoTensor[boxOffset + b].lt.x = roiX + x_start;
-            anchorBoxInfoTensor[boxOffset + b].lt.y = roiY + y_start;
-            anchorBoxInfoTensor[boxOffset + b].rb.x = roiX + x_start + boxW;
-            anchorBoxInfoTensor[boxOffset + b].rb.y = roiY + y_start + boxH;
-
-            int colorOffset = (boxOffset + b) * channels;
+        if (colorBuffer != nullptr)
+        {
+            int colorOffset = (i * maxBoxesPerImage) * channels;
+            Rpp32f dropoutColor = 0.0f;
             for (int c = 0; c < channels; c++)
-            {
-                Rpp32f dropoutColor = 0.0f;
                 if (inputBitDepth == 0)
                     colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
                 else if (inputBitDepth == 2)
@@ -1664,10 +1653,8 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
                     colors32f[colorOffset + c] = (Rpp32f)(dropoutColor);
                 else if (inputBitDepth == 3)
                     colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
-            }
-            validBoxCount++;
         }
-        numOfBoxes[i] = validBoxCount;
+        numOfBoxes[i] = 1;
     }
 }
 
