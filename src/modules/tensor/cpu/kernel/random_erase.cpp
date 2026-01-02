@@ -39,8 +39,6 @@ RppStatus random_erase_host_tensor(T *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
-    T *noisePtr = static_cast<T *>(noiseBuffer);
-    Rpp32u noiseBufferSize = 255 * 255 * srcDescPtr->c;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -61,7 +59,6 @@ RppStatus random_erase_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier * sizeof(T);
-        int noiseIdx = 0;
 
         // Erase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -110,16 +107,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
                 for (int i = 0; i < boxHeight; i++)
                 {
+                    Rpp32u noiseRowOffset = ((y1 + i + batchCount) % 255) * 255 * 3;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrTempR[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
+                        Rpp32u noiseIdx = noiseRowOffset + ((x1 + j) % 255 * 3);
                         
-                        dstPtrTempG[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
-                        
-                        dstPtrTempB[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
+                        dstPtrTempR[j] = noiseBuffer[noiseIdx]; 
+                        dstPtrTempG[j] = noiseBuffer[noiseIdx + 1]; 
+                        dstPtrTempB[j] = noiseBuffer[noiseIdx + 2];
                     }
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
@@ -172,16 +167,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
 
                 for (int i = 0; i < boxHeight; i++)
                 {
+                    Rpp32u noiseRowOffset = ((y1 + i + batchCount) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE;
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = noisePtr[noiseIdx % noiseBufferSize]; // R
-                        noiseIdx++;
-                        dstPtrRow[1] = noisePtr[noiseIdx % noiseBufferSize]; // G
-                        noiseIdx++;
-                        dstPtrRow[2] = noisePtr[noiseIdx % noiseBufferSize]; // B
-                        noiseIdx++;
-
+                        Rpp32u noiseIdx = (noiseRowOffset + ((x1 + j) % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
+                        dstPtrRow[0] = noiseBuffer[noiseIdx];     // R
+                        dstPtrRow[1] = noiseBuffer[noiseIdx + 1]; // G
+                        dstPtrRow[2] = noiseBuffer[noiseIdx + 2]; // B
                         dstPtrRow += dstDescPtr->c;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -226,16 +219,13 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
                 for (int i = 0; i < boxHeight; i++)
                 {
+                    Rpp32u noiseRowOffset = ((y1 + i + batchCount) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE * 3;  
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrTempR[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
-                        
-                        dstPtrTempG[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
-                        
-                        dstPtrTempB[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
+                        Rpp32u noiseIdx = noiseRowOffset + ((x1 + j) % RANDOM_ERASE_NOISE_BUFFER_SIDE * 3);
+                        dstPtrTempR[j] = noiseBuffer[noiseIdx];
+                        dstPtrTempG[j] = noiseBuffer[noiseIdx + 1];
+                        dstPtrTempB[j] = noiseBuffer[noiseIdx + 2];
                     }
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
@@ -265,15 +255,14 @@ RppStatus random_erase_host_tensor(T *srcPtr,
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
 
-                T *dstPtrTemp;
-                dstPtrTemp = dstPtrImage + pixelLocation;
-
+                T *dstPtrTemp = dstPtrImage + pixelLocation;
                 for (int i = 0; i < boxHeight; i++)
                 {
+                    Rpp32u noiseRowOffset = ((y1 + i + batchCount) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrTemp[j] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
+                        Rpp32u noiseIdx = noiseRowOffset + ((x1 + j) % RANDOM_ERASE_NOISE_BUFFER_SIDE);
+                        dstPtrTemp[j] = noiseBuffer[noiseIdx];
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
@@ -305,17 +294,15 @@ RppStatus random_erase_host_tensor(T *srcPtr,
 
                 for (int i = 0; i < boxHeight; i++)
                 {
+                    Rpp32u noiseRowOffset = ((y1 + i + batchCount) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE * 3;
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
-                        
-                        dstPtrRow[1] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
-                        
-                        dstPtrRow[2] = noisePtr[noiseIdx % noiseBufferSize];
-                        noiseIdx++;
+                        Rpp32u noiseXIdx = ((x1 + j) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * 3;
+                        Rpp32u noiseIdx = noiseRowOffset + noiseXIdx;
+                        dstPtrRow[0] = noiseBuffer[noiseIdx];     // R
+                        dstPtrRow[1] = noiseBuffer[noiseIdx + 1]; // G
+                        dstPtrRow[2] = noiseBuffer[noiseIdx + 2]; // B
                         dstPtrRow += dstDescPtr->c;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;

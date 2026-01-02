@@ -659,6 +659,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                        RpptDescPtr dstDescPtr,
                                        RpptRoiLtrb *anchorBoxInfoTensor,
                                        Rpp32u *numBoxesTensor,
+                                       T *noiseBuffer,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        rpp::Handle& handle);

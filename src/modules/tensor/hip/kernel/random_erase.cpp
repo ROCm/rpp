@@ -23,24 +23,6 @@ SOFTWARE.
 */
 
 #include "hip_tensor_executors.hpp"
-#include <random>
-
-__device__ inline uint generate_seed(uint x, uint y, uint z, int seed)
-{
-    return ((x * 73856093) ^ (y * 19349663) ^ (z * 83492791)) * (seed);
-}
-
-__device__ inline float generate_random_float(uint seed)
-{
-    seed = (1103515245u * seed + 12345u);
-    return static_cast<float>(seed & 0xFFFFFF) / static_cast<float>(0x1000000);
-}
-
-__device__ inline uint generate_random_int(uint seed)
-{
-    seed = (1103515245 * seed + 12345);
-    return (seed >> 16) & 0xFF;
-}
 
 // -------------------- Set 0 - random_erase main kernels --------------------
 template <typename T>
@@ -48,6 +30,7 @@ __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
                                             uint2 dstStridesNH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
                                             Rpp32u *numBoxesTensor,
+                                            T *noiseBuffer,
                                             RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -58,7 +41,7 @@ __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
     if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
         return;
 
-    uint seed = generate_seed(id_x, id_y, id_z, DROPOUT_FIXED_SEED);
+    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     Rpp32u numBoxes = numBoxesTensor[id_z];
     uint dstIdx = id_z * dstStridesNH.x + id_y * dstStridesNH.y + id_x * 3;
 
@@ -68,30 +51,9 @@ __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
             id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            if constexpr (std::is_same<T, Rpp8u>::value)
-            {
-                dstPtr[dstIdx]     = static_cast<Rpp8u>(generate_random_int(seed + 0));
-                dstPtr[dstIdx + 1] = static_cast<Rpp8u>(generate_random_int(seed + 1));
-                dstPtr[dstIdx + 2] = static_cast<Rpp8u>(generate_random_int(seed + 2));
-            }
-            else if constexpr (std::is_same<T, Rpp8s>::value)
-            {
-                dstPtr[dstIdx]     = static_cast<Rpp8s>(generate_random_int(seed + 0) - 128);
-                dstPtr[dstIdx + 1] = static_cast<Rpp8s>(generate_random_int(seed + 1) - 128);
-                dstPtr[dstIdx + 2] = static_cast<Rpp8s>(generate_random_int(seed + 2) - 128);
-            }
-            else if constexpr (std::is_same<T, Rpp32f>::value)
-            {
-                dstPtr[dstIdx]     = generate_random_float(seed + 0);
-                dstPtr[dstIdx + 1] = generate_random_float(seed + 1);
-                dstPtr[dstIdx + 2] = generate_random_float(seed + 2);
-            }
-            else if constexpr (std::is_same<T, half>::value)
-            {
-                dstPtr[dstIdx]     = __float2half(generate_random_float(seed + 0));
-                dstPtr[dstIdx + 1] = __float2half(generate_random_float(seed + 1));
-                dstPtr[dstIdx + 2] = __float2half(generate_random_float(seed + 2));
-            }
+            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
+            dstPtr[dstIdx + 1] = noiseBuffer[noiseIdx + 1];
+            dstPtr[dstIdx + 2] = noiseBuffer[noiseIdx + 2];
             break;
         }
     }
@@ -102,6 +64,7 @@ __global__ void random_erase_pln_hip_tensor(T *dstPtr,
                                             uint3 dstStridesNCH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
                                             Rpp32u *numBoxesTensor,
+                                            T *noiseBuffer,
                                             RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -112,7 +75,7 @@ __global__ void random_erase_pln_hip_tensor(T *dstPtr,
     if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
         return;
 
-    uint seed = generate_seed(id_x, id_y, id_z, DROPOUT_FIXED_SEED);
+    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE));
     Rpp32u numBoxes = numBoxesTensor[id_z];
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
@@ -122,14 +85,7 @@ __global__ void random_erase_pln_hip_tensor(T *dstPtr,
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
             id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            if constexpr (std::is_same<T, Rpp8u>::value)
-                dstPtr[dstIdx] = static_cast<Rpp8u>(generate_random_int(seed));
-            else if constexpr (std::is_same<T, Rpp8s>::value)
-                dstPtr[dstIdx] = static_cast<Rpp8s>(generate_random_int(seed) - 128);  // Centered around 0
-            else if constexpr (std::is_same<T, Rpp32f>::value)
-                dstPtr[dstIdx] = generate_random_float(seed);
-            else if constexpr (std::is_same<T, half>::value)
-                dstPtr[dstIdx] = __float2half(generate_random_float(seed));
+            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
             break;
         }
     }
@@ -140,6 +96,7 @@ __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
                                              uint3 dstStridesNCH,
                                              RpptRoiLtrb *anchorBoxInfoTensor,
                                              Rpp32u *numBoxesTensor,
+                                             T *noiseBuffer,
                                              RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -150,7 +107,7 @@ __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
     if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
         return;
 
-    uint seed = generate_seed(id_x, id_y, id_z, DROPOUT_FIXED_SEED);
+    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     Rpp32u numBoxes = numBoxesTensor[id_z];
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
@@ -160,30 +117,9 @@ __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
             id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            if constexpr (std::is_same<T, Rpp8u>::value)
-            {
-                dstPtr[dstIdx]                      = static_cast<Rpp8u>(generate_random_int(seed + 0));
-                dstPtr[dstIdx + dstStridesNCH.y]    = static_cast<Rpp8u>(generate_random_int(seed + 1));
-                dstPtr[dstIdx + 2 * dstStridesNCH.y]= static_cast<Rpp8u>(generate_random_int(seed + 2));
-            }
-            else if constexpr (std::is_same<T, Rpp8s>::value)
-            {
-                dstPtr[dstIdx]                      = static_cast<Rpp8s>(generate_random_int(seed + 0) - 128);
-                dstPtr[dstIdx + dstStridesNCH.y]    = static_cast<Rpp8s>(generate_random_int(seed + 1) - 128);
-                dstPtr[dstIdx + 2 * dstStridesNCH.y]= static_cast<Rpp8s>(generate_random_int(seed + 2) - 128);
-            }
-            else if constexpr (std::is_same<T, Rpp32f>::value)
-            {
-                dstPtr[dstIdx]                      = generate_random_float(seed + 0);
-                dstPtr[dstIdx + dstStridesNCH.y]    = generate_random_float(seed + 1);
-                dstPtr[dstIdx + 2 * dstStridesNCH.y]= generate_random_float(seed + 2);
-            }
-            else if constexpr (std::is_same<T, half>::value)
-            {
-                dstPtr[dstIdx]                      = __float2half(generate_random_float(seed + 0));
-                dstPtr[dstIdx + dstStridesNCH.y]    = __float2half(generate_random_float(seed + 1));
-                dstPtr[dstIdx + 2 * dstStridesNCH.y]= __float2half(generate_random_float(seed + 2));
-            }
+            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
+            dstPtr[dstIdx + dstStridesNCH.y] = noiseBuffer[noiseIdx + 1];
+            dstPtr[dstIdx + 2 * dstStridesNCH.y] = noiseBuffer[noiseIdx + 2];
             break;
         }
     }
@@ -197,6 +133,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                        RpptDescPtr dstDescPtr,
                                        RpptRoiLtrb *anchorBoxInfoTensor,
                                        Rpp32u *numBoxesTensor,
+                                       T *noiseBuffer,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        rpp::Handle& handle)
@@ -245,6 +182,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
                                numBoxesTensor,
+                               noiseBuffer,
                                roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
@@ -258,6 +196,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
                                numBoxesTensor,
+                               noiseBuffer,
                                roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
@@ -271,6 +210,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
                                numBoxesTensor,
+                               noiseBuffer,
                                roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::I8)
@@ -284,6 +224,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
                                numBoxesTensor,
+                               noiseBuffer,
                                roiTensorPtrSrc);
         }
     }
@@ -300,6 +241,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
                            numBoxesTensor,
+                           noiseBuffer,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 3)
@@ -315,6 +257,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
                            numBoxesTensor,
+                           noiseBuffer,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -343,6 +286,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
                                numBoxesTensor,
+                               noiseBuffer,
                                roiTensorPtrSrc);
         }
     }
@@ -356,6 +300,7 @@ template RppStatus hip_exec_random_erase_tensor<Rpp8u>(Rpp8u*,
                                                        RpptDescPtr,
                                                        RpptRoiLtrb*,
                                                        Rpp32u*,
+                                                       Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        rpp::Handle&);
@@ -366,6 +311,7 @@ template RppStatus hip_exec_random_erase_tensor<half>(half*,
                                                      RpptDescPtr,
                                                      RpptRoiLtrb*,
                                                      Rpp32u*,
+                                                     half*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
                                                      rpp::Handle&);
@@ -376,6 +322,7 @@ template RppStatus hip_exec_random_erase_tensor<Rpp32f>(Rpp32f*,
                                                          RpptDescPtr,
                                                          RpptRoiLtrb*,
                                                          Rpp32u*,
+                                                         Rpp32f*,
                                                          RpptROIPtr,
                                                          RpptRoiType,
                                                          rpp::Handle&);
@@ -386,6 +333,7 @@ template RppStatus hip_exec_random_erase_tensor<Rpp8s>(Rpp8s*,
                                                        RpptDescPtr,
                                                        RpptRoiLtrb*,
                                                        Rpp32u*,
+                                                       Rpp8s*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        rpp::Handle&);
