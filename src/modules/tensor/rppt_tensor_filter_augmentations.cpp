@@ -181,6 +181,7 @@ RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
                                     RpptDescPtr dstDescPtr,
                                     Rpp32f *stdDevTensor,
                                     Rpp32u kernelSize,
+                                    RpptImageBorderType borderType,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
@@ -188,6 +189,7 @@ RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -404,6 +406,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr dstDescPtr,
                                    Rpp32f *stdDevTensor,
                                    Rpp32u kernelSize,
+                                   RpptImageBorderType borderType,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
@@ -411,11 +414,9 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
         return RPP_ERROR_LOW_OFFSET;
-
-    Rpp32u paramIndex = 0;
-    copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -423,6 +424,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
+                                        stdDevTensor,
                                         kernelSize,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -434,6 +436,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
+                                        stdDevTensor,
                                         kernelSize,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -445,6 +448,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                         dstDescPtr,
+                                        stdDevTensor,
                                         kernelSize,
                                         roiTensorPtrSrc,
                                         roiType,
@@ -456,6 +460,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
+                                        stdDevTensor,
                                         kernelSize,
                                         roiTensorPtrSrc,
                                         roiType,

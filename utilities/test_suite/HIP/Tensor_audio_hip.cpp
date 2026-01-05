@@ -193,6 +193,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)
@@ -206,7 +207,7 @@ int main(int argc, char **argv)
                     Rpp32s resetInterval = 8192;
 
                     startWallTime = omp_get_wtime();
-                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+                    errorCodeCapture = rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
 
                     break;
                 }
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    errorCodeCapture = rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
 
                     break;
                 }
@@ -240,7 +241,7 @@ int main(int argc, char **argv)
                     RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                     startWallTime = omp_get_wtime();
-                    rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
+                    errorCodeCapture = rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
 
                     break;
                 }
@@ -258,7 +259,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+                    errorCodeCapture = rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
@@ -292,7 +293,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
+                    errorCodeCapture = rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
 
                     break;
                 }
@@ -336,7 +337,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+                    errorCodeCapture = rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
 
                     break;
                 }
@@ -364,7 +365,7 @@ int main(int argc, char **argv)
                     CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
-                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+                    errorCodeCapture = rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
@@ -381,6 +382,11 @@ int main(int argc, char **argv)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
                 return RPP_ERROR_NOT_IMPLEMENTED;
+            }
+            if (errorCodeCapture != RPP_SUCCESS)
+            {
+                cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
+                return errorCodeCapture;
             }
 
             wallTime = endWallTime - startWallTime;
