@@ -156,6 +156,7 @@ struct RPPTensorFunctionMetaData
 #define FLOAT4_ONE_OVER_255 make_float4(0.003921569f, 0.003921569f, 0.003921569f, 0.003921569f)
 #define FLOAT4_255 make_float4(255.0f, 255.0f, 255.0f, 255.0f)
 #define FLOAT4_128 make_float4(128.0f, 128.0f, 128.0f, 128.0f)
+#define FLOAT4_I8_MIN_VALUE make_float4(-128.0f, -128.0f, -128.0f, -128.0f)
 #define FLOAT4_ZERO make_float4(0.0f, 0.0f, 0.0f, 0.0f)
 #define UINT2_ZERO make_uint2(0, 0)
 

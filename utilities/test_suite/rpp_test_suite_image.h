@@ -124,7 +124,8 @@ std::map<int, string> augmentationMap =
     {92, "slice"},
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
-    {95, "solarize"}
+    {95, "solarize"},
+    {96, "channel_dropout"}
 };
 
 enum Augmentation {
@@ -188,7 +189,8 @@ enum Augmentation {
     SLICE = 92,
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
-    SOLARIZE = 95
+    SOLARIZE = 95,
+    CHANNEL_DROPOUT = 96
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
@@ -1591,6 +1593,30 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
+    }
+}
+
+void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbability, int batchSize, int channels, int seed)
+{
+    int numThreads = omp_get_max_threads();
+    omp_set_dynamic(0);
+
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < batchSize; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        Rpp8u *maskPtrTemp = dropoutTensor + (batchCount * channels);
+        bool atLeastOne = false;
+
+        for (int channel = 0; channel < channels; channel++)
+        {
+            maskPtrTemp[channel] = keepDist(rng);
+            atLeastOne |= maskPtrTemp[channel];
+        }
+
+        if (!atLeastOne)
+            maskPtrTemp[rng() % channels] = 1;
     }
 }
 
