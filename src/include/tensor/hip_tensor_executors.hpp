@@ -652,13 +652,13 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
 
 // -------------------- coarse_dropout --------------------
 
-template <typename T, typename U>
+template <typename T>
 RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          T *dstPtr,
                                          RpptDescPtr dstDescPtr,
                                          RpptRoiLtrb *anchorBoxInfoTensor,
-                                         U *colorsTensor,
+                                         T *colorsTensor,
                                          Rpp32u *numBoxesTensor,
                                          Rpp32u maxBoxesPerImage,
                                          RpptROIPtr roiTensorPtrSrc,

@@ -25,11 +25,11 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 
 // -------------------- Set 0 - Coarse dropout main kernels --------------------
-template <typename T, typename U>
+template <typename T>
 __global__ void coarse_dropout_pkd_hip_tensor(T *dstPtr,
                                               uint2 dstStridesNH,
                                               RpptRoiLtrb *anchorBoxInfoTensor,
-                                              U *colorsTensor,
+                                              T *colorsTensor,
                                               Rpp32u *numBoxesTensor,
                                               RpptROIPtr roiTensorPtrSrc,
                                               int maxBoxesPerImage) 
@@ -51,8 +51,11 @@ __global__ void coarse_dropout_pkd_hip_tensor(T *dstPtr,
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
             id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            *reinterpret_cast<U *>(dstPtr + dstIdx) = static_cast<U>(colorsTensor[temp]);
-            break;
+            int colorIdx = temp * 3;
+            dstPtr[dstIdx]     = colorsTensor[colorIdx];
+            dstPtr[dstIdx + 1] = colorsTensor[colorIdx + 1];
+            dstPtr[dstIdx + 2] = colorsTensor[colorIdx + 2];
+            break;            break;
         }
     }
 }
@@ -127,15 +130,15 @@ __global__ void coarse_dropout_pln3_hip_tensor(T *dstPtr,
 }
 
 // -------------------- Set 1 - Kernel Executors --------------------
-template <typename T, typename U>
+template <typename T>
 RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          T *dstPtr,
                                          RpptDescPtr dstDescPtr,
                                          RpptRoiLtrb *anchorBoxInfoTensor,
-                                         U *colorsTensor,
+                                         T *colorsTensor,
                                          Rpp32u *numBoxesTensor,
-                                         int maxBoxesPerImage,
+                                         Rpp32u maxBoxesPerImage,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          rpp::Handle& handle)
@@ -173,66 +176,18 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
             hipStreamSynchronize(handle.GetStream());
         }
 
-        if (srcDescPtr->dataType == RpptDataType::U8)
-        {
-            hipLaunchKernelGGL(coarse_dropout_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               anchorBoxInfoTensor,
-                               reinterpret_cast<uchar3*>(colorsTensor),
-                               numBoxesTensor,
-                               roiTensorPtrSrc,
-                               maxBoxesPerImage);
-        }
-        else if (srcDescPtr->dataType == RpptDataType::F16)
-        {
-            hipLaunchKernelGGL(coarse_dropout_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               anchorBoxInfoTensor,
-                               reinterpret_cast<d_half3_s*>(colorsTensor),
-                               numBoxesTensor,
-                               roiTensorPtrSrc,
-                               maxBoxesPerImage);
-        }
-        else if (srcDescPtr->dataType == RpptDataType::F32)
-        {
-            hipLaunchKernelGGL(coarse_dropout_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               anchorBoxInfoTensor,
-                               reinterpret_cast<float3*>(colorsTensor),
-                               numBoxesTensor,
-                               roiTensorPtrSrc,
-                               maxBoxesPerImage);
-        }
-        else if (srcDescPtr->dataType == RpptDataType::I8)
-        {
-            hipLaunchKernelGGL(coarse_dropout_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               anchorBoxInfoTensor,
-                               reinterpret_cast<d_schar3_s*>(colorsTensor),
-                               numBoxesTensor,
-                               roiTensorPtrSrc,
-                               maxBoxesPerImage);
-        }
+        hipLaunchKernelGGL(coarse_dropout_pkd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           anchorBoxInfoTensor,
+                           colorsTensor,
+                           numBoxesTensor,
+                           roiTensorPtrSrc,
+                           maxBoxesPerImage);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)
     {
@@ -303,50 +258,50 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-template RppStatus hip_exec_coarse_dropout_tensor<Rpp8u, Rpp8u>(Rpp8u*,
-                                                                RpptDescPtr,
-                                                                Rpp8u*,
-                                                                RpptDescPtr,
-                                                                RpptRoiLtrb*,
-                                                                Rpp8u*,
-                                                                Rpp32u*,
-                                                                int,
-                                                                RpptROIPtr,
-                                                                RpptRoiType,
-                                                                rpp::Handle&);
+template RppStatus hip_exec_coarse_dropout_tensor<Rpp8u>(Rpp8u*,
+                                                         RpptDescPtr,
+                                                         Rpp8u*,
+                                                         RpptDescPtr,
+                                                         RpptRoiLtrb*,
+                                                         Rpp8u*,
+                                                         Rpp32u*,
+                                                         Rpp32u,
+                                                         RpptROIPtr,
+                                                         RpptRoiType,
+                                                         rpp::Handle&);
 
-template RppStatus hip_exec_coarse_dropout_tensor<half, half>(half*,
-                                                              RpptDescPtr,
-                                                              half*,
-                                                              RpptDescPtr,
-                                                              RpptRoiLtrb*,
-                                                              half*,
-                                                              Rpp32u*,
-                                                              int,
-                                                              RpptROIPtr,
-                                                              RpptRoiType,
-                                                              rpp::Handle&);
+template RppStatus hip_exec_coarse_dropout_tensor<half>(half*,
+                                                        RpptDescPtr,
+                                                        half*,
+                                                        RpptDescPtr,
+                                                        RpptRoiLtrb*,
+                                                        half*,
+                                                        Rpp32u*,
+                                                        Rpp32u,
+                                                        RpptROIPtr,
+                                                        RpptRoiType,
+                                                        rpp::Handle&);
 
-template RppStatus hip_exec_coarse_dropout_tensor<Rpp32f, Rpp32f>(Rpp32f*,
-                                                                  RpptDescPtr,
-                                                                  Rpp32f*,
-                                                                  RpptDescPtr,
-                                                                  RpptRoiLtrb*,
-                                                                  Rpp32f*,
-                                                                  Rpp32u*,
-                                                                  int,
-                                                                  RpptROIPtr,
-                                                                  RpptRoiType,
-                                                                  rpp::Handle&);
+template RppStatus hip_exec_coarse_dropout_tensor<Rpp32f>(Rpp32f*,
+                                                          RpptDescPtr,
+                                                          Rpp32f*,
+                                                          RpptDescPtr,
+                                                          RpptRoiLtrb*,
+                                                          Rpp32f*,
+                                                          Rpp32u*,
+                                                          Rpp32u,
+                                                          RpptROIPtr,
+                                                          RpptRoiType,
+                                                          rpp::Handle&);
 
-template RppStatus hip_exec_coarse_dropout_tensor<Rpp8s, Rpp8s>(Rpp8s*,
-                                                                RpptDescPtr,
-                                                                Rpp8s*,
-                                                                RpptDescPtr,
-                                                                RpptRoiLtrb*,
-                                                                Rpp8s*,
-                                                                Rpp32u*,
-                                                                int,
-                                                                RpptROIPtr,
-                                                                RpptRoiType,
-                                                                rpp::Handle&);
+template RppStatus hip_exec_coarse_dropout_tensor<Rpp8s>(Rpp8s*,
+                                                         RpptDescPtr,
+                                                         Rpp8s*,
+                                                         RpptDescPtr,
+                                                         RpptRoiLtrb*,
+                                                         Rpp8s*,
+                                                         Rpp32u*,
+                                                         Rpp32u,
+                                                         RpptROIPtr,
+                                                         RpptRoiType,
+                                                         rpp::Handle&);
