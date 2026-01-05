@@ -106,7 +106,6 @@ void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
 // Computes inverse stddev for 2D inputs
 void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32f scale)
 {
-
     Rpp32f *srcPtrTemp = srcPtr;
     Rpp32f normFactor = (Rpp32f)(1.0 / dims[1]);
     for(Rpp32u i = 0; i < dims[0]; i++)
@@ -205,17 +204,13 @@ void compute_ND_mean(T *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, R
     else if(level == tensorDim) // Calls computeSum when only 1st axis need to be normalized
         compute_sum(meanPtr[index], srcPtr, stride[norm], dims[norm]);
     else if (!axis[level]) // When that axis at present level isn't normalized, split srcPtr and modify index to store mean
-    {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, tensorDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, lastNormAxis);
-    }
     else if(axis[level] && (level == lastNormAxis)) // Increment level alone if its last axis to be normalized
         compute_ND_mean(srcPtr, meanPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
     else if(axis[level]) // Called when axis at present level needs to be normalized
-    {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
-    }
 }
 
 // Computes inverse stddev for ND inputs
@@ -227,17 +222,13 @@ void compute_ND_stddev(T *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *di
     else if(level == tensorDim) // Calls computeDiffSumSquare when only 1st axis need to be normalized
         compute_diff_square_sum(stdDevPtr[index], srcPtr, stride[norm], dims[norm], meanPtr[index]);
     else if (!axis[level]) // When that axis at present level isn't normalized, split srcPtr and modify index to store stddev
-    {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, lastNormAxis);
-    }
     else if(axis[level] && (level == lastNormAxis)) // Increment level alone if its last axis to be normalized
         compute_ND_stddev(srcPtr, meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
     else if(axis[level]) // Called when axis at present level needs to be normalized
-    {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
-    }
 }
 
 // Computes normalize for 3D non toggle variants
@@ -392,7 +383,10 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
 
         for(Rpp32u k = 0; k < length[level]; k++)
         {
-            *dstPtrTemp = (((T2)*srcPtrTemp - meanPtr[idx]) * multiplierPtr[idx]) + shift;
+            if constexpr (std::is_same<T2, Rpp8u>::value)
+                *dstPtrTemp = RPPPIXELCHECK((((T2)*srcPtrTemp - meanPtr[idx]) * multiplierPtr[idx]) + shift);
+            else
+                *dstPtrTemp = (((T2)*srcPtrTemp - meanPtr[idx]) * multiplierPtr[idx]) + shift;
             if(k < length[level] - 1)
                 idx += paramStride[level];
             srcPtrTemp++;
@@ -694,9 +688,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     break;
                 }
                 default:
-                {
                     std::cout<<"Invalid Axis mask"<<std::endl;
-                }
             }
 
             for(Rpp32u i = 1; i < tensorDims; i++)
