@@ -333,8 +333,15 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
             Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
+#if __AVX2__
+            Rpp32u alignedLength = (bufferLength / 24) * 24;
+            Rpp32u vectorIncrement = 24;
+            Rpp32u vectorIncrementPerChannel = 8;
+#else
             Rpp32u alignedLength = (bufferLength / 12) * 12;
-
+            Rpp32u vectorIncrement = 12;
+            Rpp32u vectorIncrementPerChannel = 4;
+#endif
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrImage;
             dstPtrRowR = dstPtrImage;
@@ -350,8 +357,13 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=12)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+= vectorIncrement)
                 {
+#if __AVX2__
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+#else
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
 
                     for(int cnt = 0; cnt < 12; cnt++)
@@ -370,11 +382,11 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                         *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
                         *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
                     }
-
-                    srcPtrTemp += 12;
-                    dstPtrTempR += 4;
-                    dstPtrTempG += 4;
-                    dstPtrTempB += 4;
+#endif
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
                 {
@@ -405,8 +417,15 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
             Rpp32u bufferLength = srcDescPtr->w * layoutParams.bufferMultiplier;
+#if __AVX2__
+            Rpp32u alignedLength = (bufferLength / 24) * 24;
+            Rpp32u vectorIncrement = 24;
+            Rpp32u vectorIncrementPerChannel = 8;
+#else
             Rpp32u alignedLength = (bufferLength / 12) * 12;
-
+            Rpp32u vectorIncrement = 12;
+            Rpp32u vectorIncrementPerChannel = 4;
+#endif
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrImage;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
@@ -422,8 +441,13 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=4)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount+= vectorIncrementPerChannel)
                 {
+#if __AVX2__
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
+#else
                     Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
 
                     for(int cnt = 0; cnt < 4; cnt++)
@@ -442,11 +466,11 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                     {
                         *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
                     }
-
-                    srcPtrTempR += 4;
-                    srcPtrTempG += 4;
-                    srcPtrTempB += 4;
-                    dstPtrTemp += 12;
+#endif
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
