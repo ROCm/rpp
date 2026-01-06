@@ -2,6 +2,11 @@
 #include "rpp_hip_math.hpp"
 #include <random>
 
+__device__ static const float SNOW_HUE_LOWER_BOUND = 0.514f;        // Lower bound of hue range to exclude
+__device__ static const float SNOW_HUE_UPPER_BOUND = 0.63f;         // Upper bound of hue range to exclude
+__device__ static const float SNOW_SAT_THRESHOLD = 0.196f;          // Saturation threshold for color filtering
+__device__ static const float SNOW_LIGHTNESS_THRESHOLD = 0.196f;    // Lightness threshold for color filtering
+
 __device__ __forceinline__ void snow_1GRAY_hip_compute(float *pixel, float brightnessCoefficient, float snowThreshold, int darkMode)
 {
     float lightness = *pixel;
@@ -10,11 +15,11 @@ __device__ __forceinline__ void snow_1GRAY_hip_compute(float *pixel, float brigh
     const float thresholdDiff = 0.39215686f; // upperThreshold - lowerThreshold
     const float brightnessFactor = 2.5f;
     
-    //Lighter the darken images
+    //Lighten the darken images
     if(lightness >= lowerThreshold && lightness <= upperThreshold && (darkMode == 1))
         lightness = lightness * fmaf(-lightness / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
-    // Modify Lightness 
+    // Adjust brightness by scaling lightness with brightnessCoefficient when below snowThreshold
     if(lightness <= snowThreshold)
         lightness = lightness * brightnessCoefficient;
 
@@ -56,12 +61,12 @@ __device__ __forceinline__ void snow_1RGB_hip_compute(float *pixelR, float *pixe
         hue = hue * ONE_OVER_6;
     }
 
-    //Lighter the darken images
+    //Lighten the darken images
     if(lightness >= lowerThreshold && lightness <= upperThreshold && (darkMode == 1))
         lightness = lightness * fmaf(-lightness / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
-    // Modify L 
-    if(lightness <= snowThreshold && !((hue >= 0.514f && hue <= 0.63f) && (sat >= 0.196f) && (lightness >= 0.196f)))
+    // Apply snow brightness to Lightness
+    if(lightness <= snowThreshold && !((hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) && (sat >= SNOW_SAT_THRESHOLD) && (lightness >= SNOW_LIGHTNESS_THRESHOLD)))
         lightness = lightness * brightnessCoefficient;
 
     float4 xt_f4 = make_float4(

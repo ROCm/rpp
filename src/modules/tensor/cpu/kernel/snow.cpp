@@ -26,6 +26,11 @@ SOFTWARE.
 #include "rpp_cpu_simd_math.hpp"
 #include <random>
 
+static const Rpp32f SNOW_HUE_LOWER_BOUND = 0.514f;        // Lower bound of hue range to exclude
+static const Rpp32f SNOW_HUE_UPPER_BOUND = 0.63f;         // Upper bound of hue range to exclude
+static const Rpp32f SNOW_SAT_THRESHOLD = 0.196f;          // Saturation threshold for color filtering
+static const Rpp32f SNOW_LIGHTNESS_THRESHOLD = 0.196f;    // Lightness threshold for color filtering
+
 inline void compute_snow_host_gray(Rpp32f &pixel,
                                    Rpp32f brightnessCoefficient,
                                    Rpp32f snowCoefficient,
@@ -94,7 +99,7 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
     if(l >= lower_threshold && l <= upper_threshold && darkMode == 1)
         l = l * std::fmaf(-l / thresholdDiff, brightnessFactor - 1.0f, brightnessFactor);
 
-    if(l <= snowCoefficient && !((hue>=0.514 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196)))
+    if(l <= snowCoefficient && !((hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) && (sat >= SNOW_SAT_THRESHOLD) && (l >= SNOW_LIGHTNESS_THRESHOLD)))
         l = l * brightnessCoefficient;
 
     // HSL to RGB with brightness/contrast adjustment
@@ -192,15 +197,15 @@ inline void compute_snow_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __
     __m256 pLDivDiff = _mm256_div_ps(pL, pDiffThreshold);                                                                  // l / thresholdDiff
     __m256 pBrightnessScale = _mm256_fmsub_ps(_mm256_sub_ps(avx_p1, pBrightnessFactor), pLDivDiff, pBrightnessFactor);     // brightnessFactor - (brightnessFactor - 1) * l/thresholdDiff
     pL = _mm256_blendv_ps(pL, _mm256_mul_ps(pL, pBrightnessScale), pMask[3]);                                              // l = l * scale
-    pMask[0] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.514f), _CMP_GE_OQ);                                                         // Temporarily store hue >= 0.514 comparision
-    pMask[1] = _mm256_cmp_ps(pH, _mm256_set1_ps(0.63f), _CMP_LE_OQ);                                                        // Temporarily store hue <= 0.63 comparison
-    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue>=0.5 && hue <= 0.63) comparison
-    pMask[1] = _mm256_cmp_ps(pS, _mm256_set1_ps(0.196f), _CMP_GE_OQ);                                                       // Temporarily store (sat >= 0.196) comparison
-    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue>=0.5 && hue <= 0.63) && (sat >= 0.196) comparison
-    pMask[1] = _mm256_cmp_ps(pL, _mm256_set1_ps(0.196f), _CMP_GE_OQ);                                                       // Temporarily store (l >= 0.196) comparison
-    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue>=0.5 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196) comparison
+    pMask[0] = _mm256_cmp_ps(pH, _mm256_set1_ps(SNOW_HUE_LOWER_BOUND), _CMP_GE_OQ);                                          // Temporarily store hue >= SNOW_HUE_LOWER_BOUND comparision
+    pMask[1] = _mm256_cmp_ps(pH, _mm256_set1_ps(SNOW_HUE_UPPER_BOUND), _CMP_LE_OQ);                                          // Temporarily store hue <= SNOW_HUE_UPPER_BOUND comparison
+    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) comparison
+    pMask[1] = _mm256_cmp_ps(pS, _mm256_set1_ps(SNOW_SAT_THRESHOLD), _CMP_GE_OQ);                                            // Temporarily store (sat >= SNOW_SAT_THRESHOLD) comparison
+    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) && (sat >= SNOW_SAT_THRESHOLD) comparison
+    pMask[1] = _mm256_cmp_ps(pL, _mm256_set1_ps(SNOW_LIGHTNESS_THRESHOLD), _CMP_GE_OQ);                                      // Temporarily store (l >= SNOW_LIGHTNESS_THRESHOLD) comparison
+    pMask[0] = _mm256_and_ps(pMask[0], pMask[1]);                                                                           // Temporarily store (hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) && (sat >= SNOW_SAT_THRESHOLD) && (l >= SNOW_LIGHTNESS_THRESHOLD) comparison
     pMask[1] = _mm256_cmp_ps(pL, pSnowParams[1], _CMP_LE_OQ);                                                               // Temporarily store (l <= *snowCoefficient) comparison
-    pMask[0] = _mm256_andnot_ps(pMask[0], pMask[1]);                                                                        // if(l <= *snowCoefficient && !((hue>=0.5 && hue <= 0.63) && (sat >= 0.196) && (l >= 0.196)))
+    pMask[0] = _mm256_andnot_ps(pMask[0], pMask[1]);                                                                        // if(l <= *snowCoefficient && !((hue >= SNOW_HUE_LOWER_BOUND && hue <= SNOW_HUE_UPPER_BOUND) && (sat >= SNOW_SAT_THRESHOLD) && (l >= SNOW_LIGHTNESS_THRESHOLD)))
     pL = _mm256_blendv_ps(pL,  _mm256_mul_ps(pL, pSnowParams[0]), pMask[0]);                                                //     l = l * (*brightnessCoefficient);
 
     // HSL to RGB with brightness/contrast adjustment
@@ -1491,7 +1496,7 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixel;
-                    pixel = static_cast<Rpp32f>((*srcPtrTemp++ + 128.0f) * ONE_OVER_255);
+                    pixel = (static_cast<Rpp32f>(*srcPtrTemp++) + 128.0f) * ONE_OVER_255;
                     compute_snow_host_gray(pixel, brightnessCoefficient, snowThreshold, darkMode);
                     pixel *= 255.0f;
                     *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel - 128.0f));
