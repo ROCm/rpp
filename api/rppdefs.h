@@ -469,6 +469,17 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Image Border Edge type enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    TOP_EDGE = 0,
+    BOTTOM_EDGE,
+    LEFT_EDGE,
+    RIGHT_EDGE
+} RpptImageBorderEdge;
+
 /*! \brief RPPT Image Border Type
  * \ingroup group_rppdefs
  */
