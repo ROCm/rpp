@@ -1086,6 +1086,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                 RpptGenericDescPtr dstGenericDescPtr,
                                 Rpp32u axis,
                                 Rpp32u *srcPtr1roiTensor,
+                                Rpp32u *srcPtr2roiTensor,
                                 rpp::Handle& handle);
 
 // -------------------- jpeg_compression distortion --------------------

@@ -2964,6 +2964,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
                                dstGenericDescPtr,
                                axis,
                                roiTensorSrc1,
+                               roiTensorSrc2,
                                rpp::deref(rppHandle));
     }
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
@@ -2976,6 +2977,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
                                dstGenericDescPtr,
                                axis,
                                roiTensorSrc1,
+                               roiTensorSrc2,
                                rpp::deref(rppHandle));
     }
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -2988,6 +2990,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
                                dstGenericDescPtr,
                                axis,
                                roiTensorSrc1,
+                               roiTensorSrc2,
                                rpp::deref(rppHandle));
     }
     else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
@@ -3000,6 +3003,7 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
                                dstGenericDescPtr,
                                axis,
                                roiTensorSrc1,
+                               roiTensorSrc2,
                                rpp::deref(rppHandle));
     }
 

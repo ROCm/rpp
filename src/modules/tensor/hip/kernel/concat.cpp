@@ -226,6 +226,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                  RpptGenericDescPtr dstGenericDescPtr,
                                  Rpp32u axis,
                                  Rpp32u *roiTensor,
+                                 Rpp32u *roiTensor2,
                                  rpp::Handle& handle)
 {
     int globalThreads_x = dstGenericDescPtr->strides[0];
@@ -433,11 +434,27 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
     }
     else
     {
-        // Calculate offsets for each batch element
+        // Calculate offsets for each batch
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
-        Rpp32u *srcOffsets = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+        
+        Rpp32u *mergedRoiTensor = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+        Rpp32u *srcOffsets = mergedRoiTensor + numDims * 4 * batchSize;
         Rpp32u *dstOffsets = srcOffsets + batchSize * 2;
         
+        // Merge the two separate roiTensor arrays
+        for(int i = 0; i < batchSize; i++)
+        {
+            Rpp32u *srcRoi1 = roiTensor + i * numDims * 2;
+            Rpp32u *srcRoi2 = roiTensor2 + i * numDims * 2;
+            Rpp32u *dstRoi = mergedRoiTensor + i * numDims * 4;
+            
+            // Copy roi1_begin and roi1_length
+            memcpy(dstRoi, srcRoi1, numDims * 2 * sizeof(Rpp32u));
+            // Copy roi2_begin and roi2_length
+            memcpy(dstRoi + numDims * 2, srcRoi2, numDims * 2 * sizeof(Rpp32u));
+        }
+        
+        // Calculate offsets for each batch element
         Rpp32u srcOffset1 = 0, srcOffset2 = 0, dstOffset = 0;
         Rpp32u maxElements = 0;
         for (int i = 0; i < batchSize; i++)
@@ -446,10 +463,11 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             srcOffsets[i * 2 + 1] = srcOffset2;
             dstOffsets[i] = dstOffset;
             
-            Rpp32u *roi1 = roiTensor + i * numDims * 4;
-            Rpp32u *roi2 = roi1 + numDims * 2;
-            Rpp32u *length1 = &roi1[numDims];
-            Rpp32u *length2 = &roi2[numDims];
+            Rpp32u *batchRoiBase = mergedRoiTensor + i * numDims * 4;
+            Rpp32u *roi1 = batchRoiBase;
+            Rpp32u *length1 = roi1 + numDims;
+            Rpp32u *roi2 = length1 + numDims;
+            Rpp32u *length2 = roi2 + numDims;
             
             Rpp32u src1Size = 1, src2Size = 1, dstSize = 1;
             for (int j = 0; j < numDims; j++)
@@ -482,7 +500,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                        dstGenericDescPtr->strides,
                        axis,
                        dstGenericDescPtr->numDims - 1,
-                       roiTensor,
+                       mergedRoiTensor,
                        srcOffsets,
                        dstOffsets);
     }
@@ -498,6 +516,7 @@ template RppStatus hip_exec_concat_tensor<Rpp8u>(Rpp8u*,
                                                  RpptGenericDescPtr,
                                                  Rpp32u,
                                                  Rpp32u*,
+                                                 Rpp32u*,
                                                  rpp::Handle&);
 
 template RppStatus hip_exec_concat_tensor<half>(half*,
@@ -507,6 +526,7 @@ template RppStatus hip_exec_concat_tensor<half>(half*,
                                                 half*,
                                                 RpptGenericDescPtr,
                                                 Rpp32u,
+                                                Rpp32u*,
                                                 Rpp32u*,
                                                 rpp::Handle&);
 
@@ -518,6 +538,7 @@ template RppStatus hip_exec_concat_tensor<Rpp32f>(Rpp32f*,
                                                   RpptGenericDescPtr,
                                                   Rpp32u,
                                                   Rpp32u*,
+                                                  Rpp32u*,
                                                   rpp::Handle&);
 
 template RppStatus hip_exec_concat_tensor<Rpp8s>(Rpp8s*,
@@ -527,5 +548,6 @@ template RppStatus hip_exec_concat_tensor<Rpp8s>(Rpp8s*,
                                                  Rpp8s*,
                                                  RpptGenericDescPtr,
                                                  Rpp32u,
+                                                 Rpp32u*,
                                                  Rpp32u*,
                                                  rpp::Handle&);
