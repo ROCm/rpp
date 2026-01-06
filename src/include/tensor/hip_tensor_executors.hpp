@@ -664,6 +664,18 @@ RppStatus hip_exec_snow_tensor(T *srcPtr,
                                RpptRoiType roiType,
                                rpp::Handle& handle);
 
+// -------------------- channel_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp8u *dropoutTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- box_filter --------------------

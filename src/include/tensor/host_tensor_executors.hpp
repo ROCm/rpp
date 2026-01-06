@@ -1751,6 +1751,19 @@ RppStatus snow_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
+// -------------------- channel_dropout --------------------
+
+template<typename T>
+RppStatus channel_dropout_host_tensor(T *srcPtr,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp8u *dropoutTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      RppLayoutParams layoutParams,
+                                      rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------
