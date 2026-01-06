@@ -26,7 +26,7 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 
 inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
-                                 RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, RpptGenericDescPtr dstGenericDescPtr,
+                                 Rpp32u* tempSrc1Strides, Rpp32u* tempSrc2Strides, Rpp32u* tempDstStrides,
                                  Rpp32u* src1ReductionDims, Rpp32u* srcTensor1Strides, Rpp32u* src2ReductionDims, Rpp32u* srcTensor2Strides, Rpp32u* dstStride,
                                  Rpp32u* length, Rpp32u* length1)
 {
@@ -37,26 +37,26 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[0] = 1;
             src1ReductionDims[1] = length[0] * length[1];
             srcTensor1Strides[0] = 1;
-            srcTensor1Strides[1] = srcPtr1GenericDescPtr->strides[0];
+            srcTensor1Strides[1] = tempSrc1Strides[1];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = length1[0] * length1[1];
             srcTensor2Strides[0] = 1;
-            srcTensor2Strides[1] = srcPtr2GenericDescPtr->strides[0];
+            srcTensor2Strides[1] = tempSrc2Strides[1];
             dstStride[0] = 1;
-            dstStride[1] = dstGenericDescPtr->strides[0];
+            dstStride[1] = tempDstStrides[1];
         }
         else if (axisMask == 1)
         {
             src1ReductionDims[0] = length[0];
             src1ReductionDims[1] = length[1];
-            srcTensor1Strides[0] = srcPtr1GenericDescPtr->strides[0];
-            srcTensor1Strides[1] = srcPtr1GenericDescPtr->strides[1];
+            srcTensor1Strides[0] = tempSrc1Strides[1];
+            srcTensor1Strides[1] = tempSrc1Strides[2];
             src2ReductionDims[0] = length1[0];
             src2ReductionDims[1] = length1[1];
-            srcTensor2Strides[0] = srcPtr2GenericDescPtr->strides[0];
-            srcTensor2Strides[1] = srcPtr2GenericDescPtr->strides[1];
-            dstStride[0] = dstGenericDescPtr->strides[0];
-            dstStride[1] = dstGenericDescPtr->strides[1];
+            srcTensor2Strides[0] = tempSrc2Strides[1];
+            srcTensor2Strides[1] = tempSrc2Strides[2];
+            dstStride[0] = tempDstStrides[1];
+            dstStride[1] = tempDstStrides[2];
         }
     }
     else if (tensorDims == 3)
@@ -68,16 +68,16 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[2] = length[0] * length[1] * length[2];
             srcTensor1Strides[0] = 1;
             srcTensor1Strides[1] = 1;
-            srcTensor1Strides[2] = srcPtr1GenericDescPtr->strides[0];
+            srcTensor1Strides[2] = tempSrc1Strides[1];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = 1;
             src2ReductionDims[2] = length1[0] * length1[1] * length1[2];
             srcTensor2Strides[0] = 1;
             srcTensor2Strides[1] = 1;
-            srcTensor2Strides[2] = srcPtr2GenericDescPtr->strides[0];
+            srcTensor2Strides[2] = tempSrc2Strides[1];
             dstStride[0] = 1;
             dstStride[1] = 1;
-            dstStride[2] = dstGenericDescPtr->strides[0];
+            dstStride[2] = tempDstStrides[1];
         }
         else if (axisMask == 1)
         {
@@ -85,241 +85,237 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[1] = length[0];
             src1ReductionDims[2] = length[1] * length[2];
             srcTensor1Strides[0] = 1;
-            srcTensor1Strides[1] = srcPtr1GenericDescPtr->strides[0];
-            srcTensor1Strides[2] = srcPtr1GenericDescPtr->strides[1];
+            srcTensor1Strides[1] = tempSrc1Strides[1];
+            srcTensor1Strides[2] = tempSrc1Strides[2];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = length1[0];
             src2ReductionDims[2] = length1[1] * length1[2];
             srcTensor2Strides[0] = 1;
-            srcTensor2Strides[1] = srcPtr2GenericDescPtr->strides[0];
-            srcTensor2Strides[2] = srcPtr2GenericDescPtr->strides[1];
+            srcTensor2Strides[1] = tempSrc2Strides[1];
+            srcTensor2Strides[2] = tempSrc2Strides[2];
             dstStride[0] = 1;
-            dstStride[1] = dstGenericDescPtr->strides[0];
-            dstStride[2] = dstGenericDescPtr->strides[1];
+            dstStride[1] = tempDstStrides[1];
+            dstStride[2] = tempDstStrides[2];
         }
         else if (axisMask == 2)
         {
             src1ReductionDims[0] = length[0];
             src1ReductionDims[1] = length[1];
             src1ReductionDims[2] = length[2];
-            srcTensor1Strides[0] = srcPtr1GenericDescPtr->strides[0];
-            srcTensor1Strides[1] = srcPtr1GenericDescPtr->strides[1];
-            srcTensor1Strides[2] = srcPtr1GenericDescPtr->strides[2];
+            srcTensor1Strides[0] = tempSrc1Strides[1];
+            srcTensor1Strides[1] = tempSrc1Strides[2];
+            srcTensor1Strides[2] = tempSrc1Strides[3];
             src2ReductionDims[0] = length1[0];
             src2ReductionDims[1] = length1[1];
             src2ReductionDims[2] = length1[2];
-            srcTensor2Strides[0] = srcPtr2GenericDescPtr->strides[0];
-            srcTensor2Strides[1] = srcPtr2GenericDescPtr->strides[1];
-            srcTensor2Strides[2] = srcPtr2GenericDescPtr->strides[2];
-            dstStride[0] = dstGenericDescPtr->strides[0];
-            dstStride[1] = dstGenericDescPtr->strides[1];
-            dstStride[2] = dstGenericDescPtr->strides[2];
+            srcTensor2Strides[0] = tempSrc2Strides[1];
+            srcTensor2Strides[1] = tempSrc2Strides[2];
+            srcTensor2Strides[2] = tempSrc2Strides[3];
+            dstStride[0] = tempDstStrides[1];
+            dstStride[1] = tempDstStrides[2];
+            dstStride[2] = tempDstStrides[3];
         }
     }
 }
 
 // Computes concatenation for 2D tensors (Supports Rpp32f and Rpp8u)
 template <typename T, typename SIMD_LOAD, typename SIMD_STORE>
-void concat_2D_tensor(T *srcPtr1, T *srcPtr2, SIMD_LOAD simd_load, SIMD_STORE simd_store, RpptGenericDescPtr srcDescPtr, RpptGenericDescPtr srcDescPtr1, T *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u *dims, Rpp32u *strides,Rpp32u *dims1, Rpp32u *strides1, Rpp32u axisMask)
+void concat_2D_tensor(T *srcPtr1, T *srcPtr2, SIMD_LOAD simd_load, SIMD_STORE simd_store, RpptGenericDescPtr srcDescPtr, RpptGenericDescPtr srcDescPtr1, T *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u *dims1, Rpp32u *strides1, Rpp32u *dims2, Rpp32u *strides2, Rpp32u axisMask)
 {
     Rpp32u vectorIncrement = 8;
-    Rpp32u bufferLength = (dims[1] < dims1[1]) ? dims[1] : dims1[1];
+    Rpp32u bufferLength = (dims1[1] < dims2[1]) ? dims1[1] : dims2[1];
     Rpp32u alignedLength = (bufferLength / 8) * 8;
-    Rpp32u dstRowStride = dims[1] + dims1[1]; // Calculate the destination row stride based on concatenated size
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    Rpp32u dstRowStride = dims1[1] + dims2[1]; // Calculate the destination row stride based on concatenated size
+    for(Rpp32u i = 0; i < dims1[0]; i++)
     {
-        T *srcPtrTemp1 = srcPtr1 + i * strides[1];
-        T *srcPtrTemp2 = srcPtr2 + i * strides1[1];
+        T *srcPtrTemp1 = srcPtr1 + i * strides1[0];
+        T *srcPtrTemp2 = srcPtr2 + i * strides2[0];
         T *dstPtrTemp = dstPtr + (i * dstRowStride);
 
         Rpp32u vectorLoopCount = 0;
         __m256 pDst;
-        for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+        for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
         {
             simd_load(srcPtrTemp1, &pDst);
             simd_store(dstPtrTemp, &pDst);
             simd_load(srcPtrTemp2, &pDst);
-            simd_store(dstPtrTemp + dims[1], &pDst);
+            simd_store(dstPtrTemp + dims1[1], &pDst);
             srcPtrTemp1 += vectorIncrement;
             srcPtrTemp2 += vectorIncrement;
             dstPtrTemp += vectorIncrement;
         }
         dstPtrTemp = dstPtr + (i * dstRowStride);
-        for(int j = vectorLoopCount; j < dims[1] ; j ++)
-            *(dstPtrTemp + j) = *srcPtrTemp1++;
         for(int j = vectorLoopCount; j < dims1[1] ; j ++)
-            *(dstPtrTemp + dims[1] + j)  = *srcPtrTemp2++;
+            *(dstPtrTemp + j) = *srcPtrTemp1++;
+        for(int j = vectorLoopCount; j < dims2[1] ; j ++)
+            *(dstPtrTemp + dims1[1] + j)  = *srcPtrTemp2++;
     }
 }
 
 // Computes concatenation for 3D tensors (Supports Rpp32f and Rpp8u)
 template <typename T, typename SIMD_LOAD, typename SIMD_STORE>
-void concat_3D_tensor(T *srcPtr1, T *srcPtr2, SIMD_LOAD simd_load, SIMD_STORE simd_store, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, T *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u *dims1, Rpp32u *strides1, Rpp32u *dstStrides, Rpp32u axisMask)
+void concat_3D_tensor(T *srcPtr1, T *srcPtr2, SIMD_LOAD simd_load, SIMD_STORE simd_store, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, T *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims1, Rpp32u *strides1, Rpp32u *dims2, Rpp32u *strides2, Rpp32u *dstStrides, Rpp32u axisMask)
 {
     Rpp32u vectorIncrement = 8;
-    Rpp32u bufferLength = (dims[2] < dims1[2]) ? dims[2] : dims1[2];
+    Rpp32u bufferLength = (dims1[2] < dims2[2]) ? dims1[2] : dims2[2];
     Rpp32u alignedLength = (bufferLength / 8) * 8;
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    for(Rpp32u i = 0; i < dims1[0]; i++)
     {
         T *srcPtrRow1 = srcPtr1;
         T *srcPtrRow2 = srcPtr2;
         T *dstPtrRow = dstPtr;
-        for(Rpp32u j = 0; j < dims[1]; j++)
+        for(Rpp32u j = 0; j < dims1[1]; j++)
         {
             T *srcPtrRowTemp1 = srcPtrRow1;
             T *srcPtrRowTemp2 = srcPtrRow2;
             T *dstPtrRowTemp = dstPtrRow;
             Rpp32u vectorLoopCount = 0;
             __m256 pDst;
-            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+            for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
             {
                 simd_load(srcPtrRowTemp1, &pDst);
                 simd_store(dstPtrRowTemp, &pDst);
                 simd_load(srcPtrRowTemp2, &pDst);
-                simd_store(dstPtrRowTemp + dims[2], &pDst);
+                simd_store(dstPtrRowTemp + dims1[2], &pDst);
                 srcPtrRowTemp1 += vectorIncrement;
                 srcPtrRowTemp2 += vectorIncrement;
                 dstPtrRowTemp += vectorIncrement;
             }
-            for(Rpp32u k = vectorLoopCount ; k < dims[2] ; k++)
+            for(Rpp32u k = vectorLoopCount; k < dims1[2]; k++)
                 *(dstPtrRowTemp + k - vectorLoopCount) = *srcPtrRowTemp1++;
-            for(Rpp32u k = vectorLoopCount ; k < dims1[2] ; k++)
-                *(dstPtrRowTemp + dims[2] + k - vectorLoopCount) = *srcPtrRowTemp2++;
-            srcPtrRow1 += strides[2];
-            srcPtrRow2 += strides1[2];
-            dstPtrRow += dstStrides[2];
+            for(Rpp32u k = vectorLoopCount ; k < dims2[2] ; k++)
+                *(dstPtrRowTemp + dims1[2] + k - vectorLoopCount) = *srcPtrRowTemp2++;
+            srcPtrRow1 += strides1[1];
+            srcPtrRow2 += strides2[1];
+            dstPtrRow += dstStrides[1];
         }
-        srcPtr1 += strides[1];
-        srcPtr2 += strides1[1];
-        dstPtr += dstStrides[1];
+        srcPtr1 += strides1[0];
+        srcPtr2 += strides2[0];
+        dstPtr += dstStrides[0];
     }
 }
 
 // Computes concat for 3D variants
-void concat_3D_axismask0_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, Rpp8u *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u *dims1, Rpp32u *strides1, Rpp32u axisMask)
+void concat_3D_axismask0_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, Rpp8u *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims1, Rpp32u *strides1, Rpp32u *dims2, Rpp32u *strides2, Rpp32u *dstStrides, Rpp32u axisMask)
 {
     Rpp32u vectorIncrement = 8;
-    Rpp32u dstHeightStride = dims[1] + dims1[1]; // Concatenated height size
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    Rpp32u dstHeightStride = dims1[1] + dims2[1]; // Concatenated height size
+    for(Rpp32u i = 0; i < dims1[0]; i++)
     {
-        Rpp32u bufferLength = dims[2];
-        Rpp32u alignedLength = (bufferLength / 8) * 8;
         Rpp32u bufferLength1 = dims1[2];
         Rpp32u alignedLength1 = (bufferLength1 / 8) * 8;
+        Rpp32u bufferLength2 = dims2[2];
+        Rpp32u alignedLength2 = (bufferLength2 / 8) * 8;
         Rpp8u *srcPtrRow = srcPtr1;
-        Rpp8u *srcPtrRow1 = srcPtr2;
         Rpp8u *dstPtrRow = dstPtr;
-        for(Rpp32u j = 0; j < dims[1]; j++)
-        {
-            Rpp8u *srcPtrRowTemp = srcPtrRow;
-            Rpp8u *dstPtrRowTemp = dstPtrRow;
-            Rpp32u vectorLoopCount = 0;
-            __m256 pDst ;
-            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
-            {
-                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp, &pDst);
-                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
-                srcPtrRowTemp += vectorIncrement;
-                dstPtrRowTemp += vectorIncrement;
-            }
-            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
-            {
-                *dstPtrRowTemp++ = *srcPtrRowTemp++;
-            }
-            srcPtrRow += strides[2];
-            dstPtrRow += strides[2];
-        }
-        dstPtrRow = dstPtr + dims[1] * strides[2];
         for(Rpp32u j = 0; j < dims1[1]; j++)
         {
-            Rpp8u *srcPtrRowTemp1 = srcPtrRow1;
-            Rpp8u *dstPtrRowTemp = dstPtrRow;
-            Rpp32u vectorLoopCount = 0;
-            __m256 pDst ;
-            for(; vectorLoopCount < alignedLength1; vectorLoopCount += vectorIncrement)
-            {
-                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp1, &pDst);
-                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
-                srcPtrRowTemp1 += vectorIncrement;
-                dstPtrRowTemp += vectorIncrement;
-            }
-            for(; vectorLoopCount < dims1[2] ; vectorLoopCount ++)
-            {
-                *dstPtrRowTemp++ = *srcPtrRowTemp1++;
-            }
-            srcPtrRow1 += strides1[2];
-            dstPtrRow += strides[2];
-        }
-        
-        srcPtr1 += strides[1];
-        srcPtr2 += strides1[1];
-        dstPtr += dstHeightStride * strides[2];
-    }
-}
-
-// Computes concat for 3D variants
-void concat_3D_axismask0_pln_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, Rpp8u *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *strides, Rpp32u *dims1, Rpp32u *strides1, Rpp32u axisMask)
-{
-    Rpp32u vectorIncrement = 8;
-    for(Rpp32u i = 0; i < dims[0]; i++)
-    {
-        Rpp32u bufferLength = dims[2];
-        Rpp32u alignedLength = (bufferLength / 8) * 8;
-        Rpp32u bufferLength1 = dims1[2];
-        Rpp32u alignedLength1 = (bufferLength1 / 8) * 8;
-        Rpp8u *srcPtrRow = srcPtr1;
-        Rpp8u *dstPtrRow = dstPtr;
-        for(Rpp32u j = 0; j < dims[1]; j++)
-        {
             Rpp8u *srcPtrRowTemp = srcPtrRow;
             Rpp8u *dstPtrRowTemp = dstPtrRow;
             Rpp32u vectorLoopCount = 0;
-            __m256 pDst ;
-            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+            __m256 pDst;
+            for(; vectorLoopCount < alignedLength1; vectorLoopCount += vectorIncrement)
             {
                 rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp, &pDst);
                 rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
                 srcPtrRowTemp += vectorIncrement;
                 dstPtrRowTemp += vectorIncrement;
             }
-            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
-            {
+            for(; vectorLoopCount < dims1[2]; vectorLoopCount++)
                 *dstPtrRowTemp++ = *srcPtrRowTemp++;
-            }
-            srcPtrRow += strides[2];
-            dstPtrRow += strides[2];
+            srcPtrRow += strides1[1];
+            dstPtrRow += dstStrides[1];
         }
-        srcPtr1 += strides[1];
-        dstPtr += strides[1];
-    }
-    for(Rpp32u i = 0; i < dims[0]; i++)
-    {
-        Rpp32u bufferLength1 = dims1[2];
-        Rpp32u alignedLength = (bufferLength1 / 8) * 8;
-        Rpp8u *srcPtrRow1 = srcPtr2;
-        Rpp8u *dstPtrRow = dstPtr;
-        for(Rpp32u j = 0; j < dims[1]; j++)
+        Rpp8u *srcPtrRow2 = srcPtr2;
+        dstPtrRow = dstPtr + dims1[1] * dstStrides[1];
+        for(Rpp32u j = 0; j < dims2[1]; j++)
         {
-            Rpp8u *srcPtrRowTemp1 = srcPtrRow1;
+            Rpp8u *srcPtrRowTemp2 = srcPtrRow2;
             Rpp8u *dstPtrRowTemp = dstPtrRow;
             Rpp32u vectorLoopCount = 0;
-            __m256 pDst ;
-            for(; vectorLoopCount < alignedLength ; vectorLoopCount += vectorIncrement)
+            __m256 pDst;
+            for(; vectorLoopCount < alignedLength2; vectorLoopCount += vectorIncrement)
             {
-                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp1, &pDst);
+                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp2, &pDst);
                 rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
-                srcPtrRowTemp1 += vectorIncrement;
+                srcPtrRowTemp2 += vectorIncrement;
                 dstPtrRowTemp += vectorIncrement;
             }
-            for(; vectorLoopCount < dims[2] ; vectorLoopCount ++)
+            for(; vectorLoopCount < dims2[2] ; vectorLoopCount ++)
             {
-                *dstPtrRowTemp++ = *srcPtrRowTemp1++;
+                *dstPtrRowTemp++ = *srcPtrRowTemp2++;
             }
-            srcPtrRow1 += strides[2];
-            dstPtrRow += strides[2];
+            srcPtrRow2 += strides2[1];
+            dstPtrRow += dstStrides[1];
         }
-        srcPtr2 += strides1[1];
-        dstPtr += strides1[1];
+        
+        srcPtr1 += strides1[0];
+        srcPtr2 += strides2[0];
+        dstPtr += dstHeightStride * dstStrides[1];
+    }
+}
+
+// Computes concat for 3D variants
+void concat_3D_axismask0_pln_tensor(Rpp8u *srcPtr1, Rpp8u *srcPtr2, RpptGenericDescPtr srcPtr1GenericDescPtr, RpptGenericDescPtr srcPtr2GenericDescPtr, Rpp8u *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims1, Rpp32u *strides1, Rpp32u *dims2, Rpp32u *strides2, Rpp32u *dstStrides, Rpp32u axisMask)
+{
+    Rpp32u vectorIncrement = 8;
+    
+    // Copy all channels from srcPtr1
+    for(Rpp32u i = 0; i < dims1[0]; i++)
+    {
+        Rpp32u bufferLength = dims1[2];
+        Rpp32u alignedLength = (bufferLength / 8) * 8;
+        Rpp8u *srcPtrRow = srcPtr1;
+        Rpp8u *dstPtrRow = dstPtr;
+        for(Rpp32u j = 0; j < dims1[1]; j++)
+        {
+            Rpp8u *srcPtrRowTemp = srcPtrRow;
+            Rpp8u *dstPtrRowTemp = dstPtrRow;
+            Rpp32u vectorLoopCount = 0;
+            __m256 pDst;
+            for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+            {
+                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp, &pDst);
+                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
+                srcPtrRowTemp += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
+            }
+            for(; vectorLoopCount < dims1[2]; vectorLoopCount++)
+                *dstPtrRowTemp++ = *srcPtrRowTemp++;
+            srcPtrRow += strides1[1];
+            dstPtrRow += dstStrides[1];
+        }
+        srcPtr1 += strides1[0];
+        dstPtr += dstStrides[0];
+    }
+    
+    // Copy all channels from srcPtr2
+    for(Rpp32u i = 0; i < dims2[0]; i++)
+    {
+        Rpp32u bufferLength = dims2[2];
+        Rpp32u alignedLength = (bufferLength / 8) * 8;
+        Rpp8u *srcPtrRow = srcPtr2;
+        Rpp8u *dstPtrRow = dstPtr;
+        for(Rpp32u j = 0; j < dims2[1]; j++)
+        {
+            Rpp8u *srcPtrRowTemp = srcPtrRow;
+            Rpp8u *dstPtrRowTemp = dstPtrRow;
+            Rpp32u vectorLoopCount = 0;
+            __m256 pDst;
+            for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+            {
+                rpp_simd_load(rpp_load8_u8_to_f32_avx, srcPtrRowTemp, &pDst);
+                rpp_simd_store(rpp_store8_f32_to_u8_avx, dstPtrRowTemp, &pDst);
+                srcPtrRowTemp += vectorIncrement;
+                dstPtrRowTemp += vectorIncrement;
+            }
+            for(; vectorLoopCount < dims2[2]; vectorLoopCount++)
+                *dstPtrRowTemp++ = *srcPtrRowTemp++;
+            srcPtrRow += strides2[1];
+            dstPtrRow += dstStrides[1];
+        }
+        srcPtr2 += strides2[0];
+        dstPtr += dstStrides[0];
     }
 }
 
@@ -351,20 +347,20 @@ void concat_recursive_ND_tensor(T1 *srcPtr, Rpp32u *srcTensor1Strides, T2 *dstPt
 
 // Computes concatenation for N-Dimensional tensors
 template<typename T1, typename T2>
-void concat_ND_tensor(T1 *srcPtr1, T1 *srcPtr2, Rpp32u *srcTensor1Strides, Rpp32u *srcTensor2Strides, Rpp32u *dstStride, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims, Rpp32u *dims1, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
+void concat_ND_tensor(T1 *srcPtr1, T1 *srcPtr2, Rpp32u *srcTensor1Strides, Rpp32u *srcTensor2Strides, Rpp32u *dstStride, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *dims1, Rpp32u *dims2, Rpp32u tensorDim, Rpp32u level, Rpp32u axisMask, Rpp32u maxDims)
 {
 
     if(level >= axisMask)
     {
-        concat_recursive_ND_tensor(srcPtr1, srcTensor1Strides, dstPtr, dims, tensorDim, level, axisMask, maxDims);
+        concat_recursive_ND_tensor(srcPtr1, srcTensor1Strides, dstPtr, dims1, tensorDim, level, axisMask, maxDims);
         dstPtr += srcTensor1Strides[level];
-        concat_recursive_ND_tensor(srcPtr2, srcTensor2Strides, dstPtr, dims1, tensorDim, level, axisMask, maxDims);
+        concat_recursive_ND_tensor(srcPtr2, srcTensor2Strides, dstPtr, dims2, tensorDim, level, axisMask, maxDims);
     }
     else
     {
-        for (Rpp32u i = 0; i < dims[level]; i++)
+        for (Rpp32u i = 0; i < dims1[level]; i++)
         {
-            concat_ND_tensor(srcPtr1, srcPtr2, srcTensor1Strides, srcTensor2Strides, dstStride,  dstPtr, dstGenericDescPtr, dims, dims1, tensorDim, level + 1, axisMask, maxDims);
+            concat_ND_tensor(srcPtr1, srcPtr2, srcTensor1Strides, srcTensor2Strides, dstStride,  dstPtr, dstGenericDescPtr, dims1, dims2, tensorDim, level + 1, axisMask, maxDims);
             dstPtr += dstStride[level + 1];
             srcPtr1 += srcTensor1Strides[level + 1];
             srcPtr2 += srcTensor2Strides[level + 1];
@@ -427,7 +423,6 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;
         Rpp32u *roi2 = roiTensorSrc2 + batchCount * tensorDims * 2;
-        Rpp32u *begin1 = roi1;
         Rpp32u *length1 = &roi1[tensorDims];
         Rpp32u *length2 = &roi2[tensorDims];
 
@@ -456,17 +451,9 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
             }
         }
-        
-        // modify descriptor strides for this batch
-        for(int i = 0; i < tensorDims; i++)
-        {
-            srcPtr1GenericDescPtr->strides[i + 1] = tempSrc1Strides[i + 1];
-            srcPtr2GenericDescPtr->strides[i + 1] = tempSrc2Strides[i + 1];
-            dstGenericDescPtr->strides[i + 1] = tempDstStrides[i + 1];
-        }
 
         // Use the helper function to update strides and dimensions
-        updateStridesAndDims(tensorDims, axisMask, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr,
+        updateStridesAndDims(tensorDims, axisMask, tempSrc1Strides, tempSrc2Strides, tempDstStrides,
                              src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, length1, length2);
 
         if (tensorDims == 2) // Called for 2D tensor cases
@@ -483,8 +470,8 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
         }
         else // Handle ND tensors
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr->strides, srcPtr2GenericDescPtr->strides,
-            dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides,
+            tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
         }
     }
     return RPP_SUCCESS;
@@ -545,7 +532,6 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;
         Rpp32u *roi2 = roiTensorSrc2 + batchCount * tensorDims * 2;
-        Rpp32u *begin1 = roi1;
         Rpp32u *length1 = &roi1[tensorDims];
         Rpp32u *length2 = &roi2[tensorDims];
 
@@ -556,7 +542,7 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
         Rpp32u src1ReductionDims[3], srcTensor1Strides[3], src2ReductionDims[3], srcTensor2Strides[3], dstStride[3];
 
-        // Calculate strides based on actual tensor dimensions and store directly in descriptors
+        // Calculate strides based on actual tensor dimensions
         Rpp32u tempSrc1Strides[RPPT_MAX_DIMS], tempSrc2Strides[RPPT_MAX_DIMS], tempDstStrides[RPPT_MAX_DIMS];
         
         tempSrc1Strides[tensorDims] = 1;
@@ -575,45 +561,13 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
             }
         }
-        
-        // Temporarily modify descriptor strides for this batch
-        for(int i = 0; i < tensorDims; i++)
-        {
-            srcPtr1GenericDescPtr->strides[i + 1] = tempSrc1Strides[i + 1];
-            srcPtr2GenericDescPtr->strides[i + 1] = tempSrc2Strides[i + 1];
-            dstGenericDescPtr->strides[i + 1] = tempDstStrides[i + 1];
-        }
 
         // Use the helper function to update strides and dimensions
-        updateStridesAndDims(tensorDims, axisMask, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstGenericDescPtr,
+        updateStridesAndDims(tensorDims, axisMask, tempSrc1Strides, tempSrc2Strides, tempDstStrides,
                              src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, length1, length2);
 
-        if (tensorDims == 2)
-        {
-            concat_2D_tensor(srcPtrTemp, srcPtrTemp1, rpp_load8_u8_to_f32_avx, rpp_store8_f32_to_u8_avx, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtrTemp, dstGenericDescPtr,
-            src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, axisMask);
-        }
-        else if (tensorDims == 3)
-        {
-            if (srcPtr1GenericDescPtr->layout == RpptLayout::NCHW && axisMask == 0)
-                concat_3D_axismask0_pln_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr,
-                                dstPtrTemp, dstGenericDescPtr, src1ReductionDims, srcTensor1Strides,
-                                src2ReductionDims, srcTensor2Strides, axisMask);
-            else if ((srcPtr1GenericDescPtr->layout == RpptLayout::NHWC && axisMask == 0) ||
-                (srcPtr1GenericDescPtr->layout == RpptLayout::NCHW && axisMask == 1))
-                concat_3D_axismask0_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr,
-                            dstPtrTemp, dstGenericDescPtr, src1ReductionDims, srcTensor1Strides,
-                            src2ReductionDims, srcTensor2Strides, axisMask);
-            else
-                concat_3D_tensor(srcPtrTemp, srcPtrTemp1, rpp_load8_u8_to_f32_avx, rpp_store8_f32_to_u8_avx,
-                srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtrTemp, dstGenericDescPtr,
-                src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, axisMask);
-        }
-        else
-        {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr->strides, srcPtr2GenericDescPtr->strides,
-            dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
-        }
+        concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides,
+        tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
     }
     return RPP_SUCCESS;
 }
@@ -674,8 +628,6 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;
         Rpp32u *roi2 = roiTensorSrc2 + batchCount * tensorDims * 2;
-        Rpp32u *begin1 = roi1;
-        Rpp32u *begin2 = roi2;
         Rpp32u *length1 = &roi1[tensorDims];
         Rpp32u *length2 = &roi2[tensorDims];
 
@@ -684,7 +636,7 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
         T1 *srcPtrTemp1 = srcPtr2 + src2Offsets[batchCount];
         T2 *dstPtrTemp = dstPtr + dstOffsets[batchCount];
 
-        // Calculate strides based on actual tensor dimensions and store directly in descriptors
+        // Calculate strides based on actual tensor dimensions
         Rpp32u tempSrc1Strides[RPPT_MAX_DIMS], tempSrc2Strides[RPPT_MAX_DIMS], tempDstStrides[RPPT_MAX_DIMS];
         
         tempSrc1Strides[tensorDims] = 1;
@@ -703,16 +655,8 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
                     tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
             }
         }
-        
-        // Temporarily modify descriptor strides for this batch
-        for(int i = 0; i < tensorDims; i++)
-        {
-            srcPtr1GenericDescPtr->strides[i + 1] = tempSrc1Strides[i + 1];
-            srcPtr2GenericDescPtr->strides[i + 1] = tempSrc2Strides[i + 1];
-            dstGenericDescPtr->strides[i + 1] = tempDstStrides[i + 1];
-        }
 
-        concat_ND_tensor(srcPtrTemp, srcPtrTemp1, srcPtr1GenericDescPtr->strides, srcPtr2GenericDescPtr->strides, dstGenericDescPtr->strides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
+        concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides, tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
     }
 
     return RPP_SUCCESS;
