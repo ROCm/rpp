@@ -722,9 +722,6 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! @}
- */
-
 /*! \brief Warp perspective augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The warp perspective performs perspective transformations for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
@@ -898,6 +895,10 @@ RppStatus rppt_fisheye_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  */
 RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+git pull
+git push
+
 
 #ifdef __cplusplus
 }
