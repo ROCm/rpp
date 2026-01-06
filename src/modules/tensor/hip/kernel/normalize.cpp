@@ -25,7 +25,7 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
 
-#define MAX_SHARED_MEMORY_SIZE 1024
+#define MAX_ELEMENTS_IN_SMEM 1024u
 
 // -------------------- Set 0 - normalization kernels device helpers --------------------
 
@@ -269,15 +269,7 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     float scale = scaleAndShift.x;
     float shift = scaleAndShift.y;
     float invStdDev;
-    if (computeStdDev)
-    {
-        float stdDevSquare = stdDev * stdDev;
-        invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
-    }
-    else
-    {
-        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;
-    }
+    invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f; // Compute inverse standard deviation with scaling factor
     uint dstIdx = id_z * maxBufferLength + id_x;
     float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
     normalize_check_and_store(outVal, &dstPtr[dstIdx]);
@@ -708,7 +700,7 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
 
-    if (maxParamVolume > MAX_SHARED_MEMORY_SIZE)
+    if (maxParamVolume > MAX_ELEMENTS_IN_SMEM)
     {
         if (id_x >= maxBufferLength)
             return;
@@ -1216,7 +1208,7 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
 
-    if (maxParamVolume > MAX_SHARED_MEMORY_SIZE)
+    if (maxParamVolume > MAX_ELEMENTS_IN_SMEM)
     {
         if (id_x >= maxBufferLength)
             return;
@@ -1738,31 +1730,22 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
         Rpp32u *srcMaxDims = &srcGenericDescPtr->dims[1];
         Rpp32u *srcStrides = &srcGenericDescPtr->strides[1];
 
-        Rpp32u shared_memory_size = 0;
-        Rpp32u block_size = 1024;
-        if (maxParamVolume <= MAX_SHARED_MEMORY_SIZE)
+        Rpp32u blockSize = MAX_ELEMENTS_IN_SMEM;
+        if (maxParamVolume <= MAX_ELEMENTS_IN_SMEM)
         {
-            if (maxParamVolume <= 32)
-                shared_memory_size = 32;
-            else if (maxParamVolume <= 64)
-                shared_memory_size = 64;
-            else if (maxParamVolume <= 128)
-                shared_memory_size = 128;
-            else if (maxParamVolume <= 256)
-                shared_memory_size = 256;
-            else if (maxParamVolume <= 512)
-                shared_memory_size = 512;
-            else
-                shared_memory_size = MAX_SHARED_MEMORY_SIZE;
-            block_size = shared_memory_size;
+            // Round up to next power of 2, with minimum of 32
+            blockSize = 1 << (32 - __builtin_clz(std::max(maxParamVolume, 32u) - 1));
+            // Clamp to MAX_SHARED_MEMORY_SIZE if needed
+            blockSize = std::min(blockSize, MAX_ELEMENTS_IN_SMEM);
         }
 
+        Rpp32u sharedMemorySize = blockSize * sizeof(Rpp32f); // number of bytes equivalent to blockSize * sizeof(type)
         if (isMean)
         {
             hipLaunchKernelGGL(compute_mean_nd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/block_size), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                               dim3(block_size, 1, 1),
-                               shared_memory_size,
+                               dim3(ceil((float)globalThreads_x/blockSize), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(blockSize, 1, 1),
+                               sharedMemorySize,
                                handle.GetStream(),
                                srcPtr,
                                srcMaxDims,
@@ -1778,9 +1761,9 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
         else
         {
             hipLaunchKernelGGL(compute_stddev_nd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/block_size), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                               dim3(block_size, 1, 1),
-                               shared_memory_size,
+                               dim3(ceil((float)globalThreads_x/blockSize), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(blockSize, 1, 1),
+                               sharedMemorySize,
                                handle.GetStream(),
                                srcPtr,
                                srcMaxDims,
@@ -1848,6 +1831,12 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
     bool computeStdDev = computeMeanStddev & 2; // if 1st bit in computeMeanStddev is set, computeStdDev is set to true. Otherwise it is set to false
     if ((!computeMean) && (!computeStdDev))
         maxParamVolume = 0;
+
+    // Zero-initialize the mean and standard deviation tensors
+    if (computeMean)
+        CHECK_RETURN_STATUS(hipMemsetAsync(meanTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
+    if (computeStdDev)
+        CHECK_RETURN_STATUS(hipMemsetAsync(stdDevTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
 
     // if computeMean is set, compute mean values by processing over input based on axisMask values
     if (computeMean)

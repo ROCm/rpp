@@ -125,6 +125,7 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
+    {96, "channel_dropout"},
     {99, "random_erase"}
 };
 
@@ -190,6 +191,7 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
+    CHANNEL_DROPOUT = 96,
     RANDOM_ERASE = 99
 };
 
@@ -197,7 +199,7 @@ const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFF
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
-const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
@@ -1596,13 +1598,34 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
     }
 }
 
+void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbability, int batchSize, int channels, int seed)
+{
+    int numThreads = omp_get_max_threads();
+    omp_set_dynamic(0);
+
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < batchSize; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        Rpp8u *maskPtrTemp = dropoutTensor + (batchCount * channels);
+        bool atLeastOne = false;
+
+        for (int channel = 0; channel < channels; channel++)
+        {
+            maskPtrTemp[channel] = keepDist(rng);
+            atLeastOne |= maskPtrTemp[channel];
+        }
+
+        if (!atLeastOne)
+            maskPtrTemp[rng() % channels] = 1;
+    }
+}
+
 // Dropout Region initializer for unit and performance testing
-void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, 
-                        RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp8u inputBitDepth, bool randomSeed, 
-                        Rpp8u dropoutType, void *colorBuffer = NULL)
+void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp8u inputBitDepth, int seed, Rpp8u dropoutType, void *colorBuffer = NULL)
 {
     // Initialize Random Number Generators
-    int seed = randomSeed ? std::random_device{}() : DROPOUT_FIXED_SEED;
     std::mt19937 rng(seed);
     std::mt19937 rng_noise(seed);
 
@@ -1611,7 +1634,7 @@ void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOf
         std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
         std::uniform_int_distribution<int> dist_i(0, 255);
         
-        Rpp32u noiseSize = RANDOM_ERASE_NOISE_DIM * RANDOM_ERASE_NOISE_DIM * channels;
+        Rpp32u noiseSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * channels;
 
         if (inputBitDepth == 0) // U8
             for (Rpp32u i = 0; i < noiseSize; i++) ((Rpp8u*)colorBuffer)[i] = (Rpp8u)dist_i(rng_noise);
