@@ -252,7 +252,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             dstOffsets[i] = cumDstOffset;
             
             Rpp32u *roi1 = roiTensor + i * numDims * 2;
-            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *roi2 = roiTensor2 + i * numDims * 2;
             Rpp32u *length1 = &roi1[numDims];
             Rpp32u *length2 = &roi2[numDims];
             
@@ -286,14 +286,16 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[2];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[2];
         }
+
+        Rpp32u *dims = offsetBuffer + batchSize * 3;
+        Rpp32u *dims1 = dims + numDims;
+        
         for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
             Rpp32u *roi1 = roiTensor + batchCount * numDims * 2;
-            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *roi2 = roiTensor2 + batchCount * numDims * 2;
             Rpp32u *length = &roi1[numDims];
             Rpp32u *length1 = &roi2[numDims];
-            Rpp32u *dims = offsetBuffer + batchSize * 3;
-            Rpp32u *dims1 = dims + 2;
             if(axis == 0)
             {
                 dims[0] = 1;
@@ -343,7 +345,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             dstOffsets[i] = cumDstOffset;
             
             Rpp32u *roi1 = roiTensor + i * numDims * 2;
-            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *roi2 = roiTensor2 + i * numDims * 2;
             Rpp32u *length1 = &roi1[numDims];
             Rpp32u *length2 = &roi2[numDims];
             
@@ -380,14 +382,16 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[1];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
         }
+
+        Rpp32u *dims = offsetBuffer + batchSize * 3;
+        Rpp32u *dims1 = dims + numDims;
+        
         for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
             Rpp32u *roi1 = roiTensor + batchCount * numDims * 2;
-            Rpp32u *roi2 = roi1 + numDims * 2;
+            Rpp32u *roi2 = roiTensor2 + batchCount * numDims * 2;
             Rpp32u *length = &roi1[numDims];
             Rpp32u *length1 = &roi2[numDims];
-            Rpp32u *dims = offsetBuffer + batchSize * 3;
-            Rpp32u *dims1 = dims + 3;
             if(axis == 0)
             {
                 dims[0] = dims[1] = 1;
