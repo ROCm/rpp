@@ -604,6 +604,10 @@ int main(int argc, char **argv)
     if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 4 * batchSize * sizeof(Rpp32u)));
 
+    Rpp8u *dropoutTensor = nullptr;
+    if(testCase == CHANNEL_DROPOUT)
+        CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -1464,9 +1468,15 @@ int main(int argc, char **argv)
                         stdDevTensor[i] = 5.0f;
                     }
 
+                    if (borderType != RpptImageBorderType::REPLICATE)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                        errorCodeCapture = rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                        errorCodeCapture = rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, borderType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1837,12 +1847,30 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case CHANNEL_DROPOUT:
+                {
+                    testCaseName = "channel_dropout";
+
+                    Rpp32f dropoutProbability[batchSize];
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    for (i = 0; i < batchSize; i++)
+                        dropoutProbability[i] = 0.4f;
+                    generate_channel_dropout_mask(dropoutTensor, dropoutProbability, batchSize, srcDescPtr->c, seed);
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dropoutTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case CUTOUT_DROPOUT:
                 {
                     testCaseName = "cutout_dropout";
                     boxesInEachImage = 1;
-                    bool randomSeed = qaFlag ? 0 : 1;
-                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, randomSeed, 1, colorBuffer);
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, seed, 1, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -1857,14 +1885,13 @@ int main(int argc, char **argv)
                     testCaseName = "grid_dropout";
                     Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                     Rpp32f holeRatio = 0.4f;
-                    bool randomOffset = false;
-                    randomOffset = qaFlag ? false : randomOffset;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
                     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
                     RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
                     Rpp32u maxHoleW = 0, maxHoleH = 0;
-                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, randomOffset);
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -2096,7 +2123,7 @@ int main(int argc, char **argv)
         if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostFree(mean));
     }
-    if(testCase == ERASE)
+    if(testCase == ERASE || testCase == CUTOUT_DROPOUT)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
@@ -2199,6 +2226,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
+    if(dropoutTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(dropoutTensor));
     if (permutationTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
     return 0;

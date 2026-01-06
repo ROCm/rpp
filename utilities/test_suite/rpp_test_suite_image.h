@@ -125,6 +125,7 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
+    {96, "channel_dropout"},
     {97, "cutout_dropout"},
     {98, "grid_dropout"}
 };
@@ -191,6 +192,7 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
+    CHANNEL_DROPOUT = 96,
     CUTOUT_DROPOUT = 97,
     GRID_DROPOUT = 98
 };
@@ -199,7 +201,7 @@ const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFF
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
-const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
@@ -1598,10 +1600,33 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
     }
 }
 
-// Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, int inputBitDepth, bool randomSeed, int dropoutType, void *colorBuffer = NULL)
+void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbability, int batchSize, int channels, int seed)
 {
-    const int seed = randomSeed ? std::random_device{}() : 42;
+    int numThreads = omp_get_max_threads();
+    omp_set_dynamic(0);
+
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < batchSize; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        Rpp8u *maskPtrTemp = dropoutTensor + (batchCount * channels);
+        bool atLeastOne = false;
+
+        for (int channel = 0; channel < channels; channel++)
+        {
+            maskPtrTemp[channel] = keepDist(rng);
+            atLeastOne |= maskPtrTemp[channel];
+        }
+
+        if (!atLeastOne)
+            maskPtrTemp[rng() % channels] = 1;
+    }
+}
+
+// Dropout Region initializer for unit and performance testing
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, int inputBitDepth, int seed, int dropoutType, void *colorBuffer = NULL)
+{
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
@@ -1658,9 +1683,9 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     }
 }
 
-inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32u &maxHoleW, Rpp32u &maxHoleH, Rpp32f holeRatio, bool randomOffset)
+// Grid Dropout Region initializer for unit and performance testing
+inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u gridH, Rpp32u gridW, Rpp32u &maxHoleW, Rpp32u &maxHoleH, Rpp32f holeRatio, int seed)
 {
-    int seed = randomOffset ? std::random_device{}() : DROPOUT_FIXED_SEED;
     std::mt19937 rng(seed);
 
     for(int i=0; i< batchCount; i++)
@@ -1691,7 +1716,7 @@ inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, 
                 Rpp32s cellY = y_base + row * cellH;
 
                 Rpp32s offsetX = 0, offsetY = 0;
-                if (randomOffset && (cellW > holeW) && (cellH > holeH))
+                if ((seed != DROPOUT_FIXED_SEED) && (cellW > holeW) && (cellH > holeH))
                 {
                     offsetX = distX(rng);
                     offsetY = distY(rng);
