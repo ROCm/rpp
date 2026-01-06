@@ -1870,6 +1870,8 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_channel_dropout_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dropoutTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
+
+                    break;
                 }
                 case RANDOM_ERASE:
                 {
