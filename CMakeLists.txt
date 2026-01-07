@@ -24,8 +24,8 @@ SOFTWARE.
 cmake_minimum_required(VERSION 3.10)
 include( utils.cmake )
 set( CORE_TARGET "rpp" )
-set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
-set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES OFF CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG OFF CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
