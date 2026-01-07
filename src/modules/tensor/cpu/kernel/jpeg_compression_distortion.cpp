@@ -322,7 +322,7 @@ inline __m256 accurate_quant_round(__m256 val, __m256 quant)
                           result[4], result[5], result[6], result[7]);
 }
 
-// Applies quantization (matches raw C reference - no clamping)
+// Applies quantization
 inline void quantize_block_avx2(__m256 *p, const float *quantTable, int qualityParam)
 {
     float qualityFactor = get_quality_factor(qualityParam);
