@@ -3058,7 +3058,6 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
@@ -3109,9 +3108,6 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT
