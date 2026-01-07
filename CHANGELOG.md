@@ -7,15 +7,11 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Removed
 * BatchPD legacy support completely removed
 * LEGACY_SUPPORT compilation flag and all code enclosed within it
-* Legacy API headers: rppi.h, rppi_advanced_augmentations.h, rppi_arithmetic_operations.h, rppi_color_model_conversions.h, rppi_computer_vision.h, rppi_filter_operations.h, rppi_fused_functions.h, rppi_geometry_transforms.h, rppi_image_augmentations.h, rppi_legacy_augmentations.h, rppi_logical_operations.h
-* RppiSize and RppiROI structures and related handle members
 * OpenCL backend support
 * Batch PD test suite and installation
-* Legacy executors and validators from src/include directories
 
 ### Changed
 * Backend flag standardization: HIP_COMPILE and GPU_SUPPORT replaced with RPP_BACKEND_HIP
-* Validation header renamed from rppi_validate.hpp to rppt_validate.hpp
 * CMakeLists.txt updated to remove batch PD references
 
 ## RPP 2.2.1 for ROCm 7.2.0
