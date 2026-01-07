@@ -30,17 +30,8 @@ inline void clamp_src_locations(Rpp32s *locArray,
                                 int count,
                                 int maxWidthLimit)
 {
-    // maxWidthLimit = image width
-    // valid index range for left neighbor is [0 .. maxWidthLimit - 1]
-    int maxValid = maxWidthLimit - 1;
-
     for (int i = 0; i < count; i++)
-    {
-        if (locArray[i] < 0)
-            locArray[i] = 0;
-        else if (locArray[i] > maxValid)
-            locArray[i] = maxWidthLimit;
-    }
+        locArray[i] = std::clamp(locArray[i], 0, maxWidthLimit);
 }
 
 RppStatus resize_crop_mirror_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -93,6 +84,7 @@ RppStatus resize_crop_mirror_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s srcLocationRow, srcLocationColumn;
         Rpp32u mirrorFlag = mirrorTensor[batchCount];
         Rpp32u width = dstImgSize[batchCount].width;
+
         __m256 pDstLocInit =  avx_pDstLocInit;
         auto computeFnSrcLocAvx = &compute_resize_bilinear_src_loc_and_weights_avx;
         if(mirrorFlag)

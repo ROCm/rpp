@@ -33,6 +33,13 @@ inline void compute_warp_affine_src_loc_next_term_sse(__m128 &pSrcY, __m128 &pSr
     pSrcY = _mm_add_ps(pSrcY, pAffineMatrixTerm3Incr);   // Vectorized computation of next 4 src Y locations by adding the delta from previous location
     pSrcX = _mm_add_ps(pSrcX, pAffineMatrixTerm0Incr);   // Vectorized computation of next 4 src X locations by adding the delta from previous location
 }
+
+inline void compute_warp_affine_src_loc_next_term_avx(__m256 &pSrcX, __m256 &pSrcY, __m256 pBaseSrcX, __m256 pBaseSrcY, __m256 pAffineMatrix0, __m256 pAffineMatrix3, __m256 pIndex)
+{
+    pSrcX = _mm256_fmadd_ps(pIndex, pAffineMatrix0, pBaseSrcX); // pSrcX = (pCurrentCol * m0) + baseSrcX
+    pSrcY = _mm256_fmadd_ps(pIndex, pAffineMatrix3, pBaseSrcY); // pSrcY = (pCurrentCol * m3) + baseSrcY
+}
+
 inline void compute_warp_affine_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f6 *affineMatrix_f6, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
 {
     dstX -= roiHalfWidth;
@@ -51,12 +58,6 @@ inline void compute_warp_affine_src_loc(Rpp32f &dstX, Rpp32f &dstY, Rpp32f srcX,
 {
     dstX = std::fma(vectorLoopCount, affineMatrix_f6->data[0], srcX);   // Computation of next src Y locations by adding the delta from previous location
     dstY = std::fma(vectorLoopCount, affineMatrix_f6->data[3], srcY);   // Computation of next src X locations by adding the delta from previous location
-}
-
-inline void compute_warp_affine_src_loc_next_term_avx(__m256 &pSrcX, __m256 &pSrcY, __m256 pBaseSrcX, __m256 pBaseSrcY, __m256 pAffineMatrix0, __m256 pAffineMatrix3, __m256 pIndex)
-{
-    pSrcX = _mm256_fmadd_ps(pIndex, pAffineMatrix0, pBaseSrcX); // pSrcX = (pCurrentCol * m0) + baseSrcX
-    pSrcY = _mm256_fmadd_ps(pIndex, pAffineMatrix3, pBaseSrcY); // pSrcY = (pCurrentCol * m3) + baseSrcY
 }
 
 /************* NEAREST NEIGHBOR INTERPOLATION *************/
