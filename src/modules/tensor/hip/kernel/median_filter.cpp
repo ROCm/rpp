@@ -448,6 +448,9 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -465,8 +468,8 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -477,10 +480,8 @@ __global__ void median_filter_3x3_pkd_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -521,6 +522,9 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -538,8 +542,8 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -550,10 +554,8 @@ __global__ void median_filter_5x5_pkd_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
 
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
@@ -595,6 +597,9 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -612,8 +617,8 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -624,11 +629,8 @@ __global__ void median_filter_7x7_pkd_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -671,6 +673,9 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -688,8 +693,8 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -700,11 +705,8 @@ __global__ void median_filter_9x9_pkd_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -749,6 +751,9 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
     // Compute input pixel coordinates with edge replication
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float8 median_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -756,8 +761,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     }
@@ -767,11 +772,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
         T tempBuffer[8]; // Temporary storage for 8 pixels
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -796,8 +798,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -807,11 +809,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -834,8 +833,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -845,11 +844,8 @@ __global__ void median_filter_3x3_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -887,6 +883,9 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float8 median_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -894,8 +893,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     }
@@ -905,11 +904,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
         T tempBuffer[8]; // Temporary storage for 8 pixels
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -933,8 +929,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -944,11 +940,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -971,8 +964,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -982,11 +975,8 @@ __global__ void median_filter_5x5_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1025,6 +1015,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float8 median_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
@@ -1032,8 +1024,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     }
@@ -1043,11 +1035,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
         T tempBuffer[8]; // Temporary storage for 8 pixels
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -1071,8 +1060,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -1082,11 +1071,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1109,8 +1095,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -1120,11 +1106,8 @@ __global__ void median_filter_7x7_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1163,14 +1146,16 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float8 median_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     }
@@ -1180,11 +1165,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
         T tempBuffer[8]; // Temporary storage for 8 pixels
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -1208,8 +1190,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -1219,11 +1201,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1246,8 +1225,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
-        if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-        (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+        (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         {
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         }
@@ -1257,11 +1236,8 @@ __global__ void median_filter_9x9_pln_hip_tensor(T *srcPtr,
             T tempBuffer[8]; // Temporary storage for 8 pixels
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-                int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                    min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+                int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                    min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 tempBuffer[i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1301,6 +1277,8 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1318,8 +1296,8 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1330,11 +1308,8 @@ __global__ void median_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -1378,6 +1353,8 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1395,8 +1372,8 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1407,11 +1384,8 @@ __global__ void median_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
 
         for(int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -1455,6 +1429,8 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1472,8 +1448,8 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1484,11 +1460,8 @@ __global__ void median_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -1532,6 +1505,8 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1549,8 +1524,8 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1561,11 +1536,8 @@ __global__ void median_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
 
         for (int i = 0, rgbOffset = 0; i < 8; i++, rgbOffset += 3)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             tempBuffer[rgbOffset] = srcPtr[clampedIdx];         // R
@@ -1610,6 +1582,9 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1625,8 +1600,8 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1639,11 +1614,8 @@ __global__ void median_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
 
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1689,6 +1661,9 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1704,8 +1679,8 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1718,11 +1693,8 @@ __global__ void median_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
 
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1768,6 +1740,9 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1783,8 +1758,8 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1797,11 +1772,8 @@ __global__ void median_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
 
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1847,6 +1819,9 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
 
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
+
+    int clampedY = roiTensorPtrSrc[id_z].xywhROI.xy.y + max(0, min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
+
     d_float24 median_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
@@ -1862,8 +1837,8 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiTensorPtrSrc[id_z].xywhROI.xy.x) && ((id_x_i + 7 + padLength) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
-    (id_y_i > roiTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
+    (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1876,11 +1851,8 @@ __global__ void median_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
 
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiTensorPtrSrc[id_z].xywhROI.xy.x,
-                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.xy.x + roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
-            int clampedY = max(roiTensorPtrSrc[id_z].xywhROI.xy.y,
-                                min(id_y_i, roiTensorPtrSrc[id_z].xywhROI.xy.y + roiTensorPtrSrc[id_z].xywhROI.roiHeight - 1));
-
+            int clampedX = roiTensorPtrSrc[id_z].xywhROI.xy.x + max(0,
+                                min(id_x_i + i, roiTensorPtrSrc[id_z].xywhROI.roiWidth - 1));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
