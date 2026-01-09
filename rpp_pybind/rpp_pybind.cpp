@@ -25,6 +25,9 @@ SOFTWARE.
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#ifdef STATIC
+#undef STATIC
+#endif
 #include <torch/extension.h>
 #include <ATen/Dispatch.h>
 #include <ATen/dlpack.h>
@@ -132,7 +135,7 @@ void brightness(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_brightness(input_data.ptr, &src_desc,
@@ -159,7 +162,7 @@ void gamma_correction(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_gamma_correction(input_data.ptr, &src_desc,
@@ -186,7 +189,7 @@ void contrast(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_contrast(input_data.ptr, &src_desc,
@@ -213,7 +216,7 @@ void hue(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_hue(input_data.ptr, &src_desc,
@@ -243,7 +246,7 @@ void flip(const torch::Tensor& input_tensor,
     std::vector<Rpp32u> v_tensor(batch_size);
     
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
         h_tensor[i] = horizontal[i];
         v_tensor[i] = vertical[i];
     }
@@ -274,7 +277,7 @@ void resize(const torch::Tensor& input_tensor,
     std::vector<RpptImagePatch> dst_sizes(batch_size);
     
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
         dst_sizes[i].width = dst_width[i];
         dst_sizes[i].height = dst_height[i];
     }
@@ -303,7 +306,7 @@ void rotate(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_rotate(input_data.ptr, &src_desc,
@@ -334,10 +337,10 @@ void crop(const torch::Tensor& input_tensor,
     std::vector<RpptROI> roi(batch_size);
     
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {static_cast<Rpp32u>(x1[i]), 
-                         static_cast<Rpp32u>(y1[i]), 
-                         static_cast<Rpp32u>(crop_width[i]), 
-                         static_cast<Rpp32u>(crop_height[i])};
+        roi[i].xywhROI = {x1[i], 
+                         y1[i], 
+                         crop_width[i], 
+                         crop_height[i]};
     }
     
     rppt_crop(input_data.ptr, &src_desc,
@@ -362,7 +365,7 @@ void vignette(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_vignette(input_data.ptr, &src_desc,
@@ -390,7 +393,7 @@ void pixelate(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<Rpp32u>(input_data.shape[3]), static_cast<Rpp32u>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
     
     rppt_pixelate(input_data.ptr, &src_desc,
@@ -410,56 +413,71 @@ PYBIND11_MODULE(rpp_pybind, m) {
     // Version info
     m.attr("__version__") = "1.0.0";
     
-    // Enums wrapped as classes
-    py::class_<RppBackend>(m, "RppBackendInternal")
-        .def_readonly_static("HOST", &RPP_HOST_BACKEND)
-        .def_readonly_static("HIP", &RPP_HIP_BACKEND);
+    // Enums wrapped properly as py::enum_
+    py::enum_<RppBackend>(m, "RppBackendInternal")
+        .value("HOST", RPP_HOST_BACKEND)
+        .value("HIP", RPP_HIP_BACKEND);
     
-    py::class_<RppStatus>(m, "RppStatusInternal")
-        .def_readonly_static("SUCCESS", &RPP_SUCCESS)
-        .def_readonly_static("ERROR", &RPP_ERROR);
+    py::enum_<RppStatus>(m, "RppStatusInternal")
+        .value("SUCCESS", RPP_SUCCESS)
+        .value("ERROR", RPP_ERROR);
     
-    py::class_<RpptDataType>(m, "RpptDataTypeInternal")
-        .def_readonly_static("U8", &RpptDataType::U8)
-        .def_readonly_static("F16", &RpptDataType::F16)
-        .def_readonly_static("F32", &RpptDataType::F32)
-        .def_readonly_static("I8", &RpptDataType::I8);
+    py::enum_<RpptDataType>(m, "RpptDataTypeInternal")
+        .value("U8", RpptDataType::U8)
+        .value("F16", RpptDataType::F16)
+        .value("F32", RpptDataType::F32)
+        .value("I8", RpptDataType::I8)
+        .value("I16", RpptDataType::I16);
     
-    py::class_<RpptLayout>(m, "RpptLayoutInternal")
-        .def_readonly_static("NCHW", &RpptLayout::NCHW)
-        .def_readonly_static("NHWC", &RpptLayout::NHWC);
+    py::enum_<RpptLayout>(m, "RpptLayoutInternal")
+        .value("NCHW", RpptLayout::NCHW)
+        .value("NHWC", RpptLayout::NHWC)
+        .value("NCDHW", RpptLayout::NCDHW)
+        .value("NDHWC", RpptLayout::NDHWC)
+        .value("NHW", RpptLayout::NHW)
+        .value("NFT", RpptLayout::NFT)
+        .value("NTF", RpptLayout::NTF);
     
     // Types module
     auto types_module = m.def_submodule("types", "RPP type definitions");
     
-    py::class_<RppBackend>(types_module, "RppBackend")
-        .def_readonly_static("HOST", &RPP_HOST_BACKEND)
-        .def_readonly_static("HIP", &RPP_HIP_BACKEND);
+    py::enum_<RppBackend>(types_module, "RppBackend")
+        .value("HOST", RPP_HOST_BACKEND)
+        .value("HIP", RPP_HIP_BACKEND);
     
-    py::class_<RppStatus>(types_module, "RppStatus")
-        .def_readonly_static("SUCCESS", &RPP_SUCCESS)
-        .def_readonly_static("ERROR", &RPP_ERROR);
+    py::enum_<RppStatus>(types_module, "RppStatus")
+        .value("SUCCESS", RPP_SUCCESS)
+        .value("ERROR", RPP_ERROR);
     
-    py::class_<RpptDataType>(types_module, "RpptDataType")
-        .def_readonly_static("U8", &RpptDataType::U8)
-        .def_readonly_static("F16", &RpptDataType::F16)
-        .def_readonly_static("F32", &RpptDataType::F32)
-        .def_readonly_static("I8", &RpptDataType::I8);
+    py::enum_<RpptDataType>(types_module, "RpptDataType")
+        .value("U8", RpptDataType::U8)
+        .value("F16", RpptDataType::F16)
+        .value("F32", RpptDataType::F32)
+        .value("I8", RpptDataType::I8)
+        .value("I16", RpptDataType::I16);
     
-    py::class_<RpptLayout>(types_module, "RpptLayout")
-        .def_readonly_static("NCHW", &RpptLayout::NCHW)
-        .def_readonly_static("NHWC", &RpptLayout::NHWC);
+    py::enum_<RpptLayout>(types_module, "RpptLayout")
+        .value("NCHW", RpptLayout::NCHW)
+        .value("NHWC", RpptLayout::NHWC)
+        .value("NCDHW", RpptLayout::NCDHW)
+        .value("NDHWC", RpptLayout::NDHWC)
+        .value("NHW", RpptLayout::NHW)
+        .value("NFT", RpptLayout::NFT)
+        .value("NTF", RpptLayout::NTF);
 
     // Handle management
     m.def("rppCreate", [](int batch_size, int backend) {
         rppHandle_t handle;
-        rppCreateWithBatchSize(&handle, batch_size, 
-                              static_cast<RppBackend>(backend));
+        rppCreate(&handle,
+                  static_cast<size_t>(batch_size),
+                  0,
+                  nullptr,
+                  static_cast<RppBackend>(backend));
         return reinterpret_cast<uintptr_t>(handle);
     }, "Create RPP handle", py::arg("batch_size"), py::arg("backend"));
     
     m.def("rppDestroy", [](uintptr_t handle, int backend) {
-        rppDestroyGPU(reinterpret_cast<rppHandle_t>(handle));
+        rppDestroy(reinterpret_cast<rppHandle_t>(handle), static_cast<RppBackend>(backend));
     }, "Destroy RPP handle", py::arg("handle"), py::arg("backend"));
 
     // Bind the 10 augmentation functions
