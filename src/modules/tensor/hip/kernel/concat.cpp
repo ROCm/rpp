@@ -270,6 +270,9 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         // Calculate cumulative offsets for variable-sized tensors
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
         Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+
+        // scratchBufferPinned layout (Rpp32u entries):
+        // [src1Offsets: BatchSize] [src2Offsets: BatchSize] [dstOffsets: BatchSize] [srcDims1: numDims] [srcDims2: numDims]
         Rpp32u *src1Offsets = offsetBuffer;
         Rpp32u *src2Offsets = offsetBuffer + batchSize;
         Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
@@ -362,6 +365,9 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         // Calculate cumulative offsets for variable-sized tensors
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
         Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+
+        // scratchBufferPinned layout (Rpp32u entries):
+        // [src1Offsets: BatchSize] [src2Offsets: BatchSize] [dstOffsets: BatchSize] [srcDims1: numDims] [srcDims2: numDims]
         Rpp32u *src1Offsets = offsetBuffer;
         Rpp32u *src2Offsets = offsetBuffer + batchSize;
         Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
@@ -469,6 +475,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         // Calculate offsets for each batch
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
         
+        // scratchBufferPinned layout (Rpp32u entries):
+        // [mergedRoiTensor: 4 * numDims * Batchsize] [srcOffsets: 2 * BatchSize] [dstOffsets: BatchSize]
         Rpp32u *mergedRoiTensor = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
         Rpp32u *srcOffsets = mergedRoiTensor + numDims * 4 * batchSize;
         Rpp32u *dstOffsets = srcOffsets + batchSize * 2;
