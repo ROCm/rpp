@@ -3,9 +3,6 @@
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
 ## (Unreleased) RPP 2.2.2
-* Updating RPP version for gaussian noise kernel API changes
-
-## RPP 2.2.1 for ROCm 7.2.0
 
 ### Added
 * HOST and HIP - pinned buffers API support
@@ -13,6 +10,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Changed
 * CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
 * Mem Copy eliminated - Helper functions responsible for these copies copy_param_float(), copy_param_uint() have been removed and buffers now consistently use pinned/HIP memory
+* Updating RPP version for gaussian noise kernel API changes
 
 ### Resolved issues
 * Test Suite - Error Code Capture updates
