@@ -97,7 +97,15 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html filter_augmentations_sobel_filter_kSize3_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientX_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientX_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientX_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientY_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientY_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientY_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientXY_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientXY_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientXY_img150x150.png Sample 7x7 Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -119,7 +127,15 @@ RppStatus rppt_sobel_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html filter_augmentations_sobel_filter_kSize3_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientX_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientX_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientX_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientY_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientY_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientY_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_sobel_filter_kSize3_gradientXY_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_sobel_filter_kSize5_gradientXY_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_sobel_filter_kSize7_gradientXY_img150x150.png Sample 7x7 Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
