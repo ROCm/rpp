@@ -1174,7 +1174,8 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
                         blend_shuffle_max_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
-                         if constexpr (std::is_same<T, Rpp8s>::value)
+
+                        if constexpr (std::is_same<T, Rpp8s>::value)
                             pxResult[0] = _mm_packs_epi16(pxTemp[0], pxTemp[1]);
                         else
                             pxResult[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
