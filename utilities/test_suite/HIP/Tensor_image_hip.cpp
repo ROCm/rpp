@@ -280,7 +280,7 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u srcOffsetInBytes = (kernelSizeCase || kernelSizeAndGradientCase) ? (12 * 1) : 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase || kernelSizeAndGradientCase) ? (12 * (additionalParam / 2)) : 0;
     Rpp32u dstOffsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 

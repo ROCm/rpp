@@ -155,6 +155,10 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
+#if __AVX2__
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+#endif
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -241,35 +245,12 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                                 pDstY[k] = avx_p0;
                                 pDst[k] = avx_p0;
                             }
-                            for (int k = 0; k < 3; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                __m256 pTemp[3], pRowShift[2];
-                                Rpp32s filterIndex =  k * 3;
-                                Rpp32s rowIndex = k * 2;
-
-                                pRowShift[0] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1);
-                                pRowShift[1] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2);
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterX[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterX[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterX[filterIndex + 2]);
-                                pDstX[0] = _mm256_add_ps(pDstX[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterY[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterY[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterY[filterIndex + 2]);
-                                pDstY[0] = _mm256_add_ps(pDstY[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pRowShift[0] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1);
-                                pRowShift[1] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2);
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilterX[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterX[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterX[filterIndex + 2]);
-                                pDstX[1] = _mm256_add_ps(pDstX[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilterY[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterY[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterY[filterIndex + 2]);
-                                pDstY[1] = _mm256_add_ps(pDstY[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDstX[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilterX[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDstY[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilterY[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDstX[1], pRow[rowIndex + 1], avx_p0, &pFilterX[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDstY[1], pRow[rowIndex + 1], avx_p0, &pFilterY[filterIndex], pxMaskPln);
                             }
                             pDstX[0] = _mm256_min_ps(_mm256_max_ps(pDstX[0], pMin), pMax);
                             pDstY[0] = _mm256_min_ps(_mm256_max_ps(pDstY[0], pMin), pMax);
@@ -343,21 +324,10 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
-                            for (int k = 0; k < 3; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                __m256 pTemp[3];
-                                Rpp32s filterIndex =  k * 3;
-                                Rpp32s rowIndex = k * 2;
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
                             pDst[0] = _mm256_min_ps(_mm256_max_ps(pDst[0], pMin), pMax);
                             pDst[1] = _mm256_min_ps(_mm256_max_ps(pDst[1], pMin), pMax);
@@ -436,47 +406,12 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                                 pDstY[k] = avx_p0;
                                 pDst[k] = avx_p0;
                             }
-                            for (int k = 0; k < 5; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                             {
-                                __m256 pTemp[5], pRowShift[4];
-                                Rpp32s filterIndex =  k * 5;
-                                Rpp32s rowIndex = k * 2;
-
-                                pRowShift[0] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1);
-                                pRowShift[1] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2);
-                                pRowShift[2] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3);
-                                pRowShift[3] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4);
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterX[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterX[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterX[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterX[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterX[filterIndex + 4]);
-                                pDstX[0] = _mm256_add_ps(pDstX[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterY[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterY[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterY[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterY[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterY[filterIndex + 4]);
-                                pDstY[0] = _mm256_add_ps(pDstY[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                                pRowShift[0] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1);
-                                pRowShift[1] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2);
-                                pRowShift[2] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 7), avx_pxMaskRotate0To3);
-                                pRowShift[3] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 15), avx_pxMaskRotate0To4);
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilterX[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterX[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterX[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterX[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterX[filterIndex + 4]);
-                                pDstX[1] = _mm256_add_ps(pDstX[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilterY[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterY[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterY[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterY[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterY[filterIndex + 4]);
-                                pDstY[1] = _mm256_add_ps(pDstY[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                                permute_blend_add_5x5_pln(pDstX[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilterX[filterIndex]);
+                                permute_blend_add_5x5_pln(pDstY[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilterY[filterIndex]);
+                                permute_blend_add_5x5_pln(pDstX[1], pRow[rowIndex + 1], avx_p0, &pFilterX[filterIndex]);
+                                permute_blend_add_5x5_pln(pDstY[1], pRow[rowIndex + 1], avx_p0, &pFilterY[filterIndex]);
                             }
                             pDstX[0] = _mm256_min_ps(_mm256_max_ps(pDstX[0], pMin), pMax);
                             pDstY[0] = _mm256_min_ps(_mm256_max_ps(pDstY[0], pMin), pMax);
@@ -551,25 +486,10 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_NxN_pln_host<5>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
-                            for (int k = 0; k < 5; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                             {
-                                __m256 pTemp[5];
-                                Rpp32s filterIndex =  k * 5;
-                                Rpp32s rowIndex = k * 2;
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                                permute_blend_add_5x5_pln(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
+                                permute_blend_add_5x5_pln(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                             }
                             pDst[0] = _mm256_min_ps(_mm256_max_ps(pDst[0], pMin), pMax);
                             pDst[1] = _mm256_min_ps(_mm256_max_ps(pDst[1], pMin), pMax);
@@ -645,35 +565,10 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                             pDstX = avx_p0;
                             pDstY = avx_p0;
                             pDst = avx_p0;
-                            for (int k = 0; k < 7; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
                             {
-                                __m256 pTemp[7], pRowShift[6];
-                                Rpp32s filterIndex =  k * 7;
-                                Rpp32s rowIndex = k * 2;
-
-                                pRowShift[0] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1);
-                                pRowShift[1] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2);
-                                pRowShift[2] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3);
-                                pRowShift[3] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4);
-                                pRowShift[4] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5);
-                                pRowShift[5] = _mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6);
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterX[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterX[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterX[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterX[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterX[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(pRowShift[4], pFilterX[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(pRowShift[5], pFilterX[filterIndex + 6]);
-                                pDstX = _mm256_add_ps(pDstX, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilterY[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(pRowShift[0], pFilterY[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(pRowShift[1], pFilterY[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(pRowShift[2], pFilterY[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(pRowShift[3], pFilterY[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(pRowShift[4], pFilterY[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(pRowShift[5], pFilterY[filterIndex + 6]);
-                                pDstY = _mm256_add_ps(pDstY, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+                                permute_blend_add_7x7_pln(pDstX, &pRow[rowIndex], &pFilterX[filterIndex]);
+                                permute_blend_add_7x7_pln(pDstY, &pRow[rowIndex], &pFilterY[filterIndex]);
                             }
                             pDstX = _mm256_min_ps(_mm256_max_ps(pDstX, pMin), pMax);
                             pDstY = _mm256_min_ps(_mm256_max_ps(pDstY, pMin), pMax);
@@ -741,21 +636,8 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                             __m256 pRow[14], pDst;
                             rpp_load_filter_NxN_pln_host<7>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst = avx_p0;
-                            for (int k = 0; k < 7; k++)
-                            {
-                                __m256 pTemp[7];
-                                Rpp32s filterIndex =  k * 7;
-                                Rpp32s rowIndex = k * 2;
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 6]);
-                                pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
-                            }
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
+                                permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
                             pDst = _mm256_min_ps(_mm256_max_ps(pDst, pMin), pMax);
                             
                             // convert result from pln to pkd format and store in output buffer
