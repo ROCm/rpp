@@ -1049,9 +1049,6 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
                 int diff = abs(*outVal - *outRefVal);
                 if(diff <= CUTOFF)
                     matchedIdx++;
-                else
-                    printf("Mismatch at img %d, row %d, col %d: val = %d, ref = %d, diff = %d\n",
-           imageCnt, i, j, *outVal, *outRefVal, diff);
             }
         }
         if(matchedIdx == (height * width) && matchedIdx !=0)
@@ -1178,9 +1175,10 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
     }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = (Rpp64u)refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
-    int pln1RefStride = refOutputWidth * refOutputHeight * dstDescPtr->n * 3;
+    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
+
     if(srcDescPtr->dataType == dstDescPtr->dataType)
         func += dataType[srcDescPtr->dataType];
     else
@@ -1271,7 +1269,6 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
 
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
-    // Rpp64u binOutputSizeActual = get_bin_file_size(refFile); // Kept commented as per request
     if(dstDescPtr->dataType == RpptDataType::U8)
     {
         Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
@@ -1299,7 +1296,6 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         free(binaryContent);
     }
 
-    // 6. Log Results
     std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
@@ -1313,9 +1309,9 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         status += "FAILED";
     }
 
-    // Append results to QA file
+    // Append the QA results to file
     std::string qaResultsPath = dst + "/QA_results.txt";
-    std::ofstream qaResults(qaResultsPath, ios_base::app);
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {
         qaResults << status << std::endl;
