@@ -261,6 +261,7 @@ RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
                                     RpptDescPtr dstDescPtr,
                                     Rpp32f *stdDevTensor,
                                     Rpp32u kernelSize,
+                                    RpptImageBorderType borderType,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
@@ -268,6 +269,7 @@ RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -578,6 +580,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr dstDescPtr,
                                    Rpp32f *stdDevTensor,
                                    Rpp32u kernelSize,
+                                   RpptImageBorderType borderType,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
@@ -585,6 +588,7 @@ RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
         return RPP_ERROR_LOW_OFFSET;
 

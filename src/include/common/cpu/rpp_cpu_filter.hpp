@@ -521,6 +521,7 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, T **srcPtrTe
     }
 }
 
+
 // -------------------- Filter load functions for U8/I8 bitdepth --------------------
 
 // load function for 3x3 kernel size
