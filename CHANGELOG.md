@@ -2,6 +2,17 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
+
+## (Unreleased) RPP 2.2.2
+
+### Added
+
+
+### Changed
+* Updating RPP version for gaussian noise kernel API changes
+
+### Resolved issues
+
 ## RPP 2.2.1 for ROCm 7.2.0
 
 ### Added
