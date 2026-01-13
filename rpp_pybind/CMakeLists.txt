@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.12)
 
 # Add parent's cmake modules to path (for FindHALF.cmake and FindDLPACK.cmake)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)
 
 set(TARGET_NAME rpp_pybind)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(GNUInstallDirs)
+if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
+    set(CMAKE_INSTALL_LIBDIR lib)
+endif()
 
 # Find required packages
 find_package(pybind11 REQUIRED CONFIG)
@@ -117,7 +122,7 @@ set(PYTHON_FILES
     fn.py
     types.py
     utils.py
-    test_simple.py
+    test_suite.py
     test_unit.py
     test_performance.py
     test_qa.py
