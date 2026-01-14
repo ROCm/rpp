@@ -161,6 +161,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 1920, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -168,6 +170,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 1920, 1080, 3};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 0, 1920, 1080, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -175,6 +179,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 4:
             {
                 std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 1, 128, 128, 128};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 0, 0, 1, 128, 128, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -191,6 +197,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                         roiTensor[startIndex + j] = 0;
                         roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
+                    if((broadCastFlag == 1) || (broadCastFlag == 2))
+                        roiTensor[startIndex + nDim - 1] = 1;
                 }
                 break;
             }
@@ -281,7 +289,7 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             descriptorPtr3D->dataType = RpptDataType::U16;
             break;
         case I32_TO_I32:
-            descriptorPtr3D->dataType = RpptDataType::I32;
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I32;
             break;
         case U32_TO_U32:
             descriptorPtr3D->dataType = RpptDataType::U32;
@@ -291,6 +299,15 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             break;
         case I16_TO_F32:
             descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I16;
+            break;
+        case U16_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::U16;
+            break;
+        case U32_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::U32;
+            break;
+        case I32_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I32;
             break;
         default:
             descriptorPtr3D->dataType = RpptDataType::U8;

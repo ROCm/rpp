@@ -136,6 +136,7 @@ int main(int argc, char **argv)
     }
     Rpp32u iBufferSize = 1;
     Rpp32u oBufferSize = 1;
+    std::cerr << "BitDepthTestMode: " << BitDepthTestMode << " (" << bitdepthStr << ")" << std::endl;
     Rpp32u iBufferSizeSecond = 1;
     Rpp64u iBufferSizeInBytes = 1;
     Rpp64u oBufferSizeInBytes = 1;
@@ -170,6 +171,8 @@ int main(int argc, char **argv)
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputSecond = calloc(iBufferSizeSecond, get_size_of_data_type(srcDescriptorPtrNDSecond->dataType));
     }
+    std::cerr << "iBufferSize: " << iBufferSize << ", oBufferSize: " << oBufferSize << std::endl;
+    std::cerr << "iBufferSizeInBytes: " << iBufferSizeInBytes << ", oBufferSizeInBytes: " << oBufferSizeInBytes << std::endl;
     // read input data
     if(qaMode)
     {
@@ -222,6 +225,7 @@ int main(int argc, char **argv)
                 inputF32Second[i] = static_cast<float>(std::rand() % valLimit);
         }
 
+        std::cerr << "Converting input bitdepth for mode: " << BitDepthTestMode << std::endl;
         convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, BitDepthTestMode, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
     }
 
@@ -254,6 +258,7 @@ int main(int argc, char **argv)
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         RppStatus errorCodeCapture = RPP_SUCCESS;
+        std::cerr << "About to enter switch for testCase: " << testCase << std::endl;
         switch(testCase)
         {
             case TRANSPOSE:
@@ -355,12 +360,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_add_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_add_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_add_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_add_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_add_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -374,12 +379,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_subtract_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_subtract_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_subtract_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_subtract_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_subtract_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -393,12 +398,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_multiply_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_multiply_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_multiply_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_multiply_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_multiply_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -412,12 +417,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == U16_TO_F32 || BitDepthTestMode == U32_TO_F32 || BitDepthTestMode == I8_TO_F32 || BitDepthTestMode == I16_TO_F32 || BitDepthTestMode == I32_TO_F32 || BitDepthTestMode == F32_TO_F32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_divide_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_divide_tensor_host(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_divide_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
