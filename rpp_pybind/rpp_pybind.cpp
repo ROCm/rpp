@@ -408,36 +408,11 @@ void pixelate(const torch::Tensor& input_tensor,
 // -----------------------------------------------------
 // Python module definition
 // -----------------------------------------------------
-PYBIND11_MODULE(rpp_pybind, m) {
+PYBIND11_MODULE(_rpp_pybind, m) {
     m.doc() = "PyRPP - Python bindings for AMD ROCm Performance Primitives";
 
     // Version info
     m.attr("__version__") = "1.0.0";
-    
-    // Enums wrapped properly as py::enum_
-    py::enum_<RppBackend>(m, "RppBackendInternal")
-        .value("HOST", RPP_HOST_BACKEND)
-        .value("HIP", RPP_HIP_BACKEND);
-    
-    py::enum_<RppStatus>(m, "RppStatusInternal")
-        .value("SUCCESS", RPP_SUCCESS)
-        .value("ERROR", RPP_ERROR);
-    
-    py::enum_<RpptDataType>(m, "RpptDataTypeInternal")
-        .value("U8", RpptDataType::U8)
-        .value("F16", RpptDataType::F16)
-        .value("F32", RpptDataType::F32)
-        .value("I8", RpptDataType::I8)
-        .value("I16", RpptDataType::I16);
-    
-    py::enum_<RpptLayout>(m, "RpptLayoutInternal")
-        .value("NCHW", RpptLayout::NCHW)
-        .value("NHWC", RpptLayout::NHWC)
-        .value("NCDHW", RpptLayout::NCDHW)
-        .value("NDHWC", RpptLayout::NDHWC)
-        .value("NHW", RpptLayout::NHW)
-        .value("NFT", RpptLayout::NFT)
-        .value("NTF", RpptLayout::NTF);
     
     // Types module
     auto types_module = m.def_submodule("types", "RPP type definitions");

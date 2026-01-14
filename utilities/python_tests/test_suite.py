@@ -40,14 +40,14 @@ print(f"Loading from: {SCRIPT_DIR}")
 # import rpp_pybind
 # Import RPP modules
 # try:
-from amd.rpp.fn import (
+from rpp_pybind.fn import (
     brightness, gamma_correction, contrast, hue,
     flip, resize, rotate, crop, vignette, pixelate
 )
-from amd.rpp.rpp_types import (
+from rpp_pybind.rpp_types import (
     is_gpu_available, get_default_backend, HOST, HIP
 )
-from amd.rpp.utils import create_test_batch, load_image, tensor_to_numpy
+from rpp_pybind.amd.rpp.utils import create_test_batch, load_image, tensor_to_numpy
 
 print("✓ All RPP modules loaded successfully\n")
     

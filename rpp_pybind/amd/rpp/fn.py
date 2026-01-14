@@ -12,8 +12,7 @@ Similar to rocAL's fn.py pattern.
 
 # Simple imports - like rocAL
 import rpp_pybind
-# from amd.rpp.types import get_default_backend
-from amd.rpp.rpp_types import get_default_backend
+from rpp_pybind.amd.rpp.rpp_types import get_default_backend
 
 # Direct access to C++ functions
 _brightness = rpp_pybind.brightness
