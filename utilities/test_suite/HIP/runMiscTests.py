@@ -121,7 +121,7 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         if (miscAugmentationMap[int(case)][0] == "tensor_add_tensor" or miscAugmentationMap[int(case)][0] == "tensor_subtract_tensor" or miscAugmentationMap[int(case)][0] == "tensor_multiply_tensor"):
             bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8, BitDepthTestMode.I16_TO_I16, BitDepthTestMode.U16_TO_U16, BitDepthTestMode.I32_TO_I32, BitDepthTestMode.U32_TO_U32]
         if miscAugmentationMap[int(case)][0] == "tensor_divide_tensor":
-            bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.U16_TO_F32, BitDepthTestMode.U32_TO_F32, BitDepthTestMode.I8_TO_F32, BitDepthTestMode.I16_TO_F32, BitDepthTestMode.I32_TO_F32]
+            bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.U16_TO_F32, BitDepthTestMode.U32_TO_F32, BitDepthTestMode.I8_TO_F32, BitDepthTestMode.I16_TO_F32, BitDepthTestMode.I32_TO_F32]
         if profilingOption == "NO":
             for bitDepth in bitDepths:
                 run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
