@@ -109,7 +109,7 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW, c = 1)
  * \param [in] sobelType sobel type for sobel filter (a single Rpp32u number with sobelType = 0 (X Gradient) / 1 (Y Gradient) / 2 (XY Gradient) that applies to all images in the batch)
  * \param [in] kernelSize kernel size for sobel filter (a single Rpp32u odd number with kernelSize = 3/5/7 that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
@@ -137,9 +137,9 @@ RppStatus rppt_sobel_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \image html filter_augmentations_sobel_filter_kSize5_gradientXY_img150x150.png Sample 5x5 Output
  * \image html filter_augmentations_sobel_filter_kSize7_gradientXY_img150x150.png Sample 7x7 Output
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW, c = 1/3)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHCW, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW, c = 1)
  * \param [in] sobelType sobel type for sobel filter (a single Rpp32u number with sobelType = 0 (X Gradient) / 1 (Y Gradient) / 2 (XY Gradient) that applies to all images in the batch)
  * \param [in] kernelSize kernel size for sobel filter (a single Rpp32u odd number with kernelSize = 3/5/7 that applies to all images in the batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))

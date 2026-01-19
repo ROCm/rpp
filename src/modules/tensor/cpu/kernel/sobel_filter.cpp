@@ -152,6 +152,9 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle)
 {
+    if ((srcDescPtr->layout != RpptLayout::NCHW) || (srcDescPtr->c != 1))
+        return RPP_ERROR_INVALID_SRC_LAYOUT_OR_CHANNELS;
+
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
@@ -195,7 +198,7 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + roi.xywhROI.xy.x;
         dstPtrChannel = dstPtrImage;
-        if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
+        if ((srcDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
         {
             if (kernelSize == 3)
             {

@@ -127,7 +127,9 @@ RppStatus rppt_sobel_filter_host(RppPtr_t srcPtr,
     {
         RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
         tempPtr = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost;
-        rppt_color_to_greyscale_host(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);
+        RppStatus errorStatus = rppt_color_to_greyscale_host(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);
+        if(errorStatus != RPP_SUCCESS)
+            return errorStatus;
     }
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -437,8 +439,13 @@ RppStatus rppt_sobel_filter_gpu(RppPtr_t srcPtr,
         CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
     
         RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
-        rppt_color_to_greyscale_gpu(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);        
-        inputDesc = dstDescPtr; 
+        RppStatus errorStatus = rppt_color_to_greyscale_gpu(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle);        
+        if(errorStatus != RPP_SUCCESS)
+        {
+            CHECK_RETURN_STATUS(hipFree(tempPtr));
+            return errorStatus;
+        }
+        inputDesc = dstDescPtr;
     }
     srcPtr = (tempPtr == nullptr) ? srcPtr : tempPtr;
     hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
