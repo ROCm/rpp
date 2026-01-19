@@ -50,7 +50,7 @@ endif()
 
 # RPP Version
 # NOTE: package version and rpp_version.h is generated with this version
-set(VERSION "2.2.1")
+set(VERSION "2.2.2")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
