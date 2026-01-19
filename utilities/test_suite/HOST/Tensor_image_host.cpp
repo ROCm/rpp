@@ -1809,10 +1809,10 @@ int main(int argc, char **argv)
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
-                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    Rpp32u totalBoxes = batchSize * boxesInEachImage;
                     RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
                     Rpp32u maxHoleW = 0, maxHoleH = 0;
-                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
+                    init_grid_dropout(batchSize, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

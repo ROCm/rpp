@@ -983,7 +983,7 @@ RppStatus rppt_cutout_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, const RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u boxesInEachImage, Rpp32u maxHoleW, Rpp32u maxHoleH, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u boxesInEachImage, Rpp32u maxHoleW, Rpp32u maxHoleH, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Grid dropout augmentation on HIP backend for a NCHW/NHWC layout tensor
@@ -1007,7 +1007,7 @@ RppStatus rppt_grid_dropout_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, const RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u boxesInEachImage, Rpp32u maxHoleW, Rpp32u maxHoleH, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_grid_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u boxesInEachImage, Rpp32u maxHoleW, Rpp32u maxHoleH, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}

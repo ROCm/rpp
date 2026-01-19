@@ -30,7 +30,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   const RpptRoiLtrb *anchorBoxInfoTensor,
+                                   RpptRoiLtrb *anchorBoxInfoTensor,
                                    Rpp32u boxesInEachImage,
                                    Rpp32u maxHoleW,
                                    Rpp32u maxHoleH,
@@ -102,6 +102,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
 
+                // Skip if box is outside ROI after clipping
+                if (x1 > x2 || y1 > y2)
+                    continue;
+
                 Rpp32u pixelLocation = (y1 * dstDescPtr->strides.hStride) + (x1 * dstDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
@@ -159,6 +163,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
 
+                // Skip if box is outside ROI after clipping
+                if (x1 > x2 || y1 > y2)
+                    continue;
+
                 Rpp32u pixelLocation = (y1 * dstDescPtr->strides.hStride) + (x1 * dstDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
@@ -208,6 +216,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
 
+                // Skip if box is outside ROI after clipping
+                if (x1 > x2 || y1 > y2)
+                    continue;
+
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
@@ -245,6 +257,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 Rpp32u x2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
                 Rpp32u y2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
 
+                // Skip if box is outside ROI after clipping
+                if (x1 > x2 || y1 > y2)
+                    continue;
+
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
@@ -278,6 +294,10 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
 
+                // Skip if box is outside ROI after clipping
+                if (x1 > x2 || y1 > y2)
+                    continue;
+
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
@@ -307,7 +327,7 @@ template RppStatus grid_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                    RpptDescPtr,
                                                    Rpp8u*,
                                                    RpptDescPtr,
-                                                   const RpptRoiLtrb*,
+                                                   RpptRoiLtrb*,
                                                    Rpp32u,
                                                    Rpp32u,
                                                    Rpp32u,
@@ -320,7 +340,7 @@ template RppStatus grid_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                     RpptDescPtr,
                                                     Rpp16f*,
                                                     RpptDescPtr,
-                                                    const RpptRoiLtrb*,
+                                                    RpptRoiLtrb*,
                                                     Rpp32u,
                                                     Rpp32u,
                                                     Rpp32u,
@@ -333,7 +353,7 @@ template RppStatus grid_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                     RpptDescPtr,
                                                     Rpp32f*,
                                                     RpptDescPtr,
-                                                    const RpptRoiLtrb*,
+                                                    RpptRoiLtrb*,
                                                     Rpp32u,
                                                     Rpp32u,
                                                     Rpp32u,
@@ -346,7 +366,7 @@ template RppStatus grid_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                    RpptDescPtr,
                                                    Rpp8s*,
                                                    RpptDescPtr,
-                                                   const RpptRoiLtrb*,
+                                                   RpptRoiLtrb*,
                                                    Rpp32u,
                                                    Rpp32u,
                                                    Rpp32u,
