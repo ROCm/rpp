@@ -928,7 +928,6 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch HOST memory. Restrictions -
             - 0 <= anchorBoxInfo[i] < respective image width/height
             - Erase-region anchor boxes on each image given by the user must not overlap
- * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch (numBoxesTensor[n] >= 0)
  * \param [in] noiseBuffer pre-allocated buffer containing random noise values in HOST memory (Buffer size must be 255 * 255 * srcDescPtr->c. Values are accessed spatially (tiled) to fill erased regions)
  * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -937,7 +936,7 @@ RppStatus rppt_channel_dropout_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_random_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u *numBoxesTensor, RppPtr_t noiseBuffer, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_random_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, RppPtr_t noiseBuffer, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Random Erase augmentation on HIP backend for a NCHW/NHWC layout tensor
@@ -953,7 +952,6 @@ RppStatus rppt_random_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch pinned memory. Restrictions -
             - 0 <= anchorBoxInfo[i] < respective image width/height
             - Erase-region anchor boxes on each image given by the user must not overlap
- * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch (numBoxesTensor[n] >= 0)
  * \param [in] noiseBuffer pre-allocated buffer containing random noise values in pinned memory (Buffer size must be 255 * 255 * srcDescPtr->c. Values are accessed spatially (tiled) to fill erased regions)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -962,7 +960,7 @@ RppStatus rppt_random_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u *numBoxesTensor, RppPtr_t noiseBuffer, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_random_erase_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, RppPtr_t noiseBuffer, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}

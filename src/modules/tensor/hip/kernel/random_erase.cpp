@@ -29,7 +29,6 @@ template <typename T>
 __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
                                             uint2 dstStridesNH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
-                                            Rpp32u *numBoxesTensor,
                                             T *noiseBuffer,
                                             RpptROIPtr roiTensorPtrSrc)
 {
@@ -37,25 +36,18 @@ __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    auto &roi = roiTensorPtrSrc[id_z].xywhROI;
-    if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
+    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         return;
 
-    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     uint dstIdx = id_z * dstStridesNH.x + id_y * dstStridesNH.y + id_x * 3;
 
-    for (int i = 0; i < numBoxes; i++)
+    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
+        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
     {
-        int temp = id_z * numBoxes + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
-        {
-            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
-            dstPtr[dstIdx + 1] = noiseBuffer[noiseIdx + 1];
-            dstPtr[dstIdx + 2] = noiseBuffer[noiseIdx + 2];
-            break;
-        }
+        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
+        dstPtr[dstIdx + 1] = noiseBuffer[noiseIdx + 1];
+        dstPtr[dstIdx + 2] = noiseBuffer[noiseIdx + 2];
     }
 }
 
@@ -63,7 +55,6 @@ template <typename T>
 __global__ void random_erase_pln_hip_tensor(T *dstPtr,
                                             uint3 dstStridesNCH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
-                                            Rpp32u *numBoxesTensor,
                                             T *noiseBuffer,
                                             RpptROIPtr roiTensorPtrSrc)
 {
@@ -71,31 +62,21 @@ __global__ void random_erase_pln_hip_tensor(T *dstPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    auto &roi = roiTensorPtrSrc[id_z].xywhROI;
-    if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
+    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         return;
 
-    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE));
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE));
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
-    for (int i = 0; i < numBoxes; i++)
-    {
-        int temp = id_z * numBoxes + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
-        {
-            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
-            break;
-        }
-    }
+    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
+        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
+        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
 }
 
 template <typename T>
 __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
                                              uint3 dstStridesNCH,
                                              RpptRoiLtrb *anchorBoxInfoTensor,
-                                             Rpp32u *numBoxesTensor,
                                              T *noiseBuffer,
                                              RpptROIPtr roiTensorPtrSrc)
 {
@@ -103,25 +84,18 @@ __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    auto &roi = roiTensorPtrSrc[id_z].xywhROI;
-    if (id_x >= roi.roiWidth || id_y >= roi.roiHeight)
+    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         return;
 
-    uint noiseIdx = (((id_y + roi.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roi.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
-    for (int i = 0; i < numBoxes; i++)
+    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
+        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
     {
-        int temp = id_z * numBoxes + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
-        {
-            dstPtr[dstIdx] = noiseBuffer[noiseIdx];
-            dstPtr[dstIdx + dstStridesNCH.y] = noiseBuffer[noiseIdx + 1];
-            dstPtr[dstIdx + 2 * dstStridesNCH.y] = noiseBuffer[noiseIdx + 2];
-            break;
-        }
+        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
+        dstPtr[dstIdx + dstStridesNCH.y] = noiseBuffer[noiseIdx + 1];
+        dstPtr[dstIdx + 2 * dstStridesNCH.y] = noiseBuffer[noiseIdx + 2];
     }
 }
 
@@ -132,7 +106,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                        T *dstPtr,
                                        RpptDescPtr dstDescPtr,
                                        RpptRoiLtrb *anchorBoxInfoTensor,
-                                       Rpp32u *numBoxesTensor,
                                        T *noiseBuffer,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
@@ -181,7 +154,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               numBoxesTensor,
                                noiseBuffer,
                                roiTensorPtrSrc);
         }
@@ -195,7 +167,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               numBoxesTensor,
                                noiseBuffer,
                                roiTensorPtrSrc);
         }
@@ -209,7 +180,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               numBoxesTensor,
                                noiseBuffer,
                                roiTensorPtrSrc);
         }
@@ -223,7 +193,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               numBoxesTensor,
                                noiseBuffer,
                                roiTensorPtrSrc);
         }
@@ -240,7 +209,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           numBoxesTensor,
                            noiseBuffer,
                            roiTensorPtrSrc);
     }
@@ -256,7 +224,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           numBoxesTensor,
                            noiseBuffer,
                            roiTensorPtrSrc);
     }
@@ -285,7 +252,6 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               numBoxesTensor,
                                noiseBuffer,
                                roiTensorPtrSrc);
         }
@@ -299,7 +265,6 @@ template RppStatus hip_exec_random_erase_tensor<Rpp8u>(Rpp8u*,
                                                        Rpp8u*,
                                                        RpptDescPtr,
                                                        RpptRoiLtrb*,
-                                                       Rpp32u*,
                                                        Rpp8u*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
@@ -310,7 +275,6 @@ template RppStatus hip_exec_random_erase_tensor<half>(half*,
                                                      half*,
                                                      RpptDescPtr,
                                                      RpptRoiLtrb*,
-                                                     Rpp32u*,
                                                      half*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
@@ -321,7 +285,6 @@ template RppStatus hip_exec_random_erase_tensor<Rpp32f>(Rpp32f*,
                                                          Rpp32f*,
                                                          RpptDescPtr,
                                                          RpptRoiLtrb*,
-                                                         Rpp32u*,
                                                          Rpp32f*,
                                                          RpptROIPtr,
                                                          RpptRoiType,
@@ -332,7 +295,6 @@ template RppStatus hip_exec_random_erase_tensor<Rpp8s>(Rpp8s*,
                                                        Rpp8s*,
                                                        RpptDescPtr,
                                                        RpptRoiLtrb*,
-                                                       Rpp32u*,
                                                        Rpp8s*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
