@@ -29,74 +29,61 @@ template <typename T>
 __global__ void random_erase_pkd_hip_tensor(T *dstPtr,
                                             uint2 dstStridesNH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
-                                            T *noiseBuffer,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                            T *noiseBuffer)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
+    if (id_x < anchorBoxInfoTensor[id_z].lt.x || id_x > anchorBoxInfoTensor[id_z].rb.x || id_y < anchorBoxInfoTensor[id_z].lt.y || id_y > anchorBoxInfoTensor[id_z].rb.y)
         return;
 
-    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
+    uint noiseIdx = (((id_y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     uint dstIdx = id_z * dstStridesNH.x + id_y * dstStridesNH.y + id_x * 3;
 
-    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
-        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
-    {
-        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
-        dstPtr[dstIdx + 1] = noiseBuffer[noiseIdx + 1];
-        dstPtr[dstIdx + 2] = noiseBuffer[noiseIdx + 2];
-    }
+    dstPtr[dstIdx]     = noiseBuffer[noiseIdx];
+    dstPtr[dstIdx + 1] = noiseBuffer[noiseIdx + 1];
+    dstPtr[dstIdx + 2] = noiseBuffer[noiseIdx + 2];
 }
 
 template <typename T>
 __global__ void random_erase_pln_hip_tensor(T *dstPtr,
                                             uint3 dstStridesNCH,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
-                                            T *noiseBuffer,
-                                            RpptROIPtr roiTensorPtrSrc)
+                                            T *noiseBuffer)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
+    if (id_x < anchorBoxInfoTensor[id_z].lt.x || id_x > anchorBoxInfoTensor[id_z].rb.x || id_y < anchorBoxInfoTensor[id_z].lt.y || id_y > anchorBoxInfoTensor[id_z].rb.y)
         return;
 
-    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE));
+    uint noiseIdx = (((id_y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x % RANDOM_ERASE_NOISE_BUFFER_SIDE));
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
-    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
-        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
-        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
+    dstPtr[dstIdx] = noiseBuffer[noiseIdx];
 }
 
 template <typename T>
 __global__ void random_erase_pln3_hip_tensor(T *dstPtr,
                                              uint3 dstStridesNCH,
                                              RpptRoiLtrb *anchorBoxInfoTensor,
-                                             T *noiseBuffer,
-                                             RpptROIPtr roiTensorPtrSrc)
+                                             T *noiseBuffer)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth || id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight)
+    if (id_x < anchorBoxInfoTensor[id_z].lt.x || id_x > anchorBoxInfoTensor[id_z].rb.x || id_y < anchorBoxInfoTensor[id_z].lt.y || id_y > anchorBoxInfoTensor[id_z].rb.y)
         return;
 
-    uint noiseIdx = (((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
+    uint noiseIdx = (((id_y + id_z) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE + (id_x % RANDOM_ERASE_NOISE_BUFFER_SIDE)) * 3;
     uint dstIdx = id_z * dstStridesNCH.x + id_y * dstStridesNCH.z + id_x;
 
-    if (id_x >= anchorBoxInfoTensor[id_z].lt.x && id_x <= anchorBoxInfoTensor[id_z].rb.x &&
-        id_y >= anchorBoxInfoTensor[id_z].lt.y && id_y <= anchorBoxInfoTensor[id_z].rb.y)
-    {
-        dstPtr[dstIdx] = noiseBuffer[noiseIdx];
-        dstPtr[dstIdx + dstStridesNCH.y] = noiseBuffer[noiseIdx + 1];
-        dstPtr[dstIdx + 2 * dstStridesNCH.y] = noiseBuffer[noiseIdx + 2];
-    }
+    dstPtr[dstIdx]                       = noiseBuffer[noiseIdx];
+    dstPtr[dstIdx + dstStridesNCH.y]     = noiseBuffer[noiseIdx + 1];
+    dstPtr[dstIdx + 2 * dstStridesNCH.y] = noiseBuffer[noiseIdx + 2];
 }
 
 // -------------------- Set 1 - Kernel Executors --------------------
@@ -154,8 +141,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               noiseBuffer,
-                               roiTensorPtrSrc);
+                               noiseBuffer);
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
@@ -167,8 +153,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               noiseBuffer,
-                               roiTensorPtrSrc);
+                               noiseBuffer);
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
@@ -180,8 +165,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               noiseBuffer,
-                               roiTensorPtrSrc);
+                               noiseBuffer);
         }
         else if (srcDescPtr->dataType == RpptDataType::I8)
         {
@@ -193,8 +177,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               noiseBuffer,
-                               roiTensorPtrSrc);
+                               noiseBuffer);
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)
@@ -209,8 +192,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           noiseBuffer,
-                           roiTensorPtrSrc);
+                           noiseBuffer);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 3)
     {
@@ -224,8 +206,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           noiseBuffer,
-                           roiTensorPtrSrc);
+                           noiseBuffer);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -252,8 +233,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               noiseBuffer,
-                               roiTensorPtrSrc);
+                               noiseBuffer);
         }
     }
 
