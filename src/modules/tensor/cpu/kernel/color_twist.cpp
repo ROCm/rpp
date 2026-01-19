@@ -123,7 +123,10 @@ RppStatus color_twist_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32f brightnessParam = brightnessTensor[batchCount] * 255.0f;
         Rpp32f contrastParam = contrastTensor[batchCount];
-        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
+        Rpp32f hueModulus = fmodf(hueTensor[batchCount], 360.0f);
+        if(hueModulus < 0.0f)
+            hueModulus += 360.0f;
+        Rpp32f hueParam = hueModulus * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
         Rpp8u *srcPtrImage, *dstPtrImage;
@@ -448,7 +451,10 @@ RppStatus color_twist_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount] * ONE_OVER_255;
-        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
+        Rpp32f hueModulus = fmodf(hueTensor[batchCount], 360.0f);
+        if(hueModulus < 0.0f)
+            hueModulus += 360.0f;
+        Rpp32f hueParam = hueModulus * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -769,7 +775,10 @@ RppStatus color_twist_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         Rpp32f brightnessParam = brightnessTensor[batchCount];
         Rpp32f contrastParam = contrastTensor[batchCount] * ONE_OVER_255;
-        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
+        Rpp32f hueModulus = fmodf(hueTensor[batchCount], 360.0f);
+        if(hueModulus < 0.0f)
+            hueModulus += 360.0f;
+        Rpp32f hueParam = hueModulus * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -1136,7 +1145,10 @@ RppStatus color_twist_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         Rpp32f brightnessParam = brightnessTensor[batchCount] * 255.0f;
         Rpp32f contrastParam = contrastTensor[batchCount];
-        Rpp32f hueParam = (((int)hueTensor[batchCount]) % 360) * 0.01666667f; // 6 * 1/360
+        Rpp32f hueModulus = fmodf(hueTensor[batchCount], 360.0f);
+        if(hueModulus < 0.0f)
+            hueModulus += 360.0f;
+        Rpp32f hueParam = hueModulus * 0.01666667f; // 6 * 1/360
         Rpp32f saturationParam = saturationTensor[batchCount];
 
         Rpp8s *srcPtrImage, *dstPtrImage;
