@@ -608,14 +608,6 @@ int main(int argc, char **argv)
     if(testCase == CHANNEL_DROPOUT)
         CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
 
-    Rpp32u numGridsPerColumn, numGridsPerRow;
-    if(testCase == GRID_DROPOUT)
-    {
-        numGridsPerColumn = 10, numGridsPerRow = 10;
-        boxesInEachImage = numGridsPerRow * numGridsPerColumn;
-        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
-
-    }
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -1891,10 +1883,15 @@ int main(int argc, char **argv)
                 case GRID_DROPOUT:
                 {
                     testCaseName = "grid_dropout";
+                    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                     Rpp32f holeRatio = 0.4f;
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+
+                    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
                     Rpp32u maxHoleW = 0, maxHoleH = 0;
-                    init_grid_dropout(batchSize, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
