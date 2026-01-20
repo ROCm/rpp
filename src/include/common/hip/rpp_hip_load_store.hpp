@@ -139,11 +139,8 @@ struct RPPTensorFunctionMetaData
 #define LOCAL_THREADS_X_1DIM            256                 // single dimension kernels rpp thread launch config - local threads x = 256
 #define LOCAL_THREADS_Y_1DIM            1                   // single dimension kernels rpp thread launch config - local threads x = 1
 #define LOCAL_THREADS_Z_1DIM            1                   // single dimension kernels rpp thread launch config - local threads x = 1
-#define ONE_OVER_3                      0.33333333333334f
-#define ONE_OVER_6                      0.16666666666667f
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
-#define TWO_OVER_3                      0.66666666666667f
 #define SIX_OVER_360                    0.01666667f
 #define PI                              3.14159265
 #define TWO_PI                          6.2831853
