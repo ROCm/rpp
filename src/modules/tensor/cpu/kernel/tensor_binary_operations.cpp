@@ -531,6 +531,17 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             Rpp32u alignedLength = length[1] & ~15;
             Rpp32u src1shape = src1length[1];
             Rpp32u src2shape = src2length[1];
+
+            // Debug: Print dimension info
+            std::cout << "\n=== 2D Tensor Debug Info ===" << std::endl;
+            std::cout << "Dimensions: [" << length[0] << ", " << length[1] << "]" << std::endl;
+            std::cout << "AlignedLength: " << alignedLength << " (original: " << length[1] << ")" << std::endl;
+            std::cout << "VectorIncrement: " << vectorIncrement << std::endl;
+            std::cout << "AVX iterations per row: " << (alignedLength / vectorIncrement) << std::endl;
+            std::cout << "Scalar iterations per row: " << (length[1] - alignedLength) << std::endl;
+            std::cout << "AVX efficiency: " << ((float)alignedLength / length[1] * 100) << "%" << std::endl;
+            std::cout.flush();
+
             if(src1shape == 1)
             {
                 for (int i = 0; i < length[0]; i++)
@@ -638,8 +649,29 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             Rpp32u alignedLength = length[2] & ~15;
             Rpp32u src1shape = src1length[2];
             Rpp32u src2shape = src2length[2];
+
+            // Debug: Print dimension info
+            std::cout << "\n=== 3D Tensor Debug Info ===" << std::endl;
+            std::cout << "Dimensions: [" << length[0] << ", " << length[1] << ", " << length[2] << "]" << std::endl;
+            std::cout << "AlignedLength: " << alignedLength << " (original: " << length[2] << ")" << std::endl;
+            std::cout << "VectorIncrement: " << vectorIncrement << std::endl;
+            std::cout << "AVX iterations per row: " << (alignedLength / vectorIncrement) << std::endl;
+            std::cout << "Scalar iterations per row: " << (length[2] - alignedLength) << std::endl;
+            std::cout << "AVX efficiency: " << ((float)alignedLength / length[2] * 100) << "%" << std::endl;
+            std::cout.flush();
+    
+            // Performance counters
+            uint64_t totalAVXOps = 0;
+            uint64_t totalScalarOps = 0;
+            uint64_t totalCacheLineJumps = 0;
+            
+            // Timing
+            auto startTime = std::chrono::high_resolution_clock::now();
+
             if(src1shape == 1)
             {
+                std::cout << "661 Case: src1shape == 1 (broadcasting src1)" << std::endl;
+
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
@@ -653,8 +685,17 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
+
+                        // // Debug: Check memory alignment
+                        // if (i == 0 && j == 0) {
+                        //     std::cout << "Memory alignment check:" << std::endl;
+                        //     std::cout << "  srcPtrElem2 alignment: " << ((uintptr_t)srcPtrElem2 % 32) << " bytes offset" << std::endl;
+                        //     std::cout << "  dstPtrElem alignment: " << ((uintptr_t)dstPtrElem % 32) << " bytes offset" << std::endl;
+                        // }
 #if __AVX2__
                         __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
+                        // Time AVX section
+                        // auto avxStart = std::chrono::high_resolution_clock::now();
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p2[2], dst[2];
@@ -664,14 +705,44 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                             rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
+
+                            // totalAVXOps += vectorIncrement;
                         }
+                        // auto avxEnd = std::chrono::high_resolution_clock::now();
+                
+                        // if (i == 0 && j == 0 && alignedLength > 0) {
+                        //     auto avxTime = std::chrono::duration_cast<std::chrono::nanoseconds>(avxEnd - avxStart).count();
+                        //     std::cout << "  AVX time for first row: " << avxTime << " ns for " << alignedLength << " elements" << std::endl;
+                        //     std::cout << "  AVX throughput: " << (alignedLength * 1000.0 / avxTime) << " Gops/s" << std::endl;
+                        // }
 #endif
+                        // Time scalar section
+                        // auto scalarStart = std::chrono::high_resolution_clock::now();
+                        
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
                             Operation::scalar_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem2++;
                             dstPtrElem++;
+
+                            // totalScalarOps++;
                         }
+
+                        // auto scalarEnd = std::chrono::high_resolution_clock::now();
+                
+                        // if (i == 0 && j == 0 && (length[2] - alignedLength) > 0) {
+                        //     auto scalarTime = std::chrono::duration_cast<std::chrono::nanoseconds>(scalarEnd - scalarStart).count();
+                        //     std::cout << "  Scalar time for first row: " << scalarTime << " ns for " << (length[2] - alignedLength) << " elements" << std::endl;
+                        //     std::cout << "  Scalar throughput: " << ((length[2] - alignedLength) * 1000.0 / scalarTime) << " Gops/s" << std::endl;
+                        // }
+
+                        // // Debug: Check stride jumps
+                        // if (i == 0 && j < 5) {
+                        //     std::cout << "  Stride jump at j=" << j << ": " << src1BcastStrides[1] << " bytes" << std::endl;
+                        //     if (src1BcastStrides[1] > 64) {
+                        //         totalCacheLineJumps++;
+                        //     }
+                        // }
 
                         srcPtrOuter1 += src1BcastStrides[1];
                         srcPtrOuter2 += src2BcastStrides[1];
@@ -685,6 +756,8 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
             else if (src2shape == 1)
             {
+                std::cout << "Case: src2shape == 1 (broadcasting src2)" << std::endl;
+
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
@@ -698,8 +771,19 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
+
+                        // // Debug: Check memory alignment
+                        // if (i == 0 && j == 0) {
+                        //     std::cout << "Memory alignment check:" << std::endl;
+                        //     std::cout << "  srcPtrElem2 alignment: " << ((uintptr_t)srcPtrElem2 % 32) << " bytes offset" << std::endl;
+                        //     std::cout << "  dstPtrElem alignment: " << ((uintptr_t)dstPtrElem % 32) << " bytes offset" << std::endl;
+                        // }
+
 #if __AVX2__
                         __m256 p2 =  _mm256_set1_ps(srcPtrElem2[0]);
+                        // Time AVX section
+                        // auto avxStart = std::chrono::high_resolution_clock::now();  
+
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p1[2], dst[2];
@@ -709,14 +793,45 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                             rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
+
+                            // totalAVXOps += vectorIncrement;
                         }
+
+                        // auto avxEnd = std::chrono::high_resolution_clock::now();
+                
+                        // if (i == 0 && j == 0 && alignedLength > 0) {
+                        //     auto avxTime = std::chrono::duration_cast<std::chrono::nanoseconds>(avxEnd - avxStart).count();
+                        //     std::cout << "  AVX time for first row: " << avxTime << " ns for " << alignedLength << " elements" << std::endl;
+                        //     std::cout << "  AVX throughput: " << (alignedLength * 1000.0 / avxTime) << " Gops/s" << std::endl;
+                        // }
 #endif
+                        // Time scalar section
+                        // auto scalarStart = std::chrono::high_resolution_clock::now();
+
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
                             Operation::scalar_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem1++;
                             dstPtrElem++;
+
+                            // totalScalarOps++;
                         }
+
+                        // auto scalarEnd = std::chrono::high_resolution_clock::now();
+                
+                        // if (i == 0 && j == 0 && (length[2] - alignedLength) > 0) {
+                        //     auto scalarTime = std::chrono::duration_cast<std::chrono::nanoseconds>(scalarEnd - scalarStart).count();
+                        //     std::cout << "  Scalar time for first row: " << scalarTime << " ns for " << (length[2] - alignedLength) << " elements" << std::endl;
+                        //     std::cout << "  Scalar throughput: " << ((length[2] - alignedLength) * 1000.0 / scalarTime) << " Gops/s" << std::endl;
+                        // }
+
+                        // // Debug: Check stride jumps
+                        // if (i == 0 && j < 5) {
+                        //     std::cout << "  Stride jump at j=" << j << ": " << src1BcastStrides[1] << " bytes" << std::endl;
+                        //     if (src1BcastStrides[1] > 64) {
+                        //         totalCacheLineJumps++;
+                        //     }
+                        // }
 
                         srcPtrOuter1 += src1BcastStrides[1];
                         srcPtrOuter2 += src2BcastStrides[1];
@@ -730,6 +845,13 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
             else
             {
+                std::cout << "Case: No broadcasting" << std::endl;
+        
+                // Add memory access pattern analysis
+                std::cout << "\nMemory Access Pattern Analysis:" << std::endl;
+                std::cout << "  Stride[0] (between i): " << src1BcastStrides[0] << " bytes" << std::endl;
+                std::cout << "  Stride[1] (between j): " << src1BcastStrides[1] << " bytes" << std::endl;
+                std::cout << "  Stride[2] (between elements): " << (src1BcastStrides[2] == 1 ? "Contiguous" : "Non-contiguous") << std::endl;
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
