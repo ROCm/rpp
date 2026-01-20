@@ -29,7 +29,6 @@ template <typename T>
 __global__ void coarse_dropout_pkd_hip_tensor(T *dstPtr,
                                               uint2 dstStridesNH,
                                               RpptRoiLtrb *anchorBoxInfoTensor,
-                                              T *colorsTensor,
                                               Rpp32u *numBoxesTensor,
                                               RpptROIPtr roiTensorPtrSrc,
                                               int maxBoxesPerImage) 
@@ -42,20 +41,19 @@ __global__ void coarse_dropout_pkd_hip_tensor(T *dstPtr,
         return;
 
     Rpp32u numBoxes = numBoxesTensor[id_z];
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+    int boxStartOffset = id_z * maxBoxesPerImage;
 
-    int boxOffset = id_z * maxBoxesPerImage;
     for (int i = 0; i < numBoxes; i++)
     {
-        int temp = boxOffset + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
+        int boxIdx = boxStartOffset + i;
+        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
-            int colorIdx = temp * 3;
-            dstPtr[dstIdx]     = colorsTensor[colorIdx];
-            dstPtr[dstIdx + 1] = colorsTensor[colorIdx + 1];
-            dstPtr[dstIdx + 2] = colorsTensor[colorIdx + 2];
-            break;            break;
+            uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+            dstPtr[dstIdx]     = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
+            dstPtr[dstIdx + 1] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
+            dstPtr[dstIdx + 2] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
+            break;
         }
     }
 }
@@ -64,7 +62,6 @@ template <typename T>
 __global__ void coarse_dropout_pln_hip_tensor(T *dstPtr,
                                               uint3 dstStridesNCH,
                                               RpptRoiLtrb *anchorBoxInfoTensor,
-                                              T *colorsTensor,
                                               Rpp32u *numBoxesTensor,
                                               RpptROIPtr roiTensorPtrSrc,
                                               int maxBoxesPerImage) 
@@ -77,16 +74,16 @@ __global__ void coarse_dropout_pln_hip_tensor(T *dstPtr,
         return;
 
     Rpp32u numBoxes = numBoxesTensor[id_z];
-    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    int boxStartOffset = id_z * maxBoxesPerImage;
 
-    int boxOffset = id_z * maxBoxesPerImage;
     for (int i = 0; i < numBoxes; i++)
     {
-        int temp = boxOffset + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
+        int boxIdx = boxStartOffset + i;
+        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
-            *static_cast<T *>((dstPtr + dstIdx)) = colorsTensor[temp];
+            uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+            dstPtr[dstIdx] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
             break;
         }
     }
@@ -94,12 +91,11 @@ __global__ void coarse_dropout_pln_hip_tensor(T *dstPtr,
 
 template <typename T>
 __global__ void coarse_dropout_pln3_hip_tensor(T *dstPtr,
-                                               uint3 dstStridesNCH,
-                                               RpptRoiLtrb *anchorBoxInfoTensor,
-                                               T *colorsTensor,
-                                               Rpp32u *numBoxesTensor,
-                                               RpptROIPtr roiTensorPtrSrc,
-                                               int maxBoxesPerImage) 
+                                              uint3 dstStridesNCH,
+                                              RpptRoiLtrb *anchorBoxInfoTensor,
+                                              Rpp32u *numBoxesTensor,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              int maxBoxesPerImage) 
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -109,21 +105,18 @@ __global__ void coarse_dropout_pln3_hip_tensor(T *dstPtr,
         return;
 
     Rpp32u numBoxes = numBoxesTensor[id_z];
-    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    int boxStartOffset = id_z * maxBoxesPerImage;
 
-    int boxOffset = id_z * maxBoxesPerImage;
     for (int i = 0; i < numBoxes; i++)
     {
-        int temp = boxOffset + i;
-        if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x &&
-            id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
+        int boxIdx = boxStartOffset + i;
+        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
-            temp *= 3;
-            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp];
-            dstIdx += dstStridesNCH.y;
-            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 1];
-            dstIdx += dstStridesNCH.y;
-            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 2];
+            uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;        
+            dstPtr[dstIdx] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
+            dstPtr[dstIdx + dstStridesNCH.y] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
+            dstPtr[dstIdx + 2 * dstStridesNCH.y] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
             break;
         }
     }
@@ -136,7 +129,6 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                                          T *dstPtr,
                                          RpptDescPtr dstDescPtr,
                                          RpptRoiLtrb *anchorBoxInfoTensor,
-                                         T *colorsTensor,
                                          Rpp32u *numBoxesTensor,
                                          Rpp32u maxBoxesPerImage,
                                          RpptROIPtr roiTensorPtrSrc,
@@ -184,7 +176,6 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           colorsTensor,
                            numBoxesTensor,
                            roiTensorPtrSrc,
                            maxBoxesPerImage);
@@ -201,7 +192,6 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           colorsTensor,
                            numBoxesTensor,
                            roiTensorPtrSrc,
                            maxBoxesPerImage);
@@ -218,7 +208,6 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            anchorBoxInfoTensor,
-                           colorsTensor,
                            numBoxesTensor,
                            roiTensorPtrSrc,
                            maxBoxesPerImage);
@@ -248,7 +237,6 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                anchorBoxInfoTensor,
-                               colorsTensor,
                                numBoxesTensor,
                                roiTensorPtrSrc,
                                maxBoxesPerImage);
@@ -263,7 +251,6 @@ template RppStatus hip_exec_coarse_dropout_tensor<Rpp8u>(Rpp8u*,
                                                          Rpp8u*,
                                                          RpptDescPtr,
                                                          RpptRoiLtrb*,
-                                                         Rpp8u*,
                                                          Rpp32u*,
                                                          Rpp32u,
                                                          RpptROIPtr,
@@ -275,7 +262,6 @@ template RppStatus hip_exec_coarse_dropout_tensor<half>(half*,
                                                         half*,
                                                         RpptDescPtr,
                                                         RpptRoiLtrb*,
-                                                        half*,
                                                         Rpp32u*,
                                                         Rpp32u,
                                                         RpptROIPtr,
@@ -287,7 +273,6 @@ template RppStatus hip_exec_coarse_dropout_tensor<Rpp32f>(Rpp32f*,
                                                           Rpp32f*,
                                                           RpptDescPtr,
                                                           RpptRoiLtrb*,
-                                                          Rpp32f*,
                                                           Rpp32u*,
                                                           Rpp32u,
                                                           RpptROIPtr,
@@ -299,7 +284,6 @@ template RppStatus hip_exec_coarse_dropout_tensor<Rpp8s>(Rpp8s*,
                                                          Rpp8s*,
                                                          RpptDescPtr,
                                                          RpptRoiLtrb*,
-                                                         Rpp8s*,
                                                          Rpp32u*,
                                                          Rpp32u,
                                                          RpptROIPtr,

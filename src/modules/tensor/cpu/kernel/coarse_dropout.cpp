@@ -30,7 +30,6 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
                                      RpptRoiLtrb *anchorBoxInfoTensor,
-                                     T *colorsTensor,
                                      Rpp32u *numBoxesTensor,
                                      Rpp32u maxBoxesPerImage, 
                                      RpptROIPtr roiTensorPtrSrc,
@@ -51,7 +50,6 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
         Rpp32u numBoxes = numBoxesTensor[batchCount];
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * maxBoxesPerImage;
-        T *colors = colorsTensor + batchCount * numBoxes * srcDescPtr->c;
 
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -60,7 +58,6 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
-        T userPixel3[3];
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier * sizeof(T);
 
        // Coarse dropout with fused output-layout toggle (NHWC -> NCHW)
@@ -108,15 +105,11 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 dstPtrTempR = dstPtrImage + pixelLocation;
                 dstPtrTempG = dstPtrTempR + dstDescPtr->strides.cStride;
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
-                Rpp32u countMul3 = count * 3;
-                T userPixelR = colors[countMul3];
-                T userPixelG = colors[countMul3 + 1];
-                T userPixelB = colors[countMul3 + 2];
                 for (int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, userPixelR);
-                    std::fill_n(dstPtrTempG, boxWidth, userPixelG);
-                    std::fill_n(dstPtrTempB, boxWidth, userPixelB);
+                    std::fill_n(dstPtrTempR, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTempG, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTempB, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
                     dstPtrTempB += dstDescPtr->strides.hStride;
@@ -161,10 +154,6 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
-                Rpp32u countMul3 = count * 3;
-                userPixel3[0] = colors[countMul3];
-                userPixel3[1] = colors[countMul3 + 1];
-                userPixel3[2] = colors[countMul3 + 2];
 
                 Rpp32u pixelLocation = (y1 * dstDescPtr->strides.hStride) + (x1 * dstDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -177,9 +166,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for(int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = userPixel3[0];
-                        dstPtrRow[1] = userPixel3[1];
-                        dstPtrRow[2] = userPixel3[2];
+                        dstPtrRow[0] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
+                        dstPtrRow[1] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
+                        dstPtrRow[2] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
                         dstPtrRow += 3;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -223,15 +212,11 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 dstPtrTempR = dstPtrImage + pixelLocation;
                 dstPtrTempG = dstPtrTempR + dstDescPtr->strides.cStride;
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
-                Rpp32u countMul3 = count * 3;
-                T userPixelR = colors[countMul3];
-                T userPixelG = colors[countMul3 + 1];
-                T userPixelB = colors[countMul3 + 2];
                 for (int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, userPixelR);
-                    std::fill_n(dstPtrTempG, boxWidth, userPixelG);
-                    std::fill_n(dstPtrTempB, boxWidth, userPixelB);
+                    std::fill_n(dstPtrTempR, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTempG, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTempB, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
                     dstPtrTempB += dstDescPtr->strides.hStride;
@@ -263,10 +248,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 T *dstPtrTemp;
                 dstPtrTemp = dstPtrImage + pixelLocation;
 
-                T userPixel = colors[count];
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTemp, boxWidth, userPixel);
+                    std::fill_n(dstPtrTemp, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
@@ -289,10 +273,6 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
                 Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
                 Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
-                Rpp32u countMul3 = count * 3;
-                userPixel3[0] = colors[countMul3];
-                userPixel3[1] = colors[countMul3 + 1];
-                userPixel3[2] = colors[countMul3 + 2];
 
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -305,9 +285,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                     T *dstPtrRow = dstPtrTemp;
                     for (int j = 0; j < boxWidth; j++)
                     {
-                        dstPtrRow[0] = userPixel3[0];
-                        dstPtrRow[1] = userPixel3[1];
-                        dstPtrRow[2] = userPixel3[2];
+                        dstPtrRow[0] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
+                        dstPtrRow[1] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
+                        dstPtrRow[2] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
                         dstPtrRow += 3;
                     }
                     dstPtrTemp += dstDescPtr->strides.hStride;
@@ -324,7 +304,6 @@ template RppStatus coarse_dropout_host_tensor<Rpp8u>(Rpp8u*,
                                                      Rpp8u*,
                                                      RpptDescPtr,
                                                      RpptRoiLtrb*,
-                                                     Rpp8u*,
                                                      Rpp32u*,
                                                      Rpp32u,
                                                      RpptROIPtr,
@@ -337,7 +316,6 @@ template RppStatus coarse_dropout_host_tensor<Rpp16f>(Rpp16f*,
                                                       Rpp16f*,
                                                       RpptDescPtr,
                                                       RpptRoiLtrb*,
-                                                      Rpp16f*,
                                                       Rpp32u*,
                                                       Rpp32u, 
                                                       RpptROIPtr,
@@ -350,7 +328,6 @@ template RppStatus coarse_dropout_host_tensor<Rpp32f>(Rpp32f*,
                                                       Rpp32f*,
                                                       RpptDescPtr,
                                                       RpptRoiLtrb*,
-                                                      Rpp32f*,
                                                       Rpp32u*,
                                                       Rpp32u, 
                                                       RpptROIPtr,
@@ -363,7 +340,6 @@ template RppStatus coarse_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                      Rpp8s*,
                                                      RpptDescPtr,
                                                      RpptRoiLtrb*,
-                                                     Rpp8s*,
                                                      Rpp32u*,
                                                      Rpp32u, 
                                                      RpptROIPtr,
