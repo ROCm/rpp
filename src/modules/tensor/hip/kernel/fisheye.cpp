@@ -32,10 +32,12 @@ __device__ void fisheye_srcloc_hip_compute(int index, int2 *widthHeight_i2, int4
                                            d_float8 *normY_f8, d_float8 *dist_f8, d_float16 *locSrc_f16)
 {
     float dist = dist_f8->f1[index];
+    // Outside unit circle -> keep locSrc at (-1,-1). Interpolation treats it as out-of-ROI and writes 0.
     if ((dist >= 0.0) && (dist <= 1.0))
     {
         float distNew = sqrtf(1.0 - dist * dist);
         distNew = (dist + (1.0 - distNew)) * 0.5f;
+        // If distNew goes out of range, locSrc stays invalid -> output 0.
         if (distNew <= 1.0)
         {
             float theta = atan2f(normY_f8->f1[index], normX_f8->f1[index]);
