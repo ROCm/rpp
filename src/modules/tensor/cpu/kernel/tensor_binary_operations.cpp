@@ -277,12 +277,12 @@ inline __m256i simd_set1_val(Rpp16s &val) { return _mm256_set1_epi16(val); }
 inline __m256i simd_set1_val(Rpp32u &val) { return _mm256_set1_epi32(val); }
 inline __m256i simd_set1_val(Rpp32s &val) { return _mm256_set1_epi32(val); }
 
-inline __m256i simd_set1_ps(Rpp8u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set1_epi8(val))); }
-inline __m256i simd_set1_ps(Rpp8s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_set1_epi8(val))); }
-inline __m256i simd_set1_ps(Rpp16u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_set1_epi16(val))); }
-inline __m256i simd_set1_ps(Rpp16s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(_mm_set1_epi16(val))); }
-inline __m256i simd_set1_ps(Rpp32u &val) { return _mm256_setzero_ps(); }
-inline __m256i simd_set1_ps(Rpp32s &val) { return _mm256_cvtepi32_ps(_mm256_set1_epi32(val)); }
+inline __m256 simd_set1_ps(Rpp8u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_set1_epi8(val))); }
+inline __m256 simd_set1_ps(Rpp8s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_set1_epi8(val))); }
+inline __m256 simd_set1_ps(Rpp16u &val) { return _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(_mm_set1_epi16(val))); }
+inline __m256 simd_set1_ps(Rpp16s &val) { return _mm256_cvtepi32_ps(_mm256_cvtepi16_epi32(_mm_set1_epi16(val))); }
+inline __m256 simd_set1_ps(Rpp32u &val) { return _mm256_setzero_ps(); }
+inline __m256 simd_set1_ps(Rpp32s &val) { return _mm256_cvtepi32_ps(_mm256_set1_epi32(val)); }
 
 template<typename T1, typename T2, typename Operation>
 inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)

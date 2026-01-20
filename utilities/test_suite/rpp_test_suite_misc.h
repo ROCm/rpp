@@ -289,7 +289,7 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             descriptorPtr3D->dataType = RpptDataType::U16;
             break;
         case I32_TO_I32:
-            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I32;
+            descriptorPtr3D->dataType = RpptDataType::I32;
             break;
         case U32_TO_U32:
             descriptorPtr3D->dataType = RpptDataType::U32;
@@ -520,8 +520,6 @@ inline size_t get_size_of_data_type(RpptDataType dataType)
         return sizeof(Rpp16f);
     else if(dataType == RpptDataType::F32)
         return sizeof(Rpp32f);
-    else if(dataType == RpptDataType::I16)
-        return sizeof(Rpp16s);
     else if(dataType == RpptDataType::I16)
         return sizeof(Rpp16s);
     else if(dataType == RpptDataType::U16)
