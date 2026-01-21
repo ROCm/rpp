@@ -163,13 +163,17 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 2:
             {
                 std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 1920, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
             }
             case 3:
             {
-                std::array<Rpp32u, 6> roi = {0, 0, 0, 1920, 1080, 3};
+                std::array<Rpp32u, 6> roi = {0, 0, 0, 3, 1920, 1080};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 0, 3, 1920, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -177,6 +181,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 4:
             {
                 std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 1, 128, 128, 128};
+                if((broadCastFlag == 1) || (broadCastFlag == 2))
+                    roi = {0, 0, 0, 0, 1, 128, 128, 1};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -193,6 +199,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                         roiTensor[startIndex + j] = 0;
                         roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
+                    if((broadCastFlag == 1) || (broadCastFlag == 2))
+                        roiTensor[startIndex + nDim - 1] = 1;
                 }
                 break;
             }

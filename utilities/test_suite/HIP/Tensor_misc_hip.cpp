@@ -383,12 +383,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == I8_TO_I8 || bitDepthTestMode == I16_TO_I16 || bitDepthTestMode == U16_TO_U16 || bitDepthTestMode == I32_TO_I32 || bitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_and_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_and_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_and_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -402,12 +402,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == I8_TO_I8 || bitDepthTestMode == I16_TO_I16 || bitDepthTestMode == U16_TO_U16 || bitDepthTestMode == I32_TO_I32 || bitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_or_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_or_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_or_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
@@ -421,12 +421,12 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == I8_TO_I8 || bitDepthTestMode == I16_TO_I16 || bitDepthTestMode == U16_TO_U16 || bitDepthTestMode == I32_TO_I32 || bitDepthTestMode == U32_TO_U32)
                 {
-                    if(broadCastFlag == 0)
-                        rppt_tensor_xor_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
+                    if(broadCastFlag == 1)
+                        rppt_tensor_xor_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
                     else if(broadCastFlag == 2)
                         rppt_tensor_xor_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle);
                     else
-                        rppt_tensor_xor_tensor_gpu(d_inputSecond, d_input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, d_output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle);
+                        rppt_tensor_xor_tensor_gpu(d_input, d_inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, d_output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
                     missingFuncFlag = 1;
