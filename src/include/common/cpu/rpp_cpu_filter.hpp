@@ -383,7 +383,7 @@ inline void blend_permute_max_9x9_host(__m256 *pSrc, __m256 *pDst, __m256i *pxMa
 {
     /*  For PLN inputs                                                                          | For PKD inputs
         pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
-                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)     pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08], pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
+                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)   | pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08], pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
                   [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and permute)   |           [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and permute)
                   [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and permute)   |           [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and permute) 
                   [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and permute)   |           [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and permute)
