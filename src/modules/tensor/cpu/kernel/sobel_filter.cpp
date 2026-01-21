@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -152,8 +152,10 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle)
 {
-    if ((srcDescPtr->layout != RpptLayout::NCHW) || (srcDescPtr->c != 1))
-        return RPP_ERROR_INVALID_SRC_LAYOUT_OR_CHANNELS;
+    if (srcDescPtr->layout != RpptLayout::NCHW)
+        return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if (srcDescPtr->c != 1)
+        return RPP_ERROR_INVALID_SRC_CHANNELS;
 
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
