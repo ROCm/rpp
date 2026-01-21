@@ -579,8 +579,8 @@ def get_voxel_layout_type(layout, backend):
        result += "_PLN1_toPLN1"
     return result
 
-def get_bit_depth(bitDepth):
-    result = str(bitDepthDict[bitDepth])
+def get_bit_depth(BitDepthTestMode):
+    result = str(bitDepthDict[BitDepthTestMode])
     return result
 
 def get_signal_name_from_return_code(returnCode):
