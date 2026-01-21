@@ -74,13 +74,13 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
 string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag, bool isMeanStd = false)
 {
     string folderPath, suffix, bitDepthStr;
-    if (bitDepth == 0)
+    if (bitDepth == U8_TO_U8)
         bitDepthStr = "u8";
-    else if (bitDepth == 2)
+    else if (bitDepth == F32_TO_F32)
         bitDepthStr = "f32";
-    else if (bitDepth == 4)
+    else if (bitDepth == U8_TO_F32)
         bitDepthStr = "u8";
-    else if (bitDepth == 11)
+    else if (bitDepth == I16_TO_F32)
         bitDepthStr = "f32";
 
     if (readType == 0) // Input
@@ -98,7 +98,6 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
     else if (readType == 1) // Output
     {
         folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
-
         suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";
     }
 
@@ -686,12 +685,13 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u bitDepth
     RpptDataType dataType;
     switch(bitDepth)
     {
-        case 0: dataType = RpptDataType::U8; break;
-        case 1: dataType = RpptDataType::F16; break;
-        case 2: dataType = RpptDataType::F32; break;
-        case 4: dataType = RpptDataType::F32; break;
-        case 5: dataType = RpptDataType::I8; break;
-        case 11: dataType = RpptDataType::F32; break;
+        case U8_TO_U8: dataType = RpptDataType::U8; break;
+        case F16_TO_F16: dataType = RpptDataType::F16; break;
+        case F32_TO_F32: dataType = RpptDataType::F32; break;
+        case U8_TO_F32: dataType = RpptDataType::F32; break;
+        case I8_TO_I8: dataType = RpptDataType::I8; break;
+        case I8_TO_F32: dataType = RpptDataType::F32; break;
+        case I16_TO_F32: dataType = RpptDataType::F32; break;
         default: std::cerr << "ERROR: Invalid bitDepth specified!" << std::endl; return;
     }
     Rpp32u goldenOutputLength;

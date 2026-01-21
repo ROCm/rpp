@@ -1659,8 +1659,6 @@ RppStatus rppt_concat_host(RppPtr_t srcPtr1,
 
     if(srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims)
         return RPP_ERROR_INVALID_SRC_DIMS;
-    if (srcPtr1GenericDescPtr->layout != dstGenericDescPtr->layout)
-        return RPP_ERROR_LAYOUT_MISMATCH;
     if (axisMask >= srcPtr1GenericDescPtr->numDims)
         return RPP_ERROR_INVALID_AXIS;
     for(int i = 0 ;i < tensorDim ; i++)
@@ -2946,8 +2944,6 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
     Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     if(srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims)
         return RPP_ERROR_INVALID_SRC_DIMS;
-    if (srcPtr1GenericDescPtr->layout != dstGenericDescPtr->layout)
-        return RPP_ERROR_LAYOUT_MISMATCH;
     if (axis >= srcPtr1GenericDescPtr->numDims)
         return RPP_ERROR_INVALID_AXIS;
     for(int i = 0;i < tensorDim ; i++)
