@@ -285,15 +285,15 @@ inline __m256 simd_set1_ps(Rpp32u &val) { return _mm256_setzero_ps(); }
 inline __m256 simd_set1_ps(Rpp32s &val) { return _mm256_cvtepi32_ps(_mm256_set1_epi32(val)); }
 
 template<typename T1, typename T2, typename Operation>
-inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim, Operation op)
+inline void tensor_binary_arithmetic_op_recursive(T1 *src1, T1 *src2, Rpp32u *src1Strides, Rpp32u *src2Strides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim)
 {
     if (!nDim)
-        op.scalar_op(dst, src1, src2);
+        Operation::scalar_op(dst, src1, src2);
     else
     {
         for (int i = 0; i < *dstShape; i++)
         {
-            tensor_binary_arithmetic_op_recursive(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1, op);
+            tensor_binary_arithmetic_op_recursive<T1, T2, Operation>(src1, src2, src1Strides + 1, src2Strides + 1, dst, dstStrides + 1, dstShape + 1, nDim - 1);
             dst += *(dstStrides);
             src1 += *(src1Strides);
             src2 += *(src2Strides);
@@ -308,7 +308,6 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                                RpptGenericDescPtr srcPtr2GenericDescPtr,
                                                Rpp32f *dstPtr,
                                                RpptGenericDescPtr dstGenericDescPtr,
-                                               Operation op,
                                                RpptBroadcastMode broadcastMode,
                                                Rpp32u *srcPtr1roiTensor,
                                                Rpp32u *srcPtr2roiTensor,
@@ -474,7 +473,7 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                  for (; vectorLoopCount < length[0]; vectorLoopCount++)
                  {
-                     op.scalar_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
+                     Operation::scalar_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
                      srcPtrTemp2++;
                      dstPtrTemp++;
                  }
@@ -496,7 +495,7 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                  for (; vectorLoopCount < length[0]; vectorLoopCount++)
                  {
-                     op.scalar_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
+                     Operation::scalar_op(dstPtrTemp, srcPtrTemp1, srcPtrTemp2);
                      srcPtrTemp1++;
                      dstPtrTemp++;
                  }
@@ -531,16 +530,6 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             Rpp32u alignedLength = length[1] & ~15;
             Rpp32u src1shape = src1length[1];
             Rpp32u src2shape = src2length[1];
-
-            // Debug: Print dimension info
-            std::cout << "\n=== 2D Tensor Debug Info ===" << std::endl;
-            std::cout << "Dimensions: [" << length[0] << ", " << length[1] << "]" << std::endl;
-            std::cout << "AlignedLength: " << alignedLength << " (original: " << length[1] << ")" << std::endl;
-            std::cout << "VectorIncrement: " << vectorIncrement << std::endl;
-            std::cout << "AVX iterations per row: " << (alignedLength / vectorIncrement) << std::endl;
-            std::cout << "Scalar iterations per row: " << (length[1] - alignedLength) << std::endl;
-            std::cout << "AVX efficiency: " << ((float)alignedLength / length[1] * 100) << "%" << std::endl;
-            std::cout.flush();
 
             if(src1shape == 1)
             {
@@ -650,28 +639,8 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             Rpp32u src1shape = src1length[2];
             Rpp32u src2shape = src2length[2];
 
-            // Debug: Print dimension info
-            std::cout << "\n=== 3D Tensor Debug Info ===" << std::endl;
-            std::cout << "Dimensions: [" << length[0] << ", " << length[1] << ", " << length[2] << "]" << std::endl;
-            std::cout << "AlignedLength: " << alignedLength << " (original: " << length[2] << ")" << std::endl;
-            std::cout << "VectorIncrement: " << vectorIncrement << std::endl;
-            std::cout << "AVX iterations per row: " << (alignedLength / vectorIncrement) << std::endl;
-            std::cout << "Scalar iterations per row: " << (length[2] - alignedLength) << std::endl;
-            std::cout << "AVX efficiency: " << ((float)alignedLength / length[2] * 100) << "%" << std::endl;
-            std::cout.flush();
-    
-            // Performance counters
-            uint64_t totalAVXOps = 0;
-            uint64_t totalScalarOps = 0;
-            uint64_t totalCacheLineJumps = 0;
-            
-            // Timing
-            auto startTime = std::chrono::high_resolution_clock::now();
-
             if(src1shape == 1)
             {
-                std::cout << "661 Case: src1shape == 1 (broadcasting src1)" << std::endl;
-
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
@@ -685,17 +654,8 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-
-                        // // Debug: Check memory alignment
-                        // if (i == 0 && j == 0) {
-                        //     std::cout << "Memory alignment check:" << std::endl;
-                        //     std::cout << "  srcPtrElem2 alignment: " << ((uintptr_t)srcPtrElem2 % 32) << " bytes offset" << std::endl;
-                        //     std::cout << "  dstPtrElem alignment: " << ((uintptr_t)dstPtrElem % 32) << " bytes offset" << std::endl;
-                        // }
 #if __AVX2__
                         __m256 p1 = _mm256_set1_ps(srcPtrElem1[0]);
-                        // Time AVX section
-                        // auto avxStart = std::chrono::high_resolution_clock::now();
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 p2[2], dst[2];
@@ -705,44 +665,14 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                             rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem2 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
-
-                            // totalAVXOps += vectorIncrement;
                         }
-                        // auto avxEnd = std::chrono::high_resolution_clock::now();
-                
-                        // if (i == 0 && j == 0 && alignedLength > 0) {
-                        //     auto avxTime = std::chrono::duration_cast<std::chrono::nanoseconds>(avxEnd - avxStart).count();
-                        //     std::cout << "  AVX time for first row: " << avxTime << " ns for " << alignedLength << " elements" << std::endl;
-                        //     std::cout << "  AVX throughput: " << (alignedLength * 1000.0 / avxTime) << " Gops/s" << std::endl;
-                        // }
 #endif
-                        // Time scalar section
-                        // auto scalarStart = std::chrono::high_resolution_clock::now();
-                        
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
                             Operation::scalar_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem2++;
                             dstPtrElem++;
-
-                            // totalScalarOps++;
                         }
-
-                        // auto scalarEnd = std::chrono::high_resolution_clock::now();
-                
-                        // if (i == 0 && j == 0 && (length[2] - alignedLength) > 0) {
-                        //     auto scalarTime = std::chrono::duration_cast<std::chrono::nanoseconds>(scalarEnd - scalarStart).count();
-                        //     std::cout << "  Scalar time for first row: " << scalarTime << " ns for " << (length[2] - alignedLength) << " elements" << std::endl;
-                        //     std::cout << "  Scalar throughput: " << ((length[2] - alignedLength) * 1000.0 / scalarTime) << " Gops/s" << std::endl;
-                        // }
-
-                        // // Debug: Check stride jumps
-                        // if (i == 0 && j < 5) {
-                        //     std::cout << "  Stride jump at j=" << j << ": " << src1BcastStrides[1] << " bytes" << std::endl;
-                        //     if (src1BcastStrides[1] > 64) {
-                        //         totalCacheLineJumps++;
-                        //     }
-                        // }
 
                         srcPtrOuter1 += src1BcastStrides[1];
                         srcPtrOuter2 += src2BcastStrides[1];
@@ -756,8 +686,6 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
             else if (src2shape == 1)
             {
-                std::cout << "Case: src2shape == 1 (broadcasting src2)" << std::endl;
-
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
@@ -771,18 +699,8 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         Rpp32f *dstPtrElem = dstPtrOuter;
 
                         int vectorLoopCount = 0;
-
-                        // // Debug: Check memory alignment
-                        // if (i == 0 && j == 0) {
-                        //     std::cout << "Memory alignment check:" << std::endl;
-                        //     std::cout << "  srcPtrElem2 alignment: " << ((uintptr_t)srcPtrElem2 % 32) << " bytes offset" << std::endl;
-                        //     std::cout << "  dstPtrElem alignment: " << ((uintptr_t)dstPtrElem % 32) << " bytes offset" << std::endl;
-                        // }
-
 #if __AVX2__
-                        __m256 p2 =  _mm256_set1_ps(srcPtrElem2[0]);
-                        // Time AVX section
-                        // auto avxStart = std::chrono::high_resolution_clock::now();  
+                        __m256 p2 =  _mm256_set1_ps(srcPtrElem2[0]); 
 
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
@@ -793,45 +711,14 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
                             rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrElem, dst);    // simd stores
                             srcPtrElem1 += vectorIncrement;
                             dstPtrElem += vectorIncrement;
-
-                            // totalAVXOps += vectorIncrement;
                         }
-
-                        // auto avxEnd = std::chrono::high_resolution_clock::now();
-                
-                        // if (i == 0 && j == 0 && alignedLength > 0) {
-                        //     auto avxTime = std::chrono::duration_cast<std::chrono::nanoseconds>(avxEnd - avxStart).count();
-                        //     std::cout << "  AVX time for first row: " << avxTime << " ns for " << alignedLength << " elements" << std::endl;
-                        //     std::cout << "  AVX throughput: " << (alignedLength * 1000.0 / avxTime) << " Gops/s" << std::endl;
-                        // }
 #endif
-                        // Time scalar section
-                        // auto scalarStart = std::chrono::high_resolution_clock::now();
-
                         for (; vectorLoopCount < length[2]; vectorLoopCount++)
                         {
                             Operation::scalar_op(dstPtrElem, srcPtrElem1, srcPtrElem2);
                             srcPtrElem1++;
                             dstPtrElem++;
-
-                            // totalScalarOps++;
                         }
-
-                        // auto scalarEnd = std::chrono::high_resolution_clock::now();
-                
-                        // if (i == 0 && j == 0 && (length[2] - alignedLength) > 0) {
-                        //     auto scalarTime = std::chrono::duration_cast<std::chrono::nanoseconds>(scalarEnd - scalarStart).count();
-                        //     std::cout << "  Scalar time for first row: " << scalarTime << " ns for " << (length[2] - alignedLength) << " elements" << std::endl;
-                        //     std::cout << "  Scalar throughput: " << ((length[2] - alignedLength) * 1000.0 / scalarTime) << " Gops/s" << std::endl;
-                        // }
-
-                        // // Debug: Check stride jumps
-                        // if (i == 0 && j < 5) {
-                        //     std::cout << "  Stride jump at j=" << j << ": " << src1BcastStrides[1] << " bytes" << std::endl;
-                        //     if (src1BcastStrides[1] > 64) {
-                        //         totalCacheLineJumps++;
-                        //     }
-                        // }
 
                         srcPtrOuter1 += src1BcastStrides[1];
                         srcPtrOuter2 += src2BcastStrides[1];
@@ -845,13 +732,6 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
             else
             {
-                std::cout << "Case: No broadcasting" << std::endl;
-        
-                // Add memory access pattern analysis
-                std::cout << "\nMemory Access Pattern Analysis:" << std::endl;
-                std::cout << "  Stride[0] (between i): " << src1BcastStrides[0] << " bytes" << std::endl;
-                std::cout << "  Stride[1] (between j): " << src1BcastStrides[1] << " bytes" << std::endl;
-                std::cout << "  Stride[2] (between elements): " << (src1BcastStrides[2] == 1 ? "Contiguous" : "Non-contiguous") << std::endl;
                 for (int i = 0; i < length[0]; i++)
                 {
                     Rpp32f *srcPtrOuter1 = srcPtrTemp1;
@@ -899,7 +779,7 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
         }
         else
-            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+            tensor_binary_arithmetic_op_recursive<Rpp32f, Rpp32f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
     return RPP_SUCCESS;
@@ -919,16 +799,16 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
 {
     switch(tensorOp) {
         case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_f32_f32_host_tensor<Add<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Add<Rpp32f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor<Add<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_f32_f32_host_tensor<Subtract<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Subtract<Rpp32f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor<Subtract<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_f32_f32_host_tensor<Multiply<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Multiply<Rpp32f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor<Multiply<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f32_f32_host_tensor<Divide<Rpp32f, Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Divide<Rpp32f, Rpp32f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            tensor_binary_op_f32_f32_host_tensor<Divide<Rpp32f, Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             break;
         default :
             printf("Operation not supported\n");
@@ -945,7 +825,6 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
                                                RpptGenericDescPtr srcPtr2GenericDescPtr,
                                                Rpp16f *dstPtr,
                                                RpptGenericDescPtr dstGenericDescPtr,
-                                               Operation op,
                                                RpptBroadcastMode broadcastMode,
                                                Rpp32u *srcPtr1roiTensor,
                                                Rpp32u *srcPtr2roiTensor,
@@ -1415,7 +1294,7 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
             }
         }
         else
-            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+            tensor_binary_arithmetic_op_recursive<Rpp16f, Rpp16f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
     return RPP_SUCCESS;
@@ -1435,16 +1314,16 @@ RppStatus tensor_binary_op_dispatch_f16_f16_host_tensor(Rpp16f *srcPtr1,
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_ADD:
-                tensor_binary_op_f16_f16_host_tensor<Add<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Add<Rpp16f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                return tensor_binary_op_f16_f16_host_tensor<Add<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_SUBTRACT:
-                tensor_binary_op_f16_f16_host_tensor<Subtract<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Subtract<Rpp16f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                return tensor_binary_op_f16_f16_host_tensor<Subtract<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_MULTIPLY:
-                tensor_binary_op_f16_f16_host_tensor<Multiply<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Multiply<Rpp16f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                return tensor_binary_op_f16_f16_host_tensor<Multiply<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_DIVIDE:
-                tensor_binary_op_f16_f16_host_tensor<Divide<Rpp16f, Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Divide<Rpp16f, Rpp16f>{}, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                return tensor_binary_op_f16_f16_host_tensor<Divide<Rpp16f, Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
         }
 
@@ -1458,7 +1337,6 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
                                            RpptGenericDescPtr srcPtr2GenericDescPtr,
                                            T *dstPtr,
                                            RpptGenericDescPtr dstGenericDescPtr,
-                                           Operation op,
                                            RpptBroadcastMode broadcastMode,
                                            Rpp32u vectorIncrement,
                                            Rpp32u *srcPtr1roiTensor,
@@ -1911,7 +1789,7 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
             }
         }
         else
-            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+            tensor_binary_arithmetic_op_recursive<T, T, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
     return RPP_SUCCESS;
@@ -1924,7 +1802,6 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
                                            RpptGenericDescPtr srcPtr2GenericDescPtr,
                                            Rpp32f *dstPtr,
                                            RpptGenericDescPtr dstGenericDescPtr,
-                                           Operation op,
                                            RpptBroadcastMode broadcastMode,
                                            Rpp32u vectorIncrement,
                                            Rpp32u *srcPtr1roiTensor,
@@ -2385,7 +2262,7 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             }
         }
         else
-            tensor_binary_arithmetic_op_recursive(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim, op);
+            tensor_binary_arithmetic_op_recursive<T, Rpp32f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
     return RPP_SUCCESS;
@@ -2418,13 +2295,13 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_ADD:
-                tensor_binary_op_int_host_tensor<T1, Add<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Add<T1>{}, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                tensor_binary_op_int_host_tensor<T1, Add<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_SUBTRACT:
-                tensor_binary_op_int_host_tensor<T1, Subtract<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Subtract<T1>{}, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                tensor_binary_op_int_host_tensor<T1, Subtract<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             case RPP_TENSOR_OP_MULTIPLY:
-                tensor_binary_op_int_host_tensor<T1, Multiply<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Multiply<T1>{}, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                tensor_binary_op_int_host_tensor<T1, Multiply<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             default :
                 printf("Operation not supported\n");
@@ -2435,7 +2312,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_DIVIDE:
-                tensor_binary_divide_host_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, Divide<Rpp32f, T1>{}, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                tensor_binary_divide_host_tensor<T1, Divide<T2, T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 break;
             default :
                 printf("Operation not supported\n");
