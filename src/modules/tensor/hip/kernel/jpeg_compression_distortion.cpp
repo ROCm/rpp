@@ -1033,7 +1033,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     }
     __syncthreads();
 
-    // Row-wise Inverse DCT 
+    // Inverse DCT
     dct_inv_8x8_1d(&src_smem[hipThreadIdx_y][hipThreadIdx_x8], true);
     __syncthreads();
 
