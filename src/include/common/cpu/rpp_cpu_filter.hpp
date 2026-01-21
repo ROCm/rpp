@@ -511,7 +511,7 @@ inline void rpp_load_filter_NxN_pkd_host(__m256 *pRow, T **srcPtrTemp, Rpp32s ro
 
 // Specialized load function for 9x9 PKD3 -> PLN3 case - Loads 40 pixels per row
 template<typename T>
-inline void rpp_load_filter_9x9_pkd_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
+inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, T **srcPtrTemp, Rpp32s rowKernelLoopLimit, Rpp32s padIndex)
 {
     // Determine the starting row offset based on whether padding is applied
     // If padIndex is non-zero (true), start from the radius position of the kernel; otherwise start from 0

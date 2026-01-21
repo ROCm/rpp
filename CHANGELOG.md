@@ -2,41 +2,60 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 2.2.0 (Unreleased)
+
+## (Unreleased) RPP 2.2.2
 
 ### Added
-* 
+
 
 ### Changed
-* CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
-
-### Removed
-* 
+* Updating RPP version for gaussian noise kernel API changes
 
 ### Resolved issues
-* 
+
+## RPP 2.2.1 for ROCm 7.2.0
+
+### Added
+
+* "Pinned buffer API support for HOST and HIP
+
+### Changed
+
+* AMDClag++ compiler has moved to `${ROCM_PATH}/lib/llvm/bin`
+
+### Removed
+
+* The `copy_param_float()`  and `copy_param_uint()` mem copy helper functions have been removed as buffers now consistently use pinned/HIP memory
+
+### Resolved issues
+
+* Test Suite - Error Code Capture updates
 
 ## RPP 2.1.0 for ROCm 7.1.0
 
 ### Added
+
 * Solarize augmentation for HOST and HIP
-* Hue and Saturation adjustment augmentations for HOST and HIP 
+* Hue and Saturation adjustment augmentations for HOST and HIP
 * Find RPP - cmake module
 * Posterize augmentation for HOST and HIP
 
 ### Changed
+
 * HALF - Fix half.hpp path updates
-* Box filter - padding updates 
+* Box filter - padding updates
 
 
 ### Removed
+
 * Packaging - Remove Meta Package dependency for HIP
 * SLES 15 SP6 support
 
 ### Resolved issues
+
 * Test Suite - Fixes for accuracy
 * HIP Backend - Check return status warning fixes
-* Bugfix - HIP vector types init 
+* Bugfix - HIP vector types init
 
 ## RPP 2.0.0 for ROCm 7.0.0
 

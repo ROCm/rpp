@@ -1213,7 +1213,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[45], pDst[2];
-                        rpp_load_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)

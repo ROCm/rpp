@@ -30,7 +30,11 @@ SOFTWARE.
 #include <typeinfo>
 #include <cstring>
 #include <omp.h>
-#include <half/half.hpp>
+#if __has_include(<half/half.hpp>)
+    #include <half/half.hpp>
+#else
+    #include <half.hpp>
+#endif
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 #include "rppdefs.h"

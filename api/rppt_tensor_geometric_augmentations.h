@@ -115,9 +115,9 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr, RpptDescPtr srcDescPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] offsetTensor offset values for normalization (1D tensor in pinned/HOST memory, of size batchSize, with offsetTensor[n] <= 0)
- * \param [in] multiplierTensor multiplier values for normalization (1D tensor in pinned/HOST memory, of size batchSize, with multiplierTensor[n] > 0)
- * \param [in] mirrorTensor mirror flag values to set mirroring on/off (1D tensor in pinned/HOST memory, of size batchSize, with mirrorTensor[n] = 0/1)
+ * \param [in] offsetTensor offset values for normalization (1D tensor in pinned/HIP memory, of size batchSize, with offsetTensor[n] <= 0)
+ * \param [in] multiplierTensor multiplier values for normalization (1D tensor in pinned/HIP memory, of size batchSize, with multiplierTensor[n] > 0)
+ * \param [in] mirrorTensor mirror flag values to set mirroring on/off (1D tensor in pinned/HIP memory, of size batchSize, with mirrorTensor[n] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -204,8 +204,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
- * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
+ * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/HIP memory, of size batchSize, with horizontalTensor[i] = 0/1)
+ * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/HIP memory, of size batchSize, with verticalTensor[i] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -345,7 +345,7 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, 
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] dstImgSizes destination image sizes (<tt> \ref RpptImagePatchPtr </tt> type pointer to array, in pinned/HOST memory, of size batchSize)
  * \param [in] interpolationType Interpolation type used in <tt> \ref RpptInterpolationType </tt>
- * \param [in] mirrorTensor mirror flag value to set mirroring on/off (1D tensor in pinned/HOST memory, of size batchSize, with mirrorTensor[n] = 0/1)
+ * \param [in] mirrorTensor mirror flag value to set mirroring on/off (1D tensor in pinned/HIP memory, of size batchSize, with mirrorTensor[n] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
