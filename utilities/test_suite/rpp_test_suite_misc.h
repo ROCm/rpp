@@ -143,7 +143,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-                exit(0);
             }
             case 4:
             {
@@ -153,7 +152,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-                exit(0);
             }
         }
     }
@@ -228,7 +226,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -249,7 +247,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
 }
 
 // sets generic descriptor numDims, offsetInBytes, bitdepth, dims and strides
-inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim, int offsetInBytes, int BitDepthTestMode, int batchSize, Rpp32u *roiTensor)
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim, int offsetInBytes, int BitDepthTestMode, int batchSize, Rpp32u *roiTensor, bool isDestination)
 {
     descriptorPtr3D->numDims = nDim + 1;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
@@ -275,7 +273,10 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
     compute_strides(descriptorPtr3D);
 }
 
-// strides used for jumping to corresponding axisMask mean and stddev
+// Strides used to locate the corresponding mean and stddev values (based on axisMask)
+// within the input bin files for 2D normalization cases.
+// These strides are precomputed for various combinations of dimensions and axes
+// for the default QA test case: input shape = 100x100.
 std::map<Rpp32s, Rpp32u> paramStrideMap2D =
 {
     {1, 0},
@@ -283,16 +284,42 @@ std::map<Rpp32s, Rpp32u> paramStrideMap2D =
     {3, 200}
 };
 
-// strides used for jumping to corresponding axisMask mean and stddev
+// Strides used to locate the corresponding mean and stddev values (based on axisMask)
+// within the input bin files for 3D normalization cases.
+// These strides are precomputed for various combinations of dimensions and axes
+// for the default QA test case: input shape = 25x25x32.
 std::map<Rpp32s, Rpp32u> paramStrideMap3D =
 {
     {1, 0},
-    {2, 400},
-    {3, 800},
-    {4, 808},
-    {5, 3308},
-    {6, 3358},
-    {7, 3408}
+    {2, 800},
+    {3, 1600},
+    {4, 1632},
+    {5, 2257},
+    {6, 2282},
+    {7, 2307}
+};
+
+// Strides used to locate the corresponding mean and stddev values (based on axisMask)
+// within the input bin files for 4D normalization cases.
+// These strides are precomputed for various combinations of dimensions and axes
+// for the default QA test case: input shape = 4x10x25x40.
+std::map<Rpp32s, Rpp32u> paramStrideMap4D =
+{
+    {1, 0},
+    {2, 1000},
+    {3, 2600},
+    {4, 2640},
+    {5, 6640},
+    {6, 6740},
+    {7, 6900},
+    {8, 6904},
+    {9, 16904},
+    {10, 17154},
+    {11, 17554},
+    {12, 17564},
+    {13, 18564},
+    {14, 18589},
+    {15, 18629}
 };
 
 // strides used for jumping to corresponding axisMask mean and stddev in 4D
@@ -317,7 +344,7 @@ std::map<Rpp32s, Rpp32u> paramStrideMap4D =
 
 // fill the mean and stddev values used for normalize
 void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
-                             Rpp32f *stdDevTensor, bool qaMode, int axisMask, string scriptPath, Rpp32u bitDepth)
+                             Rpp32f *stdDevTensor, bool qaMode, int axisMask, string scriptPath, Rpp32u BitDepthTestMode)
 {
     if(qaMode)
     {
@@ -344,13 +371,13 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
         std::vector<Rpp32f> paramBuf(numValues * 2);
         Rpp32f *data = paramBuf.data();
-        read_data(data, nDim, 0, scriptPath, "normalize", bitDepth, 0, true);
+        read_data(data, nDim, 0, scriptPath, "normalize", BitDepthTestMode, true);
         memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
         memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
     }
@@ -435,7 +462,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2D / 3D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -447,9 +474,9 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
     }
 }
 
-Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag = 0)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u BitDepthTestMode)
 {
-    string refFile = get_path(nDim, readType, scriptPath, testCase, bitDepth, broadCastFlag);
+    string refFile = get_path(nDim, readType, scriptPath, testCase, BitDepthTestMode);
     std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
     filestream.seekg(0, ios_base::end);
     Rpp32u filesize = filestream.tellg();
@@ -483,7 +510,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                                    Rpp64u ioBufferSize, Rpp64u ioBufferSizeSecond, Rpp64u outputBufferSize, Rpp64u outputBufferSizeSecond,
                                    RpptGenericDescPtr srcGenericDescPtr, RpptGenericDescPtr srcDescriptorPtrNDSecond, Rpp32s testCase)
 {
-    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == U8_TO_F16) // U8 case
+    if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == U8_TO_F16) // U8 case
     {
         Rpp8u *outputU8 = static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes;
         for(Rpp32s i = 0; i < ioBufferSize; i++)
@@ -496,7 +523,7 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                 outputU8Second[i] = static_cast<Rpp8u>(std::clamp(std::round(inputF32Second[i]), 0.0f, 255.0f));
         }
     }
-    else if (BitDepthTestMode == F16_TO_F16) // F16 case
+    else if(BitDepthTestMode == F16_TO_F16) // F16 case
     {
         Rpp16f *outputF16 = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + srcGenericDescPtr->offsetInBytes);
         for (Rpp32s i = 0; i < ioBufferSize; i++)
@@ -509,13 +536,13 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
                 outputF16Second[i] = static_cast<Rpp16f>(std::clamp(inputF32Second[i], -65504.0f, 65504.0f));
         }
     }
-    else if (BitDepthTestMode == F32_TO_F32) // F32 case (No conversion needed)
+    else if(BitDepthTestMode == F32_TO_F32) // F32 case (No conversion needed)
     {
         memcpy(output, inputF32, outputBufferSize);
         if(testCase == CONCAT || testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR)
             memcpy(outputSecond, inputF32Second, outputBufferSizeSecond);
     }
-    else if (BitDepthTestMode == I8_TO_I8) // I8 case
+    else if(BitDepthTestMode == I8_TO_I8) // I8 case
     {
         Rpp8s *outputI8 = static_cast<Rpp8s *>(output) + srcGenericDescPtr->offsetInBytes;
         for(int i = 0; i < ioBufferSize; i++)
@@ -585,11 +612,11 @@ inline void convert_input_bitdepth(Rpp32f *inputF32, Rpp32f *inputF32Second, voi
 // Reconvert other bit depths to F32
 inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int BitDepthTestMode, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptGenericDescPtr dstDescPtr)
 {
-    if (BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F32) // Already F32, direct copy
+    if(BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F32) // Already F32, direct copy
     {
         memcpy(outputf32, output, outputBufferSize);
     }
-    else if (BitDepthTestMode == U8_TO_U8) // U8 to F32
+    else if(BitDepthTestMode == U8_TO_U8) // U8 to F32
     {
         Rpp8u *outputTemp = static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;
@@ -600,7 +627,7 @@ inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int 
             outputf32Temp++;
         }
     }
-    else if (BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == U8_TO_F16) // F16 to F32
+    else if(BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == U8_TO_F16) // F16 to F32
     {
         Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;
@@ -611,7 +638,7 @@ inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int 
             outputf32Temp++;
         }
     }
-    else if (BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == U8_TO_I8) // I8 to F32
+    else if(BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == U8_TO_I8) // I8 to F32
     {
         Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
         Rpp32f *outputf32Temp = outputf32 + dstDescPtr->offsetInBytes;

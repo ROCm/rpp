@@ -58,8 +58,10 @@ class BitDepthTestMode(Enum):
     U8_TO_F32  = 4  # Input: U8 -> Output: F32
     I8_TO_I8   = 5  # Input: I8 -> Output: I8
     U8_TO_I8   = 6  # Input: U8 -> Output: I8
+    I8_TO_F32  = 11 # Input: I8  -> Output: F32
+    I16_TO_F32 = 12 # Input: I16 -> Output: F32
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 11: "_i8_f32_", 12: "_i16_f32_"}
 
 class OutputFormat(Enum):
     NON_TOGGLE = 0
@@ -131,7 +133,8 @@ imageAugmentationMap = {
     92: ["slice", "HOST", "HIP"],
     93: ["jpeg_compression_distortion", "HIP"],
     94: ["posterize", "HOST", "HIP"],
-    95: ["solarize", "HOST", "HIP"]
+    95: ["solarize", "HOST", "HIP"],
+    96: ["channel_dropout", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
