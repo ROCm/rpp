@@ -425,6 +425,16 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&greyFactor, batchSize * sizeof(Rpp32f)));
     }
 
+    Rpp32f *brightnessCoefficient = nullptr;
+    Rpp32f *snowThreshold = nullptr;
+    Rpp32s *darkMode = nullptr;
+    if(testCase == SNOW)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&brightnessCoefficient, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&snowThreshold, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&darkMode, batchSize * sizeof(Rpp32s)));
+    }
+
     Rpp32u *kernelSizeTensor;
     if(testCase == JITTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
@@ -784,6 +794,25 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case SNOW:
+                {
+                    testCaseName = "snow";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        brightnessCoefficient[i] = 2.5f;
+                        snowThreshold[i] = 1.0f;
+                        darkMode[i] = 0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        rppt_snow_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightnessCoefficient, snowThreshold, darkMode, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case NOISE:
                 {
                     testCaseName = "noise";
@@ -1008,6 +1037,18 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case FISHEYE:
+                {
+                    testCaseName = "fisheye";
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        rppt_fisheye_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -2101,6 +2142,12 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(intensityFactor));
     if(greyFactor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(greyFactor));
+    if(brightnessCoefficient != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(brightnessCoefficient));
+    if(snowThreshold != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(snowThreshold));
+    if(darkMode != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(darkMode));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == JITTER)
