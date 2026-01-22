@@ -74,7 +74,14 @@ def generate_performance_reports(RESULTS_DIR):
     dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
     print(dfPrint_noIndices)
 
-def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg):
+def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    bitDepths = list(BitDepthTestMode)
+    if testType == TestType.UNIT_TEST.value:
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
+        if miscAugmentationMap[int(case)][0] == "log":
+            bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F32_TO_F32]
+        if miscAugmentationMap[int(case)][0] == "log1p":
+            bitDepths = [BitDepthTestMode.I16_TO_F32]
     for bitDepth in bitDepths:
         print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg))
         result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
@@ -110,15 +117,20 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
     elif testType == TestType.PERFORMANCE_TEST.value:
         bitDepths = [0, 1, 2, 5]
     if testType == TestType.UNIT_TEST.value:
-        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, bitDepths, additionalArg)
-    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "NO":
-        print("\n")
-        for bitDepth in bitDepths:
-            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
-    elif testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES":
-        print("\n")
-        for bitDepth in bitDepths:
-            run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg)
+        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
+    elif testType == TestType.PERFORMANCE_TEST.value:
+        # U8, F16, F32 and I8 bit depths available for augmentations. Log and Log1p cases customized to run with available bit depths
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.U8_TO_U8, BitDepthTestMode.I8_TO_I8]
+        if miscAugmentationMap[int(case)][0] == "log":
+            bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
+        if miscAugmentationMap[int(case)][0] == "log1p":
+            bitDepths = [BitDepthTestMode.I16_TO_F32]
+        if profilingOption == "NO":
+            for bitDepth in bitDepths:
+                run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
+        elif profilingOption == "YES":
+            for bitDepth in bitDepths:
+                run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():

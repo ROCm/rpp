@@ -120,15 +120,15 @@ int main(int argc, char **argv)
     dstDescriptorPtrND = &dstDescriptor;
     int offSetInBytes = 0;
 
-    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepthTestMode, batchSize, roiTensor, false);
-    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepthTestMode, batchSize, dstRoiTensor, true);
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, BitDepthTestMode, batchSize, roiTensor, false);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, BitDepthTestMode, batchSize, dstRoiTensor, true);
 
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     if(testCase == CONCAT || broadCastCase)
     {
         srcDescriptorPtrNDSecond = &srcDescriptorSecond;
-        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, bitDepthTestMode, batchSize, roiTensorSecond, false);
+        set_generic_descriptor(srcDescriptorPtrNDSecond, nDim, offSetInBytes, BitDepthTestMode, batchSize, roiTensorSecond, false);
         set_generic_descriptor_layout(srcDescriptorPtrNDSecond, dstDescriptorPtrND, nDim, toggle, qaMode);
     }
     Rpp32u iBufferSize = 1;
@@ -246,21 +246,16 @@ int main(int argc, char **argv)
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
-        switch(testCase)
-        {
-            case TRANSPOSE:
-            {
                 testCaseName  = "transpose";
                 Rpp32u permTensor[nDim];
-                fill_perm_values(nDim, permTensor, qaMode, permOrder);
 
                 for(int i = 1; i <= nDim; i++)
                     dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
                 compute_strides(dstDescriptorPtrND);
 
                 startWallTime = omp_get_wtime();
-                if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == F16_TO_F16 || bitDepthTestMode == F32_TO_F32 || bitDepthTestMode == I8_TO_I8)
-                    rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -294,11 +289,11 @@ int main(int argc, char **argv)
                     stdDevTensor = static_cast<Rpp32f *>(calloc(maxSize * batchSize, sizeof(Rpp32f)));
 
                 if(!computeMeanStddev)
-                    fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath, bitDepthTestMode);
+                    fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath, BitDepthTestMode);
 
                 startWallTime = omp_get_wtime();
-                if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == F16_TO_F16 || bitDepthTestMode == F32_TO_F32 || bitDepthTestMode == I8_TO_I8)
-                    rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -309,8 +304,8 @@ int main(int argc, char **argv)
                 testCaseName  = "log";
 
                 startWallTime = omp_get_wtime();
-                if(bitDepthTestMode == F32_TO_F32 || bitDepthTestMode == U8_TO_F32)
-                    rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
+                if(BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_F32)
+                    errorCodeCapture = rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -321,8 +316,8 @@ int main(int argc, char **argv)
                 testCaseName  = "concat";
 
                 startWallTime = omp_get_wtime();
-                if(bitDepthTestMode == U8_TO_U8 || bitDepthTestMode == F16_TO_F16 || bitDepthTestMode == F32_TO_F32 || bitDepthTestMode == I8_TO_I8)
-                    rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -337,7 +332,6 @@ int main(int argc, char **argv)
                     rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
                 else
                     missingFuncFlag = 1;
-
                 break;
             }
             case TENSOR_AND_TENSOR:
@@ -393,10 +387,6 @@ int main(int argc, char **argv)
                         rppt_tensor_xor_tensor_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle);
                 }
                 else
-                    missingFuncFlag = 1;
-
-                break;
-            }
             default:
             {
                 missingFuncFlag = 1;
@@ -440,7 +430,7 @@ int main(int argc, char **argv)
         avgWallTime /= numRuns;
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-
+    
     rppDestroy(handle, backend);
 
     free(input);

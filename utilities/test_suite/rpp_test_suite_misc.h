@@ -142,7 +142,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-                exit(0);
             }
             case 4:
             {
@@ -152,7 +151,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-                exit(0);
             }
         }
     }
@@ -235,7 +233,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
             }
             default:
             {
-                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -318,12 +316,35 @@ std::map<Rpp32s, Rpp32u> paramStrideMap2D =
 std::map<Rpp32s, Rpp32u> paramStrideMap3D =
 {
     {1, 0},
-    {2, 400},
-    {3, 800},
-    {4, 808},
-    {5, 3308},
-    {6, 3358},
-    {7, 3408}
+    {2, 800},
+    {3, 1600},
+    {4, 1632},
+    {5, 2257},
+    {6, 2282},
+    {7, 2307}
+};
+
+// Strides used to locate the corresponding mean and stddev values (based on axisMask)
+// within the input bin files for 4D normalization cases.
+// These strides are precomputed for various combinations of dimensions and axes
+// for the default QA test case: input shape = 4x10x25x40.
+std::map<Rpp32s, Rpp32u> paramStrideMap4D =
+{
+    {1, 0},
+    {2, 1000},
+    {3, 2600},
+    {4, 2640},
+    {5, 6640},
+    {6, 6740},
+    {7, 6900},
+    {8, 6904},
+    {9, 16904},
+    {10, 17154},
+    {11, 17554},
+    {12, 17564},
+    {13, 18564},
+    {14, 18589},
+    {15, 18629}
 };
 
 // Strides used to locate the corresponding mean and stddev values (based on axisMask)
@@ -378,7 +399,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
             }
             default:
             {
-                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -469,7 +490,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
             }
             default:
             {
-                std::cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D/4D inputs" << endl;
                 exit(0);
             }
         }
@@ -481,9 +502,9 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
     }
 }
 
-Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u bitDepth, int broadCastFlag = 0)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, Rpp32u BitDepthTestMode)
 {
-    string refFile = get_path(nDim, readType, scriptPath, testCase, bitDepth, broadCastFlag);
+    string refFile = get_path(nDim, readType, scriptPath, testCase, BitDepthTestMode);
     std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
     filestream.seekg(0, ios_base::end);
     Rpp32u filesize = filestream.tellg();
