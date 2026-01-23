@@ -473,8 +473,8 @@ RppStatus rppt_tensor_multiply_tensor_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, Rp
 RppStatus rppt_tensor_divide_tensor_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Tensor Divde Tensor operation on HIP backend with tensor broadcasting support
- * \details Performs element-wise multiplication of two N-dimensional tensors.
+/*! \brief Tensor Divide Tensor operation on HIP backend with tensor broadcasting support
+ * \details Performs element-wise Division of two N-dimensional tensors.
  *          For every axis, the two input tensors must either have the same length or one of them must be 1.
  *          DISABLE_BROADCAST can be chosen as broadcastMode only when every sample in the batch has identical dimensions.
  * \param [in] srcPtr1 source1 tensor in HIP memory
