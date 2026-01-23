@@ -136,7 +136,6 @@ int main(int argc, char **argv)
     }
     Rpp32u iBufferSize = 1;
     Rpp32u oBufferSize = 1;
-    std::cerr << "BitDepthTestMode: " << BitDepthTestMode << " (" << bitdepthStr << ")" << std::endl;
     Rpp32u iBufferSizeSecond = 1;
     Rpp64u iBufferSizeInBytes = 1;
     Rpp64u oBufferSizeInBytes = 1;
@@ -171,8 +170,6 @@ int main(int argc, char **argv)
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
         inputSecond = calloc(iBufferSizeSecond, get_size_of_data_type(srcDescriptorPtrNDSecond->dataType));
     }
-    std::cerr << "iBufferSize: " << iBufferSize << ", oBufferSize: " << oBufferSize << std::endl;
-    std::cerr << "iBufferSizeInBytes: " << iBufferSizeInBytes << ", oBufferSizeInBytes: " << oBufferSizeInBytes << std::endl;
     // read input data
     if(qaMode)
     {
@@ -225,7 +222,6 @@ int main(int argc, char **argv)
                 inputF32Second[i] = static_cast<float>(std::rand() % valLimit);
         }
 
-        std::cerr << "Converting input bitdepth for mode: " << BitDepthTestMode << std::endl;
         convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, BitDepthTestMode, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
     }
 
@@ -258,7 +254,6 @@ int main(int argc, char **argv)
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         RppStatus errorCodeCapture = RPP_SUCCESS;
-        std::cerr << "About to enter switch for testCase: " << testCase << std::endl;
         switch(testCase)
         {
             case TRANSPOSE:
