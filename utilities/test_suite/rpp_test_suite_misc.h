@@ -30,6 +30,8 @@ SOFTWARE.
 #include <map>
 #include <array>
 
+#define cutoff 1e-6
+
 std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
@@ -273,7 +275,7 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             descriptorPtr3D->dataType = RpptDataType::I8;
             break;
         case U8_TO_I8:
-            descriptorPtr3D->dataType = RpptDataType::I16;
+            descriptorPtr3D->dataType = RpptDataType::I8;
             break;
         case I16_TO_I16:
             descriptorPtr3D->dataType = RpptDataType::I16;
@@ -716,7 +718,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < 1e-6))
+                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < cutoff))
                     cnt++;
             }
         }
@@ -726,7 +728,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if(std::abs(out[j] - ref[j]) < 1e-6)
+                if(std::abs(out[j] - ref[j]) < cutoff)
                     cnt++;
             }
         }
