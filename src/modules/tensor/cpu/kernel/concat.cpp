@@ -26,7 +26,7 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 
 inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
-                                 Rpp32u* tempSrc1Strides, Rpp32u* tempSrc2Strides, Rpp32u* tempDstStrides,
+                                 Rpp32u* src1TensorStrides, Rpp32u* src2TensorStrides, Rpp32u* dstTensorStrides,
                                  Rpp32u* src1ReductionDims, Rpp32u* srcTensor1Strides, Rpp32u* src2ReductionDims, Rpp32u* srcTensor2Strides, Rpp32u* dstStride,
                                  Rpp32u* length1, Rpp32u* length2)
 {
@@ -37,26 +37,26 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[0] = 1;
             src1ReductionDims[1] = length1[0] * length1[1];
             srcTensor1Strides[0] = 1;
-            srcTensor1Strides[1] = tempSrc1Strides[1];
+            srcTensor1Strides[1] = src1TensorStrides[1];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = length2[0] * length2[1];
             srcTensor2Strides[0] = 1;
-            srcTensor2Strides[1] = tempSrc2Strides[1];
+            srcTensor2Strides[1] = src2TensorStrides[1];
             dstStride[0] = 1;
-            dstStride[1] = tempDstStrides[1];
+            dstStride[1] = dstTensorStrides[1];
         }
         else if (axisMask == 1)
         {
             src1ReductionDims[0] = length1[0];
             src1ReductionDims[1] = length1[1];
-            srcTensor1Strides[0] = tempSrc1Strides[1];
-            srcTensor1Strides[1] = tempSrc1Strides[2];
+            srcTensor1Strides[0] = src1TensorStrides[1];
+            srcTensor1Strides[1] = src1TensorStrides[2];
             src2ReductionDims[0] = length2[0];
             src2ReductionDims[1] = length2[1];
-            srcTensor2Strides[0] = tempSrc2Strides[1];
-            srcTensor2Strides[1] = tempSrc2Strides[2];
-            dstStride[0] = tempDstStrides[1];
-            dstStride[1] = tempDstStrides[2];
+            srcTensor2Strides[0] = src2TensorStrides[1];
+            srcTensor2Strides[1] = src2TensorStrides[2];
+            dstStride[0] = dstTensorStrides[1];
+            dstStride[1] = dstTensorStrides[2];
         }
     }
     else if (tensorDims == 3)
@@ -68,16 +68,16 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[2] = length1[0] * length1[1] * length1[2];
             srcTensor1Strides[0] = 1;
             srcTensor1Strides[1] = 1;
-            srcTensor1Strides[2] = tempSrc1Strides[1];
+            srcTensor1Strides[2] = src1TensorStrides[1];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = 1;
             src2ReductionDims[2] = length2[0] * length2[1] * length2[2];
             srcTensor2Strides[0] = 1;
             srcTensor2Strides[1] = 1;
-            srcTensor2Strides[2] = tempSrc2Strides[1];
+            srcTensor2Strides[2] = src2TensorStrides[1];
             dstStride[0] = 1;
             dstStride[1] = 1;
-            dstStride[2] = tempDstStrides[1];
+            dstStride[2] = dstTensorStrides[1];
         }
         else if (axisMask == 1)
         {
@@ -85,35 +85,35 @@ inline void updateStridesAndDims(Rpp32u tensorDims, Rpp32u axisMask,
             src1ReductionDims[1] = length1[0];
             src1ReductionDims[2] = length1[1] * length1[2];
             srcTensor1Strides[0] = 1;
-            srcTensor1Strides[1] = tempSrc1Strides[1];
-            srcTensor1Strides[2] = tempSrc1Strides[2];
+            srcTensor1Strides[1] = src1TensorStrides[1];
+            srcTensor1Strides[2] = src1TensorStrides[2];
             src2ReductionDims[0] = 1;
             src2ReductionDims[1] = length2[0];
             src2ReductionDims[2] = length2[1] * length2[2];
             srcTensor2Strides[0] = 1;
-            srcTensor2Strides[1] = tempSrc2Strides[1];
-            srcTensor2Strides[2] = tempSrc2Strides[2];
+            srcTensor2Strides[1] = src2TensorStrides[1];
+            srcTensor2Strides[2] = src2TensorStrides[2];
             dstStride[0] = 1;
-            dstStride[1] = tempDstStrides[1];
-            dstStride[2] = tempDstStrides[2];
+            dstStride[1] = dstTensorStrides[1];
+            dstStride[2] = dstTensorStrides[2];
         }
         else if (axisMask == 2)
         {
             src1ReductionDims[0] = length1[0];
             src1ReductionDims[1] = length1[1];
             src1ReductionDims[2] = length1[2];
-            srcTensor1Strides[0] = tempSrc1Strides[1];
-            srcTensor1Strides[1] = tempSrc1Strides[2];
-            srcTensor1Strides[2] = tempSrc1Strides[3];
+            srcTensor1Strides[0] = src1TensorStrides[1];
+            srcTensor1Strides[1] = src1TensorStrides[2];
+            srcTensor1Strides[2] = src1TensorStrides[3];
             src2ReductionDims[0] = length2[0];
             src2ReductionDims[1] = length2[1];
             src2ReductionDims[2] = length2[2];
-            srcTensor2Strides[0] = tempSrc2Strides[1];
-            srcTensor2Strides[1] = tempSrc2Strides[2];
-            srcTensor2Strides[2] = tempSrc2Strides[3];
-            dstStride[0] = tempDstStrides[1];
-            dstStride[1] = tempDstStrides[2];
-            dstStride[2] = tempDstStrides[3];
+            srcTensor2Strides[0] = src2TensorStrides[1];
+            srcTensor2Strides[1] = src2TensorStrides[2];
+            srcTensor2Strides[2] = src2TensorStrides[3];
+            dstStride[0] = dstTensorStrides[1];
+            dstStride[1] = dstTensorStrides[2];
+            dstStride[2] = dstTensorStrides[3];
         }
     }
 }
@@ -433,27 +433,28 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
         Rpp32u src1ReductionDims[3], srcTensor1Strides[3], src2ReductionDims[3], srcTensor2Strides[3], dstStride[3];
 
-        // Calculate strides based on actual tensor dimensions
-        Rpp32u tempSrc1Strides[RPPT_MAX_DIMS], tempSrc2Strides[RPPT_MAX_DIMS], tempDstStrides[RPPT_MAX_DIMS];
-        tempSrc1Strides[tensorDims] = 1;
-        tempSrc2Strides[tensorDims] = 1;
-        tempDstStrides[tensorDims] = 1;
+        // Compute stride arrays for the current tensor based on its actual ROI dimensions
+        // These strides are specific to this single tensor and account for variable sizes within the batch
+        Rpp32u src1TensorStrides[RPPT_MAX_DIMS], src2TensorStrides[RPPT_MAX_DIMS], dstTensorStrides[RPPT_MAX_DIMS];
+        src1TensorStrides[tensorDims] = 1;
+        src2TensorStrides[tensorDims] = 1;
+        dstTensorStrides[tensorDims] = 1;
         
         if (tensorDims > 0)
         {
             for(int i = tensorDims - 1; i >= 0; i--)
             {
-                tempSrc1Strides[i] = tempSrc1Strides[i + 1] * length1[i];
-                tempSrc2Strides[i] = tempSrc2Strides[i + 1] * length2[i];
+                src1TensorStrides[i] = src1TensorStrides[i + 1] * length1[i];
+                src2TensorStrides[i] = src2TensorStrides[i + 1] * length2[i];
                 if(i == axisMask)
-                    tempDstStrides[i] = tempDstStrides[i + 1] * (length1[i] + length2[i]);
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * (length1[i] + length2[i]);
                 else
-                    tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * length1[i];
             }
         }
 
         // Use the helper function to update strides and dimensions
-        updateStridesAndDims(tensorDims, axisMask, tempSrc1Strides, tempSrc2Strides, tempDstStrides,
+        updateStridesAndDims(tensorDims, axisMask, src1TensorStrides, src2TensorStrides, dstTensorStrides,
                              src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, length1, length2);
 
         if (tensorDims == 2) // Called for 2D tensor cases
@@ -470,8 +471,8 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
         }
         else // Handle ND tensors
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides,
-            tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, src1TensorStrides, src2TensorStrides,
+            dstTensorStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
         }
     }
     return RPP_SUCCESS;
@@ -542,28 +543,29 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
         Rpp32u src1ReductionDims[3], srcTensor1Strides[3], src2ReductionDims[3], srcTensor2Strides[3], dstStride[3];
 
-        // Calculate strides based on actual tensor dimensions
-        Rpp32u tempSrc1Strides[RPPT_MAX_DIMS], tempSrc2Strides[RPPT_MAX_DIMS], tempDstStrides[RPPT_MAX_DIMS];
+        // Compute stride arrays for the current tensor based on its actual ROI dimensions
+        // These strides are specific to this single tensor and account for variable sizes within the batch
+        Rpp32u src1TensorStrides[RPPT_MAX_DIMS], src2TensorStrides[RPPT_MAX_DIMS], dstTensorStrides[RPPT_MAX_DIMS];
         
-        tempSrc1Strides[tensorDims] = 1;
-        tempSrc2Strides[tensorDims] = 1;
-        tempDstStrides[tensorDims] = 1;
+        src1TensorStrides[tensorDims] = 1;
+        src2TensorStrides[tensorDims] = 1;
+        dstTensorStrides[tensorDims] = 1;
         
         if (tensorDims > 0)
         {
             for(int i = tensorDims - 1; i >= 0; i--)
             {
-                tempSrc1Strides[i] = tempSrc1Strides[i + 1] * length1[i];
-                tempSrc2Strides[i] = tempSrc2Strides[i + 1] * length2[i];
+                src1TensorStrides[i] = src1TensorStrides[i + 1] * length1[i];
+                src2TensorStrides[i] = src2TensorStrides[i + 1] * length2[i];
                 if(i == axisMask)
-                    tempDstStrides[i] = tempDstStrides[i + 1] * (length1[i] + length2[i]);
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * (length1[i] + length2[i]);
                 else
-                    tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * length1[i];
             }
         }
 
         // Use the helper function to update strides and dimensions
-        updateStridesAndDims(tensorDims, axisMask, tempSrc1Strides, tempSrc2Strides, tempDstStrides,
+        updateStridesAndDims(tensorDims, axisMask, src1TensorStrides, src2TensorStrides, dstTensorStrides,
                              src1ReductionDims, srcTensor1Strides, src2ReductionDims, srcTensor2Strides, dstStride, length1, length2);
 
         if (tensorDims == 2) // Called for 2D tensor cases
@@ -580,8 +582,8 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
         }
         else // Handle ND tensors
         {
-            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides,
-                             tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
+            concat_ND_tensor(srcPtrTemp, srcPtrTemp1, src1TensorStrides, src2TensorStrides,
+                             dstTensorStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
         }
     }
     return RPP_SUCCESS;
@@ -651,27 +653,28 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
         T1 *srcPtrTemp1 = srcPtr2 + src2Offsets[batchCount];
         T2 *dstPtrTemp = dstPtr + dstOffsets[batchCount];
 
-        // Calculate strides based on actual tensor dimensions
-        Rpp32u tempSrc1Strides[RPPT_MAX_DIMS], tempSrc2Strides[RPPT_MAX_DIMS], tempDstStrides[RPPT_MAX_DIMS];
+        // Compute stride arrays for the current tensor based on its actual ROI dimensions
+        // These strides are specific to this single tensor and account for variable sizes within the batch
+        Rpp32u src1TensorStrides[RPPT_MAX_DIMS], src2TensorStrides[RPPT_MAX_DIMS], dstTensorStrides[RPPT_MAX_DIMS];
         
-        tempSrc1Strides[tensorDims] = 1;
-        tempSrc2Strides[tensorDims] = 1;
-        tempDstStrides[tensorDims] = 1;
+        src1TensorStrides[tensorDims] = 1;
+        src2TensorStrides[tensorDims] = 1;
+        dstTensorStrides[tensorDims] = 1;
         
         if (tensorDims > 0)
         {
             for(int i = tensorDims - 1; i >= 0; i--)
             {
-                tempSrc1Strides[i] = tempSrc1Strides[i + 1] * length1[i];
-                tempSrc2Strides[i] = tempSrc2Strides[i + 1] * length2[i];
+                src1TensorStrides[i] = src1TensorStrides[i + 1] * length1[i];
+                src2TensorStrides[i] = src2TensorStrides[i + 1] * length2[i];
                 if(i == axisMask)
-                    tempDstStrides[i] = tempDstStrides[i + 1] * (length1[i] + length2[i]);
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * (length1[i] + length2[i]);
                 else
-                    tempDstStrides[i] = tempDstStrides[i + 1] * length1[i];
+                    dstTensorStrides[i] = dstTensorStrides[i + 1] * length1[i];
             }
         }
 
-        concat_ND_tensor(srcPtrTemp, srcPtrTemp1, tempSrc1Strides, tempSrc2Strides, tempDstStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
+        concat_ND_tensor(srcPtrTemp, srcPtrTemp1, src1TensorStrides, src2TensorStrides, dstTensorStrides, dstPtrTemp, dstGenericDescPtr, length1, length2, tensorDims, 0, axisMask, tensorDims);
     }
 
     return RPP_SUCCESS;

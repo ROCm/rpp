@@ -271,11 +271,16 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
         Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
 
-        // scratchBufferPinned layout (Rpp32u entries):
-        // [src1Offsets: BatchSize] [src2Offsets: BatchSize] [dstOffsets: BatchSize] [srcDims1: numDims] [srcDims2: numDims]
+        // Scratch buffer layout for 2D concat:
+        // - src1Offsets: batchSize elements
+        // - src2Offsets: batchSize elements
+        // - dstOffsets: batchSize elements
+        // - dimsBuffer: batchSize * (2 * numDims) elements
+        // Total: batchSize * (3 + 2 * numDims) elements
         Rpp32u *src1Offsets = offsetBuffer;
         Rpp32u *src2Offsets = offsetBuffer + batchSize;
         Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
+        Rpp32u *dimsBuffer = offsetBuffer + batchSize * 3;
         
         Rpp32u cumOffset1 = 0, cumOffset2 = 0, cumDstOffset = 0;
         for (int i = 0; i < batchSize; i++)
@@ -319,9 +324,6 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             srcPtr2GenericDescPtr->strides[0] = srcPtr2GenericDescPtr->strides[2];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[2];
         }
-
-        Rpp32u *srcDims1 = offsetBuffer + batchSize * 3;
-        Rpp32u *srcDims2 = srcDims1 + numDims;
         
         for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
@@ -329,6 +331,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             Rpp32u *roi2 = roiTensor2 + batchCount * numDims * 2;
             Rpp32u *length1 = &roi1[numDims];
             Rpp32u *length2 = &roi2[numDims];
+            Rpp32u *srcDims1 = dimsBuffer + batchCount * numDims * 2;
+            Rpp32u *srcDims2 = srcDims1 + numDims;
             if(axis == 0)
             {
                 srcDims1[0] = 1;
@@ -366,11 +370,16 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
         Rpp32u batchSize = dstGenericDescPtr->dims[0];
         Rpp32u *offsetBuffer = reinterpret_cast<Rpp32u *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
 
-        // scratchBufferPinned layout (Rpp32u entries):
-        // [src1Offsets: BatchSize] [src2Offsets: BatchSize] [dstOffsets: BatchSize] [srcDims1: numDims] [srcDims2: numDims]
+        // Scratch buffer layout for 3D concat:
+        // - src1Offsets: batchSize elements
+        // - src2Offsets: batchSize elements
+        // - dstOffsets: batchSize elements
+        // - dimsBuffer: batchSize * (2 * numDims) elements
+        // Total: batchSize * (3 + 2 * numDims) elements
         Rpp32u *src1Offsets = offsetBuffer;
         Rpp32u *src2Offsets = offsetBuffer + batchSize;
         Rpp32u *dstOffsets = offsetBuffer + batchSize * 2;
+        Rpp32u *dimsBuffer = offsetBuffer + batchSize * 3;
         
         Rpp32u cumOffset1 = 0, cumOffset2 = 0, cumDstOffset = 0;
         for (int i = 0; i < batchSize; i++)
@@ -417,9 +426,6 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             dstGenericDescPtr->strides[2] = dstGenericDescPtr->strides[1];
             dstGenericDescPtr->strides[0] = dstGenericDescPtr->strides[1] = 1;
         }
-
-        Rpp32u *srcDims1 = offsetBuffer + batchSize * 3;
-        Rpp32u *srcDims2 = srcDims1 + numDims;
         
         for(int batchCount = 0; batchCount < batchSize; batchCount++)
         {
@@ -427,6 +433,8 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
             Rpp32u *roi2 = roiTensor2 + batchCount * numDims * 2;
             Rpp32u *length1 = &roi1[numDims];
             Rpp32u *length2 = &roi2[numDims];
+            Rpp32u *srcDims1 = dimsBuffer + batchCount * numDims * 2;
+            Rpp32u *srcDims2 = srcDims1 + numDims;
             if(axis == 0)
             {
                 srcDims1[0] = srcDims1[1] = 1;
