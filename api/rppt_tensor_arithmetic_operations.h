@@ -49,12 +49,12 @@ extern "C" {
  *          Support added for f32 -> f32 dataype.
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif Sample Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP/HOST memory
+ * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
- * \param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
+ * \param[in] mulTensor mul values for fmadd calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] addTensor add values for fmadd calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -70,11 +70,11 @@ RppStatus rppt_fused_multiply_add_scalar(RppPtr_t srcPtr, RpptGenericDescPtr src
  *          Support added for f32 -> f32 dataype.
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_add_scalar_150x150x4.gif Sample Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP/HOST memory
+ * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] addTensor add values for used for addition (1D tensor of batchSize Rpp32f values)
+ * \param[in] addTensor add values for used for addition (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -90,11 +90,11 @@ RppStatus rppt_add_scalar(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
  *          Support added for f32 -> f32 dataype.
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_subtract_scalar_150x150x4.gif Sample Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP/HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] subtractTensor subtract values for used for subtraction (1D tensor of batchSize Rpp32f values)
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] subtractTensor subtract values for used for subtraction (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -110,11 +110,11 @@ RppStatus rppt_subtract_scalar(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  *          Support added for f32 -> f32 dataype.
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
  * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_multiply_scalar_150x150x4.gif Sample Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP/HOST memory
+ * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] mulTensor multiplier values for used for multiplication (1D tensor of batchSize Rpp32f values)
+ * \param[in] mulTensor multiplier values for used for multiplication (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -131,12 +131,12 @@ RppStatus rppt_multiply_scalar(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  * \image html img150x150.png Sample Input1
  * \image html img150x150_2.png Sample Input2
  * \image html arithmetic_operations_magnitude_img150x150.png Sample Output
- * \param [in] srcPtr1 source1 tensor in HIP/HOST memory
- * \param [in] srcPtr2 source2 tensor in HIP/HOST memory
+ * \param [in] srcPtr1 source1 tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 source2 tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] roiTensorPtrSrc ROI data in HIP/HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -149,11 +149,11 @@ RppStatus rppt_magnitude(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
  *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend))
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -165,11 +165,11 @@ RppStatus rppt_log(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr
  * \details Computes Log1p i.e (log(1 + x)) of the input for a given ND Tensor.
  *          Supports i16->f32 datatype.
  *          Uses Absolute of input for log1p computation to avoid undefined result.
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend))
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.

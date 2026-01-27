@@ -51,13 +51,13 @@ extern "C" {
  * \image html filter_augmentations_box_filter_kSize5_img150x150.png Sample 5x5 Output
  * \image html filter_augmentations_box_filter_kSize7_img150x150.png Sample 7x7 Output
  * \image html filter_augmentations_box_filter_kSize9_img150x150.png Sample 9x9 Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] kernelSize kernel size for box filter (a single Rpp32u number with kernelSize > 0 that applies to all images in the batch. kernelSize = 3/5/7/9 are optimized to run faster)
  * \param [in] borderType border type for padding during filtering (Restrictions - RpptImageBorderType::REPLICATE only mode supported)
- * \param [in] roiTensorPtrSrc ROI data in HIP/HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
@@ -77,13 +77,13 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \image html filter_augmentations_median_filter_kSize5_img150x150.png Sample 5x5 Output
  * \image html filter_augmentations_median_filter_kSize7_img150x150.png Sample 7x7 Output
  * \image html filter_augmentations_median_filter_kSize9_img150x150.png Sample 9x9 Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] kernelSize kernel size for median filter (a single Rpp32u number with kernelSize > 0 that applies to all images in the batch. kernelSize = 3/5/7/9 are optimized to run faster)
  * \param [in] borderType Border type for padding in the median filter (currently, only RpptImageBorderType::REPLICATE is supported)
- * \param [in] roiTensorPtrSrc ROI data in HIP/HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
@@ -102,13 +102,13 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \image html filter_augmentations_gaussian_filter_kSize5_img150x150.png Sample 5x5 Output
  * \image html filter_augmentations_gaussian_filter_kSize7_img150x150.png Sample 7x7 Output
  * \image html filter_augmentations_gaussian_filter_kSize9_img150x150.png Sample 9x9 Output
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] stdDevTensor stdDev values for gaussian calculation (1D tensor in HOST memory, of size batchSize, for each image in batch)
+ * \param [in] stdDevTensor stdDev values for gaussian calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, for each image in batch)
  * \param [in] kernelSize kernel size for gaussian filter (a single Rpp32u number with kernelSize > 0 that applies to all images in the batch. kernelSize = 3/5/7/9 are optimized to run faster)
- * \param [in] roiTensorPtrSrc ROI data in HIP/HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)

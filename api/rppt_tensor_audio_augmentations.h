@@ -48,11 +48,11 @@ extern "C" {
  * \details Non Silent Region Detection augmentation for 1D audio buffer
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
- * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP/HOST memory, of size batchSize)
- * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in pinned/HOST memory, of size batchSize)
- * \param [out] detectionLengthTensor length of non silent region  (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param [out] detectionLengthTensor length of non silent region  (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
  * \param [in] cutOffDB cutOff in dB below which the signal is considered silent
  * \param [in] windowLength window length used for computing short-term power of the signal
  * \param [in] referencePower reference power that is used to convert the signal to dB
@@ -66,11 +66,11 @@ RppStatus rppt_non_silent_region_detection(RppPtr_t srcPtr, RpptDescPtr srcDescP
 
 /*! \brief To Decibels augmentation on HIP/HOST backend
  * \details To Decibels augmentation for 1D/2D audio buffer converts magnitude values to decibel values
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
- * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in pinned/HOST memory, of size batchSize * 2)
+ * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * 2)
  * \param [in] cutOffDB  minimum or cut-off ratio in dB
  * \param [in] multiplier factor by which the logarithm is multiplied
  * \param [in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
@@ -83,12 +83,12 @@ RppStatus rppt_to_decibels(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 
 /*! \brief Pre Emphasis Filter augmentation on HIP/HOST backend
  * \details Pre Emphasis Filter augmentation for audio data
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
- * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned/HOST memory, of size batchSize)
- * \param [in] coeffTensor preemphasis coefficient (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param [in] coeffTensor preemphasis coefficient (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
  * \param [in] borderType border value policy
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -99,11 +99,11 @@ RppStatus rppt_pre_emphasis_filter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
 
 /*! \brief Down Mixing augmentation on HIP/HOST backend
 * \details Down Mixing augmentation for audio data
-* \param [in] srcPtr source tensor in HIP/HOST memory
+* \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
 * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
-* \param [out] dstPtr destination tensor in HIP/HOST memory
+* \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
-* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned/HOST memory, of size batchSize * 2)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * 2)
 * \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
 * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -114,11 +114,11 @@ RppStatus rppt_down_mixing(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 
 /*! \brief Produces a spectrogram from a 1D audio buffer on HIP/HOST backend
  * \details Spectrogram for 1D audio buffer
- * \param [in] srcPtr source tensor in HIP/HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
- * \param [out] dstPtr destination tensor in HIP/HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
- * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
  * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
  * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT).<br> if windowFunction is a nullptr, then required windowFunction values will be generated inside the kernel
@@ -135,11 +135,11 @@ RppStatus rppt_spectrogram(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 
 /*! \brief Mel filter bank augmentation HIP/HOST backend
  * \details Mel filter bank augmentation for audio data
- * \param[in] srcPtr source tensor in HIP/HOST memory
+ * \param[in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
- * \param[out] dstPtr destination tensor in HIP/HOST memory
+ * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
- * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
+ * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * 2)
  * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
  * \param[in] minFreq minimum frequency
  * \param[in] melFormula formula used to convert frequencies from hertz to mel and from mel to hertz (SLANEY / HTK)
@@ -155,13 +155,13 @@ RppStatus rppt_mel_filter_bank(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 
 /*! \brief Resample augmentation on HIP/HOST backend
 * \details Resample augmentation for audio data
-* \param [in] srcPtr source tensor in HIP/HOST memory
+* \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
 * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
-* \param [out] dstPtr destination tensor in HIP/HOST memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
-* \param [in] inRate Input sampling rate (1D tensor in pinned/HOST memory, of size batchSize)
-* \param [in] outRate Output sampling rate (1D tensor in pinned/HOST memory, of size batchSize)
-* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned/HOST memory, of size batchSize * 2)
+* \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] inRate Input sampling rate (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+* \param [in] outRate Output sampling rate (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * 2)
 * \param [in] window Resampling window (struct of type RpptRpptResamplingWindow)
 * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
