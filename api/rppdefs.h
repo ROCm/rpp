@@ -83,6 +83,7 @@ typedef halfhpp Rpp16f;
 
 const float ONE_OVER_6                      = 1.0f / 6;
 const float ONE_OVER_3                      = 1.0f / 3;
+const float TWO_OVER_3                      = 2.0f / 3;
 const float ONE_OVER_255                    = 1.0f / 255;
 const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
 const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
