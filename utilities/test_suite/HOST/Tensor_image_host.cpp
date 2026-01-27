@@ -569,6 +569,28 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case SNOW:
+                {
+                    testCaseName = "snow";
+                    Rpp32f brightnessCoefficient[batchSize];
+                    Rpp32f snowThreshold[batchSize];
+                    Rpp32s darkMode[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        brightnessCoefficient[i] = 2.5f;
+                        snowThreshold[i] = 1.0f;
+                        darkMode[i] = 0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        rppt_snow_host(input, srcDescPtr, output, dstDescPtr, brightnessCoefficient, snowThreshold, darkMode, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case NOISE:
                 {
                     testCaseName = "noise";
@@ -824,6 +846,19 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_warp_affine_host(input, srcDescPtr, output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case FISHEYE:
+                {
+                    testCaseName = "fisheye";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        rppt_fisheye_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

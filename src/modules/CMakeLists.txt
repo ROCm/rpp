@@ -177,7 +177,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     # Add HIP specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
     if(RPP_LEGACY_SUPPORT)
-        list(APPEND HIP_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+        list(APPEND HIP_LOCAL_INCLUDE_DIRS ${RPP_SOURCE_DIR}/src/include/batch_pd/hip/ ${RPP_SOURCE_DIR}/src/include/common/)
     endif()
     set(INCLUDE_LIST ${ROCM_INC} ${HIP_LOCAL_INCLUDE_DIRS} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "OCL")
@@ -198,7 +198,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 
     # Add OpenCL specific includes
     set(ROCM_INC ${ROCM_PATH}/include/)
-    list(APPEND OCL_LOCAL_INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cl/ ${CMAKE_SOURCE_DIR}/src/include/common/)
+    list(APPEND OCL_LOCAL_INCLUDE_LIST ${RPP_SOURCE_DIR}/src/include/batch_pd/cl/ ${RPP_SOURCE_DIR}/src/include/common/)
     set(INCLUDE_LIST ${ROCM_INC} ${OCL_LOCAL_INCLUDE_LIST} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
@@ -214,7 +214,7 @@ elseif( "${BACKEND}" STREQUAL "CPU")
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
     endif()
     message("-- ${Green}HOST kernels added${ColourReset}")
-    set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${RPP_SOURCE_DIR}/src/include/common/)
     add_fma_property()
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
@@ -233,28 +233,28 @@ add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/api
-        ${CMAKE_SOURCE_DIR}/third_party/ffts/include
+        ${RPP_SOURCE_DIR}/api
+        ${RPP_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
-        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/cpu>
-        $<$<NOT:$<BOOL:${RPP_LEGACY_SUPPORT}>>:${CMAKE_SOURCE_DIR}/src/include/legacy_dep> # Adds include folder based on RPP_LEGACY_SUPPORT enablement
-        ${CMAKE_SOURCE_DIR}/src/include/common
-        ${CMAKE_SOURCE_DIR}/src/include/common/cpu
-        ${CMAKE_SOURCE_DIR}/src/include/tensor
+        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${RPP_SOURCE_DIR}/src/include/batch_pd/cpu>
+        $<$<NOT:$<BOOL:${RPP_LEGACY_SUPPORT}>>:${RPP_SOURCE_DIR}/src/include/legacy_dep> # Adds include folder based on RPP_LEGACY_SUPPORT enablement
+        ${RPP_SOURCE_DIR}/src/include/common
+        ${RPP_SOURCE_DIR}/src/include/common/cpu
+        ${RPP_SOURCE_DIR}/src/include/tensor
         ${INCLUDE_LIST}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${CMAKE_SOURCE_DIR}/src/include/batch_pd/hip>
-        ${CMAKE_SOURCE_DIR}/src/include/common/hip
+        $<$<BOOL:${RPP_LEGACY_SUPPORT}>:${RPP_SOURCE_DIR}/src/include/batch_pd/hip>
+        ${RPP_SOURCE_DIR}/src/include/common/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
 elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/batch_pd/cl
+        ${RPP_SOURCE_DIR}/src/include/batch_pd/cl
     )
 endif()
