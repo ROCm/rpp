@@ -29,42 +29,46 @@ SOFTWARE.
 #include <immintrin.h>
 #endif
 
-/* median filter algorithm explanation for U8 PLN1 3x3 kernel size variant
-Let’s consider a 3x32 image input:
+/* median filter algorithm explanation
+RPP's median filter implementation matches OpenCV's approach with multiple optimization strategies:
 
+Algorithm Selection (based on kernel size):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Small kernels (3×3, 5×5): Sorting networks + AVX2 SIMD vectorization
+   - Uses hardcoded optimal compare-swap sequences
+   - Processes 8-32 elements simultaneously with SIMD
+   - No branching in inner loops
+
+2. Large kernels (7×7, 9×9+): Constant-time O(1) histogram method (U8 only)
+   - Two-tier histogram: coarse (4 MSB) + fine (full 8 bits)
+   - Maintains column histograms, slides window horizontally
+   - O(1) median finding regardless of kernel size
+
+3. Fallback: Generic std::nth_element (for non-U8 types with large kernels)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Example for 3×3 U8 PLN1:
+
+Input (3×32 grayscale image):
 x  x  x  x  x  x  x  x  x  x  ..  x  x
 x  1  2  3  4  5  6  7  8  9  .. 32  x
 x  1  2  3  4  5  6  7  8  9  .. 32  x
 x  1  2  3  4  5  6  7  8  9  .. 32  x
 x  x  x  x  x  x  x  x  x  x  ..  x  x
 
-padLength = 1 (kernelSize / 2)
+For each output pixel:
+1. Load 3×3 window with border replication (nearest-neighbor padding)
+2. Apply sorting network (25 compare-swap operations)
+3. Extract median value (element at position 4 after sorting)
+4. Write to output
 
-Below steps are followed for computing each output pixel in the ROI:
-1. For each pixel location (i, j), collect a 3x3 neighborhood of pixels centered at (i, j)
-   - Apply nearest-neighbor padding at borders
-   - Extract values into a temporary array of 9 elements
-
-2. Sort the 9 values:
-   e.g., for 3x3 window: [2, 4, 3, 1, 5, 6, 3, 7, 2] → sorted → [1, 2, 2, 3, 3, 4, 5, 6, 7]
-
-3. Pick the median (middle) value:
-   - median = element at index 4 (zero-based), i.e., value 3 in the above example
-
-4. Assign this median to the output pixel at (i, j)
-
-This process is repeated for each pixel in the ROI.
-- For single-channel (PLN1), apply per pixel.
-- For multi-channel, median is computed independently per channel.
-
-Note: Unlike box filter, there is no arithmetic averaging or SIMD optimization here due to sorting-based computation.
+AVX2 optimization processes 32 pixels simultaneously using vector min/max operations.
 */
 
-/* =====================================================================================
- * OpenCV-matching median sort-net for 3x3 and 5x5.
- * - Same compare-swap sequences as OpenCV `medianBlur_SortNet` (median_blur.simd.hpp)
- * - Same border handling as existing RPP code: clamp (replicate)
- * ===================================================================================== */
+// -------------------- Sorting Network Helpers --------------------
+// OpenCV-matching compare-swap operations for sorting networks
+// These use the optimal number of comparisons for small arrays
+
 
 template <typename T>
 inline void rpp_minmax_op_scalar(T &a, T &b)
@@ -120,9 +124,974 @@ inline T rpp_median_5x5_sortnet(T *p)
 }
 
 #if __AVX2__
-// OpenCV-style packed-row AVX2 implementation for U8 PKD (cn==3).
-// Processes the row as a linear byte array and uses cn-based offsets, matching
-// OpenCV `medianBlur_SortNet` vector path.
+// -------------------- Histogram Method for Large Kernels (7×7, 9×9+) --------------------
+// OpenCV-matching O(1) constant-time median filter for U8 images
+// Algorithm: Two-tier histogram with sliding window
+//   - Coarse histogram: 16 bins (4 MSB of pixel value)
+//   - Fine histogram: 16×16 bins (full 8-bit resolution)
+// Complexity: O(1) per pixel after initialization (independent of kernel size)
+
+
+// Two-tier histogram structure (matching OpenCV)
+typedef Rpp16u HT;
+
+struct RppMedianHistogram
+{
+    HT coarse[16];
+    HT fine[16][16];
+};
+
+// Histogram operation macros
+#define HOP(h,x,op) \
+    h.coarse[x>>4] op, \
+    *((HT*)h.fine + x) op
+
+#define COP(c,j,x,op) \
+    h_coarse[16*(n*c+j) + (x>>4)] op, \
+    h_fine[16*(n*(16*c+(x>>4)) + j) + (x & 0xF)] op
+
+// O(1) histogram-based median filter for U8 (works for any kernel size >= 7)
+inline void rpp_median_histogram_u8_host(const Rpp8u *src,
+                                       Rpp8u *dst,
+                                       int width,
+                                       int height,
+                                       int srcStride,
+                                       int dstStride,
+                                       int ksize,
+                                       int cn)
+{
+    int radius = ksize / 2;
+    int STRIPE_SIZE = std::min(width, 512 / cn);
+
+    std::vector<HT> _h_coarse(16 * (STRIPE_SIZE + 2*radius) * cn + 32);
+    std::vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*radius) * cn + 32);
+    HT* h_coarse = (HT*)(((size_t)&_h_coarse[0] + 31) & ~31);
+    HT* h_fine = (HT*)(((size_t)&_h_fine[0] + 31) & ~31);
+
+    for(int x = 0; x < width; x += STRIPE_SIZE)
+    {
+        int i, j, k, c, n = std::min(width - x, STRIPE_SIZE) + radius*2;
+        const Rpp8u* src_stripe = src + x*cn;
+        Rpp8u* dst_stripe = dst + (x - radius)*cn;
+
+        memset(h_coarse, 0, 16*n*cn*sizeof(h_coarse[0]));
+        memset(h_fine, 0, 16*16*n*cn*sizeof(h_fine[0]));
+
+        // First row initialization
+        for(c = 0; c < cn; c++)
+        {
+            for(j = 0; j < n; j++)
+                COP(c, j, src_stripe[cn*j+c], += (HT)(radius+2));
+
+            for(i = 1; i < radius; i++)
+            {
+                const Rpp8u* p = src_stripe + srcStride*std::min(i, height-1);
+                for(j = 0; j < n; j++)
+                    COP(c, j, p[cn*j+c], ++);
+            }
+        }
+
+        for(i = 0; i < height; i++)
+        {
+            const Rpp8u* p0 = src_stripe + srcStride * std::max(0, i-radius-1);
+            const Rpp8u* p1 = src_stripe + srcStride * std::min(height-1, i+radius);
+
+            for(c = 0; c < cn; c++)
+            {
+                RppMedianHistogram H;
+                HT luc[16];
+
+                memset(&H, 0, sizeof(H));
+                memset(luc, 0, sizeof(luc));
+
+                // Update column histograms for the entire row
+                for(j = 0; j < n; j++)
+                {
+                    COP(c, j, p0[j*cn + c], --);
+                    COP(c, j, p1[j*cn + c], ++);
+                }
+
+                // First column initialization
+                for(k = 0; k < 16; ++k)
+                {
+#if defined(__AVX2__)
+                    __m256i v = _mm256_load_si256((const __m256i*)(h_fine + 16*n*(16*c + k)));
+                    __m256i s = _mm256_set1_epi16((short)(2*radius + 1));
+                    v = _mm256_mullo_epi16(v, s);
+                    _mm256_store_si256((__m256i*)H.fine[k], v);
+#else
+                    for(int ind = 0; ind < 16; ++ind)
+                        H.fine[k][ind] = (HT)((2*radius + 1) * h_fine[16*n*(16*c + k) + ind]);
+#endif
+                }
+
+#if defined(__AVX2__)
+                __m256i v_coarse = _mm256_load_si256((const __m256i*)H.coarse);
+#endif
+                HT* px = h_coarse + 16*n*c;
+                for(j = 0; j < 2*radius; ++j, px += 16)
+                {
+#if defined(__AVX2__)
+                    __m256i v = _mm256_loadu_si256((const __m256i*)px);
+                    v_coarse = _mm256_add_epi16(v_coarse, v);
+#else
+                    for(int ind = 0; ind < 16; ++ind)
+                        H.coarse[ind] += px[ind];
+#endif
+                }
+#if defined(__AVX2__)
+                _mm256_store_si256((__m256i*)H.coarse, v_coarse);
+#endif
+
+                for(j = radius; j < n-radius; j++)
+                {
+                    int t = 2*radius*radius + 2*radius;
+                    int sum = 0, b;
+                    HT* segment;
+
+                    px = h_coarse + 16*(n*c + std::min(j + radius, n-1));
+#if defined(__AVX2__)
+                    __m256i v = _mm256_loadu_si256((const __m256i*)px);
+                    v_coarse = _mm256_add_epi16(v_coarse, v);
+                    _mm256_store_si256((__m256i*)H.coarse, v_coarse);
+#else
+                    for(int ind = 0; ind < 16; ++ind)
+                        H.coarse[ind] += px[ind];
+#endif
+
+                    // Find median at coarse level
+                    for(k = 0; k < 16; ++k)
+                    {
+                        sum += H.coarse[k];
+                        if(sum > t)
+                        {
+                            sum -= H.coarse[k];
+                            break;
+                        }
+                    }
+
+                    // Update corresponding histogram segment
+                    if(luc[k] <= j-radius)
+                    {
+                        memset(&H.fine[k], 0, 16*sizeof(HT));
+                        px = h_fine + 16*(n*(16*c + k) + j - radius);
+                        for(luc[k] = HT(j - radius); luc[k] < std::min(j + radius + 1, n); ++luc[k], px += 16)
+                        {
+                            for(int ind = 0; ind < 16; ++ind)
+                                H.fine[k][ind] += px[ind];
+                        }
+
+                        if(luc[k] < j+radius+1)
+                        {
+                            px = h_fine + 16*(n*(16*c + k) + (n-1));
+                            for(int ind = 0; ind < 16; ++ind)
+                                H.fine[k][ind] += (j + radius + 1 - n) * px[ind];
+                            luc[k] = (HT)(j+radius+1);
+                        }
+                    }
+                    else
+                    {
+                        px = h_fine + 16*n*(16*c + k);
+                        for(; luc[k] < j+radius+1; ++luc[k])
+                        {
+                            for(int ind = 0; ind < 16; ++ind)
+                            {
+                                H.fine[k][ind] += px[16*std::min((int)luc[k], n-1) + ind];
+                                H.fine[k][ind] -= px[16*std::max((int)luc[k] - 2*radius - 1, 0) + ind];
+                            }
+                        }
+                    }
+
+                    px = h_coarse + 16*(n*c + std::max(j - radius, 0));
+#if defined(__AVX2__)
+                    v = _mm256_loadu_si256((const __m256i*)px);
+                    v_coarse = _mm256_sub_epi16(v_coarse, v);
+#else
+                    for(int ind = 0; ind < 16; ++ind)
+                        H.coarse[ind] -= px[ind];
+#endif
+
+                    // Find median in segment
+                    segment = H.fine[k];
+                    for(b = 0; b < 16; b++)
+                    {
+                        sum += segment[b];
+                        if(sum > t)
+                        {
+                            dst_stripe[dstStride*i + cn*j + c] = (Rpp8u)(16*k + b);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+#undef HOP
+#undef COP
+}
+
+// -------------------- AVX2 Sorting Network Implementations --------------------
+// These functions implement OpenCV's sorting networks with SIMD vectorization
+
+// 3×3 Median - U8 PLN1 (processes 32 pixels per iteration)
+inline void rpp_median3x3_pln_u8_avx(const Rpp8u *row0,
+                                     const Rpp8u *row1,
+                                     const Rpp8u *row2,
+                                     Rpp8u *dstRow,
+                                     int width)
+{
+    int j = 0;
+    const int nlanes = 32;
+
+    // Scalar left edge (first pixel)
+    {
+        int p0 = row0[0], p1 = row0[0], p2 = row0[std::min(1, width - 1)];
+        int p3 = row1[0], p4 = row1[0], p5 = row1[std::min(1, width - 1)];
+        int p6 = row2[0], p7 = row2[0], p8 = row2[std::min(1, width - 1)];
+
+        int p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[0] = (Rpp8u)rpp_median_3x3_sortnet(p);
+        j = 1;
+    }
+
+    // Vector path for interior pixels
+    for (; j < width - 1; j += nlanes)
+    {
+        // Handle tail
+        if (j > width - 1 - nlanes)
+        {
+            if (j == 1 || (const Rpp8u *)dstRow == row1) // safety for in-place
+                break;
+            j = width - 1 - nlanes;
+        }
+
+        __m256i p0 = _mm256_loadu_si256((const __m256i *)(row0 + j - 1));
+        __m256i p1 = _mm256_loadu_si256((const __m256i *)(row0 + j));
+        __m256i p2 = _mm256_loadu_si256((const __m256i *)(row0 + j + 1));
+        __m256i p3 = _mm256_loadu_si256((const __m256i *)(row1 + j - 1));
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row1 + j));
+        __m256i p5 = _mm256_loadu_si256((const __m256i *)(row1 + j + 1));
+        __m256i p6 = _mm256_loadu_si256((const __m256i *)(row2 + j - 1));
+        __m256i p7 = _mm256_loadu_si256((const __m256i *)(row2 + j));
+        __m256i p8 = _mm256_loadu_si256((const __m256i *)(row2 + j + 1));
+
+#define OP(a, b)         \
+    {                    \
+        __m256i t = a;   \
+        a = _mm256_min_epu8(a, b); \
+        b = _mm256_max_epu8(b, t); \
+    }
+
+        // OpenCV m==3 vector sequence (same as scalar, but vectorized)
+        OP(p1, p2); OP(p4, p5); OP(p7, p8); OP(p0, p1);
+        OP(p3, p4); OP(p6, p7); OP(p1, p2); OP(p4, p5);
+        OP(p7, p8); OP(p0, p3); OP(p5, p8); OP(p4, p7);
+        OP(p3, p6); OP(p1, p4); OP(p2, p5); OP(p4, p7);
+        OP(p4, p2); OP(p6, p4); OP(p4, p2);
+
+#undef OP
+
+        _mm256_storeu_si256((__m256i *)(dstRow + j), p4);
+    }
+
+    // Scalar tail/right edge
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 1, 0);
+        int j2 = std::min(j + 1, width - 1);
+
+        int p0 = row0[j0], p1 = row0[j], p2 = row0[j2];
+        int p3 = row1[j0], p4 = row1[j], p5 = row1[j2];
+        int p6 = row2[j0], p7 = row2[j], p8 = row2[j2];
+
+        int p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[j] = (Rpp8u)rpp_median_3x3_sortnet(p);
+    }
+}
+
+// 3×3 Median - I8 PLN1 (processes 32 pixels per iteration)
+inline void rpp_median3x3_pln_i8_avx(const Rpp8s *row0,
+                                     const Rpp8s *row1,
+                                     const Rpp8s *row2,
+                                     Rpp8s *dstRow,
+                                     int width)
+{
+    int j = 0;
+    const int nlanes = 32;
+
+    // Scalar left edge (first pixel)
+    {
+        int p0 = row0[0], p1 = row0[0], p2 = row0[std::min(1, width - 1)];
+        int p3 = row1[0], p4 = row1[0], p5 = row1[std::min(1, width - 1)];
+        int p6 = row2[0], p7 = row2[0], p8 = row2[std::min(1, width - 1)];
+
+        int p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[0] = (Rpp8s)rpp_median_3x3_sortnet(p);
+        j = 1;
+    }
+
+    // Vector path for interior pixels
+    for (; j < width - 1; j += nlanes)
+    {
+        if (j > width - 1 - nlanes)
+        {
+            if (j == 1 || (const Rpp8s *)dstRow == row1)
+                break;
+            j = width - 1 - nlanes;
+        }
+
+        __m256i p0 = _mm256_loadu_si256((const __m256i *)(row0 + j - 1));
+        __m256i p1 = _mm256_loadu_si256((const __m256i *)(row0 + j));
+        __m256i p2 = _mm256_loadu_si256((const __m256i *)(row0 + j + 1));
+        __m256i p3 = _mm256_loadu_si256((const __m256i *)(row1 + j - 1));
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row1 + j));
+        __m256i p5 = _mm256_loadu_si256((const __m256i *)(row1 + j + 1));
+        __m256i p6 = _mm256_loadu_si256((const __m256i *)(row2 + j - 1));
+        __m256i p7 = _mm256_loadu_si256((const __m256i *)(row2 + j));
+        __m256i p8 = _mm256_loadu_si256((const __m256i *)(row2 + j + 1));
+
+#define OP(a, b)         \
+    {                    \
+        __m256i t = a;   \
+        a = _mm256_min_epi8(a, b); \
+        b = _mm256_max_epi8(b, t); \
+    }
+
+        OP(p1, p2); OP(p4, p5); OP(p7, p8); OP(p0, p1);
+        OP(p3, p4); OP(p6, p7); OP(p1, p2); OP(p4, p5);
+        OP(p7, p8); OP(p0, p3); OP(p5, p8); OP(p4, p7);
+        OP(p3, p6); OP(p1, p4); OP(p2, p5); OP(p4, p7);
+        OP(p4, p2); OP(p6, p4); OP(p4, p2);
+
+#undef OP
+
+        _mm256_storeu_si256((__m256i *)(dstRow + j), p4);
+    }
+
+    // Scalar tail/right edge
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 1, 0);
+        int j2 = std::min(j + 1, width - 1);
+
+        int p0 = row0[j0], p1 = row0[j], p2 = row0[j2];
+        int p3 = row1[j0], p4 = row1[j], p5 = row1[j2];
+        int p6 = row2[j0], p7 = row2[j], p8 = row2[j2];
+
+        int p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[j] = (Rpp8s)rpp_median_3x3_sortnet(p);
+    }
+}
+
+// 3×3 Median - F32 PLN1 (processes 8 pixels per iteration)
+inline void rpp_median3x3_pln_f32_avx(const Rpp32f *row0,
+                                      const Rpp32f *row1,
+                                      const Rpp32f *row2,
+                                      Rpp32f *dstRow,
+                                      int width)
+{
+    int j = 0;
+    const int nlanes = 8;  // 8 floats per AVX register
+
+    // Scalar left edge (first pixel)
+    {
+        float p0 = row0[0], p1 = row0[0], p2 = row0[std::min(1, width - 1)];
+        float p3 = row1[0], p4 = row1[0], p5 = row1[std::min(1, width - 1)];
+        float p6 = row2[0], p7 = row2[0], p8 = row2[std::min(1, width - 1)];
+
+        float p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[0] = rpp_median_3x3_sortnet(p);
+        j = 1;
+    }
+
+    // Vector path for interior pixels
+    for (; j < width - 1; j += nlanes)
+    {
+        if (j > width - 1 - nlanes)
+        {
+            if (j == 1 || (const Rpp32f *)dstRow == row1)
+                break;
+            j = width - 1 - nlanes;
+        }
+
+        __m256 p0 = _mm256_loadu_ps(row0 + j - 1);
+        __m256 p1 = _mm256_loadu_ps(row0 + j);
+        __m256 p2 = _mm256_loadu_ps(row0 + j + 1);
+        __m256 p3 = _mm256_loadu_ps(row1 + j - 1);
+        __m256 p4 = _mm256_loadu_ps(row1 + j);
+        __m256 p5 = _mm256_loadu_ps(row1 + j + 1);
+        __m256 p6 = _mm256_loadu_ps(row2 + j - 1);
+        __m256 p7 = _mm256_loadu_ps(row2 + j);
+        __m256 p8 = _mm256_loadu_ps(row2 + j + 1);
+
+#define OP(a, b)         \
+    {                    \
+        __m256 t = a;    \
+        a = _mm256_min_ps(a, b); \
+        b = _mm256_max_ps(b, t); \
+    }
+
+        OP(p1, p2); OP(p4, p5); OP(p7, p8); OP(p0, p1);
+        OP(p3, p4); OP(p6, p7); OP(p1, p2); OP(p4, p5);
+        OP(p7, p8); OP(p0, p3); OP(p5, p8); OP(p4, p7);
+        OP(p3, p6); OP(p1, p4); OP(p2, p5); OP(p4, p7);
+        OP(p4, p2); OP(p6, p4); OP(p4, p2);
+
+#undef OP
+
+        _mm256_storeu_ps(dstRow + j, p4);
+    }
+
+    // Scalar tail/right edge
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 1, 0);
+        int j2 = std::min(j + 1, width - 1);
+
+        float p0 = row0[j0], p1 = row0[j], p2 = row0[j2];
+        float p3 = row1[j0], p4 = row1[j], p5 = row1[j2];
+        float p6 = row2[j0], p7 = row2[j], p8 = row2[j2];
+
+        float p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[j] = rpp_median_3x3_sortnet(p);
+    }
+}
+
+// 3×3 Median - F16 PLN1 (converts to F32, processes 8 pixels, converts back)
+inline void rpp_median3x3_pln_f16_avx(const Rpp16f *row0,
+                                      const Rpp16f *row1,
+                                      const Rpp16f *row2,
+                                      Rpp16f *dstRow,
+                                      int width)
+{
+    int j = 0;
+    const int nlanes = 8;  // 8 F16 values processed as F32
+
+    // Scalar left edge (first pixel)
+    {
+        float p0 = row0[0], p1 = row0[0], p2 = row0[std::min(1, width - 1)];
+        float p3 = row1[0], p4 = row1[0], p5 = row1[std::min(1, width - 1)];
+        float p6 = row2[0], p7 = row2[0], p8 = row2[std::min(1, width - 1)];
+
+        float p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[0] = rpp_median_3x3_sortnet(p);
+        j = 1;
+    }
+
+    // Vector path for interior pixels
+    for (; j < width - 1; j += nlanes)
+    {
+        if (j > width - 1 - nlanes)
+        {
+            if (j == 1 || (const Rpp16f *)dstRow == row1)
+                break;
+            j = width - 1 - nlanes;
+        }
+
+        // Load F16 and convert to F32
+        __m256 p0 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j - 1)));
+        __m256 p1 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j)));
+        __m256 p2 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j + 1)));
+        __m256 p3 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j - 1)));
+        __m256 p4 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j)));
+        __m256 p5 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j + 1)));
+        __m256 p6 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j - 1)));
+        __m256 p7 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j)));
+        __m256 p8 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j + 1)));
+
+#define OP(a, b)         \
+    {                    \
+        __m256 t = a;    \
+        a = _mm256_min_ps(a, b); \
+        b = _mm256_max_ps(b, t); \
+    }
+
+        OP(p1, p2); OP(p4, p5); OP(p7, p8); OP(p0, p1);
+        OP(p3, p4); OP(p6, p7); OP(p1, p2); OP(p4, p5);
+        OP(p7, p8); OP(p0, p3); OP(p5, p8); OP(p4, p7);
+        OP(p3, p6); OP(p1, p4); OP(p2, p5); OP(p4, p7);
+        OP(p4, p2); OP(p6, p4); OP(p4, p2);
+
+#undef OP
+
+        // Convert back to F16 and store
+        _mm_storeu_si128((__m128i *)(dstRow + j), _mm256_cvtps_ph(p4, 0));
+    }
+
+    // Scalar tail/right edge
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 1, 0);
+        int j2 = std::min(j + 1, width - 1);
+
+        float p0 = row0[j0], p1 = row0[j], p2 = row0[j2];
+        float p3 = row1[j0], p4 = row1[j], p5 = row1[j2];
+        float p6 = row2[j0], p7 = row2[j], p8 = row2[j2];
+
+        float p[9] = {p0, p1, p2, p3, p4, p5, p6, p7, p8};
+        dstRow[j] = rpp_median_3x3_sortnet(p);
+    }
+}
+
+// 5×5 Median - U8 PLN1 (processes 32 pixels per iteration)
+inline void rpp_median5x5_pln_u8_avx(const Rpp8u *row0,
+                                     const Rpp8u *row1,
+                                     const Rpp8u *row2,
+                                     const Rpp8u *row3,
+                                     const Rpp8u *row4,
+                                     Rpp8u *dstRow,
+                                     int width)
+{
+    int j = 0;
+    const int nlanes = 32;
+
+    // Scalar left edge (first 2 pixels)
+    for (j = 0; j < std::min(2, width); j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        int p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = (Rpp8u)rpp_median_5x5_sortnet(p);
+    }
+
+    // Vector path for interior pixels
+    for (; j < width - 2; j += nlanes)
+    {
+        if (j > width - 2 - nlanes)
+        {
+            if (j == 2 || (const Rpp8u *)dstRow == row2) // safety for in-place
+                break;
+            j = width - 2 - nlanes;
+        }
+
+        __m256i p0 = _mm256_loadu_si256((const __m256i *)(row0 + j - 2));
+        __m256i p5 = _mm256_loadu_si256((const __m256i *)(row1 + j - 2));
+        __m256i p10 = _mm256_loadu_si256((const __m256i *)(row2 + j - 2));
+        __m256i p15 = _mm256_loadu_si256((const __m256i *)(row3 + j - 2));
+        __m256i p20 = _mm256_loadu_si256((const __m256i *)(row4 + j - 2));
+
+        __m256i p1 = _mm256_loadu_si256((const __m256i *)(row0 + j - 1));
+        __m256i p6 = _mm256_loadu_si256((const __m256i *)(row1 + j - 1));
+        __m256i p11 = _mm256_loadu_si256((const __m256i *)(row2 + j - 1));
+        __m256i p16 = _mm256_loadu_si256((const __m256i *)(row3 + j - 1));
+        __m256i p21 = _mm256_loadu_si256((const __m256i *)(row4 + j - 1));
+
+        __m256i p2 = _mm256_loadu_si256((const __m256i *)(row0 + j));
+        __m256i p7 = _mm256_loadu_si256((const __m256i *)(row1 + j));
+        __m256i p12 = _mm256_loadu_si256((const __m256i *)(row2 + j));
+        __m256i p17 = _mm256_loadu_si256((const __m256i *)(row3 + j));
+        __m256i p22 = _mm256_loadu_si256((const __m256i *)(row4 + j));
+
+        __m256i p3 = _mm256_loadu_si256((const __m256i *)(row0 + j + 1));
+        __m256i p8 = _mm256_loadu_si256((const __m256i *)(row1 + j + 1));
+        __m256i p13 = _mm256_loadu_si256((const __m256i *)(row2 + j + 1));
+        __m256i p18 = _mm256_loadu_si256((const __m256i *)(row3 + j + 1));
+        __m256i p23 = _mm256_loadu_si256((const __m256i *)(row4 + j + 1));
+
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j + 2));
+        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j + 2));
+        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j + 2));
+        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j + 2));
+        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j + 2));
+
+#define OP(a, b)         \
+    {                    \
+        __m256i t = a;   \
+        a = _mm256_min_epu8(a, b); \
+        b = _mm256_max_epu8(b, t); \
+    }
+
+        // OpenCV m==5 vector sequence
+        OP(p1, p2); OP(p0, p1); OP(p1, p2); OP(p4, p5); OP(p3, p4);
+        OP(p4, p5); OP(p0, p3); OP(p2, p5); OP(p2, p3); OP(p1, p4);
+        OP(p1, p2); OP(p3, p4); OP(p7, p8); OP(p6, p7); OP(p7, p8);
+        OP(p10, p11); OP(p9, p10); OP(p10, p11); OP(p6, p9); OP(p8, p11);
+        OP(p8, p9); OP(p7, p10); OP(p7, p8); OP(p9, p10); OP(p0, p6);
+        OP(p4, p10); OP(p4, p6); OP(p2, p8); OP(p2, p4); OP(p6, p8);
+        OP(p1, p7); OP(p5, p11); OP(p5, p7); OP(p3, p9); OP(p3, p5);
+        OP(p7, p9); OP(p1, p2); OP(p3, p4); OP(p5, p6); OP(p7, p8);
+        OP(p9, p10); OP(p13, p14); OP(p12, p13); OP(p13, p14); OP(p16, p17);
+        OP(p15, p16); OP(p16, p17); OP(p12, p15); OP(p14, p17); OP(p14, p15);
+        OP(p13, p16); OP(p13, p14); OP(p15, p16); OP(p19, p20); OP(p18, p19);
+        OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p21, p23); OP(p22, p24);
+        OP(p22, p23); OP(p18, p21); OP(p20, p23); OP(p20, p21); OP(p19, p22);
+        OP(p22, p24); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p12, p18);
+        OP(p16, p22); OP(p16, p18); OP(p14, p20); OP(p20, p24); OP(p14, p16);
+        OP(p18, p20); OP(p22, p24); OP(p13, p19); OP(p17, p23); OP(p17, p19);
+        OP(p15, p21); OP(p15, p17); OP(p19, p21); OP(p13, p14); OP(p15, p16);
+        OP(p17, p18); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p0, p12);
+        OP(p8, p20); OP(p8, p12); OP(p4, p16); OP(p16, p24); OP(p12, p16);
+        OP(p2, p14); OP(p10, p22); OP(p10, p14); OP(p6, p18); OP(p6, p10);
+        OP(p10, p12); OP(p1, p13); OP(p9, p21); OP(p9, p13); OP(p5, p17);
+        OP(p13, p17); OP(p3, p15); OP(p11, p23); OP(p11, p15); OP(p7, p19);
+        OP(p7, p11); OP(p11, p13); OP(p11, p12);
+
+#undef OP
+
+        _mm256_storeu_si256((__m256i *)(dstRow + j), p12);
+    }
+
+    // Scalar tail/right edge
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        int p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = (Rpp8u)rpp_median_5x5_sortnet(p);
+    }
+}
+
+// 5×5 Median - I8 PLN1 (processes 32 pixels per iteration)
+inline void rpp_median5x5_pln_i8_avx(const Rpp8s *row0,
+                                     const Rpp8s *row1,
+                                     const Rpp8s *row2,
+                                     const Rpp8s *row3,
+                                     const Rpp8s *row4,
+                                     Rpp8s *dstRow,
+                                     int width)
+{
+    int j = 0;
+    const int nlanes = 32;
+
+    // Scalar left edge
+    for (j = 0; j < std::min(2, width); j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        int p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = (Rpp8s)rpp_median_5x5_sortnet(p);
+    }
+
+    // Vector path
+    for (; j < width - 2; j += nlanes)
+    {
+        if (j > width - 2 - nlanes)
+        {
+            if (j == 2 || (const Rpp8s *)dstRow == row2)
+                break;
+            j = width - 2 - nlanes;
+        }
+
+        __m256i p0 = _mm256_loadu_si256((const __m256i *)(row0 + j - 2));
+        __m256i p5 = _mm256_loadu_si256((const __m256i *)(row1 + j - 2));
+        __m256i p10 = _mm256_loadu_si256((const __m256i *)(row2 + j - 2));
+        __m256i p15 = _mm256_loadu_si256((const __m256i *)(row3 + j - 2));
+        __m256i p20 = _mm256_loadu_si256((const __m256i *)(row4 + j - 2));
+        __m256i p1 = _mm256_loadu_si256((const __m256i *)(row0 + j - 1));
+        __m256i p6 = _mm256_loadu_si256((const __m256i *)(row1 + j - 1));
+        __m256i p11 = _mm256_loadu_si256((const __m256i *)(row2 + j - 1));
+        __m256i p16 = _mm256_loadu_si256((const __m256i *)(row3 + j - 1));
+        __m256i p21 = _mm256_loadu_si256((const __m256i *)(row4 + j - 1));
+        __m256i p2 = _mm256_loadu_si256((const __m256i *)(row0 + j));
+        __m256i p7 = _mm256_loadu_si256((const __m256i *)(row1 + j));
+        __m256i p12 = _mm256_loadu_si256((const __m256i *)(row2 + j));
+        __m256i p17 = _mm256_loadu_si256((const __m256i *)(row3 + j));
+        __m256i p22 = _mm256_loadu_si256((const __m256i *)(row4 + j));
+        __m256i p3 = _mm256_loadu_si256((const __m256i *)(row0 + j + 1));
+        __m256i p8 = _mm256_loadu_si256((const __m256i *)(row1 + j + 1));
+        __m256i p13 = _mm256_loadu_si256((const __m256i *)(row2 + j + 1));
+        __m256i p18 = _mm256_loadu_si256((const __m256i *)(row3 + j + 1));
+        __m256i p23 = _mm256_loadu_si256((const __m256i *)(row4 + j + 1));
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j + 2));
+        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j + 2));
+        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j + 2));
+        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j + 2));
+        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j + 2));
+
+#define OP(a, b) { __m256i t = a; a = _mm256_min_epi8(a, b); b = _mm256_max_epi8(b, t); }
+        OP(p1, p2); OP(p0, p1); OP(p1, p2); OP(p4, p5); OP(p3, p4);
+        OP(p4, p5); OP(p0, p3); OP(p2, p5); OP(p2, p3); OP(p1, p4);
+        OP(p1, p2); OP(p3, p4); OP(p7, p8); OP(p6, p7); OP(p7, p8);
+        OP(p10, p11); OP(p9, p10); OP(p10, p11); OP(p6, p9); OP(p8, p11);
+        OP(p8, p9); OP(p7, p10); OP(p7, p8); OP(p9, p10); OP(p0, p6);
+        OP(p4, p10); OP(p4, p6); OP(p2, p8); OP(p2, p4); OP(p6, p8);
+        OP(p1, p7); OP(p5, p11); OP(p5, p7); OP(p3, p9); OP(p3, p5);
+        OP(p7, p9); OP(p1, p2); OP(p3, p4); OP(p5, p6); OP(p7, p8);
+        OP(p9, p10); OP(p13, p14); OP(p12, p13); OP(p13, p14); OP(p16, p17);
+        OP(p15, p16); OP(p16, p17); OP(p12, p15); OP(p14, p17); OP(p14, p15);
+        OP(p13, p16); OP(p13, p14); OP(p15, p16); OP(p19, p20); OP(p18, p19);
+        OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p21, p23); OP(p22, p24);
+        OP(p22, p23); OP(p18, p21); OP(p20, p23); OP(p20, p21); OP(p19, p22);
+        OP(p22, p24); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p12, p18);
+        OP(p16, p22); OP(p16, p18); OP(p14, p20); OP(p20, p24); OP(p14, p16);
+        OP(p18, p20); OP(p22, p24); OP(p13, p19); OP(p17, p23); OP(p17, p19);
+        OP(p15, p21); OP(p15, p17); OP(p19, p21); OP(p13, p14); OP(p15, p16);
+        OP(p17, p18); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p0, p12);
+        OP(p8, p20); OP(p8, p12); OP(p4, p16); OP(p16, p24); OP(p12, p16);
+        OP(p2, p14); OP(p10, p22); OP(p10, p14); OP(p6, p18); OP(p6, p10);
+        OP(p10, p12); OP(p1, p13); OP(p9, p21); OP(p9, p13); OP(p5, p17);
+        OP(p13, p17); OP(p3, p15); OP(p11, p23); OP(p11, p15); OP(p7, p19);
+        OP(p7, p11); OP(p11, p13); OP(p11, p12);
+#undef OP
+        _mm256_storeu_si256((__m256i *)(dstRow + j), p12);
+    }
+
+    // Scalar tail
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        int p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = (Rpp8s)rpp_median_5x5_sortnet(p);
+    }
+}
+
+// 5×5 Median - F32 PLN1 (processes 8 pixels per iteration)
+inline void rpp_median5x5_pln_f32_avx(const Rpp32f *row0,
+                                      const Rpp32f *row1,
+                                      const Rpp32f *row2,
+                                      const Rpp32f *row3,
+                                      const Rpp32f *row4,
+                                      Rpp32f *dstRow,
+                                      int width)
+{
+    int j = 0;
+    const int nlanes = 8;
+
+    // Scalar left edge
+    for (j = 0; j < std::min(2, width); j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        float p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = rpp_median_5x5_sortnet(p);
+    }
+
+    // Vector path
+    for (; j < width - 2; j += nlanes)
+    {
+        if (j > width - 2 - nlanes)
+        {
+            if (j == 2 || (const Rpp32f *)dstRow == row2)
+                break;
+            j = width - 2 - nlanes;
+        }
+
+        __m256 p0 = _mm256_loadu_ps(row0 + j - 2);
+        __m256 p5 = _mm256_loadu_ps(row1 + j - 2);
+        __m256 p10 = _mm256_loadu_ps(row2 + j - 2);
+        __m256 p15 = _mm256_loadu_ps(row3 + j - 2);
+        __m256 p20 = _mm256_loadu_ps(row4 + j - 2);
+        __m256 p1 = _mm256_loadu_ps(row0 + j - 1);
+        __m256 p6 = _mm256_loadu_ps(row1 + j - 1);
+        __m256 p11 = _mm256_loadu_ps(row2 + j - 1);
+        __m256 p16 = _mm256_loadu_ps(row3 + j - 1);
+        __m256 p21 = _mm256_loadu_ps(row4 + j - 1);
+        __m256 p2 = _mm256_loadu_ps(row0 + j);
+        __m256 p7 = _mm256_loadu_ps(row1 + j);
+        __m256 p12 = _mm256_loadu_ps(row2 + j);
+        __m256 p17 = _mm256_loadu_ps(row3 + j);
+        __m256 p22 = _mm256_loadu_ps(row4 + j);
+        __m256 p3 = _mm256_loadu_ps(row0 + j + 1);
+        __m256 p8 = _mm256_loadu_ps(row1 + j + 1);
+        __m256 p13 = _mm256_loadu_ps(row2 + j + 1);
+        __m256 p18 = _mm256_loadu_ps(row3 + j + 1);
+        __m256 p23 = _mm256_loadu_ps(row4 + j + 1);
+        __m256 p4 = _mm256_loadu_ps(row0 + j + 2);
+        __m256 p9 = _mm256_loadu_ps(row1 + j + 2);
+        __m256 p14 = _mm256_loadu_ps(row2 + j + 2);
+        __m256 p19 = _mm256_loadu_ps(row3 + j + 2);
+        __m256 p24 = _mm256_loadu_ps(row4 + j + 2);
+
+#define OP(a, b) { __m256 t = a; a = _mm256_min_ps(a, b); b = _mm256_max_ps(b, t); }
+        OP(p1, p2); OP(p0, p1); OP(p1, p2); OP(p4, p5); OP(p3, p4);
+        OP(p4, p5); OP(p0, p3); OP(p2, p5); OP(p2, p3); OP(p1, p4);
+        OP(p1, p2); OP(p3, p4); OP(p7, p8); OP(p6, p7); OP(p7, p8);
+        OP(p10, p11); OP(p9, p10); OP(p10, p11); OP(p6, p9); OP(p8, p11);
+        OP(p8, p9); OP(p7, p10); OP(p7, p8); OP(p9, p10); OP(p0, p6);
+        OP(p4, p10); OP(p4, p6); OP(p2, p8); OP(p2, p4); OP(p6, p8);
+        OP(p1, p7); OP(p5, p11); OP(p5, p7); OP(p3, p9); OP(p3, p5);
+        OP(p7, p9); OP(p1, p2); OP(p3, p4); OP(p5, p6); OP(p7, p8);
+        OP(p9, p10); OP(p13, p14); OP(p12, p13); OP(p13, p14); OP(p16, p17);
+        OP(p15, p16); OP(p16, p17); OP(p12, p15); OP(p14, p17); OP(p14, p15);
+        OP(p13, p16); OP(p13, p14); OP(p15, p16); OP(p19, p20); OP(p18, p19);
+        OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p21, p23); OP(p22, p24);
+        OP(p22, p23); OP(p18, p21); OP(p20, p23); OP(p20, p21); OP(p19, p22);
+        OP(p22, p24); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p12, p18);
+        OP(p16, p22); OP(p16, p18); OP(p14, p20); OP(p20, p24); OP(p14, p16);
+        OP(p18, p20); OP(p22, p24); OP(p13, p19); OP(p17, p23); OP(p17, p19);
+        OP(p15, p21); OP(p15, p17); OP(p19, p21); OP(p13, p14); OP(p15, p16);
+        OP(p17, p18); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p0, p12);
+        OP(p8, p20); OP(p8, p12); OP(p4, p16); OP(p16, p24); OP(p12, p16);
+        OP(p2, p14); OP(p10, p22); OP(p10, p14); OP(p6, p18); OP(p6, p10);
+        OP(p10, p12); OP(p1, p13); OP(p9, p21); OP(p9, p13); OP(p5, p17);
+        OP(p13, p17); OP(p3, p15); OP(p11, p23); OP(p11, p15); OP(p7, p19);
+        OP(p7, p11); OP(p11, p13); OP(p11, p12);
+#undef OP
+        _mm256_storeu_ps(dstRow + j, p12);
+    }
+
+    // Scalar tail
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        float p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = rpp_median_5x5_sortnet(p);
+    }
+}
+
+// 5×5 Median - F16 PLN1 (converts to F32, processes 8 pixels, converts back)
+inline void rpp_median5x5_pln_f16_avx(const Rpp16f *row0,
+                                      const Rpp16f *row1,
+                                      const Rpp16f *row2,
+                                      const Rpp16f *row3,
+                                      const Rpp16f *row4,
+                                      Rpp16f *dstRow,
+                                      int width)
+{
+    int j = 0;
+    const int nlanes = 8;
+
+    // Scalar left edge
+    for (j = 0; j < std::min(2, width); j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        float p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = rpp_median_5x5_sortnet(p);
+    }
+
+    // Vector path
+    for (; j < width - 2; j += nlanes)
+    {
+        if (j > width - 2 - nlanes)
+        {
+            if (j == 2 || (const Rpp16f *)dstRow == row2)
+                break;
+            j = width - 2 - nlanes;
+        }
+
+        __m256 p0 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j - 2)));
+        __m256 p5 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j - 2)));
+        __m256 p10 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j - 2)));
+        __m256 p15 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row3 + j - 2)));
+        __m256 p20 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row4 + j - 2)));
+        __m256 p1 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j - 1)));
+        __m256 p6 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j - 1)));
+        __m256 p11 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j - 1)));
+        __m256 p16 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row3 + j - 1)));
+        __m256 p21 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row4 + j - 1)));
+        __m256 p2 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j)));
+        __m256 p7 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j)));
+        __m256 p12 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j)));
+        __m256 p17 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row3 + j)));
+        __m256 p22 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row4 + j)));
+        __m256 p3 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j + 1)));
+        __m256 p8 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j + 1)));
+        __m256 p13 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j + 1)));
+        __m256 p18 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row3 + j + 1)));
+        __m256 p23 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row4 + j + 1)));
+        __m256 p4 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row0 + j + 2)));
+        __m256 p9 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row1 + j + 2)));
+        __m256 p14 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row2 + j + 2)));
+        __m256 p19 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row3 + j + 2)));
+        __m256 p24 = _mm256_cvtph_ps(_mm_loadu_si128((const __m128i *)(row4 + j + 2)));
+
+#define OP(a, b) { __m256 t = a; a = _mm256_min_ps(a, b); b = _mm256_max_ps(b, t); }
+        OP(p1, p2); OP(p0, p1); OP(p1, p2); OP(p4, p5); OP(p3, p4);
+        OP(p4, p5); OP(p0, p3); OP(p2, p5); OP(p2, p3); OP(p1, p4);
+        OP(p1, p2); OP(p3, p4); OP(p7, p8); OP(p6, p7); OP(p7, p8);
+        OP(p10, p11); OP(p9, p10); OP(p10, p11); OP(p6, p9); OP(p8, p11);
+        OP(p8, p9); OP(p7, p10); OP(p7, p8); OP(p9, p10); OP(p0, p6);
+        OP(p4, p10); OP(p4, p6); OP(p2, p8); OP(p2, p4); OP(p6, p8);
+        OP(p1, p7); OP(p5, p11); OP(p5, p7); OP(p3, p9); OP(p3, p5);
+        OP(p7, p9); OP(p1, p2); OP(p3, p4); OP(p5, p6); OP(p7, p8);
+        OP(p9, p10); OP(p13, p14); OP(p12, p13); OP(p13, p14); OP(p16, p17);
+        OP(p15, p16); OP(p16, p17); OP(p12, p15); OP(p14, p17); OP(p14, p15);
+        OP(p13, p16); OP(p13, p14); OP(p15, p16); OP(p19, p20); OP(p18, p19);
+        OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p21, p23); OP(p22, p24);
+        OP(p22, p23); OP(p18, p21); OP(p20, p23); OP(p20, p21); OP(p19, p22);
+        OP(p22, p24); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p12, p18);
+        OP(p16, p22); OP(p16, p18); OP(p14, p20); OP(p20, p24); OP(p14, p16);
+        OP(p18, p20); OP(p22, p24); OP(p13, p19); OP(p17, p23); OP(p17, p19);
+        OP(p15, p21); OP(p15, p17); OP(p19, p21); OP(p13, p14); OP(p15, p16);
+        OP(p17, p18); OP(p19, p20); OP(p21, p22); OP(p23, p24); OP(p0, p12);
+        OP(p8, p20); OP(p8, p12); OP(p4, p16); OP(p16, p24); OP(p12, p16);
+        OP(p2, p14); OP(p10, p22); OP(p10, p14); OP(p6, p18); OP(p6, p10);
+        OP(p10, p12); OP(p1, p13); OP(p9, p21); OP(p9, p13); OP(p5, p17);
+        OP(p13, p17); OP(p3, p15); OP(p11, p23); OP(p11, p15); OP(p7, p19);
+        OP(p7, p11); OP(p11, p13); OP(p11, p12);
+#undef OP
+        _mm_storeu_si128((__m128i *)(dstRow + j), _mm256_cvtps_ph(p12, 0));
+    }
+
+    // Scalar tail
+    for (; j < width; j++)
+    {
+        int j0 = std::max(j - 2, 0);
+        int j1 = std::max(j - 1, 0);
+        int j3 = std::min(j + 1, width - 1);
+        int j4 = std::min(j + 2, width - 1);
+
+        float p[25] = {
+            row0[j0], row0[j1], row0[j], row0[j3], row0[j4],
+            row1[j0], row1[j1], row1[j], row1[j3], row1[j4],
+            row2[j0], row2[j1], row2[j], row2[j3], row2[j4],
+            row3[j0], row3[j1], row3[j], row3[j3], row3[j4],
+            row4[j0], row4[j1], row4[j], row4[j3], row4[j4]};
+        dstRow[j] = rpp_median_5x5_sortnet(p);
+    }
+}
+
+// 3×3 Median - U8 PKD3 (packed RGB, processes 32 bytes per iteration)
 inline void rpp_median3x3_packed_u8_avx(const Rpp8u *row0,
                                        const Rpp8u *row1,
                                        const Rpp8u *row2,
@@ -202,6 +1171,7 @@ inline void rpp_median3x3_packed_u8_avx(const Rpp8u *row0,
     }
 }
 
+// 5×5 Median - U8 PKD3 (packed RGB, processes 32 bytes per iteration)
 inline void rpp_median5x5_packed_u8_avx(const Rpp8u *row0,
                                        const Rpp8u *row1,
                                        const Rpp8u *row2,
@@ -326,6 +1296,9 @@ inline void rpp_median5x5_packed_u8_avx(const Rpp8u *row0,
     }
 }
 #endif // __AVX2__
+
+// -------------------- Scalar Sorting Network Fallback Functions --------------------
+// Used when AVX2 is not available or for border pixels
 
 template <typename T>
 inline void median_filter_3x3_sortnet_tensor(T *srcPtrTemp,
@@ -500,33 +1473,186 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
 
         if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            for(Rpp32s c = 0; c < srcDescPtr->c; c++)
+#if __AVX2__
+            // Use O(1) histogram method for U8 with large kernels (7x7, 9x9, etc.)
+            if (std::is_same<T, Rpp8u>::value && kernelSize >= 7)
             {
-                T *dstPtrRow = dstPtrChannel;
-                for(Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                // Process each channel separately with histogram method
+                for(Rpp32s c = 0; c < srcDescPtr->c; c++)
                 {
-                    T *dstPtrTemp = dstPtrRow;
-                    for(Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
-                    {
-                        if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
-                        else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
-                        else
-                            median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
-                        dstPtrTemp++;
-                    }
-                    dstPtrRow += dstDescPtr->strides.hStride;
+                    rpp_median_histogram_u8_host(
+                        (const Rpp8u*)srcPtrChannel,
+                        (Rpp8u*)dstPtrChannel,
+                        roi.xywhROI.roiWidth,
+                        roi.xywhROI.roiHeight,
+                        srcDescPtr->strides.hStride,
+                        dstDescPtr->strides.hStride,
+                        kernelSize,
+                        1  // cn=1 for planar layout
+                    );
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
-                dstPtrChannel += dstDescPtr->strides.cStride;
+            }
+            else
+#endif
+            {
+                for(Rpp32s c = 0; c < srcDescPtr->c; c++)
+                {
+#if __AVX2__
+                    // AVX2 fast paths for different data types
+                    if ((useSortNet3 || useSortNet5))
+                    {
+                        bool useAvx = false;
+                        
+                        if (std::is_same<T, Rpp8u>::value)
+                        {
+                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            {
+                                Rpp8u *dstRow = (Rpp8u *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                                if (useSortNet3)
+                                {
+                                    const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median3x3_pln_u8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                                }
+                                else
+                                {
+                                    const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r3 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    const Rpp8u *r4 = (const Rpp8u *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median5x5_pln_u8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                                }
+                            }
+                            useAvx = true;
+                        }
+                        else if (std::is_same<T, Rpp8s>::value)
+                        {
+                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            {
+                                Rpp8s *dstRow = (Rpp8s *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                                if (useSortNet3)
+                                {
+                                    const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median3x3_pln_i8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                                }
+                                else
+                                {
+                                    const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r3 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    const Rpp8s *r4 = (const Rpp8s *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median5x5_pln_i8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                                }
+                            }
+                            useAvx = true;
+                        }
+                        else if (std::is_same<T, Rpp32f>::value)
+                        {
+                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            {
+                                Rpp32f *dstRow = (Rpp32f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                                if (useSortNet3)
+                                {
+                                    const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median3x3_pln_f32_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                                }
+                                else
+                                {
+                                    const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r3 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    const Rpp32f *r4 = (const Rpp32f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median5x5_pln_f32_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                                }
+                            }
+                            useAvx = true;
+                        }
+                        else if (std::is_same<T, Rpp16f>::value)
+                        {
+                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            {
+                                Rpp16f *dstRow = (Rpp16f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                                if (useSortNet3)
+                                {
+                                    const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median3x3_pln_f16_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                                }
+                                else
+                                {
+                                    const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r3 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    const Rpp16f *r4 = (const Rpp16f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                    rpp_median5x5_pln_f16_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                                }
+                            }
+                            useAvx = true;
+                        }
+                        
+                        if (useAvx)
+                        {
+                            srcPtrChannel += srcDescPtr->strides.cStride;
+                            dstPtrChannel += dstDescPtr->strides.cStride;
+                            continue;
+                        }
+                    }
+#endif
+                    {
+                        // Scalar fallback
+                        T *dstPtrRow = dstPtrChannel;
+                        for(Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                        {
+                            T *dstPtrTemp = dstPtrRow;
+                            for(Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
+                            {
+                                if (useSortNet3)
+                                    median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                else if (useSortNet5)
+                                    median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                else
+                                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                                dstPtrTemp++;
+                            }
+                            dstPtrRow += dstDescPtr->strides.hStride;
+                        }
+                    }
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
 #if __AVX2__
+            // Use O(1) histogram method for U8 PKD with large kernels (7x7, 9x9, etc.)
+            if (std::is_same<T, Rpp8u>::value && kernelSize >= 7)
+            {
+                rpp_median_histogram_u8_host(
+                    (const Rpp8u*)srcPtrChannel,
+                    (Rpp8u*)dstPtrChannel,
+                    roi.xywhROI.roiWidth,
+                    roi.xywhROI.roiHeight,
+                    srcDescPtr->strides.hStride,
+                    dstDescPtr->strides.hStride,
+                    kernelSize,
+                    srcDescPtr->c  // cn=1 or 3 for packed layout
+                );
+            }
             // OpenCV-style packed-row AVX2 for U8 PKD3
-            if (std::is_same<T, Rpp8u>::value && srcDescPtr->c == 3 && (useSortNet3 || useSortNet5))
+            else if (std::is_same<T, Rpp8u>::value && srcDescPtr->c == 3 && (useSortNet3 || useSortNet5))
             {
                 const int cn = 3;
                 const int widthBytes = roi.xywhROI.roiWidth * cn;
