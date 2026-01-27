@@ -3143,8 +3143,6 @@ RppStatus rppt_snow_gpu(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
-
     for(int i = 0; i < srcDescPtr->n; i++)
     {
         if (brightnessCoefficient[i] <= 1.0f || brightnessCoefficient[i] > 4.0f)
@@ -3209,9 +3207,6 @@ RppStatus rppt_snow_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** channel_dropout ********************/
