@@ -274,8 +274,8 @@ std::map<int, std::vector<float>> TensorStddevReferenceOutputs_U8 =
 // Golden outputs for Tensor stddev Kernel
 std::map<int, std::vector<Rpp32f>> TensorStddevReferenceOutputs_F32 =
 {
-    {1, {33957.297 , 20662.211 , 29702.545}},
-    {3, {35395.457 , 34644.871 , 26681.736 , 32240.775 , 26836.457 , 19037.635 , 12889.061 , 19587.814 , 24504.188 , 30845.547 , 37487.160 , 30945.639}}
+    {1, {49.583 , 54.623 , 47.649}},
+    {3, {57.416 , 47.901 , 53.235 , 55.220 , 68.471 , 55.735 , 46.668 , 61.880 , 47.462 , 49.039 , 67.269 , 59.130}}
 };
 
 template <typename T>

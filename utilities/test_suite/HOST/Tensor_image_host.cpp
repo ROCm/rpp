@@ -1709,7 +1709,11 @@ int main(int argc, char **argv)
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
-                    Rpp32f *mean = TensorMeanReferenceOutputs_U8[inputChannels].data();
+                    Rpp32f *mean;
+                    if(BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == F16_TO_F16)
+                        mean = TensorMeanReferenceOutputs_F32[inputChannels].data();
+                    else
+                        mean = TensorMeanReferenceOutputs_U8[inputChannels].data();
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
@@ -1894,7 +1898,7 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && ((BitDepthTestMode == U8_TO_U8) || (BitDepthTestMode == F32_TO_F32)) && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
                     if (testCase == TENSOR_SUM)
                     {
