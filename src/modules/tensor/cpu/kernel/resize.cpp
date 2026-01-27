@@ -220,7 +220,7 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             // Multiply with corresponding coeffs and add together to obtain the output pixel
             for (; outLocCol + numLanes <= alignedLength; outLocCol += numLanes)
             {
-                __m128 pOutputChannel[(numVecs + 1) * 3];   // add 1 with numVecs for additional vector for transpose function with zero initialization 
+                __m128 pOutputChannel[(numVecs + 1) * 3];   // adds 1 to numVecs for an additional vector for the transpose function with zero initialization
                 set_zeros(pOutputChannel, (numVecs + 1) * 3);
                 __m128 *pOutputR = pOutputChannel;
                 __m128 *pOutputG = pOutputChannel + numVecs;
