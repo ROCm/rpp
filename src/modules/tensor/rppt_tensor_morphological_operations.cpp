@@ -25,10 +25,76 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_morphological_operations.h"
+#include "host_tensor_executors.hpp"
 
 #ifdef HIP_COMPILE
 #include "hip_tensor_executors.hpp"
 #endif // HIP_COMPILE
+
+/******************** dilate ********************/
+
+RppStatus rppt_dilate_host(RppPtr_t srcPtr,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           Rpp32u kernelSize,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        dilate_char_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                srcDescPtr,
+                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                kernelSize,
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        dilate_float_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 kernelSize,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        dilate_float_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 kernelSize,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        dilate_char_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                srcDescPtr,
+                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                kernelSize,
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams,
+                                rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
