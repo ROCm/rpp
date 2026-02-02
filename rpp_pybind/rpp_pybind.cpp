@@ -145,14 +145,9 @@ void brightness(const torch::Tensor& input_tensor,
                const std::vector<float>& beta,
                uintptr_t handle,
                int backend) {
-    std::cout << "DEBUG: C++ brightness() called" << std::endl;
-    std::cout << "DEBUG: input tensor shape: " << input_tensor.sizes() << std::endl;
-    std::cout << "DEBUG: handle = " << handle << std::endl;
-    std::cout << "DEBUG: backend = " << backend << std::endl;
 
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
-    std::cout << "DEBUG: get_tensor_data() completed" << std::endl;
     
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
@@ -161,70 +156,67 @@ void brightness(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    std::cout << "Batchsize: " << batch_size;
-    for (int i = 0; i < batch_size; i++) {
-        int width = static_cast<int>(input_data.shape[3]);   // 56
-        int height = static_cast<int>(input_data.shape[2]);  // 50
+    // std::cout << "Batchsize: " << batch_size;
+    // for (int i = 0; i < batch_size; i++) {
+    //     int width = static_cast<int>(input_data.shape[3]);   
+    //     int height = static_cast<int>(input_data.shape[2]); 
         
-        roi[i].xywhROI.xy.x = 0;
-        roi[i].xywhROI.xy.y = 0; 
-        roi[i].xywhROI.roiWidth = width;   // 56
-        roi[i].xywhROI.roiHeight = height; // 50
+    //     roi[i].xywhROI.xy.x = 0;
+    //     roi[i].xywhROI.xy.y = 0; 
+    //     roi[i].xywhROI.roiWidth = width;   
+    //     roi[i].xywhROI.roiHeight = height; 
         
-        std::cout << "DEBUG: Set ROI[" << i << "] = {0, 0, " 
-                << width << ", " << height << "}" << std::endl;
-    }
+    //     std::cout << "DEBUG: Set ROI[" << i << "] = {0, 0, " 
+    //             << width << ", " << height << "}" << std::endl;
+    // }
 
-    std::cout << "DEBUG: Data pointers - input=" << input_data.ptr 
-            << ", output=" << output_data.ptr << std::endl;
-    std::cout << "DEBUG: Strides - input n=" << src_desc.strides.nStride 
-            << ", c=" << src_desc.strides.cStride << std::endl;
     for (int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
-    // rppHandle_t rpp_handle = reinterpret_cast<rppHandle_t>(handle);
-    // Add critical debugging before RPP call
-    std::cout << "DEBUG: Complete descriptor info:" << std::endl;
-    std::cout << "  src dataType=" << static_cast<int>(src_desc.dataType) << " (0=U8, 2=F32)" << std::endl;
-    std::cout << "  src layout=" << static_cast<int>(src_desc.layout) << std::endl; 
-    std::cout << "  src offsetInBytes=" << src_desc.offsetInBytes << std::endl;
-    std::cout << "  dst dataType=" << static_cast<int>(dst_desc.dataType) << std::endl;
-    
-    // Validate parameters before call
-    std::cout << "DEBUG: Parameter validation:" << std::endl;
-    std::cout << "  alpha size=" << alpha.size() << ", values=[" << alpha[0] << "]" << std::endl;
-    std::cout << "  beta size=" << beta.size() << ", values=[" << beta[0] << "]" << std::endl;
-    std::cout << "  batch_size=" << batch_size << std::endl;
-    
-    // Check if data type conversion is needed
-    if (src_desc.dataType != RpptDataType::U8) {
-        std::cout << "WARNING: Input tensor is not U8! RPP brightness expects U8 input." << std::endl;
-        std::cout << "  Current input type: " << static_cast<int>(src_desc.dataType) << std::endl;
+
+    // Initialize pointers to CPU data by default
+    float* alpha_ptr = const_cast<float*>(alpha.data());
+    float* beta_ptr = const_cast<float*>(beta.data());
+    RpptROI* roi_ptr = roi.data();
+    float* alpha_gpu_ptr = nullptr;
+    float* beta_gpu_ptr = nullptr;
+    RpptROI *roi_gpu_ptr = nullptr;
+
+    // Check if backend is HIP (GPU)
+    if (backend == 1) {
+        // Allocate GPU memory
+        size_t alpha_size = alpha.size() * sizeof(float);
+        size_t beta_size = beta.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
+        
+        hipMalloc(&alpha_gpu_ptr, alpha_size);
+        hipMalloc(&beta_gpu_ptr, beta_size);
+        hipMalloc(&roi_gpu_ptr, roi_size);
+        
+        // Copy CPU data to GPU
+        hipMemcpy(alpha_gpu_ptr, alpha_ptr, alpha_size, hipMemcpyHostToDevice);
+        hipMemcpy(beta_gpu_ptr, beta_ptr, beta_size, hipMemcpyHostToDevice);
+        hipMemcpy(roi_gpu_ptr, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice);
+        
+        // Use GPU pointers for the function call
+        alpha_ptr = alpha_gpu_ptr;
+        beta_ptr = beta_gpu_ptr;
+        roi_ptr = roi_gpu_ptr;
     }
     
-    std::cout << "DEBUG: About to call rppt_brightness()" << std::endl;
     rppt_brightness(input_data.ptr, &src_desc,
                    output_data.ptr, &dst_desc,
-                   const_cast<float*>(alpha.data()),
-                   const_cast<float*>(beta.data()),
-                   roi.data(), RpptRoiType::XYWH,
+                   alpha_ptr,
+                   beta_ptr,
+                   roi_ptr, RpptRoiType::XYWH,
                    rpp_handle, static_cast<RppBackend>(backend));
-    std::cout << "DEBUG: rppt_brightness() completed" << std::endl;
-        
     
-    // In brightness() function, improve the HIP cleanup section:
-    // if (backend == 1) {  // HIP backend
-    //     std::cout << "DEBUG: HIP backend cleanup..." << std::endl;
-        
-    //     // ADD THESE CRITICAL FIXES:
-    //     hipError_t hipErr = hipDeviceSynchronize();
-    //     if (hipErr != hipSuccess) {
-    //         std::cout << "ERROR: GPU sync failed: " << hipGetErrorString(hipErr) << std::endl;
-    //     }
-        
-    //     // Ensure all GPU operations complete before returning
-    //     hipStreamSynchronize(0);  // Sync default stream
-    // }
+    if (backend == 1)
+    {
+        hipFree(alpha_gpu_ptr);
+        hipFree(beta_gpu_ptr);
+        hipFree(roi_gpu_ptr);
+    }
         
     std::cout << "DEBUG: brightness function complete" << std::endl;
 }
@@ -275,14 +267,9 @@ void gamma_correction(const torch::Tensor& input_tensor,
                      const std::vector<float>& gamma,
                      uintptr_t handle,
                      int backend) {
-    std::cout << "DEBUG: C++ gamma_correction() called" << std::endl;
-    std::cout << "DEBUG: input tensor shape: " << input_tensor.sizes() << std::endl;
-    std::cout << "DEBUG: handle = " << handle << std::endl;
-    std::cout << "DEBUG: backend = " << backend << std::endl;
 
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
-    std::cout << "DEBUG: get_tensor_data() completed" << std::endl;
     
     RpptDesc src_desc, dst_desc;
     memset(&src_desc, 0, sizeof(RpptDesc)); 
@@ -301,50 +288,76 @@ void gamma_correction(const torch::Tensor& input_tensor,
         roi[i].xywhROI.xy.y = 0; 
         roi[i].xywhROI.roiWidth = width;
         roi[i].xywhROI.roiHeight = height;
-        
-        std::cout << "DEBUG: Set ROI[" << i << "] = {0, 0, " 
-                << width << ", " << height << "}" << std::endl;
     }
 
-    std::cout << "DEBUG: Data pointers - input=" << input_data.ptr 
-            << ", output=" << output_data.ptr << std::endl;
-    std::cout << "DEBUG: Strides - input n=" << src_desc.strides.nStride 
-            << ", c=" << src_desc.strides.cStride << std::endl;
-    
-    // Add critical debugging before RPP call
-    std::cout << "DEBUG: Complete descriptor info:" << std::endl;
-    std::cout << "  src dataType=" << static_cast<int>(src_desc.dataType) << " (0=U8, 2=F32)" << std::endl;
-    std::cout << "  src layout=" << static_cast<int>(src_desc.layout) << std::endl; 
-    std::cout << "  src offsetInBytes=" << src_desc.offsetInBytes << std::endl;
-    std::cout << "  dst dataType=" << static_cast<int>(dst_desc.dataType) << std::endl;
-    
-    // Validate parameters before call
-    std::cout << "DEBUG: Parameter validation:" << std::endl;
-    std::cout << "  gamma size=" << gamma.size() << ", values=[" << gamma[0] << "]" << std::endl;
-    std::cout << "  batch_size=" << batch_size << std::endl;
-    
-    // Check if data type conversion is needed
-    if (src_desc.dataType != RpptDataType::U8) {
-        std::cout << "WARNING: Input tensor is not U8! RPP gamma_correction expects U8 input." << std::endl;
-        std::cout << "  Current input type: " << static_cast<int>(src_desc.dataType) << std::endl;
+    // Initialize pointers to CPU data by default
+    float* gamma_ptr = const_cast<float*>(gamma.data());
+    RpptROI* roi_ptr = roi.data();
+
+#ifdef __HIP_PLATFORM_AMD__
+    float *gamma_gpu = nullptr;
+    RpptROI *roi_gpu = nullptr;
+   
+    if (backend == 1) {  // HIP backend - allocate on GPU
+        std::cout << "DEBUG: HIP backend - allocating parameters on GPU..." << std::endl;
+       
+        // Allocate GPU memory for gamma
+        hipError_t err = hipMalloc(&gamma_gpu, batch_size * sizeof(float));
+        if (err != hipSuccess) {
+            std::cout << "ERROR: Failed to allocate gamma on GPU: " << hipGetErrorString(err) << std::endl;
+            throw std::runtime_error("GPU memory allocation failed for gamma");
+        }
+       
+        // Allocate GPU memory for ROI
+        err = hipMalloc(&roi_gpu, batch_size * sizeof(RpptROI));
+        if (err != hipSuccess) {
+            hipFree(gamma_gpu);
+            std::cout << "ERROR: Failed to allocate ROI on GPU: " << hipGetErrorString(err) << std::endl;
+            throw std::runtime_error("GPU memory allocation failed for ROI");
+        }
+       
+        // Copy data to GPU
+        hipMemcpy(gamma_gpu, gamma.data(), batch_size * sizeof(float), hipMemcpyHostToDevice);
+        hipMemcpy(roi_gpu, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice);
+       
+        // Use GPU pointers
+        gamma_ptr = gamma_gpu;
+        roi_ptr = roi_gpu;
+       
+        std::cout << "DEBUG: GPU parameter allocation complete" << std::endl;
+        std::cout << "  gamma_gpu=" << static_cast<void*>(gamma_gpu) << std::endl;
+        std::cout << "  roi_gpu=" << static_cast<void*>(roi_gpu) << std::endl;
     }
+#endif
     
-    std::cout << "DEBUG: About to call rppt_gamma_correction()" << std::endl;
     rppt_gamma_correction(input_data.ptr, &src_desc,
                          output_data.ptr, &dst_desc,
-                         const_cast<float*>(gamma.data()),
-                         roi.data(), RpptRoiType::XYWH,
+                         gamma_ptr,
+                         roi_ptr, RpptRoiType::XYWH,
                          rpp_handle, static_cast<RppBackend>(backend));
-    std::cout << "DEBUG: rppt_gamma_correction() completed" << std::endl;
-    
-    // Add GPU-specific cleanup for HIP backend
-    if (backend == 1) {  // HIP backend
+
+#ifdef __HIP_PLATFORM_AMD__
+    if (backend == 1) {  // HIP backend - cleanup GPU memory
         std::cout << "DEBUG: HIP backend cleanup..." << std::endl;
-        // Ensure GPU operations complete before cleanup
-        // Add potential GPU sync or cleanup calls here
+        
+        // Synchronize GPU operations before cleanup
+        hipError_t hipErr = hipDeviceSynchronize();
+        if (hipErr != hipSuccess) {
+            std::cout << "ERROR: GPU sync failed: " << hipGetErrorString(hipErr) << std::endl;
+        }
+        
+        // Free GPU memory
+        if (gamma_gpu) {
+            hipFree(gamma_gpu);
+            std::cout << "DEBUG: Freed gamma_gpu memory" << std::endl;
+        }
+        if (roi_gpu) {
+            hipFree(roi_gpu);
+            std::cout << "DEBUG: Freed roi_gpu memory" << std::endl;
+        }
     }
-    
-    std::cout << "DEBUG: gamma_correction function complete" << std::endl;
+#endif
+
 }
 
 // 3. Contrast (Color)
@@ -352,7 +365,7 @@ void contrast(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const std::vector<float>& contrast_factor,
              const std::vector<float>& contrast_center,
-             rppHandle_t handle,
+             uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -360,11 +373,42 @@ void contrast(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+    }
+
+    // Initialize pointers to CPU data by default
+    float* contrast_factor_ptr = const_cast<float*>(contrast_factor.data());
+    float* contrast_center_ptr = const_cast<float*>(contrast_center.data());
+    RpptROI* roi_ptr = roi.data();
+
+    float* contrast_factor_gpu = nullptr;
+    float* contrast_center_gpu = nullptr;
+    RpptROI* roi_gpu = nullptr;
+
+    if (backend == 1) {  // HIP backend
+        // Allocate GPU memory
+        size_t contrast_factor_size = contrast_factor.size() * sizeof(float);
+        size_t contrast_center_size = contrast_center.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
+        
+        hipMalloc(&contrast_factor_gpu, contrast_factor_size);
+        hipMalloc(&contrast_center_gpu, contrast_center_size);
+        hipMalloc(&roi_gpu, roi_size);
+        
+        // Copy CPU data to GPU
+        hipMemcpy(contrast_factor_gpu, contrast_factor_ptr, contrast_factor_size, hipMemcpyHostToDevice);
+        hipMemcpy(contrast_center_gpu, contrast_center_ptr, contrast_center_size, hipMemcpyHostToDevice);
+        hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
+        
+        // Use GPU pointers
+        contrast_factor_ptr = contrast_factor_gpu;
+        contrast_center_ptr = contrast_center_gpu;
+        roi_ptr = roi_gpu;
     }
     
     rppt_contrast(input_data.ptr, &src_desc,
@@ -372,14 +416,20 @@ void contrast(const torch::Tensor& input_tensor,
                  const_cast<float*>(contrast_factor.data()),
                  const_cast<float*>(contrast_center.data()),
                  roi.data(), RpptRoiType::XYWH,
-                 handle, static_cast<RppBackend>(backend));
+                 rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (backend == 1) {  // HIP backend cleanup
+        hipFree(contrast_factor_gpu);
+        hipFree(contrast_center_gpu);
+        hipFree(roi_gpu);
+    }
 }
 
 // 4. Hue (Color)
 void hue(const torch::Tensor& input_tensor,
         torch::Tensor& output_tensor,
         const std::vector<float>& hue_shift,
-        rppHandle_t handle,
+        uintptr_t handle,
         int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -387,18 +437,48 @@ void hue(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
+
+    // Initialize pointers to CPU data by default
+    float* hue_shift_ptr = const_cast<float*>(hue_shift.data());
+    RpptROI* roi_ptr = roi.data();
     
+    float* hue_shift_gpu = nullptr;
+    RpptROI* roi_gpu = nullptr;
+
+    if (backend == 1) {  // HIP backend
+        // Allocate GPU memory
+        size_t hue_shift_size = hue_shift.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
+        
+        hipMalloc(&hue_shift_gpu, hue_shift_size);
+        hipMalloc(&roi_gpu, roi_size);
+        
+        // Copy CPU data to GPU
+        hipMemcpy(hue_shift_gpu, hue_shift_ptr, hue_shift_size, hipMemcpyHostToDevice);
+        hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
+        
+        // Use GPU pointers
+        hue_shift_ptr = hue_shift_gpu;
+        roi_ptr = roi_gpu;
+    }
+
     rppt_hue(input_data.ptr, &src_desc,
             output_data.ptr, &dst_desc,
             const_cast<float*>(hue_shift.data()),
             roi.data(), RpptRoiType::XYWH,
-            handle, static_cast<RppBackend>(backend));
+            rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (backend == 1) {  // HIP backend cleanup
+        hipFree(hue_shift_gpu);
+        hipFree(roi_gpu);
+    }
 }
 
 // 5. Flip (Geometric)
@@ -406,7 +486,7 @@ void flip(const torch::Tensor& input_tensor,
          torch::Tensor& output_tensor,
          const std::vector<int>& horizontal,
          const std::vector<int>& vertical,
-         rppHandle_t handle,
+         uintptr_t handle,
          int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -414,6 +494,7 @@ void flip(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -425,12 +506,49 @@ void flip(const torch::Tensor& input_tensor,
         h_tensor[i] = horizontal[i];
         v_tensor[i] = vertical[i];
     }
+
+    // Initialize pointers to CPU data by default
+    Rpp32u* h_tensor_ptr = h_tensor.data();
+    Rpp32u* v_tensor_ptr = v_tensor.data();
+    RpptROI* roi_ptr = roi.data();
+
+    Rpp32u* h_tensor_gpu = nullptr;
+    Rpp32u* v_tensor_gpu = nullptr;
+    RpptROI* roi_gpu = nullptr;
+
+    if (backend == 1) {  // HIP backend
+        // Allocate GPU memory
+        size_t h_tensor_size = batch_size * sizeof(Rpp32u);
+        size_t v_tensor_size = batch_size * sizeof(Rpp32u);
+        size_t roi_size = batch_size * sizeof(RpptROI);
+        
+        hipMalloc(&h_tensor_gpu, h_tensor_size);
+        hipMalloc(&v_tensor_gpu, v_tensor_size);
+        hipMalloc(&roi_gpu, roi_size);
+        
+        // Copy CPU data to GPU
+        hipMemcpy(h_tensor_gpu, h_tensor_ptr, h_tensor_size, hipMemcpyHostToDevice);
+        hipMemcpy(v_tensor_gpu, v_tensor_ptr, v_tensor_size, hipMemcpyHostToDevice);
+        hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
+        
+        // Use GPU pointers
+        h_tensor_ptr = h_tensor_gpu;
+        v_tensor_ptr = v_tensor_gpu;
+        roi_ptr = roi_gpu;
+    }
     
     rppt_flip(input_data.ptr, &src_desc,
              output_data.ptr, &dst_desc,
              h_tensor.data(), v_tensor.data(),
              roi.data(), RpptRoiType::XYWH,
-             handle, static_cast<RppBackend>(backend));
+             rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (backend == 1) {  // HIP backend cleanup
+        hipFree(h_tensor_gpu);
+        hipFree(v_tensor_gpu);
+        hipFree(roi_gpu);
+    }
+    std::cout << "DEBUG: Flip HIP backend cleanup..." << std::endl;
 }
 
 // 6. Resize (Geometric)
@@ -438,7 +556,7 @@ void resize(const torch::Tensor& input_tensor,
            torch::Tensor& output_tensor,
            const std::vector<int>& dst_width,
            const std::vector<int>& dst_height,
-           rppHandle_t handle,
+           uintptr_t handle,
            int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -446,6 +564,7 @@ void resize(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -462,14 +581,14 @@ void resize(const torch::Tensor& input_tensor,
                dst_sizes.data(),
                RpptInterpolationType::BILINEAR,
                roi.data(), RpptRoiType::XYWH,
-               handle, static_cast<RppBackend>(backend));
+               rpp_handle, static_cast<RppBackend>(backend));
 }
 
 // 7. Rotate (Geometric)
 void rotate(const torch::Tensor& input_tensor,
            torch::Tensor& output_tensor,
            const std::vector<float>& angle,
-           rppHandle_t handle,
+           uintptr_t handle,
            int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -477,6 +596,7 @@ void rotate(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -489,7 +609,7 @@ void rotate(const torch::Tensor& input_tensor,
                const_cast<float*>(angle.data()),
                RpptInterpolationType::BILINEAR,
                roi.data(), RpptRoiType::XYWH,
-               handle, static_cast<RppBackend>(backend));
+               rpp_handle, static_cast<RppBackend>(backend));
 }
 
 // 8. Crop (Geometric)
@@ -499,7 +619,7 @@ void crop(const torch::Tensor& input_tensor,
          const std::vector<int>& y1,
          const std::vector<int>& crop_width,
          const std::vector<int>& crop_height,
-         rppHandle_t handle,
+         uintptr_t handle,
          int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -507,6 +627,7 @@ void crop(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -521,14 +642,14 @@ void crop(const torch::Tensor& input_tensor,
     rppt_crop(input_data.ptr, &src_desc,
              output_data.ptr, &dst_desc,
              roi.data(), RpptRoiType::XYWH,
-             handle, static_cast<RppBackend>(backend));
+             rpp_handle, static_cast<RppBackend>(backend));
 }
 
 // 9. Vignette (Effects)
 void vignette(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const std::vector<float>& intensity,
-             rppHandle_t handle,
+             uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -536,6 +657,7 @@ void vignette(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -547,7 +669,7 @@ void vignette(const torch::Tensor& input_tensor,
                  output_data.ptr, &dst_desc,
                  const_cast<float*>(intensity.data()),
                  roi.data(), RpptRoiType::XYWH,
-                 handle, static_cast<RppBackend>(backend));
+                 rpp_handle, static_cast<RppBackend>(backend));
 }
 
 // 10. Pixelate (Effects)
@@ -555,7 +677,7 @@ void pixelate(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const torch::Tensor& scratch_tensor,
              float pixelation_pct,
-             rppHandle_t handle,
+             uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
     auto output_data = get_tensor_data(output_tensor);
@@ -564,6 +686,7 @@ void pixelate(const torch::Tensor& input_tensor,
     RpptDesc src_desc, dst_desc;
     setup_tensor_descriptor(src_desc, input_data);
     setup_tensor_descriptor(dst_desc, output_data);
+    auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
@@ -576,7 +699,7 @@ void pixelate(const torch::Tensor& input_tensor,
                  scratch_data.ptr,
                  pixelation_pct,
                  roi.data(), RpptRoiType::XYWH,
-                 handle, static_cast<RppBackend>(backend));
+                 rpp_handle, static_cast<RppBackend>(backend));
 }
 
 // -----------------------------------------------------
@@ -635,36 +758,7 @@ PYBIND11_MODULE(_rpp_pybind, m) {
         rppDestroy(reinterpret_cast<rppHandle_t>(handle), static_cast<RppBackend>(backend));
     }, "Destroy RPP handle", py::arg("handle"), py::arg("backend"));
 
-    // // Bind the 10 augmentation functions
-    // m.def("brightness", [](const torch::Tensor& input, torch::Tensor& output,
-    //     const std::vector<float>& alpha, const std::vector<float>& beta,
-    //     py::int_ handle, int backend){
-    //         brightness(input, output, alpha, beta, reinterpret_cast<rppHandle_t>(static_cast<uintptr_t>(handle)), backend);
-    //     },
-    //     "Brightness augmentation",
-    //     py::arg("input"), py::arg("output"),
-    //     py::arg("alpha"), py::arg("beta"),
-    //     py::arg("handle"), py::arg("backend")
-    // );
-
-    // // 1. gamma_correction
-    // m.def("gamma_correction", [](const torch::Tensor& input,
-    //     torch::Tensor& output,
-    //     const std::vector<float>& gamma,
-    //     py::int_ handle,
-    //     int backend) {
-    //         gamma_correction(
-    //             input,
-    //             output,
-    //             gamma,
-    //             reinterpret_cast<rppHandle_t>(static_cast<uintptr_t>(handle)),
-    //             backend
-    //         );
-    //     }, "Gamma correction",
-    //     py::arg("input"), py::arg("output"),
-    //     py::arg("gamma"),
-    //     py::arg("handle"), py::arg("backend"));
-
+    // Bind the 10 augmentation functions
     m.def("brightness", &brightness, "Brightness augmentation",
           py::arg("input"), py::arg("output"), 
           py::arg("alpha"), py::arg("beta"),
@@ -675,43 +769,43 @@ PYBIND11_MODULE(_rpp_pybind, m) {
           py::arg("gamma"), 
           py::arg("handle"), py::arg("backend"));
     
-    // m.def("contrast", &contrast, "Contrast augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("contrast_factor"), py::arg("contrast_center"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("contrast", &contrast, "Contrast augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("contrast_factor"), py::arg("contrast_center"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("hue", &hue, "Hue augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("hue_shift"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("hue", &hue, "Hue augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("hue_shift"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("flip", &flip, "Flip augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("horizontal"), py::arg("vertical"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("flip", &flip, "Flip augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("horizontal"), py::arg("vertical"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("resize", &resize, "Resize augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("dst_width"), py::arg("dst_height"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("resize", &resize, "Resize augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("dst_width"), py::arg("dst_height"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("rotate", &rotate, "Rotate augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("angle"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("rotate", &rotate, "Rotate augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("angle"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("crop", &crop, "Crop augmentation",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("x1"), py::arg("y1"), py::arg("crop_width"), py::arg("crop_height"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("crop", &crop, "Crop augmentation",
+          py::arg("input"), py::arg("output"),
+          py::arg("x1"), py::arg("y1"), py::arg("crop_width"), py::arg("crop_height"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("vignette", &vignette, "Vignette effect",
-    //       py::arg("input"), py::arg("output"),
-    //       py::arg("intensity"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("vignette", &vignette, "Vignette effect",
+          py::arg("input"), py::arg("output"),
+          py::arg("intensity"),
+          py::arg("handle"), py::arg("backend"));
     
-    // m.def("pixelate", &pixelate, "Pixelate effect",
-    //       py::arg("input"), py::arg("output"), py::arg("scratch"),
-    //       py::arg("pixelation_pct"),
-    //       py::arg("handle"), py::arg("backend"));
+    m.def("pixelate", &pixelate, "Pixelate effect",
+          py::arg("input"), py::arg("output"), py::arg("scratch"),
+          py::arg("pixelation_pct"),
+          py::arg("handle"), py::arg("backend"));
 }

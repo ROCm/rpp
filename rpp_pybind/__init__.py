@@ -23,16 +23,16 @@ types = _C.types
 # Core functions
 brightness = _C.brightness
 gamma_correction = _C.gamma_correction
-# contrast = _C.contrast
-# hue = _C.hue
+contrast = _C.contrast
+hue = _C.hue
 
-# resize = _C.resize
-# flip = _C.flip
-# rotate = _C.rotate
-# crop = _C.crop
+resize = _C.resize
+flip = _C.flip
+rotate = _C.rotate
+crop = _C.crop
 
-# vignette = _C.vignette
-# pixelate = _C.pixelate
+vignette = _C.vignette
+pixelate = _C.pixelate
 
 rppCreate = _C.rppCreate
 rppDestroy = _C.rppDestroy
@@ -43,16 +43,16 @@ __all__ = [
     # Color augmentations
     "brightness",
     "gamma_correction",
-    # "contrast",
-    # "hue",
-    # # Geometric augmentations
-    # "resize",
-    # "flip",
-    # "rotate",
-    # "crop",
-    # # Effects augmentations
-    # "vignette",
-    # "pixelate",
+    "contrast",
+    "hue",
+    # Geometric augmentations
+    "resize",
+    "flip",
+    "rotate",
+    "crop",
+    # Effects augmentations
+    "vignette",
+    "pixelate",
     # Core handle functions
     "rppCreate",
     "rppDestroy",
