@@ -107,24 +107,19 @@ def brightness(images, alpha=1.0, beta=0.0, backend=None):
         beta_array = [beta] * batch_size
         
         _brightness(images, output, alpha_array, beta_array, handle, backend_int)
-        print(f"Debug: fn Brightness function complete.")
 
         # if backend == HIP:
         #     torch.cuda.synchronize()
         if backend_int == 1:  # HIP backend
-            print(f"Debug: fn Brightness function's HIP cleaning.")
             if torch.cuda.is_available():
                 torch.cuda.synchronize()  
                 torch.cuda.empty_cache() 
-        print(f"Debug: fn Brightness function if condition.")
     except Exception as e:
         print(f"DEBUG: Error calling _brightness: {e}")
         print(f"DEBUG: _brightness function: {_brightness}")
         raise
     finally:
-        print(f"Debug: fn Brightness function rpp destroy is calling.")
         rppDestroy(handle, backend_int)
-        print(f"Debug: fn Brightness function rpp destroy is done.")
     
     return output
 
@@ -164,8 +159,6 @@ def gamma_correction(images, gamma=1.0, backend=None):
     output = torch.zeros_like(images).contiguous()
 
     handle = rppCreate(batch_size, backend_int)
-    print(f"DEBUG: fn Gamma handle type = {type(handle)}, value = {handle}")
-    print(f"DEBUG: fn Gamma backend_int = {backend_int}")
     
     try:
         gamma_array = [gamma] * batch_size
@@ -194,8 +187,8 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, backend=None):
     
     Args:
         images: Input tensor (B, C, H, W)
-        contrast_factor: Contrast factor (default 1.0)
-        contrast_center: Center value for contrast (default 128.0)
+        contrast_factor: Contrast factor
+        contrast_center: Center value for contrast
         backend: RppBackend (None = auto-detect)
     
     Returns:

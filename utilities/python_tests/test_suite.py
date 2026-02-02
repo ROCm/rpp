@@ -152,7 +152,7 @@ class UnitTests:
             try:
                 image = util.load_image(img_path, device=device)
                 # image = util.load_image(img_path, device=device, apply_padding=False)
-                output = fn.brightness(image, alpha=1.5, beta=10.0, backend=self.backend)
+                output = fn.brightness(image, alpha=1.75, beta=50.0, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "brightness", image_name):
@@ -178,7 +178,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.gamma_correction(image, gamma=0.8, backend=self.backend)
+                output = fn.gamma_correction(image, gamma=1.9, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "gamma_correction", image_name):
@@ -209,7 +209,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.flip(image, horizontal=True, backend=self.backend)
+                output = fn.flip(image, horizontal=True, vertical= False, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "flip", image_name):
@@ -303,7 +303,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.hue(image, hue_shift=45, backend=self.backend)
+                output = fn.hue(image, hue_shift=60.0, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "hue", image_name):
@@ -365,7 +365,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.contrast(image, contrast_factor=1.5, backend=self.backend)
+                output = fn.contrast(image, contrast_factor=2.96, contrast_center=128.0, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "contrast", image_name):
@@ -396,7 +396,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.vignette(image, intensity=0.5, backend=self.backend)
+                output = fn.vignette(image, intensity=6.0, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "vignette", image_name):
@@ -427,7 +427,7 @@ class UnitTests:
         for img_path in self.test_images:
             try:
                 image = util.load_image(img_path, device=device)
-                output = fn.pixelate(image, pixelation_percentage=50.0, backend=self.backend)
+                output = fn.pixelate(image, pixelation_percentage=87.5, backend=self.backend)
                 
                 image_name = os.path.basename(img_path)
                 if self._save_output_image(output, "pixelate", image_name):
@@ -635,15 +635,15 @@ class QATests:
                 
                 print(f"    Comparing {img_name}: gen={generated.shape} vs ref={reference.shape}")
                 
-                # Handle potential shape mismatches
+                # Handle shape mismatches by trimming generated image to match reference dimensions
                 if generated.shape != reference.shape:
-                    # Try to match shapes if possible
                     if len(generated.shape) == 3 and len(reference.shape) == 3:
-                        min_h = min(generated.shape[0], reference.shape[0])
-                        min_w = min(generated.shape[1], reference.shape[1])
-                        min_c = min(generated.shape[2], reference.shape[2])
-                        generated = generated[:min_h, :min_w, :min_c]
-                        reference = reference[:min_h, :min_w, :min_c]
+                        ref_h, ref_w, ref_c = reference.shape
+                        gen_h, gen_w, gen_c = generated.shape
+                        
+                        # Trim generated image to match reference dimensions
+                        # Keep only the pixels that match the reference image size
+                        generated = generated[:ref_h, :ref_w, :ref_c]
                         print(f"    Shape adjusted to: {generated.shape}")
                     else:
                         results.append((img_name, False, f"Shape mismatch: gen={generated.shape} vs ref={reference.shape}"))
