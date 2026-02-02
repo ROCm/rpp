@@ -11,7 +11,6 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * Batch PD test suite and installation
 
 ### Changed
-* Backend flag consolidation: OCL_COMPILE and HIP_COMPILE merged into single GPU_SUPPORT flag
 * CMakeLists.txt updated to remove batch PD references
 
 ## RPP 2.2.1 for ROCm 7.2.0
