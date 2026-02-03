@@ -23,13 +23,13 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_bitwise_operations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /******************** bitwise AND ********************/
 
@@ -175,7 +175,6 @@ RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
@@ -193,9 +192,6 @@ RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** bitwise XOR ********************/
@@ -209,7 +205,6 @@ RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
@@ -227,9 +222,6 @@ RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** bitwise OR ********************/
@@ -243,7 +235,6 @@ RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
@@ -261,9 +252,6 @@ RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
@@ -274,7 +262,6 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
@@ -291,9 +278,6 @@ RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT

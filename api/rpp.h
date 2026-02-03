@@ -31,18 +31,7 @@ SOFTWARE.
  * \brief RPP API to create and destroy RPP HOST/GPU handle.
  */
 
-#if RPP_BACKEND_OPENCL
-
-#define CL_TARGET_OPENCL_VERSION 220
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/cl.h>
-#else
-#include <CL/cl.h>
-#endif
-/*! \brief Set rppAcceleratorQueue_t to cl_command_queue if RPP_BACKEND_OPENCL \ingroup group_rpp */
-typedef cl_command_queue rppAcceleratorQueue_t;
-
-#elif RPP_BACKEND_HIP
+#if RPP_BACKEND_HIP
 
 #include <hip/hip_runtime_api.h>
 /*! \brief Set rppAcceleratorQueue_t to hipStream_t if RPP_BACKEND_HIP \ingroup group_rpp */
@@ -84,9 +73,6 @@ typedef rppHandle_t RppHandle_t;    // Create typedef for RppHandle_t
 #endif
 
 #include "rppdefs.h"
-#ifdef LEGACY_SUPPORT
-#include "rppi.h"
-#endif
 #include "rppt.h"
 #include "rpp_version.h"
 
@@ -110,13 +96,13 @@ typedef void (*rppDeallocatorFunction)(void* context, void* memory);
 extern "C" {
 #endif
 
-/*! \brief Creates RPP handle for HOST/HIP/OCL backend batch processing.
+/*! \brief Creates RPP handle for HOST/HIP backend batch processing.
  * \details Function to create a RPP handle, and the necessary host/device memory allocations.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \param [in] nBatchSize Batch size.
  * \param [in] numThreads Number of threads to use if backend = RppBackend::RPP_HOST_BACKEND. (Pass 0 if backend = RppBackend::RPP_HIP_BACKEND).
- * \param [in] stream A pointer to an accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> - hipStream_t if backend = RppBackend::RPP_HIP_BACKEND and cl_command_queue if backend = RppBackend::RPP_OCL_BACKEND. (Pass nullptr if backend = RppBackend::RPP_HOST_BACKEND).
- * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND / RppBackend::RPP_OCL_BACKEND)
+ * \param [in] stream A pointer to an accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> - hipStream_t if backend = RppBackend::RPP_HIP_BACKEND. (Pass nullptr if backend = RppBackend::RPP_HOST_BACKEND).
+ * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND)
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
  * \retval rppStatusSuccess
@@ -131,10 +117,10 @@ extern "C" {
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0, void* stream = nullptr, RppBackend backend = RppBackend::RPP_HOST_BACKEND);
 
-/*! \brief Destroys RPP handle for HOST/HIP/OCL backend batch processing.
+/*! \brief Destroys RPP handle for HOST/HIP backend batch processing.
  * \details Function to destroy a RPP handle's host/device memory allocation. To be called in the end to break down the RPP environment.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND / RppBackend::RPP_OCL_BACKEND)
+ * \param [in] backend RPP backend to run augmentations (backend = RppBackend::RPP_HOST_BACKEND / RppBackend::RPP_HIP_BACKEND)
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
  * \retval rppStatusSuccess
@@ -185,12 +171,12 @@ extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t 
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
-#if GPU_SUPPORT
+#if RPP_BACKEND_HIP
 
 /*! \brief Set accelerator stream given a RPP handle.
  * \details Function to set an accelerator stream previously created.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
+ * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP).
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
  * \retval rppStatusSuccess
@@ -208,7 +194,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppSetStream(rppHandle_t handle, rppAcceler
 /*! \brief Get accelerator stream given a RPP handle.
  * \details Function to get an accelerator stream previously created.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
- * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).
+ * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP).
  * \ingroup group_rpp
  * \return A <tt> \ref rppStatus_t</tt> enumeration.
  * \retval rppStatusSuccess

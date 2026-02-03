@@ -23,13 +23,13 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_geometric_augmentations.h"
 #include "host_tensor_executors.hpp"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 #if __APPLE__
 #define sincosf __sincosf
@@ -1806,7 +1806,6 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1854,9 +1853,6 @@ RppStatus rppt_crop_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** crop mirror normalize ********************/
@@ -1872,7 +1868,6 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
                                          RpptRoiType roiType,
                                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1954,9 +1949,6 @@ RppStatus rppt_crop_mirror_normalize_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** warp_affine ********************/
@@ -1971,7 +1963,6 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
                                RpptRoiType roiType,
                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2025,9 +2016,6 @@ RppStatus rppt_warp_affine_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr,
@@ -2040,7 +2028,6 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2094,9 +2081,6 @@ RppStatus rppt_warp_perspective_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** flip ********************/
@@ -2111,7 +2095,6 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -2163,9 +2146,6 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** resize_mirror_normalize ********************/
@@ -2183,7 +2163,6 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                            RpptRoiType roiType,
                                            rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2280,9 +2259,6 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
     }
 
 return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** resize ********************/
@@ -2297,7 +2273,6 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -2348,9 +2323,6 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** resize_crop_mirror ********************/
@@ -2366,7 +2338,6 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                       RpptRoiType roiType,
                                       rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2425,9 +2396,6 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
 }
 
 return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** rotate ********************/
@@ -2442,7 +2410,6 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2506,9 +2473,6 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** phase ********************/
@@ -2522,7 +2486,6 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -2573,9 +2536,6 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** slice ********************/
@@ -2591,7 +2551,6 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
                          Rpp32u *roiTensor,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType != RpptDataType::F32) && (srcGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if ((dstGenericDescPtr->dataType != RpptDataType::F32) && (dstGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
     if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_LAYOUT_MISMATCH;
@@ -2624,9 +2583,6 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** crop_and_patch ********************/
@@ -2642,7 +2598,6 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1,
                                   RpptRoiType roiType,
                                   rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -2701,9 +2656,6 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1,
                                        rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** flip_voxel ********************/
@@ -2719,7 +2671,6 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr,
                               RpptRoi3DType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
@@ -2753,9 +2704,6 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** remap ********************/
@@ -2772,7 +2720,6 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
@@ -2834,9 +2781,6 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** lens_correction ********************/
@@ -2854,7 +2798,6 @@ RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     hip_exec_lens_correction_tensor(dstDescPtr,
                                     rowRemapTable,
                                     colRemapTable,
@@ -2922,9 +2865,6 @@ RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr,
                               rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** transpose ********************/
@@ -2937,7 +2877,6 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
                              Rpp32u *roiTensor,
                              rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_transpose_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
@@ -2980,9 +2919,6 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** concat ********************/
@@ -2998,7 +2934,6 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
                           Rpp32u *roiTensorSrc2,
                           rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
 
     Rpp32u tensorDim = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     if(srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims)
@@ -3063,9 +2998,6 @@ RppStatus rppt_concat_gpu(RppPtr_t srcPtr1,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 //********jpeg_compression_distortion************/
@@ -3078,7 +3010,6 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
                                                RpptRoiType roiType,
                                                rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_jpeg_compression_distortion(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -3121,9 +3052,6 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** fisheye ********************/
@@ -3136,7 +3064,6 @@ RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr,
                            RpptRoiType roiType,
                            rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_fisheye_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -3178,10 +3105,6 @@ RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr,
                                 rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
-
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT
