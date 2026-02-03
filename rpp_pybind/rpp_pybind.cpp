@@ -107,9 +107,6 @@ TensorData get_tensor_data(const torch::Tensor& tensor) {
 }
 
 void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
-    std::cout << "DEBUG: Setting up descriptor" << std::endl;
-    std::cout << "DEBUG: shape = [" << data.shape[0] << "," << data.shape[1] 
-              << "," << data.shape[2] << "," << data.shape[3] << "]" << std::endl;
     desc.dataType = data.dtype;
     desc.layout = data.layout;
     desc.numDims = data.shape.size();
@@ -120,8 +117,6 @@ void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
         desc.c = data.shape[1]; 
         desc.h = data.shape[2];
         desc.w = data.shape[3];
-        std::cout << "DEBUG: n=" << desc.n << ", c=" << desc.c 
-                  << ", h=" << desc.h << ", w=" << desc.w << std::endl;
         
         // Calculate strides in bytes
         size_t element_size = (data.dtype == RpptDataType::U8 || data.dtype == RpptDataType::I8) ? 1 :
@@ -779,8 +774,6 @@ PYBIND11_MODULE(_rpp_pybind, m) {
     // reinterpret_cast<rppHandle_t>(static_cast<uintptr_t>(handle))
     m.def("rppCreate", [](int batch_size, int backend) {
         rppHandle_t handle = nullptr;
-        std::cout << "DEBUG: Creating handle with batch=" << batch_size 
-              << ", backend=" << backend << std::endl;
         rppCreate(&handle,
                   static_cast<size_t>(batch_size),
                   0,
