@@ -31,7 +31,7 @@ extern "C" rppStatus_t rppCreate(rppHandle_t* handle, size_t nBatchSize, Rpp32u 
     if(backend == RppBackend::RPP_HOST_BACKEND)
         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
 #if GPU_SUPPORT
-    else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
+    else if(backend == RppBackend::RPP_HIP_BACKEND)
     {
             return rpp::try_([&] {
             rpp::deref(handle) = new rpp::Handle(nBatchSize, reinterpret_cast<rppAcceleratorQueue_t>(stream));
@@ -56,7 +56,7 @@ extern "C" rppStatus_t rppDestroy(rppHandle_t handle, RppBackend backend)
         return status;
     }
 #if GPU_SUPPORT
-    else if(backend == RppBackend::RPP_HIP_BACKEND || backend == RppBackend::RPP_OCL_BACKEND)
+    else if(backend == RppBackend::RPP_HIP_BACKEND)
     {
         auto status = rpp::try_([&] { rpp::deref(handle).rpp_destroy_object_gpu();});
         if(status == rppStatusSuccess) delete handle;
@@ -93,17 +93,5 @@ extern "C" rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction 
 {
     return rpp::try_([&] { rpp::deref(handle).SetAllocator(allocator, deallocator, allocatorContext); });
 }
-
-#ifdef LEGACY_SUPPORT
-extern "C" rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time)
-{
-    return rpp::try_([&] { rpp::deref(time) = rpp::deref(handle).GetKernelTime(); });
-}
-
-extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
-{
-    return rpp::try_([&] { rpp::deref(handle).EnableProfiling(enable); });
-}
-#endif
 
 #endif // GPU_SUPPORT

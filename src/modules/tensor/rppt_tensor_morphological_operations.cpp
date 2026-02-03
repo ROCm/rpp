@@ -23,12 +23,12 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_morphological_operations.h"
 
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
-#endif // HIP_COMPILE
+#endif // GPU_SUPPORT
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
@@ -47,7 +47,6 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
                          RpptRoiType roiType,
                          rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
@@ -99,9 +98,6 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 /******************** dilate ********************/
@@ -115,7 +111,6 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
@@ -167,9 +162,6 @@ RppStatus rppt_dilate_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
 #endif // GPU_SUPPORT
