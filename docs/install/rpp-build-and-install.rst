@@ -27,16 +27,6 @@ Clone the source code from the `RPP GitHub repository <https://github.com/ROCm/r
         cmake ../
         make -j8
         sudo make install
-  
-  .. tab-item:: OpenCL
-
-    .. code:: shell
-
-        mkdir build-ocl
-        cd build-ocl
-        cmake -DBACKEND=OPENCL ../
-        make -j8
-        sudo make install
 
   .. tab-item:: CPU-only
 
