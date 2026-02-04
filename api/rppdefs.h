@@ -79,9 +79,11 @@ typedef halfhpp Rpp16f;
 
 const float ONE_OVER_6                      = 1.0f / 6;
 const float ONE_OVER_3                      = 1.0f / 3;
+const float TWO_OVER_3                      = 2.0f / 3;
 const float ONE_OVER_255                    = 1.0f / 255;
 const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
 const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
+#define DROPOUT_FIXED_SEED                  42           // Constant fixed seed for reproducing the dropout output
 
 /******************** RPP typedefs ********************/
 
@@ -316,6 +318,17 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
+
+/*! \brief RPPT Image Border Edge type enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    TOP_EDGE = 0,
+    BOTTOM_EDGE,
+    LEFT_EDGE,
+    RIGHT_EDGE
+} RpptImageBorderEdge;
 
 /*! \brief RPPT Image Border Type
  * \ingroup group_rppdefs

@@ -25,7 +25,7 @@ SOFTWARE.
 #ifdef AUDIO_SUPPORT
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_audio_augmentations.h"
 #include "host_tensor_executors.hpp"
 

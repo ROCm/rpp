@@ -110,7 +110,7 @@ elseif( "${BACKEND}" STREQUAL "CPU")
         remove_audio_augmentations(Rpp_Source "${BACKEND}")
     endif()
     message("-- ${Green}HOST kernels added${ColourReset}")
-    set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set(INCLUDE_LIST ${RPP_SOURCE_DIR}/src/include/common/)
     add_fma_property()
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
@@ -123,8 +123,8 @@ add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/api
-        ${CMAKE_SOURCE_DIR}/third_party/ffts/include
+        ${RPP_SOURCE_DIR}/api
+        ${RPP_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/common

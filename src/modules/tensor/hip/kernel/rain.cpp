@@ -213,7 +213,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr,
                                rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     Rpp32f rainPercent = rainPercentage * 0.004f; //Scaling factor to convert percentage to a range suitable for rain effect intensity
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);

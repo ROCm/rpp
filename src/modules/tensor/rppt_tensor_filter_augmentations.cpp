@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rppi_validate.hpp"
+#include "rppt_validate.hpp"
 #include "rppt_tensor_filter_augmentations.h"
 #include "host_tensor_executors.hpp"
 
@@ -331,6 +331,8 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
+
+    if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
 
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
