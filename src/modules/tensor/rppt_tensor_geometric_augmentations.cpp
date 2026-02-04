@@ -2994,7 +2994,7 @@ RppStatus rppt_fisheye(RppPtr_t srcPtr,
                        RpptDescPtr dstDescPtr,
                        RpptROIPtr roiTensorPtrSrc,
                        RpptRoiType roiType,
-                       rppHandle_t rppHandle
+                       rppHandle_t rppHandle,
                        RppBackend executionBackend)
 {
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
