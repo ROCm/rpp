@@ -173,16 +173,6 @@ sudo zypper install rpp rpp-devel rpp-test
 > [!IMPORTANT]
 > `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
 
-#### OCL Backend
-
-  ```shell
-  mkdir build-ocl
-  cd build-ocl
-  cmake -DBACKEND=OCL ../rpp
-  make -j8
-  sudo make install
-  ```
-
 ## Verify installation
 
 The installer will copy
