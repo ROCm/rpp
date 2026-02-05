@@ -158,7 +158,7 @@ RppStatus rppt_mel_filter_bank(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
 * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [in] inRate Input sampling rate (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
 * \param [in] outRate Output sampling rate (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * 2)
