@@ -80,26 +80,29 @@ List of high level dependency checks - for RPP QA tests in utilities/test_suite/
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
+set(RPP_TEST_SCRIPT_DIR "${ROCM_PATH}/share/rpp/test")
+
 if(BUILD_FROM_SOURCE)
-    # Building from source tree
+    # Source tree mode - Use parent CMakeLists.txt definitions for backend/audio support
     message("-- ${White}${PROJECT_NAME}: Building from source tree${ColourReset}")
     message("-- ${Yellow}${PROJECT_NAME}: Ensure RPP is built and installed before running CTests${ColourReset}")
     
     set(RPP_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/api")
-    set(RPP_TEST_SCRIPT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     
-    # Get backend/audio support from parent scope
-    set(rpp_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP})
+    # Get backend/audio support from parent scope (already set by parent CMakeLists.txt)
+    if (DEFINED RPP_BACKEND_HIP)
+        set(rpp_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP})
+    else()
+        set(rpp_BACKEND_HIP_FOUND 0)
+    endif()
     if(DEFINED RPP_AUDIO_AUGMENTATIONS_SUPPORT)
         set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${RPP_AUDIO_AUGMENTATIONS_SUPPORT})
     else()
         set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
     endif()
 else()
-    message("-- ${White}${PROJECT_NAME}: Standalone/installed mode${ColourReset}")
-    
     # Standalone mode - use find_package and installed paths
-    set(RPP_TEST_SCRIPT_DIR "${ROCM_PATH}/share/rpp/test")
+    message("-- ${White}${PROJECT_NAME}: Standalone/installed mode${ColourReset}")
     
     find_package(rpp 3.0.0 QUIET)
     if(rpp_FOUND)
