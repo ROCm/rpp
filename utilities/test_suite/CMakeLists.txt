@@ -105,6 +105,15 @@ else()
     find_package(rpp 3.0.0 QUIET)
     if(rpp_FOUND)
         message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+
+        message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
+        message("-- \t${White}rpp_LIB_DIR -- ${rpp_LIB_DIR}${ColourReset}")
+        message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+        message("-- \t${White}rpp_FOUND -- ${rpp_FOUND}${ColourReset}")
+        message("-- \t${White}rpp_VERSION -- ${rpp_VERSION}${ColourReset}")
+        message("-- \t${White}rpp_VERSION_MAJOR -- ${rpp_VERSION_MAJOR}${ColourReset}")
+        message("-- \t${White}rpp_VERSION_MINOR -- ${rpp_VERSION_MINOR}${ColourReset}")
+        message("-- \t${White}rpp_VERSION_PATCH -- ${rpp_VERSION_PATCH}${ColourReset}")
         
         set(RPP_GENERATED_INCLUDE_DIR "${rpp_INCLUDE_DIR}/rpp")
         
