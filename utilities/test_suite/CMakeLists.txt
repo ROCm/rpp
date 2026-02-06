@@ -87,8 +87,6 @@ if(BUILD_FROM_SOURCE)
     message("-- ${White}${PROJECT_NAME}: Building from source tree${ColourReset}")
     message("-- ${Yellow}${PROJECT_NAME}: Ensure RPP is built and installed before running CTests${ColourReset}")
     
-    set(RPP_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/api")
-    
     # Get backend/audio support from parent scope (already set by parent CMakeLists.txt)
     if (DEFINED RPP_BACKEND_HIP)
         set(rpp_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP})
