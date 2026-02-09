@@ -102,24 +102,19 @@ def brightness(images, alpha=1.0, beta=0.0, backend=None):
     
     handle = rppCreate(batch_size, backend_int)
 
-    try:
-        alpha_array = [alpha] * batch_size
-        beta_array = [beta] * batch_size
-        
-        _brightness(images, output, alpha_array, beta_array, handle, backend_int)
+    alpha_array = [alpha] * batch_size
+    beta_array = [beta] * batch_size
+    
+    _brightness(images, output, alpha_array, beta_array, handle, backend_int)
 
-        # if backend == HIP:
-        #     torch.cuda.synchronize()
-        if backend_int == 1:  # HIP backend
-            if torch.cuda.is_available():
-                torch.cuda.synchronize()  
-                torch.cuda.empty_cache() 
-    except Exception as e:
-        print(f"DEBUG: Error calling _brightness: {e}")
-        print(f"DEBUG: _brightness function: {_brightness}")
-        raise
-    finally:
-        rppDestroy(handle, backend_int)
+    # if backend == HIP:
+    #     torch.cuda.synchronize()
+    # if backend_int == 1:  # HIP backend
+    #     if torch.cuda.is_available():
+    #         torch.cuda.synchronize()  
+    #         torch.cuda.empty_cache() 
+
+    rppDestroy(handle, backend_int)
     
     return output
 
@@ -159,19 +154,14 @@ def gamma_correction(images, gamma=1.0, backend=None):
     output = torch.zeros_like(images).contiguous()
 
     handle = rppCreate(batch_size, backend_int)
+
+    gamma_array = [gamma] * batch_size
     
-    try:
-        gamma_array = [gamma] * batch_size
-        
-        _gamma_correction(images, output, gamma_array, handle, backend_int)
-        if backend == HIP:
-            torch.cuda.synchronize()
-    except Exception as e:
-        print(f"DEBUG: Error calling _gamma correction: {e}")
-        print(f"DEBUG: _gamma correction function: {_gamma_correction}")
-        raise
-    finally: 
-        rppDestroy(handle, backend_int)
+    _gamma_correction(images, output, gamma_array, handle, backend_int)
+    # if backend == HIP:
+    #     torch.cuda.synchronize()
+
+    rppDestroy(handle, backend_int)
     
     return output
 

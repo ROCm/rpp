@@ -63,6 +63,7 @@ def load_image(image_path, device='cpu', apply_padding=True):
     
     # Convert to PyTorch tensor (H, W, C) -> (C, H, W)
     tensor = torch.from_numpy(rgb_array).permute(2, 0, 1).float()
+    # tensor = torch.from_numpy(rgb_array).float()
     
     # Add batch dimension
     tensor = tensor.unsqueeze(0)

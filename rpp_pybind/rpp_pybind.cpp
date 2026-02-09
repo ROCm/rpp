@@ -200,7 +200,7 @@ void brightness(const torch::Tensor& input_tensor,
         hipFree(roi_gpu_ptr);
     }
         
-    std::cout << "DEBUG: brightness function complete" << std::endl;
+    // std::cout << "DEBUG: brightness function complete" << std::endl;
 }
 
 // 2. Gamma Correction (Color)
