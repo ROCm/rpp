@@ -95,7 +95,8 @@ __global__ void dilate_3x3_pkd_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));            int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
+            int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];     // R
             src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 1]; // G
