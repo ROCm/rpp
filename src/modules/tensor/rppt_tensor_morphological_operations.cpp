@@ -97,6 +97,8 @@ RppStatus rppt_erode_host(RppPtr_t srcPtr,
                                layoutParams,
                                rpp::deref(rppHandle));
     }
+    else
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
     return RPP_SUCCESS;
 }

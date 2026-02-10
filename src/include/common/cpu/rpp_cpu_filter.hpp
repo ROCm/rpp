@@ -889,7 +889,9 @@ struct MorphPad_Erode
     static inline __m256  pad_float() { return avx_p1; }
 };
 
-// MorphPad_Dilate is defined for future morphological dilate implementation.
+// MorphPad_Dilate defines the padding policy for morphological dilation and
+// is included here for API completeness and extensibility, even if unused by
+// current kernels.
 struct MorphPad_Dilate
 {
     static inline __m256i pad_int() { return _mm256_set1_epi8((char)0); }
