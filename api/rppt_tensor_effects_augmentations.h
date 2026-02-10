@@ -99,10 +99,10 @@ RppStatus rppt_spatter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] noiseProbabilityTensor noiseProbability values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= noiseProbabilityTensor[i] <= 1 for each image in batch)
- * \param [in] saltProbabilityTensor saltProbability values to decide if a given destination noise-pixel is salt or pepper (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= saltProbabilityTensor[i] <= 1 for each image in batch)
- * \param [in] saltValueTensor A user-defined salt noise value (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= saltValueTensor[i] <= 1 for each image in batch)
- * \param [in] pepperValueTensor A user-defined pepper noise value (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= pepperValueTensor[i] <= 1 for each image in batch)
+ * \param [in] noiseProbabilityTensor noiseProbability values to decide if a destination pixel is a noise-pixel, or equal to source (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= noiseProbabilityTensor[i] <= 1 for each image in batch)
+ * \param [in] saltProbabilityTensor saltProbability values to decide if a given destination noise-pixel is salt or pepper (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= saltProbabilityTensor[i] <= 1 for each image in batch)
+ * \param [in] saltValueTensor A user-defined salt noise value (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= saltValueTensor[i] <= 1 for each image in batch)
+ * \param [in] pepperValueTensor A user-defined pepper noise value (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 <= pepperValueTensor[i] <= 1 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -124,7 +124,7 @@ RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] shotNoiseFactorTensor shotNoiseFactor values for each image, which are used to compute the lambda values in a poisson distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with shotNoiseFactorTensor[i] >= 0 for each image in batch)
+ * \param [in] shotNoiseFactorTensor shotNoiseFactor values for each image, which are used to compute the lambda values in a poisson distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with shotNoiseFactorTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -146,8 +146,8 @@ RppStatus rppt_shot_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] meanTensor mean values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with meanTensor[i] >= 0 for each image in batch)
- * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] meanTensor mean values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with meanTensor[i] >= 0 for each image in batch)
+ * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
@@ -171,7 +171,7 @@ RppStatus rppt_gaussian_noise(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -192,12 +192,12 @@ RppStatus rppt_non_linear_blend(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr 
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] amplitudeXTensor amplitudeX values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
- * \param[in] amplitudeYTensor amplitudeY values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
- * \param[in] frequencyXTensor frequencyX values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
- * \param[in] frequencyYTensor frequencyY values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
- * \param[in] phaseXTensor phaseX values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
- * \param[in] phaseYTensor phaseY values for water effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] amplitudeXTensor amplitudeX values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] amplitudeYTensor amplitudeY values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] frequencyXTensor frequencyX values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] frequencyYTensor frequencyY values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] phaseXTensor phaseX values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param[in] phaseYTensor phaseY values for water effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -242,7 +242,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, R
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
+ * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -263,7 +263,7 @@ RppStatus rppt_vignette(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] kernelSizeTensor kernelsize value for jitter calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), kernelSize = 3/5/7 for optimal use)
+ * \param [in] kernelSizeTensor kernelsize value for jitter calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), kernelSize = 3/5/7 for optimal use)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -283,8 +283,8 @@ RppStatus rppt_jitter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, 
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with meanTensor[i] >= 0 for each image in batch)
- * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with meanTensor[i] >= 0 for each image in batch)
+ * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
@@ -309,7 +309,7 @@ RppStatus rppt_gaussian_noise_voxel(RppPtr_t srcPtr, RpptGenericDescPtr srcGener
             - 0 <= anchorBoxInfo[i] < respective image width/height
             - Erase-region anchor boxes on each image given by the user must not overlap
  * \param [in] colorsTensor RGB values to use for each erase-region inside each image in the batch (tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)). (colors[i] will have range equivalent of srcPtr)
- * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend)). (numBoxesTensor[n] >= 0)
+ * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend)). (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -358,7 +358,7 @@ RppStatus rppt_glitch(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, 
  * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
  * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
  *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
- * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), 0 ≤ alpha ≤ 1 for each image in the batch).
+ * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), 0 ≤ alpha ≤ 1 for each image in the batch).
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend) for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -402,8 +402,8 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
- * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
+ * \param [in] intensityFactor intensity factor values for fog calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= intensityFactor <= 0.5 for each image in batch)
+ * \param [in] greyFactor gray factor values to introduce grayness in the image for fog calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= greyFactor <= 1 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend) for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST/HIP handle created with <tt>\ref rppCreate()</tt>
@@ -424,7 +424,7 @@ RppStatus rppt_fog(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
+ * \param [in] posterizeLevelBits number of bits used to represent the image with posterize Operation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 1 <= posterizeLevelBits <= 8 for each image in batch))
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend) for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -445,7 +445,7 @@ RppStatus rppt_posterize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] thresholdTensor threshold values for solarize effect (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= threshold <= 1 for each image in batch)
+ * \param [in] thresholdTensor threshold values for solarize effect (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with 0 <= threshold <= 1 for each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend) for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -467,9 +467,9 @@ RppStatus rppt_solarize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with brightnessCoefficient[i] in the range (1, 4] for each image in batch)
- * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 < snowThreshold[i] <= 1 for each image in batch)
- * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with darkMode[i] = 0/1)
+ * \param [in] brightnessCoefficient brightness modification parameter for snow calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with brightnessCoefficient[i] in the range (1, 4] for each image in batch)
+ * \param [in] snowThreshold threshold parameter for snow calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize with 0 < snowThreshold[i] <= 1 for each image in batch)
+ * \param [in] darkMode darkMode values to set dark mode on/off (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, with darkMode[i] = 0/1)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -490,7 +490,7 @@ RppStatus rppt_snow(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] dropoutTensor channel dropout tensor (1D Rpp8u tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * channels Values must be 0 (Drop) or 1 (Keep) for each channel of each image in batch)
+ * \param [in] dropoutTensor channel dropout tensor (1D Rpp8u tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize * channels Values must be 0 (Drop) or 1 (Keep) for each channel of each image in batch)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>

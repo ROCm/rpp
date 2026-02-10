@@ -53,8 +53,8 @@ extern "C" {
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] mulTensor mul values for fmadd calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
- * \param[in] addTensor add values for fmadd calculation (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] mulTensor mul values for fmadd calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] addTensor add values for fmadd calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -74,7 +74,7 @@ RppStatus rppt_fused_multiply_add_scalar(RppPtr_t srcPtr, RpptGenericDescPtr src
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] addTensor add values for used for addition (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] addTensor add values for used for addition (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -94,7 +94,7 @@ RppStatus rppt_add_scalar(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param[in] subtractTensor subtract values for used for subtraction (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] subtractTensor subtract values for used for subtraction (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -114,7 +114,7 @@ RppStatus rppt_subtract_scalar(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] mulTensor multiplier values for used for multiplication (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
+ * \param[in] mulTensor multiplier values for used for multiplication (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
@@ -153,7 +153,7 @@ RppStatus rppt_magnitude(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend))
+ * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend))
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -169,7 +169,7 @@ RppStatus rppt_log(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend))
+ * \param [in] roiTensor values to represent dimensions of input tensor (tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend))
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
