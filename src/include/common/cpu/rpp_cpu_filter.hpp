@@ -912,12 +912,10 @@ inline void rpp_morphological_load_NxN(typename MorphVecLoader<T>::VecType *pxRo
         pxRow[k] = Loader::load(srcPtrTemp[k]);
 
     // Load valid remaining rows
-    #pragma unroll
     for (int k = preLoadRows; k < rowKernelLoopLimit; ++k)
         pxRow[k] = Loader::load(srcPtrTemp[k]);
 
     // Pad beyond valid range
-    #pragma unroll
     for (int k = rowKernelLoopLimit; k < kernelSize; ++k)
     {
         if constexpr (std::is_same_v<Vec, __m256i>)
