@@ -138,6 +138,8 @@ void brightness(const torch::Tensor& input_tensor,
                torch::Tensor& output_tensor,
                const std::vector<float>& alpha,
                const std::vector<float>& beta,
+               const std::vector<int>& roi_widths,
+               const std::vector<int>& roi_heights,
                uintptr_t handle,
                int backend) {
 
@@ -153,7 +155,8 @@ void brightness(const torch::Tensor& input_tensor,
     std::vector<RpptROI> roi(batch_size);
 
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -207,6 +210,8 @@ void brightness(const torch::Tensor& input_tensor,
 void gamma_correction(const torch::Tensor& input_tensor,
                      torch::Tensor& output_tensor,
                      const std::vector<float>& gamma,
+                     const std::vector<int>& roi_widths,
+                     const std::vector<int>& roi_heights,
                      uintptr_t handle,
                      int backend) {
 
@@ -221,7 +226,8 @@ void gamma_correction(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -266,6 +272,8 @@ void contrast(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const std::vector<float>& contrast_factor,
              const std::vector<float>& contrast_center,
+             const std::vector<int>& roi_widths,
+             const std::vector<int>& roi_heights,
              uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -279,7 +287,8 @@ void contrast(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -330,6 +339,8 @@ void contrast(const torch::Tensor& input_tensor,
 void hue(const torch::Tensor& input_tensor,
         torch::Tensor& output_tensor,
         const std::vector<float>& hue_shift,
+        const std::vector<int>& roi_widths,
+        const std::vector<int>& roi_heights,
         uintptr_t handle,
         int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -343,7 +354,8 @@ void hue(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -387,6 +399,8 @@ void flip(const torch::Tensor& input_tensor,
          torch::Tensor& output_tensor,
          const std::vector<int>& horizontal,
          const std::vector<int>& vertical,
+         const std::vector<int>& roi_widths,
+         const std::vector<int>& roi_heights,
          uintptr_t handle,
          int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -402,13 +416,9 @@ void flip(const torch::Tensor& input_tensor,
     std::vector<Rpp32u> h_tensor(batch_size);
     std::vector<Rpp32u> v_tensor(batch_size);
 
-    int actual_widths[] = {50, 100, 150};
-    int actual_heights[] = {50, 100, 150};
-
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
-    // for (int i = 0; i < batch_size; i++) {
-    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
         h_tensor[i] = horizontal[i];
         v_tensor[i] = vertical[i];
     }
@@ -461,6 +471,8 @@ void resize(const torch::Tensor& input_tensor,
            torch::Tensor& output_tensor,
            const std::vector<int>& dst_width,
            const std::vector<int>& dst_height,
+           const std::vector<int>& roi_widths,
+           const std::vector<int>& roi_heights,
            uintptr_t handle,
            int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -475,13 +487,9 @@ void resize(const torch::Tensor& input_tensor,
     std::vector<RpptROI> roi(batch_size);
     std::vector<RpptImagePatch> dst_sizes(batch_size);
 
-    int actual_widths[] = {50, 100, 150};
-    int actual_heights[] = {50, 100, 150};
-
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
-    // for (int i = 0; i < batch_size; i++) {
-    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
         dst_sizes[i].width = dst_width[i];
         dst_sizes[i].height = dst_height[i];
     }
@@ -527,6 +535,8 @@ void resize(const torch::Tensor& input_tensor,
 void rotate(const torch::Tensor& input_tensor,
            torch::Tensor& output_tensor,
            const std::vector<float>& angle,
+           const std::vector<int>& roi_widths,
+           const std::vector<int>& roi_heights,
            uintptr_t handle,
            int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -539,10 +549,9 @@ void rotate(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    int actual_widths[] = {50, 100, 150};
-    int actual_heights[] = {50, 100, 150};
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -601,14 +610,12 @@ void crop(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
     
-    // for (int i = 0; i < batch_size; i++) {
-    //     roi[i].xywhROI = {x1[i], 
-    //                      y1[i], 
-    //                      crop_width[i], 
-    //                      crop_height[i]};
+    for (int i = 0; i < batch_size; i++) {
+        roi[i].xywhROI = {x1[i], 
+                         y1[i], 
+                         crop_width[i], 
+                         crop_height[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -643,6 +650,8 @@ void crop(const torch::Tensor& input_tensor,
 void vignette(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const std::vector<float>& intensity,
+             const std::vector<int>& roi_widths,
+             const std::vector<int>& roi_heights,
              uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -656,7 +665,8 @@ void vignette(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -700,6 +710,8 @@ void pixelate(const torch::Tensor& input_tensor,
              torch::Tensor& output_tensor,
              const torch::Tensor& scratch_tensor,
              float pixelation_pct,
+             const std::vector<int>& roi_widths,
+             const std::vector<int>& roi_heights,
              uintptr_t handle,
              int backend) {
     auto input_data = get_tensor_data(input_tensor);
@@ -713,16 +725,11 @@ void pixelate(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
 
-    int actual_widths[] = {50, 100, 150};
-    int actual_heights[] = {50, 100, 150};
-
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
+        // Use provided ROI dimensions instead of full tensor dimensions
+        roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
-    // for (int i = 0; i < batch_size; i++) {
-    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
-    // }
 
     // Initialize pointers to CPU data by default
     RpptROI* roi_ptr = roi.data();
@@ -812,36 +819,43 @@ PYBIND11_MODULE(_rpp_pybind, m) {
     m.def("brightness", &brightness, "Brightness augmentation",
           py::arg("input"), py::arg("output"), 
           py::arg("alpha"), py::arg("beta"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("gamma_correction", &gamma_correction, "Gamma correction",
           py::arg("input"), py::arg("output"),
-          py::arg("gamma"), 
+          py::arg("gamma"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("contrast", &contrast, "Contrast augmentation",
           py::arg("input"), py::arg("output"),
           py::arg("contrast_factor"), py::arg("contrast_center"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("hue", &hue, "Hue augmentation",
           py::arg("input"), py::arg("output"),
           py::arg("hue_shift"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("flip", &flip, "Flip augmentation",
           py::arg("input"), py::arg("output"),
           py::arg("horizontal"), py::arg("vertical"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("resize", &resize, "Resize augmentation",
           py::arg("input"), py::arg("output"),
           py::arg("dst_width"), py::arg("dst_height"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("rotate", &rotate, "Rotate augmentation",
           py::arg("input"), py::arg("output"),
           py::arg("angle"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("crop", &crop, "Crop augmentation",
@@ -852,10 +866,12 @@ PYBIND11_MODULE(_rpp_pybind, m) {
     m.def("vignette", &vignette, "Vignette effect",
           py::arg("input"), py::arg("output"),
           py::arg("intensity"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("pixelate", &pixelate, "Pixelate effect",
           py::arg("input"), py::arg("output"), py::arg("scratch"),
           py::arg("pixelation_pct"),
+          py::arg("roi_widths"), py::arg("roi_heights"),
           py::arg("handle"), py::arg("backend"));
 }

@@ -321,10 +321,18 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.brightness(
                     image, 
                     alpha=params['alpha'], 
-                    beta=params['beta'], 
+                    beta=params['beta'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -415,9 +423,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.gamma_correction(
                     image, 
-                    gamma=params['gamma'], 
+                    gamma=params['gamma'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -512,10 +528,18 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.flip(
                     image, 
                     horizontal=True,
-                    vertical=False, 
+                    vertical=False,
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -610,10 +634,18 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.resize(
                     image, 
                     width=params['width'], 
-                    height=params['height'], 
+                    height=params['height'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -808,9 +840,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.hue(
                     image, 
-                    hue_shift=params['hue_shift'], 
+                    hue_shift=params['hue_shift'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -905,9 +945,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.rotate(
                     image, 
-                    angle=params['angle'], 
+                    angle=params['angle'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -1002,10 +1050,18 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.contrast(
                     image, 
                     contrast_factor=params['contrast_factor'], 
-                    contrast_center=params['contrast_center'], 
+                    contrast_center=params['contrast_center'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -1100,9 +1156,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.vignette(
                     image, 
-                    intensity=params['intensity'], 
+                    intensity=params['intensity'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
@@ -1197,9 +1261,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                roi_widths = [actual_w]
+                roi_heights = [actual_h]
+                
                 output = fn.pixelate(
                     image, 
-                    pixelation_percentage=params['pixelation_percentage'], 
+                    pixelation_percentage=params['pixelation_percentage'],
+                    roi_widths=roi_widths,
+                    roi_heights=roi_heights,
                     backend=self.backend
                 )
                 
