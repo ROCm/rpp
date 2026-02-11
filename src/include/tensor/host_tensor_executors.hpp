@@ -352,6 +352,50 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
+RppStatus brightness_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f alpha,
+                                             Rpp32f beta,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
+RppStatus brightness_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f alpha,
+                                               Rpp32f beta,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus brightness_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp16f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f alpha,
+                                               Rpp32f beta,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus brightness_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8s *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f alpha,
+                                             Rpp32f beta,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
 // -------------------- blend --------------------
 
 RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,

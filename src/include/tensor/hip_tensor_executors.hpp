@@ -257,6 +257,17 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_brightness_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f alpha,
+                                           Rpp32f betar,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- blend --------------------
 
 template <typename T>
@@ -690,6 +701,16 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_box_filter_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32u kernelSize,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- gaussian_filter --------------------
 
 template <typename T>
@@ -727,6 +748,15 @@ RppStatus hip_exec_crop_tensor(T *srcPtr,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_crop_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
 
 // -------------------- crop_and_patch --------------------
 
@@ -770,6 +800,17 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                rpp::Handle& handle);
 
 template <typename T>
+RppStatus hip_exec_flip_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u horizontalFlag,
+                                     Rpp32u verticalFlag,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+template <typename T>
 RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                      RpptGenericDescPtr srcGenericDescPtr,
                                      T *dstPtr,
@@ -808,6 +849,17 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_resize_single_image(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptImagePatchPtr dstImgSize,
+                                       RpptInterpolationType interpolationType,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
 
 // -------------------- resize_crop_mirror --------------------
 
