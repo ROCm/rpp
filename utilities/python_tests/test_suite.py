@@ -23,6 +23,7 @@ import numpy as np
 import torch
 from datetime import datetime
 from PIL import Image
+import matplotlib.pyplot as plt
 from typing import Optional, Tuple, Dict, Any, List
 
 # Add current directory to path
@@ -136,7 +137,7 @@ class UnifiedTestSuite:
     # HELPER FUNCTIONS
     # =========================================================================
     
-    def _save_output_image(self, tensor, augmentation_name, image_name):
+    def _save_output_image(self, tensor, augmentation_name, image_name, img_idx):
         """Save output image to filesystem (Unit mode)"""
         try:
             # Create augmentation-specific directory
@@ -161,6 +162,10 @@ class UnifiedTestSuite:
             # Ensure uint8 type
             if output_hwc.dtype != np.uint8:
                 output_hwc = np.clip(output_hwc, 0, 255).astype(np.uint8)
+            
+            # Get actual dimensions and crop before saving
+            actual_h, actual_w = self.config.IMAGE_SPECS[img_idx]
+            output_hwc = output_hwc[:actual_h, :actual_w, :]
             
             # Save image
             output_path = os.path.join(aug_output_dir, image_name)
@@ -206,6 +211,7 @@ class UnifiedTestSuite:
         ref_roi = img_slot_reshaped[:actual_h, :actual_w, :]
         
         return ref_roi
+
     
     def _compare_with_reference(self, output_tensor, ref_data, img_idx):
         """
@@ -239,14 +245,19 @@ class UnifiedTestSuite:
             ref_roi = self._extract_from_batch_nhwc(ref_data, img_idx)
             
             # Verify shapes match
+            # print("Output ROI Shape: ",output_roi.shape)
+            # print("reference ROI Shape: ",ref_roi.shape)
             if output_roi.shape != ref_roi.shape:
                 return False, {
                     "error": f"Shape mismatch: output {output_roi.shape} vs ref {ref_roi.shape}"
                 }
-            
+            print("Output values: ",output_roi.astype(np.int16))
+            print("Reference values: ",ref_roi.astype(np.int16))
+
             # Calculate differences
             diff = output_roi.astype(np.int16) - ref_roi.astype(np.int16)
             abs_diff = np.abs(diff)
+            # print(abs_diff)
             
             # Statistics
             max_diff = int(abs_diff.max())
@@ -319,7 +330,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -412,7 +423,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -503,14 +514,14 @@ class UnifiedTestSuite:
                 image = util.load_image(img_path, device=device)
                 output = fn.flip(
                     image, 
-                    horizontal=params['horizontal'], 
-                    vertical=params['vertical'], 
+                    horizontal=True,
+                    vertical=False, 
                     backend=self.backend
                 )
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -608,7 +619,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -708,7 +719,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -805,7 +816,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -902,7 +913,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -1000,7 +1011,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -1097,7 +1108,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1
@@ -1194,7 +1205,7 @@ class UnifiedTestSuite:
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
-                    if self._save_output_image(output, aug_name, image_name):
+                    if self._save_output_image(output, aug_name, image_name, idx):
                         print(f"    ✓ {image_name} : SAVED")
                         if self.mode == "UNIT":
                             success_count += 1

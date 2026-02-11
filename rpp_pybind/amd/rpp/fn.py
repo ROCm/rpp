@@ -297,6 +297,8 @@ def flip(images, horizontal=False, vertical=False, backend=None):
         images = images.cpu()
     
     batch_size = images.shape[0]
+    actual_heights = [images.shape[2]] * batch_size
+    actual_widths = [images.shape[3]] * batch_size
     output = torch.empty_like(images)
     
     handle = rppCreate(batch_size, backend=backend)

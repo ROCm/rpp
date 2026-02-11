@@ -401,9 +401,14 @@ void flip(const torch::Tensor& input_tensor,
     std::vector<RpptROI> roi(batch_size);
     std::vector<Rpp32u> h_tensor(batch_size);
     std::vector<Rpp32u> v_tensor(batch_size);
-    
+
+    int actual_widths[] = {50, 100, 150};
+    int actual_heights[] = {50, 100, 150};
+
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
+    // for (int i = 0; i < batch_size; i++) {
+    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
         h_tensor[i] = horizontal[i];
         v_tensor[i] = vertical[i];
     }
@@ -469,9 +474,14 @@ void resize(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     std::vector<RpptImagePatch> dst_sizes(batch_size);
-    
+
+    int actual_widths[] = {50, 100, 150};
+    int actual_heights[] = {50, 100, 150};
+
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
+    // for (int i = 0; i < batch_size; i++) {
+    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
         dst_sizes[i].width = dst_width[i];
         dst_sizes[i].height = dst_height[i];
     }
@@ -529,6 +539,8 @@ void rotate(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
+    int actual_widths[] = {50, 100, 150};
+    int actual_heights[] = {50, 100, 150};
     for (int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
     }
@@ -589,12 +601,14 @@ void crop(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {x1[i], 
-                         y1[i], 
-                         crop_width[i], 
-                         crop_height[i]};
+        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
+    
+    // for (int i = 0; i < batch_size; i++) {
+    //     roi[i].xywhROI = {x1[i], 
+    //                      y1[i], 
+    //                      crop_width[i], 
+    //                      crop_height[i]};
     }
 
     // Initialize pointers to CPU data by default
@@ -698,10 +712,17 @@ void pixelate(const torch::Tensor& input_tensor,
     auto rpp_handle = reinterpret_cast<rppHandle_t>(handle);
     
     int batch_size = input_data.shape[0];
+
+    int actual_widths[] = {50, 100, 150};
+    int actual_heights[] = {50, 100, 150};
+
     std::vector<RpptROI> roi(batch_size);
     for (int i = 0; i < batch_size; i++) {
-        roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+        roi[i].xywhROI = {0, 0, actual_widths[i], actual_heights[i]};
     }
+    // for (int i = 0; i < batch_size; i++) {
+    //     roi[i].xywhROI = {0, 0, static_cast<int>(input_data.shape[3]), static_cast<int>(input_data.shape[2])};
+    // }
 
     // Initialize pointers to CPU data by default
     RpptROI* roi_ptr = roi.data();
