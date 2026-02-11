@@ -1994,10 +1994,22 @@ RppStatus crop_mirror_normalize_u8_f16_host_tensor(Rpp8u *srcPtr,
                                                    RppLayoutParams layoutParams,
                                                    rpp::Handle& handle);
 
-// -------------------- dilate --------------------
+// -------------------- erode --------------------
 
 template<typename T>
-RppStatus dilate_char_host_tensor(T *srcPtr,
+RppStatus erode_char_host_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus erode_float_host_tensor(T *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   T *dstPtr,
                                   RpptDescPtr dstDescPtr,
@@ -2007,17 +2019,32 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle);
 
+
+// -------------------- erode --------------------
+
+template<typename T>
+RppStatus erode_char_host_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
 // F32 and F16 bitdepth
 template<typename T>
-RppStatus dilate_float_host_tensor(T *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   T *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   Rpp32u kernelSize,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams,
-                                   rpp::Handle& handle);
+RppStatus erode_float_host_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32u kernelSize,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
 
 // -------------------- flip --------------------
 
