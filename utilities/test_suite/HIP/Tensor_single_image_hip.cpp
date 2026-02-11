@@ -679,6 +679,23 @@ int main(int argc, char **argv)
     int roiHeightList[noOfImages], roiWidthList[noOfImages];
     initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
 
+    // Initialize output buffers with correct size based on actual image dimensions (not padded)
+    vector<Mat> outputVec(noOfImages);
+    vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
+    for (int i = 0; i < noOfImages; i++)
+    {
+        // Store actual dimensions before padding
+        actualInputWidth[i] = inputVec[i].cols;
+        actualInputHeight[i] = inputVec[i].rows;
+        
+        int cvType = get_cv_type(dstDescPtr[i].dataType, 1);
+        // Allocate buffer using actual image dimensions, not padded descriptor width
+        if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
+            outputVec[i] = Mat(actualInputHeight[i] * dstDescPtr[i].c, actualInputWidth[i], cvType);
+        else
+            outputVec[i] = Mat(actualInputHeight[i], actualInputWidth[i], get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
+    }
+
     // Prepare input buffers as contiguous memory for direct device copy
     for(int i = 0; i < noOfImages; i++)
     {
@@ -698,21 +715,6 @@ int main(int argc, char **argv)
             preparedInput = preparedInput.clone();
         
         inputVec[i] = preparedInput;
-    }
-
-    // Initialize output buffers with correct size based on actual image dimensions (not padded)
-    vector<Mat> outputVec(noOfImages);
-    vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
-    for (int i = 0; i < noOfImages; i++)
-    {
-        actualInputHeight[i] = inputVec[i].rows;
-        actualInputWidth[i] = inputVec[i].cols;
-        int cvType = get_cv_type(dstDescPtr[i].dataType, 1);
-        // Allocate buffer using padded descriptor width
-        if (dstDescPtr[i].layout == RpptLayout::NCHW)
-            outputVec[i] = Mat(dstDescPtr[i].h * dstDescPtr[i].c, dstDescPtr[i].w, cvType);
-        else
-            outputVec[i] = Mat(dstDescPtr[i].h, dstDescPtr[i].w, get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
     }
     
     Rpp32u numThreads = 1;
@@ -917,7 +919,7 @@ int main(int argc, char **argv)
             for(int j = 0; j < outputVec[i].rows; j++)
             {
                 Rpp8u *d_outputRowTemp = d_output_offsetted + j * dstDescPtr[i].strides.hStride * outElementSize;
-                Rpp8u *outputRowTemp = outputTemp + j * inputVec[i].step[0];
+                Rpp8u *outputRowTemp = outputTemp + j * outputVec[i].step[0];
                 CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
             }
 
@@ -941,11 +943,8 @@ int main(int argc, char **argv)
             if(testCase != CROP && testCase != RESIZE)
             {
                 // Use actual dimensions, not padded descriptor width
-                dstImgSizes[i].width = inputVec[i].cols;
-                dstImgSizes[i].height = inputVec[i].rows;
-
-                // dstImgSizes[i].width = dstDescPtr[i].w;
-                // dstImgSizes[i].height = dstDescPtr[i].h;
+                dstImgSizes[i].width = actualInputWidth[i];
+                dstImgSizes[i].height = actualInputHeight[i];
             }
         }
         saveBatchOutput(dst, noOfImages, outputVec, dstDescPtr, dstImgSizes);
