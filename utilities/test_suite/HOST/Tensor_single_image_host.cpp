@@ -69,7 +69,7 @@ cv::Mat convert_pkd3_to_pln3(const cv::Mat& srcPacked)
             }
         }
     }
-    else if (srcPacked.depth() == CV_32F || srcPacked.depth() == CV_16F)
+    else if (srcPacked.depth() == CV_32F)
     {
         for (int y = 0; y < height; y++)
         {
@@ -91,6 +91,28 @@ cv::Mat convert_pkd3_to_pln3(const cv::Mat& srcPacked)
             }
         }
     }
+    else if (srcPacked.depth() == CV_16F)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            const cv::float16_t* srcRow = srcPacked.ptr<cv::float16_t>(y);
+
+            cv::float16_t* dstR = dstPlanar.ptr<cv::float16_t>(y);
+            cv::float16_t* dstG = dstPlanar.ptr<cv::float16_t>(y + height);
+            cv::float16_t* dstB = dstPlanar.ptr<cv::float16_t>(y + 2 * height);
+
+            for (int x = 0; x < width; x++)
+            {
+                cv::float16_t val0 = *srcRow++;
+                cv::float16_t val1 = *srcRow++;
+                cv::float16_t val2 = *srcRow++;
+
+                *dstR++ = val0;
+                *dstG++ = val1;
+                *dstB++ = val2;
+            }
+        }
+    }
 
     return dstPlanar;
 }
@@ -99,7 +121,7 @@ cv::Mat convert_pln3_to_pkd3(const cv::Mat& srcPlanar, int height, int width)
 {
     cv::Mat dstPacked(height, width, CV_MAKETYPE(srcPlanar.depth(), 3));
 
-    if (srcPlanar.depth() == CV_8U)
+    if (srcPlanar.depth() == CV_8U || srcPlanar.depth() == CV_8S)
     {
         for (int y = 0; y < height; y++)
         {
@@ -135,11 +157,109 @@ cv::Mat convert_pln3_to_pkd3(const cv::Mat& srcPlanar, int height, int width)
             }
         }
     }
+    else if (srcPlanar.depth() == CV_16F)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            const cv::float16_t* srcR = srcPlanar.ptr<cv::float16_t>(y);
+            const cv::float16_t* srcG = srcPlanar.ptr<cv::float16_t>(y + height);
+            const cv::float16_t* srcB = srcPlanar.ptr<cv::float16_t>(y + 2 * height);
+
+            cv::float16_t* dstRow = dstPacked.ptr<cv::float16_t>(y);
+
+            for (int x = 0; x < width; x++)
+            {
+                *dstRow++ = *srcR++;
+                *dstRow++ = *srcG++;
+                *dstRow++ = *srcB++;
+            }
+        }
+    }
 
     return dstPacked;
 }
 
-vector<Mat> loadBatchImages(const string& directory, int& noOfImages, RpptLayout layoutType, bool isColor, int bitDepthMode, float conversionFactor)
+vector<Mat> loadBatchImages_jpegd(const string& directory, int& noOfImages, bool isColor)
+{
+    vector<Mat> images;
+    DIR* dir;
+    struct dirent* entry;
+    tjhandle m_jpegDecompressor = tjInitDecompress();
+
+    if ((dir = opendir(directory.c_str())) == NULL) {
+        cerr << "Could not open directory: " << directory << endl;
+        return images;
+    }
+
+    vector<string> image_names;
+    while ((entry = readdir(dir)) != NULL) {
+        string filename = entry->d_name;
+        if (filename == "." || filename == "..") continue;
+        string ext = filename.substr(filename.find_last_of(".") + 1);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext != "jpg" && ext != "jpeg") continue;
+        image_names.push_back(directory + "/" + filename);
+    }
+    closedir(dir);
+
+    for (const auto& inputImagePath : image_names)
+    {
+        FILE* fp = fopen(inputImagePath.c_str(), "rb");
+        if(!fp) {
+            std::cerr << "\n unable to open file : "<< inputImagePath;
+            continue;
+        }
+        fseek(fp, 0, SEEK_END);
+        long jpegSize = ftell(fp);
+        rewind(fp);
+        
+        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        if (fread(jpegBuf, 1, jpegSize, fp) != jpegSize) {
+             std::cerr << "\n File read incomplete: " << inputImagePath;
+             free(jpegBuf);
+             fclose(fp);
+             continue;
+        }
+        fclose(fp);
+
+        int width, height, subsamp, color_space;
+        if(tjDecompressHeader3(m_jpegDecompressor, jpegBuf, jpegSize, &width, &height, &subsamp, &color_space) != 0) {
+            std::cerr << "\n Jpeg image decode failed in tjDecompressHeader3 for " << inputImagePath;
+            free(jpegBuf);
+            continue;
+        }
+
+        Mat decodedImage;
+        if(isColor)
+        {
+            decodedImage = Mat::zeros(height, width, CV_8UC3);
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, decodedImage.data, width, 
+                             (int)decodedImage.step, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0) {
+                std::cerr << "\n Jpeg image decode failed for " << inputImagePath;
+                free(jpegBuf);
+                continue;
+            }
+        }
+        else
+        {
+            decodedImage = Mat::zeros(height, width, CV_8UC1);
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, decodedImage.data, width, 
+                             (int)decodedImage.step, height, TJPF_GRAY, 0) != 0) {
+                std::cerr << "\n Jpeg image decode failed for " << inputImagePath;
+                free(jpegBuf);
+                continue;
+            }
+        }
+        images.push_back(decodedImage);
+        free(jpegBuf);
+    }
+
+    tjDestroy(m_jpegDecompressor);
+    noOfImages = images.size();
+    return images;
+}
+
+vector<Mat> loadBatchImages_cv(const string& directory, int& noOfImages, bool isColor)
 {
     vector<Mat> images;
     DIR* dir;
@@ -150,55 +270,78 @@ vector<Mat> loadBatchImages(const string& directory, int& noOfImages, RpptLayout
         return images;
     }
 
+    vector<string> filenames;
     while ((entry = readdir(dir)) != NULL) {
         string filename = entry->d_name;
         if (filename == "." || filename == "..") continue;
         string ext = filename.substr(filename.find_last_of(".") + 1);
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         if (ext != "jpg" && ext != "jpeg" && ext != "png" && ext != "bmp") continue;
-
-        string filePath = directory + "/" + filename;
-
-        Mat processedImg = imread(filePath, isColor ? IMREAD_COLOR : IMREAD_GRAYSCALE);
-        if (processedImg.empty()) continue;
-
-        Mat finalImg;
-        if (bitDepthMode == U8_TO_F32 || bitDepthMode == F32_TO_F32)
-            processedImg.convertTo(finalImg, CV_32F, conversionFactor);
-        else if (bitDepthMode == U8_TO_F16 || bitDepthMode == F16_TO_F16)
-            processedImg.convertTo(finalImg, CV_16F, conversionFactor);
-        else if (bitDepthMode == I8_TO_I8 || bitDepthMode == U8_TO_I8)
-            processedImg.convertTo(finalImg, CV_8S, 1.0, -128.0);
-        else
-            finalImg = processedImg;
-
-        images.push_back(finalImg);
+        filenames.push_back(directory + "/" + filename);
     }
     closedir(dir);
+    std::sort(filenames.begin(), filenames.end());
+
+    for (const auto& filePath : filenames) {
+        Mat temp = imread(filePath, isColor ? IMREAD_COLOR : IMREAD_GRAYSCALE);
+        if (temp.empty()) continue;
+        Mat img;
+        if (isColor && temp.depth() == CV_8U)
+            cvtColor(temp, img, COLOR_BGR2RGB);
+        else
+            img = temp;
+        if (!img.isContinuous())
+            img = img.clone();
+        images.push_back(img);
+    }
     noOfImages = images.size();
     return images;
 }
 
-void initializeROI(const vector<Mat>& imgs, vector<RpptROI>& rois, vector<RpptDesc>& descPtr, int* roiList)
+void convertBatchBitDepth(vector<Mat>& images, int bitDepthMode, float conversionFactor)
+{
+    if (bitDepthMode == U8_TO_U8) 
+        return;
+
+    for (size_t i = 0; i < images.size(); i++)
+    {
+        Mat finalImg;
+        
+        if (bitDepthMode == U8_TO_F32 || bitDepthMode == F32_TO_F32)
+            images[i].convertTo(finalImg, CV_32F, conversionFactor);
+        else if (bitDepthMode == U8_TO_F16 || bitDepthMode == F16_TO_F16)
+            images[i].convertTo(finalImg, CV_16F, conversionFactor);
+        else if (bitDepthMode == I8_TO_I8 || bitDepthMode == U8_TO_I8)
+            images[i].convertTo(finalImg, CV_8S, 1.0, -128.0);
+        else
+            finalImg = images[i];
+
+        images[i] = finalImg;
+    }
+}
+
+void initializeROI(const vector<Mat>& imgs, vector<RpptROI>& rois, vector<RpptDesc>& descPtr, int* roiList, int* roiHeightList, int* roiWidthList)
 {
     int batchSize = imgs.size();
-    bool useCustomROI = (roiList[2] != 0 && roiList[3] != 0);
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     for (int i = 0; i < batchSize; ++i)
     {
-        if (useCustomROI)
+        rois[i].xywhROI.xy.x = 0;
+        rois[i].xywhROI.xy.y = 0;
+        rois[i].xywhROI.roiWidth = imgs[i].cols;
+        rois[i].xywhROI.roiHeight = imgs[i].rows;
+        if (invalidROI)
         {
-            rois[i].xywhROI.xy.x = roiList[0];
-            rois[i].xywhROI.xy.y = roiList[1];
-            rois[i].xywhROI.roiWidth = roiList[2];
-            rois[i].xywhROI.roiHeight = roiList[3];
+            roiList[0] = 10;
+            roiList[1] = 10;
+            roiWidthList[i] = rois[i].xywhROI.roiWidth / 2;
+            roiHeightList[i] = rois[i].xywhROI.roiHeight / 2;
         }
         else
         {
-            rois[i].xywhROI.xy.x = 0;
-            rois[i].xywhROI.xy.y = 0;
-            rois[i].xywhROI.roiWidth = descPtr[i].w;
-            rois[i].xywhROI.roiHeight = descPtr[i].h;
+            roiWidthList[i] = roiList[2];
+            roiHeightList[i] = roiList[3];
         }
     }
 }
@@ -211,9 +354,6 @@ void initializeDescriptors(const vector<Mat>& imgs, vector<RpptDesc>& descPtr, i
     {
         const Mat& img = imgs[i];
 
-        int realHeight = img.rows;
-        int realWidth = img.cols;
-
         descPtr[i].h = img.rows;
         descPtr[i].w = img.cols;
         descPtr[i].c = channel;
@@ -221,17 +361,17 @@ void initializeDescriptors(const vector<Mat>& imgs, vector<RpptDesc>& descPtr, i
 
         if (descPtr[i].layout == RpptLayout::NHWC)
         {
-            descPtr[i].strides.nStride = realHeight * realWidth * channel;
-            descPtr[i].strides.hStride = realWidth * channel;
+            descPtr[i].strides.nStride = descPtr[i].h * descPtr[i].w * channel;
+            descPtr[i].strides.hStride = descPtr[i].w * channel;
             descPtr[i].strides.wStride = channel;
             descPtr[i].strides.cStride = 1;
         }
         else
         {
-            descPtr[i].strides.nStride = realHeight * realWidth * channel;
-            descPtr[i].strides.hStride = realWidth;
+            descPtr[i].strides.nStride = descPtr[i].h * descPtr[i].w * channel;
+            descPtr[i].strides.hStride = descPtr[i].w;
             descPtr[i].strides.wStride = 1;
-            descPtr[i].strides.cStride = realHeight * realWidth;
+            descPtr[i].strides.cStride = descPtr[i].h * descPtr[i].w;
         }
     }
 }
@@ -245,6 +385,8 @@ inline void set_descriptor_data_type_name(int BitDepthTestMode, string &funcName
     else if (BitDepthTestMode == U8_TO_F32) funcName += "_u8_f32_";
     else if (BitDepthTestMode == I8_TO_I8) funcName += "_i8_";
     else if (BitDepthTestMode == U8_TO_I8) funcName += "_u8_i8_";
+    else if (BitDepthTestMode == I8_TO_F32) funcName += "_i8_f32_";
+    else if (BitDepthTestMode == I16_TO_F32) funcName += "_i16_f32_";
 }
 
 inline void set_descriptor_layout(vector<RpptDesc>& srcDescs, vector<RpptDesc>& dstDescs, int layoutType, bool pln1OutTypeCase, int outputFormatToggle, int noOfImages)
@@ -314,57 +456,57 @@ int get_cv_type(RpptDataType dataType, int channels)
 void saveBatchOutput(const string& dstDir, int noOfImages, const vector<Mat>& outputVec, const vector<RpptDesc>& dstDescPtr, RpptImagePatch *dstImgSizes)
 {
     mkdir(dstDir.c_str(), 0700);
+    string outputFolder = dstDir;
+    if (outputFolder.back() != '/')
+        outputFolder += "/";
+    int cnt = 1;
 
     for (int i = 0; i < noOfImages; i++)
     {
-        string separator = (dstDir.back() == '/') ? "" : "/";
-        string currentFileName = dstDir + separator + to_string(i) + ".jpg";
+        string baseName = to_string(i);
+        string ext = ".jpg";
+        string outputImagePath = outputFolder + baseName + ext;
 
-        // Skip empty or invalid output
-        if (outputVec[i].empty())
-        {
-            cerr << "\n[Error] Output image " << i << " is empty";
-            continue;
-        }
+        Rpp32u height = dstImgSizes[i].height;
+        Rpp32u width = dstImgSizes[i].width;
 
-        // Validate and clamp dimensions to Mat bounds
-        int matCols = outputVec[i].cols;
-        int matRows = outputVec[i].rows;
-        int extractWidth = std::min((int)dstImgSizes[i].width, matCols);
-        int extractHeight = std::min((int)dstImgSizes[i].height, matRows);
-        
-        // Extract the actual output region based on dstImgSizes
         Mat tempImg;
         if ((dstDescPtr[i].c == 3) && (dstDescPtr[i].layout == RpptLayout::NCHW))
         {
-            // For planar layout, extract region for all 3 channels
-            int planarHeight = std::min(extractHeight * 3, matRows);
-            tempImg = outputVec[i](Rect(0, 0, extractWidth, planarHeight));
+            Mat planarImg = outputVec[i](Rect(0, 0, width, height * 3));
+            tempImg = convert_pln3_to_pkd3(planarImg, height, width);
         }
         else
         {
-            // For packed layout or single channel
-            tempImg = outputVec[i](Rect(0, 0, extractWidth, extractHeight));
+            tempImg = outputVec[i](Rect(0, 0, width, height));
         }
+
 
         Mat saveImg;
         if (tempImg.depth() == CV_32F || tempImg.depth() == CV_16F)
-        {
             tempImg.convertTo(saveImg, CV_8U, 255.0);
-        }
         else if (tempImg.depth() == CV_8S)
-        {
             tempImg.convertTo(saveImg, CV_8U, 1.0, 128.0);
-        }
         else
-        {
             saveImg = tempImg;
-        }
+
+        if (saveImg.channels() == 3)
+            cvtColor(saveImg, saveImg, COLOR_RGB2BGR);
 
         if (!saveImg.empty())
         {
-            imwrite(currentFileName, saveImg);
-            cout << "\nSaved: " << currentFileName;
+            if (std::filesystem::exists(outputImagePath))
+            {
+                std::string outPath = outputFolder + baseName + "_" + to_string(cnt) + ext;
+                imwrite(outPath, saveImg);
+                cout << "\nSaved: " << outPath;
+                cnt++;
+            }
+            else
+            {
+                imwrite(outputImagePath, saveImg);
+                cout << "\nSaved: " << outputImagePath;
+            }
         }
         else
         {
@@ -419,46 +561,56 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    // Determine the type of function to be used based on the specified layout type
+    RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
+    RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
     string func = funcName;
     set_descriptor_data_type_name(BitDepthTestMode, func);
     func += funcType;
     if (kernelSizeCase) func += "_kernelSize" + std::to_string(additionalParam);
+    // else if (interpolationTypeCase)
+    // {
+    //     interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+    //     func += "_interpolationType";
+    //     func += interpolationTypeName.c_str();
+    // }
     if(!qaFlag) dst += "/" + func;
 
     int noOfImages = 0, missingFuncFlag = 0;
     Rpp32f conversionFactor = 1.0f / 255.0;
     bool isColor = (layoutType != 2);
     RpptLayout srcLayoutEnum = (layoutType == 0) ? RpptLayout::NHWC : RpptLayout::NCHW;
-    vector<Mat> inputVec = loadBatchImages(src, noOfImages, srcLayoutEnum, isColor, BitDepthTestMode, conversionFactor);
-    vector<Mat> inputVecSecond;
-    if (dualInputCase)
-        inputVecSecond = loadBatchImages(srcSecond, noOfImages, srcLayoutEnum, isColor, BitDepthTestMode, conversionFactor);
-
+    vector<Mat> inputVec;
+    if (decoderType == 0)
+        inputVec = loadBatchImages_jpegd(src, noOfImages, isColor);
+    else
+        inputVec = loadBatchImages_cv(src, noOfImages, isColor);
     if (noOfImages == 0) { cerr << "No images found!"; return -1; }
+
+    convertBatchBitDepth(inputVec, BitDepthTestMode, conversionFactor);
     if (noOfImages < batchSize) {
         for (int i = noOfImages; i < batchSize; i++)
-        {
             inputVec.push_back(inputVec[noOfImages - 1]);
-            if (dualInputCase)
-                inputVecSecond.push_back(inputVecSecond[noOfImages - 1]);
-        }
         noOfImages = batchSize;
     }
 
     vector<RpptDesc> srcDescPtr(noOfImages), dstDescPtr(noOfImages);
     vector<RpptROI> roi(noOfImages);
-    RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
+    memset(roi.data(), 0, noOfImages * sizeof(RpptROI));
+    RpptImagePatch dstImgSizes[noOfImages];
+
     int inputChannel = set_input_channels(layoutType);
     int outputChannel = inputChannel;
     if(pln1OutTypeCase)
         outputChannel = 1;
     set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle, noOfImages);
+    set_descriptor_data_type(BitDepthTestMode, srcDescPtr, dstDescPtr, noOfImages);
+
     initializeDescriptors(inputVec, srcDescPtr, inputChannel);
     initializeDescriptors(inputVec, dstDescPtr, outputChannel);
-    set_descriptor_data_type(BitDepthTestMode, srcDescPtr, dstDescPtr, noOfImages);
-    initializeROI(inputVec, roi, srcDescPtr, roiList);
+    int roiHeightList[noOfImages], roiWidthList[noOfImages];
+    initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
 
     vector<Mat> outputVec(noOfImages);
     for (int i = 0; i < noOfImages; i++)
@@ -481,9 +633,6 @@ int main(int argc, char **argv)
     {
         for(int i = 0; i < noOfImages; i++)
             inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
-        if (dualInputCase)
-            for(int i = 0; i < noOfImages; i++)
-                inputVecSecond[i] = convert_pkd3_to_pln3(inputVecSecond[i]);
     }
 
     Rpp32u numThreads = noOfImages;
@@ -493,14 +642,6 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double startCpuTime, wallTime;
     string testCaseName;
-    
-    // Initialize dstImgSizes for all images to their original dimensions
-    RpptImagePatch dstImgSizes[noOfImages];
-    for (int i = 0; i < noOfImages; i++)
-    {
-        dstImgSizes[i].width = dstDescPtr[i].w;
-        dstImgSizes[i].height = dstDescPtr[i].h;
-    }
     
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -523,32 +664,6 @@ int main(int argc, char **argv)
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) {
                         errorCodeCapture = rppt_brightness_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle);
-                    }
-                }
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case BOX_FILTER:
-            {
-                testCaseName = "box_filter";
-                Rpp32u kernelSize = additionalParam;
-
-                if (borderType != RpptImageBorderType::REPLICATE)
-                {
-                    missingFuncFlag = 1;
-                    break;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                {
-                    omp_set_dynamic(0);
-                    #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_box_filter_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle);
                     }
                 }
                 else
@@ -584,8 +699,8 @@ int main(int argc, char **argv)
 
                 for (int i = 0; i < noOfImages; i++)
                 {
-                    dstImgSizes[i].width = roi[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roi[i].xywhROI.roiHeight / 2;
+                    dstImgSizes[i].width = roi[i].xywhROI.roiWidth = roi[i].xywhROI.roiWidth / 2;
+                    dstImgSizes[i].height = roi[i].xywhROI.roiHeight = roi[i].xywhROI.roiHeight / 2;
                 }
 
                 startWallTime = omp_get_wtime();
@@ -606,34 +721,14 @@ int main(int argc, char **argv)
             case CROP:
             {
                 testCaseName = "crop";
-                int roiHeightList[noOfImages], roiWidthList[noOfImages];
-                bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
                 for(int i = 0; i < noOfImages ; i++)
                 {
-                    if(invalidROI)
-                    {
-                        roiList[0] = 10;
-                        roiList[1] = 10;
-                        roiWidthList[i] = roi[i].xywhROI.roiWidth / 2;
-                        roiHeightList[i] = roi[i].xywhROI.roiHeight / 2;
-                    }
-                    else
-                    {
-                        roiWidthList[i] = roiList[2];
-                        roiHeightList[i] = roiList[3];
-                    }
-                }
-
-                for (int i = 0; i < noOfImages; i++)
-                {
                     roi[i].xywhROI.xy.x = roiList[0];
                     roi[i].xywhROI.xy.y = roiList[1];
-                    roi[i].xywhROI.roiWidth = roiWidthList[i];
-                    roi[i].xywhROI.roiHeight = roiHeightList[i];
-                    // Update dstImgSizes for crop
-                    dstImgSizes[i].width = roiWidthList[i];
-                    dstImgSizes[i].height = roiHeightList[i];
+                    dstImgSizes[i].width = roi[i].xywhROI.roiWidth = roiWidthList[i];
+                    dstImgSizes[i].height = roi[i].xywhROI.roiHeight = roiHeightList[i];
+
                 }
 
                 startWallTime = omp_get_wtime();
@@ -644,6 +739,32 @@ int main(int argc, char **argv)
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) 
                         errorCodeCapture = rppt_crop_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case BOX_FILTER:
+            {
+                testCaseName = "box_filter";
+                Rpp32u kernelSize = additionalParam;
+
+                if (borderType != RpptImageBorderType::REPLICATE)
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                startWallTime = omp_get_wtime();
+                startCpuTime = clock();
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                {
+                    omp_set_dynamic(0);
+                    #pragma omp parallel for num_threads(numThreads)
+                    for (int i = 0; i < noOfImages; ++i) {
+                        errorCodeCapture = rppt_box_filter_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle);
+                    }
                 }
                 else
                     missingFuncFlag = 1;
@@ -676,17 +797,16 @@ int main(int argc, char **argv)
         cout <<"\n\n";
         cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch";
 
-        if ((dstDescPtr[0].c == 3) && (dstDescPtr[0].layout == RpptLayout::NCHW))
+        if(testCase != CROP && testCase != RESIZE)
         {
-            vector<Mat> outputVecPkd3(noOfImages);
             for(int i = 0; i < noOfImages; i++)
-                outputVecPkd3[i] = convert_pln3_to_pkd3(outputVec[i], dstImgSizes[i].height, dstImgSizes[i].width);
-            saveBatchOutput(dst, noOfImages, outputVecPkd3, dstDescPtr, dstImgSizes);
+            {
+                // Use actual dimensions, not padded descriptor width
+                dstImgSizes[i].width = outputVec[i].cols;
+                dstImgSizes[i].height = outputVec[i].rows;
+            }
         }
-        else
-        {
-            saveBatchOutput(dst, noOfImages, outputVec, dstDescPtr, dstImgSizes);
-        }
+        saveBatchOutput(dst, noOfImages, outputVec, dstDescPtr, dstImgSizes);
     }
 
     rppDestroy(handle, backend);

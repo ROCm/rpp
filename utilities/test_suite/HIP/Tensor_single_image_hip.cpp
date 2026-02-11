@@ -45,7 +45,6 @@ SOFTWARE.
 using namespace cv;
 using namespace std;
 
-
 cv::Mat convert_pkd3_to_pln3(const cv::Mat& srcPacked)
 {
     int width = srcPacked.cols;
@@ -697,24 +696,11 @@ int main(int argc, char **argv)
     }
 
     // Prepare input buffers as contiguous memory for direct device copy
-    for(int i = 0; i < noOfImages; i++)
+    if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
     {
-        Mat preparedInput;
-        if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
-        {
+        for(int i = 0; i < noOfImages; i++)
             // Convert PKD3 to PLN3 for NCHW layout
-            preparedInput = convert_pkd3_to_pln3(inputVec[i]);
-        }
-        else
-        {
-            preparedInput = inputVec[i];
-        }
-        
-        // Ensure contiguous memory layout
-        if (!preparedInput.isContinuous())
-            preparedInput = preparedInput.clone();
-        
-        inputVec[i] = preparedInput;
+            inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
     }
     
     Rpp32u numThreads = 1;
@@ -938,9 +924,9 @@ int main(int argc, char **argv)
     {
         cout <<"\n\n";
         cout << "GPU Backend Wall Time: " << avgWallTime * 1000 / (numRuns * noOfImages) <<" ms/image";
-        for(int i = 0; i < noOfImages; i++)
+        if(testCase != CROP && testCase != RESIZE)
         {
-            if(testCase != CROP && testCase != RESIZE)
+            for(int i = 0; i < noOfImages; i++)
             {
                 // Use actual dimensions, not padded descriptor width
                 dstImgSizes[i].width = actualInputWidth[i];
