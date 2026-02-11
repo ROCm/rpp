@@ -33,251 +33,225 @@ SOFTWARE.
 
 /******************** bitwise AND ********************/
 
-RppStatus rppt_bitwise_and_host(RppPtr_t srcPtr1,
-                                RppPtr_t srcPtr2,
-                                RpptDescPtr srcDescPtr,
-                                RppPtr_t dstPtr,
-                                RpptDescPtr dstDescPtr,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rppHandle_t rppHandle)
+RppStatus rppt_bitwise_and(RppPtr_t srcPtr1,
+                           RppPtr_t srcPtr2,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle,
+                           RppBackend executionBackend)
 {
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
-        bitwise_and_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                      static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                      dstDescPtr,
-                                      roiTensorPtrSrc,
-                                      roiType,
-                                      layoutParams,
-                                      rpp::deref(rppHandle));
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            bitwise_and_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                          static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          layoutParams,
+                                          handle);
+        }
+        return RPP_SUCCESS;
     }
-
-    return RPP_SUCCESS;
+#ifdef GPU_SUPPORT
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_bitwise_and_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                        static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        handle);
+        }
+        return RPP_SUCCESS;
+    }
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
 /******************** bitwise XOR ********************/
 
-RppStatus rppt_bitwise_xor_host(RppPtr_t srcPtr1,
-                                RppPtr_t srcPtr2,
-                                RpptDescPtr srcDescPtr,
-                                RppPtr_t dstPtr,
-                                RpptDescPtr dstDescPtr,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rppHandle_t rppHandle)
+RppStatus rppt_bitwise_xor(RppPtr_t srcPtr1,
+                           RppPtr_t srcPtr2,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle,
+                           RppBackend executionBackend)
 {
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
-        bitwise_xor_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                      static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                      dstDescPtr,
-                                      roiTensorPtrSrc,
-                                      roiType,
-                                      layoutParams,
-                                      rpp::deref(rppHandle));
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            bitwise_xor_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                          static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          layoutParams,
+                                          handle);
+        }
+        return RPP_SUCCESS;
     }
-
-    return RPP_SUCCESS;
+#ifdef GPU_SUPPORT
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_bitwise_xor_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                        static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        handle);
+        }
+        return RPP_SUCCESS;
+    }
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
 /******************** bitwise OR ********************/
 
-RppStatus rppt_bitwise_or_host(RppPtr_t srcPtr1,
-                               RppPtr_t srcPtr2,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+RppStatus rppt_bitwise_or(RppPtr_t srcPtr1,
+                          RppPtr_t srcPtr2,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
+                          rppHandle_t rppHandle,
+                          RppBackend executionBackend)
 {
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
-        bitwise_or_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                     static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     layoutParams,
-                                     rpp::deref(rppHandle));
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            bitwise_or_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                         static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                         srcDescPtr,
+                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                         dstDescPtr,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams,
+                                         handle);
+        }
+        return RPP_SUCCESS;
     }
-
-    return RPP_SUCCESS;
+#ifdef GPU_SUPPORT
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_bitwise_or_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                       static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       handle);
+        }
+        return RPP_SUCCESS;
+    }
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
 /******************** bitwise NOT ********************/
 
-RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr,
-                                RpptDescPtr srcDescPtr,
-                                RppPtr_t dstPtr,
-                                RpptDescPtr dstDescPtr,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rppHandle_t rppHandle)
+RppStatus rppt_bitwise_not(RppPtr_t srcPtr,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle,
+                           RppBackend executionBackend)
 {
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
-        bitwise_not_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                      dstDescPtr,
-                                      roiTensorPtrSrc,
-                                      roiType,
-                                      layoutParams,
-                                      rpp::deref(rppHandle));
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            bitwise_not_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          layoutParams,
+                                          handle);
+        }
+        return RPP_SUCCESS;
     }
-
-    return RPP_SUCCESS;
-}
-
-
-/********************************************************************************************************************/
-/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
-/********************************************************************************************************************/
-
 #ifdef GPU_SUPPORT
-
-/******************** bitwise AND ********************/
-
-RppStatus rppt_bitwise_and_gpu(RppPtr_t srcPtr1,
-                               RppPtr_t srcPtr2,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
-{
-
-    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        hip_exec_bitwise_and_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                    static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                    dstDescPtr,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    rpp::deref(rppHandle));
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_bitwise_not_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                        srcDescPtr,
+                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        handle);
+        }
+        return RPP_SUCCESS;
     }
-
-    return RPP_SUCCESS;
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
-
-/******************** bitwise XOR ********************/
-
-RppStatus rppt_bitwise_xor_gpu(RppPtr_t srcPtr1,
-                               RppPtr_t srcPtr2,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
-{
-
-    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        hip_exec_bitwise_xor_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                    static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                    dstDescPtr,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-}
-
-/******************** bitwise OR ********************/
-
-RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1,
-                              RppPtr_t srcPtr2,
-                              RpptDescPtr srcDescPtr,
-                              RppPtr_t dstPtr,
-                              RpptDescPtr dstDescPtr,
-                              RpptROIPtr roiTensorPtrSrc,
-                              RpptRoiType roiType,
-                              rppHandle_t rppHandle)
-{
-
-    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        hip_exec_bitwise_or_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                   static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes,
-                                   srcDescPtr,
-                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                   dstDescPtr,
-                                   roiTensorPtrSrc,
-                                   roiType,
-                                   rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-}
-
-RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
-{
-
-    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
-
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
-    {
-        hip_exec_bitwise_not_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                    dstDescPtr,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-}
-
-#endif // GPU_SUPPORT
