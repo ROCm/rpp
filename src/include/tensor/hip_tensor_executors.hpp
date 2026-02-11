@@ -1121,6 +1121,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                T *dstPtr,
                                                RpptDescPtr dstDescPtr,
+                                               Rpp32s *qualityTensor,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                rpp::Handle& handle);
