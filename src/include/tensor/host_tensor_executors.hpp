@@ -2020,6 +2020,32 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                                   rpp::Handle& handle);
 
 
+// -------------------- erode --------------------
+
+template<typename T>
+RppStatus dilate_char_host_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32u kernelSize,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus dilate_float_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u kernelSize,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+
 // -------------------- flip --------------------
 
 RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
