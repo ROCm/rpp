@@ -1273,6 +1273,20 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case DILATE:
+                {
+                    testCaseName = "dilate";
+                    Rpp32u kernelSize = additionalParam;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == 0 || BitDepthTestMode == 1 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        rppt_dilate_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case COLOR_TEMPERATURE:
                 {
                     testCaseName = "color_temperature";
