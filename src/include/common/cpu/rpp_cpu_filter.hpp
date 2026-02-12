@@ -1062,7 +1062,6 @@ inline void rpp_morphological_load_NxN(typename MorphVecLoader<T>::VecType *pxRo
     constexpr int preLoadRows = (kernelSize + 1) / 2;
 
     // Load initial rows
-    #pragma unroll
     for (int k = 0; k < preLoadRows; ++k)
         pxRow[k] = Loader::load(srcPtrTemp[k]);
 
