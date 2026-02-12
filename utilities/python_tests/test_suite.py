@@ -164,6 +164,10 @@ class UnifiedTestSuite:
             
             # Get actual dimensions and crop before saving
             actual_h, actual_w = self.config.IMAGE_SPECS[img_idx]
+            # FOR CROP AND RESIZE: Save at half dimensions (25x25, 50x50, 75x75)
+            if augmentation_name in ('crop', 'resize'):
+                actual_h //= 2
+                actual_w //= 2
             output_hwc = output_hwc[:actual_h, :actual_w, :]
             
             # Save image
@@ -244,18 +248,6 @@ class UnifiedTestSuite:
             if aug_name in ('crop', 'resize'):
                 actual_h //= 2
                 actual_w //= 2
-            
-            if self.backend == HIP and aug_name in ('crop', 'resize'):
-                torch.cuda.synchronize()  # Force GPU sync
-                if hasattr(output, 'contiguous'):
-                    output = output.contiguous()  # Ensure contiguous memory
-
-            if self.backend == HIP and aug_name in ('crop', 'resize'):
-                torch.cuda.synchronize()  # Force sync before reading
-            
-            if self.backend == HIP and aug_name in ('crop', 'resize'):
-                output = output.clone()  # Force new memory allocation
-
 
             # Extract ROI from output (remove any padding)
             output_roi = output_hwc[:actual_h, :actual_w, :]
@@ -656,9 +648,11 @@ class UnifiedTestSuite:
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
-                roi_widths = [actual_w//2]
-                roi_heights = [actual_h//2]
+                roi_widths = [actual_w //2]
+                roi_heights = [actual_h //2]
                 
+                if self.backend == HIP:
+                    torch.cuda.synchronize()
                 output = fn.resize(
                     image, 
                     width=actual_w//2, 
@@ -667,6 +661,8 @@ class UnifiedTestSuite:
                     roi_heights=roi_heights,
                     backend=self.backend
                 )
+                if self.backend == HIP:
+                    torch.cuda.synchronize()
                 
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:

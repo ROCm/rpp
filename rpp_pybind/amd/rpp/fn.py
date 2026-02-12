@@ -171,12 +171,6 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backe
     
     return output
 
-# __all__ = [
-#     # Color augmentations
-#     'brightness',
-#     'gamma_correction'
-# ]
-
 def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None, roi_heights=None, backend=None):
     """
     Adjust image contrast.
@@ -211,7 +205,7 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -267,7 +261,7 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, backend=None):
         raise ValueError("Hue adjustment requires RGB images (3 channels)")
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -321,7 +315,7 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -380,9 +374,8 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     batch_size = images.shape[0]
     channels = images.shape[1]
     device = images.device
-    
-    output = torch.empty(batch_size, channels, height, width, 
-                        dtype=images.dtype, device=device)
+
+    output = torch.zeros_like(images).contiguous()
 
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -395,7 +388,7 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     width_array = [width] * batch_size
     height_array = [height] * batch_size
     
-    _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend)
+    _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend_int)
 
     rppDestroy(handle, backend_int)
     
@@ -435,7 +428,7 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, backend=None):
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -491,10 +484,9 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
     channels = images.shape[1]
     device = images.device
     
-    output = torch.empty(batch_size, channels, crop_height, crop_width,
-                        dtype=images.dtype, device=device)
+    output = torch.zeros_like(images).contiguous()
     
-    handle = rppCreate(batch_size, backend=backend)
+    handle = rppCreate(batch_size, backend_int)
     
     # Convert scalars to lists
     x1_array = [x1] * batch_size if isinstance(x1, (int, float)) else x1
@@ -502,9 +494,9 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
     width_array = [crop_width] * batch_size if isinstance(crop_width, (int, float)) else crop_width
     height_array = [crop_height] * batch_size if isinstance(crop_height, (int, float)) else crop_height
     
-    _crop(images, output, x1_array, y1_array, width_array, height_array, handle, backend)
+    _crop(images, output, x1_array, y1_array, width_array, height_array, handle, backend_int)
     
-    rppDestroy(handle, backend)
+    rppDestroy(handle, backend_int)
     
     return output
 
@@ -543,7 +535,7 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, backend=N
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
@@ -595,7 +587,7 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.empty_like(images)
+    output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:

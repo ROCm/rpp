@@ -117,6 +117,11 @@ void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
         desc.c = data.shape[1]; 
         desc.h = data.shape[2];
         desc.w = data.shape[3];
+
+        std::cout << "N: " << desc.n 
+          << " C: " << desc.c
+          << " H: " << desc.h
+          << " W: " << desc.w << std::endl;
         
         // Calculate strides in bytes
         size_t element_size = (data.dtype == RpptDataType::U8 || data.dtype == RpptDataType::I8) ? 1 :
