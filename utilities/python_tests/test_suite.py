@@ -82,10 +82,9 @@ class TestConfig:
             'gamma_correction': {'gamma': 1.9},
             'contrast': {'contrast_factor': 2.96, 'contrast_center': 128.0},
             'flip': {'horizontal': True, 'vertical': False},
-            'resize': {'width': 224, 'height': 224},
-            'crop': {'x1': 10, 'y1': 10, 'crop_width': 30, 'crop_height': 30},
+            # 'crop': {'x1': 10, 'y1': 10, 'crop_width': 30, 'crop_height': 30},
             'hue': {'hue_shift': 60.0},
-            'rotate': {'angle': 45.0},
+            'rotate': {'angle': 50.0},
             'vignette': {'intensity': 6.0},
             'pixelate': {'pixelation_percentage': 87.5}
         }
@@ -177,7 +176,7 @@ class UnifiedTestSuite:
             print(f"    ✗ Failed to save: {e}")
             return False
     
-    def _extract_from_batch_nhwc(self, batch_data, img_idx):
+    def _extract_from_batch_nhwc(self, batch_data, img_idx, aug_name=None):
         """
         Extract individual image from NHWC batch reference data.
         
@@ -187,8 +186,6 @@ class UnifiedTestSuite:
         
         But stored with padding to 200 height for uniformity.
         """
-        # The batch has a complex layout
-        # Total: 273,600 bytes = 3 × 200 × 152 × 3
         
         # Calculate offsets based on actual storage layout
         slot_height = 150  # Padded height for all slots
@@ -206,6 +203,11 @@ class UnifiedTestSuite:
         
         # Get actual dimensions and extract valid region
         actual_h, actual_w = self.config.IMAGE_SPECS[img_idx]
+
+        # Adjust for crop and resize
+        if aug_name in ('crop', 'resize'):
+            actual_h //= 2
+            actual_w //= 2
         
         # Extract only the valid region (top-left corner)
         ref_roi = img_slot_reshaped[:actual_h, :actual_w, :]
@@ -213,7 +215,7 @@ class UnifiedTestSuite:
         return ref_roi
 
     
-    def _compare_with_reference(self, output_tensor, ref_data, img_idx):
+    def _compare_with_reference(self, output_tensor, ref_data, img_idx, aug_name=None):
         """
         Compare output tensor with reference from batch.
         
@@ -237,12 +239,29 @@ class UnifiedTestSuite:
             
             # Get actual dimensions for this image
             actual_h, actual_w = self.config.IMAGE_SPECS[img_idx]
+        
+            # Adjust for crop/resize
+            if aug_name in ('crop', 'resize'):
+                actual_h //= 2
+                actual_w //= 2
             
+            if self.backend == HIP and aug_name in ('crop', 'resize'):
+                torch.cuda.synchronize()  # Force GPU sync
+                if hasattr(output, 'contiguous'):
+                    output = output.contiguous()  # Ensure contiguous memory
+
+            if self.backend == HIP and aug_name in ('crop', 'resize'):
+                torch.cuda.synchronize()  # Force sync before reading
+            
+            if self.backend == HIP and aug_name in ('crop', 'resize'):
+                output = output.clone()  # Force new memory allocation
+
+
             # Extract ROI from output (remove any padding)
             output_roi = output_hwc[:actual_h, :actual_w, :]
             
             # Extract reference from batch
-            ref_roi = self._extract_from_batch_nhwc(ref_data, img_idx)
+            ref_roi = self._extract_from_batch_nhwc(ref_data, img_idx, aug_name)
             
             # Verify shapes match
             # print("Output ROI Shape: ",output_roi.shape)
@@ -448,7 +467,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -554,7 +573,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -598,10 +617,10 @@ class UnifiedTestSuite:
         - QA mode: Apply and compare with reference
         """
         aug_name = "resize"
-        params = self.config.AUGMENTATION_PARAMS[aug_name]
+        # params = self.config.AUGMENTATION_PARAMS[aug_name]
         device = 'cuda' if self.backend == HIP else 'cpu'
         
-        print(f"  [4/10] Resize (width={params['width']}, height={params['height']})")
+        print(f"  [4/10] Resize")
         print("  " + "-" * 50)
         
         if not hasattr(fn, 'resize'):
@@ -615,7 +634,7 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor_interpolationTypeBicubic.bin"
+                f"{aug_name}_u8_Tensor_interpolationTypeBilinear.bin"
             )
             if os.path.exists(ref_path):
                 ref_data = np.fromfile(ref_path, dtype=np.uint8)
@@ -637,13 +656,13 @@ class UnifiedTestSuite:
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
-                roi_widths = [actual_w]
-                roi_heights = [actual_h]
+                roi_widths = [actual_w//2]
+                roi_heights = [actual_h//2]
                 
                 output = fn.resize(
                     image, 
-                    width=params['width'], 
-                    height=params['height'],
+                    width=actual_w//2, 
+                    height=actual_h//2,
                     roi_widths=roi_widths,
                     roi_heights=roi_heights,
                     backend=self.backend
@@ -660,7 +679,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -704,10 +723,10 @@ class UnifiedTestSuite:
         - QA mode: Apply and compare with reference
         """
         aug_name = "crop"
-        params = self.config.AUGMENTATION_PARAMS[aug_name]
+        # params = self.config.AUGMENTATION_PARAMS[aug_name]
         device = 'cuda' if self.backend == HIP else 'cpu'
-        
-        print(f"  [5/10] Crop (x1={params['x1']}, y1={params['y1']}, width={params['crop_width']}, height={params['crop_height']})")
+        print(f"  [5/10] Crop (x1=10, y1=10)")
+        # print(f"  [5/10] Crop (x1={params['x1']}, y1={params['y1']}, width={params['crop_width']}, height={params['crop_height']})")
         print("  " + "-" * 50)
         
         if not hasattr(fn, 'crop'):
@@ -740,12 +759,17 @@ class UnifiedTestSuite:
             try:
                 # Load and apply augmentation
                 image = util.load_image(img_path, device=device)
+                # Get actual dimensions for ROI
+                actual_h, actual_w = self.config.IMAGE_SPECS[idx]
+                # roi_widths = actual_w/2
+                # roi_heights = actual_h/2
+
                 output = fn.crop(
                     image, 
-                    x1=params['x1'], 
-                    y1=params['y1'], 
-                    crop_width=params['crop_width'], 
-                    crop_height=params['crop_height'], 
+                    x1=10, 
+                    y1=10, 
+                    crop_width = actual_w//2, 
+                    crop_height = actual_h//2, 
                     backend=self.backend
                 )
                 
@@ -760,7 +784,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -865,7 +889,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -970,7 +994,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -1076,7 +1100,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -1181,7 +1205,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -1286,7 +1310,7 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
                     
                     if passed:
                         print(f"    ✓ {image_name} : QA PASS")
@@ -1407,9 +1431,7 @@ class UnifiedTestSuite:
                                    vertical=params['flip']['vertical'], backend=self.backend)),
             ('resize', lambda: fn.resize(test_image, width=params['resize']['width'], 
                                         height=params['resize']['height'], backend=self.backend)),
-            ('crop', lambda: fn.crop(test_image, x1=params['crop']['x1'], y1=params['crop']['y1'], 
-                                    crop_width=params['crop']['crop_width'], 
-                                    crop_height=params['crop']['crop_height'], backend=self.backend)),
+            ('crop', lambda: fn.crop(test_image, x1=params['crop']['x1'], y1=params['crop']['y1'], backend=self.backend)),
             ('hue', lambda: fn.hue(test_image, hue_shift=params['hue']['hue_shift'], backend=self.backend)),
             ('rotate', lambda: fn.rotate(test_image, angle=params['rotate']['angle'], backend=self.backend)),
             ('contrast', lambda: fn.contrast(test_image, contrast_factor=params['contrast']['contrast_factor'], 

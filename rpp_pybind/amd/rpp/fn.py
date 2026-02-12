@@ -383,7 +383,7 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     
     output = torch.empty(batch_size, channels, height, width, 
                         dtype=images.dtype, device=device)
-    
+
     # Set ROI dimensions (use full tensor dimensions if not provided)
     if roi_widths is None:
         roi_widths = [images.shape[3]] * batch_size
@@ -395,8 +395,8 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     width_array = [width] * batch_size
     height_array = [height] * batch_size
     
-    _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend_int)
-    
+    _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend)
+
     rppDestroy(handle, backend_int)
     
     return output
