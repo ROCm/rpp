@@ -103,7 +103,7 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    40: ["erode", "HIP"],
+    40: ["erode", "HOST", "HIP"],
     41: ["dilate", "HIP"],
     42: ["hue", "HOST", "HIP"],
     43: ["saturation", "HOST", "HIP"],
@@ -133,7 +133,7 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
     96: ["channel_dropout", "HOST", "HIP"]

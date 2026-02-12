@@ -610,6 +610,10 @@ int main(int argc, char **argv)
     if(testCase == ROTATE)
         CHECK_RETURN_STATUS(hipHostMalloc(&angle, batchSize * sizeof(Rpp32f)));
 
+    Rpp32s *qualityTensor = nullptr;
+    if(testCase == JPEG_COMPRESSION_DISTORTION)
+        CHECK_RETURN_STATUS(hipHostMalloc(&qualityTensor, batchSize * sizeof(Rpp32s)));
+
     Rpp32u *permutationTensor = nullptr;
     if(testCase == CHANNEL_PERMUTE)
         CHECK_RETURN_STATUS(hipHostMalloc(&permutationTensor, 3 * batchSize * sizeof(Rpp32u)));
@@ -1817,7 +1821,10 @@ int main(int argc, char **argv)
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
-                    memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
+                    if(BitDepthTestMode == F32_TO_F32 ||BitDepthTestMode == F16_TO_F16)
+                        memcpy(mean, TensorMeanReferenceOutputs_F32[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
+                    else
+                        memcpy(mean, TensorMeanReferenceOutputs_U8[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -1852,6 +1859,8 @@ int main(int argc, char **argv)
                 case JPEG_COMPRESSION_DISTORTION:
                 {
                     testCaseName = "jpeg_compression_distortion";
+                    for (i = 0; i < batchSize; i++)
+                        qualityTensor[i] = 50;
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_jpeg_compression_distortion(d_input, srcDescPtr, d_output, dstDescPtr, qualityTensor, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HIP_BACKEND);
@@ -1983,14 +1992,24 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && BitDepthTestMode == U8_TO_U8 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
-                    if (testCase == TENSOR_SUM)
-                        compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                     if (testCase == TENSOR_SUM)
+                    {
+                        if (BitDepthTestMode == U8_TO_U8)
+                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                        else if (BitDepthTestMode == F32_TO_F32)
+                            compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    }
                     else if (testCase == TENSOR_MEAN || testCase == TENSOR_STDDEV)
                         compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
-                        compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    {
+                        if (BitDepthTestMode == U8_TO_U8)
+                            compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                        else if (BitDepthTestMode == F32_TO_F32)
+                            compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    }
                 }
             }
             else
@@ -2243,5 +2262,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(dropoutTensor));
     if (permutationTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
+    if (qualityTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(qualityTensor));
     return 0;
 }
