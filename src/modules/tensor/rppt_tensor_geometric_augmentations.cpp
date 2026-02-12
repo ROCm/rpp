@@ -2788,6 +2788,7 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                 srcDescPtr,
                                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                                 dstDescPtr,
+                                                qualityTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 handle);
@@ -2798,6 +2799,7 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                 srcDescPtr,
                                                 reinterpret_cast<half*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
                                                 dstDescPtr,
+                                                qualityTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 handle);
@@ -2808,6 +2810,7 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                 srcDescPtr,
                                                 reinterpret_cast<Rpp32f*>((static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes)),
                                                 dstDescPtr,
+                                                qualityTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 handle);
@@ -2818,6 +2821,7 @@ RppStatus rppt_jpeg_compression_distortion(RppPtr_t srcPtr,
                                                 srcDescPtr,
                                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                                 dstDescPtr,
+                                                qualityTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 handle);
@@ -2942,6 +2946,7 @@ RppStatus rppt_concat(RppPtr_t srcPtr1,
                                    dstGenericDescPtr,
                                    axisMask,
                                    roiTensorSrc1,
+                                   roiTensorSrc2,
                                    handle);
         }
         else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
@@ -2954,6 +2959,7 @@ RppStatus rppt_concat(RppPtr_t srcPtr1,
                                    dstGenericDescPtr,
                                    axisMask,
                                    roiTensorSrc1,
+                                   roiTensorSrc2,
                                    handle);
         }
         else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -2966,6 +2972,7 @@ RppStatus rppt_concat(RppPtr_t srcPtr1,
                                    dstGenericDescPtr,
                                    axisMask,
                                    roiTensorSrc1,
+                                   roiTensorSrc2,
                                    handle);
         }
         else if ((srcPtr1GenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
@@ -2978,6 +2985,7 @@ RppStatus rppt_concat(RppPtr_t srcPtr1,
                                    dstGenericDescPtr,
                                    axisMask,
                                    roiTensorSrc1,
+                                   roiTensorSrc2,
                                    handle);
         }
         return RPP_SUCCESS;

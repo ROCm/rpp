@@ -376,8 +376,6 @@ int main(int argc, char **argv)
     if(testCase == RICAP)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
-    Rpp32s* qualityTensor = NULL;
-
     void *d_rowRemapTable, *d_colRemapTable;
     if(testCase == LENS_CORRECTION || testCase == REMAP)
     {
