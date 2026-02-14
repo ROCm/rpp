@@ -2,6 +2,17 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
+## (Unreleased) RPP 3.1.0
+
+### Added
+- Runtime backend selection parameter (`RppBackend executionBackend`) for all RPP tensor API functions
+- Backend tracking in `rppHandle_t` to store backend type (HOST or HIP)
+
+### Changed
+- All RPP tensor API functions now unified with a single function signature
+- Updated all test suite calls to use unified API with backend parameter
+- Enhanced layout validation for image augmentations within unified API
+
 ## (Unreleased) RPP 3.0.0
 
 ### Removed
