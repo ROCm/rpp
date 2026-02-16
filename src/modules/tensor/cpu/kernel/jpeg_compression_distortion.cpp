@@ -331,7 +331,6 @@ inline void quantize_block_avx2(__m256 *p, const float *quantTable, int qualityP
     for (int i = 0; i < 8; i++) {
         __m256 quantRow = _mm256_loadu_ps(&quantTable[i * 8]);
         quantRow = _mm256_mul_ps(quantRow, pQualityFactor);  // Scale by quality
-        quantRow = _mm256_max_ps(avx_p1, _mm256_min_ps(quantRow, avx_p255));  // Clamp between 1 and 255
         p[i] = accurate_quant_round(p[i], quantRow);  // Quantize
     }
 }
