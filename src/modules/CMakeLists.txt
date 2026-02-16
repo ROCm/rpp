@@ -127,16 +127,16 @@ target_include_directories( ${PROJECT_NAME}
         ${RPP_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/common
-        ${CMAKE_SOURCE_DIR}/src/include/common/cpu
-        ${CMAKE_SOURCE_DIR}/src/include/tensor
+        ${RPP_SOURCE_DIR}/src/include/common
+        ${RPP_SOURCE_DIR}/src/include/common/cpu
+        ${RPP_SOURCE_DIR}/src/include/tensor
         ${INCLUDE_LIST}
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include/common/hip
+        ${RPP_SOURCE_DIR}/src/include/common/hip
     )
     target_link_libraries(${PROJECT_NAME} hip::device)
 endif()
