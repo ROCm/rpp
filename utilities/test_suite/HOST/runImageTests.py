@@ -52,6 +52,10 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList, singleImageFlag):
+    # For single image mode, skip unsupported cases early to avoid printing blank lines
+    if singleImageFlag and int(case) not in SINGLE_IMAGE_SUPPORTED_CASES:
+        return
+    
     bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
     if qaMode:
@@ -69,8 +73,8 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                         result = subprocess.Popen([buildFolderPath + "/build/Tensor_single_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                         log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
                 elif imageAugmentationMap[int(case)][0] in {"resize"}:
-                    # Run all variants of interpolation functions with additional argument of interpolationType = nearestneigbor
-                    for interpolationType in [3]:
+                    # Run all variants of interpolation functions with additional argument of interpolationType = nearestneighbor
+                    for interpolationType in [0]:
                         print("./Tensor_single_image_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(interpolationType) + " 0")
                         result = subprocess.Popen([buildFolderPath + "/build/Tensor_single_image_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                         log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_image_layout_type(layout, outputFormatToggle.value, "HOST"))
@@ -363,8 +367,15 @@ if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_image_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_host")
+        if singleImageFlag:
+            # For single image mode, use only the supported single image cases
+            # Filter nonQACaseList to only include cases that are in SINGLE_IMAGE_SUPPORTED_CASES
+            singleImageNonQACaseList = [case for case in nonQACaseList if int(case) in SINGLE_IMAGE_SUPPORTED_CASES]
+            print("---------------------------------- Results of QA Test - Tensor_single_image_host ----------------------------------\n")
+            print_qa_tests_summary(qaFilePath, list(SINGLE_IMAGE_SUPPORTED_CASES), singleImageNonQACaseList, "Tensor_single_image_host")
+        else:
+            print("---------------------------------- Results of QA Test - Tensor_image_host ----------------------------------\n")
+            print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_host")
 
 # unit tests and QA mode disabled
 if testType == TestType.UNIT_TEST.value and not qaMode:

@@ -52,6 +52,10 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList, singleImageFlag):
+    # For single image mode, skip unsupported cases early to avoid printing blank lines
+    if singleImageFlag and int(case) not in SINGLE_IMAGE_SUPPORTED_CASES:
+        return
+    
     print("\n")
     bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
@@ -63,14 +67,14 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
-            if singleImageFlag:
+            if singleImageFlag:                 
                 if imageAugmentationMap[int(case)][0] in {"box_filter"}:
                     for kernelSize in range(3, 10, 2):
                         print("./Tensor_single_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(kernelSize))
                         result = subprocess.Popen([buildFolderPath + "/build/Tensor_single_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                         log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth.value), get_image_layout_type(layout, outputFormatToggle.value, "HIP"))
                 elif imageAugmentationMap[int(case)][0] in {"resize"}:
-                    for interpolationType in [3]: # support for nearestneighbor
+                    for interpolationType in [0]: # support for nearestneighbor
                         print("./Tensor_single_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(interpolationType))
                         result = subprocess.Popen([buildFolderPath + "/build/Tensor_single_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                         log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth.value), get_image_layout_type(layout, outputFormatToggle.value, "HIP"))
@@ -528,8 +532,15 @@ if qaMode and testType == TestType.UNIT_TEST.value:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_image_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
+        if singleImageFlag:
+            # For single image mode, use only the supported single image cases
+            # Filter nonQACaseList to only include cases that are in SINGLE_IMAGE_SUPPORTED_CASES
+            singleImageNonQACaseList = [case for case in nonQACaseList if int(case) in SINGLE_IMAGE_SUPPORTED_CASES]
+            print("---------------------------------- Results of QA Test - Tensor_single_image_hip ----------------------------------\n")
+            print_qa_tests_summary(qaFilePath, list(SINGLE_IMAGE_SUPPORTED_CASES), singleImageNonQACaseList, "Tensor_single_image_hip")
+        else:
+            print("---------------------------------- Results of QA Test - Tensor_image_hip ----------------------------------\n")
+            print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_image_hip")
 
 if len(errorLog) > 1 or errorLog[0]["notExecutedFunctionality"] != 0:
     print("\n---------------------------------- Log of function variants requested but not run - Tensor_image_hip  ----------------------------------\n")

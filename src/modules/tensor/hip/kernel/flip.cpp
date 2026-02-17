@@ -433,12 +433,9 @@ __global__ void flip_pln_hip_single_image(T *srcPtr,
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
         return;
-    }
 
     uint dstIdx = (id_y * dstStridesCH.y) + id_x;
     uint srcIdx = 0;
@@ -449,7 +446,7 @@ __global__ void flip_pln_hip_single_image(T *srcPtr,
         srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStridesCH.y) + (roiSrc.ltrbROI.rb.x - id_x - 7);
     else if(horizontalFlag == 1)
     {
-        if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
+        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
         {
             srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + roiSrc.ltrbROI.lt.x;
             dstIdx -= (id_x + 8 -(roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1));
@@ -502,6 +499,8 @@ __global__ void flip_pln_hip_single_image(T *srcPtr,
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         }
     }
+
+    return;
 }
 
 template <typename T>
@@ -516,7 +515,6 @@ __global__ void flip_pkd3_pln3_hip_single_image(T *srcPtr,
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
@@ -539,9 +537,9 @@ __global__ void flip_pkd3_pln3_hip_single_image(T *srcPtr,
     }
     else if(horizontalFlag == 1)
     {
-        if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
+        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
         {
-            srcIdx += ((id_y + roiSrc.xywhROI.xy.y) * srcStrideH) + roiSrc.xywhROI.xy.x * 3;
+            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + roiSrc.ltrbROI.lt.x * 3;
             dstIdx -= (id_x + 8 - (roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1));
         }
         else
@@ -569,7 +567,6 @@ __global__ void flip_pln3_pkd3_hip_single_image(T *srcPtr,
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
     {
@@ -592,9 +589,9 @@ __global__ void flip_pln3_pkd3_hip_single_image(T *srcPtr,
     }
     else if(horizontalFlag == 1)
     {
-        if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
+        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
         {
-            srcIdx = ((id_y + roiSrc.xywhROI.xy.y) * srcStridesCH.y) + roiSrc.xywhROI.xy.x;
+            srcIdx = ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + roiSrc.ltrbROI.lt.x;
             dstIdx -= (id_x + 8 -(roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1)) * 3;
         }
         else

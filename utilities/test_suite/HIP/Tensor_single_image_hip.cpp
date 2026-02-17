@@ -481,7 +481,17 @@ void saveBatchOutput(const string& dstDir, int noOfImages, const vector<Mat>& ou
         Mat tempImg;
         if ((dstDescPtr[i].c == 3) && (dstDescPtr[i].layout == RpptLayout::NCHW))
         {
-            Mat planarImg = outputVec[i](Rect(0, 0, width, height * 3));
+            // For PLN3, extract each channel separately and reconstruct
+            int matChannelStride = outputVec[i].rows / 3;
+            Mat planarImg(height * 3, width, CV_MAKETYPE(outputVec[i].depth(), 1));
+            
+            for(int c = 0; c < 3; c++)
+            {
+                Mat channelSrc = outputVec[i](Rect(0, c * matChannelStride, width, height));
+                Mat channelDst = planarImg(Rect(0, c * height, width, height));
+                channelSrc.copyTo(channelDst);
+            }
+            
             tempImg = convert_pln3_to_pkd3(planarImg, height, width);
         }
         else
@@ -507,14 +517,10 @@ void saveBatchOutput(const string& dstDir, int noOfImages, const vector<Mat>& ou
             {
                 std::string outPath = outputFolder + baseName + "_" + to_string(cnt) + ext;
                 imwrite(outPath, saveImg);
-                cout << "\nSaved: " << outPath;
                 cnt++;
             }
             else
-            {
                 imwrite(outputImagePath, saveImg);
-                cout << "\nSaved: " << outputImagePath;
-            }
         }
         else
         {
@@ -688,17 +694,15 @@ int main(int argc, char **argv)
         actualInputHeight[i] = inputVec[i].rows;
         
         int cvType = get_cv_type(dstDescPtr[i].dataType, 1);
-        // Allocate buffer using actual image dimensions, not padded descriptor width
+        
+        // Allocate buffer using input dimensions
         if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
             outputVec[i] = Mat(actualInputHeight[i] * dstDescPtr[i].c, actualInputWidth[i], cvType);
         else
             outputVec[i] = Mat(actualInputHeight[i], actualInputWidth[i], get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
-    }
-
-    // Prepare input buffers as contiguous memory for direct device copy
-    if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
-    {
-        for(int i = 0; i < noOfImages; i++)
+        
+        // Prepare input buffers as contiguous memory for direct device copy
+        if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
             // Convert PKD3 to PLN3 for NCHW layout
             inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
     }
@@ -889,24 +893,46 @@ int main(int argc, char **argv)
             Rpp8u *d_output_offsetted = static_cast<Rpp8u*>(d_output) + dstDescPtr[i].offsetInBytes;
             Rpp8u *outputTemp = (outputVec[i].data);
             
+            // For resize/crop, use roi dimensions; for others, use input dimensions
+            int outputWidth = (testCase == RESIZE || testCase == CROP) ? dstImgSizes[i].width : actualInputWidth[i];
+            int outputHeight = (testCase == RESIZE || testCase == CROP) ? dstImgSizes[i].height : actualInputHeight[i];
+            
             // Calculate correct row size based on layout
             size_t rowSizeInBytes;
             if (dstDescPtr[i].layout == RpptLayout::NCHW)
             {
                 // For planar layout, each row is single channel width
-                rowSizeInBytes = actualInputWidth[i] * outElementSize;
+                rowSizeInBytes = outputWidth * outElementSize;
             }
             else
             {
                 // For packed layout, each row is width * channels
-                rowSizeInBytes = actualInputWidth[i] * outputChannel * outElementSize;
+                rowSizeInBytes = outputWidth * outputChannel * outElementSize;
             }
             
-            for(int j = 0; j < outputVec[i].rows; j++)
+            // Copy output based on layout
+            if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
             {
-                Rpp8u *d_outputRowTemp = d_output_offsetted + j * dstDescPtr[i].strides.hStride * outElementSize;
-                Rpp8u *outputRowTemp = outputTemp + j * outputVec[i].step[0];
-                CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
+                // For PLN3, copy each channel separately - channels are at actualInputHeight intervals in Mat
+                for(int c = 0; c < 3; c++)
+                {
+                    for(int j = 0; j < outputHeight; j++)
+                    {
+                        Rpp8u *d_outputRowTemp = d_output_offsetted + (c * dstDescPtr[i].strides.cStride + j * dstDescPtr[i].strides.hStride) * outElementSize;
+                        Rpp8u *outputRowTemp = outputTemp + (c * actualInputHeight[i] + j) * outputVec[i].step[0];
+                        CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
+                    }
+                }
+            }
+            else
+            {
+                // For PKD3 and PLN1, copy rows sequentially
+                for(int j = 0; j < outputHeight; j++)
+                {
+                    Rpp8u *d_outputRowTemp = d_output_offsetted + j * dstDescPtr[i].strides.hStride * outElementSize;
+                    Rpp8u *outputRowTemp = outputTemp + j * outputVec[i].step[0];
+                    CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
+                }
             }
 
             // Free device memory for this image
@@ -933,6 +959,20 @@ int main(int argc, char **argv)
                 dstImgSizes[i].height = actualInputHeight[i];
             }
         }
+
+        // QA mode - compare outputs with golden outputs
+        if (qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && !randomOutputCase && !nonQACase)
+        {
+            string interpolationTypeName = "";
+            string noiseTypeName = "";
+            if (interpolationTypeCase)
+                interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+            if (noiseTypeCase)
+                noiseTypeName = get_noise_type(additionalParam);
+
+            compare_output_single_image(outputVec, srcDescPtr, dstDescPtr, testCaseName, dstImgSizes, noOfImages, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
+        }
+
         saveBatchOutput(dst, noOfImages, outputVec, dstDescPtr, dstImgSizes);
     }
     rppDestroy(handle, backend);

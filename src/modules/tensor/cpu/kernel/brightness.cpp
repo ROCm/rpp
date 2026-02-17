@@ -1374,7 +1374,7 @@ RppStatus brightness_f32_f32_host_single_image(Rpp32f *srcPtr,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32(srcPtrTemp[0] * alpha + beta);
                     *dstPtrTempG = RPPPIXELCHECKF32(srcPtrTemp[1] * alpha + beta);
