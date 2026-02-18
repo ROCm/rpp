@@ -12,7 +12,7 @@ function( configure__pkg PACKAGE_NAME_T COMPONENT_NAME_T PACKAGE_VERSION_T MAINT
 
       # Configure the copyright file
       configure_file(
-        "${CMAKE_SOURCE_DIR}/DEBIAN/copyright.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/DEBIAN/copyright.in"
         "${CMAKE_BINARY_DIR}/DEBIAN/copyright"
         @ONLY
       )
@@ -24,7 +24,7 @@ function( configure__pkg PACKAGE_NAME_T COMPONENT_NAME_T PACKAGE_VERSION_T MAINT
 
       # Configure the changelog file
       configure_file(
-        "${CMAKE_SOURCE_DIR}/CHANGELOG.md"
+        "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md"
         "${CMAKE_BINARY_DIR}/DEBIAN/CHANGELOG.md"
         @ONLY
       )
