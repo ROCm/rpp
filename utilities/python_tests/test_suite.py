@@ -280,12 +280,12 @@ Examples:
                        help=f"Start case number [{case_min}-{case_max}]")
     parser.add_argument("--case_end", type=int, default=case_max,
                        help=f"End case number [{case_min}-{case_max}]")
-    parser.add_argument("--test_type", type=int,
-                       help="0=Unit tests, 1=Performance tests")
+    parser.add_argument("--test_type", type=int, default=0,
+                       help="0=Unit/QA tests (based on qa_mode), 1=Performance tests")
     parser.add_argument("--case_list", nargs="+",
                        help="Specific augmentations to test")
     parser.add_argument("--qa_mode", type=int, default=0,
-                       help="Enable QA mode (0/1)")
+                       help="Enable QA mode when test_type=0 (0/1)")
     parser.add_argument("--num_runs", type=int, default=1,
                        help="Number of performance test iterations")
     parser.add_argument("--preserve_output", type=int, default=1,
@@ -299,21 +299,20 @@ Examples:
                        default=None,
                        help='Specific bit depth for testing. If not specified, runs multiple bitdepths based on mode')
     
-    # Keep existing arguments for backward compatibility
-    parser.add_argument('--mode', 
-                       choices=['UNIT', 'QA', 'PERF', 'ALL'],
-                       help='Test mode to run')
     parser.add_argument('--backend', 
                        choices=['HOST', 'HIP'],
                        help='Backend to test. If not specified, runs both HOST and HIP')
     
     args = parser.parse_args()
     
-    # Validate paths
     if not validate_path(args.input_path1):
+        print(f"Warning: input_path1 '{args.input_path1}' not found, falling back to default.")
         args.input_path1 = default_input_path
     if not validate_path(args.input_path2):
         args.input_path2 = default_input_path
+
+    # Store the default path so QA mode can always reference it
+    args.default_input_path = default_input_path
     
     # Validate case range
     args.case_start = max(case_min, min(args.case_start, case_max))
@@ -336,20 +335,22 @@ Examples:
         args.case_list = valid_cases if valid_cases else None
     
     if not args.case_list:
-        args.case_list = [k for k in augmentationCaseMap.keys() 
-                         if args.case_start <= k <= args.case_end]
+        args.case_list = [
+            k for k in sorted(augmentationCaseMap.keys())
+            if args.case_start <= k <= args.case_end
+        ]
     
-    # Map test_type to mode if specified
-    if args.test_type is not None:
-        if args.test_type == 0:
-            args.mode = 'UNIT' if not args.qa_mode else 'QA'
-        elif args.test_type == 1:
-            args.mode = 'PERF'
-    elif not args.mode:
-        args.mode = 'ALL'
+    # Determine mode based on test_type and qa_mode (no more --mode argument)
+    if args.test_type == 0:
+        args.mode = 'UNIT' if not args.qa_mode else 'QA'
+    elif args.test_type == 1:
+        args.mode = 'PERF'
+    else:
+        print(f"Invalid test_type: {args.test_type}. Must be 0 or 1")
+        sys.exit(1)
     
-    # Set default num_runs based on test type
-    if args.mode == 'PERF' and "--num_runs" not in sys.argv:
+    # Set default num_runs for performance tests
+    if args.test_type == 1 and "--num_runs" not in sys.argv:
         args.num_runs = 100
     
     return args
@@ -361,10 +362,20 @@ Examples:
 class TestConfig:
     """Global test configuration"""
     
-    def __init__(self, preserve_output=1, test_type=None, qa_mode=0, bitdepth='u8'):
+    def __init__(self, preserve_output=1, test_type=None, qa_mode=0, bitdepth='u8',
+                 input_path=None):
         # Directories
-        self.TEST_IMAGES_DIR = "../test_suite/TEST_IMAGES/three_images_mixed_src1"
+        self.DEFAULT_IMAGES_DIR = "../test_suite/TEST_IMAGES/three_images_mixed_src1"
         self.REFERENCE_DIR = "../test_suite/REFERENCE_OUTPUT"
+
+        # QA always uses default images; UNIT/PERF use input_path if valid
+        if qa_mode:
+            self.TEST_IMAGES_DIR = self.DEFAULT_IMAGES_DIR
+        else:
+            if input_path and validate_path(input_path):
+                self.TEST_IMAGES_DIR = input_path
+            else:
+                self.TEST_IMAGES_DIR = self.DEFAULT_IMAGES_DIR
         
         # Test settings
         if bitdepth == 'u8':
@@ -380,19 +391,37 @@ class TestConfig:
         self.qa_mode = qa_mode
         self.bitdepth = bitdepth
         
-        # Test image paths and specs
-        self.TEST_IMAGES = [
-            "1_img50x50.jpg",
-            "2_img100x100.jpg", 
-            "3_img150x150.jpg"
-        ]
-        
-        # Image dimensions (actual sizes)
-        self.IMAGE_SPECS = [
-            (50, 50),   # Image 0
-            (100, 100), # Image 1
-            (150, 150)  # Image 2
-        ]
+        # Test image paths and specs - dynamically discover for non-QA tests
+        if qa_mode:
+            # QA mode requires specific test images for comparison
+            self.TEST_IMAGES = [
+                "1_img50x50.jpg",
+                "2_img100x100.jpg", 
+                "3_img150x150.jpg"
+            ]
+            
+            # Image dimensions (actual sizes)
+            self.IMAGE_SPECS = [
+                (50, 50),   # Image 0
+                (100, 100), # Image 1
+                (150, 150)  # Image 2
+            ]
+        else:
+            # Try to discover images dynamically for unit/perf testing
+            if not self._discover_images():
+                # Fall back to default images if discovery fails
+                self.TEST_IMAGES = [
+                    "1_img50x50.jpg",
+                    "2_img100x100.jpg", 
+                    "3_img150x150.jpg"
+                ]
+                
+                # Image dimensions (actual sizes)
+                self.IMAGE_SPECS = [
+                    (50, 50),   # Image 0
+                    (100, 100), # Image 1
+                    (150, 150)  # Image 2
+                ]
         
         # Reference batch dimensions
         self.BATCH_HEIGHT = 150
@@ -401,6 +430,59 @@ class TestConfig:
         
         # Timestamp for output directories
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    
+    def _discover_images(self):
+        """Dynamically discover images in the input directory"""
+        try:
+            # Get list of image files
+            image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif')
+            image_files = []
+            
+            for file in sorted(os.listdir(self.TEST_IMAGES_DIR)):
+                if file.lower().endswith(image_extensions):
+                    image_files.append(file)
+            
+            if not image_files:
+                print(f"No image files found in {self.TEST_IMAGES_DIR}")
+                return False
+            
+            print(f"Discovered {len(image_files)} image(s) in {self.TEST_IMAGES_DIR}")
+            
+            # Limit to first 3 images for consistency with test suite expectations
+            image_files = image_files[:3]
+            
+            # Discover dimensions for each image
+            self.TEST_IMAGES = []
+            self.IMAGE_SPECS = []
+            
+            for img_file in image_files:
+                img_path = os.path.join(self.TEST_IMAGES_DIR, img_file)
+                try:
+                    # Use PIL to get image dimensions
+                    with Image.open(img_path) as img:
+                        width, height = img.size
+                        self.TEST_IMAGES.append(img_file)
+                        self.IMAGE_SPECS.append((height, width))  # Store as (height, width)
+                        print(f"  - {img_file}: {width}x{height}")
+                except Exception as e:
+                    print(f"  - Failed to read {img_file}: {e}")
+                    continue
+            
+            if not self.TEST_IMAGES:
+                print(f"Could not read any images from {self.TEST_IMAGES_DIR}")
+                return False
+            
+            # If we have fewer than 3 images, duplicate the last one to maintain consistency
+            while len(self.TEST_IMAGES) < 3:
+                self.TEST_IMAGES.append(self.TEST_IMAGES[-1])
+                self.IMAGE_SPECS.append(self.IMAGE_SPECS[-1])
+                print(f"  - Duplicating last image to fill batch (total: {len(self.TEST_IMAGES)})")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error discovering images: {e}")
+            return False
     
     def get_output_dir(self, backend_name, mode):
         """Get output directory based on backend and mode with bitdepth"""
@@ -2095,12 +2177,24 @@ def main():
             print(f"Running tests: Backend={backend_name}, BitDepth={bitdepth}")
             print(f"{'='*70}")
             
-            # Create test configuration with shared timestamp
+            # # Create test configuration with shared timestamp
+            # config = TestConfig(
+            #     preserve_output=args.preserve_output,
+            #     test_type=args.test_type if hasattr(args, 'test_type') else None,
+            #     qa_mode=args.qa_mode,
+            #     bitdepth=bitdepth
+            # )
+            current_mode_is_qa = args.mode in ['QA'] or args.qa_mode
+            input_path_for_config = (
+                args.default_input_path if current_mode_is_qa else args.input_path1
+            )
+
             config = TestConfig(
                 preserve_output=args.preserve_output,
                 test_type=args.test_type if hasattr(args, 'test_type') else None,
                 qa_mode=args.qa_mode,
-                bitdepth=bitdepth
+                bitdepth=bitdepth,
+                input_path=input_path_for_config,  # <-- new
             )
             config.timestamp = backend_timestamp  # Use shared timestamp
             
