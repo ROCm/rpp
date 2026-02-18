@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " samples) and computing mean statistics...";
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         RppStatus errorCodeCapture = RPP_SUCCESS;
@@ -228,8 +228,8 @@ int main(int argc, char **argv)
                 compute_strides(dstDescriptorPtrND);
 
                 startWallTime = omp_get_wtime();
-                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    errorCodeCapture = rppt_transpose_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_transpose(input, srcDescriptorPtrND, output, dstDescriptorPtrND, permTensor, roiTensor, handle, RPP_HOST_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -266,8 +266,8 @@ int main(int argc, char **argv)
                     fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath, BitDepthTestMode);
 
                 startWallTime = omp_get_wtime();
-                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    errorCodeCapture = rppt_normalize_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_normalize(input, srcDescriptorPtrND, output, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle, RPP_HOST_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_F32)
-                    errorCodeCapture = rppt_log_host(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
+                    errorCodeCapture = rppt_log(input, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle, RPP_HOST_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -290,8 +290,8 @@ int main(int argc, char **argv)
                 testCaseName  = "concat";
 
                 startWallTime = omp_get_wtime();
-                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                    errorCodeCapture = rppt_concat_host(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle);
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                    errorCodeCapture = rppt_concat(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, axisMask, roiTensor, roiTensorSecond, handle, RPP_HOST_BACKEND);
                 else
                     missingFuncFlag = 1;
 
@@ -303,7 +303,7 @@ int main(int argc, char **argv)
 
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == I16_TO_F32)
-                    errorCodeCapture = rppt_log1p_host(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle);
+                    errorCodeCapture = rppt_log1p(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle, RPP_HOST_BACKEND);
                 else
                     missingFuncFlag = 1;
 

@@ -79,6 +79,7 @@ imageAugmentationMap = {
     4: ["contrast", "HOST", "HIP"],
     5: ["pixelate", "HOST", "HIP"],
     6: ["jitter", "HOST", "HIP"],
+    7: ["snow", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
     10: ["fog", "HOST", "HIP"],
     11: ["rain", "HOST", "HIP"],
@@ -88,6 +89,7 @@ imageAugmentationMap = {
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
+    25: ["fisheye", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
     28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
@@ -101,8 +103,8 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    40: ["erode", "HIP"],
-    41: ["dilate", "HIP"],
+    40: ["erode", "HOST", "HIP"],
+    41: ["dilate", "HOST", "HIP"],
     42: ["hue", "HOST", "HIP"],
     43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
@@ -132,7 +134,7 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
     96: ["channel_dropout", "HOST", "HIP"]
@@ -172,10 +174,10 @@ ImageAugmentationGroupMap = {
         "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
     ],
     "effects_augmentations": [
-        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize"
+        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow"
     ],
     "geometric_augmentations": [
-        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion"
+        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion", "fisheye"
     ],
     "filter_augmentations": [
         "box_filter", "median_filter", "gaussian_filter", "sobel_filter"
