@@ -1921,7 +1921,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8)
-                        rppt_histogram_equalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                        errorCodeCapture = rppt_histogram_equalize(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
