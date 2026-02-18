@@ -84,6 +84,7 @@ const float ONE_OVER_255                    = 1.0f / 255;
 const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
 const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
 #define DROPOUT_FIXED_SEED                  42           // Constant fixed seed for reproducing the dropout output
+#define RANDOM_ERASE_NOISE_BUFFER_SIDE      255          // Random erase spatial noise buffer height and width. Changing this constant will result in QA test failures for tiled noise mapping
 
 /******************** RPP typedefs ********************/
 
