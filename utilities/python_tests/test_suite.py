@@ -448,14 +448,14 @@ class TestConfig:
             
             print(f"Discovered {len(image_files)} image(s) in {self.TEST_IMAGES_DIR}")
             
-            # Limit to first 3 images for consistency with test suite expectations
-            image_files = image_files[:3]
+            # Process all discovered images (no limit)
+            # image_files = image_files[:3]  # REMOVED: No longer limiting to 3 images
             
             # Discover dimensions for each image
             self.TEST_IMAGES = []
             self.IMAGE_SPECS = []
             
-            for img_file in image_files:
+            for idx, img_file in enumerate(image_files):
                 img_path = os.path.join(self.TEST_IMAGES_DIR, img_file)
                 try:
                     # Use PIL to get image dimensions
@@ -463,20 +463,21 @@ class TestConfig:
                         width, height = img.size
                         self.TEST_IMAGES.append(img_file)
                         self.IMAGE_SPECS.append((height, width))  # Store as (height, width)
-                        print(f"  - {img_file}: {width}x{height}")
+                        print(f"  - [{idx+1}/{len(image_files)}] {img_file}: {width}x{height}")
                 except Exception as e:
-                    print(f"  - Failed to read {img_file}: {e}")
+                    print(f"  - [{idx+1}/{len(image_files)}] Failed to read {img_file}: {e}")
                     continue
             
             if not self.TEST_IMAGES:
                 print(f"Could not read any images from {self.TEST_IMAGES_DIR}")
                 return False
             
-            # If we have fewer than 3 images, duplicate the last one to maintain consistency
-            while len(self.TEST_IMAGES) < 3:
-                self.TEST_IMAGES.append(self.TEST_IMAGES[-1])
-                self.IMAGE_SPECS.append(self.IMAGE_SPECS[-1])
-                print(f"  - Duplicating last image to fill batch (total: {len(self.TEST_IMAGES)})")
+            # No longer duplicating images - process whatever number we have
+            # REMOVED: Image duplication logic
+            
+            # Update BATCH_SIZE to match actual number of images discovered
+            self.BATCH_SIZE = len(self.TEST_IMAGES)
+            print(f"  - Batch size set to: {self.BATCH_SIZE}")
             
             return True
             
