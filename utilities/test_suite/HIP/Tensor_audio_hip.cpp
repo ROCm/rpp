@@ -207,7 +207,7 @@ int main(int argc, char **argv)
                     Rpp32s resetInterval = 8192;
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+                    errorCodeCapture = rppt_non_silent_region_detection(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    errorCodeCapture = rppt_to_decibels(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
                     RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
+                    errorCodeCapture = rppt_pre_emphasis_filter(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+                    errorCodeCapture = rppt_down_mixing(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
+                    errorCodeCapture = rppt_spectrogram(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+                    errorCodeCapture = rppt_resample(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
@@ -365,7 +365,7 @@ int main(int argc, char **argv)
                     CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
-                    errorCodeCapture = rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+                    errorCodeCapture = rppt_mel_filter_bank(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle, RPP_HIP_BACKEND);
 
                     break;
                 }
