@@ -38,6 +38,7 @@ SOFTWARE.
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define RPP_128_OVER_255                0.50196078431f
+#define RPPMIN2(a,b)                    (((a) < (b)) ? (a) : (b))
 #define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
 #define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
