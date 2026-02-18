@@ -112,10 +112,10 @@ def func_group_finder(aug_name):
             return group
     return "miscellaneous"
 
-def create_layout_directories(dst_path, bitdepth="u8"):
-    """Create layout-based directory structure with bitdepth"""
+def create_layout_directories(dst_path):
+    """Create layout-based directory structure"""
     for layout in Layout:
-        layout_path = os.path.join(dst_path, f"{layout.name}_{bitdepth}")
+        layout_path = os.path.join(dst_path, layout.name)
         os.makedirs(layout_path, exist_ok=True)
 
 def directory_name_generator(backend, layout, aug_name, bitdepth="u8"):
@@ -137,7 +137,6 @@ def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
     """
     # Load image (returns float tensor with values 0-255)
     image = util.load_image(img_path, device=device)
-    print("U8 datatype: ", image.type())
     if bitdepth == 'f32':
         # Normalize to [0, 1] range for f32
         image = image / 255.0
@@ -148,7 +147,9 @@ def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
     elif bitdepth == 'i8':
         # Convert to signed int8 [-128, 127]
         image = image - 128
-        print("I8 datatype: ", image.type())
+        image = image.to(torch.int8)
+    else:
+        image = image.to(torch.uint8)
     return image
 
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
@@ -292,11 +293,11 @@ Examples:
     parser.add_argument("--batch_size", type=int, default=3,
                        help="Batch size for testing")
     
-    # Bitdepth support
+    # Bitdepth support - now optional, will run multiple bitdepths if not specified
     parser.add_argument("--bitdepth", 
                        choices=['u8', 'f32', 'f16','i8'],
-                       default='u8',
-                       help='Bit depth for testing (u8 or f32)')
+                       default=None,
+                       help='Specific bit depth for testing. If not specified, runs multiple bitdepths based on mode')
     
     # Keep existing arguments for backward compatibility
     parser.add_argument('--mode', 
@@ -304,8 +305,7 @@ Examples:
                        help='Test mode to run')
     parser.add_argument('--backend', 
                        choices=['HOST', 'HIP'],
-                       required=True, 
-                       help='Backend to test')
+                       help='Backend to test. If not specified, runs both HOST and HIP')
     
     args = parser.parse_args()
     
@@ -407,15 +407,15 @@ class TestConfig:
         bitdepth_suffix = f"_{self.bitdepth.upper()}" if self.bitdepth else ""
         if mode == "UNIT":
             if self.qa_mode:
-                return f"QA_RESULTS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
+                return f"QA_RESULTS_{backend_name}_{self.timestamp}"
             else:
-                return f"OUTPUT_IMAGES_{backend_name}{bitdepth_suffix}_{self.timestamp}"
+                return f"OUTPUT_IMAGES_{backend_name}_{self.timestamp}"
         elif mode == "PERF":
-            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
+            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}_{self.timestamp}"
         elif mode == "QA":
-            return f"QA_RESULTS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
+            return f"QA_RESULTS_{backend_name}_{self.timestamp}"
         else:
-            return f"{backend_name}_OUTPUT_{mode}{bitdepth_suffix}_{self.timestamp}"
+            return f"{backend_name}_OUTPUT_{mode}_{self.timestamp}"
 
 
 # =============================================================================
@@ -454,9 +454,9 @@ class UnifiedTestSuite:
             self.unit_output_dir = self.config.get_output_dir(self.backend_name, "UNIT")
             os.makedirs(self.unit_output_dir, exist_ok=True)
             print(f"Unit Output Directory: {self.unit_output_dir}")
-            # Create layout directories for structured output with bitdepth
+            # Create layout directories for structured output
             if not self.config.qa_mode:
-                create_layout_directories(self.unit_output_dir, bitdepth)
+                create_layout_directories(self.unit_output_dir)
         
         # Setup QA output directory and file
         if self.mode in ["QA", "ALL"]:
@@ -464,18 +464,22 @@ class UnifiedTestSuite:
                 self.qa_output_dir = self.config.get_output_dir(self.backend_name, "QA")
                 os.makedirs(self.qa_output_dir, exist_ok=True)
                 print(f"QA Output Directory: {self.qa_output_dir}")
-                self.qa_file = open(os.path.join(self.qa_output_dir, f"QA_results_{bitdepth}.txt"), "w")
+                # Don't create QA file here if it will be overridden later
+                self.qa_file = None
         
         # Setup Performance output directory and log files
         if self.mode in ["PERF", "ALL"]:
             self.perf_output_dir = self.config.get_output_dir(self.backend_name, "PERF")
             os.makedirs(self.perf_output_dir, exist_ok=True)
             print(f"Performance Output Directory: {self.perf_output_dir}")
-            # Create performance log files for each layout with bitdepth
+            # Create single performance log file for all layouts and bitdepths
+            log_file = os.path.join(self.perf_output_dir, 
+                                   f"Tensor_image_{self.backend_name.lower()}_raw_performance_log.txt")
+            # Open in write mode first to clear any existing content
+            with open(log_file, "w") as f:
+                pass  # Just create/clear the file
             for layout in Layout:
-                log_file = os.path.join(self.perf_output_dir, 
-                                       f"Tensor_image_{self.backend_name.lower()}_{layout.name.lower()}_{bitdepth}_raw_performance_log.txt")
-                self.perf_logs[layout.name] = open(log_file, "w")
+                self.perf_logs[layout.name] = open(log_file, "a")
         
         # Load test images paths
         self.test_images = [
@@ -500,7 +504,7 @@ class UnifiedTestSuite:
         
         # Generate structured directory path with bitdepth
         func_group = func_group_finder(augmentation_name)
-        layout_dir = os.path.join(self.unit_output_dir, f"{layout}_{self.bitdepth}")
+        layout_dir = os.path.join(self.unit_output_dir, f"{layout}")
         structured_dir = f"rpp_{self.backend_name.lower()}_{layout.lower()}_{self.bitdepth}_{func_group}"
         full_path = os.path.join(layout_dir, structured_dir, augmentation_name)
         os.makedirs(full_path, exist_ok=True)
@@ -511,9 +515,6 @@ class UnifiedTestSuite:
         try:
             # Get structured output directory
             aug_output_dir = self._get_structured_output_path(augmentation_name, "PKD3")
-            # if self.bitdepth == 'i8':
-            #     tensor = tensor + 128
-            #     print(f"DEBUG i8: pre-shift min={tensor.min()-128:.1f} max={tensor.max()-128:.1f}  post-shift min={tensor.min():.1f} max={tensor.max():.1f}")
 
             # Convert tensor to numpy
             if hasattr(tensor, 'cpu'):
@@ -539,22 +540,18 @@ class UnifiedTestSuite:
             output_hwc = output_hwc[:actual_h, :actual_w, :]
             
             if self.bitdepth == 'f32':
-                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_f32.jpg'))
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '.jpg'))
                 output_u8 = np.clip(output_hwc * 255, 0, 255).astype(np.uint8)
                 img = Image.fromarray(output_u8)
                 img.save(jpg_path)
             elif self.bitdepth == 'f16':
-                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_f16.jpg'))
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '.jpg'))
                 output_u8 = np.clip(output_hwc * 255, 0, 255).astype(np.uint8)
                 img = Image.fromarray(output_u8)
                 img.save(jpg_path)
             elif self.bitdepth == 'i8':
-                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_i8.jpg'))
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '.jpg'))
                 out_f = output_hwc.astype(np.float32)
-                # if np.isnan(out_f).any():
-                #     print(f"    ✗ Skipping save — NaN values in output (i8 not supported for this augmentation)")
-                #     return False
-                # output_hwc = output_hwc.astype(np.int16) + 128.0
                 output_u8 = np.clip(out_f + 128.0, 0, 255).astype(np.uint8)
                 img = Image.fromarray(output_u8)
                 img.save(jpg_path)
@@ -1997,64 +1994,225 @@ def main():
     # Use the new parser
     args = test_suite_parser_and_validator()
     
-    # Determine backend
-    backend = HIP if args.backend == 'HIP' else HOST
-    backend_name = args.backend
+    # Determine backends to test
+    backends_to_test = []
+    if args.backend:
+        # Backend was specified
+        backend = HIP if args.backend == 'HIP' else HOST
+        backend_name = args.backend
+        
+        # Check GPU availability for HIP backend
+        if backend == HIP and not is_gpu_available():
+            print(f"ERROR: HIP backend requested but GPU not available")
+            return 1
+        backends_to_test.append((backend, backend_name))
+    else:
+        # No backend specified, run both if possible
+        backends_to_test.append((HOST, 'HOST'))
+        if is_gpu_available():
+            backends_to_test.append((HIP, 'HIP'))
+        else:
+            print("Note: GPU not available, skipping HIP backend")
     
-    # Check GPU availability for HIP backend
-    if backend == HIP and not is_gpu_available():
-        print(f"ERROR: HIP backend requested but GPU not available")
-        return 1
-    
-    # Handle preserve_output - remove old directories if requested
-    if args.preserve_output == 0:
-        base_dir = os.getcwd()
-        if args.mode == "UNIT" and not args.qa_mode:
-            validate_and_remove_folders(base_dir, f"OUTPUT_IMAGES_{backend_name}")
-        elif args.mode == "QA" or args.qa_mode:
-            validate_and_remove_folders(base_dir, f"QA_RESULTS_{backend_name}")
-        elif args.mode == "PERF":
-            validate_and_remove_folders(base_dir, f"OUTPUT_PERFORMANCE_LOGS_{backend_name}")
+    # Determine bitdepths to test
+    bitdepths_to_test = []
+    if args.bitdepth:
+        # Bitdepth was specified
+        bitdepths_to_test = [args.bitdepth]
+    else:
+        # No bitdepth specified, select based on test type
+        if args.test_type == 0 and args.qa_mode:
+            # QA testing: only u8 and f32
+            bitdepths_to_test = ['u8', 'f32']
+        elif args.test_type == 0:
+            # Unit testing: all bitdepths
+            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
+        elif args.test_type == 1:
+            # Performance testing: all bitdepths
+            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
+        elif args.mode == 'QA':
+            # QA mode explicitly set
+            bitdepths_to_test = ['u8', 'f32']
+        else:
+            # Default to all for other modes
+            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
     
     # Print header
     print("\n" + "="*70)
-    print("RPP TEST SUITE - WITH F32 SUPPORT")
+    print("RPP TEST SUITE - MULTI-BITDEPTH SUPPORT")
     print("="*70)
     print(f"Mode: {args.mode}")
-    print(f"Backend: {backend_name}")
-    print(f"BitDepth: {args.bitdepth}")
+    print(f"Backends to test: {[b[1] for b in backends_to_test]}")
+    print(f"BitDepths to test: {bitdepths_to_test}")
     print(f"GPU Available: {is_gpu_available()}")
     if args.case_list:
         print(f"Case List: {args.case_list}")
     print("="*70)
     
-    # Create test configuration
-    config = TestConfig(
-        preserve_output=args.preserve_output,
-        test_type=args.test_type if hasattr(args, 'test_type') else None,
-        qa_mode=args.qa_mode,
-        bitdepth=args.bitdepth
-    )
     
-    # Run tests with structured output
-    try:
-        test_suite = UnifiedTestSuite(
-            backend, 
-            args.mode, 
-            config, 
-            args.case_list,
-            num_runs=args.num_runs,
-            bitdepth=args.bitdepth
-        )
-        success = test_suite.run_all()
-        test_suite.cleanup()
-        return 0 if success else 1
+    # Run tests for each backend and bitdepth combination
+    overall_success = True
+    qa_summaries = {}  # Store QA results for overall summary
+    
+    for backend, backend_name in backends_to_test:
+        # Handle preserve_output - remove old directories if requested
+        if args.preserve_output == 0:
+            base_dir = os.getcwd()
+            if args.mode == "UNIT" and not args.qa_mode:
+                validate_and_remove_folders(base_dir, f"OUTPUT_IMAGES_{backend_name}")
+            elif args.mode == "QA" or args.qa_mode:
+                validate_and_remove_folders(base_dir, f"QA_RESULTS_{backend_name}")
+            elif args.mode == "PERF":
+                validate_and_remove_folders(base_dir, f"OUTPUT_PERFORMANCE_LOGS_{backend_name}")
         
-    except Exception as e:
-        print(f"\nFATAL ERROR: {e}")
-        import traceback
-        traceback.print_exc()
-        return 1
+        # Generate single timestamp per backend
+        backend_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        
+        # Create single QA output directory and file per backend
+        qa_file = None
+        qa_output_dir = None
+        if args.mode in ["QA", "ALL"] or args.qa_mode:
+            qa_output_dir = f"QA_RESULTS_{backend_name}_{backend_timestamp}"
+            os.makedirs(qa_output_dir, exist_ok=True)
+            qa_file = open(os.path.join(qa_output_dir, "QA_results.txt"), "w")
+            print(f"QA Output Directory: {qa_output_dir}")
+        
+        # Create single performance log directory and file per backend
+        perf_log_file = None
+        perf_output_dir = None
+        if args.mode in ["PERF", "ALL"]:
+            perf_output_dir = f"OUTPUT_PERFORMANCE_LOGS_{backend_name}_{backend_timestamp}"
+            os.makedirs(perf_output_dir, exist_ok=True)
+            perf_log_file = open(os.path.join(perf_output_dir, 
+                                              f"Tensor_image_{backend_name.lower()}_raw_performance_log.txt"), "w")
+            print(f"Performance Output Directory: {perf_output_dir}")
+        
+        # Track results for overall summary
+        backend_qa_results = []
+        
+        for bitdepth in bitdepths_to_test:
+            print(f"\n{'='*70}")
+            print(f"Running tests: Backend={backend_name}, BitDepth={bitdepth}")
+            print(f"{'='*70}")
+            
+            # Create test configuration with shared timestamp
+            config = TestConfig(
+                preserve_output=args.preserve_output,
+                test_type=args.test_type if hasattr(args, 'test_type') else None,
+                qa_mode=args.qa_mode,
+                bitdepth=bitdepth
+            )
+            config.timestamp = backend_timestamp  # Use shared timestamp
+            
+            # Run tests with structured output
+            try:
+                # Override QA file if it exists
+                if qa_file:
+                    # Temporarily override the config to not create new QA directory
+                    original_get_output_dir = config.get_output_dir
+                    config.get_output_dir = lambda bn, md: qa_output_dir if md == "QA" else original_get_output_dir(bn, md)
+                
+                test_suite = UnifiedTestSuite(
+                    backend, 
+                    args.mode, 
+                    config, 
+                    args.case_list,
+                    num_runs=args.num_runs,
+                    bitdepth=bitdepth
+                )
+                
+                # Override the QA file to use the shared one
+                if qa_file:
+                    # Don't close any existing file since we didn't create one
+                    test_suite.qa_file = qa_file
+                    test_suite.qa_output_dir = qa_output_dir
+                
+                # If performance mode and shared backend log exists, use it
+                if args.mode in ["PERF", "ALL"] and perf_log_file:
+                    # Override the test suite's log files to use backend-specific shared log
+                    if hasattr(test_suite, 'perf_logs'):
+                        for layout in test_suite.perf_logs:
+                            if test_suite.perf_logs[layout]:
+                                test_suite.perf_logs[layout].close()
+                    # Redirect all layouts to the shared backend log
+                    for layout in Layout:
+                        test_suite.perf_logs[layout.name] = perf_log_file
+                    
+                    # Write section header for this bitdepth
+                    perf_log_file.write(f"\n{'='*50}\n")
+                    perf_log_file.write(f"BitDepth: {bitdepth}\n")
+                    perf_log_file.write(f"{'='*50}\n")
+                    perf_log_file.flush()
+                
+                success = test_suite.run_all()
+                
+                # Store QA results for summary
+                if hasattr(test_suite, 'results') and 'qa' in test_suite.results:
+                    for aug_name, result in test_suite.results['qa']:
+                        backend_qa_results.append((bitdepth, aug_name, result))
+                
+                # Don't close shared files in cleanup
+                if qa_file or perf_log_file:
+                    # Temporarily set files to None to avoid closing shared files
+                    saved_qa = test_suite.qa_file
+                    saved_logs = test_suite.perf_logs.copy() if hasattr(test_suite, 'perf_logs') else {}
+                    test_suite.qa_file = None
+                    test_suite.perf_logs = {}
+                    test_suite.cleanup()
+                    test_suite.qa_file = saved_qa
+                    test_suite.perf_logs = saved_logs
+                else:
+                    test_suite.cleanup()
+                
+            except Exception as e:
+                print(f"\nERROR for {backend_name}/{bitdepth}: {e}")
+                import traceback
+                traceback.print_exc()
+                overall_success = False
+        
+        # Write overall QA summary for this backend
+        if qa_file and backend_qa_results:
+            qa_file.write("\n" + "="*70 + "\n")
+            qa_file.write("OVERALL SUMMARY\n")
+            qa_file.write("="*70 + "\n")
+            
+            # Group by augmentation
+            aug_results = {}
+            for bitdepth, aug_name, result in backend_qa_results:
+                if aug_name not in aug_results:
+                    aug_results[aug_name] = {}
+                aug_results[aug_name][bitdepth] = "PASSED" if result else "FAILED"
+            
+            # Write summary in requested format
+            for aug_name in sorted(aug_results.keys()):
+                for bitdepth in bitdepths_to_test:
+                    if bitdepth in aug_results[aug_name]:
+                        qa_file.write(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}\n")
+            
+            qa_file.close()
+            print(f"\nQA results saved to: {qa_output_dir}/QA_results.txt")
+        
+        # Close performance log for this backend
+        if perf_log_file:
+            perf_log_file.close()
+            print(f"\nPerformance results saved to: {perf_output_dir}/Tensor_image_{backend_name.lower()}_raw_performance_log.txt")
+            
+            # Print performance summary
+            print_performance_tests_summary(
+                os.path.join(perf_output_dir, f"Tensor_image_{backend_name.lower()}_raw_performance_log.txt"),
+                list(AugmentationGroupMap.keys()),
+                args.num_runs
+            )
+                
+    print("\n" + "="*70)
+    print("OVERALL TEST SUMMARY")
+    print("="*70)
+    print(f"Backends tested: {[b[1] for b in backends_to_test]}")
+    print(f"BitDepths tested: {bitdepths_to_test}")
+    print(f"Overall Result: {'SUCCESS' if overall_success else 'FAILURE'}")
+    print("="*70 + "\n")
+    
+    return 0 if overall_success else 1
 
 
 if __name__ == '__main__':
