@@ -163,6 +163,12 @@ inline void rpp_normalize48(__m128 *p)
     p[11] = _mm_mul_ps(p[11], xmm_p1op255);
 }
 
+inline void rpp_normalize16_avx(__m256 *p)
+{
+    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+}
+
 inline void rpp_normalize48_avx(__m256 *p)
 {
     p[0] = _mm256_mul_ps(p[0], avx_p1op255);

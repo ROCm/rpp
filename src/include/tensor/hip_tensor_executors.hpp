@@ -650,6 +650,20 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle);
 
+// -------------------- snow --------------------
+
+template <typename T>
+RppStatus hip_exec_snow_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *brightnessCoefficient,
+                               Rpp32f *snowThreshold,
+                               Rpp32s *darkMode,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
+
 // -------------------- channel_dropout --------------------
 
 template <typename T>
@@ -913,6 +927,17 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle);
 
+// -------------------- fisheye --------------------
+
+template <typename T>
+RppStatus hip_exec_fisheye_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rpp::Handle& handle);
+
 /**************************************** MORPHOLOGICAL OPERATIONS ****************************************/
 
 template <typename T>
@@ -1099,6 +1124,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                 RpptGenericDescPtr dstGenericDescPtr,
                                 Rpp32u axis,
                                 Rpp32u *srcPtr1roiTensor,
+                                Rpp32u *srcPtr2roiTensor,
                                 rpp::Handle& handle);
 
 // -------------------- jpeg_compression distortion --------------------
@@ -1108,6 +1134,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                T *dstPtr,
                                                RpptDescPtr dstDescPtr,
+                                               Rpp32s *qualityTensor,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                rpp::Handle& handle);
