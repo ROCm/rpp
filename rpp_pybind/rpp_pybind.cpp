@@ -118,14 +118,10 @@ void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
         desc.h = data.shape[2];
         desc.w = data.shape[3];
         
-        // Calculate strides in bytes
-        size_t element_size = (data.dtype == RpptDataType::U8 || data.dtype == RpptDataType::I8) ? 1 :
-                            (data.dtype == RpptDataType::F16) ? 2 : 4;
-        
-        desc.strides.nStride = data.strides[0] * element_size;
-        desc.strides.cStride = data.strides[1] * element_size;
-        desc.strides.hStride = data.strides[2] * element_size;
-        desc.strides.wStride = data.strides[3] * element_size;
+        desc.strides.nStride = data.strides[0];
+        desc.strides.cStride = data.strides[1];
+        desc.strides.hStride = data.strides[2];
+        desc.strides.wStride = data.strides[3];
     }
 }
 

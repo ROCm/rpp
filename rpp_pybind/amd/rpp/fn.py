@@ -90,9 +90,6 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, b
     if not images.is_contiguous():
         images = images.contiguous()
     
-    if images.dtype != torch.uint8:
-        images = (images.clamp(0, 255)).to(torch.uint8)
-    
     # Move to correct device
     if backend == HIP and not images.is_cuda:
         images = images.cuda()
@@ -140,9 +137,6 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backe
         backend = get_default_backend()
 
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -192,9 +186,6 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -245,9 +236,6 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, backend=None):
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -302,9 +290,6 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -359,9 +344,6 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -415,9 +397,6 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, backend=None):
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -468,9 +447,6 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -522,9 +498,6 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, backend=N
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()
@@ -574,9 +547,6 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
         backend = get_default_backend()
     
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    if images.dtype != torch.uint8:
-        images = images.clamp(0, 255).to(torch.uint8)  # Convert F32/F16 → U8
     
     if not images.is_contiguous():
         images = images.contiguous()

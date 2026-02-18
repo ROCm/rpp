@@ -1,5 +1,4 @@
 """
-RPP Test Suite
 ==============
 
 Unified test suite with combined Unit/QA testing per augmentation.
@@ -7,14 +6,15 @@ Unified test suite with combined Unit/QA testing per augmentation.
 - QA mode: Apply augmentation and compare with reference tensor
 - Performance mode: Time measurements
 - All mode: Run all three test types
+- Supports both u8 and f32 bitdepths
 
 Usage:
-    python test_suite.py --mode UNIT --backend HOST
-    python test_suite.py --mode QA --backend HOST
-    python test_suite.py --mode PERF --backend HIP
-    python test_suite.py --mode ALL --backend HOST
-    python test_suite.py --test_type 0 --backend HOST
-    python test_suite.py --test_type 1 --backend HIP --num_runs 100
+    python test_suite.py --mode UNIT --backend HOST --bitdepth u8
+    python test_suite.py --mode QA --backend HOST --bitdepth f32
+    python test_suite.py --mode PERF --backend HIP --bitdepth u8
+    python test_suite.py --mode ALL --backend HOST --bitdepth f32
+    python test_suite.py --test_type 0 --backend HOST --bitdepth u8
+    python test_suite.py --test_type 1 --backend HIP --num_runs 100 --bitdepth f32
 """
 
 import sys
@@ -56,6 +56,13 @@ class Layout(Enum):
     PKD3 = 0
     PLN3 = 1
     PLN1 = 2
+
+class BitDepth(Enum):
+    """Supported bit depths"""
+    U8 = "u8"
+    F32 = "f32"
+    F16 = "f16"   # Add half-precision float
+    I8 = "i8"
 
 # Simplified augmentation case mapping for test_suite's 10 functions
 augmentationCaseMap = {
@@ -105,24 +112,44 @@ def func_group_finder(aug_name):
             return group
     return "miscellaneous"
 
-def create_layout_directories(dst_path):
-    """Create layout-based directory structure"""
+def create_layout_directories(dst_path, bitdepth="u8"):
+    """Create layout-based directory structure with bitdepth"""
     for layout in Layout:
-        layout_path = os.path.join(dst_path, layout.name)
+        layout_path = os.path.join(dst_path, f"{layout.name}_{bitdepth}")
         os.makedirs(layout_path, exist_ok=True)
-        # Move any existing folders into correct layout directory
-        for folder in os.listdir(dst_path):
-            folder_path = os.path.join(dst_path, folder)
-            if os.path.isdir(folder_path) and folder != layout.name:
-                if layout.name.lower() in folder.lower():
-                    dest_path = os.path.join(layout_path, folder)
-                    if not os.path.exists(dest_path):
-                        shutil.move(folder_path, dest_path)
 
-def directory_name_generator(backend, layout, aug_name):
-    """Generate directory name based on backend, layout and augmentation"""
+def directory_name_generator(backend, layout, aug_name, bitdepth="u8"):
+    """Generate directory name based on backend, layout, augmentation and bitdepth"""
     func_group = func_group_finder(aug_name)
-    return f"rpp_{backend.lower()}_{layout.lower()}_{func_group}"
+    return f"rpp_{backend.lower()}_{layout.lower()}_{bitdepth}_{func_group}"
+
+def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
+    """
+    Load image with specified bitdepth.
+    
+    Args:
+        img_path: Path to image file
+        bitdepth: 'u8' or 'f32'
+        device: 'cpu' or 'cuda'
+    
+    Returns:
+        PyTorch tensor in specified bitdepth
+    """
+    # Load image (returns float tensor with values 0-255)
+    image = util.load_image(img_path, device=device)
+    print("U8 datatype: ", image.type())
+    if bitdepth == 'f32':
+        # Normalize to [0, 1] range for f32
+        image = image / 255.0
+    elif bitdepth == 'f16':
+        # Convert to half precision
+        image = image / 255.0
+        image = image.half()  # Convert to float16
+    elif bitdepth == 'i8':
+        # Convert to signed int8 [-128, 127]
+        image = image - 128
+        print("I8 datatype: ", image.type())
+    return image
 
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
     """Read QA results and print summary"""
@@ -221,25 +248,25 @@ def test_suite_parser_and_validator():
     case_max = max(augmentationCaseMap.keys())
     
     parser = argparse.ArgumentParser(
-        description='RPP Test Suite - Complete Version',
+        description='RPP Test Suite - Complete Version with f32 Support',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Unit testing only
-  python test_suite.py --mode UNIT --backend HOST
+  # Unit testing only (u8)
+  python test_suite.py --mode UNIT --backend HOST --bitdepth u8
   
-  # QA testing only
-  python test_suite.py --mode QA --backend HOST
+  # QA testing only (f32)
+  python test_suite.py --mode QA --backend HOST --bitdepth f32
   
   # Performance testing only
-  python test_suite.py --mode PERF --backend HIP
+  python test_suite.py --mode PERF --backend HIP --bitdepth f32
   
   # Run all tests
-  python test_suite.py --mode ALL --backend HOST
+  python test_suite.py --mode ALL --backend HOST --bitdepth u8
   
   # Using test_type parameter (runImageTests.py style)
-  python test_suite.py --test_type 0 --backend HOST
-  python test_suite.py --test_type 1 --backend HIP --num_runs 100
+  python test_suite.py --test_type 0 --backend HOST --bitdepth f32
+  python test_suite.py --test_type 1 --backend HIP --num_runs 100 --bitdepth u8
         """
     )
     
@@ -264,6 +291,12 @@ Examples:
                        help="0=override, 1=preserve previous outputs")
     parser.add_argument("--batch_size", type=int, default=3,
                        help="Batch size for testing")
+    
+    # Bitdepth support
+    parser.add_argument("--bitdepth", 
+                       choices=['u8', 'f32', 'f16','i8'],
+                       default='u8',
+                       help='Bit depth for testing (u8 or f32)')
     
     # Keep existing arguments for backward compatibility
     parser.add_argument('--mode', 
@@ -328,16 +361,24 @@ Examples:
 class TestConfig:
     """Global test configuration"""
     
-    def __init__(self, preserve_output=1, test_type=None, qa_mode=0):
+    def __init__(self, preserve_output=1, test_type=None, qa_mode=0, bitdepth='u8'):
         # Directories
         self.TEST_IMAGES_DIR = "../test_suite/TEST_IMAGES/three_images_mixed_src1"
         self.REFERENCE_DIR = "../test_suite/REFERENCE_OUTPUT"
         
         # Test settings
-        self.TOLERANCE = 1  # pixel difference tolerance for QA
+        if bitdepth == 'u8':
+            self.TOLERANCE = 1
+        elif bitdepth == 'f32':
+            self.TOLERANCE = 0.01
+        elif bitdepth == 'f16':
+            self.TOLERANCE = 0.1  # Less precision than f32
+        elif bitdepth == 'i8':
+            self.TOLERANCE = 1  # Same as u8
         self.preserve_output = preserve_output
         self.test_type = test_type
         self.qa_mode = qa_mode
+        self.bitdepth = bitdepth
         
         # Test image paths and specs
         self.TEST_IMAGES = [
@@ -362,18 +403,19 @@ class TestConfig:
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     def get_output_dir(self, backend_name, mode):
-        """Get output directory based on backend and mode - matching runImageTests.py"""
+        """Get output directory based on backend and mode with bitdepth"""
+        bitdepth_suffix = f"_{self.bitdepth.upper()}" if self.bitdepth else ""
         if mode == "UNIT":
             if self.qa_mode:
-                return f"QA_RESULTS_{backend_name}_{self.timestamp}"
+                return f"QA_RESULTS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
             else:
-                return f"OUTPUT_IMAGES_{backend_name}_{self.timestamp}"
+                return f"OUTPUT_IMAGES_{backend_name}{bitdepth_suffix}_{self.timestamp}"
         elif mode == "PERF":
-            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}_{self.timestamp}"
+            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
         elif mode == "QA":
-            return f"QA_RESULTS_{backend_name}_{self.timestamp}"
+            return f"QA_RESULTS_{backend_name}{bitdepth_suffix}_{self.timestamp}"
         else:
-            return f"{backend_name}_OUTPUT_{mode}_{self.timestamp}"
+            return f"{backend_name}_OUTPUT_{mode}{bitdepth_suffix}_{self.timestamp}"
 
 
 # =============================================================================
@@ -383,13 +425,14 @@ class TestConfig:
 class UnifiedTestSuite:
     """Unified test suite with structured output organization"""
     
-    def __init__(self, backend, mode="ALL", config=None, case_list=None, num_runs=1):
+    def __init__(self, backend, mode="ALL", config=None, case_list=None, num_runs=1, bitdepth='u8'):
         self.backend = backend
         self.backend_name = "HIP" if backend == HIP else "HOST"
         self.mode = mode.upper()  # UNIT, QA, PERF, or ALL
-        self.config = config if config else TestConfig()
+        self.config = config if config else TestConfig(bitdepth=bitdepth)
         self.case_list = case_list
         self.num_runs = num_runs
+        self.bitdepth = bitdepth
         self.results = {
             'unit': [],
             'qa': [],
@@ -411,9 +454,9 @@ class UnifiedTestSuite:
             self.unit_output_dir = self.config.get_output_dir(self.backend_name, "UNIT")
             os.makedirs(self.unit_output_dir, exist_ok=True)
             print(f"Unit Output Directory: {self.unit_output_dir}")
-            # Create layout directories for structured output
+            # Create layout directories for structured output with bitdepth
             if not self.config.qa_mode:
-                create_layout_directories(self.unit_output_dir)
+                create_layout_directories(self.unit_output_dir, bitdepth)
         
         # Setup QA output directory and file
         if self.mode in ["QA", "ALL"]:
@@ -421,17 +464,17 @@ class UnifiedTestSuite:
                 self.qa_output_dir = self.config.get_output_dir(self.backend_name, "QA")
                 os.makedirs(self.qa_output_dir, exist_ok=True)
                 print(f"QA Output Directory: {self.qa_output_dir}")
-                self.qa_file = open(os.path.join(self.qa_output_dir, "QA_results.txt"), "w")
+                self.qa_file = open(os.path.join(self.qa_output_dir, f"QA_results_{bitdepth}.txt"), "w")
         
         # Setup Performance output directory and log files
         if self.mode in ["PERF", "ALL"]:
             self.perf_output_dir = self.config.get_output_dir(self.backend_name, "PERF")
             os.makedirs(self.perf_output_dir, exist_ok=True)
             print(f"Performance Output Directory: {self.perf_output_dir}")
-            # Create performance log files for each layout
+            # Create performance log files for each layout with bitdepth
             for layout in Layout:
                 log_file = os.path.join(self.perf_output_dir, 
-                                       f"Tensor_image_{self.backend_name.lower()}_{layout.name.lower()}_raw_performance_log.txt")
+                                       f"Tensor_image_{self.backend_name.lower()}_{layout.name.lower()}_{bitdepth}_raw_performance_log.txt")
                 self.perf_logs[layout.name] = open(log_file, "w")
         
         # Load test images paths
@@ -442,6 +485,7 @@ class UnifiedTestSuite:
         
         print(f"Backend: {self.backend_name}")
         print(f"Mode: {self.mode}")
+        print(f"BitDepth: {self.bitdepth}")
         print(f"Test Images: {len(self.test_images)}")
         print("-" * 70)
     
@@ -450,24 +494,27 @@ class UnifiedTestSuite:
     # =========================================================================
     
     def _get_structured_output_path(self, augmentation_name, layout="PKD3"):
-        """Get structured path for saving outputs matching runImageTests.py"""
+        """Get structured path for saving outputs matching runImageTests.py with bitdepth"""
         if self.config.qa_mode:
             return self.unit_output_dir
         
-        # Generate structured directory path
+        # Generate structured directory path with bitdepth
         func_group = func_group_finder(augmentation_name)
-        layout_dir = os.path.join(self.unit_output_dir, layout)
-        structured_dir = f"rpp_{self.backend_name.lower()}_{layout.lower()}_{func_group}"
+        layout_dir = os.path.join(self.unit_output_dir, f"{layout}_{self.bitdepth}")
+        structured_dir = f"rpp_{self.backend_name.lower()}_{layout.lower()}_{self.bitdepth}_{func_group}"
         full_path = os.path.join(layout_dir, structured_dir, augmentation_name)
         os.makedirs(full_path, exist_ok=True)
         return full_path
     
     def _save_output_image(self, tensor, augmentation_name, image_name, img_idx):
-        """Save output image to structured filesystem"""
+        """Save output image to structured filesystem (handles both u8 and f32)"""
         try:
             # Get structured output directory
             aug_output_dir = self._get_structured_output_path(augmentation_name, "PKD3")
-            
+            # if self.bitdepth == 'i8':
+            #     tensor = tensor + 128
+            #     print(f"DEBUG i8: pre-shift min={tensor.min()-128:.1f} max={tensor.max()-128:.1f}  post-shift min={tensor.min():.1f} max={tensor.max():.1f}")
+
             # Convert tensor to numpy
             if hasattr(tensor, 'cpu'):
                 tensor_np = tensor.cpu().numpy()
@@ -483,10 +530,6 @@ class UnifiedTestSuite:
             else:
                 output_hwc = tensor_np
             
-            # Ensure uint8 type
-            if output_hwc.dtype != np.uint8:
-                output_hwc = np.clip(output_hwc, 0, 255).astype(np.uint8)
-            
             # Get actual dimensions and crop before saving
             actual_h, actual_w = self.config.IMAGE_SPECS[img_idx]
             # FOR CROP AND RESIZE: Save at half dimensions (25x25, 50x50, 75x75)
@@ -495,10 +538,36 @@ class UnifiedTestSuite:
                 actual_w //= 2
             output_hwc = output_hwc[:actual_h, :actual_w, :]
             
-            # Save image
-            output_path = os.path.join(aug_output_dir, image_name)
-            img = Image.fromarray(output_hwc)
-            img.save(output_path)
+            if self.bitdepth == 'f32':
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_f32.jpg'))
+                output_u8 = np.clip(output_hwc * 255, 0, 255).astype(np.uint8)
+                img = Image.fromarray(output_u8)
+                img.save(jpg_path)
+            elif self.bitdepth == 'f16':
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_f16.jpg'))
+                output_u8 = np.clip(output_hwc * 255, 0, 255).astype(np.uint8)
+                img = Image.fromarray(output_u8)
+                img.save(jpg_path)
+            elif self.bitdepth == 'i8':
+                jpg_path = os.path.join(aug_output_dir, image_name.replace('.jpg', '_i8.jpg'))
+                out_f = output_hwc.astype(np.float32)
+                # if np.isnan(out_f).any():
+                #     print(f"    ✗ Skipping save — NaN values in output (i8 not supported for this augmentation)")
+                #     return False
+                # output_hwc = output_hwc.astype(np.int16) + 128.0
+                output_u8 = np.clip(out_f + 128.0, 0, 255).astype(np.uint8)
+                img = Image.fromarray(output_u8)
+                img.save(jpg_path)
+            else:
+                # Ensure uint8 type for u8
+                if output_hwc.dtype != np.uint8:
+                    output_hwc = np.clip(output_hwc, 0, 255).astype(np.uint8)
+                
+                # Save as image for u8
+                output_path = os.path.join(aug_output_dir, image_name)
+                img = Image.fromarray(output_hwc)
+                img.save(output_path)
+            
             return True
             
         except Exception as e:
@@ -508,12 +577,7 @@ class UnifiedTestSuite:
     def _extract_from_batch_nhwc(self, batch_data, img_idx, aug_name=None):
         """
         Extract individual image from NHWC batch reference data.
-        
-        Batch structure (273,600 bytes total):
-        - First two images: each in 150×152×3 slots
-        - Third image: in remaining space (also 150×152×3)
-        
-        But stored with padding to 200 height for uniformity.
+        Handles both u8 and f32 formats.
         """
         
         # Calculate offsets based on actual storage layout
@@ -543,10 +607,9 @@ class UnifiedTestSuite:
         
         return ref_roi
 
-    
-    def _compare_with_reference(self, output_tensor, ref_data, img_idx, aug_name=None):
+    def _compare_output(self, output_tensor, ref_data, img_idx, aug_name=None):
         """
-        Compare output tensor with reference from batch.
+        Compare output tensor with reference from batch (handles u8 and f32).
         
         Returns: (passed, stats_dict)
         """
@@ -585,25 +648,42 @@ class UnifiedTestSuite:
                 return False, {
                     "error": f"Shape mismatch: output {output_roi.shape} vs ref {ref_roi.shape}"
                 }
-
-            # Calculate differences
-            diff = output_roi.astype(np.int16) - ref_roi.astype(np.int16)
-            abs_diff = np.abs(diff)
-            
-            # Statistics
-            max_diff = int(abs_diff.max())
-            mismatched = np.sum(abs_diff > self.config.TOLERANCE)
-            total_pixels = output_roi.size
-            
-            stats = {
-                "max_diff": max_diff,
-                "mismatched_pixels": int(mismatched),
-                "total_pixels": int(total_pixels),
-                "match_percentage": 100.0 * (total_pixels - mismatched) / total_pixels
-            }
-            
-            # Pass if all pixels within tolerance
-            passed = max_diff <= self.config.TOLERANCE
+            if self.bitdepth in ['f32']:
+                # Handle floating point comparison
+                dtype = np.float32 if self.bitdepth == 'f32' else np.float16
+                diff = np.abs(output_roi.astype(dtype) - ref_roi.astype(dtype))
+                max_diff = float(diff.max())
+                mismatched = np.sum(diff > self.config.TOLERANCE)
+                total_pixels = output_roi.size
+                
+                stats = {
+                    "max_diff": max_diff,
+                    "mismatched_pixels": int(mismatched),
+                    "total_pixels": int(total_pixels),
+                    "match_percentage": 100.0 * (total_pixels - mismatched) / total_pixels
+                }
+                
+                # Pass if all pixels within tolerance
+                passed = max_diff <= self.config.TOLERANCE
+            else:
+                # For u8, compare as integers
+                diff = output_roi.astype(np.int16) - ref_roi.astype(np.int16)
+                abs_diff = np.abs(diff)
+                
+                # Statistics
+                max_diff = int(abs_diff.max())
+                mismatched = np.sum(abs_diff > self.config.TOLERANCE)
+                total_pixels = output_roi.size
+                
+                stats = {
+                    "max_diff": max_diff,
+                    "mismatched_pixels": int(mismatched),
+                    "total_pixels": int(total_pixels),
+                    "match_percentage": 100.0 * (total_pixels - mismatched) / total_pixels
+                }
+                
+                # Pass if all pixels within tolerance
+                passed = max_diff <= self.config.TOLERANCE
             
             return passed, stats
             
@@ -614,7 +694,7 @@ class UnifiedTestSuite:
         """Write QA result to file"""
         if self.qa_file:
             status = "PASSED" if passed else "FAILED"
-            result_line = f"{aug_name}_img{image_idx}: {status}"
+            result_line = f"{aug_name}_img{image_idx}_{self.bitdepth}: {status}"
             if stats and not passed:
                 if "error" in stats:
                     result_line += f" - Error: {stats['error']}"
@@ -638,7 +718,7 @@ class UnifiedTestSuite:
             else:
                 status = "FAILED"
                 
-            summary_line = f"{aug_name} Percentage: {status} ({percentage:.0f}%)\n"
+            summary_line = f"{aug_name} ({self.bitdepth}) Percentage: {status} ({percentage:.0f}%)\n"
             self.qa_file.write(summary_line)
             self.qa_file.flush()
             
@@ -650,7 +730,7 @@ class UnifiedTestSuite:
         if layout in self.perf_logs:
             log_file = self.perf_logs[layout]
             func_group = func_group_finder(aug_name)
-            log_file.write(f"\n{func_group}\n")
+            log_file.write(f"\n{func_group} ({self.bitdepth})\n")
             log_file.write(f"Running {aug_name} {self.num_runs} times\n")
             log_file.write(f"max,min,avg wall times in ms/batch = {times_dict['max']:.2f},{times_dict['min']:.2f},{times_dict['avg']:.2f}\n")
             log_file.flush()
@@ -664,13 +744,13 @@ class UnifiedTestSuite:
             log_file.close()
     
     # =========================================================================
-    # AUGMENTATION FUNCTIONS (Combined Unit + QA)
+    # AUGMENTATION FUNCTIONS (Combined Unit + QA with f32 support)
     # =========================================================================
     
     def test_brightness(self):
         aug_name = "brightness"
         device = 'cuda' if self.backend == HIP else 'cpu' 
-        print(f"  [1/10] Brightness ")
+        print(f"  [1/10] Brightness ({self.bitdepth})")
         
         # Load reference data for QA mode
         ref_data = None
@@ -678,11 +758,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -695,8 +776,9 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                # image = util.load_image(img_path, device=device)
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -715,7 +797,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -723,15 +805,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS (max_diff={stats['max_diff']})")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth}, max_diff={stats['max_diff']})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -769,7 +851,7 @@ class UnifiedTestSuite:
     def test_gamma_correction(self):
         aug_name = "gamma_correction"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [2/10] Gamma Correction ")
+        print(f"  [2/10] Gamma Correction ({self.bitdepth})")
         
         # Load reference data for QA mode
         ref_data = None
@@ -777,11 +859,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -797,8 +880,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -816,7 +899,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -824,15 +907,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -869,7 +952,7 @@ class UnifiedTestSuite:
     def test_flip(self):
         aug_name = "flip"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f" Flip ")
+        print(f"  [3/10] Flip ({self.bitdepth})")
         
         if not hasattr(fn, 'flip'):
             print("  SKIP (function not available)")
@@ -882,11 +965,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -902,8 +986,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -922,7 +1006,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -930,15 +1014,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -975,7 +1059,7 @@ class UnifiedTestSuite:
     def test_resize(self):
         aug_name = "resize"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [4/10] Resize")
+        print(f"  [4/10] Resize ({self.bitdepth})")
         
         if not hasattr(fn, 'resize'):
             print("  SKIP (function not available)")
@@ -988,11 +1072,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor_interpolationTypeBilinear.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor_interpolationTypeBilinear.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1008,8 +1093,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1032,7 +1117,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1040,15 +1125,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1085,7 +1170,7 @@ class UnifiedTestSuite:
     def test_crop(self):
         aug_name = "crop"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [5/10] Crop ")
+        print(f"  [5/10] Crop ({self.bitdepth})")
         
         if not hasattr(fn, 'crop'):
             print("  SKIP (function not available)")
@@ -1098,11 +1183,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1118,8 +1204,9 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
+                
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
 
@@ -1135,7 +1222,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1143,15 +1230,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1188,7 +1275,7 @@ class UnifiedTestSuite:
     def test_hue(self):
         aug_name = "hue"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [6/10] Hue ")
+        print(f"  [6/10] Hue ({self.bitdepth})")
         
         if not hasattr(fn, 'hue'):
             print("  SKIP (function not available)")
@@ -1201,11 +1288,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1221,8 +1309,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1240,7 +1328,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1248,15 +1336,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1293,7 +1381,7 @@ class UnifiedTestSuite:
     def test_rotate(self):
         aug_name = "rotate"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [7/10] Rotate")
+        print(f"  [7/10] Rotate ({self.bitdepth})")
         
         if not hasattr(fn, 'rotate'):
             print("  SKIP (function not available)")
@@ -1306,11 +1394,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor_interpolationTypeBilinear.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor_interpolationTypeBilinear.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1326,8 +1415,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1345,7 +1434,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1353,15 +1442,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1398,7 +1487,7 @@ class UnifiedTestSuite:
     def test_contrast(self):
         aug_name = "contrast"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [8/10] Contrast")
+        print(f"  [8/10] Contrast ({self.bitdepth})")
         
         if not hasattr(fn, 'contrast'):
             print("  SKIP (function not available)")
@@ -1411,11 +1500,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1431,8 +1521,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1451,7 +1541,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1459,15 +1549,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1504,7 +1594,7 @@ class UnifiedTestSuite:
     def test_vignette(self):
         aug_name = "vignette"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [9/10] Vignette")
+        print(f"  [9/10] Vignette ({self.bitdepth})")
         
         if not hasattr(fn, 'vignette'):
             print("  SKIP (function not available)")
@@ -1517,11 +1607,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1537,8 +1628,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1556,7 +1647,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1564,15 +1655,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1609,7 +1700,7 @@ class UnifiedTestSuite:
     def test_pixelate(self):
         aug_name = "pixelate"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [10/10] Pixelate ")
+        print(f"  [10/10] Pixelate ({self.bitdepth})")
         
         if not hasattr(fn, 'pixelate'):
             print("  SKIP (function not available)")
@@ -1622,11 +1713,12 @@ class UnifiedTestSuite:
             ref_path = os.path.join(
                 self.config.REFERENCE_DIR,
                 aug_name,
-                f"{aug_name}_u8_Tensor.bin"
+                f"{aug_name}_{self.bitdepth}_Tensor.bin"
             )
             if os.path.exists(ref_path):
-                ref_data = np.fromfile(ref_path, dtype=np.uint8)
-                print(f"  Loaded reference: {len(ref_data)} bytes")
+                dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
+                ref_data = np.fromfile(ref_path, dtype=dtype)
+                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
             else:
                 print(f"  ✗ Reference not found: {ref_path}")
                 return False
@@ -1642,8 +1734,8 @@ class UnifiedTestSuite:
             image_name = os.path.basename(img_path)
             
             try:
-                # Load and apply augmentation
-                image = util.load_image(img_path, device=device)
+                # Load image with specified bitdepth
+                image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
@@ -1661,7 +1753,7 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED")
+                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
@@ -1669,15 +1761,15 @@ class UnifiedTestSuite:
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
-                    passed, stats = self._compare_with_reference(output, ref_data, idx, aug_name)
+                    passed, stats = self._compare_output(output, ref_data, idx, aug_name)
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS")
+                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL")
+                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
                         if "error" in stats:
                             print(f"      Error: {stats['error']}")
                         else:
@@ -1718,7 +1810,7 @@ class UnifiedTestSuite:
     def run_unit_tests(self):
         """Run augmentations based on case_list in Unit mode"""
         print(f"\n{'='*70}")
-        print(f"UNIT TESTS - Image Generation ({self.backend_name})")
+        print(f"UNIT TESTS - Image Generation ({self.backend_name}, {self.bitdepth})")
         print(f"{'='*70}\n")
         
         # Map augmentation names to test methods
@@ -1760,7 +1852,7 @@ class UnifiedTestSuite:
     def run_performance_tests(self):
         """Run performance tests - timing measurements for all augmentations"""
         print(f"\n{'='*70}")
-        print(f"PERFORMANCE TESTS ({self.backend_name})")
+        print(f"PERFORMANCE TESTS ({self.backend_name}, {self.bitdepth})")
         print(f"{'='*70}\n")
         
         device = 'cuda' if self.backend == HIP else 'cpu'
@@ -1768,19 +1860,20 @@ class UnifiedTestSuite:
         warmup_iterations = 5
         
         # Test image for performance (using 100x100 image)
-        test_image = util.load_image(self.test_images[1], device=device)
+        test_image = load_image_with_bitdepth(self.test_images[1], bitdepth=self.bitdepth, device=device)
         
         print(f"Running {num_iterations} iterations per augmentation (after {warmup_iterations} warmup runs)\n")
+        print(f"BitDepth: {self.bitdepth}\n")
         
         perf_tests = [
-            ('brightness', lambda: fn.brightness(test_image, alpha=1.75, beta=50.0, backend=self.backend)),
+            ('brightness', lambda: fn.brightness(test_image, alpha=1.75, beta=50.0 if self.bitdepth == 'u8' else 50.0/255.0, backend=self.backend)),
             ('gamma_correction', lambda: fn.gamma_correction(test_image, gamma=1.9, backend=self.backend)),
             ('flip', lambda: fn.flip(test_image, horizontal=True, vertical=False, backend=self.backend)),
-            ('resize', lambda: fn.resize(test_image, width=50, height=50, backend=self.backend)),  # Fixed with proper parameters
-            ('crop', lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50, backend=self.backend)),  # Fixed with proper parameters
+            ('resize', lambda: fn.resize(test_image, width=50, height=50, backend=self.backend)),
+            ('crop', lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50, backend=self.backend)),
             ('hue', lambda: fn.hue(test_image, hue_shift=60.0, backend=self.backend)),
             ('rotate', lambda: fn.rotate(test_image, angle=50.0, backend=self.backend)),
-            ('contrast', lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=128.0, backend=self.backend)),
+            ('contrast', lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=128.0 if self.bitdepth == 'u8' else 128.0/255.0, backend=self.backend)),
             ('vignette', lambda: fn.vignette(test_image, intensity=6.0, backend=self.backend)),
             ('pixelate', lambda: fn.pixelate(test_image, pixelation_percentage=87.5, backend=self.backend))
         ]
@@ -1856,7 +1949,7 @@ class UnifiedTestSuite:
     def _print_summary(self):
         """Print test summary"""
         print(f"\n{'='*70}")
-        print(f"TEST SUMMARY ({self.mode} mode)")
+        print(f"TEST SUMMARY ({self.mode} mode, {self.bitdepth})")
         print(f"{'='*70}")
         
         if self.mode in ["UNIT", "ALL"] and self.results['unit']:
@@ -1864,6 +1957,7 @@ class UnifiedTestSuite:
             failed = sum(1 for _, r in self.results['unit'] if r is False)
             skipped = sum(1 for _, r in self.results['unit'] if r is None)
             print(f"\nUNIT TESTS:")
+            print(f"  BitDepth: {self.bitdepth}")
             print(f"  Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
         
         if self.mode in ["QA", "ALL"] and self.results['qa']:
@@ -1871,16 +1965,18 @@ class UnifiedTestSuite:
             failed = sum(1 for _, r in self.results['qa'] if r is False)
             skipped = sum(1 for _, r in self.results['qa'] if r is None)
             print(f"\nQA TESTS:")
+            print(f"  BitDepth: {self.bitdepth}")
             print(f"  Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
         
         if self.mode in ["PERF", "ALL"] and self.results['perf']:
             valid = sum(1 for _, r in self.results['perf'] if r is not None)
             print(f"\nPERFORMANCE TESTS:")
+            print(f"  BitDepth: {self.bitdepth}")
             print(f"  Completed: {valid}/{len(self.results['perf'])}")
             
             if valid > 0:
                 # Show detailed performance results for each augmentation
-                print(f"\nDetailed Performance Results:")
+                print(f"\nDetailed Performance Results ({self.bitdepth}):")
                 print(f"  {'Augmentation':<20} {'Avg (ms)':<12} {'Min (ms)':<12} {'Max (ms)':<12} {'Runs':<8}")
                 print(f"  {'-'*20} {'-'*12} {'-'*12} {'-'*12} {'-'*8}")
                 
@@ -1922,10 +2018,11 @@ def main():
     
     # Print header
     print("\n" + "="*70)
-    print("RPP TEST SUITE - STRUCTURED OUTPUT VERSION")
+    print("RPP TEST SUITE - WITH F32 SUPPORT")
     print("="*70)
     print(f"Mode: {args.mode}")
     print(f"Backend: {backend_name}")
+    print(f"BitDepth: {args.bitdepth}")
     print(f"GPU Available: {is_gpu_available()}")
     if args.case_list:
         print(f"Case List: {args.case_list}")
@@ -1935,13 +2032,22 @@ def main():
     config = TestConfig(
         preserve_output=args.preserve_output,
         test_type=args.test_type if hasattr(args, 'test_type') else None,
-        qa_mode=args.qa_mode
+        qa_mode=args.qa_mode,
+        bitdepth=args.bitdepth
     )
     
     # Run tests with structured output
     try:
-        test_suite = UnifiedTestSuite(backend, args.mode, config, args.case_list)
+        test_suite = UnifiedTestSuite(
+            backend, 
+            args.mode, 
+            config, 
+            args.case_list,
+            num_runs=args.num_runs,
+            bitdepth=args.bitdepth
+        )
         success = test_suite.run_all()
+        test_suite.cleanup()
         return 0 if success else 1
         
     except Exception as e:
