@@ -103,9 +103,6 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
 
         __m256 pXCameraInit, pYCameraInit, pZCameraInit;
         __m256 pXCameraIncrement, pYCameraIncrement, pZCameraIncrement;
-        pXCameraInit = _mm256_mul_ps(avx_pDstLocInit, pInvMat0);
-        pYCameraInit = _mm256_mul_ps(avx_pDstLocInit, pInvMat3);
-        pZCameraInit = _mm256_mul_ps(avx_pDstLocInit, pInvMat6);
         pXCameraIncrement = _mm256_mul_ps(pInvMat0, avx_p8);
         pYCameraIncrement = _mm256_mul_ps(pInvMat3, avx_p8);
         pZCameraIncrement = _mm256_mul_ps(pInvMat6, avx_p8);
@@ -116,12 +113,18 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
             Rpp32f xCamera = i * invMat[1] + invMat[2];
             Rpp32f yCamera = i * invMat[4] + invMat[5];
             Rpp32f zCamera = i * invMat[7] + invMat[8];
-            __m256 pXCamera = _mm256_add_ps(_mm256_set1_ps(xCamera), pXCameraInit);
-            __m256 pYCamera = _mm256_add_ps(_mm256_set1_ps(yCamera), pYCameraInit);
-            __m256 pZCamera = _mm256_add_ps(_mm256_set1_ps(zCamera), pZCameraInit);
+            // broadcast once per row
+            __m256 pXCameraBase = _mm256_set1_ps(xCamera);
+            __m256 pYCameraBase = _mm256_set1_ps(yCamera);
+            __m256 pZCameraBase = _mm256_set1_ps(zCamera);
+
+            __m256 pPixelIndex = avx_pDstLocInit;
             int vectorLoopCount = 0;
             for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
             {
+                __m256 pXCamera = _mm256_fmadd_ps(pPixelIndex, pInvMat0, pXCameraBase);
+                __m256 pYCamera = _mm256_fmadd_ps(pPixelIndex, pInvMat3, pYCameraBase);
+                __m256 pZCamera = _mm256_fmadd_ps(pPixelIndex, pInvMat6, pZCameraBase);
                 // float z = 1./zCamera, x = xCamera*z, y = yCamera*z;
                 __m256 pZ = _mm256_div_ps(avx_p1, pZCamera);
                 __m256 pX = _mm256_mul_ps(pXCamera, pZ);
@@ -151,14 +154,14 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
                 rowRemapTableRow += vectorIncrement;
                 colRemapTableRow += vectorIncrement;
 
-                // xCamera += invMat[0], yCamera += invMat[3], zCamera += invMat[6]
-                pXCamera = _mm256_add_ps(pXCamera, pXCameraIncrement);
-                pYCamera = _mm256_add_ps(pYCamera, pYCameraIncrement);
-                pZCamera = _mm256_add_ps(pZCamera, pZCameraIncrement);
+                pPixelIndex = _mm256_add_ps(pPixelIndex, avx_p8);
             }
             for(; vectorLoopCount < width; vectorLoopCount++)
             {
-                Rpp32f z = 1./zCamera, x = xCamera * z, y = yCamera * z;
+                Rpp32f xCam = std::fmaf(vectorLoopCount, invMat[0], xCamera);
+                Rpp32f yCam = std::fmaf(vectorLoopCount, invMat[3], yCamera);
+                Rpp32f zCam = std::fmaf(vectorLoopCount, invMat[6], zCamera);
+                Rpp32f z = 1./zCam, x = xCam * z, y = yCam * z;
                 Rpp32f xSquare = x * x, ySquare = y * y, r2 = xSquare + ySquare;
                 Rpp32f xyMul2 = 2 * x * y;
                 Rpp32f kr = std::fmaf(std::fmaf(std::fmaf(rCoeff[2], r2, rCoeff[1]), r2, rCoeff[0]), r2, 1) / std::fmaf(std::fmaf(std::fmaf(rCoeff[5], r2, rCoeff[4]), r2, rCoeff[3]), r2, 1);
@@ -166,9 +169,6 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
                 Rpp32f rowLoc = std::fmaf(fy, (std::fmaf(tCoeff[0], (std::fmaf(2, ySquare, r2)), std::fmaf(y, kr, (tCoeff[1] * xyMul2)))), v0);
                 *rowRemapTableRow++ = rowLoc;
                 *colRemapTableRow++ = colLoc;
-                xCamera += invMat[0];
-                yCamera += invMat[3];
-                zCamera += invMat[6];
             }
         }
     }

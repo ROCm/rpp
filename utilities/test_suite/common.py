@@ -58,8 +58,10 @@ class BitDepthTestMode(Enum):
     U8_TO_F32  = 4  # Input: U8 -> Output: F32
     I8_TO_I8   = 5  # Input: I8 -> Output: I8
     U8_TO_I8   = 6  # Input: U8 -> Output: I8
+    I8_TO_F32  = 11 # Input: I8  -> Output: F32
+    I16_TO_F32 = 12 # Input: I16 -> Output: F32
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 11: "_i8_f32_", 12: "_i16_f32_"}
 
 class OutputFormat(Enum):
     NON_TOGGLE = 0
@@ -77,6 +79,7 @@ imageAugmentationMap = {
     4: ["contrast", "HOST", "HIP"],
     5: ["pixelate", "HOST", "HIP"],
     6: ["jitter", "HOST", "HIP"],
+    7: ["snow", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
     10: ["fog", "HOST", "HIP"],
     11: ["rain", "HOST", "HIP"],
@@ -86,6 +89,7 @@ imageAugmentationMap = {
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
+    25: ["fisheye", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
     28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
@@ -99,8 +103,8 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    40: ["erode", "HIP"],
-    41: ["dilate", "HIP"],
+    40: ["erode", "HOST", "HIP"],
+    41: ["dilate", "HOST", "HIP"],
     42: ["hue", "HOST", "HIP"],
     43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
@@ -129,9 +133,10 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
+    96: ["channel_dropout", "HOST", "HIP"],
     97: ["histogram_equalize", "HOST", "HIP"]
 }
 
@@ -169,10 +174,10 @@ ImageAugmentationGroupMap = {
         "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
     ],
     "effects_augmentations": [
-        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize"
+        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow"
     ],
     "geometric_augmentations": [
-        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion"
+        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion", "fisheye"
     ],
     "filter_augmentations": [
         "box_filter", "median_filter", "gaussian_filter"

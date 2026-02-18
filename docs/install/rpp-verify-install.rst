@@ -32,14 +32,6 @@ To test RPP's functionality, run ``testALLScript.sh``:
 
         cd rpp/utilities/rpp-unittests/HIP_NEW
         ./testAllScript.sh
-  
-  .. tab-item:: OpenCL
-
-    .. code:: shell
-
-        cd rpp/utilities/rpp-unittests/OCL_NEW
-        ./testAllScript.sh
-
 
   .. tab-item:: CPU-only
 
