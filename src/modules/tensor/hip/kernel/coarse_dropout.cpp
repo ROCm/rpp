@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -40,14 +40,24 @@ __global__ void coarse_dropout_pkd_hip_tensor(T *dstPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    // Clamp numBoxes to maxBoxesPerImage to prevent buffer overflow
+    Rpp32u numBoxes = min(numBoxesTensor[id_z], static_cast<Rpp32u>(maxBoxesPerImage));
     int boxStartOffset = id_z * maxBoxesPerImage;
+    
+    // Get ROI origin for coordinate conversion from image space to ROI-local space
+    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
+    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
+    
+    // Convert thread coordinates from ROI-local to image space
+    int img_x = id_x + roiX;
+    int img_y = id_y + roiY;
 
     for (int i = 0; i < numBoxes; i++)
     {
         int boxIdx = boxStartOffset + i;
-        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
-            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
+        // Compare against anchor boxes in image space
+        if (img_x >= anchorBoxInfoTensor[boxIdx].lt.x && img_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            img_y >= anchorBoxInfoTensor[boxIdx].lt.y && img_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
             uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
             dstPtr[dstIdx]     = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
@@ -73,14 +83,24 @@ __global__ void coarse_dropout_pln_hip_tensor(T *dstPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    // Clamp numBoxes to maxBoxesPerImage to prevent buffer overflow
+    Rpp32u numBoxes = min(numBoxesTensor[id_z], static_cast<Rpp32u>(maxBoxesPerImage));
     int boxStartOffset = id_z * maxBoxesPerImage;
+    
+    // Get ROI origin for coordinate conversion from image space to ROI-local space
+    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
+    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
+    
+    // Convert thread coordinates from ROI-local to image space
+    int img_x = id_x + roiX;
+    int img_y = id_y + roiY;
 
     for (int i = 0; i < numBoxes; i++)
     {
         int boxIdx = boxStartOffset + i;
-        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
-            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
+        // Compare against anchor boxes in image space
+        if (img_x >= anchorBoxInfoTensor[boxIdx].lt.x && img_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            img_y >= anchorBoxInfoTensor[boxIdx].lt.y && img_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
             uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
             dstPtr[dstIdx] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
@@ -104,14 +124,24 @@ __global__ void coarse_dropout_pln3_hip_tensor(T *dstPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    Rpp32u numBoxes = numBoxesTensor[id_z];
+    // Clamp numBoxes to maxBoxesPerImage to prevent buffer overflow
+    Rpp32u numBoxes = min(numBoxesTensor[id_z], static_cast<Rpp32u>(maxBoxesPerImage));
     int boxStartOffset = id_z * maxBoxesPerImage;
+    
+    // Get ROI origin for coordinate conversion from image space to ROI-local space
+    int roiX = roiTensorPtrSrc[id_z].xywhROI.xy.x;
+    int roiY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
+    
+    // Convert thread coordinates from ROI-local to image space
+    int img_x = id_x + roiX;
+    int img_y = id_y + roiY;
 
     for (int i = 0; i < numBoxes; i++)
     {
         int boxIdx = boxStartOffset + i;
-        if (id_x >= anchorBoxInfoTensor[boxIdx].lt.x && id_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
-            id_y >= anchorBoxInfoTensor[boxIdx].lt.y && id_y <= anchorBoxInfoTensor[boxIdx].rb.y)
+        // Compare against anchor boxes in image space
+        if (img_x >= anchorBoxInfoTensor[boxIdx].lt.x && img_x <= anchorBoxInfoTensor[boxIdx].rb.x &&
+            img_y >= anchorBoxInfoTensor[boxIdx].lt.y && img_y <= anchorBoxInfoTensor[boxIdx].rb.y)
         {
             uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;        
             dstPtr[dstIdx] = (std::is_same<T, Rpp8s>::value) ? -128 : 0;
