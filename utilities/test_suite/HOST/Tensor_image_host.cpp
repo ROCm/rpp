@@ -1855,9 +1855,7 @@ int main(int argc, char **argv)
                     bool randomSeed = qaFlag ? false : true;
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * maxBoxesPerImage];
                     Rpp32u numOfBoxes[batchSize];
-                    size_t colorCount = batchSize * maxBoxesPerImage * srcDescPtr->c;
-                    Rpp32f *colorBuffer = (Rpp32f *)malloc(colorCount * sizeof(Rpp32f));
-                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 4);
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, nullptr, srcDescPtr->dataType, randomSeed, 4);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

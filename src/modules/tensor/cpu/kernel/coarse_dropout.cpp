@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -69,6 +69,8 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
+            // Copy ROI region from source to destination while converting layout (NHWC -> NCHW)
+            // This preserves the original image data before applying dropout to specific boxes
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -92,10 +94,17 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
             }
             for(int count = 0; count < numBoxes; count++)
             {
-                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth));
-                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
-                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
-                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
+                // Clamp anchor box coordinates to ROI bounds in image space
+                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+
+                // Convert to ROI-local coordinates
+                x1 -= roi.xywhROI.xy.x;
+                y1 -= roi.xywhROI.xy.y;
+                x2 -= roi.xywhROI.xy.x;
+                y2 -= roi.xywhROI.xy.y;
 
                 Rpp32u pixelLocation = (y1 * dstDescPtr->strides.hStride) + (x1 * dstDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -125,7 +134,8 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-            // To copy ROI region in Image
+            // Copy ROI region from source to destination while converting layout (NCHW -> NHWC)
+            // This preserves the original image data before applying dropout to specific boxes
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                  T *srcRowR, *srcRowG, *srcRowB, *dstPtrTemp;
@@ -150,10 +160,17 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
             for(int count = 0; count < numBoxes; count++)
             {
-                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth));
-                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
-                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
-                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
+                // Clamp anchor box coordinates to ROI bounds in image space
+                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+
+                // Convert to ROI-local coordinates
+                x1 -= roi.xywhROI.xy.x;
+                y1 -= roi.xywhROI.xy.y;
+                x2 -= roi.xywhROI.xy.x;
+                y2 -= roi.xywhROI.xy.y;
 
                 Rpp32u pixelLocation = (y1 * dstDescPtr->strides.hStride) + (x1 * dstDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -179,7 +196,8 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         // Coarse dropout without fused output-layout toggle 3 channel(NCHW -> NCHW)
         else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            // To copy ROI region in Image
+            // Copy ROI region from source to destination (same layout)
+            // This preserves the original image data before applying dropout to specific boxes
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 T *srcPtrRow, *dstPtrRow;
@@ -199,10 +217,17 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
             for(int count = 0; count < numBoxes; count++)
             {
-                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth));
-                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
-                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
-                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
+                // Clamp anchor box coordinates to ROI bounds in image space
+                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+
+                // Convert to ROI-local coordinates
+                x1 -= roi.xywhROI.xy.x;
+                y1 -= roi.xywhROI.xy.y;
+                x2 -= roi.xywhROI.xy.x;
+                y2 -= roi.xywhROI.xy.y;
 
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -226,7 +251,8 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         // Coarse dropout without fused output-layout toggle 1 channel(NCHW -> NCHW)
         else if((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            // To copy ROI region in Image
+            // Copy ROI region from source to destination (same layout)
+            // This preserves the original image data before applying dropout to specific boxes
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 memcpy(dstPtrChannel, srcPtrChannel, bufferLength);
@@ -236,10 +262,17 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
             for(int count = 0; count < numBoxes; count++)
             {
-                Rpp32u x1 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth);
-                Rpp32u y1 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight);
-                Rpp32u x2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
-                Rpp32u y2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
+                // Clamp anchor box coordinates to ROI bounds in image space
+                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+
+                // Convert to ROI-local coordinates
+                x1 -= roi.xywhROI.xy.x;
+                y1 -= roi.xywhROI.xy.y;
+                x2 -= roi.xywhROI.xy.x;
+                y2 -= roi.xywhROI.xy.y;
 
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -259,7 +292,8 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         // Coarse dropout without fused output-layout toggle 3 channel(NHWC -> NHWC)
         else
         {
-            // To copy ROI region in Image
+            // Copy ROI region from source to destination (same layout)
+            // This preserves the original image data before applying dropout to specific boxes
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 memcpy(dstPtrChannel, srcPtrChannel, bufferLength);
@@ -269,10 +303,17 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
             for(int count = 0; count < numBoxes; count++)
             {
-                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth));
-                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight));
-                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth));
-                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight));
+                // Clamp anchor box coordinates to ROI bounds in image space
+                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
+                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
+
+                // Convert to ROI-local coordinates
+                x1 -= roi.xywhROI.xy.x;
+                y1 -= roi.xywhROI.xy.y;
+                x2 -= roi.xywhROI.xy.x;
+                y2 -= roi.xywhROI.xy.y;
 
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
@@ -282,14 +323,7 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    T *dstPtrRow = dstPtrTemp;
-                    for (int j = 0; j < boxWidth; j++)
-                    {
-                        dstPtrRow[0] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow[1] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow[2] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow += 3;
-                    }
+                    std::fill_n(dstPtrTemp, boxWidth * 3, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
