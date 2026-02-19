@@ -61,22 +61,6 @@ inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padL
     }
 }
 
-inline void flip_kernel(Rpp32f *filterTensor, int kernelSize)
-{
-    Rpp32f temp[kernelSize * kernelSize];
-    for (int i = 0; i < kernelSize; i++)
-    {
-        for (int j = 0; j < kernelSize; j++)
-        {
-            temp[(kernelSize - 1 - i) * kernelSize + (kernelSize - 1 - j)] = filterTensor[i * kernelSize + j];
-        }
-    }
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-    {
-        filterTensor[i] = temp[i];
-    }
-}
-
 template<typename T>
 inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                               Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth,
