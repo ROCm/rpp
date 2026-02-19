@@ -318,8 +318,11 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                         RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, padVertical);
-                        dstPtrTemp += padLength;
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
+                            dstPtrTemp++;
+                        }
 #if __AVX2__
                          Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
@@ -480,8 +483,11 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                         RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, padVertical);
-                        dstPtrTemp += padLength;
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
+                            dstPtrTemp++;
+                        }
 #if __AVX2__
                          Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row
@@ -631,8 +637,11 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                         RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
-                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, padVertical);
-                        dstPtrTemp += padLength;
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filter, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
+                            dstPtrTemp++;
+                        }
 #if __AVX2__
                          Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
                         // process alignedLength number of columns in each row

@@ -556,7 +556,10 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        RpptDescPtr inputDesc = srcDescPtr; 
+        if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
+            return RPP_ERROR_LOW_OFFSET;
+
+        RpptDescPtr inputDesc = srcDescPtr;
         void *tempPtr = nullptr;
         if (srcDescPtr->c == 3)
         {
@@ -565,7 +568,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             size_t dataSize = dstDescPtr->strides.nStride * dstDescPtr->n * elementSize;
 
             CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
-        
+
             RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
             RppStatus errorStatus = rppt_color_to_greyscale(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle, RppBackend::RPP_HIP_BACKEND);        
             if(errorStatus != RPP_SUCCESS)
@@ -638,4 +641,3 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
 
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
-

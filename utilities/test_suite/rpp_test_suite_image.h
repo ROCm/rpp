@@ -300,8 +300,8 @@ inline std::string get_gradient_type(unsigned int val)
     }
 }
 
-// returns the interpolation type used for image resizing or scaling operations.
-inline std::string get_kernel_size_and_gradient_type(unsigned int val, Rpp32u &kernelSize, Rpp32u &gradientType)
+// returns the kernel size and gradient type for sobel filter operations.
+inline std::string get_kernel_size_and_gradient_type(unsigned int val, Rpp32u& kernelSize, Rpp32u& gradientType)
 {
     unsigned int kernelIndex = val / 3;
     gradientType = val % 3;
@@ -1167,7 +1167,7 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
 void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int testCase)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
-    Rpp32f cutoff = ((testCase == LENS_CORRECTION)|| (testCase == SOBEL_FILTER)) ? 1e-4 : 1e-5;
+    Rpp32f cutoff = ((testCase == LENS_CORRECTION) || (testCase == SOBEL_FILTER)) ? 1e-4 : 1e-5;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
@@ -1295,9 +1295,9 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         Rpp32u kernelSize, gradientType;
         get_kernel_size_and_gradient_type(additionalParam, kernelSize, gradientType);
 
-        func += kernelSizeAndGradientName; 
+        func += kernelSizeAndGradientName;
         std::string gradientName;
-        switch(gradientType) 
+        switch(gradientType)
         {
             case 0: gradientName = "_gradientX"; break;
             case 1: gradientName = "_gradientY"; break;
