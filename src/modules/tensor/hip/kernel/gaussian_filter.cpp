@@ -112,7 +112,6 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -198,7 +197,6 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -292,7 +290,6 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -353,7 +350,7 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    float *filter_row1 = &filterTensor   [id_z * 81];
+    float *filter_row1 = &filterTensor[id_z * 81];
     float *filter_row2 = &filter_row1[9];
     float *filter_row3 = &filter_row1[18];
     float *filter_row4 = &filter_row1[27];
@@ -394,7 +391,6 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -526,7 +522,6 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
-
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
@@ -654,7 +649,6 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
-
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
@@ -933,7 +927,6 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         }
 
         __syncthreads();
-
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
@@ -1037,7 +1030,6 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1123,7 +1115,6 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1217,7 +1208,6 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1319,7 +1309,6 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx + 2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1427,7 +1416,6 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1517,7 +1505,6 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1615,7 +1602,6 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
@@ -1721,7 +1707,6 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
             src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8 + i] = srcPtr[clampedIdx2]; // B
         }
     }
-
     __syncthreads();
     if ((id_x_o < roiWidth) && (id_y_o < roiHeight) && (hipThreadIdx_x < tileSize.x) && (hipThreadIdx_y < tileSize.y))
     {
