@@ -51,6 +51,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         Rpp32u numBoxes = numBoxesTensor[batchCount];
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * maxBoxesPerImage;
 
+        // Compute dropout value once based on data type instead of using ternary operator repeatedly
+        T dropoutValue = (std::is_same<T, Rpp8s>::value) ? static_cast<T>(-128) : static_cast<T>(0);
+
         T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -116,9 +119,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
                 for (int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    std::fill_n(dstPtrTempG, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    std::fill_n(dstPtrTempB, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTempR, boxWidth, dropoutValue);
+                    std::fill_n(dstPtrTempG, boxWidth, dropoutValue);
+                    std::fill_n(dstPtrTempB, boxWidth, dropoutValue);
                     dstPtrTempR += dstDescPtr->strides.hStride;
                     dstPtrTempG += dstDescPtr->strides.hStride;
                     dstPtrTempB += dstDescPtr->strides.hStride;
@@ -180,39 +183,46 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    T *dstPtrRow = dstPtrTemp;
-                    for(int j = 0; j < boxWidth; j++)
-                    {
-                        dstPtrRow[0] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow[1] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow[2] = ((std::is_same<T, Rpp8s>::value) ? -128 : 0);
-                        dstPtrRow += 3;
-                    }
+                    std::fill_n(dstPtrTemp, boxWidth * 3, dropoutValue);
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
         }
 
-        // Coarse dropout without fused output-layout toggle 3 channel(NCHW -> NCHW)
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        // Coarse dropout without fused output-layout toggle (same src/dst layout with 3 channels)
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == dstDescPtr->layout))
         {
             // Copy ROI region from source to destination (same layout)
             // This preserves the original image data before applying dropout to specific boxes
-            for(int c = 0; c < layoutParams.channelParam; c++)
+            if (srcDescPtr->layout == RpptLayout::NCHW)
             {
-                T *srcPtrRow, *dstPtrRow;
-                srcPtrRow = srcPtrChannel;
-                dstPtrRow = dstPtrChannel;
+                // For NCHW layout, channels are in separate planes, requiring per-channel copy
+                for(int c = 0; c < layoutParams.channelParam; c++)
+                {
+                    T *srcPtrRow, *dstPtrRow;
+                    srcPtrRow = srcPtrChannel;
+                    dstPtrRow = dstPtrChannel;
 
+                    for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    {
+                        memcpy(dstPtrRow, srcPtrRow, bufferLength);
+                        srcPtrRow += srcDescPtr->strides.hStride;
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
+            }
+            else // NHWC layout
+            {
+                // For NHWC layout, all channels are interleaved, single memcpy per row
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
-                    memcpy(dstPtrRow, srcPtrRow, bufferLength);
-                    srcPtrRow += srcDescPtr->strides.hStride;
-                    dstPtrRow += dstDescPtr->strides.hStride;
+                    memcpy(dstPtrChannel, srcPtrChannel, bufferLength);
+                    srcPtrChannel += srcDescPtr->strides.hStride;
+                    dstPtrChannel += dstDescPtr->strides.hStride;
                 }
-
-                srcPtrChannel += srcDescPtr->strides.cStride;
-                dstPtrChannel += dstDescPtr->strides.cStride;
             }
 
             for(int count = 0; count < numBoxes; count++)
@@ -233,18 +243,30 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
                 Rpp32u boxHeight = y2 - y1 + 1;
                 Rpp32u boxWidth = x2 - x1 + 1;
 
-                T *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-                dstPtrTempR = dstPtrImage + pixelLocation;
-                dstPtrTempG = dstPtrTempR + dstDescPtr->strides.cStride;
-                dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
-                for (int i = 0; i < boxHeight; i++)
+                if (srcDescPtr->layout == RpptLayout::NCHW)
                 {
-                    std::fill_n(dstPtrTempR, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    std::fill_n(dstPtrTempG, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    std::fill_n(dstPtrTempB, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    dstPtrTempR += dstDescPtr->strides.hStride;
-                    dstPtrTempG += dstDescPtr->strides.hStride;
-                    dstPtrTempB += dstDescPtr->strides.hStride;
+                    T *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                    dstPtrTempR = dstPtrImage + pixelLocation;
+                    dstPtrTempG = dstPtrTempR + dstDescPtr->strides.cStride;
+                    dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
+                    for (int i = 0; i < boxHeight; i++)
+                    {
+                        std::fill_n(dstPtrTempR, boxWidth, dropoutValue);
+                        std::fill_n(dstPtrTempG, boxWidth, dropoutValue);
+                        std::fill_n(dstPtrTempB, boxWidth, dropoutValue);
+                        dstPtrTempR += dstDescPtr->strides.hStride;
+                        dstPtrTempG += dstDescPtr->strides.hStride;
+                        dstPtrTempB += dstDescPtr->strides.hStride;
+                    }
+                }
+                else // NHWC layout
+                {
+                    T *dstPtrTemp = dstPtrImage + pixelLocation;
+                    for(int i = 0; i < boxHeight; i++)
+                    {
+                        std::fill_n(dstPtrTemp, boxWidth * 3, dropoutValue);
+                        dstPtrTemp += dstDescPtr->strides.hStride;
+                    }
                 }
             }
         }
@@ -283,47 +305,7 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    std::fill_n(dstPtrTemp, boxWidth, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
-                    dstPtrTemp += dstDescPtr->strides.hStride;
-                }
-            }
-        }
-
-        // Coarse dropout without fused output-layout toggle 3 channel(NHWC -> NHWC)
-        else
-        {
-            // Copy ROI region from source to destination (same layout)
-            // This preserves the original image data before applying dropout to specific boxes
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
-            {
-                memcpy(dstPtrChannel, srcPtrChannel, bufferLength);
-                srcPtrChannel += srcDescPtr->strides.hStride;
-                dstPtrChannel += dstDescPtr->strides.hStride;
-            }
-
-            for(int count = 0; count < numBoxes; count++)
-            {
-                // Clamp anchor box coordinates to ROI bounds in image space
-                Rpp32u x1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
-                Rpp32u y1 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
-                Rpp32u x2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.xy.x + roi.xywhROI.roiWidth - 1));
-                Rpp32u y2 = static_cast<Rpp32u>(RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.xy.y + roi.xywhROI.roiHeight - 1));
-
-                // Convert to ROI-local coordinates
-                x1 -= roi.xywhROI.xy.x;
-                y1 -= roi.xywhROI.xy.y;
-                x2 -= roi.xywhROI.xy.x;
-                y2 -= roi.xywhROI.xy.y;
-
-                Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
-                Rpp32u boxHeight = y2 - y1 + 1;
-                Rpp32u boxWidth = x2 - x1 + 1;
-                T *dstPtrTemp;
-                dstPtrTemp = dstPtrImage + pixelLocation;
-
-                for(int i = 0; i < boxHeight; i++)
-                {
-                    std::fill_n(dstPtrTemp, boxWidth * 3, ((std::is_same<T, Rpp8s>::value) ? -128 : 0));
+                    std::fill_n(dstPtrTemp, boxWidth, dropoutValue);
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
@@ -376,7 +358,7 @@ template RppStatus coarse_dropout_host_tensor<Rpp8s>(Rpp8s*,
                                                      RpptRoiLtrb*,
                                                      Rpp32u*,
                                                      Rpp32u, 
-                                                     RpptROIPtr,
-                                                     RpptRoiType,
-                                                     RppLayoutParams,
-                                                     rpp::Handle&);
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      RppLayoutParams,
+                                                      rpp::Handle&);
