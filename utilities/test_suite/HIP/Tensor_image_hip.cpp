@@ -403,6 +403,9 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
         CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
     }
+    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
+    if(testCase == GRID_DROPOUT)
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * numGridsPerRow * numGridsPerColumn * sizeof(RpptRoiLtrb)));
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
@@ -1933,13 +1936,11 @@ int main(int argc, char **argv)
                 case GRID_DROPOUT:
                 {
                     testCaseName = "grid_dropout";
-                    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                     Rpp32f holeRatio = 0.4f;
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
                     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
-                    RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
                     Rpp32u maxHoleW = 0, maxHoleH = 0;
                     init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
 
