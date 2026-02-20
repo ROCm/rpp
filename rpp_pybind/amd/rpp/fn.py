@@ -1,6 +1,25 @@
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
 # MIT License
-# Mukesh/rpp/rpp_pybind/amd/rpp/fn.py
+
+# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 
 """
 RPP Augmentation Functions
@@ -78,8 +97,6 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, b
     Returns:
         Augmented images tensor
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
 
@@ -131,8 +148,6 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backe
     Returns:
         Gamma-corrected images
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
 
@@ -180,8 +195,6 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
     Returns:
         Contrast-adjusted images
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -230,8 +243,6 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, backend=None):
     Returns:
         Hue-adjusted images
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -284,8 +295,6 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
     Returns:
         Flipped images tensor
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -338,8 +347,6 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     Returns:
         Resized images tensor
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -391,8 +398,6 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, backend=None):
     Returns:
         Rotated images tensor
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -441,8 +446,6 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
     Returns:
         Cropped images tensor
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -492,8 +495,6 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, backend=N
     Returns:
         Images with vignette effect
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     
@@ -541,8 +542,6 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
     Returns:
         Pixelated images
     """
-    import torch
-    
     if backend is None:
         backend = get_default_backend()
     

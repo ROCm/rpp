@@ -1,4 +1,3 @@
-// # Mukesh/rpp/rpp_pybind/rpp_pybind.cpp
 /*
 MIT License
 
@@ -59,29 +58,29 @@ struct TensorData {
 };
 
 TensorData get_tensor_data(const torch::Tensor& tensor) {
-    if (!tensor.defined()) {
+    if(!tensor.defined()) {
         throw std::runtime_error("Tensor is not defined");
     }
     
-    if (!tensor.is_contiguous()) {
+    if(!tensor.is_contiguous()) {
         throw std::runtime_error("Tensor must be contiguous");
     }
 
     TensorData data;
     data.ptr = tensor.data_ptr();
 
-    if (data.ptr == nullptr) {
+    if(data.ptr == nullptr) {
         throw std::runtime_error("Tensor data pointer is null");
     }
     
     // Map PyTorch dtype to RPP dtype
-    if (tensor.dtype() == torch::kUInt8) {
+    if(tensor.dtype() == torch::kUInt8) {
         data.dtype = RpptDataType::U8;
-    } else if (tensor.dtype() == torch::kFloat32) {
+    } else if(tensor.dtype() == torch::kFloat32) {
         data.dtype = RpptDataType::F32;
-    } else if (tensor.dtype() == torch::kFloat16) {
+    } else if(tensor.dtype() == torch::kFloat16) {
         data.dtype = RpptDataType::F16;
-    } else if (tensor.dtype() == torch::kInt8) {
+    } else if(tensor.dtype() == torch::kInt8) {
         data.dtype = RpptDataType::I8;
     } else {
         throw std::runtime_error("Unsupported tensor dtype");
@@ -91,13 +90,13 @@ TensorData get_tensor_data(const torch::Tensor& tensor) {
     data.layout = RpptLayout::NCHW;
     
     // Get shape and strides
-    for (int i = 0; i < tensor.dim(); i++) {
+    for(int i = 0; i < tensor.dim(); i++) {
         data.shape.push_back(tensor.size(i));
         data.strides.push_back(tensor.stride(i));
     }
     
     // Set device
-    if (tensor.is_cuda()) {
+    if(tensor.is_cuda()) {
         data.device = {kDLROCM, 0};  // ROCm device
     } else {
         data.device = {kDLCPU, 0};
@@ -112,7 +111,7 @@ void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
     desc.numDims = data.shape.size();
     desc.offsetInBytes = 0;
     
-    if (desc.numDims == 4) {
+    if(desc.numDims == 4) {
         desc.n = data.shape[0];
         desc.c = data.shape[1]; 
         desc.h = data.shape[2];
@@ -150,8 +149,7 @@ void brightness(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
 
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -164,7 +162,7 @@ void brightness(const torch::Tensor& input_tensor,
     RpptROI *roi_gpu_ptr = nullptr;
 
     // Check if backend is HIP (GPU)
-    if (backend == 1) {
+    if(backend == 1) {
         // Allocate GPU memory
         size_t alpha_size = alpha.size() * sizeof(float);
         size_t beta_size = beta.size() * sizeof(float);
@@ -192,14 +190,13 @@ void brightness(const torch::Tensor& input_tensor,
                    roi_ptr, RpptRoiType::XYWH,
                    rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1)
+    if(backend == 1)
     {
         hipFree(alpha_gpu_ptr);
         hipFree(beta_gpu_ptr);
         hipFree(roi_gpu_ptr);
     }
         
-    // std::cout << "DEBUG: brightness function complete" << std::endl;
 }
 
 // 2. Gamma Correction (Color)
@@ -221,8 +218,7 @@ void gamma_correction(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -233,7 +229,7 @@ void gamma_correction(const torch::Tensor& input_tensor,
     RpptROI *roi_gpu_ptr = nullptr;
 
     // Check if backend is HIP (GPU)
-    if (backend == 1) {
+    if(backend == 1) {
         // Allocate GPU memory
         size_t gamma_size = gamma.size() * sizeof(float);
         size_t roi_size = batch_size * sizeof(RpptROI);
@@ -257,7 +253,7 @@ void gamma_correction(const torch::Tensor& input_tensor,
                          rpp_handle, static_cast<RppBackend>(backend));
 
 
-    if (backend == 1) {
+    if(backend == 1) {
         hipFree(gamma_gpu_ptr);
         hipFree(roi_gpu_ptr);
     }
@@ -282,8 +278,7 @@ void contrast(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -296,7 +291,7 @@ void contrast(const torch::Tensor& input_tensor,
     float* contrast_center_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t contrast_factor_size = contrast_factor.size() * sizeof(float);
         size_t contrast_center_size = contrast_center.size() * sizeof(float);
@@ -324,7 +319,7 @@ void contrast(const torch::Tensor& input_tensor,
                  roi_ptr, RpptRoiType::XYWH,
                  rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {
+    if(backend == 1) {
         hipFree(contrast_factor_gpu);
         hipFree(contrast_center_gpu);
         hipFree(roi_gpu);
@@ -349,8 +344,7 @@ void hue(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -361,7 +355,7 @@ void hue(const torch::Tensor& input_tensor,
     float* hue_shift_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t hue_shift_size = hue_shift.size() * sizeof(float);
         size_t roi_size = batch_size * sizeof(RpptROI);
@@ -384,7 +378,7 @@ void hue(const torch::Tensor& input_tensor,
             roi_ptr, RpptRoiType::XYWH,
             rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(hue_shift_gpu);
         hipFree(roi_gpu);
     }
@@ -412,8 +406,7 @@ void flip(const torch::Tensor& input_tensor,
     std::vector<Rpp32u> h_tensor(batch_size);
     std::vector<Rpp32u> v_tensor(batch_size);
 
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
         h_tensor[i] = horizontal[i];
         v_tensor[i] = vertical[i];
@@ -428,7 +421,7 @@ void flip(const torch::Tensor& input_tensor,
     Rpp32u* v_tensor_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t h_tensor_size = batch_size * sizeof(Rpp32u);
         size_t v_tensor_size = batch_size * sizeof(Rpp32u);
@@ -455,7 +448,7 @@ void flip(const torch::Tensor& input_tensor,
              roi_ptr, RpptRoiType::XYWH,
              rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(h_tensor_gpu);
         hipFree(v_tensor_gpu);
         hipFree(roi_gpu);
@@ -483,8 +476,7 @@ void resize(const torch::Tensor& input_tensor,
     std::vector<RpptROI> roi(batch_size);
     std::vector<RpptImagePatch> dst_sizes(batch_size);
 
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
         dst_sizes[i].width = dst_width[i];
         dst_sizes[i].height = dst_height[i];
@@ -497,7 +489,7 @@ void resize(const torch::Tensor& input_tensor,
     RpptImagePatch* dst_sizes_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t dst_sizes_size = batch_size * sizeof(RpptImagePatch);
         size_t roi_size = batch_size * sizeof(RpptROI);
@@ -521,7 +513,7 @@ void resize(const torch::Tensor& input_tensor,
                roi_ptr, RpptRoiType::XYWH,
                rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(dst_sizes_gpu);
         hipFree(roi_gpu);
     }
@@ -545,8 +537,7 @@ void rotate(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -557,7 +548,7 @@ void rotate(const torch::Tensor& input_tensor,
     float* angle_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t angle_size = angle.size() * sizeof(float);
         size_t roi_size = batch_size * sizeof(RpptROI);
@@ -581,7 +572,7 @@ void rotate(const torch::Tensor& input_tensor,
                roi_ptr, RpptRoiType::XYWH,
                rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(angle_gpu);
         hipFree(roi_gpu);
     }
@@ -607,7 +598,7 @@ void crop(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
     
-    for (int i = 0; i < batch_size; i++) {
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {x1[i], 
                          y1[i], 
                          crop_width[i], 
@@ -619,7 +610,7 @@ void crop(const torch::Tensor& input_tensor,
 
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t roi_size = batch_size * sizeof(RpptROI);
         
@@ -637,7 +628,7 @@ void crop(const torch::Tensor& input_tensor,
              roi_ptr, RpptRoiType::XYWH,
              rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(roi_gpu);
     }
 }
@@ -660,8 +651,7 @@ void vignette(const torch::Tensor& input_tensor,
     
     int batch_size = input_data.shape[0];
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -672,7 +662,7 @@ void vignette(const torch::Tensor& input_tensor,
     float* intensity_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t intensity_size = intensity.size() * sizeof(float);
         size_t roi_size = batch_size * sizeof(RpptROI);
@@ -695,7 +685,7 @@ void vignette(const torch::Tensor& input_tensor,
                  roi_ptr, RpptRoiType::XYWH,
                  rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(intensity_gpu);
         hipFree(roi_gpu);
     }
@@ -722,8 +712,7 @@ void pixelate(const torch::Tensor& input_tensor,
     int batch_size = input_data.shape[0];
 
     std::vector<RpptROI> roi(batch_size);
-    for (int i = 0; i < batch_size; i++) {
-        // Use provided ROI dimensions instead of full tensor dimensions
+    for(int i = 0; i < batch_size; i++) {
         roi[i].xywhROI = {0, 0, roi_widths[i], roi_heights[i]};
     }
 
@@ -732,7 +721,7 @@ void pixelate(const torch::Tensor& input_tensor,
 
     RpptROI* roi_gpu = nullptr;
 
-    if (backend == 1) {  // HIP backend
+    if(backend == 1) {  // HIP backend
         // Allocate GPU memory
         size_t roi_size = batch_size * sizeof(RpptROI);
         
@@ -752,7 +741,7 @@ void pixelate(const torch::Tensor& input_tensor,
                  roi_ptr, RpptRoiType::XYWH,
                  rpp_handle, static_cast<RppBackend>(backend));
     
-    if (backend == 1) {  // HIP backend cleanup
+    if(backend == 1) {  // HIP backend cleanup
         hipFree(roi_gpu);
     }
 }
@@ -856,7 +845,8 @@ PYBIND11_MODULE(_rpp_pybind, m) {
     
     m.def("crop", &crop, "Crop augmentation",
           py::arg("input"), py::arg("output"),
-          py::arg("x1"), py::arg("y1"), py::arg("crop_width"), py::arg("crop_height"),
+          py::arg("x1"), py::arg("y1"), 
+          py::arg("crop_width"), py::arg("crop_height"),
           py::arg("handle"), py::arg("backend"));
     
     m.def("vignette", &vignette, "Vignette effect",

@@ -1,3 +1,26 @@
+# MIT License
+
+# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 """
 ==============
 
@@ -5,7 +28,6 @@ Unified test suite with combined Unit/QA testing per augmentation.
 - Unit mode: Apply augmentation and save image
 - QA mode: Apply augmentation and compare with reference tensor
 - Performance mode: Time measurements
-- All mode: Run all three test types
 - Supports both u8 and f32 bitdepths
 
 Usage:
@@ -2127,9 +2149,9 @@ def main():
                 test_type=args.test_type if hasattr(args, 'test_type') else None,
                 qa_mode=args.qa_mode,
                 bitdepth=bitdepth,
-                input_path=input_path_for_config,  # <-- new
+                input_path=input_path_for_config,
             )
-            config.timestamp = backend_timestamp  # Use shared timestamp
+            config.timestamp = backend_timestamp
             
             # Run tests with structured output
             try:
@@ -2202,20 +2224,19 @@ def main():
                     if bitdepth in aug_results[aug_name]:
                         qa_file.write(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}\n")
             
-            # Count total test cases (looking at the actual QA file content)
+            # Count total test cases
             qa_file.flush()
             qa_file_path = os.path.join(qa_output_dir, "QA_results.txt")
             with open(qa_file_path, 'r') as f:
                 lines = f.readlines()
                 for line in lines:
-                    # Count individual test results (e.g., "brightness_img0_u8: PASSED")
                     if '_img' in line and ': PASSED' in line:
                         total_tests_requested += 1
                         total_tests_passed += 1
                     elif '_img' in line and ': FAILED' in line:
                         total_tests_requested += 1
             
-            # Write Final Results summary similar to runImageTests.py
+            # Write Final Results summary
             qa_file.write("\n")
             qa_file.write("Final Results of Tests:\n")
             qa_file.write(f"    - Total test cases including all subvariants REQUESTED = {total_tests_requested}\n")
@@ -2224,8 +2245,7 @@ def main():
             # Add general information about test suite
             supported_augmentations = list(augmentationCaseMap.values())
             total_supported = len(supported_augmentations)
-            # All functions in test_suite.py have QA support (no randomization)
-            non_qa_functions = []  # No functions with randomization in test_suite.py
+            non_qa_functions = [] 
             
             qa_file.write("\nGeneral information on test suite availability:\n")
             qa_file.write(f"    - Total augmentations supported in test suite = {total_supported}\n")
@@ -2235,7 +2255,7 @@ def main():
             qa_file.close()
             print(f"\nQA results saved to: {qa_output_dir}/QA_results.txt")
             
-            # Print the summary to console as well
+            # Print the summary
             print("\n" + "="*70)
             print("Final Results of Tests:")
             print(f"    - Total test cases including all subvariants REQUESTED = {total_tests_requested}")
