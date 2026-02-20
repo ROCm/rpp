@@ -9,11 +9,10 @@ Unified test suite with combined Unit/QA testing per augmentation.
 - Supports both u8 and f32 bitdepths
 
 Usage:
-    python test_suite.py --mode UNIT --backend HOST --bitdepth u8
-    python test_suite.py --mode QA --backend HOST --bitdepth f32
-    python test_suite.py --mode PERF --backend HIP --bitdepth u8
-    python test_suite.py --mode ALL --backend HOST --bitdepth f32
-    python test_suite.py --test_type 0 --backend HOST --bitdepth u8
+    python test_suite.py --test_type 0 --backend HOST --bitdepth u8 f16
+    python test_suite.py --test_type 0 --backend HIP
+    python test_suite.py --test_type 1 --backend HIP --num_runs 100 --bitdepth f32
+    python test_suite.py --test_type 0 --backend HOST --bitdepth u8 f32 --qa_mode 1
     python test_suite.py --test_type 1 --backend HIP --num_runs 100 --bitdepth f32
 """
 
@@ -194,31 +193,30 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     frames = []
     prevLine = ""
     funcCount = 0
+    current_category = ""
 
     # Loop over each line
     for line in f:
-        for functionalityGroup in functionalityGroupList:
-            if functionalityGroup in line:
-                functions.extend([" ", functionalityGroup, " "])
-                frames.extend([" ", " ", " "])
-                maxVals.extend([" ", " ", " "])
-                minVals.extend([" ", " ", " "])
-                avgVals.extend([" ", " ", " "])
-
+        # Process actual performance data
         if "max,min,avg wall times in ms/batch" in line:
-            splitWordStart = "Running "
-            splitWordEnd = " " + str(numRuns)
-            prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
-            if prevLine not in functions:
-                functions.append(prevLine)
-                frames.append(numRuns)
-                splitWordStart = "max,min,avg wall times in ms/batch = "
-                splitWordEnd = "\n"
-                stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
-                maxVals.append(stats[0])
-                minVals.append(stats[1])
-                avgVals.append(stats[2])
-                funcCount += 1
+            # Extract function name from previous line
+            if "Running " in prevLine:
+                splitWordStart = "Running "
+                splitWordEnd = " " + str(numRuns)
+                func_name = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+                if func_name and func_name not in functions:
+                    functions.append(func_name)
+                    frames.append(numRuns)
+                    
+                    # Extract timing data from current line
+                    splitWordStart = "max,min,avg wall times in ms/batch = "
+                    splitWordEnd = "\n"
+                    stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
+                    if len(stats) == 3:
+                        maxVals.append(stats[0])
+                        minVals.append(stats[1])
+                        avgVals.append(stats[2])
+                        funcCount += 1
 
         if line != "\n":
             prevLine = line
@@ -230,9 +228,16 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     headerFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
     rowFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
     print("\n" + headerFormat.format("Functionality", "Frames Count", "max(ms/batch)", "min(ms/batch)", "avg(ms/batch)") + "\n")
+    
     if len(functions) != 0:
         for i, func in enumerate(functions):
-            print(rowFormat.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
+            if func:  # Skip empty entries
+                if func.startswith("---"):
+                    # Print category separator
+                    print("\n" + func)
+                else:
+                    # Print actual function data
+                    print(rowFormat.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
     else:
         print("No variants under this category")
 
@@ -254,16 +259,13 @@ def test_suite_parser_and_validator():
         epilog="""
 Examples:
   # Unit testing only (u8)
-  python test_suite.py --mode UNIT --backend HOST --bitdepth u8
+  python test_suite.py --test_type 0 --backend HOST --bitdepth u8
   
   # QA testing only (f32)
-  python test_suite.py --mode QA --backend HOST --bitdepth f32
+  python test_suite.py --test_type 0 --backend HOST --bitdepth f32 --qa_mode 1
   
   # Performance testing only
-  python test_suite.py --mode PERF --backend HIP --bitdepth f32
-  
-  # Run all tests
-  python test_suite.py --mode ALL --backend HOST --bitdepth u8
+  python test_suite.py --test_type 1 --backend HIP --bitdepth f32
   
   # Using test_type parameter (runImageTests.py style)
   python test_suite.py --test_type 0 --backend HOST --bitdepth f32
@@ -296,6 +298,7 @@ Examples:
     # Bitdepth support - now optional, will run multiple bitdepths if not specified
     parser.add_argument("--bitdepth", 
                        choices=['u8', 'f32', 'f16','i8'],
+                       nargs='+',
                        default=None,
                        help='Specific bit depth for testing. If not specified, runs multiple bitdepths based on mode')
     
@@ -472,9 +475,6 @@ class TestConfig:
                 print(f"Could not read any images from {self.TEST_IMAGES_DIR}")
                 return False
             
-            # No longer duplicating images - process whatever number we have
-            # REMOVED: Image duplication logic
-            
             # Update BATCH_SIZE to match actual number of images discovered
             self.BATCH_SIZE = len(self.TEST_IMAGES)
             print(f"  - Batch size set to: {self.BATCH_SIZE}")
@@ -526,11 +526,14 @@ class UnifiedTestSuite:
         self.qa_results = []
         self.qa_file = None
         self.qa_output_dir = None
+        self.owns_qa_file = True  # Track whether we own the QA file
         self.current_aug_results = []  # Track results for current augmentation
         
         # Performance log files
         self.perf_logs = {}
         self.perf_output_dir = None
+        self.perf_log_file = None  # Initialize to None
+        self.owns_perf_log = True  # Track whether we own the log file
         
         # Setup directories with structured output
         if self.mode in ["UNIT", "ALL"]:
@@ -555,14 +558,8 @@ class UnifiedTestSuite:
             self.perf_output_dir = self.config.get_output_dir(self.backend_name, "PERF")
             os.makedirs(self.perf_output_dir, exist_ok=True)
             print(f"Performance Output Directory: {self.perf_output_dir}")
-            # Create single performance log file for all layouts and bitdepths
-            log_file = os.path.join(self.perf_output_dir, 
-                                   f"Tensor_image_{self.backend_name.lower()}_raw_performance_log.txt")
-            # Open in write mode first to clear any existing content
-            with open(log_file, "w") as f:
-                pass  # Just create/clear the file
-            for layout in Layout:
-                self.perf_logs[layout.name] = open(log_file, "a")
+            # Don't create log file here if it will be provided externally
+            # This will be handled by set_shared_perf_log() method
         
         # Load test images paths
         self.test_images = [
@@ -806,22 +803,38 @@ class UnifiedTestSuite:
             self.current_aug_results = []
     
     def _write_perf_result(self, aug_name, times_dict, layout="PKD3"):
-        """Write performance result to log file"""
-        if layout in self.perf_logs:
-            log_file = self.perf_logs[layout]
+        """Write performance result to log file (only write once, not per layout)"""
+        # Only write for PKD3 to avoid duplication (since all layouts use the same file)
+        if layout == "PKD3" and hasattr(self, 'perf_log_file'):
             func_group = func_group_finder(aug_name)
-            log_file.write(f"\n{func_group} ({self.bitdepth})\n")
-            log_file.write(f"Running {aug_name} {self.num_runs} times\n")
-            log_file.write(f"max,min,avg wall times in ms/batch = {times_dict['max']:.2f},{times_dict['min']:.2f},{times_dict['avg']:.2f}\n")
-            log_file.flush()
+            self.perf_log_file.write(f"\n{func_group} ({self.bitdepth})\n")
+            self.perf_log_file.write(f"Running {aug_name} {self.num_runs} times\n")
+            self.perf_log_file.write(f"max,min,avg wall times in ms/batch = {times_dict['max']:.2f},{times_dict['min']:.2f},{times_dict['avg']:.2f}\n")
+            self.perf_log_file.flush()
     
     def cleanup(self):
         """Close all open files"""
-        if self.qa_file:
+        # Close QA file only if we own it
+        if self.qa_file and self.owns_qa_file:
             self.qa_file.close()
         
-        for log_file in self.perf_logs.values():
-            log_file.close()
+        # Close performance log file only if we own it
+        if hasattr(self, 'perf_log_file') and self.perf_log_file and self.owns_perf_log:
+            self.perf_log_file.close()
+    
+    def set_shared_perf_log(self, perf_log_file):
+        """Set a shared performance log file from external source"""
+        self.perf_log_file = perf_log_file
+        self.owns_perf_log = False  # We don't own this file, so won't close it
+        # All layouts use the same file handle
+        for layout in Layout:
+            self.perf_logs[layout.name] = perf_log_file
+    
+    def set_shared_qa_file(self, qa_file, qa_output_dir):
+        """Set a shared QA file from external source"""
+        self.qa_file = qa_file
+        self.qa_output_dir = qa_output_dir
+        self.owns_qa_file = False  # We don't own this file, so won't close it
     
     # =========================================================================
     # AUGMENTATION FUNCTIONS (Combined Unit + QA with f32 support)
@@ -830,7 +843,7 @@ class UnifiedTestSuite:
     def test_brightness(self):
         aug_name = "brightness"
         device = 'cuda' if self.backend == HIP else 'cpu' 
-        print(f"  [1/10] Brightness ({self.bitdepth})")
+        print(f" Brightness Augmentation ({self.bitdepth})")
         
         # Load reference data for QA mode
         ref_data = None
@@ -857,7 +870,6 @@ class UnifiedTestSuite:
             
             try:
                 # Load image with specified bitdepth
-                # image = util.load_image(img_path, device=device)
                 image = load_image_with_bitdepth(img_path, bitdepth=self.bitdepth, device=device)
                 
                 # Get actual dimensions for ROI
@@ -877,11 +889,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"   {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"   {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -889,19 +901,13 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth}, max_diff={stats['max_diff']})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth}, max_diff={stats['max_diff']})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']} (tolerance: {self.config.TOLERANCE})")
-                            print(f"      Mismatched: {stats['mismatched_pixels']}/{stats['total_pixels']} ({100-stats['match_percentage']:.2f}%)")
-                
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -916,7 +922,7 @@ class UnifiedTestSuite:
         else:  # ALL
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -931,7 +937,7 @@ class UnifiedTestSuite:
     def test_gamma_correction(self):
         aug_name = "gamma_correction"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [2/10] Gamma Correction ({self.bitdepth})")
+        print(f" Gamma Correction Augmentation ({self.bitdepth})")
         
         # Load reference data for QA mode
         ref_data = None
@@ -944,10 +950,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -979,11 +981,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -991,18 +993,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1017,7 +1015,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1032,7 +1030,7 @@ class UnifiedTestSuite:
     def test_flip(self):
         aug_name = "flip"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [3/10] Flip ({self.bitdepth})")
+        print(f" Flip Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'flip'):
             print("  SKIP (function not available)")
@@ -1050,10 +1048,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1086,11 +1080,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1098,15 +1092,11 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
                 print(f"    ✗ {image_name} : ERROR → {e}")
@@ -1124,7 +1114,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1139,7 +1129,7 @@ class UnifiedTestSuite:
     def test_resize(self):
         aug_name = "resize"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [4/10] Resize ({self.bitdepth})")
+        print(f" Resize Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'resize'):
             print("  SKIP (function not available)")
@@ -1157,10 +1147,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1180,9 +1166,7 @@ class UnifiedTestSuite:
                 actual_h, actual_w = self.config.IMAGE_SPECS[idx]
                 roi_widths = [actual_w //2]
                 roi_heights = [actual_h //2]
-                
-                if self.backend == HIP:
-                    torch.cuda.synchronize()
+
                 output = fn.resize(
                     image, 
                     width=actual_w//2, 
@@ -1197,11 +1181,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1209,18 +1193,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1235,7 +1215,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1250,7 +1230,7 @@ class UnifiedTestSuite:
     def test_crop(self):
         aug_name = "crop"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [5/10] Crop ({self.bitdepth})")
+        print(f"  Crop Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'crop'):
             print("  SKIP (function not available)")
@@ -1268,10 +1248,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1302,11 +1278,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1314,18 +1290,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1340,7 +1312,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1355,7 +1327,7 @@ class UnifiedTestSuite:
     def test_hue(self):
         aug_name = "hue"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [6/10] Hue ({self.bitdepth})")
+        print(f"  Hue Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'hue'):
             print("  SKIP (function not available)")
@@ -1373,10 +1345,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1408,11 +1376,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1420,18 +1388,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1446,7 +1410,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1461,7 +1425,7 @@ class UnifiedTestSuite:
     def test_rotate(self):
         aug_name = "rotate"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [7/10] Rotate ({self.bitdepth})")
+        print(f"  Rotate Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'rotate'):
             print("  SKIP (function not available)")
@@ -1479,10 +1443,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1514,11 +1474,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1526,18 +1486,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1552,7 +1508,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status} ")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1567,7 +1523,7 @@ class UnifiedTestSuite:
     def test_contrast(self):
         aug_name = "contrast"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [8/10] Contrast ({self.bitdepth})")
+        print(f"  Contrast Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'contrast'):
             print("  SKIP (function not available)")
@@ -1585,10 +1541,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1621,11 +1573,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1633,18 +1585,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1659,7 +1607,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1674,7 +1622,7 @@ class UnifiedTestSuite:
     def test_vignette(self):
         aug_name = "vignette"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [9/10] Vignette ({self.bitdepth})")
+        print(f" Vignette Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'vignette'):
             print("  SKIP (function not available)")
@@ -1692,10 +1640,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1727,11 +1671,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1739,18 +1683,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1765,7 +1705,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status} ")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1780,7 +1720,7 @@ class UnifiedTestSuite:
     def test_pixelate(self):
         aug_name = "pixelate"
         device = 'cuda' if self.backend == HIP else 'cpu'
-        print(f"  [10/10] Pixelate ({self.bitdepth})")
+        print(f" Pixelate Augmentation ({self.bitdepth})")
         
         if not hasattr(fn, 'pixelate'):
             print("  SKIP (function not available)")
@@ -1798,10 +1738,6 @@ class UnifiedTestSuite:
             if os.path.exists(ref_path):
                 dtype = np.float32 if self.bitdepth == 'f32' else np.uint8
                 ref_data = np.fromfile(ref_path, dtype=dtype)
-                print(f"  Loaded reference: {len(ref_data)} bytes ({self.bitdepth})")
-            else:
-                print(f"  ✗ Reference not found: {ref_path}")
-                return False
             
             # Clear results tracking for this augmentation
             self.current_aug_results = []
@@ -1833,11 +1769,11 @@ class UnifiedTestSuite:
                 # UNIT MODE: Save output
                 if self.mode in ["UNIT", "ALL"]:
                     if self._save_output_image(output, aug_name, image_name, idx):
-                        print(f"    ✓ {image_name} : SAVED ({self.bitdepth})")
+                        print(f"    {image_name} : SAVED ({self.bitdepth})")
                         if self.mode == "UNIT":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : SAVE FAILED")
+                        print(f"    {image_name} : SAVE FAILED")
                 
                 # QA MODE: Compare with reference
                 if self.mode in ["QA", "ALL"] and ref_data is not None:
@@ -1845,18 +1781,14 @@ class UnifiedTestSuite:
                     self._write_qa_result(aug_name, idx, passed, stats)
                     
                     if passed:
-                        print(f"    ✓ {image_name} : QA PASS ({self.bitdepth})")
+                        print(f"    {image_name} : QA PASS ({self.bitdepth})")
                         if self.mode == "QA" or self.mode == "ALL":
                             success_count += 1
                     else:
-                        print(f"    ✗ {image_name} : QA FAIL ({self.bitdepth})")
-                        if "error" in stats:
-                            print(f"      Error: {stats['error']}")
-                        else:
-                            print(f"      Max diff: {stats['max_diff']}")
+                        print(f"    {image_name} : QA FAIL ({self.bitdepth})")
                 
             except Exception as e:
-                print(f"    ✗ {image_name} : ERROR → {e}")
+                print(f"    {image_name} : ERROR → {e}")
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
@@ -1871,7 +1803,7 @@ class UnifiedTestSuite:
         else:
             status = f"COMPLETED {success_count}/{total} tests"
         
-        print(f"\n  RESULT: {status} {'✓' if success else '✗'}")
+        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -1945,21 +1877,34 @@ class UnifiedTestSuite:
         print(f"Running {num_iterations} iterations per augmentation (after {warmup_iterations} warmup runs)\n")
         print(f"BitDepth: {self.bitdepth}\n")
         
-        perf_tests = [
-            ('brightness', lambda: fn.brightness(test_image, alpha=1.75, beta=50.0 if self.bitdepth == 'u8' else 50.0/255.0, backend=self.backend)),
-            ('gamma_correction', lambda: fn.gamma_correction(test_image, gamma=1.9, backend=self.backend)),
-            ('flip', lambda: fn.flip(test_image, horizontal=True, vertical=False, backend=self.backend)),
-            ('resize', lambda: fn.resize(test_image, width=50, height=50, backend=self.backend)),
-            ('crop', lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50, backend=self.backend)),
-            ('hue', lambda: fn.hue(test_image, hue_shift=60.0, backend=self.backend)),
-            ('rotate', lambda: fn.rotate(test_image, angle=50.0, backend=self.backend)),
-            ('contrast', lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=128.0 if self.bitdepth == 'u8' else 128.0/255.0, backend=self.backend)),
-            ('vignette', lambda: fn.vignette(test_image, intensity=6.0, backend=self.backend)),
-            ('pixelate', lambda: fn.pixelate(test_image, pixelation_percentage=87.5, backend=self.backend))
+        # Define all available performance tests
+        all_perf_tests = [
+            (0, 'brightness', lambda: fn.brightness(test_image, alpha=1.75, beta=50.0 if self.bitdepth == 'u8' else 50.0/255.0, backend=self.backend)),
+            (1, 'gamma_correction', lambda: fn.gamma_correction(test_image, gamma=1.9, backend=self.backend)),
+            (20, 'flip', lambda: fn.flip(test_image, horizontal=True, vertical=False, backend=self.backend)),
+            (21, 'resize', lambda: fn.resize(test_image, width=50, height=50, backend=self.backend)),
+            (37, 'crop', lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50, backend=self.backend)),
+            (42, 'hue', lambda: fn.hue(test_image, hue_shift=60.0, backend=self.backend)),
+            (23, 'rotate', lambda: fn.rotate(test_image, angle=50.0, backend=self.backend)),
+            (4, 'contrast', lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=128.0 if self.bitdepth == 'u8' else 128.0/255.0, backend=self.backend)),
+            (46, 'vignette', lambda: fn.vignette(test_image, intensity=6.0, backend=self.backend)),
+            (5, 'pixelate', lambda: fn.pixelate(test_image, pixelation_percentage=87.5, backend=self.backend))
         ]
         
+        # Filter tests based on case_list if provided
+        if self.case_list:
+            perf_tests = [(name, func) for case_id, name, func in all_perf_tests if case_id in self.case_list]
+        else:
+            perf_tests = [(name, func) for case_id, name, func in all_perf_tests]
+        
+        # Report which tests will be run
+        if self.case_list:
+            print(f"Running tests for cases: {self.case_list}")
+            print(f"Functions to test: {[name for name, _ in perf_tests]}\n")
+        
+        total_tests = len(perf_tests)
         for i, (func_name, func_call) in enumerate(perf_tests, 1):
-            print(f"  [{i}/10] Testing {func_name}...", end=" ")
+            print(f"  [{i}/{total_tests}] Testing {func_name}...", end=" ")
             
             # Check if function is available
             if not hasattr(fn, func_name):
@@ -2014,9 +1959,6 @@ class UnifiedTestSuite:
         elif self.mode == "QA":
             self.run_unit_tests()
         elif self.mode == "PERF":
-            self.run_performance_tests()  # Actually run the performance tests!
-        elif self.mode == "ALL":
-            self.run_unit_tests()
             self.run_performance_tests()
         else:
             print(f"ERROR: Invalid mode '{self.mode}'")
@@ -2038,7 +1980,7 @@ class UnifiedTestSuite:
             skipped = sum(1 for _, r in self.results['unit'] if r is None)
             print(f"\nUNIT TESTS:")
             print(f"  BitDepth: {self.bitdepth}")
-            print(f"  Passed: {passed}, Failed: {failed}, Skipped: {skipped}")
+            print(f"  Saved: {passed}, Failed: {failed}, Skipped: {skipped}")
         
         if self.mode in ["QA", "ALL"] and self.results['qa']:
             passed = sum(1 for _, r in self.results['qa'] if r is True)
@@ -2100,25 +2042,15 @@ def main():
     # Determine bitdepths to test
     bitdepths_to_test = []
     if args.bitdepth:
-        # Bitdepth was specified
-        bitdepths_to_test = [args.bitdepth]
-    else:
-        # No bitdepth specified, select based on test type
-        if args.test_type == 0 and args.qa_mode:
-            # QA testing: only u8 and f32
-            bitdepths_to_test = ['u8', 'f32']
-        elif args.test_type == 0:
-            # Unit testing: all bitdepths
-            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
-        elif args.test_type == 1:
-            # Performance testing: all bitdepths
-            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
-        elif args.mode == 'QA':
-            # QA mode explicitly set
-            bitdepths_to_test = ['u8', 'f32']
+        # Bitdepth was specified - handle both single value and list
+        if isinstance(args.bitdepth, list):
+            bitdepths_to_test = args.bitdepth
         else:
-            # Default to all for other modes
-            bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
+            bitdepths_to_test = [args.bitdepth]
+    else:
+        # No bitdepth specified - always run all bitdepths by default
+        bitdepths_to_test = ['u8', 'i8', 'f32', 'f16']
+        print("Note: No bitdepth specified. Running tests for all bitdepths (u8, i8, f32, f16)")
     
     # Print header
     print("\n" + "="*70)
@@ -2178,13 +2110,13 @@ def main():
             print(f"Running tests: Backend={backend_name}, BitDepth={bitdepth}")
             print(f"{'='*70}")
             
-            # # Create test configuration with shared timestamp
-            # config = TestConfig(
-            #     preserve_output=args.preserve_output,
-            #     test_type=args.test_type if hasattr(args, 'test_type') else None,
-            #     qa_mode=args.qa_mode,
-            #     bitdepth=bitdepth
-            # )
+            # Check if QA mode is requested for unsupported bitdepths
+            if (args.mode == 'QA' or (args.mode == 'UNIT' and args.qa_mode)) and bitdepth in ['i8', 'f16']:
+                print(f"Note: QA support is not available for {bitdepth} bitdepth. Skipping QA tests for {bitdepth}.")
+                if args.mode == 'QA':
+                    # Skip this bitdepth entirely for QA-only mode
+                    continue
+            
             current_mode_is_qa = args.mode in ['QA'] or args.qa_mode
             input_path_for_config = (
                 args.default_input_path if current_mode_is_qa else args.input_path1
@@ -2218,20 +2150,13 @@ def main():
                 
                 # Override the QA file to use the shared one
                 if qa_file:
-                    # Don't close any existing file since we didn't create one
-                    test_suite.qa_file = qa_file
-                    test_suite.qa_output_dir = qa_output_dir
+                    # Set the shared QA file
+                    test_suite.set_shared_qa_file(qa_file, qa_output_dir)
                 
                 # If performance mode and shared backend log exists, use it
                 if args.mode in ["PERF", "ALL"] and perf_log_file:
-                    # Override the test suite's log files to use backend-specific shared log
-                    if hasattr(test_suite, 'perf_logs'):
-                        for layout in test_suite.perf_logs:
-                            if test_suite.perf_logs[layout]:
-                                test_suite.perf_logs[layout].close()
-                    # Redirect all layouts to the shared backend log
-                    for layout in Layout:
-                        test_suite.perf_logs[layout.name] = perf_log_file
+                    # Set the shared performance log file
+                    test_suite.set_shared_perf_log(perf_log_file)
                     
                     # Write section header for this bitdepth
                     perf_log_file.write(f"\n{'='*50}\n")
@@ -2246,18 +2171,8 @@ def main():
                     for aug_name, result in test_suite.results['qa']:
                         backend_qa_results.append((bitdepth, aug_name, result))
                 
-                # Don't close shared files in cleanup
-                if qa_file or perf_log_file:
-                    # Temporarily set files to None to avoid closing shared files
-                    saved_qa = test_suite.qa_file
-                    saved_logs = test_suite.perf_logs.copy() if hasattr(test_suite, 'perf_logs') else {}
-                    test_suite.qa_file = None
-                    test_suite.perf_logs = {}
-                    test_suite.cleanup()
-                    test_suite.qa_file = saved_qa
-                    test_suite.perf_logs = saved_logs
-                else:
-                    test_suite.cleanup()
+                # Cleanup will handle file closure correctly based on ownership
+                test_suite.cleanup()
                 
             except Exception as e:
                 print(f"\nERROR for {backend_name}/{bitdepth}: {e}")
@@ -2273,6 +2188,9 @@ def main():
             
             # Group by augmentation
             aug_results = {}
+            total_tests_requested = 0
+            total_tests_passed = 0
+            
             for bitdepth, aug_name, result in backend_qa_results:
                 if aug_name not in aug_results:
                     aug_results[aug_name] = {}
@@ -2284,8 +2202,49 @@ def main():
                     if bitdepth in aug_results[aug_name]:
                         qa_file.write(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}\n")
             
+            # Count total test cases (looking at the actual QA file content)
+            qa_file.flush()
+            qa_file_path = os.path.join(qa_output_dir, "QA_results.txt")
+            with open(qa_file_path, 'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    # Count individual test results (e.g., "brightness_img0_u8: PASSED")
+                    if '_img' in line and ': PASSED' in line:
+                        total_tests_requested += 1
+                        total_tests_passed += 1
+                    elif '_img' in line and ': FAILED' in line:
+                        total_tests_requested += 1
+            
+            # Write Final Results summary similar to runImageTests.py
+            qa_file.write("\n")
+            qa_file.write("Final Results of Tests:\n")
+            qa_file.write(f"    - Total test cases including all subvariants REQUESTED = {total_tests_requested}\n")
+            qa_file.write(f"    - Total test cases including all subvariants PASSED = {total_tests_passed}\n")
+            
+            # Add general information about test suite
+            supported_augmentations = list(augmentationCaseMap.values())
+            total_supported = len(supported_augmentations)
+            # All functions in test_suite.py have QA support (no randomization)
+            non_qa_functions = []  # No functions with randomization in test_suite.py
+            
+            qa_file.write("\nGeneral information on test suite availability:\n")
+            qa_file.write(f"    - Total augmentations supported in test suite = {total_supported}\n")
+            qa_file.write(f"    - Total augmentations with golden output QA test support = {total_supported}\n")
+            qa_file.write(f"    - Total augmentations without golden output QA test support (due to randomization involved) = {len(non_qa_functions)}\n")
+            
             qa_file.close()
             print(f"\nQA results saved to: {qa_output_dir}/QA_results.txt")
+            
+            # Print the summary to console as well
+            print("\n" + "="*70)
+            print("Final Results of Tests:")
+            print(f"    - Total test cases including all subvariants REQUESTED = {total_tests_requested}")
+            print(f"    - Total test cases including all subvariants PASSED = {total_tests_passed}")
+            print("\nGeneral information on test suite availability:")
+            print(f"    - Total augmentations supported in test suite = {total_supported}")
+            print(f"    - Total augmentations with golden output QA test support = {total_supported}")
+            print(f"    - Total augmentations without golden output QA test support (due to randomization involved) = {len(non_qa_functions)}")
+            print("="*70)
         
         # Close performance log for this backend
         if perf_log_file:
