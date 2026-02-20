@@ -80,6 +80,8 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
         bitDepthStr = "f32";
     else if (BitDepthTestMode == U8_TO_F32)
         bitDepthStr = "u8";
+    else if (BitDepthTestMode == I16_TO_F32)
+        bitDepthStr = "f32";
     else if (BitDepthTestMode == I8_TO_F32)
         bitDepthStr = "f32";
 
@@ -98,11 +100,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
     else if (readType == 1) // Output
     {
         folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
-        // Logical tensor ops use testCase prefix and bitDepth suffix; others use simple naming
-        if(testCase == "tensor_and_tensor" || testCase == "tensor_or_tensor" || testCase == "tensor_xor_tensor")
-            suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";
-        else
-            suffix = std::to_string(nDim) + "d_output.bin";
+        suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";
     }
     return scriptPath + folderPath + suffix;
 }
@@ -274,14 +272,23 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
         case I8_TO_I8:
             descriptorPtr3D->dataType = RpptDataType::I8;
             break;
+        case U8_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::U8;
+            break;
         case U8_TO_I8:
             descriptorPtr3D->dataType = RpptDataType::I8;
             break;
         case I16_TO_I16:
             descriptorPtr3D->dataType = RpptDataType::I16;
             break;
+        case I8_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I8;
+            break;
         case U16_TO_U16:
             descriptorPtr3D->dataType = RpptDataType::U16;
+            break;
+        case I16_TO_F32:
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::I16;
             break;
         case I32_TO_I32:
             descriptorPtr3D->dataType = RpptDataType::I32;
