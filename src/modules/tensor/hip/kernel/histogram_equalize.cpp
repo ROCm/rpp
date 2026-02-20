@@ -39,8 +39,8 @@ __device__ constexpr float coeffCrB = -0.081312f;
 
 // Coefficients for YCbCr to RGB Conversion
 __device__ constexpr float coeffRCr = 1.402f;
-__device__ constexpr float coeffGCb = -0.344136f;
-__device__ constexpr float coeffGCr = -0.714136f;
+__device__ constexpr float coeffGCb = 0.344136f;
+__device__ constexpr float coeffGCr = 0.714136f;
 __device__ constexpr float coeffBCb = 1.772f;
 
 __device__ constexpr float maxPixelVal = 255.0f;
@@ -97,8 +97,8 @@ __device__ inline void ycbcr_to_rgb_hip_compute(d_float24 &rgb_f24, d_float8 &y_
     rgb_f24.f4[0] = clamp_f4((y_f8.f4[0] + MAKE_FLOAT4(coeffRCr) * cr_f8.f4[0]), 0.0f, maxPixelVal);
     rgb_f24.f4[1] = clamp_f4((y_f8.f4[1] + MAKE_FLOAT4(coeffRCr) * cr_f8.f4[1]), 0.0f, maxPixelVal);
 
-    rgb_f24.f4[2] = clamp_f4((y_f8.f4[0] + (MAKE_FLOAT4(coeffGCb) * cb_f8.f4[0]) + (MAKE_FLOAT4(coeffGCr) * cr_f8.f4[0])), 0.0f, maxPixelVal);
-    rgb_f24.f4[3] = clamp_f4((y_f8.f4[1] + (MAKE_FLOAT4(coeffGCb) * cb_f8.f4[1]) + (MAKE_FLOAT4(coeffGCr) * cr_f8.f4[1])), 0.0f, maxPixelVal);
+    rgb_f24.f4[2] = clamp_f4((y_f8.f4[0] - (MAKE_FLOAT4(coeffGCb) * cb_f8.f4[0]) - (MAKE_FLOAT4(coeffGCr) * cr_f8.f4[0])), 0.0f, maxPixelVal);
+    rgb_f24.f4[3] = clamp_f4((y_f8.f4[1] - (MAKE_FLOAT4(coeffGCb) * cb_f8.f4[1]) - (MAKE_FLOAT4(coeffGCr) * cr_f8.f4[1])), 0.0f, maxPixelVal);
 
     rgb_f24.f4[4] = clamp_f4((y_f8.f4[0] + MAKE_FLOAT4(coeffBCb) * cb_f8.f4[0]), 0.0f, maxPixelVal);
     rgb_f24.f4[5] = clamp_f4((y_f8.f4[1] + MAKE_FLOAT4(coeffBCb) * cb_f8.f4[1]), 0.0f, maxPixelVal);
@@ -350,7 +350,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                              rpp::Handle& handle)
 {
     if(roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int batchSize = dstDescPtr->n;
     unsigned int *d_hist = reinterpret_cast<unsigned int*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
