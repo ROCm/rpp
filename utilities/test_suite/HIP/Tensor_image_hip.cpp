@@ -622,7 +622,7 @@ int main(int argc, char **argv)
     if(testCase == CHANNEL_DROPOUT)
         CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
 
-    Rpp8u maxBoxesPerImage;
+    Rpp32u maxBoxesPerImage;
     if(testCase == COARSE_DROPOUT)
     {
         maxBoxesPerImage = 8;
