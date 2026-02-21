@@ -153,7 +153,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                                roiTensorPtrSrc);
             globalThreads_x = maxHoleW;
             globalThreads_y = maxHoleH;
-            globalThreads_z = totalBoxes;
+            globalThreads_z = srcDescPtr->n * boxesInEachImage;
         }
 
         hipLaunchKernelGGL(grid_dropout_pkd_hip_tensor,
@@ -201,7 +201,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                                roiTensorPtrSrc);
             globalThreads_x = maxHoleW;
             globalThreads_y = maxHoleH;
-            globalThreads_z = totalBoxes;
+            globalThreads_z = srcDescPtr->n * boxesInEachImage;
         }
 
         hipLaunchKernelGGL(grid_dropout_pln_hip_tensor,
