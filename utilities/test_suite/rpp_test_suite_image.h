@@ -70,6 +70,7 @@ std::map<int, string> augmentationMap =
     {4, "contrast"},
     {5, "pixelate"},
     {6, "jitter"},
+    {7, "snow"},
     {8, "noise"},
     {10, "fog"},
     {11, "rain"},
@@ -79,6 +80,7 @@ std::map<int, string> augmentationMap =
     {21, "resize"},
     {23, "rotate"},
     {24, "warp_afffine"},
+    {25, "fisheye"},
     {26, "lens_correction"},
     {28, "warp_perspective"},
     {29, "water"},
@@ -125,7 +127,8 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
-    {96, "emboss"}
+    {96, "channel_dropout"},
+    {101, "emboss"}
 };
 
 enum Augmentation {
@@ -135,6 +138,7 @@ enum Augmentation {
     CONTRAST = 4,
     PIXELATE = 5,
     JITTER = 6,
+    SNOW = 7,
     NOISE = 8,
     FOG = 10,
     RAIN = 11,
@@ -144,6 +148,7 @@ enum Augmentation {
     RESIZE = 21,
     ROTATE = 23,
     WARP_AFFINE = 24,
+    FISHEYE = 25,
     LENS_CORRECTION = 26,
     WARP_PERSPECTIVE = 28,
     WATER = 29,
@@ -190,52 +195,89 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
-    EMBOSS = 96
+    CHANNEL_DROPOUT = 96,
+    EMBOSS = 101
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, EMBOSS};
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, EMBOSS};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
-const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE, GAUSSIAN_FILTER};
+const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
 const unordered_set<int> interpolationTypeCases = {RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, REMAP};
 const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MAX, TENSOR_MEAN, TENSOR_STDDEV};
 const unordered_set<int> noiseTypeCases = {NOISE};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE};
 
 // Golden outputs for Tensor min Kernel
-std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs_U8 =
 {
     {1, {1, 1, 7}},
     {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
 };
 
+// Golden outputs for Tensor min Kernel
+std::map<int, std::vector<Rpp32f>> TensorMinReferenceOutputs_F32 =
+{
+    {1, {0.004 , 0.004 , 0.027}},
+    {3, {0.000 , 0.000 , 0.000 , 0.000 , 0.008 , 0.000 , 0.000 , 0.000 , 0.027 , 0.035 , 0.000 , 0.000}}
+};
+
 // Golden outputs for Tensor max Kernel
-std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs_U8 =
 {
     {1, {239, 245, 255}},
     {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
 };
 
+// Golden outputs for Tensor max Kernel
+std::map<int, std::vector<Rpp32f>> TensorMaxReferenceOutputs_F32 =
+{
+    {1, {0.937 , 0.961 , 1.000}},
+    {3, {1.000 , 0.941 , 0.925 , 1.000 , 1.000 , 0.949 , 0.945 , 1.000 , 0.992 , 1.000 , 1.000 , 1.000}}
+};
+
 // Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs =
+std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs_U8 =
 {
     {1, {334225, 813471, 2631125}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
+// Golden outputs for Tensor sum Kernel
+std::map<int, std::vector<Rpp32f>> TensorSumReferenceOutputs_F32 =
+{
+    {1, {1310.686 , 3190.083 , 10318.138}},
+    {3, {1366.196 , 1337.224 , 1029.867 , 3733.286 , 4143.341 , 2939.239 , 1989.965 , 9072.546 , 8512.338 , 10715.169 , 13022.350 , 32249.857}}
+};
+
 // Golden outputs for Tensor mean Kernel
-std::map<int, std::vector<float>> TensorMeanReferenceOutputs =
+std::map<int, std::vector<Rpp32f>> TensorMeanReferenceOutputs_U8 =
 {
     {1, {133.690, 81.347, 116.939}},
     {3, {139.352, 136.397, 105.046, 126.932, 105.655, 74.951, 50.744, 77.117, 96.473, 121.439, 147.587, 121.833}}
 };
 
+// Golden outputs for Tensor mean Kernel
+std::map<int, std::vector<Rpp32f>> TensorMeanReferenceOutputs_F32 =
+{
+    {1, {0.524 , 0.319 , 0.459}},
+    {3, {0.546 , 0.535 , 0.412 , 0.498 , 0.414 , 0.294 , 0.199 , 0.302 , 0.378 , 0.476 , 0.579 , 0.478}}
+};
+
+
 // Golden outputs for Tensor stddev Kernel
-std::map<int, std::vector<float>> TensorStddevReferenceOutputs =
+std::map<int, std::vector<float>> TensorStddevReferenceOutputs_U8 =
 {
     {1, {49.583, 54.623, 47.649}},
     {3, {57.416, 47.901, 53.235, 55.220, 68.471, 55.735, 46.668, 61.880, 47.462, 49.039, 67.269, 59.130}}
+};
+
+// Golden outputs for Tensor stddev Kernel
+std::map<int, std::vector<Rpp32f>> TensorStddevReferenceOutputs_F32 =
+{
+    {1, {49.583 , 54.623 , 47.649}},
+    {3, {57.416 , 47.901 , 53.235 , 55.220 , 68.471 , 55.735 , 46.668 , 61.880 , 47.462 , 49.039 , 67.269 , 59.130}}
 };
 
 template <typename T>
@@ -1019,9 +1061,10 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
 }
 
 // compares the output of PKD3-PKD3 and PLN1-PLN1 variants
-void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int testCase)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    Rpp32f cutoff = (testCase == LENS_CORRECTION) ? 1e-4 : 1e-5;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
@@ -1039,7 +1082,7 @@ void compare_outputs_pkd_and_pln1(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 Rpp32f diff = abs(*outVal - *outRefVal);
-                if(diff <= 2e-6)
+                if(diff <= cutoff)
                     matchedIdx++;
             }
         }
@@ -1085,9 +1128,10 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
 }
 
 // compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
-void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch, int testCase)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    Rpp32f cutoff = (testCase == LENS_CORRECTION) ? 1e-4 : 1e-5;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
     {
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
@@ -1110,7 +1154,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
                     outVal = rowTemp + j;
                     outRefVal = rowTempRef + j * 3;
                     Rpp32f diff = abs(*outVal - *outRefVal);
-                    if(diff <= 2e-6)
+                    if(diff <= cutoff)
                         matchedIdx++;
                 }
             }
@@ -1215,11 +1259,11 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         read_bin_file(refFile, binaryContent);
 
         if(dstDescPtr->layout == RpptLayout::NHWC)
-            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pln3((Rpp32f*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         else
-            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            compare_outputs_pkd_and_pln1((Rpp32f*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch, testCase);
         free(binaryContent);
     }
 
@@ -1251,9 +1295,14 @@ template <typename T>
 inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
-
-    func += dataType[srcDescPtr->dataType];
+    switch (srcDescPtr->dataType)
+    {
+        case RpptDataType::U8:  func += "_u8_"; break;
+        case RpptDataType::F16: func += "_f16_"; break;
+        case RpptDataType::F32: func += "_f32_"; break;
+        case RpptDataType::I8:  func += "_i8_"; break;
+        default:                func += "_unknown_"; break;
+    }
 
     if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
@@ -1268,19 +1317,36 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int fileMatch = 0;
     int matched_values = 0;
 
+    int inputBitDepth = srcDescPtr->dataType;
     T *refOutput;
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    if(testCase == TENSOR_MIN)
-        refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
-    else if(testCase == TENSOR_MAX)
-        refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
-    else if(testCase == TENSOR_SUM)
-        refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
-    else if(testCase == TENSOR_MEAN)
-        refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
-    else if(testCase == TENSOR_STDDEV)
-        refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
+    if (inputBitDepth == RpptDataType::F32)
+    {
+        if (testCase == TENSOR_MIN)
+            refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs_F32[numChannels].data());
+        else if (testCase == TENSOR_MAX)
+            refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs_F32[numChannels].data());
+        else if (testCase == TENSOR_SUM)
+            refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs_F32[numChannels].data());
+        else if (testCase == TENSOR_MEAN)
+            refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs_F32[numChannels].data());
+        else if (testCase == TENSOR_STDDEV)
+            refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs_F32[numChannels].data());
+    }
+    else if (inputBitDepth == RpptDataType::U8)
+    {
+        if (testCase == TENSOR_MIN)
+            refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs_U8[numChannels].data());
+        else if (testCase == TENSOR_MAX)
+            refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs_U8[numChannels].data());
+        else if (testCase == TENSOR_SUM)
+            refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs_U8[numChannels].data());
+        else if (testCase == TENSOR_MEAN)
+            refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs_U8[numChannels].data());
+        else if (testCase == TENSOR_STDDEV)
+            refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs_U8[numChannels].data());
+    }
 
     if(srcDescPtr->c == 1)
     {
@@ -1593,6 +1659,30 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
             }
         }
+    }
+}
+
+void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbability, int batchSize, int channels, int seed)
+{
+    int numThreads = omp_get_max_threads();
+    omp_set_dynamic(0);
+
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < batchSize; batchCount++)
+    {
+        std::mt19937 rng(seed + batchCount);
+        std::bernoulli_distribution keepDist(1.0f - dropoutProbability[batchCount]);
+        Rpp8u *maskPtrTemp = dropoutTensor + (batchCount * channels);
+        bool atLeastOne = false;
+
+        for (int channel = 0; channel < channels; channel++)
+        {
+            maskPtrTemp[channel] = keepDist(rng);
+            atLeastOne |= maskPtrTemp[channel];
+        }
+
+        if (!atLeastOne)
+            maskPtrTemp[rng() % channels] = 1;
     }
 }
 

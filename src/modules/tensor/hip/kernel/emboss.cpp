@@ -38,22 +38,6 @@ __device__ void emboss_row_hip_compute(T *srcPtr, d_float8 *dst_f8, float *filte
     }
 }
 
-__device__ void flip_kernel(float *filterTensor, int kernelSize)
-{
-    float temp[kernelSize * kernelSize];
-    for (int i = 0; i < kernelSize; i++)
-    {
-        for (int j = 0; j < kernelSize; j++)
-        {
-            temp[(kernelSize - 1 - i) * kernelSize + (kernelSize - 1 - j)] = filterTensor[i * kernelSize + j];
-        }
-    }
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-    {
-        filterTensor[i] = temp[i];
-    }
-}
-
 // -------------------- Set 1 - PKD3->PKD3 for T = U8/F32/F16/I8 --------------------
 
 // kernelSize = 3
@@ -1877,17 +1861,16 @@ __global__ void create_emboss_kernel_3x3(float *filterTensor,
     float strength = strengthTensor[id_x];
     float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
-    // Base emboss kernel 
+    // 3x3 emboss kernel
     const float baseKernel[9] = {
-        -2.0f, -1.0f,  0.0f,
-        -1.0f,  1.0f,  1.0f,
-         0.0f,  1.0f,  2.0f
+         2.0f,  1.0f,  0.0f,
+         1.0f,  1.0f, -1.0f,
+         0.0f, -1.0f, -2.0f
     };
 
     // Apply strength scaling
     for (int i = 0; i < 9; i++)
         filter[i] = baseKernel[i] * clampedStrength;
-    flip_kernel(filter, 3);
 }
 
 __global__ void create_emboss_kernel_5x5(float *filterTensor,
@@ -1902,19 +1885,18 @@ __global__ void create_emboss_kernel_5x5(float *filterTensor,
     float strength = strengthTensor[id_x];
     float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
-    // Example 5x5 Emboss kernel (diagonal edge emphasis)
+    // 5x5 emboss kernel
     const float baseKernel[25] = {
-        -3, -3, -2, -1,  0,
-        -3, -2, -1,  0,  1,
-        -2, -1,  1,  1,  2,
-        -1,  0,  1,  2,  3,
-         0,  1,  2,  3,  3
+         3,  3,  2,  1,  0,
+         3,  2,  1,  0, -1,
+         2,  1,  1, -1, -2,
+         1,  0, -1, -2, -3,
+         0, -1, -2, -3, -3
     };
 
     // Apply strength scaling
     for (int i = 0; i < 25; i++)
         filter[i] = baseKernel[i] * clampedStrength;
-    flip_kernel(filter, 5);
 }
 
 __global__ void create_emboss_kernel_7x7(float *filterTensor,
@@ -1929,21 +1911,20 @@ __global__ void create_emboss_kernel_7x7(float *filterTensor,
     float strength = strengthTensor[id_x];
     float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
-    // Sample 7x7 Emboss Kernel (top-left to bottom-right edge detection)
+    // 7x7 emboss kernel
     const float baseKernel[49] = {
-        -4, -5, -4, -3, -2, -1,  0,
-        -5, -3, -3, -2, -1,  0,  1,
-        -4, -3, -2, -1,  0,  1,  2,
-        -3, -2, -1,  1,  1,  2,  3,
-        -2, -1,  0,  1,  2,  3,  4,
-        -1,  0,  1,  2,  3,  3,  5,
-         0,  1,  2,  3,  4,  5,  4
+         4,  5,  4,  3,  2,  1,  0,
+         5,  3,  3,  2,  1,  0, -1,
+         4,  3,  2,  1,  0, -1, -2,
+         3,  2,  1,  1, -1, -2, -3,
+         2,  1,  0, -1, -2, -3, -4,
+         1,  0, -1, -2, -3, -3, -5,
+         0, -1, -2, -3, -4, -5, -4
     };
 
     // Apply strength
     for (int i = 0; i < 49; i++)
         filter[i] = baseKernel[i] * clampedStrength;
-    flip_kernel(filter, 7);
 }
 
 __global__ void create_emboss_kernel_9x9(float *filterTensor,
@@ -1958,23 +1939,22 @@ __global__ void create_emboss_kernel_9x9(float *filterTensor,
     float strength = strengthTensor[id_x];
     float clampedStrength = (strength > 2.0f) ? 2.0f : strength;
 
-    // A sample 9x9 Emboss kernel (diagonal edge detection, symmetric from top-left to bottom-right)
+    // 9x9 emboss kernel
     const float baseKernel[81] = {
-        -5, -7, -6, -5, -4, -3, -2, -1,  0,
-        -7, -4, -5, -4, -3, -2, -1,  0,  1,
-        -6, -5, -3, -3, -2, -1,  0,  1,  2,
-        -5, -4, -3, -2, -1,  0,  1,  2,  3,
-        -4, -3, -2, -1,  1,  1,  2,  3,  4,
-        -3, -2, -1,  0,  1,  2,  3,  4,  5,
-        -2, -1,  0,  1,  2,  3,  3,  5,  6,
-        -1,  0,  1,  2,  3,  4,  5,  4,  7,
-         0,  1,  2,  3,  4,  5,  6,  7,  5
+         5,  7,  6,  5,  4,  3,  2,  1,  0,
+         7,  4,  5,  4,  3,  2,  1,  0, -1,
+         6,  5,  3,  3,  2,  1,  0, -1, -2,
+         5,  4,  3,  2,  1,  0, -1, -2, -3,
+         4,  3,  2,  1,  1, -1, -2, -3, -4,
+         3,  2,  1,  0, -1, -2, -3, -4, -5,
+         2,  1,  0, -1, -2, -3, -3, -5, -6,
+         1,  0, -1, -2, -3, -4, -5, -4, -7,
+         0, -1, -2, -3, -4, -5, -6, -7, -5
     };
 
     // Apply strength scaling
     for (int i = 0; i < 81; i++)
         filter[i] = baseKernel[i] * clampedStrength;
-    flip_kernel(filter, 9);
 }
 
 static RppStatus hip_exec_create_emboss_kernel(Rpp32f *filterTensor,

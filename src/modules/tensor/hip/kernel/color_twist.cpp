@@ -63,21 +63,30 @@ __device__ void color_twist_hip_compute(uchar *srcPtr, d_float24 *pix_f24, float
     float4 normalizer_f4 = FLOAT4_ONE_OVER_255;
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     colorTwistParams_f4->x = colorTwistParams_f4->x * 255.0f;
-    colorTwistParams_f4->z = (((int)colorTwistParams_f4->z) % 360) * SIX_OVER_360;
+    float hueParam = fmodf(colorTwistParams_f4->z, 360.0f);
+    if(hueParam < 0.0f)
+        hueParam += 360.0f;
+    colorTwistParams_f4->z = hueParam * 0.01666667f; // 6 * 1/360
     color_twist_8RGB_hip_compute(pix_f24, colorTwistParams_f4);
     rpp_hip_pixel_check_0to255(pix_f24);
 }
 __device__ void color_twist_hip_compute(float *srcPtr, d_float24 *pix_f24, float4 *colorTwistParams_f4)
 {
     colorTwistParams_f4->y = colorTwistParams_f4->y * ONE_OVER_255;
-    colorTwistParams_f4->z = (((int)colorTwistParams_f4->z) % 360) * SIX_OVER_360;
+    float hueParam = fmodf(colorTwistParams_f4->z, 360.0f);
+    if(hueParam < 0.0f)
+        hueParam += 360.0f;
+    colorTwistParams_f4->z = hueParam * 0.01666667f; // 6 * 1/360
     color_twist_8RGB_hip_compute(pix_f24, colorTwistParams_f4);
     rpp_hip_pixel_check_0to1(pix_f24);
 }
 __device__ void color_twist_hip_compute(half *srcPtr, d_float24 *pix_f24, float4 *colorTwistParams_f4)
 {
     colorTwistParams_f4->y = colorTwistParams_f4->y * ONE_OVER_255;
-    colorTwistParams_f4->z = (((int)colorTwistParams_f4->z) % 360) * SIX_OVER_360;
+    float hueParam = fmodf(colorTwistParams_f4->z, 360.0f);
+    if(hueParam < 0.0f)
+        hueParam += 360.0f;
+    colorTwistParams_f4->z = hueParam * 0.01666667f; // 6 * 1/360
     color_twist_8RGB_hip_compute(pix_f24, colorTwistParams_f4);
     rpp_hip_pixel_check_0to1(pix_f24);
 }
@@ -88,7 +97,10 @@ __device__ void color_twist_hip_compute(schar *srcPtr, d_float24 *pix_f24, float
     rpp_hip_math_add24_const(pix_f24, pix_f24, i8Offset_f4);
     rpp_hip_math_multiply24_const(pix_f24, pix_f24, normalizer_f4);
     colorTwistParams_f4->x = colorTwistParams_f4->x * 255.0f;
-    colorTwistParams_f4->z = (((int)colorTwistParams_f4->z) % 360) * SIX_OVER_360;
+    float hueParam = fmodf(colorTwistParams_f4->z, 360.0f);
+    if(hueParam < 0.0f)
+        hueParam += 360.0f;
+    colorTwistParams_f4->z = hueParam * 0.01666667f; // 6 * 1/360
     color_twist_8RGB_hip_compute(pix_f24, colorTwistParams_f4);
     rpp_hip_pixel_check_0to255(pix_f24);
     rpp_hip_math_subtract24_const(pix_f24, pix_f24, i8Offset_f4);
