@@ -176,25 +176,48 @@ def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
     """Read QA results and print summary"""
     try:
-        f = open(qaFilePath, 'r+')
-        numLines = 0
+        # Read all lines first to count properly
+        with open(qaFilePath, 'r') as f:
+            lines = f.readlines()
+        
+        # Count test results from the specific summary format
+        numRequested = 0
         numPassed = 0
-        for line in f:
+        
+        for line in lines:
+            # Count lines that look like test results: "bitdepth_augmentation: PASSED/FAILED"
+            if (': PASSED' in line or ': FAILED' in line) and ('_' in line):
+                # Check if it's a summary line (e.g. "f32_brightness: PASSED")
+                parts = line.split(':')
+                if len(parts) == 2:
+                    test_name = parts[0].strip()
+                    result = parts[1].strip()
+                    # Check if it matches the pattern bitdepth_augmentation
+                    if '_' in test_name and any(bd in test_name for bd in ['u8', 'f32', 'f16', 'i8']):
+                        numRequested += 1
+                        if result == 'PASSED':
+                            numPassed += 1
+        
+        # Print the file contents
+        for line in lines:
             sys.stdout.write(line)
-            numLines += 1
-            if "PASSED" in line:
-                numPassed += 1
             sys.stdout.flush()
+        
+        # Add results summary
         resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numRequested)
         resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
         resultsInfo += "\n\nGeneral information on test suite availability:"
         resultsInfo += "\n    - Total augmentations supported in test suite = " + str(len(supportedCaseList))
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden output QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-        f.write(resultsInfo)
+        
+        # Append to file
+        with open(qaFilePath, 'a') as f:
+            f.write(resultsInfo)
+        
         print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
-        f.close()
+        
     except Exception as e:
         print(f"Error reading QA results: {e}")
 
@@ -509,18 +532,21 @@ class TestConfig:
     
     def get_output_dir(self, backend_name, mode):
         """Get output directory based on backend and mode with bitdepth"""
-        bitdepth_suffix = f"_{self.bitdepth.upper()}" if self.bitdepth else ""
+        # Match C++ format: simpler date format without leading zeros
+        now = datetime.now()
+        # Format without leading zeros for month and day
+        timestamp_formatted = f"{now.year}-{now.month}-{now.day:02d}_{now.hour:02d}-{now.minute:02d}-{now.second:02d}"
         if mode == "UNIT":
             if self.qa_mode:
-                return f"QA_RESULTS_{backend_name}_{self.timestamp}"
+                return f"QA_RESULTS_{backend_name}_{timestamp_formatted}"
             else:
-                return f"OUTPUT_IMAGES_{backend_name}_{self.timestamp}"
+                return f"OUTPUT_IMAGES_{backend_name}_{timestamp_formatted}"
         elif mode == "PERF":
-            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}_{self.timestamp}"
+            return f"OUTPUT_PERFORMANCE_LOGS_{backend_name}_{timestamp_formatted}"
         elif mode == "QA":
-            return f"QA_RESULTS_{backend_name}_{self.timestamp}"
+            return f"QA_RESULTS_{backend_name}_{timestamp_formatted}"
         else:
-            return f"{backend_name}_OUTPUT_{mode}_{self.timestamp}"
+            return f"{backend_name}_OUTPUT_{mode}_{timestamp_formatted}"
 
 
 # =============================================================================
@@ -593,7 +619,7 @@ class UnifiedTestSuite:
         print(f"Mode: {self.mode}")
         print(f"BitDepth: {self.bitdepth}")
         print(f"Test Images: {len(self.test_images)}")
-        print("-" * 70)
+        print("-" * 90)
     
     # =========================================================================
     # HELPER FUNCTIONS WITH STRUCTURED OUTPUT
@@ -790,48 +816,77 @@ class UnifiedTestSuite:
             return False, {"error": str(e)}
     
     def _write_qa_result(self, aug_name, image_idx, passed, stats=None):
-        """Write QA result to file"""
+        """Write QA result to file matching C++ format - simplified one-line format"""
         if self.qa_file:
-            status = "PASSED" if passed else "FAILED"
-            result_line = f"{aug_name}_img{image_idx}_{self.bitdepth}: {status}"
-            if stats and not passed:
-                if "error" in stats:
-                    result_line += f" - Error: {stats['error']}"
-                else:
-                    result_line += f" - Max diff: {stats['max_diff']}, Mismatch: {stats['mismatched_pixels']}/{stats['total_pixels']}"
-            self.qa_file.write(result_line + "\n")
-            self.qa_file.flush()
-            
-            # Track result for percentage calculation
+            # Store result internally for summary
             self.current_aug_results.append(passed)
+            # Don't write individual image results, just collect for summary
     
-    def _write_aug_summary(self, aug_name):
-        """Write augmentation summary with percentage"""
-        if self.qa_file and self.current_aug_results:
-            passed_count = sum(self.current_aug_results)
-            total_count = len(self.current_aug_results)
-            percentage = (passed_count / total_count) * 100
+    def _write_aug_summary(self, aug_name, timing_info=None):
+        """Write augmentation summary - format matching C++ reference output"""
+        if self.qa_file:
+            # Write timing header
+            backend_str = "CPU" if self.backend == HOST else "GPU"
+            layout_str = "PKD3_to_PKD3"
+            backend_name = "HOST" if self.backend == HOST else "HIP"
+            func_name = f"{aug_name}_{self.bitdepth}_Tensor_{backend_name}_{layout_str}"
             
-            if percentage == 100:
-                status = "PASSED"
+            # Print to console as well
+            print(f"\nRunning {func_name} 1 times (each time with a batch size of {self.config.BATCH_SIZE} images) and computing mean statistics...\n")
+            
+            self.qa_file.write(f"Running {func_name} 1 times (each time with a batch size of {self.config.BATCH_SIZE} images) and computing mean statistics...\n\n")
+            
+            # Write and print timing results
+            if timing_info:
+                clock_line = f"{backend_str} Backend Clock Time: {timing_info['clock_time']:.3f} ms/batch"
+                wall_line = f"{backend_str} Backend Wall Time: {timing_info['wall_time']:.4f} ms/batch"
+            
+            print(clock_line)
+            print(wall_line)
+            print()
+            
+            self.qa_file.write(clock_line + "\n")
+            self.qa_file.write(wall_line + "\n\n")
+            
+            # Write results line with underscore between layouts
+            results_line = f"Results for {aug_name}_{self.bitdepth}_Tensor_PKD3_to_PKD3 :"
+            print(results_line)
+            
+            self.qa_file.write(results_line + "\n")
+            
+            # Determine overall pass/fail status
+            if self.current_aug_results:
+                overall_passed = all(self.current_aug_results)
             else:
-                status = "FAILED"
-                
-            summary_line = f"{aug_name} ({self.bitdepth}) Percentage: {status} ({percentage:.0f}%)\n"
-            self.qa_file.write(summary_line)
+                overall_passed = True  # Default to pass if no results
+            
+            status = "PASSED!" if overall_passed else "FAILED!"
+            print(status)
+            self.qa_file.write(f"{status}\n")
+            
             self.qa_file.flush()
             
             # Clear for next augmentation
             self.current_aug_results = []
     
     def _write_perf_result(self, aug_name, times_dict, layout="PKD3"):
-        """Write performance result to log file (only write once, not per layout)"""
+        """Write performance result to log file matching C++ format"""
         # Only write for PKD3 to avoid duplication (since all layouts use the same file)
-        if layout == "PKD3" and hasattr(self, 'perf_log_file'):
-            func_group = func_group_finder(aug_name)
-            self.perf_log_file.write(f"\n{func_group} ({self.bitdepth})\n")
-            self.perf_log_file.write(f"Running {aug_name} {self.num_runs} times\n")
-            self.perf_log_file.write(f"max,min,avg wall times in ms/batch = {times_dict['max']:.2f},{times_dict['min']:.2f},{times_dict['avg']:.2f}\n")
+        if layout == "PKD3" and hasattr(self, 'perf_log_file') and self.perf_log_file:
+            # Write command line format
+            backend_str = "HIP" if self.backend == HIP else "HOST"
+            layout_str = "PKD3" if layout == "PKD3" else layout
+            
+            # Create command line string similar to C++ test suite
+            cmd = f"./Tensor_image_{backend_str.lower()} {self.perf_output_dir} 0 0 {aug_name} 0 0"
+            self.perf_log_file.write(f"{cmd}\n")
+            
+            # Write running message
+            func_name = f"{aug_name}_{self.bitdepth}_Tensor_{backend_str}_{layout_str}_to{layout_str}"
+            self.perf_log_file.write(f"Running {func_name} {self.num_runs} times (each time with a batch size of {self.config.BATCH_SIZE} images) and computing mean statistics...\n")
+            
+            # Write timing results in exact format
+            self.perf_log_file.write(f"max,min,avg wall times in ms/batch = {times_dict['max']:.6f},{times_dict['min']:.6f},{times_dict['avg']:.6f}\n")
             self.perf_log_file.flush()
     
     def cleanup(self):
@@ -864,8 +919,11 @@ class UnifiedTestSuite:
     
     def test_brightness(self):
         aug_name = "brightness"
-        device = 'cuda' if self.backend == HIP else 'cpu' 
-        print(f" Brightness Augmentation ({self.bitdepth})")
+        device = 'cuda' if self.backend == HIP else 'cpu'
+        
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         # Load reference data for QA mode
         ref_data = None
@@ -931,20 +989,23 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
+        
+        # Print separator after augmentation
+        print("\n" + "-" * 90)
         
         # Report results
         success = success_count == total
-        if self.mode == "UNIT":
-            status = f"SAVED {success_count}/{total} images"
-        elif self.mode == "QA":
-            status = f"PASSED {success_count}/{total} comparisons"
-        else:  # ALL
-            status = f"COMPLETED {success_count}/{total} tests"
-        
-        print(f"\n  RESULT: {status}")
         
         if self.mode == "UNIT":
             self.results['unit'].append((aug_name, success))
@@ -960,6 +1021,10 @@ class UnifiedTestSuite:
         aug_name = "gamma_correction"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f" Gamma Correction Augmentation ({self.bitdepth})")
+        
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         # Load reference data for QA mode
         ref_data = None
@@ -1024,9 +1089,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,
+            'wall_time': (end_wall - start_wall) * 1000
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1058,6 +1131,10 @@ class UnifiedTestSuite:
             print("  SKIP (function not available)")
             self.results[self.mode.lower()].append((aug_name, None))
             return None
+        
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         # Load reference data for QA mode
         ref_data = None
@@ -1123,9 +1200,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    ✗ {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1152,6 +1237,10 @@ class UnifiedTestSuite:
         aug_name = "resize"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f" Resize Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'resize'):
             print("  SKIP (function not available)")
@@ -1224,6 +1313,14 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
             self._write_aug_summary(aug_name)
@@ -1253,6 +1350,10 @@ class UnifiedTestSuite:
         aug_name = "crop"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f"  Crop Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'crop'):
             print("  SKIP (function not available)")
@@ -1320,10 +1421,18 @@ class UnifiedTestSuite:
                 
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
+
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1350,6 +1459,10 @@ class UnifiedTestSuite:
         aug_name = "hue"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f"  Hue Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'hue'):
             print("  SKIP (function not available)")
@@ -1418,10 +1531,18 @@ class UnifiedTestSuite:
                 
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
+
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1448,6 +1569,10 @@ class UnifiedTestSuite:
         aug_name = "rotate"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f"  Rotate Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'rotate'):
             print("  SKIP (function not available)")
@@ -1517,9 +1642,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1546,6 +1679,10 @@ class UnifiedTestSuite:
         aug_name = "contrast"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f"  Contrast Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'contrast'):
             print("  SKIP (function not available)")
@@ -1616,9 +1753,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1645,6 +1790,10 @@ class UnifiedTestSuite:
         aug_name = "vignette"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f" Vignette Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'vignette'):
             print("  SKIP (function not available)")
@@ -1714,9 +1863,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1743,6 +1900,10 @@ class UnifiedTestSuite:
         aug_name = "pixelate"
         device = 'cuda' if self.backend == HIP else 'cpu'
         print(f" Pixelate Augmentation ({self.bitdepth})")
+
+        # Timing variables
+        start_clock = time.perf_counter()
+        start_wall = time.time()
         
         if not hasattr(fn, 'pixelate'):
             print("  SKIP (function not available)")
@@ -1812,9 +1973,17 @@ class UnifiedTestSuite:
             except Exception as e:
                 print(f"    {image_name} : ERROR → {e}")
         
+        # Calculate timing
+        end_clock = time.perf_counter()
+        end_wall = time.time()
+        timing_info = {
+            'clock_time': (end_clock - start_clock) * 1000,  # Convert to ms
+            'wall_time': (end_wall - start_wall) * 1000  # Convert to ms
+        }
+        
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -1843,9 +2012,9 @@ class UnifiedTestSuite:
     
     def run_unit_tests(self):
         """Run augmentations based on case_list in Unit mode"""
-        print(f"\n{'='*70}")
+        print(f"\n{'-'*90}")
         print(f"UNIT TESTS - Image Generation ({self.backend_name}, {self.bitdepth})")
-        print(f"{'='*70}\n")
+        print(f"{'-'*90}\n")
         
         # Map augmentation names to test methods
         test_map = {
@@ -1869,16 +2038,16 @@ class UnifiedTestSuite:
                     if aug_name in test_map:
                         try:
                             test_map[aug_name]()
-                            print("-" * 70)
+                            print("-" * 90)
                         except Exception as e:
                             print(f"ERROR in {aug_name}: {e}")
-                            print("-" * 70)
+                            print("-" * 90)
         else:
             # Run all tests if no case_list specified
             for test_func in test_map.values():
                 try:
                     test_func()
-                    print("-" * 70)
+                    print("-" * 90)
                 except Exception as e:
                     print(f"ERROR in {test_func.__name__}: {e}")
                     print("-" * 70)
@@ -2224,17 +2393,11 @@ def main():
                     if bitdepth in aug_results[aug_name]:
                         qa_file.write(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}\n")
             
-            # Count total test cases
-            qa_file.flush()
-            qa_file_path = os.path.join(qa_output_dir, "QA_results.txt")
-            with open(qa_file_path, 'r') as f:
-                lines = f.readlines()
-                for line in lines:
-                    if '_img' in line and ': PASSED' in line:
-                        total_tests_requested += 1
-                        total_tests_passed += 1
-                    elif '_img' in line and ': FAILED' in line:
-                        total_tests_requested += 1
+            # Count total test cases from backend_qa_results
+            for bitdepth, aug_name, result in backend_qa_results:
+                total_tests_requested += 1
+                if result:
+                    total_tests_passed += 1
             
             # Write Final Results summary
             qa_file.write("\n")

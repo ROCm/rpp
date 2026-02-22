@@ -1,51 +1,201 @@
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
+[![PyPI](https://img.shields.io/badge/pypi-v0.1.0-orange.svg)](https://pypi.org/project/rpp-pybind/)
+
+<p align="center"><img width="70%" src="https://github.com/ROCm/rpp/raw/master/docs/data/AMD_RPP_logo.png" /></p>
+
 # PyRPP - Python Bindings for AMD ROCm Performance Primitives
 
-Simple Python interface for RPP, designed to be easy to use like rocAL.
+> [!NOTE]
+> PyRPP provides Python bindings for AMD's ROCm Performance Primitives (RPP) library, enabling GPU-accelerated image augmentations with a simple, intuitive API designed to be easy to use like rocAL. The documentation source files reside in the `rpp_pybind` folder of this repository.
 
-## Overview
+AMD PyRPP is a comprehensive, high-performance Python interface for computer vision augmentations on AMD processors with `HIP` (GPU) and `HOST` (CPU) backends.
 
-PyRPP provides Python bindings for AMD's ROCm Performance Primitives (RPP) library, enabling GPU-accelerated image augmentations with a simple, intuitive API.
+<p align="center"><img width="35%" src="https://github.com/ROCm/rpp/raw/master/docs/data/rpp_structure_4.png" /></p>
 
-## Structure
+#### Latest release
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/ROCm/rpp/releases)
 
+## Supported functionalities and variants
+
+PyRPP provides 10 core augmentations across different categories:
+
+### Color Augmentations (4)
+| Function | Description | Parameters |
+|----------|-------------|------------|
+| **brightness** | Adjust image brightness | `alpha` (0-20), `beta` (0-255) |
+| **gamma_correction** | Non-linear brightness adjustment | `gamma` (>0) |
+| **contrast** | Adjust image contrast | `contrast_factor` (>0), `contrast_center` (0-255) |
+| **hue** | Shift hue values for RGB images | `hue_shift` (0-359) |
+
+### Geometric Augmentations (4)
+| Function | Description | Parameters |
+|----------|-------------|------------|
+| **flip** | Flip images horizontally/vertically | `horizontal` (bool), `vertical` (bool) |
+| **resize** | Resize images with bilinear interpolation | `width`, `height` |
+| **rotate** | Rotate images by angle | `angle` (degrees) |
+| **crop** | Extract rectangular region | `x1`, `y1`, `crop_width`, `crop_height` |
+
+### Effects Augmentations (2)
+| Function | Description | Parameters |
+|----------|-------------|------------|
+| **vignette** | Add darkening effect around edges | `intensity` (0.0-1.0) |
+| **pixelate** | Create pixelated/mosaic effect | `pixelation_percentage` (0-100) |
+
+## Prerequisites
+
+### Operating Systems
+* Linux
+  * Ubuntu - `22.04` / `24.04`
+  * RedHat - `8` / `9`
+  * SLES - `15 SP7`
+
+### Hardware
+* **CPU**: [AMD64](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+* **GPU**: [AMD Radeon™ Graphics](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) / [AMD Instinct™ Accelerators](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+
+> [!IMPORTANT] 
+> * [ROCm-supported hardware required for HIP backend](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+> * `gfx908` or higher GPU required for GPU backend
+> * Install ROCm `6.0.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
+
+### Python Requirements
+* Python Version `3.8` or later
+  ```shell
+  python3 --version
+  ```
+
+### Dependencies
+
+#### System Libraries
+* libturbojpeg for JPEG operations
+  ```shell
+  sudo apt install libturbojpeg0-dev
+  ```
+
+#### Python Packages
+* NumPy - Array operations
+* PyTorch - Tensor operations
+* PyTurboJPEG - Fast JPEG encoding/decoding
+  ```shell
+  pip install numpy torch PyTurboJPEG
+  ```
+
+> [!NOTE]
+> All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
+
+## Installation instructions
+
+The installation process uses the following steps:
+
+* [Prerequisites installation](#prerequisites)
+* [RPP library installation](#rpp-library-installation)
+* [Python bindings installation](#python-bindings-installation)
+
+### RPP Library Installation
+
+> [!IMPORTANT]
+> PyRPP requires the base RPP library to be installed first.
+
+#### Package Install (Recommended)
+
+##### Ubuntu
+```shell
+sudo apt install rpp rpp-dev
 ```
-rpp_pybind/
-├── __init__.py       # Main module with C++ exports
-├── fn.py            # High-level augmentation functions
-├── types.py         # Type definitions and helpers
-├── utils.py         # Image loading/saving utilities
-├── rpp_pybind.cpp   # C++ pybind11 bindings
-├── test_simple.py   # Simple test runner
-└── example_simple.py # Usage examples
+
+##### RHEL
+```shell
+sudo yum install rpp rpp-devel
 ```
 
-## Installation
-
-### Prerequisites
-
-```bash
-# Install dependencies
-sudo apt-get update
-sudo apt-get install -y python3-dev libturbojpeg0-dev
-
-# Install Python packages
-pip install numpy torch PyTurboJPEG
+##### SLES
+```shell
+sudo zypper install rpp rpp-devel
 ```
 
-### Build and Install
+### Python Bindings Installation
 
-```bash
-# Build RPP with Python support
+#### Option 1: Build with RPP (Recommended)
+
+```shell
+# Clone RPP repository
+git clone https://github.com/ROCm/rpp.git
 cd rpp
+
+# Build RPP with Python support
 mkdir build && cd build
 cmake -DBUILD_PYPACKAGE=ON ..
 make -j$(nproc)
 sudo make install
-
-# The Python module will be installed to your Python site-packages
 ```
 
-## Usage
+#### Option 2: Install from PyPI
+
+```shell
+pip install rpp-pybind
+```
+
+#### Option 3: Development Install
+
+```shell
+# Clone repository
+git clone https://github.com/ROCm/rpp.git
+cd rpp/rpp_pybind
+
+# Development install
+pip install -e .
+```
+
+## Verify installation
+
+### Quick Verification
+
+```python
+import rpp_pybind as rpp
+from rpp_pybind import types
+
+# Check version
+print(f"PyRPP Version: {rpp.__version__}")
+
+# Check backend availability
+print(f"GPU Available: {types.is_gpu_available()}")
+print(f"Default Backend: {types.get_default_backend()}")
+```
+
+### Run Test Suite
+
+The comprehensive test suite is located at `utilities/python_tests/test_suite.py` and provides Unit, QA, and Performance testing capabilities.
+
+```bash
+# Navigate to RPP root directory
+cd /path/to/rpp
+
+# Unit testing (saves output images)
+python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --bitdepth u8
+
+# QA testing (compares with reference outputs)
+python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --bitdepth f32 --qa_mode 1
+
+# Performance testing (timing measurements)
+python utilities/python_tests/test_suite.py --test_type 1 --backend HIP --num_runs 100 --bitdepth f32
+
+# Test specific augmentations
+python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --case_list 0 1 4  # brightness, gamma, contrast
+
+# Test multiple bitdepths
+python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --bitdepth u8 f32 --qa_mode 1
+```
+
+#### Test Suite Options
+- `--test_type`: 0 for Unit/QA tests, 1 for Performance tests
+- `--backend`: HOST (CPU) or HIP (GPU)
+- `--bitdepth`: u8, i8, f32, f16 (can specify multiple)
+- `--qa_mode`: 1 to enable QA comparison mode
+- `--num_runs`: Number of iterations for performance testing
+- `--case_list`: Specific augmentation cases to test
+
+## Usage Examples
 
 ### Basic Example
 
@@ -79,128 +229,79 @@ output = fn.brightness(images, alpha=1.5, backend=types.HOST)
 output = fn.brightness(images, alpha=1.5, backend=types.HIP)
 ```
 
+### Batch Processing
+
+```python
+# Process multiple images with different parameters
+horizontal_flips = [True, False, True, False]
+vertical_flips = [False, True, False, True]
+
+output = fn.flip(images, 
+                 horizontal=horizontal_flips,
+                 vertical=vertical_flips,
+                 backend=types.HIP)
+```
+
 ## API Reference
+
+### Module Structure
+
+```
+rpp_pybind/
+├── __init__.py       # Main module with C++ exports
+├── fn.py            # High-level augmentation functions
+├── rpp_types.py     # Type definitions and helpers
+├── utils.py         # Image loading/saving utilities
+├── rpp_pybind.cpp   # C++ pybind11 bindings
+└── amd/rpp/         # AMD namespace package structure
+```
 
 ### fn Module - Augmentation Functions
 
-#### Color Augmentations (4)
+All functions accept:
+- `images`: Input tensor(s)
+- `backend`: Optional backend selection (`types.HOST` or `types.HIP`)
+- Function-specific parameters
 
-- **brightness**(images, alpha=1.0, beta=0.0, backend=None)
-  - Adjust image brightness
-  - `alpha`: Brightness multiplier (0 to 20)
-  - `beta`: Brightness offset (0 to 255)
-
-- **gamma_correction**(images, gamma=1.0, backend=None)
-  - Apply gamma correction
-  - `gamma`: Gamma value (>0)
-
-- **contrast**(images, contrast_factor=1.0, contrast_center=128.0, backend=None)
-  - Adjust image contrast
-  - `contrast_factor`: Contrast multiplier (>0)
-  - `contrast_center`: Center value for contrast
-
-- **hue**(images, hue_shift=0.0, backend=None)
-  - Adjust hue for RGB images
-  - `hue_shift`: Hue shift in degrees (0 to 359)
-  - Note: RGB images only (3 channels)
-
-#### Geometric Augmentations (4)
-
-- **flip**(images, horizontal=False, vertical=False, backend=None)
-  - Flip images horizontally and/or vertically
-  - `horizontal`: Boolean or list
-  - `vertical`: Boolean or list
-
-- **resize**(images, width, height, backend=None)
-  - Resize images to specified dimensions
-  - `width`: Target width
-  - `height`: Target height
-
-- **rotate**(images, angle=0.0, backend=None)
-  - Rotate images by given angle
-  - `angle`: Rotation in degrees (positive = counter-clockwise)
-
-- **crop**(images, x1, y1, crop_width, crop_height, backend=None)
-  - Crop images to specified region
-  - `x1`, `y1`: Top-left coordinates
-  - `crop_width`, `crop_height`: Crop dimensions
-
-#### Effects Augmentations (2)
-
-- **vignette**(images, intensity=0.5, backend=None)
-  - Apply vignette effect
-  - `intensity`: Effect strength (0.0 to 1.0)
-
-- **pixelate**(images, pixelation_percentage=50.0, backend=None)
-  - Apply pixelate effect
-  - `pixelation_percentage`: Pixelation level (0 to 100)
+Returns:
+- Augmented tensor(s) in the same format as input
 
 ### utils Module - Image Utilities
 
-- **load_image**(path, device='cpu', apply_padding=True)
-  - Load single JPEG image as tensor
+| Function | Description | Parameters |
+|----------|-------------|------------|
+| `load_image()` | Load single JPEG image | `path`, `device`, `apply_padding` |
+| `load_images()` | Load batch of JPEG images | `paths`, `device`, `apply_padding` |
+| `save_image()` | Save tensor as JPEG | `tensor`, `path` |
+| `create_test_batch()` | Create random test images | `batch_size`, `height`, `width`, `channels`, `device` |
 
-- **load_images**(paths, device='cpu', apply_padding=True)
-  - Load batch of JPEG images
+### types Module - Constants and Helpers
 
-- **save_image**(tensor, path)
-  - Save tensor as JPEG image
+#### Enums
+- **Backend**: `HOST` (CPU), `HIP` (GPU)
+- **Layout**: `NCHW`, `NHWC`
+- **DataType**: `U8`, `F32`, `F16`
 
-- **create_test_batch**(batch_size, height, width, channels=3, device='cpu')
-  - Create random test images
+#### Helper Functions
+- `is_gpu_available()`: Check GPU availability
+- `get_default_backend()`: Auto-select optimal backend
 
-### types Module - Enums and Constants
+## Performance Optimization
 
-- **Backends**: `HOST` (CPU), `HIP` (GPU)
-- **Layouts**: `NCHW`, `NHWC`
-- **Data Types**: `U8`, `F32`, `F16`
-- **Helper Functions**:
-  - `is_gpu_available()`: Check if GPU is available
-  - `get_default_backend()`: Auto-select backend
+PyRPP leverages RPP's optimized kernels:
+- **CPU Backend**: OpenMP-accelerated SIMD implementations
+- **GPU Backend**: HIP/ROCm kernels for AMD GPUs
 
-## Testing
+### Performance Tips
 
-```bash
-# Run all tests
-python test_simple.py
-
-# Run specific test
-python test_simple.py --test brightness
-
-# Use GPU backend
-python test_simple.py --backend HIP
-```
-
-## Examples
-
-```bash
-# Run examples
-python example_simple.py
-```
-
-## Supported Augmentations
-
-PyRPP provides 10 augmentations from different categories:
-
-### Color Augmentations (4)
-1. **Brightness** - Adjust image brightness with alpha/beta parameters
-2. **Gamma Correction** - Non-linear brightness adjustment
-3. **Contrast** - Adjust image contrast around a center value
-4. **Hue** - Shift hue values for RGB images
-
-### Geometric Augmentations (4)
-5. **Flip** - Horizontal/vertical image flipping
-6. **Resize** - Resize images using bilinear interpolation
-7. **Rotate** - Rotate images by specified angle
-8. **Crop** - Extract rectangular region from images
-
-### Effects Augmentations (2)
-9. **Vignette** - Add darkening effect around edges
-10. **Pixelate** - Create pixelated/mosaic effect
+1. **Use GPU backend** when available for maximum performance
+2. **Process in batches** rather than individual images
+3. **Reuse tensors** to minimize memory allocation overhead
+4. **Chain operations** efficiently to minimize data transfers
 
 ## Direct C++ API Access
 
-For advanced users, you can access the C++ functions directly:
+For advanced users requiring fine-grained control:
 
 ```python
 import rpp_pybind as rpp
@@ -215,12 +316,52 @@ rpp.brightness(input_tensor, output_tensor, alpha_list, beta_list, handle, backe
 rpp.rppDestroy(handle, backend)
 ```
 
-## Performance
+## Technical Support
 
-PyRPP leverages RPP's optimized kernels for both CPU and GPU backends:
-- **CPU**: OpenMP-accelerated SIMD implementations
-- **GPU**: HIP/ROCm kernels for AMD GPUs
+For PyRPP questions and feedback, you can contact us at `mivisionx.support@amd.com`.
+
+To submit feature requests and bug reports, use our [GitHub issues](https://github.com/ROCm/rpp/issues) page.
+
+## Documentation
+
+### Building Documentation
+
+#### Sphinx Documentation
+
+```bash
+cd rpp_pybind/docs
+pip3 install -r requirements.txt
+python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+```
+
+#### API Documentation
+
+```bash
+cd rpp_pybind
+python -m pydoc -w rpp_pybind
+```
+
+## Release Notes
+
+All notable changes for each release are documented in the [CHANGELOG](../CHANGELOG.md).
+
+## Tested Configurations
+
+* **Linux Distribution**
+  * Ubuntu - `22.04` / `24.04`
+  * RedHat - `8` / `9`
+  * SLES - `15 SP7`
+* **ROCm**: rocm-core - `6.0.0`+
+* **Python**: Version `3.8`+
+* **NumPy**: Version `1.21.0`+
+* **PyTorch**: Version `2.0.0`+
+* **PyTurboJPEG**: Version `1.7.0`+
+* **AMD Clang++**: Version `17.0.0`+ (for C++ backend compilation)
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](../LICENSE) file for details.
+
+## Acknowledgments
+
+PyRPP is built on top of AMD's ROCm Performance Primitives (RPP) library. We thank all contributors to the RPP project.
