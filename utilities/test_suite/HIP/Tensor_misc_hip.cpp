@@ -1,4 +1,3 @@
-
 /*
 MIT License
 
@@ -47,7 +46,7 @@ int main(int argc, char **argv)
     BitDepthTestMode = atoi(argv[7]);
     string dst = argv[9];
     string scriptPath = argv[10];
-    qaMode = (testType == 0);
+    qaMode = (testType == UNIT_TEST);
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
     bool broadCastCase = (testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR);
@@ -56,7 +55,7 @@ int main(int argc, char **argv)
 
     if(qaMode && batchSize != 3)
     {
-        cout << "QA mode can only run with batchsize 3" << std::endl;
+        cout<<"QA mode can only run with batchsize 3" << std::endl;
         return -1;
     }
 
@@ -87,13 +86,13 @@ int main(int argc, char **argv)
     }
 
     std::string func = funcName + "_" + std::to_string(nDim) + "d_" + bitdepthStr;
-    if(axisMaskCase)
+    if (axisMaskCase)
         func += "_axisMask" + std::to_string(axisMask);
-    if(permOrderCase)
+    if (permOrderCase)
         func += "_permOrder" + std::to_string(permOrder);
-    if(broadCastFlag == 1)
+    if (broadCastFlag == 1)
         func += "_broadcast_input2";
-    else if(broadCastFlag == 2)
+    else if (broadCastFlag == 2)
         func += "_broadcast_input1";
 
     // fill roi based on mode and number of dimensions
@@ -236,7 +235,7 @@ int main(int argc, char **argv)
 
         Rpp32f *inputF32 = static_cast<Rpp32f *>(input);
         Rpp16s *inputI16_cast = static_cast<Rpp16s *>(inputI16);
-        for(int i = 0; i < iBufferSize; i++)
+        for (int i = 0; i < iBufferSize; i++)
             inputI16_cast[i] = static_cast<Rpp16s>(inputF32[i]);
     }
 
@@ -444,7 +443,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         endWallTime = omp_get_wtime();
 
-        if(missingFuncFlag == 1)
+        if (missingFuncFlag == 1)
         {
             cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -499,7 +498,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
     if(srcDescriptorPtrNDSecond != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrNDSecond));
-    if(permTensor != nullptr)
+    if (permTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permTensor));
     if(meanTensorCPU != nullptr)
         free(meanTensorCPU);
