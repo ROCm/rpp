@@ -1687,7 +1687,7 @@ void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbabil
 }
 
 // Dropout Region initializer for unit and performance testing
-void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb *anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp8u inputBitDepth, int seed, Rpp8u dropoutType, void *colorBuffer = NULL)
+void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb *anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp8u BitDepthTestMode, int seed, Rpp8u dropoutType, void *colorBuffer = NULL)
 {
     // Initialize Random Number Generators
     std::mt19937 rng(seed);
@@ -1700,16 +1700,16 @@ void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOf
         
         Rpp32u noiseSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * channels;
 
-        if (inputBitDepth == 0) // U8
+        if (BitDepthTestMode == U8_TO_U8) // U8
             for (Rpp32u i = 0; i < noiseSize; i++)
                 ((Rpp8u*)colorBuffer)[i] = (Rpp8u)dist_i(rng_noise);
-        else if (inputBitDepth == 1) // F32
+        else if (BitDepthTestMode == F32_TO_F32) // F32
             for (Rpp32u i = 0; i < noiseSize; i++)
                 ((Rpp32f*)colorBuffer)[i] = (Rpp32f)dist_f(rng_noise);
-        else if (inputBitDepth == 2) // F16
+        else if (BitDepthTestMode == F16_TO_F16) // F16
             for (Rpp32u i = 0; i < noiseSize; i++)
                 ((Rpp16f*)colorBuffer)[i] = (Rpp16f)dist_f(rng_noise);
-        else if (inputBitDepth == 5) // I8
+        else if (BitDepthTestMode == I8_TO_I8) // I8
             for (Rpp32u i = 0; i < noiseSize; i++)
                 ((Rpp8s*)colorBuffer)[i] = (Rpp8s)(dist_i(rng_noise) - 128);
     }
@@ -1757,20 +1757,20 @@ void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOf
             int colorOffset = (i * maxBoxesPerImage) * channels;
             Rpp32f dropoutColor = 0.0f;
 
-            if (inputBitDepth == 0) // U8
+            if (BitDepthTestMode == U8_TO_U8)
                 for (int c = 0; c < channels; c++)
                     ((Rpp8u*)colorBuffer)[colorOffset + c] = (Rpp8u)dropoutColor;
-            else if (inputBitDepth == 1) // F32
+            else if (BitDepthTestMode == F32_TO_F32)
                 for (int c = 0; c < channels; c++)
                     ((Rpp32f*)colorBuffer)[colorOffset + c] = (Rpp32f)dropoutColor;
-            else if (inputBitDepth == 2) // F16
+            else if (BitDepthTestMode == F16_TO_F16)
                 for (int c = 0; c < channels; c++)
                     ((Rpp16f*)colorBuffer)[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
-            else if (inputBitDepth == 5) // I8
+            else if (BitDepthTestMode == I8_TO_I8)
                 for (int c = 0; c < channels; c++)
                     ((Rpp8s*)colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
         }
-        numOfBoxes[i] += 1;
+        numOfBoxes[i] = 1;
     }
 }
 
