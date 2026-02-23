@@ -259,16 +259,6 @@ typedef enum
     S8_U8,
 } RppConvertBitDepthMode;
 
-/*! \brief RPP polar point
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f rho;
-    Rpp32f theta;
-} RppPointPolar;
-#endif
-
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
  */

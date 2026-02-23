@@ -90,9 +90,9 @@ int main(int argc, char **argv)
         func += "_axisMask" + std::to_string(axisMask);
     if (permOrderCase)
         func += "_permOrder" + std::to_string(permOrder);
-    if (broadCastFlag == 1)
+    if((broadCastFlag == 1) && (broadCastCase))
         func += "_broadcast_input2";
-    else if (broadCastFlag == 2)
+    else if((broadCastFlag == 2) && (broadCastCase))
         func += "_broadcast_input1";
 
     // fill roi based on mode and number of dimensions

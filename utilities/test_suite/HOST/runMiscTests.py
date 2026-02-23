@@ -89,9 +89,6 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
             bitDepths = [BitDepthTestMode.I16_TO_F32]
         for bitDepth in bitDepths:
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
-        # elif profilingOption == "YES":
-        #     for bitDepth in bitDepths:
-        #         run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():

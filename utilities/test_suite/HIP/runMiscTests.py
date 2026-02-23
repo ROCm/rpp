@@ -125,11 +125,12 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
         if miscAugmentationMap[int(case)][0] == "log1p":
             bitDepths = [BitDepthTestMode.I16_TO_F32]
-        for bitDepth in bitDepths:
-            run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
-        # elif profilingOption == "YES":
-        #     for bitDepth in bitDepths:
-        #         run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
+        if profilingOption == "NO":
+            for bitDepth in bitDepths:
+                run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
+        elif profilingOption == "YES":
+            for bitDepth in bitDepths:
+                run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():

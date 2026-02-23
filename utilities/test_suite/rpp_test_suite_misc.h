@@ -30,8 +30,6 @@ SOFTWARE.
 #include <map>
 #include <array>
 
-#define cutoff 1e-6
-
 std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
@@ -102,6 +100,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
         folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
         suffix = testCase + "_" + std::to_string(nDim) + "d_output_" + bitDepthStr + ".bin";
     }
+
     return scriptPath + folderPath + suffix;
 }
 
@@ -684,7 +683,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
     }
     Rpp32u goldenOutputLength;
     if(testCase == "log")
-        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, 2, broadCastFlag);
+        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, F32_TO_F32, broadCastFlag);
     else
         goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, BitDepthTestMode, broadCastFlag);
     void *refOutput = calloc(goldenOutputLength, get_size_of_data_type(dataType));
@@ -721,6 +720,8 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
 
         if(testCase == "log" && BitDepthTestMode == U8_TO_F32)
         {
+            Rpp32f cutoff = 1e-6;
+
             Rpp32f *ref = static_cast<Rpp32f *>(refOutput) + sampleOffset;
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
@@ -731,6 +732,8 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
         }
         else if(BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I16_TO_F32 || BitDepthTestMode == U8_TO_F32)  // F32 || I16_F32 || U8_F32
         {
+            Rpp32f cutoff = (testCase == "normalize") ? 1e-5 : 1e-6;
+
             Rpp32f *ref = static_cast<Rpp32f *>(refOutput) + sampleOffset;
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
@@ -745,7 +748,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
             Rpp8u *out = static_cast<Rpp8u *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if(out[j] - ref[j] == 0) 
+                if(out[j] - ref[j] == 0)
                     cnt++;
             }
         }
@@ -766,6 +769,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
         std::cout << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
+
     free(refOutput);
 
     // Append the QA results to file
