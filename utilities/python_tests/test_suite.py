@@ -496,9 +496,6 @@ class TestConfig:
             
             print(f"Discovered {len(image_files)} image(s) in {self.TEST_IMAGES_DIR}")
             
-            # Process all discovered images (no limit)
-            # image_files = image_files[:3]  # REMOVED: No longer limiting to 3 images
-            
             # Discover dimensions for each image
             self.TEST_IMAGES = []
             self.IMAGE_SPECS = []
@@ -598,16 +595,11 @@ class UnifiedTestSuite:
                 self.qa_output_dir = self.config.get_output_dir(self.backend_name, "QA")
                 os.makedirs(self.qa_output_dir, exist_ok=True)
                 print(f"QA Output Directory: {self.qa_output_dir}")
-                # Don't create QA file here if it will be overridden later
                 self.qa_file = None
         
         # Setup Performance output directory and log files
         if self.mode in ["PERF", "ALL"]:
-            self.perf_output_dir = self.config.get_output_dir(self.backend_name, "PERF")
-            os.makedirs(self.perf_output_dir, exist_ok=True)
-            print(f"Performance Output Directory: {self.perf_output_dir}")
-            # Don't create log file here if it will be provided externally
-            # This will be handled by set_shared_perf_log() method
+            self.perf_output_dir = None 
         
         # Load test images paths
         self.test_images = [
@@ -818,9 +810,7 @@ class UnifiedTestSuite:
     def _write_qa_result(self, aug_name, image_idx, passed, stats=None):
         """Write QA result to file matching C++ format - simplified one-line format"""
         if self.qa_file:
-            # Store result internally for summary
             self.current_aug_results.append(passed)
-            # Don't write individual image results, just collect for summary
     
     def _write_aug_summary(self, aug_name, timing_info=None):
         """Write augmentation summary - format matching C++ reference output"""
@@ -899,10 +889,13 @@ class UnifiedTestSuite:
         if hasattr(self, 'perf_log_file') and self.perf_log_file and self.owns_perf_log:
             self.perf_log_file.close()
     
-    def set_shared_perf_log(self, perf_log_file):
-        """Set a shared performance log file from external source"""
+    def set_shared_perf_log(self, perf_log_file, perf_output_dir=None):
+        """Set a shared performance log file and directory from external source"""
         self.perf_log_file = perf_log_file
-        self.owns_perf_log = False  # We don't own this file, so won't close it
+        self.owns_perf_log = False 
+        # Set the shared output directory
+        if perf_output_dir:
+            self.perf_output_dir = perf_output_dir
         # All layouts use the same file handle
         for layout in Layout:
             self.perf_logs[layout.name] = perf_log_file
@@ -911,7 +904,7 @@ class UnifiedTestSuite:
         """Set a shared QA file from external source"""
         self.qa_file = qa_file
         self.qa_output_dir = qa_output_dir
-        self.owns_qa_file = False  # We don't own this file, so won't close it
+        self.owns_qa_file = False
     
     # =========================================================================
     # AUGMENTATION FUNCTIONS (Combined Unit + QA with f32 support)
@@ -1323,7 +1316,7 @@ class UnifiedTestSuite:
         
         # Write percentage summary for this augmentation
         if self.mode in ["QA", "ALL"] and self.qa_file:
-            self._write_aug_summary(aug_name)
+            self._write_aug_summary(aug_name, timing_info)
         
         # Report results
         success = success_count == total
@@ -2324,9 +2317,7 @@ def main():
             
             # Run tests with structured output
             try:
-                # Override QA file if it exists
                 if qa_file:
-                    # Temporarily override the config to not create new QA directory
                     original_get_output_dir = config.get_output_dir
                     config.get_output_dir = lambda bn, md: qa_output_dir if md == "QA" else original_get_output_dir(bn, md)
                 
@@ -2339,15 +2330,14 @@ def main():
                     bitdepth=bitdepth
                 )
                 
-                # Override the QA file to use the shared one
                 if qa_file:
                     # Set the shared QA file
                     test_suite.set_shared_qa_file(qa_file, qa_output_dir)
                 
                 # If performance mode and shared backend log exists, use it
                 if args.mode in ["PERF", "ALL"] and perf_log_file:
-                    # Set the shared performance log file
-                    test_suite.set_shared_perf_log(perf_log_file)
+                    # Set the shared performance log file and directory
+                    test_suite.set_shared_perf_log(perf_log_file, perf_output_dir)
                     
                     # Write section header for this bitdepth
                     perf_log_file.write(f"\n{'='*50}\n")
@@ -2374,8 +2364,9 @@ def main():
         # Write overall QA summary for this backend
         if qa_file and backend_qa_results:
             qa_file.write("\n" + "="*70 + "\n")
-            qa_file.write("OVERALL SUMMARY\n")
+            qa_file.write("Results of QA Test \n")
             qa_file.write("="*70 + "\n")
+            print("\n" + "-"*40 +" Results of QA Test "+"-"*40 + "\n")
             
             # Group by augmentation
             aug_results = {}
@@ -2392,6 +2383,7 @@ def main():
                 for bitdepth in bitdepths_to_test:
                     if bitdepth in aug_results[aug_name]:
                         qa_file.write(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}\n")
+                        print(f"{bitdepth}_{aug_name}: {aug_results[aug_name][bitdepth]}")
             
             # Count total test cases from backend_qa_results
             for bitdepth, aug_name, result in backend_qa_results:
@@ -2410,8 +2402,8 @@ def main():
             total_supported = len(supported_augmentations)
             non_qa_functions = [] 
             
-            qa_file.write("\nGeneral information on test suite availability:\n")
-            qa_file.write(f"    - Total augmentations supported in test suite = {total_supported}\n")
+            qa_file.write("\nGeneral information on Tensor test suite availability:\n")
+            qa_file.write(f"    - Total augmentations supported in Tensor test suite = {total_supported}\n")
             qa_file.write(f"    - Total augmentations with golden output QA test support = {total_supported}\n")
             qa_file.write(f"    - Total augmentations without golden output QA test support (due to randomization involved) = {len(non_qa_functions)}\n")
             
@@ -2441,13 +2433,11 @@ def main():
                 args.num_runs
             )
                 
-    print("\n" + "="*70)
-    print("OVERALL TEST SUMMARY")
-    print("="*70)
+    print("\n" + "-"*30+" OVERALL TEST SUMMARY "+"-"*40)
     print(f"Backends tested: {[b[1] for b in backends_to_test]}")
     print(f"BitDepths tested: {bitdepths_to_test}")
     print(f"Overall Result: {'SUCCESS' if overall_success else 'FAILURE'}")
-    print("="*70 + "\n")
+    print("-"*70 + "\n")
     
     return 0 if overall_success else 1
 
