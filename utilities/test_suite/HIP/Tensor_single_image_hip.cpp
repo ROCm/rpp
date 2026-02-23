@@ -205,6 +205,7 @@ vector<Mat> loadBatchImages_jpegd(const string& directory, int& noOfImages, bool
         image_names.push_back(directory + "/" + filename);
     }
     closedir(dir);
+    std::sort(image_names.begin(), image_names.end());
 
     for (const auto& inputImagePath : image_names)
     {
