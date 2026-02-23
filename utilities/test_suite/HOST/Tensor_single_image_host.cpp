@@ -677,7 +677,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_brightness_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_brightness(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                     }
                 }
                 else
@@ -699,7 +699,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_flip_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_flip(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                     }
                 }
                 else
@@ -724,7 +724,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_resize_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &dstImgSizes[i], interpolationType, &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_resize(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &dstImgSizes[i], interpolationType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                     }
                 }
                 else
@@ -752,7 +752,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) 
-                        errorCodeCapture = rppt_crop_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_crop(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;
@@ -777,7 +777,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_box_filter_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_box_filter(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                     }
                 }
                 else
