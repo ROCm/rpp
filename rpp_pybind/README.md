@@ -1,9 +1,3 @@
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org)
-[![PyPI](https://img.shields.io/badge/pypi-v0.1.0-orange.svg)](https://pypi.org/project/rpp-pybind/)
-
-<p align="center"><img width="70%" src="https://github.com/ROCm/rpp/raw/master/docs/data/AMD_RPP_logo.png" /></p>
-
 # PyRPP - Python Bindings for AMD ROCm Performance Primitives
 
 > [!NOTE]
@@ -12,9 +6,6 @@
 AMD PyRPP is a comprehensive, high-performance Python interface for computer vision augmentations on AMD processors with `HIP` (GPU) and `HOST` (CPU) backends.
 
 <p align="center"><img width="35%" src="https://github.com/ROCm/rpp/raw/master/docs/data/rpp_structure_4.png" /></p>
-
-#### Latest release
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/ROCm/rpp/releases)
 
 ## Supported functionalities and variants
 
@@ -298,70 +289,3 @@ PyRPP leverages RPP's optimized kernels:
 2. **Process in batches** rather than individual images
 3. **Reuse tensors** to minimize memory allocation overhead
 4. **Chain operations** efficiently to minimize data transfers
-
-## Direct C++ API Access
-
-For advanced users requiring fine-grained control:
-
-```python
-import rpp_pybind as rpp
-
-# Create handle
-handle = rpp.rppCreate(batch_size=4, backend=rpp.types.HOST)
-
-# Call C++ function directly
-rpp.brightness(input_tensor, output_tensor, alpha_list, beta_list, handle, backend)
-
-# Destroy handle
-rpp.rppDestroy(handle, backend)
-```
-
-## Technical Support
-
-For PyRPP questions and feedback, you can contact us at `mivisionx.support@amd.com`.
-
-To submit feature requests and bug reports, use our [GitHub issues](https://github.com/ROCm/rpp/issues) page.
-
-## Documentation
-
-### Building Documentation
-
-#### Sphinx Documentation
-
-```bash
-cd rpp_pybind/docs
-pip3 install -r requirements.txt
-python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
-```
-
-#### API Documentation
-
-```bash
-cd rpp_pybind
-python -m pydoc -w rpp_pybind
-```
-
-## Release Notes
-
-All notable changes for each release are documented in the [CHANGELOG](../CHANGELOG.md).
-
-## Tested Configurations
-
-* **Linux Distribution**
-  * Ubuntu - `22.04` / `24.04`
-  * RedHat - `8` / `9`
-  * SLES - `15 SP7`
-* **ROCm**: rocm-core - `6.0.0`+
-* **Python**: Version `3.8`+
-* **NumPy**: Version `1.21.0`+
-* **PyTorch**: Version `2.0.0`+
-* **PyTurboJPEG**: Version `1.7.0`+
-* **AMD Clang++**: Version `17.0.0`+ (for C++ backend compilation)
-
-## License
-
-MIT License - see [LICENSE](../LICENSE) file for details.
-
-## Acknowledgments
-
-PyRPP is built on top of AMD's ROCm Performance Primitives (RPP) library. We thank all contributors to the RPP project.
