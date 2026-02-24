@@ -653,16 +653,25 @@ int main(int argc, char **argv)
     int noOfImages = 0, missingFuncFlag = 0;
     Rpp32f conversionFactor = 1.0f / 255.0;
     bool isColor = (layoutType != 2);
-    vector<Mat> inputVec;
+    vector<Mat> inputVec, inputVecSecond;
     if (decoderType == 0)
+    {
         inputVec = loadBatchImages_jpegd(src, noOfImages, isColor);
+        if (dualInputCase)
+            inputVecSecond = loadBatchImages_jpegd(srcSecond, noOfImages, isColor);
+    }
     else
+    {
         inputVec = loadBatchImages_cv(src, noOfImages, isColor);
+        if (dualInputCase)
+            inputVecSecond = loadBatchImages_cv(srcSecond, noOfImages, isColor);
+    }
 
     if (noOfImages == 0) { cerr << "No images found!"; return -1; }
 
     // Convert batch to user-specified bit depth
     convertBatchBitDepth(inputVec, BitDepthTestMode, conversionFactor);
+    convertBatchBitDepth(inputVecSecond, BitDepthTestMode, conversionFactor);
     if (noOfImages < batchSize) {
         for (int i = noOfImages; i < batchSize; i++)
             inputVec.push_back(inputVec[noOfImages - 1]);
@@ -704,8 +713,12 @@ int main(int argc, char **argv)
         
         // Prepare input buffers as contiguous memory for direct device copy
         if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
+        {
             // Convert PKD3 to PLN3 for NCHW layout
             inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
+            if (dualInputCase)
+                inputVecSecond[i] = convert_pkd3_to_pln3(inputVecSecond[i]);
+        }
     }
     
     Rpp32u numThreads = 1;
@@ -741,7 +754,7 @@ int main(int argc, char **argv)
                 outElementSize = 4;
 
             // Allocate device memory for this image
-            void *d_input, *d_output;
+            void *d_input, *d_inputSecond = nullptr, *d_output;
             size_t dataSizeInBytes = (size_t)srcDescPtr[i].strides.nStride * inElementSize;
             size_t actualInputCols = inputVec[i].cols;
             size_t inputInBytes = actualInputCols * inputVec[i].channels() * inElementSize;
@@ -750,17 +763,30 @@ int main(int argc, char **argv)
 
             CHECK_RETURN_STATUS(hipMalloc(&d_input, inputSizeInBytes));
             CHECK_RETURN_STATUS(hipMemset(d_input, 0, inputSizeInBytes));
+            if (dualInputCase)
+            {
+                CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, inputSizeInBytes));
+                CHECK_RETURN_STATUS(hipMemset(d_inputSecond, 0, inputSizeInBytes));
+            }
             CHECK_RETURN_STATUS(hipMalloc(&d_output, outputSizeInBytes));
             CHECK_RETURN_STATUS(hipMemset(d_output, 0, outputSizeInBytes));
 
             // Copy input data to device
             Rpp8u *inputTemp = (inputVec[i].data);
+            Rpp8u *inputTempSecond = (inputVecSecond[i].data);
             Rpp8u *d_input_offsetted = static_cast<Rpp8u*>(d_input) + srcDescPtr[i].offsetInBytes;
+            Rpp8u *d_inputSecond_offsetted = static_cast<Rpp8u*>(d_inputSecond) + srcDescPtr[i].offsetInBytes;
             for(int j = 0; j < inputVec[i].rows; j++)
             {
                 Rpp8u* d_inputRowTemp = d_input_offsetted + j * srcDescPtr[i].strides.hStride * inElementSize;
                 Rpp8u* inputRowTemp = inputTemp + j * inputVec[i].step[0];
                 CHECK_RETURN_STATUS(hipMemcpy(d_inputRowTemp, inputRowTemp, inputInBytes, hipMemcpyHostToDevice));
+                if (dualInputCase)
+                {
+                    Rpp8u* d_inputSecondRowTemp = d_inputSecond_offsetted + j * srcDescPtr[i].strides.hStride * inElementSize;
+                    Rpp8u* inputSecondRowTemp = inputTempSecond + j * inputVec[i].step[0];
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputSecondRowTemp, inputSecondRowTemp, inputInBytes, hipMemcpyHostToDevice));
+                }
             }
 
             switch (testCase)
@@ -774,6 +800,20 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_brightness(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case BLEND:
+                {
+                    testCaseName = "blend";
+
+                    Rpp32f alpha = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                            errorCodeCapture = rppt_blend(d_input, d_inputSecond, &srcDescPtr[i], d_output, &dstDescPtr[i], &alpha, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -879,6 +919,8 @@ int main(int argc, char **argv)
             {
                 cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
                 CHECK_RETURN_STATUS(hipFree(d_input));
+                if (dualInputCase)
+                    CHECK_RETURN_STATUS(hipFree(d_inputSecond));
                 CHECK_RETURN_STATUS(hipFree(d_output));
                 return RPP_ERROR_NOT_IMPLEMENTED;
             }
@@ -886,6 +928,8 @@ int main(int argc, char **argv)
             {
                 cout << "\nThe functionality " << func << " returned an error status " << rppStatusToString[errorCodeCapture] << " on run number " << perfRunCount + 1 << " of " << numRuns << " runs.\n";
                 CHECK_RETURN_STATUS(hipFree(d_input));
+                if (dualInputCase)
+                    CHECK_RETURN_STATUS(hipFree(d_inputSecond));
                 CHECK_RETURN_STATUS(hipFree(d_output));
                 return errorCodeCapture;
             }
@@ -938,6 +982,8 @@ int main(int argc, char **argv)
 
             // Free device memory for this image
             CHECK_RETURN_STATUS(hipFree(d_input));
+            if (dualInputCase)
+                CHECK_RETURN_STATUS(hipFree(d_inputSecond));
             CHECK_RETURN_STATUS(hipFree(d_output));
 
             wallTime = endWallTime - startWallTime;

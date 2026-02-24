@@ -1371,6 +1371,7 @@ RppStatus resize_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
+// -------------------- Single Image Processing --------------------
 
 RppStatus resize_nn_u8_u8_host_single_image(Rpp8u *srcPtr,
                                             RpptDescPtr srcDescPtr,

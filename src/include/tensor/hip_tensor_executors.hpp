@@ -281,6 +281,17 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_blend_single_image(T *srcPtr1,
+                                      T *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f alpha,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
+
 // -------------------- color_cast --------------------
 
 template <typename T>

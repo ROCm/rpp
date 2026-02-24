@@ -3104,6 +3104,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+// -------------------- Single Image Processing --------------------
 
 template<typename T>
 RppStatus box_filter_char_host_single_image(T *srcPtr,

@@ -209,6 +209,8 @@ RppStatus hip_exec_crop_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+// -------------------- Single Image Processing --------------------
+
 template <typename T>
 __global__ void crop_pkd_hip_single_image(T *srcPtr,
                                           uint srcStrideH,
