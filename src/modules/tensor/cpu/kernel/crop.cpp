@@ -683,6 +683,7 @@ RppStatus crop_i8_i8_host_tensor(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
+// -------------------- Single Image Processing --------------------
 
 RppStatus crop_u8_u8_host_single_image(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,

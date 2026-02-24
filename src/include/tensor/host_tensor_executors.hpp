@@ -442,6 +442,51 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle);
 
+
+RppStatus blend_u8_u8_host_single_image(Rpp8u *srcPtr1,
+                                        Rpp8u *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f alpha,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus blend_f32_f32_host_single_image(Rpp32f *srcPtr1,
+                                          Rpp32f *srcPtr2,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp32f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f alpha,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus blend_f16_f16_host_single_image(Rpp16f *srcPtr1,
+                                          Rpp16f *srcPtr2,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp16f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f alpha,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus blend_i8_i8_host_single_image(Rpp8s *srcPtr1,
+                                        Rpp8s *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8s *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f alpha,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
 // -------------------- color_cast --------------------
 
 RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -2096,6 +2141,58 @@ RppStatus crop_mirror_normalize_u8_f16_host_tensor(Rpp8u *srcPtr,
                                                    RpptRoiType roiType,
                                                    RppLayoutParams layoutParams,
                                                    rpp::Handle& handle);
+
+// -------------------- erode --------------------
+
+template<typename T>
+RppStatus erode_char_host_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus erode_float_host_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32u kernelSize,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+
+// -------------------- erode --------------------
+
+template<typename T>
+RppStatus dilate_char_host_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  Rpp32u kernelSize,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus dilate_float_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u kernelSize,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
 
 // -------------------- flip --------------------
 

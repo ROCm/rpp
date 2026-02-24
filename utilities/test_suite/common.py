@@ -103,8 +103,8 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    40: ["erode", "HIP"],
-    41: ["dilate", "HIP"],
+    40: ["erode", "HOST", "HIP"],
+    41: ["dilate", "HOST", "HIP"],
     42: ["hue", "HOST", "HIP"],
     43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
@@ -133,7 +133,7 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
     96: ["channel_dropout", "HOST", "HIP"]
@@ -170,7 +170,7 @@ miscAugmentationMap  = {
 
 # Supported test cases for single image processing
 # Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
-SINGLE_IMAGE_SUPPORTED_CASES = {0, 20, 21, 37, 49}  # brightness, flip, resize, crop, box_filter
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49}  # brightness, flip, resize, crop, box_filter
 
 ImageAugmentationGroupMap = {
     "color_augmentations": [

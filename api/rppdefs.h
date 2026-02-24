@@ -170,7 +170,9 @@ typedef enum
     /*! \brief Length in some dimensions are invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_DIM_LENGTHS       = -25,
     /*! \brief The specified axis is invalid or out of range. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_AXIS              = -26
+    RPP_ERROR_INVALID_AXIS              = -26,
+    /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
+    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums

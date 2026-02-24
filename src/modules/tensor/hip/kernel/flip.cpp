@@ -366,7 +366,7 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-// Single Image Processing 
+// -------------------- Single Image Processing --------------------
 
 template <typename T>
 __global__ void flip_pkd_hip_single_image(T *srcPtr,

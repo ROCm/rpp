@@ -201,6 +201,7 @@ vector<Mat> loadBatchImages_jpegd(const string& directory, int& noOfImages, bool
         image_names.push_back(directory + "/" + filename);
     }
     closedir(dir);
+    std::sort(image_names.begin(), image_names.end());
 
     for (const auto& inputImagePath : image_names)
     {
@@ -587,17 +588,29 @@ int main(int argc, char **argv)
     Rpp32f conversionFactor = 1.0f / 255.0;
     bool isColor = (layoutType != 2);
     RpptLayout srcLayoutEnum = (layoutType == 0) ? RpptLayout::NHWC : RpptLayout::NCHW;
-    vector<Mat> inputVec;
+    vector<Mat> inputVec, inputVecSecond;
     if (decoderType == 0)
+    {
         inputVec = loadBatchImages_jpegd(src, noOfImages, isColor);
+        if (dualInputCase)
+            inputVecSecond = loadBatchImages_jpegd(srcSecond, noOfImages, isColor);
+    }
     else
+    {
         inputVec = loadBatchImages_cv(src, noOfImages, isColor);
+        if (dualInputCase)
+            inputVecSecond = loadBatchImages_cv(srcSecond, noOfImages, isColor);
+    }
+            
     if (noOfImages == 0) { cerr << "No images found!"; return -1; }
 
     convertBatchBitDepth(inputVec, BitDepthTestMode, conversionFactor);
+    convertBatchBitDepth(inputVecSecond, BitDepthTestMode, conversionFactor);
     if (noOfImages < batchSize) {
         for (int i = noOfImages; i < batchSize; i++)
             inputVec.push_back(inputVec[noOfImages - 1]);
+            if (dualInputCase)
+                inputVecSecond.push_back(inputVecSecond[noOfImages - 1]);
         noOfImages = batchSize;
     }
 
@@ -646,7 +659,11 @@ int main(int argc, char **argv)
     if (isColor && srcDescPtr[0].layout == RpptLayout::NCHW)
     {
         for(int i = 0; i < noOfImages; i++)
+        {
             inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
+            if (dualInputCase)
+                inputVecSecond[i] = convert_pkd3_to_pln3(inputVecSecond[i]);
+        }
     }
 
     Rpp32u numThreads = noOfImages;
@@ -676,9 +693,28 @@ int main(int argc, char **argv)
                 {
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_brightness_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle);
-                    }
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_brightness(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case BLEND:
+            {
+                printf("hello");
+                testCaseName = "blend";
+                Rpp32f alpha = 0.4;
+
+                startWallTime = omp_get_wtime();
+                startCpuTime = clock();
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                {
+                    omp_set_dynamic(0);
+                    #pragma omp parallel for num_threads(numThreads)
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_blend(inputVec[i].data, inputVecSecond[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;
@@ -698,9 +734,8 @@ int main(int argc, char **argv)
                 {
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_flip_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::XYWH, handle);
-                    }
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_flip(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;
@@ -723,9 +758,8 @@ int main(int argc, char **argv)
                 {
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_resize_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &dstImgSizes[i], interpolationType, &roi[i], RpptRoiType::XYWH, handle);
-                    }
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_resize(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &dstImgSizes[i], interpolationType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;
@@ -752,7 +786,7 @@ int main(int argc, char **argv)
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
                     for (int i = 0; i < noOfImages; ++i) 
-                        errorCodeCapture = rppt_crop_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle);
+                        errorCodeCapture = rppt_crop(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;
@@ -776,9 +810,8 @@ int main(int argc, char **argv)
                 {
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) {
-                        errorCodeCapture = rppt_box_filter_host(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle);
-                    }
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_box_filter(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
                     missingFuncFlag = 1;

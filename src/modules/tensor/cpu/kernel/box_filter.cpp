@@ -3104,6 +3104,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+// -------------------- Single Image Processing --------------------
 
 template<typename T>
 RppStatus box_filter_char_host_single_image(T *srcPtr,
@@ -4064,7 +4065,8 @@ RppStatus box_filter_char_host_single_image(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12;
+                Rpp32u vectorIncrement = 12;
+                Rpp32u alignedLength = (((bufferLength - 2 * padLength * 3) / vectorIncrement) * vectorIncrement) - vectorIncrement;
                 for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -4130,7 +4132,7 @@ RppStatus box_filter_char_host_single_image(T *srcPtr,
             {
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12 - 12;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;

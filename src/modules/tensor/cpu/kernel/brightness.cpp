@@ -1118,7 +1118,7 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
-// single image processing 
+// -------------------- Single Image Processing --------------------
 
 RppStatus brightness_u8_u8_host_single_image(Rpp8u *srcPtr,
                                              RpptDescPtr srcDescPtr,
