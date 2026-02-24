@@ -480,7 +480,10 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             cbPtr = cbBuf;
             crPtr = crBuf;
 #if __AVX2__
-            alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+            if (roi.xywhROI.roiWidth >= vectorIncrement)
+                alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+            else
+                alignedLength = 0;
 #endif
             for(int i = 0; i < roiHeight; i++)
             {
@@ -558,7 +561,10 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             cbPtr = cbBuf;
             crPtr = crBuf;
 #if __AVX2__
-            alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+            if (roi.xywhROI.roiWidth >= vectorIncrement)
+                alignedLength = ((roi.xywhROI.roiWidth / vectorIncrement) - 1) * vectorIncrement;
+            else
+                alignedLength = 0;
 #endif
             for(int i = 0; i < roiHeight; i++)
             {
@@ -635,6 +641,10 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             collect_hist_pln_tensor_host(srcPtr, hist, roiWidth, roiHeight, srcDescPtr->strides.hStride);
             build_lut_from_hist_host(hist, lutBatch, pixels);
             apply_lut_tensor(srcPtr, dstPtr, roiWidth, roiHeight, lutBatch, srcDescPtr->strides.hStride, dstDescPtr->strides.hStride);
+        }
+        else
+        {
+            return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
 
