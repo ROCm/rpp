@@ -359,7 +359,10 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
     if(srcDescPtr->c == 3)
     {
         const size_t planeSize = static_cast<size_t>(srcDescPtr->w) * srcDescPtr->h * srcDescPtr->n;
-        Rpp8u *yuvBuf = reinterpret_cast<Rpp8u *>(d_lut + batchSize * HISTOGRAM_BINS);
+        size_t yuvBufferSize = 3 * planeSize * sizeof(Rpp8u);
+        
+        Rpp8u *yuvBuf = nullptr;
+        CHECK_RETURN_STATUS(hipMalloc(&yuvBuf, yuvBufferSize));
 
         Rpp8u *yBuf = yuvBuf;
         Rpp8u *cbBuf = yuvBuf + planeSize;
@@ -513,6 +516,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                    roiTensorPtrSrc);
             }
         }
+
+        CHECK_RETURN_STATUS(hipFree(yuvBuf));
 
         return RPP_SUCCESS;
     }

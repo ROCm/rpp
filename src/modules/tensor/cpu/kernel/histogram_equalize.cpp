@@ -295,10 +295,9 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u roiHeight = roi.xywhROI.roiHeight;
         Rpp32u pixels = roiWidth * roiHeight;
 
-        Rpp8u *scratchBase = reinterpret_cast<Rpp8u *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
-        Rpp8u *yBuf = scratchBase + batchCount * (pixels * 3);
-        Rpp8u *cbBuf = yBuf + pixels;
-        Rpp8u *crBuf = cbBuf + pixels;
+        Rpp8u *yBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
+        Rpp8u *cbBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
+        Rpp8u *crBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
         Rpp8u *dstYBuf = yBuf;
 
 #if __AVX2__
@@ -642,10 +641,10 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             build_lut_from_hist_host(hist, lutBatch, pixels);
             apply_lut_tensor(srcPtr, dstPtr, roiWidth, roiHeight, lutBatch, srcDescPtr->strides.hStride, dstDescPtr->strides.hStride);
         }
-        else
-        {
-            return RPP_ERROR_NOT_IMPLEMENTED;
-        }
+        
+        free(yBuf);
+        free(cbBuf);
+        free(crBuf);
     }
 
     return RPP_SUCCESS;
