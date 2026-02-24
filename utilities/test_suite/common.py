@@ -137,7 +137,7 @@ imageAugmentationMap = {
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
     96: ["channel_dropout", "HOST", "HIP"],
-    97: ["histogram_equalize", "HOST", "HIP"]
+    102: ["histogram_equalize", "HOST", "HIP"]
 }
 
 audioAugmentationMap = {
