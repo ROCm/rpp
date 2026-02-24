@@ -134,7 +134,6 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] strength strength values for emboss calculation (1D tensor in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize, for each image in batch)
- * \param [in] bias bias for emboss filter (Rpp32f number with bias > 0 that applies to all images in the batch.)
  * \param [in] kernelSize kernel size for emboss (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
  * \param [in] borderType border type for padding during filtering (Restrictions - RpptImageBorderType::REPLICATE only mode supported)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
@@ -145,7 +144,7 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_emboss(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *strength, Rpp32f *bias, Rpp32u kernelSize, RpptImageBorderType borderType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
+RppStatus rppt_emboss(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *strength, Rpp32u kernelSize, RpptImageBorderType borderType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! @}
  */
