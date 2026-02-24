@@ -503,7 +503,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
             if((srcGenericDescPtr1->dims[src1NDim - i] != 1) && (srcGenericDescPtr2->dims[src2NDim - i] != 1))
             {
                 printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
+                return RPP_ERROR_INVALID_ARGUMENTS;
             }
         }
     }
@@ -549,51 +549,41 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         src1BeginOffsets[i] = 0;
         src2BeginOffsets[i] = 0;
 
-        // Copy ROI limits and Strides to individual sample strides and dims until minDim
-        memcpy(src1SampleDims, src1Dims, minDim * sizeof(Rpp32u));
-        memcpy(src2SampleDims, src2Dims, minDim * sizeof(Rpp32u));
-        memcpy(src1SampleStrides + 1, src1Strides + 1, minDim * sizeof(Rpp32u));
-        memcpy(src2SampleStrides + 1, src2Strides + 1, minDim * sizeof(Rpp32u));
-        memcpy(dstSampleStrides + 1, dstStrides + 1, minDim * sizeof(Rpp32u));
+        // Calculate offsets for left-padding to align trailing axes
+        int src1Offset = dstDim - src1NDim;
+        int src2Offset = dstDim - src2NDim;
 
-        // Compute begin offsets based on ROIs & check incompatibility of dimensions
-        for(int j = 0; j < minDim; j++)
+        std::fill_n(src1SampleDims, dstDim, 1);
+        std::fill_n(src2SampleDims, dstDim, 1);
+        std::fill_n(src1SampleStrides + 1, dstDim, 0);
+        std::fill_n(src2SampleStrides + 1, dstDim, 0);
+
+        // Copy ROI limits and Strides to individual sample arrays with proper alignment
+        memcpy(src1SampleDims + src1Offset, src1Dims, src1NDim * sizeof(Rpp32u));
+        memcpy(src2SampleDims + src2Offset, src2Dims, src2NDim * sizeof(Rpp32u));
+        memcpy(src1SampleStrides + 1 + src1Offset, src1Strides + 1, src1NDim * sizeof(Rpp32u));
+        memcpy(src2SampleStrides + 1 + src2Offset, src2Strides + 1, src2NDim * sizeof(Rpp32u));
+        memcpy(dstSampleStrides + 1, dstStrides + 1, dstDim * sizeof(Rpp32u));
+
+        // Compute begin offsets based on ROIs & check incompatibility of dimensions and compute dstSampleDims
+        for(int j = 0; j < dstDim; j++)
         {
             if((src1SampleDims[j] != src2SampleDims[j]) && (src1SampleDims[j] != 1) && (src2SampleDims[j] != 1))
                 incompatibleDims = true;
 
             dstSampleDims[j] = std::max(src1SampleDims[j], src2SampleDims[j]);
+        }
+
+        // Compute begin offsets for src1 and src2
+        for(int j = 0; j < src1NDim; j++)
             src1BeginOffsets[i] += src1Begin[j] * src1Strides[j + 1];
+        for(int j = 0; j < src2NDim; j++)
             src2BeginOffsets[i] += src2Begin[j] * src2Strides[j + 1];
-        }
-
-        // Handle cases of mismatching num dims
-        if(src1NDim < src2NDim)
-        {
-            int extraDims = dstDim - minDim;
-            memset(src1SampleDims + minDim, 1, extraDims * sizeof(Rpp32u));
-            memcpy(src2SampleDims + minDim, src2Dims + minDim, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleDims  + minDim, src2Dims + minDim, extraDims * sizeof(Rpp32u));
-
-            memset(src1SampleStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
-            memcpy(src2SampleStrides + minDim + 1, src2Strides + minDim + 1, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleStrides  + minDim + 1, dstStrides  + minDim + 1, extraDims * sizeof(Rpp32u));
-        }
-        else if(src1NDim > src2NDim)
-        {
-            int extraDims = dstDim - minDim;
-            memcpy(src1SampleDims + minDim, src1Dims + minDim, extraDims * sizeof(Rpp32u));
-            memset(src2SampleDims + minDim, 1, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleDims  + minDim, src1Dims + minDim, extraDims * sizeof(Rpp32u));
-
-            memcpy(src1SampleStrides + minDim + 1, src1Strides + minDim + 1, extraDims * sizeof(Rpp32u));
-            memset(src2SampleStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleStrides + minDim + 1, dstStrides + minDim + 1, extraDims * sizeof(Rpp32u));
-        }
 
         // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
         // Setting stride to zero will allow for repetition of values operated required for broadcasting
-        for(int j = 0; j < minDim; j++) {
+        for(int j = 0; j < dstDim; j++)
+        {
             if((src1SampleDims[j] != dstSampleDims[j]) && (src1SampleDims[j] == 1))
                 src1SampleStrides[j + 1] = 0;
             if((src2SampleDims[j] != dstSampleDims[j]) && (src2SampleDims[j] == 1))

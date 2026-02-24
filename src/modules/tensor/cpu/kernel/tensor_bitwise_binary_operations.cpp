@@ -89,7 +89,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
             {
                 printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
+                return RPP_ERROR_INVALID_ARGUMENTS;
             }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];

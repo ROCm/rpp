@@ -270,6 +270,12 @@ RppStatus rppt_tensor_and_tensor(RppPtr_t srcPtr1,
                                  rppHandle_t rppHandle,
                                  RppBackend executionBackend)
 {
+    // Validate that all three data types match
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
@@ -391,6 +397,12 @@ RppStatus rppt_tensor_or_tensor(RppPtr_t srcPtr1,
                                 rppHandle_t rppHandle,
                                 RppBackend executionBackend)
 {
+    // Validate that all three data types match
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
@@ -512,6 +524,12 @@ RppStatus rppt_tensor_xor_tensor(RppPtr_t srcPtr1,
                                  rppHandle_t rppHandle,
                                  RppBackend executionBackend)
 {
+    // Validate that all three data types match
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
