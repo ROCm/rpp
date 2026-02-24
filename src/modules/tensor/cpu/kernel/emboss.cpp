@@ -31,57 +31,60 @@ inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kerne
 
     if (kernelSize == 3)
     {
+        // 3x3 emboss kernel
         Rpp32f kernel[9] = {
-            -2.0f, -1.0f,  0.0f,
-            -1.0f,  1.0f,  1.0f,
-             0.0f,  1.0f,  2.0f
+             2.0f,  1.0f,  0.0f,
+             1.0f,  1.0f, -1.0f,
+             0.0f, -1.0f, -2.0f
         };
         for (int i = 0; i < 9; i++)
             filter[i] = kernel[i] * clampedStrength;
     }
     else if (kernelSize == 5)
     {
+        // 5x5 emboss kernel
         Rpp32f kernel[25] = {
-            -3, -3, -2, -1,  0,
-            -3, -2, -1,  0,  1,
-            -2, -1,  1,  1,  2,
-            -1,  0,  1,  2,  3,
-             0,  1,  2,  3,  3
+             3,  3,  2,  1,  0,
+             3,  2,  1,  0, -1,
+             2,  1,  1, -1, -2,
+             1,  0, -1, -2, -3,
+             0, -1, -2, -3, -3
         };
         for (int i = 0; i < 25; i++)
             filter[i] = kernel[i] * clampedStrength;
     }
     else if (kernelSize == 7)
     {
+        // 7x7 emboss kernel
         Rpp32f kernel[49] = {
-            -4, -5, -4, -3, -2, -1,  0,
-            -5, -3, -3, -2, -1,  0,  1,
-            -4, -3, -2, -1,  0,  1,  2,
-            -3, -2, -1,  1,  1,  2,  3,
-            -2, -1,  0,  1,  2,  3,  4,
-            -1,  0,  1,  2,  3,  3,  5,
-             0,  1,  2,  3,  4,  5,  4
+             4,  5,  4,  3,  2,  1,  0,
+             5,  3,  3,  2,  1,  0, -1,
+             4,  3,  2,  1,  0, -1, -2,
+             3,  2,  1,  1, -1, -2, -3,
+             2,  1,  0, -1, -2, -3, -4,
+             1,  0, -1, -2, -3, -3, -5,
+             0, -1, -2, -3, -4, -5, -4
         };
         for (int i = 0; i < 49; i++)
             filter[i] = kernel[i] * clampedStrength;
     }
     else if (kernelSize == 9)
     {
+        // 9x9 emboss kernel
         Rpp32f kernel[81] = {
-            -5, -7, -6, -5, -4, -3, -2, -1,  0,
-            -7, -4, -5, -4, -3, -2, -1,  0,  1,
-            -6, -5, -3, -3, -2, -1,  0,  1,  2,
-            -5, -4, -3, -2, -1,  0,  1,  2,  3,
-            -4, -3, -2, -1,  1,  1,  2,  3,  4,
-            -3, -2, -1,  0,  1,  2,  3,  4,  5,
-            -2, -1,  0,  1,  2,  3,  3,  5,  6,
-            -1,  0,  1,  2,  3,  4,  5,  4,  7,
-             0,  1,  2,  3,  4,  5,  6,  7,  5
+             5,  7,  6,  5,  4,  3,  2,  1,  0,
+             7,  4,  5,  4,  3,  2,  1,  0, -1,
+             6,  5,  3,  3,  2,  1,  0, -1, -2,
+             5,  4,  3,  2,  1,  0, -1, -2, -3,
+             4,  3,  2,  1,  1, -1, -2, -3, -4,
+             3,  2,  1,  0, -1, -2, -3, -4, -5,
+             2,  1,  0, -1, -2, -3, -3, -5, -6,
+             1,  0, -1, -2, -3, -4, -5, -4, -7,
+             0, -1, -2, -3, -4, -5, -6, -7, -5
         };
         for (int i = 0; i < 81; i++)
             filter[i] = kernel[i] * clampedStrength;
     }
-    flip_kernel(filter, kernelSize);
 }
 
 template<typename T>
@@ -1213,7 +1216,7 @@ RppStatus emboss_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
                         __m256 pRow[45], pDst[2];
-                        rpp_load_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
                         for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 5)
