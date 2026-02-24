@@ -14,14 +14,14 @@ import numpy as np
 import torch
 
 try:
-    from turbojpeg import TurboJPEG
+    from turbojpeg import TurboJPEG, TJPF_GRAY, TJPF_RGB
     TURBOJPEG_AVAILABLE = True
 except ImportError:
     TURBOJPEG_AVAILABLE = False
     print("Warning: PyTurboJPEG not installed. Install with: pip install PyTurboJPEG")
 
 
-def load_image(image_path, device='cpu', apply_padding=True):
+def load_image(image_path, grayscale=False, device='cpu', apply_padding=True):
     """
     Load single JPEG image using TurboJPEG decoder.
     
@@ -29,9 +29,11 @@ def load_image(image_path, device='cpu', apply_padding=True):
         image_path: Path to JPEG image file
         device: 'cpu' or 'cuda'
         apply_padding: Apply width padding to multiple of 8 (matches C++ tests)
+        grayscale: If True, load as grayscale (PLN1), otherwise RGB (PKD3/PLN3)
     
     Returns:
         PyTorch tensor in NCHW format (1, C, H, W)
+        C=1 for grayscale, C=3 for RGB
         If apply_padding=True, W is padded to (W/8)*8 + 8
     """
     if not TURBOJPEG_AVAILABLE:
@@ -42,27 +44,54 @@ def load_image(image_path, device='cpu', apply_padding=True):
         jpeg_data = f.read()
     
     jpeg = TurboJPEG()
-    bgr_array = jpeg.decode(jpeg_data)  # Returns BGR (H, W, C)
-    rgb_array = bgr_array[:, :, ::-1]   # Convert to RGB
     
-    height, width, channels = rgb_array.shape
-    
-    # Apply C++ test suite padding pattern
-    if apply_padding:
-        # C++ pattern: descPtr->w = (descPtr->w / 8) * 8 + 8
-        padded_width = (width // 8) * 8 + 8
+    if grayscale:
+        # Decode as grayscale
+        gray_array = jpeg.decode(jpeg_data, pixel_format=TJPF_GRAY)
+        # Handle both 2D (H, W) and 3D (H, W, 1) grayscale arrays
+        if len(gray_array.shape) == 3:
+            height, width, _ = gray_array.shape
+            gray_array = gray_array[:, :, 0]  # Take first channel
+        else:
+            height, width = gray_array.shape
         
-        if padded_width > width:
-            # Create padded array
-            padded_array = np.zeros((height, padded_width, channels), dtype=np.uint8)
-            # Copy original image
-            padded_array[:, :width, :] = rgb_array
-            # Replicate last column for padding (matches C++ behavior)
-            padded_array[:, width:, :] = rgb_array[:, -1:, :]
-            rgb_array = padded_array
-    
-    # Convert to PyTorch tensor (H, W, C) -> (C, H, W)
-    tensor = torch.from_numpy(rgb_array).permute(2, 0, 1).float()
+        # Apply C++ test suite padding pattern
+        if apply_padding:
+            padded_width = (width // 8) * 8 + 8
+            
+            if padded_width > width:
+                # Create padded array
+                padded_array = np.zeros((height, padded_width), dtype=np.uint8)
+                # Copy original image
+                padded_array[:, :width] = gray_array
+                # Replicate last column for padding
+                padded_array[:, width:] = gray_array[:, -1:]
+                gray_array = padded_array
+        
+        # Convert to PyTorch tensor (H, W) -> (1, H, W)
+        tensor = torch.from_numpy(gray_array).unsqueeze(0).float()
+    else:
+        # Decode as RGB
+        bgr_array = jpeg.decode(jpeg_data)  # Returns BGR (H, W, C)
+        rgb_array = bgr_array[:, :, ::-1]   # Convert to RGB
+        
+        height, width, channels = rgb_array.shape
+        
+        # Apply C++ test suite padding pattern
+        if apply_padding:
+            padded_width = (width // 8) * 8 + 8
+            
+            if padded_width > width:
+                # Create padded array
+                padded_array = np.zeros((height, padded_width, channels), dtype=np.uint8)
+                # Copy original image
+                padded_array[:, :width, :] = rgb_array
+                # Replicate last column for padding (matches C++ behavior)
+                padded_array[:, width:, :] = rgb_array[:, -1:, :]
+                rgb_array = padded_array
+        
+        # Convert to PyTorch tensor (H, W, C) -> (C, H, W)
+        tensor = torch.from_numpy(rgb_array).permute(2, 0, 1).float()
     
     # Add batch dimension
     tensor = tensor.unsqueeze(0)
@@ -71,7 +100,6 @@ def load_image(image_path, device='cpu', apply_padding=True):
         tensor = tensor.cuda()
     
     return tensor
-
 
 def load_images(image_paths, device='cpu', apply_padding=True):
     """
@@ -264,6 +292,55 @@ def create_test_batch(batch_size, height=224, width=224, channels=3, device='cpu
     
     return tensor
 
+"""
+Layout conversion utilities for RPP tensors
+"""
+
+def convert_nchw_to_nhwc(tensor):
+    """
+    Convert tensor from NCHW to NHWC format.
+    
+    Args:
+        tensor: Input tensor (B, C, H, W)
+    
+    Returns:
+        Converted tensor (B, H, W, C)
+    """
+    if tensor.dim() != 4:
+        raise ValueError(f"Expected 4D tensor, got {tensor.dim()}D")
+    
+    # Permute dimensions: NCHW (0,1,2,3) → NHWC (0,2,3,1)
+    return tensor.permute(0, 2, 3, 1).contiguous()
+
+
+def convert_nhwc_to_nchw(tensor):
+    """
+    Convert tensor from NHWC to NCHW format.
+    
+    Args:
+        tensor: Input tensor (B, H, W, C)
+    
+    Returns:
+        Converted tensor (B, C, H, W)
+    """
+    if tensor.dim() != 4:
+        raise ValueError(f"Expected 4D tensor, got {tensor.dim()}D")
+    
+    # Permute dimensions: NHWC (0,1,2,3) → NCHW (0,3,1,2)
+    return tensor.permute(0, 3, 1, 2).contiguous()
+
+
+def get_layout_name(layout_enum):
+    """Get string name for layout enum"""
+    from rpp_pybind.amd.rpp.rpp_types import RpptLayout
+    
+    if layout_enum == RpptLayout.NCHW:
+        return "PKD3"
+    elif layout_enum == RpptLayout.NHWC:
+        return "PLN3"
+    else:
+        return f"LAYOUT_{layout_enum}"
+
 
 __all__ = [
     'load_image',
@@ -272,5 +349,8 @@ __all__ = [
     'numpy_to_tensor',
     'tensor_to_numpy',
     'save_image',
-    'create_test_batch'
+    'create_test_batch',
+    'convert_nchw_to_nhwc', 
+    'convert_nhwc_to_nchw', 
+    'get_layout_name'
 ]

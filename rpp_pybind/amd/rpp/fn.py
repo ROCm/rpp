@@ -82,7 +82,7 @@ def _prepare_tensor_and_backend(tensor, backend):
 # Wrapper functions - 10 augmentations from different groups
 
 # Color Augmentations (4)
-def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, backend=None):
+def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Adjust image brightness.
     
@@ -116,11 +116,11 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, b
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
 
@@ -134,7 +134,7 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, b
     return output
 
 
-def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backend=None):
+def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Apply gamma correction.
     
@@ -164,14 +164,13 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backe
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
 
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
 
     handle = rppCreate(batch_size, backend_int)
-
     gamma_array = [gamma] * batch_size
     
     _gamma_correction(images, output, gamma_array, roi_widths, roi_heights, handle, backend_int)
@@ -180,7 +179,7 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, backe
     
     return output
 
-def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None, roi_heights=None, backend=None):
+def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Adjust image contrast.
     
@@ -209,13 +208,14 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
+    output = torch.empty_like(images).contiguous()
+    # output = torch.zeros_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
     
@@ -229,7 +229,7 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
     return output
 
 
-def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, backend=None):
+def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Adjust image hue (for RGB images only).
     
@@ -256,31 +256,29 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, backend=None):
     elif backend == HOST and images.is_cuda:
         images = images.cpu()
     
-    if images.shape[1] != 3:
-        raise ValueError("Hue adjustment requires RGB images (3 channels)")
+    # if images.shape[1] != 3:
+    #     raise ValueError("Hue adjustment requires RGB images (3 channels)")
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
-    
     hue_shift_array = [hue_shift] * batch_size
     
     _hue(images, output, hue_shift_array, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
 
 
 # Geometric Augmentations (4)
-def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=None, backend=None):
+def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Flip images horizontally and/or vertically.
     
@@ -311,11 +309,11 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
     
@@ -326,13 +324,12 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
         vertical = [int(vertical)] * batch_size
     
     _flip(images, output, horizontal, vertical, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
 
 
-def resize(images, width, height, roi_widths=None, roi_heights=None, backend=None):
+def resize(images, width, height, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Resize images.
     
@@ -361,16 +358,15 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
         images = images.cpu()
     
     batch_size = images.shape[0]
-    channels = images.shape[1]
-    device = images.device
 
-    output = torch.zeros_like(images).contiguous()
+    # output = torch.zeros_like(images).contiguous()
+    output = torch.empty_like(images).contiguous()
 
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
     
@@ -378,13 +374,12 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, backend=Non
     height_array = [height] * batch_size
     
     _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend_int)
-
     rppDestroy(handle, backend_int)
     
     return output
 
 
-def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, backend=None):
+def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Rotate images by given angle.
     
@@ -412,26 +407,25 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, backend=None):
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
+    # output = torch.zeros_like(images).contiguous()
+    output = torch.empty_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
-    
     angle_array = [angle] * batch_size
     
     _rotate(images, output, angle_array, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
 
 
-def crop(images, x1, y1, crop_width, crop_height, backend=None):
+def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Crop images to specified region.
     
@@ -460,10 +454,44 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
         images = images.cpu()
     
     batch_size = images.shape[0]
-    channels = images.shape[1]
     device = images.device
     
-    output = torch.zeros_like(images).contiguous()
+    # Detect layout from input shape
+    # is_nchw = (images.shape[1] <= 3)
+    if input_layout == "NCHW":
+        is_nchw = True
+    elif input_layout == "NHWC":
+        is_nchw = False
+    else:
+        raise ValueError("input_layout must be NCHW or NHWC")
+    channels = images.shape[1] if is_nchw else images.shape[3]
+
+    # Determine channels from input
+    if input_layout == "NCHW":
+        channels = images.shape[1]
+    elif input_layout == "NHWC":
+        channels = images.shape[3]
+
+    # Allocate based on OUTPUT layout
+    if output_layout == "NCHW":
+        output = torch.zeros(
+            (batch_size, channels, crop_height, crop_width),
+            dtype=images.dtype,
+            device=device
+        )
+    elif output_layout == "NHWC":
+        output = torch.zeros(
+            (batch_size, crop_height, crop_width, channels),
+            dtype=images.dtype,
+            device=device
+        )
+    
+    # # Create output maintaining same layout as input
+    # if is_nchw:
+    #     output = torch.zeros(batch_size, channels, crop_height, crop_width, dtype=images.dtype, device=device)
+    # else:
+    #     output = torch.zeros_like(images)
+    #     # output = torch.zeros(batch_size, crop_height, crop_width, channels, dtype=images.dtype, device=device)
     
     handle = rppCreate(batch_size, backend_int)
     
@@ -481,7 +509,7 @@ def crop(images, x1, y1, crop_width, crop_height, backend=None):
 
 
 # Effects Augmentations (2)
-def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, backend=None):
+def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Apply vignette effect to images.
     
@@ -511,24 +539,21 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, backend=N
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
     
     handle = rppCreate(batch_size, backend_int)
-    
     intensity_array = [intensity] * batch_size
-    
     _vignette(images, output, intensity_array, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
 
 
-def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=None, backend=None):
+def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Apply pixelate effect to images.
     
@@ -556,22 +581,37 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
         images = images.cpu()
     
     batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
+    # output = torch.zeros_like(images).contiguous()
+    # Create output tensor based on layout
+    if input_layout == output_layout:
+        output = torch.empty_like(images)
+    else:
+        if input_layout == 'NCHW' and output_layout == 'NHWC':
+            b, c, h, w = images.shape
+            output = torch.zeros(b, h, w, c, dtype=images.dtype, device=images.device)
+        elif input_layout == 'NHWC' and output_layout == 'NCHW':
+            b, h, w, c = images.shape
+            output = torch.zeros(b, c, h, w, dtype=images.dtype, device=images.device)
+        else:
+            output = torch.empty_like(images)
     
-    # Set ROI dimensions (use full tensor dimensions if not provided)
+    # Set ROI dimensions
     if roi_widths is None:
-        roi_widths = [images.shape[3]] * batch_size
+        roi_widths = [images.shape[3] if input_layout == 'NCHW' else images.shape[2]] * batch_size
     if roi_heights is None:
-        roi_heights = [images.shape[2]] * batch_size
+        roi_heights = [images.shape[2] if input_layout == 'NCHW' else images.shape[1]] * batch_size
     
     # Create scratch buffer
-    scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
+    # scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
+    # Create scratch buffer
+    if input_layout == 'NCHW':
+        scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
+    else:  # NHWC
+        scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
     scratch = torch.empty(scratch_size, dtype=torch.float32, device=images.device)
     
     handle = rppCreate(batch_size, backend_int)
-    
     _pixelate(images, output, scratch, pixelation_percentage, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
