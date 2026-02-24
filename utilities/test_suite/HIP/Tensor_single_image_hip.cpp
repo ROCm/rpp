@@ -773,7 +773,9 @@ int main(int argc, char **argv)
 
             // Copy input data to device
             Rpp8u *inputTemp = (inputVec[i].data);
-            Rpp8u *inputTempSecond = (inputVecSecond[i].data);
+            Rpp8u *inputTempSecond;
+            if (dualInputCase)
+                inputTempSecond = (inputVecSecond[i].data);
             Rpp8u *d_input_offsetted = static_cast<Rpp8u*>(d_input) + srcDescPtr[i].offsetInBytes;
             Rpp8u *d_inputSecond_offsetted = static_cast<Rpp8u*>(d_inputSecond) + srcDescPtr[i].offsetInBytes;
             for(int j = 0; j < inputVec[i].rows; j++)
