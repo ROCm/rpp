@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -505,7 +505,7 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, input_lay
     return output
 
 
-def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
+def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=None, input_layout='NCHW', output_layout=None, backend=None):
     """
     Apply pixelate effect to images.
     

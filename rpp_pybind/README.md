@@ -144,14 +144,14 @@ pip install -e .
 
 ```python
 import rpp_pybind as rpp
-from rpp_pybind import types
+import rpp_pybind.amd.rpp.rpp_types as rpp_type
 
 # Check version
 print(f"PyRPP Version: {rpp.__version__}")
 
 # Check backend availability
-print(f"GPU Available: {types.is_gpu_available()}")
-print(f"Default Backend: {types.get_default_backend()}")
+print(f"GPU Available: {rpp_type.is_gpu_available()}")
+print(f"Default Backend: {rpp_type.get_default_backend()}")
 ```
 
 ### Run Test Suite
@@ -192,7 +192,7 @@ python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --bitde
 
 ```python
 import rpp_pybind as rpp
-from rpp_pybind import fn, utils, types
+from rpp_pybind.amd.rpp import fn, utils, rpp_types
 
 # Load images
 images = utils.load_images(['image1.jpg', 'image2.jpg'])

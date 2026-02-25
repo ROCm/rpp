@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,6 @@ import numpy as np
 import torch
 from datetime import datetime
 from PIL import Image
-# import matplotlib.pyplot as plt                          # UNUSED: matplotlib not used anywhere in this file
 from typing import Optional, Tuple, Dict, Any, List
 import shutil
 from enum import Enum
@@ -59,10 +58,7 @@ if SCRIPT_DIR not in sys.path:
 # Import RPP modules
 import rpp_pybind.amd.rpp.fn as fn
 import rpp_pybind.amd.rpp.utils as util
-# from rpp_pybind.amd.rpp.utils import convert_nchw_to_nhwc, convert_nhwc_to_nchwq   # UNUSED: replaced by util.convert_* calls
-from rpp_pybind.amd.rpp.rpp_types import (
-    is_gpu_available, get_default_backend, HOST, HIP
-)
+import rpp_pybind.amd.rpp.rpp_types as rpp_type 
 
 # =============================================================================
 # ENUMS AND MAPPINGS
@@ -483,7 +479,7 @@ class UnifiedTestSuite:
     def __init__(self, backend, test_type=0, qa_mode=0, config=None,
                  case_list=None, num_runs=1, bitdepth='u8', shared_output_dir=None):
         self.backend      = backend
-        self.backend_name = "HIP" if backend == HIP else "HOST"
+        self.backend_name = "HIP" if backend == rpp_type.HIP else "HOST"
         self.test_type    = test_type   # 0 = Unit/QA, 1 = Perf
         self.qa_mode      = qa_mode     # 0 = Unit,    1 = QA   (only when test_type==0)
         self.config       = config if config else TestConfig(
@@ -744,8 +740,8 @@ class UnifiedTestSuite:
         if not self.qa_file:
             return
 
-        backend_str  = "CPU" if self.backend == HOST else "GPU"
-        backend_name = "HOST" if self.backend == HOST else "HIP"
+        backend_str  = "CPU" if self.backend == rpp_type.HOST else "GPU"
+        backend_name = "HOST" if self.backend == rpp_type.HOST else "HIP"
         func_name    = f"{aug_name}_{self.bitdepth}_Tensor_{backend_name}_{layout_str}"
 
         header = (f"Running {func_name} 1 times "
@@ -782,7 +778,7 @@ class UnifiedTestSuite:
     def _write_perf_result(self, aug_name, times_dict, layout_variant="PKD3-PKD3"):
         """Write performance result to log file for all layout variants."""
         if hasattr(self, 'perf_log_file') and self.perf_log_file:
-            backend_str = "HIP" if self.backend == HIP else "HOST"
+            backend_str = "HIP" if self.backend == rpp_type.HIP else "HOST"
             
             # Include the full layout variant in the function name
             func_name = f"{aug_name}_{self.bitdepth}_Tensor_{backend_str}_{layout_variant.replace('-', '_to')}"
@@ -828,7 +824,7 @@ class UnifiedTestSuite:
 
     def _run_augmentation_test(self, aug_name, aug_function, aug_params, ref_file_suffix=""):
         """Run one augmentation across all layout variants."""
-        device = 'cuda' if self.backend == HIP else 'cpu'
+        device = 'cuda' if self.backend == rpp_type.HIP else 'cpu'
 
         # Load reference data once (QA only: test_type=0, qa_mode=1)
         ref_data = None
@@ -972,6 +968,8 @@ class UnifiedTestSuite:
             # Record per-variant results
             if self.test_type == 0 and self.qa_mode:
                 success = overall_success_count == overall_total
+                variant_total = len(self.test_images)
+                success = (variant_success == variant_total)
                 self.results['qa'].append((aug_name + "_" + variant_name, success))
             elif self.test_type == 0 and not self.qa_mode:
                 self.results['unit'].append((aug_name, True))
@@ -1108,7 +1106,7 @@ class UnifiedTestSuite:
 
     def run_performance_tests(self):
         """Run performance tests (test_type=1)."""
-        device            = 'cuda' if self.backend == HIP else 'cpu'
+        device            = 'cuda' if self.backend == rpp_type.HIP else 'cpu'
         num_iterations    = self.num_runs if self.num_runs > 1 else 100
         warmup_iterations = 5
 
@@ -1173,14 +1171,14 @@ class UnifiedTestSuite:
                 try:
                     for _ in range(warmup_iterations):
                         _ = func_call()
-                        if self.backend == HIP:
+                        if self.backend == rpp_type.HIP:
                             torch.cuda.synchronize()
 
                     times = []
                     for _ in range(num_iterations):
                         start = time.perf_counter()
                         _ = func_call()
-                        if self.backend == HIP:
+                        if self.backend == rpp_type.HIP:
                             torch.cuda.synchronize()
                         times.append((time.perf_counter() - start) * 1000)
 
@@ -1264,16 +1262,16 @@ def main():
     # ------------------------------------------------------------------
     backends_to_test = []
     if args.backend:
-        backend      = HIP if args.backend == 'HIP' else HOST
+        backend      = rpp_type.HIP if args.backend == 'HIP' else rpp_type.HOST
         backend_name = args.backend
-        if backend == HIP and not is_gpu_available():
+        if backend == rpp_type.HIP and not rpp_type.is_gpu_available():
             print("ERROR: HIP backend requested but GPU not available")
             return 1
         backends_to_test.append((backend, backend_name))
     else:
-        backends_to_test.append((HOST, 'HOST'))
-        if is_gpu_available():
-            backends_to_test.append((HIP, 'HIP'))
+        backends_to_test.append((rpp_type.HOST, 'HOST'))
+        if rpp_type.is_gpu_available():
+            backends_to_test.append((rpp_type.HIP, 'HIP'))
         else:
             print("Note: GPU not available, skipping HIP backend")
 
@@ -1297,7 +1295,7 @@ def main():
     print(f"qa_mode:           {args.qa_mode}")
     print(f"Backends to test:  {[b[1] for b in backends_to_test]}")
     print(f"BitDepths to test: {bitdepths_to_test}")
-    print(f"GPU Available:     {is_gpu_available()}")
+    print(f"GPU Available:     {rpp_type.is_gpu_available()}")
     if args.case_list:
         print(f"Case List:         {args.case_list}")
     print("="*70)

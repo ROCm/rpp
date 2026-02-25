@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -96,10 +96,21 @@ TensorData get_tensor_data(const torch::Tensor& tensor) {
     }
     
     // Set device
-    if(tensor.is_cuda()) {
-        data.device = {kDLROCM, 0};  // ROCm device
+    // if(tensor.is_cuda()) {
+    //     data.device = {kDLROCM, 0};  // ROCm device
+    // } else {
+    //     data.device = {kDLCPU, 0};
+    // }
+    if (tensor.is_cuda()) {
+        DLDevice device;
+        device.device_type = kDLROCM;                 // ROCm device
+        device.device_id   = tensor.get_device();     // actual device index
+        data.device        = device;
     } else {
-        data.device = {kDLCPU, 0};
+        DLDevice device;
+        device.device_type = kDLCPU;
+        device.device_id   = 0;
+        data.device        = device;
     }
     
     return data;
@@ -128,17 +139,6 @@ void setup_tensor_descriptor(RpptDesc& desc, const TensorData& data) {
     desc.numDims = data.shape.size();
     desc.offsetInBytes = 0;
     
-    // if(desc.numDims == 4) {
-    //     desc.n = data.shape[0];
-    //     desc.c = data.shape[1]; 
-    //     desc.h = data.shape[2];
-    //     desc.w = data.shape[3];
-        
-    //     desc.strides.nStride = data.strides[0];
-    //     desc.strides.cStride = data.strides[1];
-    //     desc.strides.hStride = data.strides[2];
-    //     desc.strides.wStride = data.strides[3];
-    // }
     if (desc.layout == RpptLayout::NCHW) {
         desc.n = data.shape[0];
         desc.c = data.shape[1]; 
@@ -225,12 +225,16 @@ void brightness(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu_ptr;
     }
     
-    rppt_brightness(input_data.ptr, &src_desc,
-                   output_data.ptr, &dst_desc,
-                   alpha_ptr,
-                   beta_ptr,
-                   roi_ptr, RpptRoiType::XYWH,
-                   rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_brightness(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        alpha_ptr,
+                        beta_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_brightness failed");
+    }
     
     if(backend == 1)
     {
@@ -292,12 +296,15 @@ void gamma_correction(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu_ptr;
     }
     
-    rppt_gamma_correction(input_data.ptr, &src_desc,
+    RppStatus status = rppt_gamma_correction(input_data.ptr, &src_desc,
                          output_data.ptr, &dst_desc,
                          gamma_ptr,
                          roi_ptr, RpptRoiType::XYWH,
                          rpp_handle, static_cast<RppBackend>(backend));
-
+    
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_gamma_correction failed");
+    }
 
     if(backend == 1) {
         hipFree(gamma_gpu_ptr);
@@ -362,12 +369,16 @@ void contrast(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_contrast(input_data.ptr, &src_desc,
-                 output_data.ptr, &dst_desc,
-                 contrast_factor_ptr,
-                 contrast_center_ptr,
-                 roi_ptr, RpptRoiType::XYWH,
-                 rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_contrast(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        contrast_factor_ptr,
+                        contrast_center_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_contrast failed");
+    }
     
     if(backend == 1) {
         hipFree(contrast_factor_gpu);
@@ -426,11 +437,15 @@ void hue(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
 
-    rppt_hue(input_data.ptr, &src_desc,
-            output_data.ptr, &dst_desc,
-            hue_shift_ptr,   
-            roi_ptr, RpptRoiType::XYWH,
-            rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_hue(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        hue_shift_ptr,   
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_hue failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(hue_shift_gpu);
@@ -500,11 +515,15 @@ void flip(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_flip(input_data.ptr, &src_desc,
-             output_data.ptr, &dst_desc,
-             h_tensor_ptr, v_tensor_ptr,
-             roi_ptr, RpptRoiType::XYWH,
-             rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_flip(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        h_tensor_ptr, v_tensor_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_flip failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(h_tensor_gpu);
@@ -568,12 +587,16 @@ void resize(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_resize(input_data.ptr, &src_desc,
-               output_data.ptr, &dst_desc,
-               dst_sizes_ptr,
-               RpptInterpolationType::BILINEAR,
-               roi_ptr, RpptRoiType::XYWH,
-               rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_resize(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        dst_sizes_ptr,
+                        RpptInterpolationType::BILINEAR,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_resize failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(dst_sizes_gpu);
@@ -631,12 +654,16 @@ void rotate(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_rotate(input_data.ptr, &src_desc,
-               output_data.ptr, &dst_desc,
-               angle_ptr,
-               RpptInterpolationType::BILINEAR,
-               roi_ptr, RpptRoiType::XYWH,
-               rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_rotate(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        angle_ptr,
+                        RpptInterpolationType::BILINEAR,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_rotate failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(angle_gpu);
@@ -693,10 +720,14 @@ void crop(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_crop(input_data.ptr, &src_desc,
-             output_data.ptr, &dst_desc,
-             roi_ptr, RpptRoiType::XYWH,
-             rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_crop(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_crop failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(roi_gpu);
@@ -753,11 +784,15 @@ void vignette(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_vignette(input_data.ptr, &src_desc,
-                 output_data.ptr, &dst_desc,
-                 intensity_ptr,
-                 roi_ptr, RpptRoiType::XYWH,
-                 rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_vignette(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        intensity_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_vignette failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(intensity_gpu);
@@ -812,12 +847,16 @@ void pixelate(const torch::Tensor& input_tensor,
         roi_ptr = roi_gpu;
     }
     
-    rppt_pixelate(input_data.ptr, &src_desc,
-                 output_data.ptr, &dst_desc,
-                 scratch_data.ptr,
-                 pixelation_pct,
-                 roi_ptr, RpptRoiType::XYWH,
-                 rpp_handle, static_cast<RppBackend>(backend));
+    RppStatus status = rppt_pixelate(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        scratch_data.ptr,
+                        pixelation_pct,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_pixelate failed");
+    }
     
     if(backend == 1) {  // HIP backend cleanup
         hipFree(roi_gpu);
