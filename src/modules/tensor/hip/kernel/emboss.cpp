@@ -687,7 +687,7 @@ __global__ void emboss_5x5_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= 0) && ((id_x_i + 7) < 0) && (id_y_i >= roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
@@ -836,7 +836,7 @@ __global__ void emboss_7x7_pln_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i >= 0) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
