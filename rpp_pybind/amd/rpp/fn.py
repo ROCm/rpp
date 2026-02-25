@@ -455,44 +455,18 @@ def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=N
     
     batch_size = images.shape[0]
     device = images.device
-    
+
     # Detect layout from input shape
-    # is_nchw = (images.shape[1] <= 3)
-    if input_layout == "NCHW":
-        is_nchw = True
-    elif input_layout == "NHWC":
-        is_nchw = False
-    else:
-        raise ValueError("input_layout must be NCHW or NHWC")
+    is_nchw = (images.shape[1] <= 3)
     channels = images.shape[1] if is_nchw else images.shape[3]
-
-    # Determine channels from input
-    if input_layout == "NCHW":
-        channels = images.shape[1]
-    elif input_layout == "NHWC":
-        channels = images.shape[3]
-
-    # Allocate based on OUTPUT layout
-    if output_layout == "NCHW":
-        output = torch.zeros(
-            (batch_size, channels, crop_height, crop_width),
-            dtype=images.dtype,
-            device=device
-        )
-    elif output_layout == "NHWC":
-        output = torch.zeros(
-            (batch_size, crop_height, crop_width, channels),
-            dtype=images.dtype,
-            device=device
-        )
     
-    # # Create output maintaining same layout as input
-    # if is_nchw:
-    #     output = torch.zeros(batch_size, channels, crop_height, crop_width, dtype=images.dtype, device=device)
-    # else:
-    #     output = torch.zeros_like(images)
-    #     # output = torch.zeros(batch_size, crop_height, crop_width, channels, dtype=images.dtype, device=device)
-    
+    # Create output maintaining same layout as input
+    if is_nchw:
+        output = torch.empty(batch_size, channels, crop_height, crop_width, dtype=images.dtype, device=device).contiguous()
+    else:
+        # output = torch.empty(batch_size, crop_height, crop_width, channels, dtype=images.dtype, device=device)
+        output = torch.zeros_like(images).contiguous()
+
     handle = rppCreate(batch_size, backend_int)
     
     # Convert scalars to lists

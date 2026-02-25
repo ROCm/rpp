@@ -1083,6 +1083,29 @@ class UnifiedTestSuite:
                 print(f"ERROR in {test_func.__name__}: {e}")
             print("-" * 70)
 
+    def _filter_test_cases(self, test_cases):
+        """
+        Apply case_list or case_start/case_end filtering
+        to a list of (name, callable) test cases.
+        """
+
+        # Filter by explicit case_list
+        if self.case_list:
+            selected = [
+                (name, fn) for name, fn in test_cases
+                if name in self.case_list
+            ]
+            if not selected:
+                print(f"WARNING: None of the specified cases found in performance tests: {self.case_list}")
+            return selected
+
+        # Filter by range
+        if hasattr(self, 'case_start') and hasattr(self, 'case_end'):
+            if self.case_start is not None and self.case_end is not None:
+                return test_cases[self.case_start:self.case_end + 1]
+
+        return test_cases
+
     def run_performance_tests(self):
         """Run performance tests (test_type=1)."""
         device            = 'cuda' if self.backend == HIP else 'cpu'
@@ -1111,26 +1134,37 @@ class UnifiedTestSuite:
             beta_val        = 50.0  if self.bitdepth in ['u8', 'i8'] else 50.0  / 255.0
             contrast_center = 128.0 if self.bitdepth in ['u8', 'i8'] else 128.0 / 255.0
 
-            perf_tests = [
-                ('brightness',      lambda: fn.brightness(test_image, alpha=1.75, beta=beta_val,
+            # Create a dictionary mapping case numbers to test functions
+            all_perf_tests = {
+                0:  ('brightness',       lambda: fn.brightness(test_image, alpha=1.75, beta=beta_val,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('gamma_correction', lambda: fn.gamma_correction(test_image, gamma=1.9,
+                1:  ('gamma_correction', lambda: fn.gamma_correction(test_image, gamma=1.9,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('flip',            lambda: fn.flip(test_image, horizontal=True, vertical=False,
+                20: ('flip',            lambda: fn.flip(test_image, horizontal=True, vertical=False,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('resize',          lambda: fn.resize(test_image, width=50, height=50,
+                21: ('resize',          lambda: fn.resize(test_image, width=50, height=50,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('crop',            lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50,
+                37: ('crop',            lambda: fn.crop(test_image, x1=10, y1=10, crop_width=50, crop_height=50,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('rotate',          lambda: fn.rotate(test_image, angle=50.0,
+                23: ('rotate',          lambda: fn.rotate(test_image, angle=50.0,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('contrast',        lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=contrast_center,
+                4:  ('contrast',        lambda: fn.contrast(test_image, contrast_factor=2.96, contrast_center=contrast_center,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('vignette',        lambda: fn.vignette(test_image, intensity=6.0,
+                46: ('vignette',        lambda: fn.vignette(test_image, intensity=6.0,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-                ('pixelate',        lambda: fn.pixelate(test_image, pixelation_percentage=87.5,
+                5:  ('pixelate',        lambda: fn.pixelate(test_image, pixelation_percentage=87.5,
                                         input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
-            ]
+                42: ('hue',             lambda: fn.hue(test_image, hue_shift=60.0,
+                                        input_layout=input_layout_str, output_layout=output_layout_str, backend=self.backend)),
+            }
+            
+            # FILTER based on case_list
+            if self.case_list:
+                perf_tests = [(all_perf_tests[case][0], all_perf_tests[case][1]) 
+                              for case in self.case_list if case in all_perf_tests]
+            else:
+                # If no case_list, run all tests
+                perf_tests = [(name, func) for _, (name, func) in sorted(all_perf_tests.items())]
 
             for func_name, func_call in perf_tests:
                 if skip_color_ops and func_name in ['hue']:
