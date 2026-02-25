@@ -128,7 +128,6 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, i
     beta_array = [beta] * batch_size
     
     _brightness(images, output, alpha_array, beta_array, roi_widths, roi_heights, handle, backend_int)
-
     rppDestroy(handle, backend_int)
     
     return output
@@ -174,7 +173,6 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, input
     gamma_array = [gamma] * batch_size
     
     _gamma_correction(images, output, gamma_array, roi_widths, roi_heights, handle, backend_int)
-
     rppDestroy(handle, backend_int)
     
     return output
@@ -209,7 +207,6 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
     
     batch_size = images.shape[0]
     output = torch.empty_like(images).contiguous()
-    # output = torch.zeros_like(images).contiguous()
     
     # Set ROI dimensions
     if roi_widths is None:
@@ -223,7 +220,6 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
     contrast_center_array = [contrast_center] * batch_size
     
     _contrast(images, output, contrast_factor_array, contrast_center_array, roi_widths, roi_heights, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
@@ -255,9 +251,6 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, input_layout=N
         images = images.cuda()
     elif backend == HOST and images.is_cuda:
         images = images.cpu()
-    
-    # if images.shape[1] != 3:
-    #     raise ValueError("Hue adjustment requires RGB images (3 channels)")
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -358,8 +351,6 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, input_layou
         images = images.cpu()
     
     batch_size = images.shape[0]
-
-    # output = torch.zeros_like(images).contiguous()
     output = torch.empty_like(images).contiguous()
 
     # Set ROI dimensions
@@ -407,7 +398,6 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, input_layout=No
         images = images.cpu()
     
     batch_size = images.shape[0]
-    # output = torch.zeros_like(images).contiguous()
     output = torch.empty_like(images).contiguous()
     
     # Set ROI dimensions
@@ -454,18 +444,7 @@ def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=N
         images = images.cpu()
     
     batch_size = images.shape[0]
-    device = images.device
-
-    # Detect layout from input shape
-    is_nchw = (images.shape[1] <= 3)
-    channels = images.shape[1] if is_nchw else images.shape[3]
-    
-    # Create output maintaining same layout as input
-    if is_nchw:
-        output = torch.empty(batch_size, channels, crop_height, crop_width, dtype=images.dtype, device=device).contiguous()
-    else:
-        # output = torch.empty(batch_size, crop_height, crop_width, channels, dtype=images.dtype, device=device)
-        output = torch.zeros_like(images).contiguous()
+    output = torch.zeros_like(images).contiguous()
 
     handle = rppCreate(batch_size, backend_int)
     
@@ -476,7 +455,6 @@ def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=N
     height_array = [crop_height] * batch_size if isinstance(crop_height, (int, float)) else crop_height
     
     _crop(images, output, x1_array, y1_array, width_array, height_array, handle, backend_int)
-    
     rppDestroy(handle, backend_int)
     
     return output
@@ -555,28 +533,14 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
         images = images.cpu()
     
     batch_size = images.shape[0]
-    # output = torch.zeros_like(images).contiguous()
-    # Create output tensor based on layout
-    if input_layout == output_layout:
-        output = torch.empty_like(images)
-    else:
-        if input_layout == 'NCHW' and output_layout == 'NHWC':
-            b, c, h, w = images.shape
-            output = torch.zeros(b, h, w, c, dtype=images.dtype, device=images.device)
-        elif input_layout == 'NHWC' and output_layout == 'NCHW':
-            b, h, w, c = images.shape
-            output = torch.zeros(b, c, h, w, dtype=images.dtype, device=images.device)
-        else:
-            output = torch.empty_like(images)
+    output = torch.empty_like(images)
     
     # Set ROI dimensions
     if roi_widths is None:
         roi_widths = [images.shape[3] if input_layout == 'NCHW' else images.shape[2]] * batch_size
     if roi_heights is None:
         roi_heights = [images.shape[2] if input_layout == 'NCHW' else images.shape[1]] * batch_size
-    
-    # Create scratch buffer
-    # scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
+
     # Create scratch buffer
     if input_layout == 'NCHW':
         scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
