@@ -747,6 +747,16 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
                                         RpptRoiType roiType,
                                         rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_median_filter_single_image(T *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              T *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u kernelSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              rpp::Handle& handle);
+
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
 // -------------------- crop --------------------

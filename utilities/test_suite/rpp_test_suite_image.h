@@ -1721,7 +1721,7 @@ void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
 }
 
 // Compare output for single image processing mode
-// Only supports: BRIGHTNESS (0), FLIP (20), RESIZE (21), CROP (37), BOX_FILTER (49)
+// Only supports: BRIGHTNESS (0), BLEND (2), FLIP (20), RESIZE (21), CROP (37), BOX_FILTER (49), MEDIAN_FILTER (51)
 inline void compare_output_single_image(const vector<cv::Mat>& outputVec, const vector<RpptDesc>& srcDescPtr, const vector<RpptDesc>& dstDescPtr, string funcName, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
@@ -1765,7 +1765,7 @@ inline void compare_output_single_image(const vector<cv::Mat>& outputVec, const 
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
     }
-    else if(testCase == BOX_FILTER)
+    else if(testCase == BOX_FILTER || testCase == MEDIAN_FILTER)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);

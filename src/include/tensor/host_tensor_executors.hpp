@@ -1942,6 +1942,17 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
 
+template<typename T>
+RppStatus median_filter_generic_host_single_image(T *srcPtr,
+                                                  RpptDescPtr srcDescPtr,
+                                                  T *dstPtr,
+                                                  RpptDescPtr dstDescPtr,
+                                                  Rpp32u kernelSize,
+                                                  RpptROIPtr roiTensorPtrSrc,
+                                                  RpptRoiType roiType,
+                                                  RppLayoutParams layoutParams,
+                                                  rpp::Handle& handle);
+
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
 // -------------------- crop --------------------
