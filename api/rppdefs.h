@@ -258,6 +258,7 @@ typedef enum
     U8_S8,
     S8_U8,
 } RppConvertBitDepthMode;
+#endif
 
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
