@@ -1856,13 +1856,14 @@ int main(int argc, char **argv)
                     Rpp32u noiseBufferSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c;
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numBoxesTensor[batchSize];
-                    Rpp32f *noiseBuffer[noiseBufferSize];
-                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, seed, 3, noiseBuffer);
+                    memset(numBoxesTensor, 0, batchSize * sizeof(Rpp32u));
+                    Rpp32f *colorBuffer[noiseBufferSize];
+                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                        errorCodeCapture = rppt_random_erase(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, noiseBuffer, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HOST_BACKEND);
+                        errorCodeCapture = rppt_random_erase(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HOST_BACKEND);
                     else
                         missingFuncFlag = 1;
 
