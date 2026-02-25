@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@ SOFTWARE.
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_load_store.hpp"
 #include "rpp_hip_math.hpp"
+
+#define HIP_VECTOR_MAX_INDEX 7  // Maximum index when processing 8 pixels (0-7 inclusive)
 
 __device__ __constant__ float sobel3x3XHip[9] = {-1, 0, 1,
                                                  -2, 0, 2,
@@ -124,7 +126,7 @@ __global__ void sobel_filter_3x3_pln_bidirection_tensor(T *srcPtr,
     sum_f8x.f4[1] = FLOAT4_ZERO;
     sum_f8y.f4[0] = FLOAT4_ZERO;
     sum_f8y.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -207,7 +209,7 @@ __global__ void sobel_filter_5x5_pln_bidirection_tensor(T *srcPtr,
     sum_f8x.f4[1] = FLOAT4_ZERO;
     sum_f8y.f4[0] = FLOAT4_ZERO;
     sum_f8y.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -298,7 +300,7 @@ __global__ void sobel_filter_7x7_pln_bidirection_tensor(T *srcPtr,
     sum_f8x.f4[1] = FLOAT4_ZERO;
     sum_f8y.f4[0] = FLOAT4_ZERO;
     sum_f8y.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -382,7 +384,7 @@ __global__ void sobel_filter_3x3_pln_x_gradient_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[6];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -447,7 +449,7 @@ __global__ void sobel_filter_5x5_pln_x_gradient_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[20];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -515,7 +517,7 @@ __global__ void sobel_filter_7x7_pln_x_gradient_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[42];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -582,7 +584,7 @@ __global__ void sobel_filter_3x3_pln_y_gradient_tensor(T *srcPtr,
     float *filter_row3 = &filter_row1[6];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -646,7 +648,7 @@ __global__ void sobel_filter_5x5_pln_y_gradient_tensor(T *srcPtr,
     float *filter_row5 = &filter_row1[20];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
@@ -714,7 +716,7 @@ __global__ void sobel_filter_7x7_pln_y_gradient_tensor(T *srcPtr,
     float *filter_row7 = &filter_row1[42];
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + HIP_VECTOR_MAX_INDEX) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {

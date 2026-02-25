@@ -463,6 +463,10 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
 
 /******************** sobel_filter ********************/
 
+#define SOBEL_TYPE_X_GRADIENT 0
+#define SOBEL_TYPE_Y_GRADIENT 1
+#define SOBEL_TYPE_XY_GRADIENT 2
+
 RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
                             RpptDescPtr srcDescPtr,
                             RppPtr_t dstPtr,
@@ -476,7 +480,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
 {
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7))
         return RPP_ERROR_INVALID_ARGUMENTS;
-    if ((sobelType != 0) && (sobelType != 1) && (sobelType != 2))
+    if ((sobelType != SOBEL_TYPE_X_GRADIENT) && (sobelType != SOBEL_TYPE_Y_GRADIENT) && (sobelType != SOBEL_TYPE_XY_GRADIENT))
         return RPP_ERROR_INVALID_ARGUMENTS;
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -556,9 +560,6 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
-            return RPP_ERROR_LOW_OFFSET;
-
         RpptDescPtr inputDesc = srcDescPtr;
         void *tempPtr = nullptr;
         if (srcDescPtr->c == 3)
