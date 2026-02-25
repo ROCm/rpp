@@ -1720,14 +1720,14 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
             boxH = std::max(1.0f, wh_ratio_cutout(rng) * roiH);
         }
 
-        const float x_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
-        const float y_start = std::max(1.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
+        const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
+        const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
 
         RpptRoiLtrb &box = anchorBoxInfoTensor[i * maxBoxesPerImage];
         box.lt.x = static_cast<Rpp32u>(roiX + x_start);
         box.lt.y = static_cast<Rpp32u>(roiY + y_start);
-        box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW);
-        box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH);
+        box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW - 1.0f);
+        box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH - 1.0f);
 
         if (colorBuffer != nullptr)
         {
@@ -1759,10 +1759,10 @@ inline void init_grid_dropout(int batchCount, RpptRoiLtrb* anchorBoxInfoTensor, 
         Rpp32s x_base = roiTensorPtrSrc[i].xywhROI.xy.x;
         Rpp32s y_base = roiTensorPtrSrc[i].xywhROI.xy.y;
 
-        Rpp32u cellW = roiW / gridW;
-        Rpp32u cellH = roiH / gridH;
-        Rpp32u holeW = static_cast<Rpp32u>(cellW * holeRatio);
-        Rpp32u holeH = static_cast<Rpp32u>(cellH * holeRatio);
+        Rpp32u cellW = std::max(1u, roiW / gridW);
+        Rpp32u cellH = std::max(1u, roiH / gridH);
+        Rpp32u holeW = std::max(1u, static_cast<Rpp32u>(cellW * holeRatio));
+        Rpp32u holeH = std::max(1u, static_cast<Rpp32u>(cellH * holeRatio));
         if (holeW > maxHoleW)
             maxHoleW = holeW;
         if (holeH > maxHoleH)

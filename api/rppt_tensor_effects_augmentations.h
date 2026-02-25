@@ -510,9 +510,9 @@ RppStatus rppt_channel_dropout(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor Precomputed cutout erase regions for the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
- * \param [in] colorsTensor Pointer to erase color values for each erase region in HIP memory (for HIP backend) or HOST memory (for HOST backend)
- * \param [in] numBoxesTensor Pointer to number of erase regions per image in the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend) (Data Type - Rpp32u*)
+ * \param [in] anchorBoxInfoTensor precomputed cutout erase regions for the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), stored as a flat array of RpptRoiLtrb of size (batchSize * maxBoxesPerImage), where maxBoxesPerImage = max(numBoxesTensor[n])
+ * \param [in] colorsTensor pointer to erase color values for each erase region in HIP memory (for HIP backend) or HOST memory (for HOST backend), laid out identically to anchorBoxInfoTensor, i.e., of size (batchSize * maxBoxesPerImage), with colorsTensor[(n * maxBoxesPerImage) + k]
+ * \param [in] numBoxesTensor number of erase regions per image in the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend) (1D tensor of size batchSize, Data Type - Rpp32u*)
  * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
