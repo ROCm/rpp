@@ -127,7 +127,8 @@ std::map<int, string> augmentationMap =
     {93, "jpeg_compression_distortion"},
     {94, "posterize"},
     {95, "solarize"},
-    {96, "channel_dropout"}
+    {96, "channel_dropout"},
+    {102, "histogram_equalize"}
 };
 
 enum Augmentation {
@@ -194,7 +195,8 @@ enum Augmentation {
     JPEG_COMPRESSION_DISTORTION = 93,
     POSTERIZE = 94,
     SOLARIZE = 95,
-    CHANNEL_DROPOUT = 96
+    CHANNEL_DROPOUT = 96,
+    HISTOGRAM_EQUALIZE = 102
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
