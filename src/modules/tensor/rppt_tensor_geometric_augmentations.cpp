@@ -1730,6 +1730,65 @@ RppStatus rppt_concat_host(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
+/******************** fisheye ********************/
+
+RppStatus rppt_fisheye_host(RppPtr_t srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            RpptROIPtr roiTensorPtrSrc,
+                            RpptRoiType roiType,
+                            rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        fisheye_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams,
+                                  rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        fisheye_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams,
+                                    rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        fisheye_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                    srcDescPtr,
+                                    reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                    dstDescPtr,
+                                    roiTensorPtrSrc,
+                                    roiType,
+                                    layoutParams,
+                                    rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        fisheye_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                  dstDescPtr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams,
+                                  rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
@@ -3062,6 +3121,64 @@ RppStatus rppt_jpeg_compression_distortion_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** fisheye ********************/
+
+RppStatus rppt_fisheye_gpu(RppPtr_t srcPtr,
+                           RpptDescPtr srcDescPtr,
+                           RppPtr_t dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           RpptROIPtr roiTensorPtrSrc,
+                           RpptRoiType roiType,
+                           rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_fisheye_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                srcDescPtr,
+                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                roiTensorPtrSrc,
+                                roiType,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_fisheye_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                dstDescPtr,
+                                roiTensorPtrSrc,
+                                roiType,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_fisheye_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                dstDescPtr,
+                                roiTensorPtrSrc,
+                                roiType,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_fisheye_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                srcDescPtr,
+                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                roiTensorPtrSrc,
+                                roiType,
+                                rpp::deref(rppHandle));
+    }
+    return RPP_SUCCESS;
+
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
