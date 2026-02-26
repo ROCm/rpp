@@ -825,6 +825,7 @@ class UnifiedTestSuite:
     def _run_augmentation_test(self, aug_name, aug_function, aug_params, ref_file_suffix=""):
         """Run one augmentation across all layout variants."""
         device = 'cuda' if self.backend == rpp_type.HIP else 'cpu'
+        self.current_aug_results = []
 
         # Load reference data once (QA only: test_type=0, qa_mode=1)
         ref_data = None
@@ -934,8 +935,11 @@ class UnifiedTestSuite:
                                 output_for_qa = output
 
                         passed, stats = self._compare_output(
-                            output_for_qa, ref_data, idx,
-                            is_grayscale=grayscale, aug_name=aug_name)
+                            output_for_qa, ref_data, idx, is_grayscale=grayscale, aug_name=aug_name)
+
+                        # RECORD PER-IMAGE RESULT
+                        if self.qa_file:
+                            self._write_qa_result(aug_name=aug_name, image_idx=idx, passed=passed, stats=stats)
 
                         if passed:
                             variant_success += 1
@@ -967,14 +971,14 @@ class UnifiedTestSuite:
 
             # Record per-variant results
             if self.test_type == 0 and self.qa_mode:
-                success = overall_success_count == overall_total
                 variant_total = len(self.test_images)
-                success = (variant_success == variant_total)
-                self.results['qa'].append((aug_name + "_" + variant_name, success))
+                variant_passed = (variant_success == variant_total)
+                self.results['qa'].append((aug_name + "_" + variant_name, variant_passed))
             elif self.test_type == 0 and not self.qa_mode:
                 self.results['unit'].append((aug_name, True))
 
-        return success
+        overall_passed = (overall_success_count == overall_total)
+        return overall_passed
 
     # =========================================================================
     # INDIVIDUAL AUGMENTATION TEST METHODS
@@ -1110,7 +1114,11 @@ class UnifiedTestSuite:
         num_iterations    = self.num_runs if self.num_runs > 1 else 100
         warmup_iterations = 5
 
-        base_image = load_image_with_bitdepth(self.test_images[1], bitdepth=self.bitdepth, device=device)
+        if not self.test_images:
+            raise RuntimeError("No test images found in input folder.")
+
+        image_index = 0 if len(self.test_images) == 1 else 1
+        base_image = load_image_with_bitdepth(self.test_images[image_index], bitdepth=self.bitdepth, device=device)
         print(f"Running {num_iterations} iterations per augmentation "
               f"(after {warmup_iterations} warmup runs)\n")
 

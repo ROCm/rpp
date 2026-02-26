@@ -240,11 +240,10 @@ output = fn.flip(images,
 ```
 rpp_pybind/
 ├── __init__.py       # Main module with C++ exports
-├── fn.py            # High-level augmentation functions
-├── rpp_types.py     # Type definitions and helpers
-├── utils.py         # Image loading/saving utilities
-├── rpp_pybind.cpp   # C++ pybind11 bindings
-└── amd/rpp/         # AMD namespace package structure
+├── amd/rpp/fn.py           # High-level augmentation functions
+├── amd/rpp/rpp_types.py     # Type definitions and helpers
+├── amd/rpp/utils.py        # Image loading/saving utilities
+└── rpp_pybind.cpp   # C++ pybind11 bindings
 ```
 
 ### fn Module - Augmentation Functions
