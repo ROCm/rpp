@@ -214,10 +214,10 @@ utils.save_image(output[0], 'augmented_result.jpg')
 output = fn.brightness(images, alpha=1.5)
 
 # Explicitly use CPU backend
-output = fn.brightness(images, alpha=1.5, backend=types.HOST)
+output = fn.brightness(images, alpha=1.5, backend=rpp_types.HOST)
 
 # Explicitly use GPU backend
-output = fn.brightness(images, alpha=1.5, backend=types.HIP)
+output = fn.brightness(images, alpha=1.5, backend=rpp_types.HIP)
 ```
 
 ### Batch Processing

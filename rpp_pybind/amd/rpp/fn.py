@@ -108,10 +108,12 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, i
         images = images.contiguous()
     
     # Move to correct device
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
 
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -155,10 +157,12 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, input
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
 
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -200,10 +204,12 @@ def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.empty_like(images).contiguous()
@@ -247,10 +253,12 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, input_layout=N
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -294,10 +302,12 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -345,10 +355,12 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, input_layou
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.empty_like(images).contiguous()
@@ -392,10 +404,12 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, input_layout=No
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.empty_like(images).contiguous()
@@ -438,10 +452,12 @@ def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=N
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -483,10 +499,12 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, input_lay
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.zeros_like(images).contiguous()
@@ -527,10 +545,12 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
     if not images.is_contiguous():
         images = images.contiguous()
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
+    else:  # HOST
+        if images.is_cuda:
+            images = images.cpu()
     
     batch_size = images.shape[0]
     output = torch.empty_like(images)
