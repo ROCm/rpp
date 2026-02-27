@@ -58,10 +58,18 @@ class BitDepthTestMode(Enum):
     U8_TO_F32  = 4  # Input: U8 -> Output: F32
     I8_TO_I8   = 5  # Input: I8 -> Output: I8
     U8_TO_I8   = 6  # Input: U8 -> Output: I8
+    I16_TO_I16 = 7  # Input: I16 -> Output: I16
+    U16_TO_U16 = 8  # Input: U16 -> Output: U16
+    I32_TO_I32 = 9  # Input: I32 -> Output: I32
+    U32_TO_U32 = 10 # Input: U32 -> Output: U32
     I8_TO_F32  = 11 # Input: I8  -> Output: F32
     I16_TO_F32 = 12 # Input: I16 -> Output: F32
+    U16_TO_F32 = 13 # Input: U16 -> Output: F32
+    U32_TO_F32 = 14 # Input: U32 -> Output: F32
+    I32_TO_F32 = 15 # Input: I32 -> Output: F32
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 11: "_i8_f32_", 12: "_i16_f32_"}
+
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i8_f32_", 12: "_i16_f32_", 13: "_u16_f32_", 14: "_u32_f32_", 15: "_i32_f32_"}
 
 class OutputFormat(Enum):
     NON_TOGGLE = 0
@@ -165,7 +173,10 @@ miscAugmentationMap  = {
     1: ["normalize", "HOST", "HIP"],
     2: ["log", "HOST", "HIP"],
     3: ["concat","HOST","HIP"],
-    4: ["log1p", "HOST", "HIP"]
+    4: ["log1p", "HOST", "HIP"],
+    5: ["tensor_and_tensor", "HOST", "HIP"],
+    6: ["tensor_or_tensor", "HOST", "HIP"],
+    7: ["tensor_xor_tensor", "HOST", "HIP"],
 }
 
 ImageAugmentationGroupMap = {

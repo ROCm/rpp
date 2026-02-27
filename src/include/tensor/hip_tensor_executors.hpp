@@ -242,6 +242,21 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
+// -------------------- tensor_bitwise_operations --------------------
+
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
+                                                       T *srcPtr2,
+                                                       RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                       RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                       T *dstPtr,
+                                                       RpptGenericDescPtr dstGenericDescPtr,
+                                                       RpptBitwiseOp tensorOp,
+                                                       RpptBroadcastMode broadcastMode,
+                                                       Rpp32u *roiTensor1,
+                                                       Rpp32u *roiTensor2,
+                                                       rpp::Handle& handle);
+
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------
