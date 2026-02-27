@@ -562,7 +562,7 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
             if((srcGenericDescPtr1->dims[src1NDim - i] != 1) && (srcGenericDescPtr2->dims[src2NDim - i] != 1))
             {
                 printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
+                return RPP_ERROR_INVALID_ARGUMENTS;
             }
         }
     }

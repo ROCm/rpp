@@ -551,6 +551,9 @@ RppStatus rppt_tensor_add_tensor(RppPtr_t srcPtr1,
                                   rppHandle_t rppHandle,
                                   RppBackend executionBackend)
 {
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
         if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -774,6 +777,9 @@ RppStatus rppt_tensor_subtract_tensor(RppPtr_t srcPtr1,
                                        rppHandle_t rppHandle,
                                        RppBackend executionBackend)
 {
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
         if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -997,6 +1003,9 @@ RppStatus rppt_tensor_multiply_tensor(RppPtr_t srcPtr1,
                                        rppHandle_t rppHandle,
                                        RppBackend executionBackend)
 {
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
         if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -1220,6 +1229,8 @@ RppStatus rppt_tensor_divide_tensor(RppPtr_t srcPtr1,
                                      rppHandle_t rppHandle,
                                      RppBackend executionBackend)
 {
+    if (srcPtr1GenericDescPtr->dataType != srcPtr2GenericDescPtr->dataType) return RPP_ERROR_INVALID_SRC_DATATYPE;
+
     if (executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
         if ((srcPtr1GenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))

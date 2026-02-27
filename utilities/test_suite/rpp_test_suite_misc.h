@@ -705,7 +705,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
        (nDim >= 2) && (nDim <= 4))
         refBroadCastFlag = 3;
     if(testCase == "log")
-        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, 2);
+        goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, F32_TO_F32);
     else if(testCase == "tensor_and_tensor" || testCase == "tensor_or_tensor" || testCase == "tensor_xor_tensor")
         goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase, BitDepthTestMode, broadCastFlag);
     else
