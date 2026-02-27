@@ -29,7 +29,7 @@ SOFTWARE.
 __device__ float gaussian(int iSquare, int j, float mulFactor)
 {
     float expFactor = - (iSquare + (j * j)) * mulFactor;
-    expFactor = expf(expFactor);
+    expFactor = __expf(expFactor);
     return expFactor;
 }
 
@@ -1756,28 +1756,35 @@ __global__ void create_gaussian_kernel_3x3(float *filterTensor,
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
+    float kernelSum = 0.0f;
 
     // compute values for only top left quarter and replicate the values
+    // Accumulate sum during generation for single-pass normalization
     for(int i = -1; i <= 0; i++, rowIdx += 3)
     {
         int iSquare = i * i;
-        filter[rowIdx + 2] = filter[rowIdx] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 1] = gaussian(iSquare, 0, mulFactor);
+        float val0 = gaussian(iSquare, -1, mulFactor);
+        float val1 = gaussian(iSquare, 0, mulFactor);
+        
+        filter[rowIdx + 2] = filter[rowIdx] = val0;
+        filter[rowIdx + 1] = val1;
+        
+        kernelSum += val0 * 2.0f + val1;  // val0 appears twice due to symmetry
 
         // Copy symmetric rows
         if((6 - rowIdx) != rowIdx)  // Index of last row of filter = 2 rows * 3 cols = 6
+        {
             *(float3 *)(&filter[6 - rowIdx]) = *(float3 *)(&filter[rowIdx]);
+            kernelSum += val0 * 2.0f + val1;  // Add for mirrored row
+        }
     }
 
-    // Find the sum of 9 values in 3x3 kernel
-    float kernelSum = 0.0f;
+    // Single-pass normalization using inverted sum
+    float invKernelSum = 1.0f / kernelSum;
+    
+    #pragma unroll
     for(int i = 0; i < 9; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    // Multiply kernel values by (1 / kernelSum)
-    for(int i = 0; i < 9; i++)
-        filter[i] *= kernelSum;
+        filter[i] *= invKernelSum;
 }
 
 __global__ void create_gaussian_kernel_5x5(float *filterTensor,
@@ -1792,29 +1799,37 @@ __global__ void create_gaussian_kernel_5x5(float *filterTensor,
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
+    float kernelSum = 0.0f;
 
     // compute values for only top left quarter and replicate the values
+    // Accumulate sum during generation
     for(int i = -2; i <= 0; i++, rowIdx += 5)
     {
         int iSquare = i * i;
-        filter[rowIdx + 4] = filter[rowIdx] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 3] = filter[rowIdx + 1] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 2] = gaussian(iSquare, 0, mulFactor);
+        float val0 = gaussian(iSquare, -2, mulFactor);
+        float val1 = gaussian(iSquare, -1, mulFactor);
+        float val2 = gaussian(iSquare, 0, mulFactor);
+        
+        filter[rowIdx + 4] = filter[rowIdx] = val0;
+        filter[rowIdx + 3] = filter[rowIdx + 1] = val1;
+        filter[rowIdx + 2] = val2;
+        
+        kernelSum += val0 * 2.0f + val1 * 2.0f + val2;
 
         // Copy symmetric rows
         if((20 - rowIdx) != rowIdx) // Index of last row of filter = 4 rows * 5 cols = 20
+        {
             *(d_float5 *)(&filter[20 - rowIdx]) = *(d_float5 *)(&filter[rowIdx]);
+            kernelSum += val0 * 2.0f + val1 * 2.0f + val2;
+        }
     }
 
-    // Find the sum of 25 values in 5x5 kernel
-    float kernelSum = 0.0f;
+    // Single-pass normalization
+    float invKernelSum = 1.0f / kernelSum;
+    
+    #pragma unroll
     for(int i = 0; i < 25; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    // Multiply kernel values by (1 / kernelSum)
-    for(int i = 0; i < 25; i++)
-        filter[i] *= kernelSum;
+        filter[i] *= invKernelSum;
 }
 
 __global__ void create_gaussian_kernel_7x7(float *filterTensor,
@@ -1829,30 +1844,39 @@ __global__ void create_gaussian_kernel_7x7(float *filterTensor,
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
+    float kernelSum = 0.0f;
 
     // compute values for only top left quarter and replicate the values
+    // Accumulate sum during generation
     for(int i = -3; i <= 0; i++, rowIdx += 7)
     {
         int iSquare = i * i;
-        filter[rowIdx + 6] = filter[rowIdx] = gaussian(iSquare, -3, mulFactor);
-        filter[rowIdx + 5] = filter[rowIdx + 1] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 4] = filter[rowIdx + 2] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 3] = gaussian(iSquare, 0, mulFactor);
+        float val0 = gaussian(iSquare, -3, mulFactor);
+        float val1 = gaussian(iSquare, -2, mulFactor);
+        float val2 = gaussian(iSquare, -1, mulFactor);
+        float val3 = gaussian(iSquare, 0, mulFactor);
+        
+        filter[rowIdx + 6] = filter[rowIdx] = val0;
+        filter[rowIdx + 5] = filter[rowIdx + 1] = val1;
+        filter[rowIdx + 4] = filter[rowIdx + 2] = val2;
+        filter[rowIdx + 3] = val3;
+        
+        kernelSum += val0 * 2.0f + val1 * 2.0f + val2 * 2.0f + val3;
 
         // Copy symmetric rows
         if((42 - rowIdx) != rowIdx) // Index of last row of filter = 6 rows * 7 cols = 42
+        {
             *(d_float7 *)(&filter[42 - rowIdx]) = *(d_float7 *)(&filter[rowIdx]);
+            kernelSum += val0 * 2.0f + val1 * 2.0f + val2 * 2.0f + val3;
+        }
     }
 
-    // Find the sum of 49 values in 7x7 kernel
-    float kernelSum = 0.0f;
+    // Single-pass normalization
+    float invKernelSum = 1.0f / kernelSum;
+    
+    #pragma unroll
     for(int i = 0; i < 49; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    // Multiply kernel values by (1 / kernelSum)
-    for(int i = 0; i < 49; i++)
-        filter[i] *= kernelSum;
+        filter[i] *= invKernelSum;
 }
 
 __global__ void create_gaussian_kernel_9x9(float *filterTensor,
@@ -1867,31 +1891,41 @@ __global__ void create_gaussian_kernel_9x9(float *filterTensor,
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
+    float kernelSum = 0.0f;
 
     // compute values for only top left quarter and replicate the values
+    // Accumulate sum during generation
     for(int i = -4; i <= 0; i++, rowIdx += 9)
     {
         int iSquare = i * i;
-        filter[rowIdx + 8] = filter[rowIdx] = gaussian(iSquare, -4, mulFactor);
-        filter[rowIdx + 7] = filter[rowIdx + 1] = gaussian(iSquare, -3, mulFactor);
-        filter[rowIdx + 6] = filter[rowIdx + 2] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 5] = filter[rowIdx + 3] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 4] = gaussian(iSquare, 0, mulFactor);
+        float val0 = gaussian(iSquare, -4, mulFactor);
+        float val1 = gaussian(iSquare, -3, mulFactor);
+        float val2 = gaussian(iSquare, -2, mulFactor);
+        float val3 = gaussian(iSquare, -1, mulFactor);
+        float val4 = gaussian(iSquare, 0, mulFactor);
+        
+        filter[rowIdx + 8] = filter[rowIdx] = val0;
+        filter[rowIdx + 7] = filter[rowIdx + 1] = val1;
+        filter[rowIdx + 6] = filter[rowIdx + 2] = val2;
+        filter[rowIdx + 5] = filter[rowIdx + 3] = val3;
+        filter[rowIdx + 4] = val4;
+        
+        kernelSum += val0 * 2.0f + val1 * 2.0f + val2 * 2.0f + val3 * 2.0f + val4;
 
         // Copy symmetric rows
         if((72 - rowIdx) != rowIdx) // Index of last row of filter = 8 rows * 9 cols = 72
+        {
             *(d_float9 *)(&filter[72 - rowIdx]) = *(d_float9 *)(&filter[rowIdx]);
+            kernelSum += val0 * 2.0f + val1 * 2.0f + val2 * 2.0f + val3 * 2.0f + val4;
+        }
     }
 
-    // Find the sum of 81 values in 9x9 kernel
-    float kernelSum = 0.0f;
+    // Single-pass normalization
+    float invKernelSum = 1.0f / kernelSum;
+    
+    #pragma unroll
     for(int i = 0; i < 81; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    // Multiply kernel values by (1 / kernelSum)
-    for(int i = 0; i < 81; i++)
-        filter[i] *= kernelSum;
+        filter[i] *= invKernelSum;
 }
 
 static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
@@ -2267,6 +2301,321 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+// Single image version
+template <typename T>
+RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                T *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32f stdDev,
+                                                Rpp32u kernelSize,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = 1;
+
+    uint padLength = kernelSize / 2;
+    uint padLengthTwice = padLength * 2;
+    uint2 tileSize;
+    tileSize.x = (SMEM_LENGTH_X - padLengthTwice) / 8;
+    tileSize.y = 16 - padLengthTwice;
+
+    // Create a filter of size (kernel size x kernel size)
+    float *filterTensor = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
+    hip_exec_create_gaussian_kernel(filterTensor,
+                                    kernelSize,
+                                    &stdDev,
+                                    handle);
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
+
+        if (kernelSize == 3)
+        {
+            hipLaunchKernelGGL(gaussian_filter_3x3_pkd_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 5)
+        {
+            hipLaunchKernelGGL(gaussian_filter_5x5_pkd_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 7)
+        {
+            hipLaunchKernelGGL(gaussian_filter_7x7_pkd_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 9)
+        {
+            hipLaunchKernelGGL(gaussian_filter_9x9_pkd_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        if (kernelSize == 3)
+        {
+            hipLaunchKernelGGL(gaussian_filter_3x3_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 5)
+        {
+            hipLaunchKernelGGL(gaussian_filter_5x5_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 7)
+        {
+            hipLaunchKernelGGL(gaussian_filter_7x7_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+        else if (kernelSize == 9)
+        {
+            hipLaunchKernelGGL(gaussian_filter_9x9_pln_tensor,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc,
+                               filterTensor);
+        }
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            if (kernelSize == 3)
+            {
+                hipLaunchKernelGGL(gaussian_filter_3x3_pkd3_pln3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 5)
+            {
+                hipLaunchKernelGGL(gaussian_filter_5x5_pkd3_pln3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 7)
+            {
+                hipLaunchKernelGGL(gaussian_filter_7x7_pkd3_pln3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 9)
+            {
+                hipLaunchKernelGGL(gaussian_filter_9x9_pkd3_pln3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+
+            if (kernelSize == 3)
+            {
+                hipLaunchKernelGGL(gaussian_filter_3x3_pln3_pkd3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 5)
+            {
+                hipLaunchKernelGGL(gaussian_filter_5x5_pln3_pkd3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 7)
+            {
+                hipLaunchKernelGGL(gaussian_filter_7x7_pln3_pkd3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+            else if (kernelSize == 9)
+            {
+                hipLaunchKernelGGL(gaussian_filter_9x9_pln3_pkd3_tensor,
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   padLength,
+                                   tileSize,
+                                   roiTensorPtrSrc,
+                                   filterTensor);
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 template RppStatus hip_exec_gaussian_filter_tensor<Rpp8u>(Rpp8u*,
                                                           RpptDescPtr,
                                                           Rpp8u*,
@@ -2306,3 +2655,43 @@ template RppStatus hip_exec_gaussian_filter_tensor<Rpp8s>(Rpp8s*,
                                                           RpptROIPtr,
                                                           RpptRoiType,
                                                           rpp::Handle&);
+
+template RppStatus hip_exec_gaussian_filter_single_image<Rpp8u>(Rpp8u*,
+                                                                RpptDescPtr,
+                                                                Rpp8u*,
+                                                                RpptDescPtr,
+                                                                Rpp32f,
+                                                                Rpp32u,
+                                                                RpptROIPtr,
+                                                                RpptRoiType,
+                                                                rpp::Handle&);
+
+template RppStatus hip_exec_gaussian_filter_single_image<half>(half*,
+                                                               RpptDescPtr,
+                                                               half*,
+                                                               RpptDescPtr,
+                                                               Rpp32f,
+                                                               Rpp32u,
+                                                               RpptROIPtr,
+                                                               RpptRoiType,
+                                                               rpp::Handle&);
+
+template RppStatus hip_exec_gaussian_filter_single_image<Rpp32f>(Rpp32f*,
+                                                                 RpptDescPtr,
+                                                                 Rpp32f*,
+                                                                 RpptDescPtr,
+                                                                 Rpp32f,
+                                                                 Rpp32u,
+                                                                 RpptROIPtr,
+                                                                 RpptRoiType,
+                                                                 rpp::Handle&);
+
+template RppStatus hip_exec_gaussian_filter_single_image<Rpp8s>(Rpp8s*,
+                                                                RpptDescPtr,
+                                                                Rpp8s*,
+                                                                RpptDescPtr,
+                                                                Rpp32f,
+                                                                Rpp32u,
+                                                                RpptROIPtr,
+                                                                RpptRoiType,
+                                                                rpp::Handle&);
