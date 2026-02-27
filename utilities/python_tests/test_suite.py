@@ -1068,22 +1068,39 @@ class UnifiedTestSuite:
         return [(n, name, fn_) for n, name, fn_ in all_tests if n in self.case_list]
 
     def run_unit_tests(self):
-        """Run augmentations in Unit mode (test_type=0, qa_mode=0)."""
+        overall_success = True
+
         for _, name, test_func in self._get_filtered_tests():
             try:
-                test_func()
+                result = test_func()
+                if result is False:
+                    overall_success = False
             except Exception as e:
                 print(f"ERROR in {test_func.__name__}: {e}")
+                overall_success = False
+
             print("-" * 70)
 
+        return overall_success
+
     def run_qa_tests(self):
-        """Run augmentations in QA mode (test_type=0, qa_mode=1)."""
+        overall_success = True
+
         for _, name, test_func in self._get_filtered_tests():
             try:
-                test_func()
+                result = test_func()
+
+                # If augmentation explicitly failed
+                if result is False:
+                    overall_success = False
+
             except Exception as e:
                 print(f"ERROR in {test_func.__name__}: {e}")
+                overall_success = False
+
             print("-" * 70)
+
+        return overall_success
 
     def _filter_test_cases(self, test_cases):
         """
@@ -1209,37 +1226,38 @@ class UnifiedTestSuite:
     # =========================================================================
 
     def run_all(self):
-        """Dispatch to the correct runner based on test_type and qa_mode."""
+        overall_success = True
+
+        # Performance
         if self.test_type == 1:
             self.run_performance_tests()
-        elif self.test_type == 0 and self.qa_mode:
-            self.run_qa_tests()
-        elif self.test_type == 0 and not self.qa_mode:
-            self.run_unit_tests()
+
+        # Unit / QA
+        elif self.test_type == 0:
+            if self.qa_mode == 1:
+                overall_success &= self.run_qa_tests()
+            else:
+                overall_success &= self.run_unit_tests()
+
         else:
-            print(f"ERROR: Invalid combination test_type={self.test_type}, qa_mode={self.qa_mode}")
+            print("Invalid configuration")
             return False
 
         self._print_summary()
-        return True
+        return overall_success
 
     def _print_summary(self):
         mode_label = get_mode_str(self.test_type, self.qa_mode)
-        # print(f"\n{'-'*30}")
-        # print(f"TEST SUMMARY ({mode_label} mode, {self.bitdepth})")
-        # print(f"{'-'*30}")
 
         if self.results['unit']:
             passed  = sum(1 for _, r in self.results['unit'] if r is True)
             failed  = sum(1 for _, r in self.results['unit'] if r is False)
             skipped = sum(1 for _, r in self.results['unit'] if r is None)
-            # print(f"\nUNIT TESTS:  BitDepth={self.bitdepth}  Saved={passed}  Failed={failed}  Skipped={skipped}")
 
         if self.results['qa']:
             passed  = sum(1 for _, r in self.results['qa'] if r is True)
             failed  = sum(1 for _, r in self.results['qa'] if r is False)
             skipped = sum(1 for _, r in self.results['qa'] if r is None)
-            # print(f"\nQA TESTS:    BitDepth={self.bitdepth}  Passed={passed}  Failed={failed}  Skipped={skipped}")
 
         if self.results['perf']:
             valid = sum(1 for _, r in self.results['perf'] if r is not None)
@@ -1309,7 +1327,6 @@ def main():
     print("="*70)
 
     overall_success = True
-    # qa_summaries = {}   # UNUSED: reserved for future multi-backend summary aggregation
 
     for backend, backend_name in backends_to_test:
         if args.preserve_output == 0:
