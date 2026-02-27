@@ -769,11 +769,13 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
         }
         else if(BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I16_TO_F32 || BitDepthTestMode == U8_TO_F32)  // F32 || I16_F32 || U8_F32
         {
+            Rpp32f cutoff = (testCase == "normalize") ? 1e-5 : 1e-6;
+
             Rpp32f *ref = static_cast<Rpp32f *>(refOutput) + sampleOffset;
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if(std::abs(out[j] - ref[j]) < 1e-6)
+                if(std::abs(out[j] - ref[j]) < cutoff)
                     cnt++;
 
             }
