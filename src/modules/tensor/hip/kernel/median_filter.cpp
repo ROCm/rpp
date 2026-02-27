@@ -304,15 +304,6 @@ __device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_floa
 template <typename T>
 __device__ void median_filter_5x5_row_hip_compute(T* src_smem, d_float8* median_f8)
 {
-    using VectorType = typename FilterDispatch<T>::VectorType;
-    
-    // Load 5 rows of shared memory
-    VectorType row0 = *((VectorType*)&src_smem[0 * SMEM_LENGTH_X]);
-    VectorType row1 = *((VectorType*)&src_smem[1 * SMEM_LENGTH_X]);
-    VectorType row2 = *((VectorType*)&src_smem[2 * SMEM_LENGTH_X]);
-    VectorType row3 = *((VectorType*)&src_smem[3 * SMEM_LENGTH_X]);
-    VectorType row4 = *((VectorType*)&src_smem[4 * SMEM_LENGTH_X]);
-
     // Process 8 pixels using optimized sorting network
     #pragma unroll
     for (int px = 0; px < 8; ++px)

@@ -117,15 +117,6 @@ inline T rpp_median_5x5_sortnet(T *p)
     return p[12];
 }
 
-#if __AVX2__
-
-// Two-tier histogram structure
-struct RppMedianHistogram
-{
-    Rpp16u coarse[16];
-    Rpp16u fine[16][16];
-};
-
 // Simplified O(1) histogram for single-channel PLN1
 inline void rpp_median_histogram_u8_pln1_host(const Rpp8u *src,
                                                Rpp8u *dst,
@@ -248,6 +239,7 @@ inline void rpp_median3x3_pln_u8_avx(const Rpp8u *row0,
         // Handle tail
         if (j > width - 1 - nlanes)
         {
+            // Exit vectorized loop for small widths or in-place operation to avoid reading overwritten data
             if (j == 1 || (const Rpp8u *)dstRow == row1)
                 break;
             j = width - 1 - nlanes;
@@ -1071,7 +1063,7 @@ inline void rpp_median5x5_pkd_u8_avx(const Rpp8u *row0,
     for (; j < limit; j++)
     {
         int j1 = j >= channels ? j - channels : j;
-        int j0 = j >= channels * 2 ? j -  channels * 2 : j1;
+        int j0 = j >= channels * 2 ? j - channels * 2 : j1;
         int j3 = j < widthBytes - channels ? j + channels : j;
         int j4 = j < widthBytes - channels * 2 ? j + channels * 2 : j3;
 
@@ -1118,11 +1110,11 @@ inline void rpp_median5x5_pkd_u8_avx(const Rpp8u *row0,
         __m256i p18 = _mm256_loadu_si256((const __m256i *)(row3 + j + channels));
         __m256i p23 = _mm256_loadu_si256((const __m256i *)(row4 + j + channels));
 
-        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j +  channels * 2));
-        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j +  channels * 2));
-        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j +  channels * 2));
-        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j +  channels * 2));
-        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j +  channels * 2));
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j + channels * 2));
+        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j + channels * 2));
+        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j + channels * 2));
+        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j + channels * 2));
+        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j + channels * 2));
 
 #define OP(a, b)         \
     {                    \
