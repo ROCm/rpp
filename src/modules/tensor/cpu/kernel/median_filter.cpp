@@ -210,6 +210,8 @@ inline void rpp_median_histogram_u8_pkd_host(const Rpp8u *src,
     }
 }
 
+#if __AVX2__
+
 // -------------------- AVX2 Sorting Network Implementations --------------------
 
 // 3×3 Median - U8 PLN1
