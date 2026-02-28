@@ -703,7 +703,6 @@ int main(int argc, char **argv)
             }
             case BLEND:
             {
-                printf("hello");
                 testCaseName = "blend";
                 Rpp32f alpha = 0.4;
 
