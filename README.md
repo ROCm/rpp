@@ -15,29 +15,30 @@ vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends.
 #### Latest release
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/ROCm/rpp/releases)
 
-## Supported functionalities and variants
+## Supported Augmentations / Primitives
+
+RPP supports various 2D image, 3D image (voxel), audio and miscellaneous augmentations and primitives as listed below.
 
 <p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities.png" /></p>
 
+## Supported 2D Image Augmentations Samples
+
 <p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities_samples.jpg" /></p>
 
-### Supported 3D Functionalities Samples
+## Supported 3D Image Augmentations Samples
 
-Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 3D image)
-:-------------------------:|:-------------------------:
-![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
+| &nbsp; | Input<br>(3D voxel image) | &nbsp; |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+| &nbsp; | ![](docs/data/doxygenInputs/input150x150x4.gif) | &nbsp; |
+| add_scalar<br>(3D scalar addition) | subtract_scalar<br>(3D scalar subtraction) | multiply_scalar<br>(3D scalar multiplication) |
+| ![](docs/data/doxygenOutputs/arithmetic_operations_add_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/arithmetic_operations_subtract_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/arithmetic_operations_multiply_scalar_150x150x4.gif) |
+| fused_multiply_add_scalar<br>(brightened 3D image) | gaussian_noise<br>(3D noise augmentation) | flip<br>(3D flip augmentation) |
+| ![](docs/data/doxygenOutputs/arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/effects_augmentations_gaussian_noise_150x150x4.gif) | ![](docs/data/doxygenOutputs/geometric_augmentations_flip_150x150x4.gif) |
 
-## Supported audio functionalities and variants
-* Below are the list of audio functions supported
-  * Non Silent Region Detection (HOST and HIP)
-  * To Decibels (HOST and HIP)
-  * Downmixing (HOST and HIP)
-  * Preemphasis Filter (HOST and HIP)
-  * Resample (HOST and HIP)
-  * Mel Filter Bank (HOST and HIP)
-  * Spectrogram (HOST and HIP)
+## Supported Audio Augmentations Samples
 
-Spectrogram kernel output represented as a image <br><br>
+Spectrogram functionality output represented as an image:
+
 ![](docs/data/spectrogramOutput.png)
   
 ## Prerequisites
