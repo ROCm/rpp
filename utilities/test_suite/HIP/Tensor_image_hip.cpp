@@ -2272,6 +2272,7 @@ int main(int argc, char **argv)
     if(saturationFactor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(saturationFactor));
     if (minTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(minTensor));
     if (maxTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
