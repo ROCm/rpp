@@ -253,6 +253,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                            reinterpret_cast<float3 *>(maxTensor),
                            make_float2(rangeMin, rangeMax),
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -271,6 +272,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                reinterpret_cast<float3 *>(maxTensor),
                                make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -287,6 +289,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                maxTensor,
                                make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -306,6 +309,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                reinterpret_cast<float3 *>(maxTensor),
                                make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -322,6 +326,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                reinterpret_cast<float3 *>(maxTensor),
                                make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

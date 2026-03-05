@@ -224,6 +224,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
                        normFactors,
                        weightsDown,
                        intervals);
+    HIP_CHECK_LAUNCH_RETURN();
 
     delete melScalePtr;
     return RPP_SUCCESS;

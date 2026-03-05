@@ -226,6 +226,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            alphaTensor,
                            betaTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -242,6 +243,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                            alphaTensor,
                            betaTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -259,6 +261,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                alphaTensor,
                                betaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -275,6 +278,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                alphaTensor,
                                betaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

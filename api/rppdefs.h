@@ -73,6 +73,11 @@ typedef halfhpp Rpp16f;
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
+/*! \brief Check last HIP error after kernel launch; return RPP_ERROR_GPU on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
+#define HIP_CHECK_LAUNCH_RETURN() { \
+    hipError_t _e = hipGetLastError(); \
+    if (_e != hipSuccess) { return RPP_ERROR_GPU; } \
+}
 #else
 #define RPP_HOST_DEVICE
 #endif
@@ -172,7 +177,9 @@ typedef enum
     /*! \brief The specified axis is invalid or out of range. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_AXIS              = -26,
     /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
-    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27
+    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27,
+    /*! \brief HIP/GPU runtime or kernel launch error \ingroup group_rppdefs */
+    RPP_ERROR_GPU                       = -28
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums
