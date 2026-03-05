@@ -1770,7 +1770,10 @@ void init_dropout_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOf
                 for (int c = 0; c < channels; c++)
                     ((Rpp8s*)colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
         }
-        numOfBoxes[i] = 1;
+        
+        // Only set numOfBoxes if it's provided
+        if (numOfBoxes != nullptr)
+            numOfBoxes[i] = 1;
     }
 }
 

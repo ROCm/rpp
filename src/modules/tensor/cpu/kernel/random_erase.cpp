@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -106,10 +106,10 @@ RppStatus random_erase_host_tensor(T *srcPtr,
             dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
             for (int i = 0; i < boxHeight; i++)
             {
-                Rpp32u noiseRowOffset = ((y1 + i + batchCount) % 255) * 255 * 3;
+                Rpp32u noiseRowOffset = ((y1 + i + batchCount) % RANDOM_ERASE_NOISE_BUFFER_SIDE) * RANDOM_ERASE_NOISE_BUFFER_SIDE * 3;
                 for (int j = 0; j < boxWidth; j++)
                 {
-                    Rpp32u noiseIdx = noiseRowOffset + ((x1 + j) % 255 * 3);
+                    Rpp32u noiseIdx = noiseRowOffset + ((x1 + j) % RANDOM_ERASE_NOISE_BUFFER_SIDE * 3);
 
                     dstPtrTempR[j] = noiseBuffer[noiseIdx];
                     dstPtrTempG[j] = noiseBuffer[noiseIdx + 1];
