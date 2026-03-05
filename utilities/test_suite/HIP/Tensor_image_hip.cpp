@@ -627,8 +627,6 @@ int main(int argc, char **argv)
         boxesInEachImage = 1;
         CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
-        CHECK_RETURN_STATUS(hipMemset(numOfBoxes, 0, batchSize * sizeof(Rpp32u)));
     }
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -1928,7 +1926,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "random_erase";
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
-                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
+                    init_dropout_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -2287,7 +2285,6 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
-        CHECK_RETURN_STATUS(hipHostFree(numOfBoxes));
     }
     if (qualityTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(qualityTensor));
