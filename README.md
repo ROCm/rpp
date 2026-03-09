@@ -39,6 +39,10 @@ RPP supports various 2D image, 3D image (voxel), audio and miscellaneous augment
 
 </div>
 
+slice (3D slice - 100x200 from 240x240x155):
+
+<p align="center"><img src="docs/data/doxygenOutputs/geometric_augmentations_slice_100x200x155.gif" /></p>
+
 ## Supported Audio Augmentations Samples
 
 Spectrogram functionality output represented as an image:
