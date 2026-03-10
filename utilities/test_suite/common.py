@@ -110,6 +110,7 @@ imageAugmentationMap = {
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
+    50: ["sobel_filter", "HOST", "HIP"],
     51: ["median_filter", "HOST", "HIP"],
     54: ["gaussian_filter", "HOST", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
@@ -179,7 +180,7 @@ ImageAugmentationGroupMap = {
         "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion", "fisheye"
     ],
     "filter_augmentations": [
-        "box_filter", "median_filter", "gaussian_filter"
+        "box_filter", "median_filter", "gaussian_filter", "sobel_filter"
     ],
     "morphological_operations": [
         "erode", "dilate"
