@@ -157,11 +157,26 @@ __global__ void tensor_or_tensor_non_broadcast_1d_hip_tensor(T *src1Ptr,
     uint srcIdx2 = (id_z * strides) + id_x + beginX2;
     uint dstIdx = (id_z * strides) + id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
-    BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    uint remaining = width - id_x;
+
+    if (remaining >= 8)
+    {
+        VectorType src1_vec8, src2_vec8, dst_vec8;
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
+        BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
+    {
+        // Tail handling for the last partial (width % 8) elements
+        for (uint i = 0; i < remaining; ++i)
+        {
+            T v1 = src1Ptr[srcIdx1 + i];
+            T v2 = src2Ptr[srcIdx2 + i];
+            dstPtr[dstIdx + i] = Operation::op(v1, v2);
+        }
+    }
 }
 
 template <typename T, typename Operation>
@@ -262,15 +277,33 @@ __global__ void tensor_or_tensor_non_broadcast_2d_hip_tensor(T *src1Ptr,
     if(id_x >= width || id_y >= height)
         return;
 
-    uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
-    uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
-    uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
+    uint remaining = width - id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
-    BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    // Vectorized path: safe to load/store 8 elements
+    if (remaining >= 8)
+    {
+        uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
+        uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
+        uint dstIdx  = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
+
+        VectorType src1_vec8, src2_vec8, dst_vec8;
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
+        BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    // Remainder path: handle final 1..7 elements safely
+    else
+    {
+        uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
+        uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
+        uint dstIdx  = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
+
+        for (uint i = 0; i < remaining; ++i)
+        {
+            dstPtr[dstIdx + i] = Operation::op(src1Ptr[srcIdx1 + i], src2Ptr[srcIdx2 + i]);
+        }
+    }
 }
 
 template <typename T, typename Operation>
@@ -373,11 +406,24 @@ __global__ void tensor_or_tensor_non_broadcast_3d_hip_tensor(T *src1Ptr,
     uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + beginX2;
     uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x;
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
-    BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    // Use vectorized path only when a full 8-element vector is within bounds.
+    if(id_x + 7 < lengthX2)
+    {
+        VectorType src1_vec8, src2_vec8, dst_vec8;
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T *)&src1_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T *)&src2_vec8);
+        BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
+    {
+        // Tail processing for remaining (less than 8) elements along X.
+        uint tail = lengthX2 - id_x;
+        for(uint i = 0; i < tail; ++i)
+        {
+            dstPtr[dstIdx + i] = Operation::op(src1Ptr[srcIdx1 + i], src2Ptr[srcIdx2 + i]);
+        }
+    }
 }
 
 template <typename T, typename Operation>
@@ -437,39 +483,94 @@ __global__ void tensor_or_tensor_non_broadcast_nd_hip_tensor(T *src1Ptr,
 
     using VectorType = typename BitwiseLoadStoreExecute<T>::VectorType;
 
-    if(id_x >= strides[0])
+    // Total number of elements per tensor (flattened length)
+    uint totalElements = *strides;
+
+    if(id_x >= totalElements)
         return;
 
-    uint *roi1 = roiTensor1 + id_z * numDims * 2;
-    uint *begin1 = roi1;
-    uint *roi2 = roiTensor2 + id_z * numDims * 2;
-    uint *begin2 = roi2;
-    uint *length = &roi2[numDims];
-    uint dstIdx = (id_z * *strides);
-    uint srcIdx1 = (id_z * *strides);
-    uint srcIdx2 = (id_z * *strides);
-    strides++;
-    uint coords[RPPT_MAX_DIMS];
+    uint remaining = totalElements - id_x;
 
-    for(int i = 0; i < numDims; i++)
+    if (remaining >= 8)
     {
-        coords[i] = (id_x / strides[i]) % src1Dims[i];
-        if(coords[i] >= length[i])
-            return;
-    }
+        uint *roi1 = roiTensor1 + id_z * numDims * 2;
+        uint *begin1 = roi1;
+        uint *roi2 = roiTensor2 + id_z * numDims * 2;
+        uint *begin2 = roi2;
+        uint *length = &roi2[numDims];
+        uint dstIdx = (id_z * totalElements);
+        uint srcIdx1 = (id_z * totalElements);
+        uint srcIdx2 = (id_z * totalElements);
+        uint *dimStrides = strides + 1;
+        uint coords[RPPT_MAX_DIMS];
 
-    for(int i = 0; i < numDims; i++)
+        for(int i = 0; i < numDims; i++)
+        {
+            coords[i] = (id_x / dimStrides[i]) % src1Dims[i];
+            if(coords[i] >= length[i])
+                return;
+        }
+
+        for(int i = 0; i < numDims; i++)
+        {
+            dstIdx += (coords[i] * dimStrides[i]);
+            srcIdx1 += (begin1[i] + (coords[i] * dimStrides[i]));
+            srcIdx2 += (begin2[i] + (coords[i] * dimStrides[i]));
+        }
+
+        VectorType src1_vec8, src2_vec8, dst_vec8;
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
+        BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
     {
-        dstIdx += (coords[i] * strides[i]);
-        srcIdx1 += (begin1[i] + (coords[i] * strides[i]));
-        srcIdx2 += (begin2[i] + (coords[i] * strides[i]));
-    }
+        // Tail handling for the final (remaining < 8) elements to avoid out-of-bounds access
+        uint *roi1 = roiTensor1 + id_z * numDims * 2;
+        uint *begin1 = roi1;
+        uint *roi2 = roiTensor2 + id_z * numDims * 2;
+        uint *begin2 = roi2;
+        uint *length = &roi2[numDims];
 
-    VectorType src1_vec8, src2_vec8, dst_vec8;
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src1Ptr + srcIdx1, (T*)&src1_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_load8(src2Ptr + srcIdx2, (T*)&src2_vec8);
-    BitwiseOperationExecute<VectorType, Operation>::rpp_hip_math_bitwiseOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    BitwiseLoadStoreExecute<T>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+        // Base indices for this batch
+        uint dstBaseIdx   = id_z * totalElements;
+        uint srcBaseIdx1  = id_z * totalElements;
+        uint srcBaseIdx2  = id_z * totalElements;
+
+        // Strides for each dimension start at strides[1]
+        uint *dimStrides = strides + 1;
+
+        for (uint e = 0; e < remaining; e++)
+        {
+            uint flatIdx = static_cast<uint>(id_x) + e;
+
+            uint dstIdx = dstBaseIdx;
+            uint srcIdx1 = srcBaseIdx1;
+            uint srcIdx2 = srcBaseIdx2;
+            bool skipElement = false;
+
+            // Compute coordinates and indices for this element
+            for (int i = 0; i < numDims; i++)
+            {
+                uint coord = (flatIdx / dimStrides[i]) % src1Dims[i];
+                if (coord >= length[i])
+                {
+                    skipElement = true;
+                    break;
+                }
+
+                dstIdx  += coord * dimStrides[i];
+                srcIdx1 += begin1[i] + coord * dimStrides[i];
+                srcIdx2 += begin2[i] + coord * dimStrides[i];
+            }
+
+            if (skipElement)
+                continue;
+
+            dstPtr[dstIdx] = Operation::op(src1Ptr[srcIdx1], src2Ptr[srcIdx2]);
+        }
+    }
 }
 
 // -------------------- Set 3 - executor kernels --------------------
@@ -572,6 +673,11 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
                 incompatibleDims = true;
 
             dstSampleDims[j] = std::max(src1SampleDims[j], src2SampleDims[j]);
+        }
+
+        if(incompatibleDims == true)
+        {
+            printf("Incompatible dimensions for operation for sample %d inside batch\n", i);
         }
 
         // Compute begin offsets for src1 and src2

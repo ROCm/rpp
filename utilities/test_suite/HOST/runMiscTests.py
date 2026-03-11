@@ -55,6 +55,9 @@ def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFi
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F32_TO_F32]
         if miscAugmentationMap[int(case)][0] == "log1p":
             bitDepths = [BitDepthTestMode.I16_TO_F32]
+        # Tensor AND/OR/XOR (cases 5/6/7) are only executed for integer bit depths
+        if int(case) in (5, 6, 7):
+            bitDepths = [BitDepthTestMode.U8_TO_U8]
     for bitDepth in bitDepths:
         print("\n./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg))
         result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth.value), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec

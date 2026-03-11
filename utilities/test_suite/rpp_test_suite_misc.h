@@ -197,7 +197,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                         roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
                     if((broadCastFlag == 1) || (broadCastFlag == 2))
-                        roiTensor[startIndex + nDim - 1] = 1;
+                        roiTensor[lengthIndex + nDim - 1] = 1;
                 }
                 break;
             }
@@ -275,7 +275,7 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             descriptorPtr3D->dataType = isDestination ? RpptDataType::F32 : RpptDataType::U8;
             break;
         case U8_TO_I8:
-            descriptorPtr3D->dataType = RpptDataType::I8;
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::I8 : RpptDataType::U8;
             break;
         case I16_TO_I16:
             descriptorPtr3D->dataType = RpptDataType::I16;

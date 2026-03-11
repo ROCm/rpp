@@ -276,6 +276,33 @@ RppStatus rppt_tensor_and_tensor(RppPtr_t srcPtr1,
     if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
+    // When broadcast is disabled, ensure that all tensor shapes and ROIs match
+    if (broadcastMode == RpptBroadcastMode::RPP_BROADCAST_DISABLE)
+    {
+        // Validate number of dimensions match across all tensors
+        if ((srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims) ||
+            (srcPtr1GenericDescPtr->numDims != dstGenericDescPtr->numDims))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+
+        // Validate that each dimension size matches across all tensors
+        for (Rpp32u dim = 0; dim < srcPtr1GenericDescPtr->numDims; dim++)
+        {
+            if ((srcPtr1GenericDescPtr->dims[dim] != srcPtr2GenericDescPtr->dims[dim]) ||
+                (srcPtr1GenericDescPtr->dims[dim] != dstGenericDescPtr->dims[dim]))
+            {
+                return RPP_ERROR_INVALID_ARGUMENTS;
+            }
+        }
+
+        // Validate ROI tensor presence consistency when not broadcasting
+        if ((roiTensorSrc1 == nullptr) != (roiTensorSrc2 == nullptr))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+    }
+
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
@@ -403,6 +430,33 @@ RppStatus rppt_tensor_or_tensor(RppPtr_t srcPtr1,
     if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
 
+    // When broadcast is disabled, ensure that all tensor shapes and ROIs match
+    if (broadcastMode == RpptBroadcastMode::RPP_BROADCAST_DISABLE)
+    {
+        // Validate number of dimensions match across all tensors
+        if ((srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims) ||
+            (srcPtr1GenericDescPtr->numDims != dstGenericDescPtr->numDims))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+
+        // Validate that each dimension size matches across all tensors
+        for (Rpp32u dim = 0; dim < srcPtr1GenericDescPtr->numDims; dim++)
+        {
+            if ((srcPtr1GenericDescPtr->dims[dim] != srcPtr2GenericDescPtr->dims[dim]) ||
+                (srcPtr1GenericDescPtr->dims[dim] != dstGenericDescPtr->dims[dim]))
+            {
+                return RPP_ERROR_INVALID_ARGUMENTS;
+            }
+        }
+
+        // Validate ROI tensor presence consistency when not broadcasting
+        if ((roiTensorSrc1 == nullptr) != (roiTensorSrc2 == nullptr))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+    }
+
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
 
@@ -529,6 +583,33 @@ RppStatus rppt_tensor_xor_tensor(RppPtr_t srcPtr1,
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if (srcPtr1GenericDescPtr->dataType != dstGenericDescPtr->dataType)
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
+    // When broadcast is disabled, ensure that all tensor shapes and ROIs match
+    if (broadcastMode == RpptBroadcastMode::RPP_BROADCAST_DISABLE)
+    {
+        // Validate number of dimensions match across all tensors
+        if ((srcPtr1GenericDescPtr->numDims != srcPtr2GenericDescPtr->numDims) ||
+            (srcPtr1GenericDescPtr->numDims != dstGenericDescPtr->numDims))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+
+        // Validate that each dimension size matches across all tensors
+        for (Rpp32u dim = 0; dim < srcPtr1GenericDescPtr->numDims; dim++)
+        {
+            if ((srcPtr1GenericDescPtr->dims[dim] != srcPtr2GenericDescPtr->dims[dim]) ||
+                (srcPtr1GenericDescPtr->dims[dim] != dstGenericDescPtr->dims[dim]))
+            {
+                return RPP_ERROR_INVALID_ARGUMENTS;
+            }
+        }
+
+        // Validate ROI tensor presence consistency when not broadcasting
+        if ((roiTensorSrc1 == nullptr) != (roiTensorSrc2 == nullptr))
+        {
+            return RPP_ERROR_INVALID_ARGUMENTS;
+        }
+    }
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
