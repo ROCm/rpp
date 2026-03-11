@@ -295,10 +295,28 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u roiHeight = roi.xywhROI.roiHeight;
         Rpp32u pixels = roiWidth * roiHeight;
 
-        Rpp8u *yBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-        Rpp8u *cbBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-        Rpp8u *crBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-        Rpp8u *dstYBuf = yBuf;
+        // Allocate YCbCr buffers only for 3-channel images
+        Rpp8u *yBuf = nullptr;
+        Rpp8u *cbBuf = nullptr;
+        Rpp8u *crBuf = nullptr;
+        Rpp8u *dstYBuf = nullptr;
+
+        if(srcDescPtr->c == 3)
+        {
+            yBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
+            cbBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
+            crBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
+
+            // Check for allocation failures
+            if(!yBuf || !cbBuf || !crBuf)
+            {
+                free(yBuf);
+                free(cbBuf);
+                free(crBuf);
+                continue;  // Skip this batch element on allocation failure
+            }
+            dstYBuf = yBuf;
+        }
 
 #if __AVX2__
         Rpp32u vectorIncrement = 48;

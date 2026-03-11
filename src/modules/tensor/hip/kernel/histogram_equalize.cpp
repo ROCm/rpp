@@ -222,6 +222,9 @@ __global__ void apply_lut_pln1_hip_tensor(const unsigned char *__restrict__ srcP
 }
 
 // RGB PKD3 to YCbCr PLN3 conversion kernel
+// Note: This kernel processes 8 pixels per thread. The buffer is sized for the full image dimensions,
+// ensuring sufficient memory even when roiWidth is not a multiple of 8. Edge pixels beyond roiWidth
+// but within buffer bounds are processed but will be overwritten or unused.
 __global__ void convert_rgb_pkd3_to_ycbcr_pln3(unsigned char *__restrict__ srcPtr,
                                                uint2 srcStridesNH,
                                                unsigned char *__restrict__ yPtr,
@@ -234,6 +237,7 @@ __global__ void convert_rgb_pkd3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
@@ -252,6 +256,8 @@ __global__ void convert_rgb_pkd3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
 }
 
 // RGB PLN3 to YCbCr PLN3 conversion kernel
+// Note: This kernel processes 8 pixels per thread. The buffer is sized for the full image dimensions,
+// ensuring sufficient memory even when roiWidth is not a multiple of 8.
 __global__ void convert_rgb_pln3_to_ycbcr_pln3(unsigned char *__restrict__ srcPtr,
                                                uint3 srcStridesNCH,
                                                unsigned char *__restrict__ yPtr,
@@ -264,6 +270,7 @@ __global__ void convert_rgb_pln3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
@@ -282,6 +289,8 @@ __global__ void convert_rgb_pln3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
 }
 
 // YCbCr PLN3 to RGB PLN3 conversion kernel
+// Note: This kernel processes 8 pixels per thread. The buffer is sized for the full image dimensions,
+// ensuring sufficient memory even when roiWidth is not a multiple of 8.
 __global__ void convert_ycbcr_pln3_to_rgb_pln3(unsigned char *__restrict__ yPtr,
                                                unsigned char *__restrict__ cbPtr,
                                                unsigned char *__restrict__ crPtr,
@@ -294,6 +303,7 @@ __global__ void convert_ycbcr_pln3_to_rgb_pln3(unsigned char *__restrict__ yPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
@@ -312,6 +322,8 @@ __global__ void convert_ycbcr_pln3_to_rgb_pln3(unsigned char *__restrict__ yPtr,
 }
 
 // YCbCr PLN3 to RGB PKD3 conversion kernel
+// Note: This kernel processes 8 pixels per thread. The buffer is sized for the full image dimensions,
+// ensuring sufficient memory even when roiWidth is not a multiple of 8.
 __global__ void convert_ycbcr_pln3_to_rgb_pkd3(unsigned char *__restrict__ yPtr,
                                                unsigned char *__restrict__ cbPtr,
                                                unsigned char *__restrict__ crPtr,
@@ -324,6 +336,7 @@ __global__ void convert_ycbcr_pln3_to_rgb_pkd3(unsigned char *__restrict__ yPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
@@ -358,7 +371,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
 
     if(srcDescPtr->c == 3)
     {
-        const size_t planeSize = static_cast<size_t>(srcDescPtr->w) * srcDescPtr->h * srcDescPtr->n;
+        // Use size_t for all intermediate calculations to prevent overflow for large images
+        const size_t planeSize = static_cast<size_t>(srcDescPtr->w) * static_cast<size_t>(srcDescPtr->h) * static_cast<size_t>(srcDescPtr->n);
         size_t yuvBufferSize = 3 * planeSize * sizeof(Rpp8u);
         
         Rpp8u *yuvBuf = nullptr;
