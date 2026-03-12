@@ -159,7 +159,7 @@ python runImageTests.py --case_list 0 20 21 37 49 --test_type 0 --qa_mode 1 --ba
 
 **Notes:**
 - Single image mode is available for both HOST and HIP backends
-- For resize operations in single image mode, NearestNeighbor interpolation is used
+- For resize operations in single image mode, the backend's default (NearestNeighbor) interpolation is used
 
 ## RPP Voxel Test Suite
 The 3D Voxel test suite can be executed under 2 backend scenarios - (HOST/HIP):

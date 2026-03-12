@@ -496,6 +496,7 @@ RppStatus rppt_blend(RppPtr_t srcPtr1,
             else
                 return RPP_ERROR_NOT_IMPLEMENTED;
         }
+        else
         {
             if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
             {
