@@ -121,8 +121,25 @@ def get_augmentation_group(augmentation_name):
 # UTILITY FUNCTIONS
 # =============================================================================
 
-def validate_path(input_path):
-    """Validate if a path exists and is a directory"""
+def is_safe_path(path, base_dir=None):
+    """Check if path is safe (no traversal attacks) and optionally within base_dir"""
+    if not path or '\0' in path:
+        return False
+    
+    try:
+        resolved = os.path.realpath(os.path.abspath(path))
+        if base_dir:
+            base_resolved = os.path.realpath(os.path.abspath(base_dir))
+            if not resolved.startswith(base_resolved + os.sep) and resolved != base_resolved:
+                return False
+        return True
+    except (OSError, ValueError):
+        return False
+
+def validate_path(input_path, base_dir=None):
+    """Validate if path exists, is a directory, and is safe to use"""
+    if not is_safe_path(input_path, base_dir):
+        return False
     if not os.path.exists(input_path):
         return False
     return os.path.isdir(input_path)
@@ -175,7 +192,7 @@ def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     """Read performance logs and print summary"""
     try:
-        f = open(logFile, "r")
+        log_file = open(logFile, "r")
         print("\nOpened log file -> " + logFile)
     except IOError:
         print("Skipping file -> " + logFile)
@@ -189,9 +206,8 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     frames = []
     prevLine = ""
     funcCount = 0
-    # current_category = ""                             # UNUSED: assigned but never read
 
-    for line in f:
+    for line in log_file:
         if "max,min,avg wall times in ms/batch" in line:
             if "Running " in prevLine:
                 splitWordStart = "Running "
@@ -227,7 +243,7 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     else:
         print("No variants under this category")
 
-    f.close()
+    log_file.close()
 
 def get_mode_str(test_type, qa_mode):
     """Return a short mode label for display purposes.
@@ -302,11 +318,19 @@ Examples:
 
     args = parser.parse_args()
 
-    # Validate paths
+    # Validate paths with security checks
     if not validate_path(args.input_path1):
-        print(f"Warning: input_path1 '{args.input_path1}' not found, falling back to default.")
+        print(f"Warning: input_path1 '{args.input_path1}' not found or unsafe, falling back to default.")
         args.input_path1 = default_input_path
+    elif not is_safe_path(args.input_path1):
+        print(f"Security Warning: input_path1 '{args.input_path1}' failed security check, using default.")
+        args.input_path1 = default_input_path
+    
     if not validate_path(args.input_path2):
+        print(f"Warning: input_path2 '{args.input_path2}' not found or unsafe, falling back to default.")
+        args.input_path2 = default_input_path
+    elif not is_safe_path(args.input_path2):
+        print(f"Security Warning: input_path2 '{args.input_path2}' failed security check, using default.")
         args.input_path2 = default_input_path
 
     args.default_input_path = default_input_path

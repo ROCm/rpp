@@ -34,7 +34,4 @@ The canonical implementation now lives under:
 
 from __future__ import annotations
 
-from .amd.rpp.rpp_types import *  
-
-# Re-export the same public API
-from .amd.rpp.rpp_types import __all__  
+from .amd.rpp.rpp_types import *

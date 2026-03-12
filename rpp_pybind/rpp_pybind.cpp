@@ -43,6 +43,14 @@ SOFTWARE.
 #define M_PI 3.14159265358979323846
 #endif
 
+#define CHECK_RETURN_STATUS(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+        exit(-1); \
+    } \
+} while (0)
+
 namespace py = pybind11;
 
 // -----------------------------------------------------
@@ -198,51 +206,42 @@ void brightness(const torch::Tensor& input_tensor,
     float* beta_gpu_ptr = nullptr;
     RpptROI *roi_gpu_ptr = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (alpha_gpu_ptr) hipFree(alpha_gpu_ptr);
-        if (beta_gpu_ptr)  hipFree(beta_gpu_ptr);
-        if (roi_gpu_ptr)   hipFree(roi_gpu_ptr);
-    };
-
-    try {
-        if(backend == 1) {    // Check if backend is HIP (GPU)
-            // Allocate GPU memory
-            size_t alpha_size = alpha.size() * sizeof(float);
-            size_t beta_size = beta.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&alpha_gpu_ptr, alpha_size);
-            hipMalloc(&beta_gpu_ptr, beta_size);
-            hipMalloc(&roi_gpu_ptr, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(alpha_gpu_ptr, alpha_ptr, alpha_size, hipMemcpyHostToDevice);
-            hipMemcpy(beta_gpu_ptr, beta_ptr, beta_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu_ptr, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice);
-            
-            // Use GPU pointers for the function call
-            alpha_ptr = alpha_gpu_ptr;
-            beta_ptr = beta_gpu_ptr;
-            roi_ptr = roi_gpu_ptr;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t alpha_size = alpha.size() * sizeof(float);
+        size_t beta_size = beta.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_brightness(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            alpha_ptr,
-                            beta_ptr,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_brightness failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&alpha_gpu_ptr, alpha_size));
+        CHECK_RETURN_STATUS(hipMalloc(&beta_gpu_ptr, beta_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu_ptr, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(alpha_gpu_ptr, alpha_ptr, alpha_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(beta_gpu_ptr, beta_ptr, beta_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu_ptr, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice));
+        
+        // Use GPU pointers for the function call
+        alpha_ptr = alpha_gpu_ptr;
+        beta_ptr = beta_gpu_ptr;
+        roi_ptr = roi_gpu_ptr;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_brightness(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        alpha_ptr,
+                        beta_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_brightness failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(alpha_gpu_ptr));
+        CHECK_RETURN_STATUS(hipFree(beta_gpu_ptr));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu_ptr));
     }
 }
 
@@ -280,46 +279,36 @@ void gamma_correction(const torch::Tensor& input_tensor,
     float* gamma_gpu_ptr = nullptr;
     RpptROI *roi_gpu_ptr = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (gamma_gpu_ptr) hipFree(gamma_gpu_ptr);
-        if (roi_gpu_ptr)  hipFree(roi_gpu_ptr);    
-    };
-    
-    try {
-        // Check if backend is HIP (GPU)
-        if(backend == 1) {
-            // Allocate GPU memory
-            size_t gamma_size = gamma.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&gamma_gpu_ptr, gamma_size);
-            hipMalloc(&roi_gpu_ptr, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(gamma_gpu_ptr, gamma_ptr, gamma_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu_ptr, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice);
-            
-            // Use GPU pointers for the function call
-            gamma_ptr = gamma_gpu_ptr;
-            roi_ptr = roi_gpu_ptr;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t gamma_size = gamma.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_gamma_correction(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            gamma_ptr,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
+        CHECK_RETURN_STATUS(hipMalloc(&gamma_gpu_ptr, gamma_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu_ptr, roi_size));
         
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_gamma_correction failed");
-        }
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(gamma_gpu_ptr, gamma_ptr, gamma_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu_ptr, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice));
         
-        hip_cleanup();  // success path cleanup
+        // Use GPU pointers for the function call
+        gamma_ptr = gamma_gpu_ptr;
+        roi_ptr = roi_gpu_ptr;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_gamma_correction(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        gamma_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_gamma_correction failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(gamma_gpu_ptr));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu_ptr));
     }
 }
 
@@ -359,51 +348,42 @@ void contrast(const torch::Tensor& input_tensor,
     float* contrast_center_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (contrast_factor_gpu) hipFree(contrast_factor_gpu);
-        if (contrast_center_gpu)  hipFree(contrast_center_gpu);
-        if (roi_gpu)   hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t contrast_factor_size = contrast_factor.size() * sizeof(float);
-            size_t contrast_center_size = contrast_center.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&contrast_factor_gpu, contrast_factor_size);
-            hipMalloc(&contrast_center_gpu, contrast_center_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(contrast_factor_gpu, contrast_factor_ptr, contrast_factor_size, hipMemcpyHostToDevice);
-            hipMemcpy(contrast_center_gpu, contrast_center_ptr, contrast_center_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice);
-            
-            // Use GPU pointers for the function call
-            contrast_factor_ptr = contrast_factor_gpu;
-            contrast_center_ptr = contrast_center_gpu;
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t contrast_factor_size = contrast_factor.size() * sizeof(float);
+        size_t contrast_center_size = contrast_center.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_contrast(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            contrast_factor_ptr,
-                            contrast_center_ptr,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
+        CHECK_RETURN_STATUS(hipMalloc(&contrast_factor_gpu, contrast_factor_size));
+        CHECK_RETURN_STATUS(hipMalloc(&contrast_center_gpu, contrast_center_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_contrast failed");
-        }
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(contrast_factor_gpu, contrast_factor_ptr, contrast_factor_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(contrast_center_gpu, contrast_center_ptr, contrast_center_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), batch_size * sizeof(RpptROI), hipMemcpyHostToDevice));
         
-        hip_cleanup();  // success path cleanup
+        // Use GPU pointers for the function call
+        contrast_factor_ptr = contrast_factor_gpu;
+        contrast_center_ptr = contrast_center_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_contrast(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        contrast_factor_ptr,
+                        contrast_center_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+    
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_contrast failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(contrast_factor_gpu));
+        CHECK_RETURN_STATUS(hipFree(contrast_center_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -440,45 +420,36 @@ void hue(const torch::Tensor& input_tensor,
     float* hue_shift_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (hue_shift_gpu) hipFree(hue_shift_gpu);
-        if (roi_gpu)  hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t hue_shift_size = hue_shift.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&hue_shift_gpu, hue_shift_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(hue_shift_gpu, hue_shift_ptr, hue_shift_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            hue_shift_ptr = hue_shift_gpu;
-            roi_ptr = roi_gpu;
-        }
-
-        RppStatus status = rppt_hue(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            hue_shift_ptr,   
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_hue failed");
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t hue_shift_size = hue_shift.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        hip_cleanup();  // success path cleanup
+        CHECK_RETURN_STATUS(hipMalloc(&hue_shift_gpu, hue_shift_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
+        
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(hue_shift_gpu, hue_shift_ptr, hue_shift_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        hue_shift_ptr = hue_shift_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+
+    RppStatus status = rppt_hue(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        hue_shift_ptr,   
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_hue failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(hue_shift_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -523,50 +494,41 @@ void flip(const torch::Tensor& input_tensor,
     Rpp32u* v_tensor_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (h_tensor_gpu) hipFree(h_tensor_gpu);
-        if (v_tensor_gpu)  hipFree(v_tensor_gpu);
-        if (roi_gpu)   hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t h_tensor_size = batch_size * sizeof(Rpp32u);
-            size_t v_tensor_size = batch_size * sizeof(Rpp32u);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&h_tensor_gpu, h_tensor_size);
-            hipMalloc(&v_tensor_gpu, v_tensor_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(h_tensor_gpu, h_tensor_ptr, h_tensor_size, hipMemcpyHostToDevice);
-            hipMemcpy(v_tensor_gpu, v_tensor_ptr, v_tensor_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            h_tensor_ptr = h_tensor_gpu;
-            v_tensor_ptr = v_tensor_gpu;
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t h_tensor_size = batch_size * sizeof(Rpp32u);
+        size_t v_tensor_size = batch_size * sizeof(Rpp32u);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_flip(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            h_tensor_ptr, v_tensor_ptr,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_flip failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&h_tensor_gpu, h_tensor_size));
+        CHECK_RETURN_STATUS(hipMalloc(&v_tensor_gpu, v_tensor_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(h_tensor_gpu, h_tensor_ptr, h_tensor_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(v_tensor_gpu, v_tensor_ptr, v_tensor_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        h_tensor_ptr = h_tensor_gpu;
+        v_tensor_ptr = v_tensor_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_flip(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        h_tensor_ptr, v_tensor_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_flip failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(h_tensor_gpu));
+        CHECK_RETURN_STATUS(hipFree(v_tensor_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -608,46 +570,37 @@ void resize(const torch::Tensor& input_tensor,
     RpptImagePatch* dst_sizes_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (dst_sizes_gpu) hipFree(dst_sizes_gpu);
-        if (roi_gpu)  hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t dst_sizes_size = batch_size * sizeof(RpptImagePatch);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&dst_sizes_gpu, dst_sizes_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(dst_sizes_gpu, dst_sizes_ptr, dst_sizes_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            dst_sizes_ptr = dst_sizes_gpu;
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t dst_sizes_size = batch_size * sizeof(RpptImagePatch);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_resize(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            dst_sizes_ptr,
-                            RpptInterpolationType::BILINEAR,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_resize failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&dst_sizes_gpu, dst_sizes_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(dst_sizes_gpu, dst_sizes_ptr, dst_sizes_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        dst_sizes_ptr = dst_sizes_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_resize(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        dst_sizes_ptr,
+                        RpptInterpolationType::BILINEAR,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_resize failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(dst_sizes_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -684,46 +637,37 @@ void rotate(const torch::Tensor& input_tensor,
     float* angle_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (angle_gpu) hipFree(angle_gpu);
-        if (roi_gpu)  hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t angle_size = angle.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&angle_gpu, angle_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(angle_gpu, angle_ptr, angle_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            angle_ptr = angle_gpu;
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t angle_size = angle.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_rotate(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            angle_ptr,
-                            RpptInterpolationType::BILINEAR,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_rotate failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&angle_gpu, angle_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(angle_gpu, angle_ptr, angle_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        angle_ptr = angle_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_rotate(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        angle_ptr,
+                        RpptInterpolationType::BILINEAR,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_rotate failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(angle_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -762,39 +706,31 @@ void crop(const torch::Tensor& input_tensor,
     RpptROI* roi_ptr = roi.data();
 
     RpptROI* roi_gpu = nullptr;
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (roi_gpu) hipFree(roi_gpu);
-    };
 
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_crop(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_crop failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_crop(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_crop failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -831,45 +767,36 @@ void vignette(const torch::Tensor& input_tensor,
     float* intensity_gpu = nullptr;
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (intensity_gpu) hipFree(intensity_gpu);
-        if (roi_gpu)  hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t intensity_size = intensity.size() * sizeof(float);
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&intensity_gpu, intensity_size);
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(intensity_gpu, intensity_ptr, intensity_size, hipMemcpyHostToDevice);
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            intensity_ptr = intensity_gpu;
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t intensity_size = intensity.size() * sizeof(float);
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_vignette(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            intensity_ptr,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_vignette failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&intensity_gpu, intensity_size));
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(intensity_gpu, intensity_ptr, intensity_size, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        intensity_ptr = intensity_gpu;
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_vignette(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        intensity_ptr,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_vignette failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(intensity_gpu));
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
@@ -907,41 +834,32 @@ void pixelate(const torch::Tensor& input_tensor,
 
     RpptROI* roi_gpu = nullptr;
 
-    // RAII cleanup guard
-    auto hip_cleanup = [&]() {
-        if (roi_gpu) hipFree(roi_gpu);
-    };
-
-    try {
-        if(backend == 1) {  // HIP backend
-            // Allocate GPU memory
-            size_t roi_size = batch_size * sizeof(RpptROI);
-            
-            hipMalloc(&roi_gpu, roi_size);
-            
-            // Copy CPU data to GPU
-            hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice);
-            
-            // Use GPU pointers
-            roi_ptr = roi_gpu;
-        }
+    if(backend == 1) {    // HIP backend
+        // Allocate GPU memory
+        size_t roi_size = batch_size * sizeof(RpptROI);
         
-        RppStatus status = rppt_pixelate(input_data.ptr, &src_desc,
-                            output_data.ptr, &dst_desc,
-                            scratch_data.ptr,
-                            pixelation_pct,
-                            roi_ptr, RpptRoiType::XYWH,
-                            rpp_handle, static_cast<RppBackend>(backend));
-
-        if (status != RPP_SUCCESS) {
-            throw std::runtime_error("rppt_pixelate failed");
-        }
+        CHECK_RETURN_STATUS(hipMalloc(&roi_gpu, roi_size));
         
-        hip_cleanup();  // success path cleanup
+        // Copy CPU data to GPU
+        CHECK_RETURN_STATUS(hipMemcpy(roi_gpu, roi.data(), roi_size, hipMemcpyHostToDevice));
+        
+        // Use GPU pointers
+        roi_ptr = roi_gpu;
     }
-    catch (...) {
-        hip_cleanup();  // error path cleanup
-        throw;          // rethrow original exception
+    
+    RppStatus status = rppt_pixelate(input_data.ptr, &src_desc,
+                        output_data.ptr, &dst_desc,
+                        scratch_data.ptr,
+                        pixelation_pct,
+                        roi_ptr, RpptRoiType::XYWH,
+                        rpp_handle, static_cast<RppBackend>(backend));
+
+    if (status != RPP_SUCCESS) {
+        throw std::runtime_error("rppt_pixelate failed");
+    }
+    
+    if(backend == 1) {
+        CHECK_RETURN_STATUS(hipFree(roi_gpu));
     }
 }
 
