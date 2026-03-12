@@ -73,7 +73,7 @@ typedef halfhpp Rpp16f;
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
-/*! \brief Check last HIP error after kernel launch; return RPP_ERROR_GPU on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
+/*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
 #define HIP_CHECK_LAUNCH_RETURN() do { \
     hipError_t _e = hipGetLastError(); \
     if (_e != hipSuccess) { return RPP_ERROR_HIP_LAUNCH; } \
