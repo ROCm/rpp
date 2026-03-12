@@ -69,6 +69,7 @@ int main(int argc, char **argv)
     bool reductionTypeCase = (reductionTypeCases.find(testCase) != reductionTypeCases.end());
     bool noiseTypeCase = (noiseTypeCases.find(testCase) != noiseTypeCases.end());
     bool pln1OutTypeCase = (pln1OutTypeCases.find(testCase) != pln1OutTypeCases.end());
+    bool kernelSizeAndGradientCase = (kernelSizeAndGradientCases.find(testCase) != kernelSizeAndGradientCases.end());
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -196,6 +197,8 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
+    std::string kernelSizeAndGradientName = "";
+    Rpp32u kernelSize, GradientType;
 
     if (interpolationTypeCase)
     {
@@ -223,6 +226,11 @@ int main(int argc, char **argv)
         }
         func += "_permOrder";
         func += std::to_string(additionalParam);
+    }
+    else if (kernelSizeAndGradientCase)
+    {
+        kernelSizeAndGradientName = get_kernel_size_and_gradient_type(additionalParam, kernelSize, GradientType);
+        func += kernelSizeAndGradientName;
     }
 
     if(!qaFlag)
@@ -1341,6 +1349,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case SOBEL_FILTER:
+                {
+                    testCaseName = "sobel_filter";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_sobel_filter(input, srcDescPtr, output, dstDescPtr, GradientType, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case MEDIAN_FILTER:
                 {
                     testCaseName = "median_filter";
@@ -2003,7 +2024,7 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (!(randomOutputCase) && !(nonQACase)))
-                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
+                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, kernelSizeAndGradientName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)
