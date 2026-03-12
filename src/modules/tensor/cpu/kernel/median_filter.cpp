@@ -38,10 +38,10 @@ Algorithm Selection (based on kernel size):
    - Processes 8-32 elements simultaneously with SIMD
    - No branching in inner loops
 
-2. Large kernels (7×7, 9×9+): Constant-time O(1) histogram method (U8 only)
-   - Two-tier histogram: coarse (4 MSB) + fine (full 8 bits)
-   - Maintains column histograms, slides window horizontally
-   - O(1) median finding regardless of kernel size
+2. Large kernels (7×7, 9×9+): Histogram-based method (U8 only)
+   - Single-level 256-bin histogram over the current kernel window
+   - Histogram is rebuilt from scratch for each output pixel (no sliding window)
+   - Median found by cumulative count scan; cost grows with kernel area
 
 3. Fallback: Generic std::nth_element (for non-U8 types with large kernels)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,7 +57,7 @@ x  x  x  x  x  x  x  x  x  x  ..  x  x
 
 For each output pixel:
 1. Load 3×3 window with border replication (nearest-neighbor padding)
-2. Apply sorting network (25 compare-swap operations)
+2. Apply sorting network (19 compare-swap operations)
 3. Extract median value (element at position 4 after sorting)
 4. Write to output
 
@@ -1266,6 +1266,10 @@ inline void median_filter_5x5_sortnet_tensor(T *srcPtrTemp,
 }
 
 // Generic median filter implementation
+// Max kernel size is 9x9 = 81, max channels is 4, so max buffer size is 81 * 4 = 324
+constexpr Rpp32s MAX_KERNEL_SIZE_SQUARED = 81;  // 9x9 kernel
+constexpr Rpp32s MAX_CHANNELS = 4;
+
 template<typename T>
 inline void median_filter_generic_tensor(T *srcPtrTemp,
                                          T *dstPtrTemp,
@@ -1279,8 +1283,9 @@ inline void median_filter_generic_tensor(T *srcPtrTemp,
                                          RpptDescPtr srcDescPtr,
                                          RpptDescPtr dstDescPtr)
 {
-    // Temporary buffer to hold kernel window data for all channels
-    T blockData[kernelSizeSquared * channels];
+    // Fixed-size buffer to hold kernel window data for all channels
+    // Using fixed-size array instead of VLA for C++ standard compliance and stack safety
+    T blockData[MAX_KERNEL_SIZE_SQUARED * MAX_CHANNELS];
     Rpp32s index = 0, medianIndex = kernelSizeSquared / 2;
 
     // Fill blockData with padded values from the source image using nearest neighbor padding
@@ -1304,7 +1309,8 @@ inline void median_filter_generic_tensor(T *srcPtrTemp,
 
     for (Rpp32s ch = 0; ch < channels; ch++)
     {
-        T channelBlock[kernelSizeSquared];
+        // Fixed-size buffer instead of VLA for C++ standard compliance
+        T channelBlock[MAX_KERNEL_SIZE_SQUARED];
 
         for (Rpp32s i = 0; i < kernelSizeSquared; i++)
             channelBlock[i] = blockData[i * channels + ch];

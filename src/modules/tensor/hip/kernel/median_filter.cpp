@@ -441,7 +441,7 @@ __device__ __forceinline__ float compute_median(T *window)
     {
         // Build histogram (256 bins for U8)
         int hist[256];
-        #pragma unroll
+        #pragma unroll 8
         for (int i = 0; i < 256; i++)
             hist[i] = 0;
         
@@ -465,39 +465,50 @@ __device__ __forceinline__ float compute_median(T *window)
         int leftIdx = 0;
         int rightIdx = windowSize - 1;
 
-        // Hoare Quick-Select partitioning algorithm
+        // Quick-Select partitioning algorithm with proper duplicate handling
         while (leftIdx < rightIdx)
         {
             // Choose pivot using median-of-3 (first, mid, last)
             int midIdx = (leftIdx + rightIdx) >> 1;
             float3 val_f3 = make_float3(static_cast<float>(window[leftIdx]), static_cast<float>(window[midIdx]), static_cast<float>(window[rightIdx]));
-            float midVal = rpp_hip_median3(val_f3);
+            T pivotVal = static_cast<T>(rpp_hip_median3(val_f3));
 
-            // Partition around pivot
-            int i = leftIdx;
-            int j = rightIdx;
-            while (i <= j)
+            // Three-way partition (Dutch National Flag) to handle duplicates
+            int lt = leftIdx;      // window[leftIdx..lt-1] < pivot
+            int gt = rightIdx;     // window[gt+1..rightIdx] > pivot
+            int i = leftIdx;       // window[lt..i-1] == pivot, window[i..gt] unexamined
+
+            while (i <= gt)
             {
-                while (window[i] < midVal) ++i;
-                while (window[j] > midVal) --j;
-
-                if (i <= j)
+                if (window[i] < pivotVal)
                 {
-                    T tmp = window[i];
-                    window[i] = window[j];
-                    window[j] = tmp;
+                    T tmp = window[lt];
+                    window[lt] = window[i];
+                    window[i] = tmp;
+                    ++lt;
                     ++i;
-                    --j;
+                }
+                else if (window[i] > pivotVal)
+                {
+                    T tmp = window[gt];
+                    window[gt] = window[i];
+                    window[i] = tmp;
+                    --gt;
+                }
+                else
+                {
+                    ++i;
                 }
             }
 
+            // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
             // Shrink search interval toward median position
-            if (medianIndex <= j)
-                rightIdx = j;
-            else if (i <= medianIndex)
-                leftIdx = i;
+            if (medianIndex < lt)
+                rightIdx = lt - 1;
+            else if (medianIndex > gt)
+                leftIdx = gt + 1;
             else
-                break; // midVal is the median
+                break; // medianIndex is in the equal-to-pivot region
         }
 
         return static_cast<float>(window[medianIndex]);

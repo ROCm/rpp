@@ -87,6 +87,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
     // Maximum kernel size is 9x9 = 81 coefficients
     constexpr int MAX_FILTER_SIZE = 81;
     __m256 *pFilterBatch = (__m256 *)aligned_alloc(32, dstDescPtr->n * MAX_FILTER_SIZE * sizeof(__m256));
+    if (pFilterBatch == nullptr)
+        return RPP_ERROR_NOT_ENOUGH_MEMORY;
     
     // Pre-compute all Gaussian kernels and broadcast to AVX registers
     int filterSize = kernelSize * kernelSize;
@@ -163,7 +165,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // Prefetch next row for better cache performance
                         if (i + 1 < roi.xywhROI.roiHeight)
                         {
-                            for (int k = 0; k < kernelSize; k++)
+                            int prefetchCount = (kernelSize < 3) ? kernelSize : 3;
+                            for (int k = 0; k < prefetchCount; k++)
                                 _mm_prefetch((const char*)(srcPtrRow[k] + srcDescPtr->strides.hStride), _MM_HINT_T0);
                         }
                         // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
