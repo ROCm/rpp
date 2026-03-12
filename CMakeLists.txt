@@ -96,12 +96,10 @@ option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 option(RPP_PYPACKAGE  "Build RPP Python package"  OFF)
 set(PYTHON_VERSION_SUGGESTED "" CACHE STRING "User provided Python version for RPP pybind")
 
-# Validate Python version if provided once
-if(PYTHON_VERSION_SUGGESTED)
-    if(PYTHON_VERSION_SUGGESTED AND (${PYTHON_VERSION_SUGGESTED} VERSION_LESS "3.8" OR ${PYTHON_VERSION_SUGGESTED} VERSION_GREATER "3.13"))
-        message("-- ${Red}NOTE: RPP pybind supported on Python versions - 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. Please provide supported version${ColourReset}")
-        set(RPP_PYPACKAGE OFF)
-    endif()
+# Validate Python version if provided
+if(PYTHON_VERSION_SUGGESTED AND (PYTHON_VERSION_SUGGESTED VERSION_LESS "3.8" OR PYTHON_VERSION_SUGGESTED VERSION_GREATER "3.13"))
+    message("-- ${Red}NOTE: RPP pybind supported on Python versions - 3.8 to 3.13. Please provide supported version${ColourReset}")
+    set(RPP_PYPACKAGE OFF)
 endif()
 
 # Set message options
