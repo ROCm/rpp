@@ -1817,6 +1817,18 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
+// -------------------- sobel_filter --------------------
+template<typename T>
+RppStatus sobel_filter_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u sobelType,
+                                   Rpp32u kernelSize,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
 // -------------------- median_filter --------------------
 
 template<typename T>
