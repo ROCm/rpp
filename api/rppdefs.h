@@ -179,7 +179,7 @@ typedef enum
     /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
     RPP_ERROR_INCOMPATIBLE_BACKEND      = -27,
     /*! \brief HIP/GPU runtime or kernel launch error \ingroup group_rppdefs */
-    RPP_ERROR_GPU                       = -28
+    RPP_ERROR_HIP_LAUNCH                = -28
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums
