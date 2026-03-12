@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     if(testCase == CONCAT || broadCastCase)
     {
         iBufferSizeSecondInBytes = iBufferSizeSecond * get_size_of_data_type(srcDescriptorPtrNDSecond->dataType);
-        inputSecond = calloc(iBufferSizeSecond, get_size_of_data_type(srcDescriptorPtrNDSecond->dataType));
+        inputSecond = calloc(iBufferSizeSecondInBytes, 1);
         CHECK_RETURN_STATUS(hipMalloc(&d_inputSecond, iBufferSizeSecondInBytes));
     }
     // read input data
