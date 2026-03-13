@@ -593,7 +593,6 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          handle);
-            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -606,7 +605,6 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          handle);
-            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -619,7 +617,6 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          handle);
-            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -632,7 +629,6 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          handle);
-            HIP_CHECK_LAUNCH_RETURN();
         }
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
