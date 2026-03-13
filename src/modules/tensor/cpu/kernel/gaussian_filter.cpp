@@ -87,7 +87,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
     // Maximum kernel size is 9x9 = 81 coefficients
     constexpr int MAX_FILTER_SIZE = 81;
     __m256 *pFilterBatch = (__m256 *)aligned_alloc(32, dstDescPtr->n * MAX_FILTER_SIZE * sizeof(__m256));
-    
+    if (!pFilterBatch)
+        return gaussian_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
     // Pre-compute all Gaussian kernels and broadcast to AVX registers
     int filterSize = kernelSize * kernelSize;
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
