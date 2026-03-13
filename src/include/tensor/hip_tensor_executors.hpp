@@ -703,6 +703,19 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
 
+// -------------------- sobel_filter --------------------
+
+template <typename T>
+RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32u sobelType,
+                                          Rpp32u kernelSize,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
 // -------------------- median_filter --------------------
 
 template <typename T>
