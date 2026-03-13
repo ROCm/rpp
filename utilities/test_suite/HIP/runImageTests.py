@@ -90,6 +90,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(swapOrder))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(swapOrder), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth.value), get_image_layout_type(layout, outputFormatToggle.value, "HIP"))
+            elif imageAugmentationMap[int(case)][0] == "sobel_filter":
+                for kernelSizeAndGradient in range(9):
+                    print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(kernelSizeAndGradient) + " 0")
+                    result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(kernelSizeAndGradient), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth.value), get_image_layout_type(layout, outputFormatToggle.value, "HIP"))
             else:
                 print("./Tensor_image_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout))
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_image_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
@@ -130,6 +135,11 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
                 # Run all variants of swap channel functions with additional argument of swapOrder (0 - 5)
                 for swapOrder in range(swapOrderRange):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, swapOrder, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
+            elif imageAugmentationMap[int(case)][0] == "sobel_filter":
+                # kernelSizeAndGradient range = 0-8
+                for kernelSizeAndGradient in range(9):
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, kernelSizeAndGradient, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                     print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
