@@ -63,8 +63,8 @@ The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
 The image test suite accepts the following command line arguments:
 -   input_path1: The path to the input folder 1. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
 -   input_path2: The path to the input folder 2. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
--   case_start: The starting case number for the test range (0-91). Default is 0
--   case_end: The ending case number for the test range (0-91). Default is 91
+-   case_start: The starting case number for the test range (0-102). Default is 0
+-   case_end: The ending case number for the test range (0-102). Default is 102
 -   test_type: The type of test to run (0 = Unit tests, 1 = Performance tests). Default is 0
 -   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
@@ -90,7 +90,7 @@ python runImageTests.py --input_path1 <input_path1> --input_path2 <input_path2> 
 -   QA mode (Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
-python runImageTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 1 --batch_size 3
+python runImageTests.py --case_start 0 --case_end 102 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
 ``` python
@@ -100,13 +100,13 @@ python runImageTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_s
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runImageTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 0
+python runImageTests.py --case_start 0 --case_end 102 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runImageTests.py --case_start 0 --case_end 91 --test_type 1
+python runImageTests.py --case_start 0 --case_end 102 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
@@ -214,9 +214,9 @@ You are free to use and/or refer to the BraTS datasets in your own research, pro
 -   S. Bakas, M. Reyes, A. Jakab, S. Bauer, M. Rempfler, A. Crimi, et al., "Identifying the Best Machine Learning Algorithms for Brain Tumor Segmentation, Progression Assessment, and Overall Survival Prediction in the BRATS Challenge", arXiv preprint arXiv:1811.02629 (2018)
 
 ## RPP Audio Test Suite
-The audio test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) audio library.
+The audio test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) audio library. It can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
--   F32 Bit Depth
+-   HIP backend - (On a GPU with HIP backend)
 
 ### Command Line Arguments (RPP Audio Test Suite)
 The audio test suite accepts the following command line arguments:
@@ -265,10 +265,9 @@ The audio test suite includes:
 -   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
 
 ## RPP Miscellaneous Test Suite
-The miscellaneous test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) generic libraries that can process N-Dimensional inputs
+The miscellaneous test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) generic libraries that can process N-Dimensional inputs. It can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
 -   HIP backend - (On a GPU with HIP backend)
--   F32 Bit Depth
 
 ### Command Line Arguments (RPP Miscellaneous Test Suite)
 The miscellaneous test suite accepts the following command line arguments:
