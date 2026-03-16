@@ -131,6 +131,7 @@ std::map<int, string> augmentationMap =
     {96, "channel_dropout"},
     {97, "cutout_dropout"},
     {98, "grid_dropout"}
+    {99, "random_erase"}
 };
 
 enum Augmentation {
@@ -201,6 +202,7 @@ enum Augmentation {
     CHANNEL_DROPOUT = 96,
     CUTOUT_DROPOUT = 97,
     GRID_DROPOUT = 98
+    RANDOM_ERASE = 99
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
