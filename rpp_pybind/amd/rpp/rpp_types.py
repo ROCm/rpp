@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,7 @@ NHWC = RpptLayout.NHWC
 U8 = RpptDataType.U8
 F32 = RpptDataType.F32
 F16 = RpptDataType.F16
+I8 = RpptDataType.I8
 
 SUCCESS = RppStatus.SUCCESS
 ERROR = RppStatus.ERROR

@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -49,35 +49,64 @@ _pixelate = rpp_pybind.pixelate
 rppCreate = rpp_pybind.rppCreate
 rppDestroy = rpp_pybind.rppDestroy
 
-def _prepare_tensor_and_backend(tensor, backend):
-    """Prepare tensor for RPP operations"""   
+def _resolve_layout(images, input_layout=None):
+    """
+    Returns: layout_str ('NCHW' or 'NHWC')
+    """
+
+    if input_layout is not None:
+        return input_layout.upper()
+
+    if images.ndim != 4:
+        raise ValueError("Expected 4D tensor (B, C, H, W) or (B, H, W, C)")
+
+    # If last dim looks like channels (1, 3, 4 typical cases)
+    if images.shape[-1] in (1, 3, 4):
+        return "NHWC"
+
+    # If second dim looks like channels
+    if images.shape[1] in (1, 3, 4):
+        return "NCHW"
+
+    raise ValueError(
+        "Unable to infer layout. Please specify input_layout explicitly."
+    )
+
+def _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights):
+    """
+    Common preparation for all augmentation functions.
+    
+    Returns:
+        (images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle)
+    """
     if backend is None:
         backend = get_default_backend()
-
-    # Get backend integer consistently
+    
     backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-
-    # Validate tensor
-    if not isinstance(tensor, torch.Tensor):
-        raise TypeError("Input must be a PyTorch tensor")
     
-    if tensor.dim() != 4:
-        raise ValueError(f"Expected 4D tensor (B,C,H,W), got {tensor.dim()}D")
-
-    # Ensure contiguous
-    if not tensor.is_contiguous():
-        tensor = tensor.contiguous()
+    if not images.is_contiguous():
+        images = images.contiguous()
     
-    # Ensure correct device
-    if backend_int == 1:
-        if not tensor.is_cuda:
-            tensor = tensor.cuda()
-        torch.cuda.synchronize()
+    if backend_int == 1:  # HIP
+        if not images.is_cuda:
+            images = images.cuda()
     else:  # HOST
-        if tensor.is_cuda:
-            tensor = tensor.cpu()
+        if images.is_cuda:
+            images = images.cpu()
     
-    return tensor, backend_int
+    batch_size = images.shape[0]
+    output = torch.zeros_like(images).contiguous()
+    layout = _resolve_layout(images, input_layout)
+
+    # Set ROI dimensions
+    if roi_widths is None:
+        roi_widths = [images.shape[3] if layout == "NCHW" else images.shape[2]] * batch_size
+    if roi_heights is None:
+        roi_heights = [images.shape[2] if layout == "NCHW" else images.shape[1]] * batch_size
+    
+    handle = rppCreate(batch_size, backend_int)
+    
+    return images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle
 
 # Wrapper functions - 10 augmentations from different groups
 
@@ -87,50 +116,29 @@ def brightness(images, alpha=1.0, beta=0.0, roi_widths=None, roi_heights=None, i
     Adjust image brightness.
     
     Args:
-        images: Input tensor (B, C, H, W) - PyTorch tensor
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
         alpha: Brightness multiplier (default 1.0)
         beta: Brightness offset (default 0.0)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Augmented images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
-
-    # Convert backend to integer
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    # Ensure tensor is contiguous and on correct device  
-    if not images.is_contiguous():
-        images = images.contiguous()
-    
-    # Move to correct device
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-
-    alpha_array = [alpha] * batch_size
-    beta_array = [beta] * batch_size
-    
-    _brightness(images, output, alpha_array, beta_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _brightness(images, output, [alpha] * batch_size, [beta] * batch_size, 
+                    roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP brightness failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -138,91 +146,58 @@ def gamma_correction(images, gamma=1.0, roi_widths=None, roi_heights=None, input
     Apply gamma correction.
     
     Args:
-        images: Input tensor (B, C, H, W)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
         gamma: Gamma value (default 1.0)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
-        Gamma-corrected images
+        Gamma-corrected images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
-
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
+    try:
+        _gamma_correction(images, output, [gamma] * batch_size, 
+                         roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP gamma_correction failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-
-    handle = rppCreate(batch_size, backend_int)
-    gamma_array = [gamma] * batch_size
-    
-    _gamma_correction(images, output, gamma_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
 
 def contrast(images, contrast_factor=1.0, contrast_center=128.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
     """
     Adjust image contrast.
     
     Args:
-        images: Input tensor (B, C, H, W)
-        contrast_factor: Contrast factor
-        contrast_center: Center value for contrast
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
+        contrast_factor: Contrast factor (default 1.0)
+        contrast_center: Center value for contrast (default 128.0)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
-        Contrast-adjusted images
+        Contrast-adjusted images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.empty_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    
-    contrast_factor_array = [contrast_factor] * batch_size
-    contrast_center_array = [contrast_center] * batch_size
-    
-    _contrast(images, output, contrast_factor_array, contrast_center_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _contrast(images, output, [contrast_factor] * batch_size, [contrast_center] * batch_size,
+                  roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP contrast failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -230,44 +205,27 @@ def hue(images, hue_shift=0.0, roi_widths=None, roi_heights=None, input_layout=N
     Adjust image hue (for RGB images only).
     
     Args:
-        images: Input tensor (B, 3, H, W) - RGB images only
-        hue_shift: Hue shift in degrees (0-359)
+        images: Input tensor (B, 3, H, W) or (B, H, W, 3) - RGB images only
+        hue_shift: Hue shift in degrees (default 0.0, range 0-359)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
-        Hue-adjusted images
+        Hue-adjusted images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    hue_shift_array = [hue_shift] * batch_size
-    
-    _hue(images, output, hue_shift_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _hue(images, output, [hue_shift] * batch_size, roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP hue failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 # Geometric Augmentations (4)
@@ -276,50 +234,32 @@ def flip(images, horizontal=False, vertical=False, roi_widths=None, roi_heights=
     Flip images horizontally and/or vertically.
     
     Args:
-        images: Input tensor (B, C, H, W)
-        horizontal: Flip horizontally (bool or list)
-        vertical: Flip vertically (bool or list)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
+        horizontal: Flip horizontally (bool or list, default False)
+        vertical: Flip vertically (bool or list, default False)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Flipped images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
+    try:
+        # Convert bool to list if needed
+        horizontal = [int(horizontal)] * batch_size if isinstance(horizontal, bool) else horizontal
+        vertical = [int(vertical)] * batch_size if isinstance(vertical, bool) else vertical
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    
-    # Convert bool to list if needed
-    if isinstance(horizontal, bool):
-        horizontal = [int(horizontal)] * batch_size
-    if isinstance(vertical, bool):
-        vertical = [int(vertical)] * batch_size
-    
-    _flip(images, output, horizontal, vertical, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+        _flip(images, output, horizontal, vertical, roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP flip failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def resize(images, width, height, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -327,47 +267,29 @@ def resize(images, width, height, roi_widths=None, roi_heights=None, input_layou
     Resize images.
     
     Args:
-        images: Input tensor (B, C, H, W)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
         width: Target width
         height: Target height
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Resized images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.empty_like(images).contiguous()
-
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    
-    width_array = [width] * batch_size
-    height_array = [height] * batch_size
-    
-    _resize(images, output, width_array, height_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _resize(images, output, [width] * batch_size, [height] * batch_size,
+                roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP resize failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -375,44 +297,27 @@ def rotate(images, angle=0.0, roi_widths=None, roi_heights=None, input_layout=No
     Rotate images by given angle.
     
     Args:
-        images: Input tensor (B, C, H, W)
-        angle: Rotation angle in degrees (positive = counter-clockwise)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
+        angle: Rotation angle in degrees (default 0.0, positive = counter-clockwise)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Rotated images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.empty_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    angle_array = [angle] * batch_size
-    
-    _rotate(images, output, angle_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _rotate(images, output, [angle] * batch_size, roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP rotate failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -420,44 +325,36 @@ def crop(images, x1, y1, crop_width, crop_height, roi_widths=None, roi_heights=N
     Crop images to specified region.
     
     Args:
-        images: Input tensor (B, C, H, W)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
         x1: Top-left x coordinate
-        y1: Top-left y coordinate  
+        y1: Top-left y coordinate
         crop_width: Width of crop region
         crop_height: Height of crop region
-        backend: RppBackend (None = auto-detect)
+        roi_widths: List of actual image widths (None = use full tensor width)
+        roi_heights: List of actual image heights (None = use full tensor height)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Cropped images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
+    try:
+        # Convert scalars to lists
+        x1_array = [x1] * batch_size if isinstance(x1, (int, float)) else x1
+        y1_array = [y1] * batch_size if isinstance(y1, (int, float)) else y1
+        width_array = [crop_width] * batch_size if isinstance(crop_width, (int, float)) else crop_width
+        height_array = [crop_height] * batch_size if isinstance(crop_height, (int, float)) else crop_height
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-
-    handle = rppCreate(batch_size, backend_int)
-    
-    # Convert scalars to lists
-    x1_array = [x1] * batch_size if isinstance(x1, (int, float)) else x1
-    y1_array = [y1] * batch_size if isinstance(y1, (int, float)) else y1
-    width_array = [crop_width] * batch_size if isinstance(crop_width, (int, float)) else crop_width
-    height_array = [crop_height] * batch_size if isinstance(crop_height, (int, float)) else crop_height
-    
-    _crop(images, output, x1_array, y1_array, width_array, height_array, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+        _crop(images, output, x1_array, y1_array, width_array, height_array, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP crop failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 # Effects Augmentations (2)
@@ -466,43 +363,27 @@ def vignette(images, intensity=0.5, roi_widths=None, roi_heights=None, input_lay
     Apply vignette effect to images.
     
     Args:
-        images: Input tensor (B, C, H, W)
-        intensity: Vignette intensity (0.0 to 1.0)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
+        intensity: Vignette intensity (default 0.5, range 0.0-1.0)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
         Images with vignette effect
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
-        
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.zeros_like(images).contiguous()
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if images.shape[1] <= 3 else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if images.shape[1] <= 3 else images.shape[1]] * batch_size
-    
-    handle = rppCreate(batch_size, backend_int)
-    intensity_array = [intensity] * batch_size
-    _vignette(images, output, intensity_array, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+    try:
+        _vignette(images, output, [intensity] * batch_size, roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP vignette failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=None, input_layout=None, output_layout=None, backend=None):
@@ -510,49 +391,31 @@ def pixelate(images, pixelation_percentage=50.0, roi_widths=None, roi_heights=No
     Apply pixelate effect to images.
     
     Args:
-        images: Input tensor (B, C, H, W)
-        pixelation_percentage: Pixelation level (0-100)
+        images: Input tensor (B, C, H, W) or (B, H, W, C)
+        pixelation_percentage: Pixelation level (default 50.0, range 0-100)
         roi_widths: List of actual image widths (None = use full tensor width)
         roi_heights: List of actual image heights (None = use full tensor height)
-        backend: RppBackend (None = auto-detect)
+        input_layout: Input tensor layout ('NCHW' or 'NHWC', None = auto-detect)
+        output_layout: Output tensor layout (currently unused, reserved for future use)
+        backend: RppBackend (None = auto-detect, HOST or HIP)
     
     Returns:
-        Pixelated images
+        Pixelated images tensor
     """
-    if backend is None:
-        backend = get_default_backend()
+    images, output, layout, roi_widths, roi_heights, batch_size, backend_int, handle = \
+        _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights)
     
-    backend_int = backend.value if hasattr(backend, 'value') else int(backend)
-    
-    if not images.is_contiguous():
-        images = images.contiguous()
+    try:
+        # Create scratch buffer (size is same for both NCHW and NHWC layouts)
+        scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
+        scratch = torch.empty(scratch_size, dtype=torch.float32, device=images.device)
         
-    if backend == HIP and not images.is_cuda:
-        images = images.cuda()
-    elif backend == HOST and images.is_cuda:
-        images = images.cpu()
-    
-    batch_size = images.shape[0]
-    output = torch.empty_like(images)
-    
-    # Set ROI dimensions
-    if roi_widths is None:
-        roi_widths = [images.shape[3] if input_layout == 'NCHW' else images.shape[2]] * batch_size
-    if roi_heights is None:
-        roi_heights = [images.shape[2] if input_layout == 'NCHW' else images.shape[1]] * batch_size
-
-    # Create scratch buffer
-    if input_layout == 'NCHW':
-        scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
-    else:  # NHWC
-        scratch_size = batch_size * images.shape[1] * images.shape[2] * images.shape[3]
-    scratch = torch.empty(scratch_size, dtype=torch.float32, device=images.device)
-    
-    handle = rppCreate(batch_size, backend_int)
-    _pixelate(images, output, scratch, pixelation_percentage, roi_widths, roi_heights, handle, backend_int)
-    rppDestroy(handle, backend_int)
-    
-    return output
+        _pixelate(images, output, scratch, pixelation_percentage, roi_widths, roi_heights, handle, backend_int)
+        return output
+    except Exception as e:
+        raise RuntimeError(f"RPP pixelate failed: {e}") from e
+    finally:
+        rppDestroy(handle, backend_int)
 
 
 __all__ = [

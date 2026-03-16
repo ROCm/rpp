@@ -1,6 +1,6 @@
 # MIT License
 
-# Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+# Copyright (c) 2026 Advanced Micro Devices, Inc.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,6 @@ import numpy as np
 import torch
 from datetime import datetime
 from PIL import Image
-# import matplotlib.pyplot as plt                          # UNUSED: matplotlib not used anywhere in this file
 from typing import Optional, Tuple, Dict, Any, List
 import shutil
 from enum import Enum
@@ -59,10 +58,7 @@ if SCRIPT_DIR not in sys.path:
 # Import RPP modules
 import rpp_pybind.amd.rpp.fn as fn
 import rpp_pybind.amd.rpp.utils as util
-# from rpp_pybind.amd.rpp.utils import convert_nchw_to_nhwc, convert_nhwc_to_nchwq   # UNUSED: replaced by util.convert_* calls
-from rpp_pybind.amd.rpp.rpp_types import (
-    is_gpu_available, get_default_backend, HOST, HIP
-)
+import rpp_pybind.amd.rpp.rpp_types as rpp_type 
 
 # =============================================================================
 # ENUMS AND MAPPINGS
@@ -125,8 +121,25 @@ def get_augmentation_group(augmentation_name):
 # UTILITY FUNCTIONS
 # =============================================================================
 
-def validate_path(input_path):
-    """Validate if a path exists and is a directory"""
+def is_safe_path(path, base_dir=None):
+    """Check if path is safe (no traversal attacks) and optionally within base_dir"""
+    if not path or '\0' in path:
+        return False
+    
+    try:
+        resolved = os.path.realpath(os.path.abspath(path))
+        if base_dir:
+            base_resolved = os.path.realpath(os.path.abspath(base_dir))
+            if not resolved.startswith(base_resolved + os.sep) and resolved != base_resolved:
+                return False
+        return True
+    except (OSError, ValueError):
+        return False
+
+def validate_path(input_path, base_dir=None):
+    """Validate if path exists, is a directory, and is safe to use"""
+    if not is_safe_path(input_path, base_dir):
+        return False
     if not os.path.exists(input_path):
         return False
     return os.path.isdir(input_path)
@@ -179,7 +192,7 @@ def load_image_with_bitdepth(img_path, bitdepth='u8', device='cpu'):
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     """Read performance logs and print summary"""
     try:
-        f = open(logFile, "r")
+        log_file = open(logFile, "r")
         print("\nOpened log file -> " + logFile)
     except IOError:
         print("Skipping file -> " + logFile)
@@ -193,9 +206,8 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     frames = []
     prevLine = ""
     funcCount = 0
-    # current_category = ""                             # UNUSED: assigned but never read
 
-    for line in f:
+    for line in log_file:
         if "max,min,avg wall times in ms/batch" in line:
             if "Running " in prevLine:
                 splitWordStart = "Running "
@@ -231,7 +243,7 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     else:
         print("No variants under this category")
 
-    f.close()
+    log_file.close()
 
 def get_mode_str(test_type, qa_mode):
     """Return a short mode label for display purposes.
@@ -306,11 +318,19 @@ Examples:
 
     args = parser.parse_args()
 
-    # Validate paths
+    # Validate paths with security checks
     if not validate_path(args.input_path1):
-        print(f"Warning: input_path1 '{args.input_path1}' not found, falling back to default.")
+        print(f"Warning: input_path1 '{args.input_path1}' not found or unsafe, falling back to default.")
         args.input_path1 = default_input_path
+    elif not is_safe_path(args.input_path1):
+        print(f"Security Warning: input_path1 '{args.input_path1}' failed security check, using default.")
+        args.input_path1 = default_input_path
+    
     if not validate_path(args.input_path2):
+        print(f"Warning: input_path2 '{args.input_path2}' not found or unsafe, falling back to default.")
+        args.input_path2 = default_input_path
+    elif not is_safe_path(args.input_path2):
+        print(f"Security Warning: input_path2 '{args.input_path2}' failed security check, using default.")
         args.input_path2 = default_input_path
 
     args.default_input_path = default_input_path
@@ -483,7 +503,7 @@ class UnifiedTestSuite:
     def __init__(self, backend, test_type=0, qa_mode=0, config=None,
                  case_list=None, num_runs=1, bitdepth='u8', shared_output_dir=None):
         self.backend      = backend
-        self.backend_name = "HIP" if backend == HIP else "HOST"
+        self.backend_name = "HIP" if backend == rpp_type.HIP else "HOST"
         self.test_type    = test_type   # 0 = Unit/QA, 1 = Perf
         self.qa_mode      = qa_mode     # 0 = Unit,    1 = QA   (only when test_type==0)
         self.config       = config if config else TestConfig(
@@ -744,8 +764,8 @@ class UnifiedTestSuite:
         if not self.qa_file:
             return
 
-        backend_str  = "CPU" if self.backend == HOST else "GPU"
-        backend_name = "HOST" if self.backend == HOST else "HIP"
+        backend_str  = "CPU" if self.backend == rpp_type.HOST else "GPU"
+        backend_name = "HOST" if self.backend == rpp_type.HOST else "HIP"
         func_name    = f"{aug_name}_{self.bitdepth}_Tensor_{backend_name}_{layout_str}"
 
         header = (f"Running {func_name} 1 times "
@@ -782,7 +802,7 @@ class UnifiedTestSuite:
     def _write_perf_result(self, aug_name, times_dict, layout_variant="PKD3-PKD3"):
         """Write performance result to log file for all layout variants."""
         if hasattr(self, 'perf_log_file') and self.perf_log_file:
-            backend_str = "HIP" if self.backend == HIP else "HOST"
+            backend_str = "HIP" if self.backend == rpp_type.HIP else "HOST"
             
             # Include the full layout variant in the function name
             func_name = f"{aug_name}_{self.bitdepth}_Tensor_{backend_str}_{layout_variant.replace('-', '_to')}"
@@ -828,7 +848,8 @@ class UnifiedTestSuite:
 
     def _run_augmentation_test(self, aug_name, aug_function, aug_params, ref_file_suffix=""):
         """Run one augmentation across all layout variants."""
-        device = 'cuda' if self.backend == HIP else 'cpu'
+        device = 'cuda' if self.backend == rpp_type.HIP else 'cpu'
+        self.current_aug_results = []
 
         # Load reference data once (QA only: test_type=0, qa_mode=1)
         ref_data = None
@@ -938,8 +959,11 @@ class UnifiedTestSuite:
                                 output_for_qa = output
 
                         passed, stats = self._compare_output(
-                            output_for_qa, ref_data, idx,
-                            is_grayscale=grayscale, aug_name=aug_name)
+                            output_for_qa, ref_data, idx, is_grayscale=grayscale, aug_name=aug_name)
+
+                        # RECORD PER-IMAGE RESULT
+                        if self.qa_file:
+                            self._write_qa_result(aug_name=aug_name, image_idx=idx, passed=passed, stats=stats)
 
                         if passed:
                             variant_success += 1
@@ -971,12 +995,14 @@ class UnifiedTestSuite:
 
             # Record per-variant results
             if self.test_type == 0 and self.qa_mode:
-                success = overall_success_count == overall_total
-                self.results['qa'].append((aug_name + "_" + variant_name, success))
+                variant_total = len(self.test_images)
+                variant_passed = (variant_success == variant_total)
+                self.results['qa'].append((aug_name + "_" + variant_name, variant_passed))
             elif self.test_type == 0 and not self.qa_mode:
                 self.results['unit'].append((aug_name, True))
 
-        return success
+        overall_passed = (overall_success_count == overall_total)
+        return overall_passed
 
     # =========================================================================
     # INDIVIDUAL AUGMENTATION TEST METHODS
@@ -1066,22 +1092,39 @@ class UnifiedTestSuite:
         return [(n, name, fn_) for n, name, fn_ in all_tests if n in self.case_list]
 
     def run_unit_tests(self):
-        """Run augmentations in Unit mode (test_type=0, qa_mode=0)."""
+        overall_success = True
+
         for _, name, test_func in self._get_filtered_tests():
             try:
-                test_func()
+                result = test_func()
+                if result is False:
+                    overall_success = False
             except Exception as e:
                 print(f"ERROR in {test_func.__name__}: {e}")
+                overall_success = False
+
             print("-" * 70)
 
+        return overall_success
+
     def run_qa_tests(self):
-        """Run augmentations in QA mode (test_type=0, qa_mode=1)."""
+        overall_success = True
+
         for _, name, test_func in self._get_filtered_tests():
             try:
-                test_func()
+                result = test_func()
+
+                # If augmentation explicitly failed
+                if result is False:
+                    overall_success = False
+
             except Exception as e:
                 print(f"ERROR in {test_func.__name__}: {e}")
+                overall_success = False
+
             print("-" * 70)
+
+        return overall_success
 
     def _filter_test_cases(self, test_cases):
         """
@@ -1108,11 +1151,15 @@ class UnifiedTestSuite:
 
     def run_performance_tests(self):
         """Run performance tests (test_type=1)."""
-        device            = 'cuda' if self.backend == HIP else 'cpu'
+        device            = 'cuda' if self.backend == rpp_type.HIP else 'cpu'
         num_iterations    = self.num_runs if self.num_runs > 1 else 100
         warmup_iterations = 5
 
-        base_image = load_image_with_bitdepth(self.test_images[1], bitdepth=self.bitdepth, device=device)
+        if not self.test_images:
+            raise RuntimeError("No test images found in input folder.")
+
+        image_index = 0 if len(self.test_images) == 1 else 1
+        base_image = load_image_with_bitdepth(self.test_images[image_index], bitdepth=self.bitdepth, device=device)
         print(f"Running {num_iterations} iterations per augmentation "
               f"(after {warmup_iterations} warmup runs)\n")
 
@@ -1173,14 +1220,14 @@ class UnifiedTestSuite:
                 try:
                     for _ in range(warmup_iterations):
                         _ = func_call()
-                        if self.backend == HIP:
+                        if self.backend == rpp_type.HIP:
                             torch.cuda.synchronize()
 
                     times = []
                     for _ in range(num_iterations):
                         start = time.perf_counter()
                         _ = func_call()
-                        if self.backend == HIP:
+                        if self.backend == rpp_type.HIP:
                             torch.cuda.synchronize()
                         times.append((time.perf_counter() - start) * 1000)
 
@@ -1203,37 +1250,38 @@ class UnifiedTestSuite:
     # =========================================================================
 
     def run_all(self):
-        """Dispatch to the correct runner based on test_type and qa_mode."""
+        overall_success = True
+
+        # Performance
         if self.test_type == 1:
             self.run_performance_tests()
-        elif self.test_type == 0 and self.qa_mode:
-            self.run_qa_tests()
-        elif self.test_type == 0 and not self.qa_mode:
-            self.run_unit_tests()
+
+        # Unit / QA
+        elif self.test_type == 0:
+            if self.qa_mode == 1:
+                overall_success &= self.run_qa_tests()
+            else:
+                overall_success &= self.run_unit_tests()
+
         else:
-            print(f"ERROR: Invalid combination test_type={self.test_type}, qa_mode={self.qa_mode}")
+            print("Invalid configuration")
             return False
 
         self._print_summary()
-        return True
+        return overall_success
 
     def _print_summary(self):
         mode_label = get_mode_str(self.test_type, self.qa_mode)
-        # print(f"\n{'-'*30}")
-        # print(f"TEST SUMMARY ({mode_label} mode, {self.bitdepth})")
-        # print(f"{'-'*30}")
 
         if self.results['unit']:
             passed  = sum(1 for _, r in self.results['unit'] if r is True)
             failed  = sum(1 for _, r in self.results['unit'] if r is False)
             skipped = sum(1 for _, r in self.results['unit'] if r is None)
-            # print(f"\nUNIT TESTS:  BitDepth={self.bitdepth}  Saved={passed}  Failed={failed}  Skipped={skipped}")
 
         if self.results['qa']:
             passed  = sum(1 for _, r in self.results['qa'] if r is True)
             failed  = sum(1 for _, r in self.results['qa'] if r is False)
             skipped = sum(1 for _, r in self.results['qa'] if r is None)
-            # print(f"\nQA TESTS:    BitDepth={self.bitdepth}  Passed={passed}  Failed={failed}  Skipped={skipped}")
 
         if self.results['perf']:
             valid = sum(1 for _, r in self.results['perf'] if r is not None)
@@ -1264,16 +1312,16 @@ def main():
     # ------------------------------------------------------------------
     backends_to_test = []
     if args.backend:
-        backend      = HIP if args.backend == 'HIP' else HOST
+        backend      = rpp_type.HIP if args.backend == 'HIP' else rpp_type.HOST
         backend_name = args.backend
-        if backend == HIP and not is_gpu_available():
+        if backend == rpp_type.HIP and not rpp_type.is_gpu_available():
             print("ERROR: HIP backend requested but GPU not available")
             return 1
         backends_to_test.append((backend, backend_name))
     else:
-        backends_to_test.append((HOST, 'HOST'))
-        if is_gpu_available():
-            backends_to_test.append((HIP, 'HIP'))
+        backends_to_test.append((rpp_type.HOST, 'HOST'))
+        if rpp_type.is_gpu_available():
+            backends_to_test.append((rpp_type.HIP, 'HIP'))
         else:
             print("Note: GPU not available, skipping HIP backend")
 
@@ -1297,13 +1345,12 @@ def main():
     print(f"qa_mode:           {args.qa_mode}")
     print(f"Backends to test:  {[b[1] for b in backends_to_test]}")
     print(f"BitDepths to test: {bitdepths_to_test}")
-    print(f"GPU Available:     {is_gpu_available()}")
+    print(f"GPU Available:     {rpp_type.is_gpu_available()}")
     if args.case_list:
         print(f"Case List:         {args.case_list}")
     print("="*70)
 
     overall_success = True
-    # qa_summaries = {}   # UNUSED: reserved for future multi-backend summary aggregation
 
     for backend, backend_name in backends_to_test:
         if args.preserve_output == 0:

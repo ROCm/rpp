@@ -15,7 +15,6 @@ OUTPUT_PERFORMANCE*
 QA_RESULTS*
 OUTPUT_VOXEL*
 doxygen_output*
-
 # documentation artifacts
 _build/
 _images/

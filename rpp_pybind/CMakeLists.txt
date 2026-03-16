@@ -147,6 +147,7 @@ install(
     FILES
         "${CMAKE_CURRENT_SOURCE_DIR}/__init__.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/fn.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rpp_types.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/rpp_pybind
     COMPONENT dev

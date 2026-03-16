@@ -144,14 +144,14 @@ pip install -e .
 
 ```python
 import rpp_pybind as rpp
-from rpp_pybind import types
+import rpp_pybind.amd.rpp.rpp_types as rpp_type
 
 # Check version
 print(f"PyRPP Version: {rpp.__version__}")
 
 # Check backend availability
-print(f"GPU Available: {types.is_gpu_available()}")
-print(f"Default Backend: {types.get_default_backend()}")
+print(f"GPU Available: {rpp_type.is_gpu_available()}")
+print(f"Default Backend: {rpp_type.get_default_backend()}")
 ```
 
 ### Run Test Suite
@@ -192,7 +192,7 @@ python utilities/python_tests/test_suite.py --test_type 0 --backend HOST --bitde
 
 ```python
 import rpp_pybind as rpp
-from rpp_pybind import fn, utils, types
+from rpp_pybind.amd.rpp import fn, utils, rpp_types
 
 # Load images
 images = utils.load_images(['image1.jpg', 'image2.jpg'])
@@ -214,10 +214,10 @@ utils.save_image(output[0], 'augmented_result.jpg')
 output = fn.brightness(images, alpha=1.5)
 
 # Explicitly use CPU backend
-output = fn.brightness(images, alpha=1.5, backend=types.HOST)
+output = fn.brightness(images, alpha=1.5, backend=rpp_types.HOST)
 
 # Explicitly use GPU backend
-output = fn.brightness(images, alpha=1.5, backend=types.HIP)
+output = fn.brightness(images, alpha=1.5, backend=rpp_types.HIP)
 ```
 
 ### Batch Processing
@@ -240,11 +240,10 @@ output = fn.flip(images,
 ```
 rpp_pybind/
 ├── __init__.py       # Main module with C++ exports
-├── fn.py            # High-level augmentation functions
-├── rpp_types.py     # Type definitions and helpers
-├── utils.py         # Image loading/saving utilities
-├── rpp_pybind.cpp   # C++ pybind11 bindings
-└── amd/rpp/         # AMD namespace package structure
+├── amd/rpp/fn.py           # High-level augmentation functions
+├── amd/rpp/rpp_types.py     # Type definitions and helpers
+├── amd/rpp/utils.py        # Image loading/saving utilities
+└── rpp_pybind.cpp   # C++ pybind11 bindings
 ```
 
 ### fn Module - Augmentation Functions
