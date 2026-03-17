@@ -130,7 +130,7 @@ std::map<int, string> augmentationMap =
     {95, "solarize"},
     {96, "channel_dropout"},
     {97, "cutout_dropout"},
-    {98, "grid_dropout"}
+    {98, "grid_dropout"},
     {99, "random_erase"}
 };
 
@@ -201,7 +201,7 @@ enum Augmentation {
     SOLARIZE = 95,
     CHANNEL_DROPOUT = 96,
     CUTOUT_DROPOUT = 97,
-    GRID_DROPOUT = 98
+    GRID_DROPOUT = 98,
     RANDOM_ERASE = 99
 };
 

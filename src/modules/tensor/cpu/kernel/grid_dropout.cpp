@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -261,8 +261,11 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         }
 
         // grid_dropout without fused output-layout toggle 3 channel(NHWC -> NHWC)
-        else
+        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
+            if (srcDescPtr->c != 3)
+                return RPP_ERROR_NOT_IMPLEMENTED;
+
             // To copy ROI region in Image
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {

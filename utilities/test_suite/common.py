@@ -139,7 +139,7 @@ imageAugmentationMap = {
     95: ["solarize", "HOST", "HIP"],
     96: ["channel_dropout", "HOST", "HIP"],
     97: ["cutout_dropout", "HOST", "HIP"],
-    98: ["grid_dropout", "HOST", "HIP"]
+    98: ["grid_dropout", "HOST", "HIP"],
     99: ["random_erase", "HOST", "HIP"]
 }
 

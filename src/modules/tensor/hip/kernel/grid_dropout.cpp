@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -133,6 +133,9 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
     int globalThreads_z = srcDescPtr->n * boxesInEachImage;
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
+        if (dstDescPtr->c != 3)
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
         // if src layout is NHWC, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NHWC)
             CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
