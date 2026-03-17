@@ -131,6 +131,7 @@ std::map<int, string> augmentationMap =
     {96, "channel_dropout"},
     {99, "random_erase"},
     {100, "coarse_dropout"}
+    {101, "emboss"}
 };
 
 enum Augmentation {
@@ -200,7 +201,8 @@ enum Augmentation {
     SOLARIZE = 95,
     CHANNEL_DROPOUT = 96,
     RANDOM_ERASE = 99,
-    COARSE_DROPOUT = 100
+    COARSE_DROPOUT = 100,
+    EMBOSS = 101
 };
 
 // Enum for dropout types
@@ -211,8 +213,8 @@ enum DropoutType
     DROPOUT_COARSE = 4
 };
 
-const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
-const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
+const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, EMBOSS};
+const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, EMBOSS};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
 const unordered_set<int> randomOutputCases = {JITTER, NOISE, FOG, RAIN, SPATTER};
 const unordered_set<int> nonQACases = {WARP_AFFINE, WARP_PERSPECTIVE};
@@ -1292,7 +1294,7 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         func += "_noiseType" + noiseTypeName;
         binFile += "_noiseType" + noiseTypeName;
     }
-    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER || testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER)
+    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER || testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER || testCase == EMBOSS)
     {
         func += "_kernelSize" + std::to_string(additionalParam);
         binFile += "_kernelSize" + std::to_string(additionalParam);
