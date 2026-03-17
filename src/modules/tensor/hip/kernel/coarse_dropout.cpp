@@ -174,6 +174,12 @@ RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
 
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
+        // NHWC layout only supports 3-channel (RGB) images
+        if (dstDescPtr->c != 3)
+        {
+            return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+
         // if src layout is NHWC, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {

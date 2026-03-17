@@ -48,9 +48,7 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u numBoxes = numBoxesTensor[batchCount];
-        if (numBoxes > maxBoxesPerImage)
-            numBoxes = maxBoxesPerImage;
+        Rpp32u numBoxes = std::min(numBoxesTensor[batchCount], maxBoxesPerImage);
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * maxBoxesPerImage;
 
         // Compute dropout value once based on data type instead of using ternary operator repeatedly

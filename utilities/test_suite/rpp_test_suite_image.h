@@ -201,6 +201,13 @@ enum Augmentation {
     COARSE_DROPOUT = 100
 };
 
+// Enum for dropout types used in init_dropout_erase function
+enum DropoutType {
+    DROPOUT_CUTOUT = 1,
+    DROPOUT_RANDOM_ERASING = 3,
+    DROPOUT_COARSE = 4
+};
+
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE};
 const unordered_set<int> kernelSizeCases = {ERODE, DILATE, BOX_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER};
 const unordered_set<int> dualInputCases = {BLEND, NON_LINEAR_BLEND, CROP_AND_PATCH, MAGNITUDE, PHASE, BITWISE_AND, BITWISE_XOR, BITWISE_OR};
@@ -1785,9 +1792,9 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
         int actualBoxCount = 1;
         std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
 
-        if (dropoutType == 3) // Random Erasing
+        if (dropoutType == DROPOUT_RANDOM_ERASING) // Random Erasing
             curr_wh_ratio = &wh_ratio_random;
-        else if (dropoutType == 4) // Coarse Dropout
+        else if (dropoutType == DROPOUT_COARSE) // Coarse Dropout
         {
             actualBoxCount = coarse_box_count_dist(rng);
             curr_wh_ratio = &wh_ratio_coarse;
@@ -1800,7 +1807,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
         {
             float boxW, boxH;
 
-            if (dropoutType == 1) // Cutout: Perfect square
+            if (dropoutType == DROPOUT_CUTOUT) // Cutout: Perfect square
             {
                 float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
                 boxW = boxH = std::max(1.0f, squareSize);
@@ -1826,7 +1833,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
             box.rb.x = box.lt.x + boxWInt - 1;
             box.rb.y = box.lt.y + boxHInt - 1;
 
-            if (dropoutType != 3 && colorBuffer != nullptr)
+            if (dropoutType != DROPOUT_RANDOM_ERASING && colorBuffer != nullptr)
             {
                 int colorOffset = (boxOffset + b) * channels;
                 Rpp32f dropoutColor = 0.0f;
