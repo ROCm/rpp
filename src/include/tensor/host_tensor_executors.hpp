@@ -1779,6 +1779,20 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle);
 
+// -------------------- random_erase --------------------
+
+template <typename T>
+RppStatus random_erase_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptRoiLtrb *anchorBoxInfoTensor,
+                                   T *noiseBuffer,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------
@@ -1832,6 +1846,18 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
+// -------------------- sobel_filter --------------------
+template<typename T>
+RppStatus sobel_filter_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u sobelType,
+                                   Rpp32u kernelSize,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   rpp::Handle& handle);
+
 // -------------------- median_filter --------------------
 
 template<typename T>
@@ -1844,6 +1870,32 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
+
+// -------------------- emboss --------------------
+
+template<typename T>
+RppStatus emboss_host_tensor(T *srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             T *dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *strength,
+                             Rpp32u kernelSize,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             RppLayoutParams layoutParams,
+                             rpp::Handle& handle);
+
+template<typename T>
+RppStatus emboss_generic_host_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *strength,
+                                     Rpp32u kernelSize,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
 
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 

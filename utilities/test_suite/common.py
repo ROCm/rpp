@@ -118,6 +118,7 @@ imageAugmentationMap = {
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
+    50: ["sobel_filter", "HOST", "HIP"],
     51: ["median_filter", "HOST", "HIP"],
     54: ["gaussian_filter", "HOST", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
@@ -144,7 +145,9 @@ imageAugmentationMap = {
     93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
     95: ["solarize", "HOST", "HIP"],
-    96: ["channel_dropout", "HOST", "HIP"]
+    96: ["channel_dropout", "HOST", "HIP"],
+    99: ["random_erase", "HOST", "HIP"],
+    101: ["emboss","HOST","HIP"]
 }
 
 audioAugmentationMap = {
@@ -190,7 +193,7 @@ ImageAugmentationGroupMap = {
         "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion", "fisheye"
     ],
     "filter_augmentations": [
-        "box_filter", "median_filter", "gaussian_filter"
+        "box_filter", "median_filter", "gaussian_filter", "sobel_filter", "emboss"
     ],
     "morphological_operations": [
         "erode", "dilate"
