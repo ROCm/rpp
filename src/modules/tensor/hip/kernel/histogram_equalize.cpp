@@ -161,15 +161,9 @@ __global__ void build_lut_from_hist_kernel(const unsigned int *__restrict__ hist
         minCdfShared = 0;
     __syncthreads();
 
+    // Load histogram values directly into shared memory (no need to zero first since all values are overwritten)
     for(int i = tid; i < HISTOGRAM_BINS; i += blockDim.x)
-        cdfShared[i] = 0;
-    __syncthreads();
-
-    for(int i = tid; i < HISTOGRAM_BINS; i += blockDim.x)
-    {
-        unsigned int val = hist[batch * HISTOGRAM_BINS + i];
-        cdfShared[i] = val;
-    }
+        cdfShared[i] = hist[batch * HISTOGRAM_BINS + i];
     __syncthreads();
 
     if(tid == 0)

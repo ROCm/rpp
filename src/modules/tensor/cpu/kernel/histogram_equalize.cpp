@@ -182,6 +182,8 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
     {
         cdfAccum += hist[i];
         cdf[i] = cdfAccum;
+        // Find the first non-zero CDF value (minimum CDF) required for histogram equalization formula:
+        // equalized_value = ((cdf[i] - minCdf) / (imgSize - minCdf)) * 255
         if(minCdf == 0 && cdf[i] != 0)
             minCdf = cdf[i];
     }
@@ -274,6 +276,30 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
     RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
+    // Pre-allocate YCbCr buffers for 3-channel images outside the parallel loop
+    // Using max possible size (srcDescPtr->w * srcDescPtr->h) to handle any ROI
+    Rpp8u *yBufBatch = nullptr;
+    Rpp8u *cbBufBatch = nullptr;
+    Rpp8u *crBufBatch = nullptr;
+    Rpp32u maxPixelsPerImage = srcDescPtr->w * srcDescPtr->h;
+
+    if(srcDescPtr->c == 3)
+    {
+        // Allocate buffers for each thread to avoid race conditions
+        yBufBatch = static_cast<Rpp8u *>(malloc(numThreads * maxPixelsPerImage * sizeof(Rpp8u)));
+        cbBufBatch = static_cast<Rpp8u *>(malloc(numThreads * maxPixelsPerImage * sizeof(Rpp8u)));
+        crBufBatch = static_cast<Rpp8u *>(malloc(numThreads * maxPixelsPerImage * sizeof(Rpp8u)));
+
+        // Check for allocation failures
+        if(!yBufBatch || !cbBufBatch || !crBufBatch)
+        {
+            free(yBufBatch);
+            free(cbBufBatch);
+            free(crBufBatch);
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -295,7 +321,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u roiHeight = roi.xywhROI.roiHeight;
         Rpp32u pixels = roiWidth * roiHeight;
 
-        // Allocate YCbCr buffers only for 3-channel images
+        // Get thread-local buffer pointers for 3-channel images
         Rpp8u *yBuf = nullptr;
         Rpp8u *cbBuf = nullptr;
         Rpp8u *crBuf = nullptr;
@@ -303,18 +329,11 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         if(srcDescPtr->c == 3)
         {
-            yBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-            cbBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-            crBuf = static_cast<Rpp8u *>(malloc(pixels * sizeof(Rpp8u)));
-
-            // Check for allocation failures
-            if(!yBuf || !cbBuf || !crBuf)
-            {
-                free(yBuf);
-                free(cbBuf);
-                free(crBuf);
-                continue;  // Skip this batch element on allocation failure
-            }
+            int threadId = omp_get_thread_num();
+            Rpp32u threadOffset = threadId * maxPixelsPerImage;
+            yBuf = yBufBatch + threadOffset;
+            cbBuf = cbBufBatch + threadOffset;
+            crBuf = crBufBatch + threadOffset;
             dstYBuf = yBuf;
         }
 
@@ -659,11 +678,12 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
             build_lut_from_hist_host(hist, lutBatch, pixels);
             apply_lut_tensor(srcPtr, dstPtr, roiWidth, roiHeight, lutBatch, srcDescPtr->strides.hStride, dstDescPtr->strides.hStride);
         }
-        
-        free(yBuf);
-        free(cbBuf);
-        free(crBuf);
     }
+
+    // Free pre-allocated batch buffers after parallel processing
+    free(yBufBatch);
+    free(cbBufBatch);
+    free(crBufBatch);
 
     return RPP_SUCCESS;
 }
