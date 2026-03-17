@@ -180,8 +180,8 @@ int main(int argc, char **argv)
     void *d_inputf32Second = nullptr;
     if(testCase == AUDIO_TENSOR_ADD_TENSOR)
     {
-        inputf32Second = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipMalloc(&d_inputf32Second iBufferSize * sizeof(Rpp32f)));
+        inputf32Second = static_cast<Rpp32f *>(calloc(batchSize, sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputf32Second, batchSize * sizeof(Rpp32f)));
     }
 
     // run case-wise RPP API and measure time
@@ -389,8 +389,7 @@ int main(int argc, char **argv)
                         inputf32Second[i] = 2.0f;
                     }
                     
-                    // Fill srcPtr2 with test values (copy of srcPtr1 for testing element-wise addition)
-                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32Second, inputf32Second, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32Second, inputf32Second, batchSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
                     errorCodeCapture = rppt_audio_tensor_add_tensor(d_inputf32, d_inputf32Second, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, handle, RPP_HIP_BACKEND);

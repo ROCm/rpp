@@ -24,13 +24,12 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-__global__ void audio_tensor_mul_scalar_hip_kernel(Rpp32f *srcPtr,
+__global__ void audio_tensor_mul_scalar_hip_kernel(float *srcPtr,
                                                    uint srcStride,
-                                                   Rpp32f *dstPtr,
+                                                   float *dstPtr,
                                                    uint dstStride,
-                                                   Rpp32u *srcLengthTensor,
-                                                   Rpp32u batchSize
-                                                   Rpp32f scalarValue)
+                                                   int *srcLengthTensor,
+                                                   float scalarValue)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -43,7 +42,7 @@ __global__ void audio_tensor_mul_scalar_hip_kernel(Rpp32f *srcPtr,
     float4 scalarValue_f4 = MAKE_FLOAT4(scalarValue);
 
     d_float8 src_f8, dst_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     dst_f8.f4[0] = src_f8.f4[0] * scalarValue_f4;
     dst_f8.f4[1] = src_f8.f4[1] * scalarValue_f4;
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);

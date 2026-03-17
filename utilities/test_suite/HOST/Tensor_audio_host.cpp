@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     // allocate second input buffer for audio_tensor_add_tensor
     Rpp32f *inputf32Second = nullptr;
     if(testCase == AUDIO_TENSOR_ADD_TENSOR)
-        inputf32Second = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
+        inputf32Second = (Rpp32f *)calloc(batchSize, sizeof(Rpp32f));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
