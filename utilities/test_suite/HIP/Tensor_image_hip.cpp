@@ -630,6 +630,13 @@ int main(int argc, char **argv)
     if(testCase == CHANNEL_DROPOUT)
         CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
 
+    if(testCase == RANDOM_ERASE)
+    {
+        boxesInEachImage = 1;
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+    }
+
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -1935,6 +1942,20 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case RANDOM_ERASE:
+                {
+                    testCaseName = "random_erase";
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    init_dropout_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_random_erase(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -2280,6 +2301,11 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(dropoutTensor));
     if (permutationTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
+    if (testCase == RANDOM_ERASE)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+    }
     if (qualityTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(qualityTensor));
     return 0;
