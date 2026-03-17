@@ -129,6 +129,7 @@ std::map<int, string> augmentationMap =
     {94, "posterize"},
     {95, "solarize"},
     {96, "channel_dropout"},
+    {99, "random_erase"},
     {100, "coarse_dropout"}
 };
 
@@ -198,11 +199,13 @@ enum Augmentation {
     POSTERIZE = 94,
     SOLARIZE = 95,
     CHANNEL_DROPOUT = 96,
+    RANDOM_ERASE = 99,
     COARSE_DROPOUT = 100
 };
 
-// Enum for dropout types used in init_dropout_erase function
-enum DropoutType {
+// Enum for dropout types
+enum DropoutType
+{
     DROPOUT_CUTOUT = 1,
     DROPOUT_RANDOM_ERASING = 3,
     DROPOUT_COARSE = 4
@@ -1765,7 +1768,6 @@ void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbabil
             maskPtrTemp[rng() % channels] = 1;
     }
 }
-
 
 // Dropout Region initializer for unit and performance testing
 void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode, bool randomSeed, int dropoutType)
