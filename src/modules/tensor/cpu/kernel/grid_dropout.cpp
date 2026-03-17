@@ -263,9 +263,6 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         // grid_dropout without fused output-layout toggle 3 channel(NHWC -> NHWC)
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            if (srcDescPtr->c != 3)
-                return RPP_ERROR_NOT_IMPLEMENTED;
-
             // To copy ROI region in Image
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
