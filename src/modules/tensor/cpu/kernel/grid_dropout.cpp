@@ -167,14 +167,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    T *dstPtrRow = dstPtrTemp;
-                    for(int j = 0; j < boxWidth; j++)
-                    {
-                        dstPtrRow[0] = fillValue;
-                        dstPtrRow[1] = fillValue;
-                        dstPtrRow[2] = fillValue;
-                        dstPtrRow += 3;
-                    }
+                    std::fill_n(dstPtrTemp, boxWidth * 3, fillValue);
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }
@@ -263,9 +256,6 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
         // grid_dropout without fused output-layout toggle 3 channel(NHWC -> NHWC)
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            if (srcDescPtr->c != 3)
-                return RPP_ERROR_NOT_IMPLEMENTED;
-
             // To copy ROI region in Image
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -289,14 +279,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
 
                 for(int i = 0; i < boxHeight; i++)
                 {
-                    T *dstPtrRow = dstPtrTemp;
-                    for(int j = 0; j < boxWidth; j++)
-                    {
-                        dstPtrRow[0] = fillValue;
-                        dstPtrRow[1] = fillValue;
-                        dstPtrRow[2] = fillValue;
-                        dstPtrRow += 3;
-                    }
+                    std::fill_n(dstPtrTemp, boxWidth * 3, fillValue);
                     dstPtrTemp += dstDescPtr->strides.hStride;
                 }
             }

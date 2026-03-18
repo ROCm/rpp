@@ -42,19 +42,23 @@ __global__ void grid_dropout_pkd_hip_tensor(T *dstPtr,
     if ((id_y >= (anchorBoxInfoTensor[id_z].rb.y - anchorBoxInfoTensor[id_z].lt.y + 1)) || (id_x >= (anchorBoxInfoTensor[id_z].rb.x - anchorBoxInfoTensor[id_z].lt.x + 1)))
         return;
 
-    uint dstIdx = (batch_idx * dstStridesNH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNH.y + (id_x + anchorBoxInfoTensor[id_z].lt.x) * 3;
+    uint dstIdx = (batch_idx * dstStridesNH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNH.y + (id_x + anchorBoxInfoTensor[id_z].lt.x);
 
     if constexpr (std::is_same<T, Rpp8s>::value)
     {
-        dstPtr[dstIdx] = -128.0f;
-        dstPtr[dstIdx + 1] = -128.0f;
-        dstPtr[dstIdx + 2] = -128.0f;
+        *reinterpret_cast<char3 *>(&dstPtr[dstIdx * 3]) = make_char3(-128, -128, -128);
     }
-    else
+    else if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        dstPtr[dstIdx] = 0.0f;
-        dstPtr[dstIdx + 1] = 0.0f;
-        dstPtr[dstIdx + 2] = 0.0f;
+        *reinterpret_cast<uchar3 *>(&dstPtr[dstIdx * 3]) = make_uchar3(0, 0, 0);
+    }
+    else if constexpr (std::is_same<T, Rpp32f>::value)
+    {
+        *reinterpret_cast<float3 *>(&dstPtr[dstIdx * 3]) = make_float3(0.0f, 0.0f, 0.0f);
+    }
+    else // half
+    {
+        *reinterpret_cast<d_half3_s *>(&dstPtr[dstIdx * 3]) = {(half)0, (half)0, (half)0};
     }
 }
 
