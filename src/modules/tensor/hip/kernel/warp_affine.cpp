@@ -369,6 +369,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                             make_uint2(dstDescPtr->w, dstDescPtr->h),
                             (d_float6 *)affineTensorPtr,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -385,6 +386,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                             dstDescPtr->c,
                             (d_float6 *)affineTensorPtr,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
@@ -402,6 +404,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                                 make_uint2(dstDescPtr->w, dstDescPtr->h),
                                 (d_float6 *)affineTensorPtr,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
@@ -418,6 +421,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                                 make_uint2(dstDescPtr->w, dstDescPtr->h),
                                 (d_float6 *)affineTensorPtr,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -437,6 +441,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                             make_uint2(dstDescPtr->w, dstDescPtr->h),
                             (d_float6 *)affineTensorPtr,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -453,6 +458,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                             dstDescPtr->c,
                             (d_float6 *)affineTensorPtr,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
@@ -470,6 +476,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                                 make_uint2(dstDescPtr->w, dstDescPtr->h),
                                 (d_float6 *)affineTensorPtr,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
@@ -486,6 +493,7 @@ RppStatus hip_exec_warp_affine_tensor(T *srcPtr,
                                 make_uint2(dstDescPtr->w, dstDescPtr->h),
                                 (d_float6 *)affineTensorPtr,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

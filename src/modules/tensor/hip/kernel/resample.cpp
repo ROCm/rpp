@@ -299,6 +299,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            inRateTensor,
                            outRateTensor,
                            &window);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     // For 2D audio tensors (channels > 1)
     else if (tensorDims == 2)
@@ -316,6 +317,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            inRateTensor,
                            outRateTensor,
                            &window);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

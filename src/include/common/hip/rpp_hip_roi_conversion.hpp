@@ -56,6 +56,7 @@ static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc
                        0,
                        handle.GetStream(),
                        (int *) roiTensorPtrSrc);
+    HIP_CHECK_LAUNCH_RETURN();
 
     return RPP_SUCCESS;
 }
@@ -89,6 +90,7 @@ static RppStatus hip_exec_roi_converison_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc
                        0,
                        handle.GetStream(),
                        (int *) roiTensorPtrSrc);
+    HIP_CHECK_LAUNCH_RETURN();
 
     return RPP_SUCCESS;
 }

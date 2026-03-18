@@ -360,6 +360,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -376,6 +377,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
@@ -393,6 +395,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
@@ -409,6 +412,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -428,6 +432,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -444,6 +449,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
                                reinterpret_cast<d_float9 *>(perspectiveTensor),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
@@ -461,6 +467,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
@@ -477,6 +484,7 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                    make_uint2(dstDescPtr->w, dstDescPtr->h),
                                    reinterpret_cast<d_float9 *>(perspectiveTensor),
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
