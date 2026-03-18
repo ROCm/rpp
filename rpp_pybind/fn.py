@@ -20,18 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-"""
-Compatibility wrapper for the rocAL-style API.
-
-Historically some code imported functions via:
-
-    from rpp_pybind.fn import ...
-
-The canonical implementation now lives under:
-
-    rpp_pybind.amd.rpp.fn
-"""
-
 from __future__ import annotations
 
 from .amd.rpp.fn import *  

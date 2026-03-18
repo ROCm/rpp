@@ -1,7 +1,7 @@
 # PyRPP - Python Bindings for AMD ROCm Performance Primitives
 
 > [!NOTE]
-> PyRPP provides Python bindings for AMD's ROCm Performance Primitives (RPP) library, enabling GPU-accelerated image augmentations with a simple, intuitive API designed to be easy to use like rocAL. The documentation source files reside in the `rpp_pybind` folder of this repository.
+> PyRPP provides Python bindings for AMD's ROCm Performance Primitives (RPP) library, enabling GPU-accelerated image augmentations with a simple, intuitive API designed to be easy to use. The documentation source files reside in the `rpp_pybind` folder of this repository.
 
 AMD PyRPP is a comprehensive, high-performance Python interface for computer vision augmentations on AMD processors with `HIP` (GPU) and `HOST` (CPU) backends.
 

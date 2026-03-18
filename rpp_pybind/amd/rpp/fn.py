@@ -26,10 +26,8 @@ RPP Augmentation Functions
 ===========================
 
 High-level wrapper functions for RPP augmentations.
-Similar to rocAL's fn.py pattern.
 """
 
-# Simple imports - like rocAL
 import rpp_pybind
 from rpp_pybind.amd.rpp.rpp_types import get_default_backend, HOST, HIP
 import ctypes

@@ -27,7 +27,6 @@ RPP Type Definitions and Helpers
 Re-exports C++ types and provides Python convenience functions.
 """
 
-# Simple import - like rocAL
 import rpp_pybind
 
 # Re-export enums for easier access
