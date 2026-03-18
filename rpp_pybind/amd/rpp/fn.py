@@ -29,7 +29,7 @@ High-level wrapper functions for RPP augmentations.
 """
 
 import rpp_pybind
-from rpp_pybind.amd.rpp.rpp_types import get_default_backend, HOST, HIP
+from .rpp_types import get_default_backend, HOST, HIP
 import ctypes
 import torch
 
@@ -58,16 +58,28 @@ def _resolve_layout(images, input_layout=None):
     if images.ndim != 4:
         raise ValueError("Expected 4D tensor (B, C, H, W) or (B, H, W, C)")
 
-    # If last dim looks like channels (1, 3, 4 typical cases)
-    if images.shape[-1] in (1, 3, 4):
+    # Check for typical channel dimensions (1 for grayscale, 3 for RGB)
+    # Only use 1 and 3 to avoid ambiguity with width=4
+    last_dim = images.shape[-1]
+    second_dim = images.shape[1]
+    
+    # Unambiguous cases: channel dim is 1 or 3
+    if last_dim in (1, 3) and second_dim not in (1, 3):
         return "NHWC"
-
-    # If second dim looks like channels
-    if images.shape[1] in (1, 3, 4):
+    
+    if second_dim in (1, 3) and last_dim not in (1, 3):
         return "NCHW"
+    
+    # Both dimensions could be channels - ambiguous case
+    if last_dim in (1, 3, 4) and second_dim in (1, 3, 4):
+        raise ValueError(
+            f"Ambiguous tensor shape {tuple(images.shape)}: both dim[1]={second_dim} and "
+            f"dim[-1]={last_dim} could be channels. Please specify input_layout explicitly."
+        )
 
     raise ValueError(
-        "Unable to infer layout. Please specify input_layout explicitly."
+        f"Unable to infer layout from shape {tuple(images.shape)}. "
+        "Please specify input_layout explicitly."
     )
 
 def _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights):
@@ -85,7 +97,7 @@ def _prepare_tensors(images, backend, input_layout, roi_widths, roi_heights):
     if not images.is_contiguous():
         images = images.contiguous()
     
-    if backend_int == 1:  # HIP
+    if backend == HIP:
         if not images.is_cuda:
             images = images.cuda()
     else:  # HOST
