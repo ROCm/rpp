@@ -176,6 +176,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // allocate second input buffer for audio_tensor_add_tensor
+    // srcPtr2 is a 1D tensor of size batchSize (one scalar value per batch)
+    // Each scalar value is broadcasted and added to all elements in the corresponding batch of srcPtr1
     Rpp32f *inputf32Second = nullptr;
     void *d_inputf32Second = nullptr;
     if(testCase == AUDIO_TENSOR_ADD_TENSOR)

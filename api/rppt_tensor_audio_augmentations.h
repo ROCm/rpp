@@ -171,10 +171,11 @@ RppStatus rppt_mel_filter_bank(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 RppStatus rppt_resample(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Audio Tensor Add Tensor augmentation on HIP/HOST backend
- * \details Audio Tensor Add Tensor augmentation for audio data. Performs element-wise addition of two audio tensors.
- *          srcPtr2 contains values that are added to srcPtr1 element by element.
+ * \details Audio Tensor Add Tensor augmentation for audio data. Performs scalar broadcasting addition where
+ *          srcPtr2 contains one scalar value per batch (shape: batchSize) that is broadcasted and added to
+ *          all elements in the corresponding batch of srcPtr1.
  * \param [in] srcPtr1 first source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
- * \param [in] srcPtr2 second source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 second source tensor containing one scalar per batch in HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
