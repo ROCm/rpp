@@ -116,7 +116,7 @@ cd rpp
 
 # Build RPP with Python support
 mkdir build && cd build
-cmake -DBUILD_PYPACKAGE=ON ..
+cmake -DRPP_PYPACKAGE=ON ..
 make -j$(nproc)
 sudo make install
 ```
