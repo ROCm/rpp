@@ -91,6 +91,7 @@ RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
                        dstPtr,
                        dstDescPtr->strides.nStride,
                        reinterpret_cast<int2 *>(srcDimsTensor));
+    HIP_CHECK_LAUNCH_RETURN();
 
     return RPP_SUCCESS;
 }

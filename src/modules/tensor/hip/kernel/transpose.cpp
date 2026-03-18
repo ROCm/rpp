@@ -122,6 +122,7 @@ RppStatus hip_exec_transpose_tensor(T *srcPtr,
                            dstGenericDescPtr->dims + 1,
                            dstGenericDescPtr->numDims - 1,
                            permTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;
