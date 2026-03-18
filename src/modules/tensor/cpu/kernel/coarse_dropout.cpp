@@ -84,10 +84,9 @@ RppStatus coarse_dropout_host_tensor(T *srcPtr,
 
                 for(int j = 0; j < roi.xywhROI.roiWidth; j++)
                 {
-                    *dstPtrTempR++ = srcPtrTemp[0];
-                    *dstPtrTempG++ = srcPtrTemp[1];
-                    *dstPtrTempB++ = srcPtrTemp[2];
-                    srcPtrTemp += 3;
+                    *dstPtrTempR++ = *srcPtrTemp++;
+                    *dstPtrTempG++ = *srcPtrTemp++;
+                    *dstPtrTempB++ = *srcPtrTemp++;
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;

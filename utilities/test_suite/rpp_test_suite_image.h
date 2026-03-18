@@ -130,7 +130,7 @@ std::map<int, string> augmentationMap =
     {95, "solarize"},
     {96, "channel_dropout"},
     {99, "random_erase"},
-    {100, "coarse_dropout"}
+    {100, "coarse_dropout"},
     {101, "emboss"}
 };
 
