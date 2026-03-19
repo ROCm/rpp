@@ -185,6 +185,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            tensorPartialSumArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_mean_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -194,6 +195,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            gridDim_x * gridDim_y,
                            tensorMeanArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
@@ -210,6 +212,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            tensorPartialSumArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -219,6 +222,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            gridDim_x * gridDim_y,
                            tensorMeanArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
@@ -235,6 +239,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            tensorPartialSumArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -244,6 +249,7 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
                            gridDim_x * gridDim_y,
                            tensorMeanArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

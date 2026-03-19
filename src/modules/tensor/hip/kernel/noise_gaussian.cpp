@@ -424,6 +424,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -442,6 +443,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -461,6 +463,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -479,6 +482,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
@@ -523,6 +527,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
                                    dstGenericDescPtr->dims[1],
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -540,6 +545,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    xorwowInitialStatePtr,
                                    xorwowSeedStream,
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -565,6 +571,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                    make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -581,6 +588,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    xorwowInitialStatePtr,
                                    xorwowSeedStream,
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

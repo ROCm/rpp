@@ -2,23 +2,15 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 3.1.0
+## (Unreleased) RPP 3.1.1
 
 ### Added
 
-- Runtime backend selection parameter (`RppBackend executionBackend`) for all RPP tensor API functions
-- Backend tracking in `rppHandle_t` to store backend type (HOST or HIP)
-
-### Changed
-
-- All RPP tensor API functions now unified with a single function signature
-- Updated all test suite calls to use unified API with backend parameter
-- Enhanced layout validation for image augmentations within unified API
-
-## (Unreleased) RPP 3.0.0
+* Runtime backend selection parameter (`RppBackend executionBackend`) for all RPP tensor API functions
+* Backend tracking in `rppHandle_t` to store backend type (HOST or HIP)
+* Added `RPP_ERROR_HIP_LAUNCH` error type for reporting HIP kernel launch errors.
 
 ### Removed
-
 * BatchPD legacy support completely removed
 * LEGACY_SUPPORT compilation flag and all code enclosed within it
 * OpenCL backend support
@@ -26,7 +18,11 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Changed
 
+* All RPP tensor API functions now unified with a single function signature
+* Updated all test suite calls to use unified API with backend parameter
+* Enhanced layout validation for image augmentations within unified API
 * CMakeLists.txt updated to remove batch PD references
+
 
 ## RPP 2.2.1 for ROCm 7.2.1
 
