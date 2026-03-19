@@ -147,6 +147,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                     src1BroadcastDims[curIndex] = 1;
                     src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
                     dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
+                    // Setting stride to zero will allow for repetition of values operated required for broadcasting
                     src1BroadcastStrides[curIndex] = 0;
                     src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
                     dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
@@ -159,6 +160,7 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                     src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
                     dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
                     src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
+                    // Setting stride to zero will allow for repetition of values operated required for broadcasting
                     src2BroadcastStrides[curIndex] = 0;
                     dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
                 }

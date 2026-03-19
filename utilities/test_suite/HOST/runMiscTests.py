@@ -85,7 +85,7 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == TestType.PERFORMANCE_TEST.value:
         # U8, F16, F32 and I8 bit depths available for augmentations. Log and Log1p cases customized to run with available bit depths
-        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8, BitDepthTestMode.I16_TO_I16, BitDepthTestMode.U16_TO_U16, BitDepthTestMode.I32_TO_I32, BitDepthTestMode.U32_TO_U32]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.I8_TO_I8, BitDepthTestMode.I16_TO_I16, BitDepthTestMode.U16_TO_U16, BitDepthTestMode.I32_TO_I32, BitDepthTestMode.U32_TO_U32]
         if miscAugmentationMap[int(case)][0] == "log":
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
         if miscAugmentationMap[int(case)][0] == "log1p":

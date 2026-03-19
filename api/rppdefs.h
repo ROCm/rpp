@@ -226,41 +226,6 @@ typedef enum
     RPP_BROADCAST_DISABLE    // Broadcasting is disabled; Requires input tensors to be of the same shape
 } RpptBroadcastMode;
 
-#ifdef LEGACY_SUPPORT
-/*! \brief RPP Operations type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPP_SCALAR_OP_AND       = 1,
-    RPP_SCALAR_OP_OR,
-    RPP_SCALAR_OP_XOR,
-    RPP_SCALAR_OP_NAND,
-    RPP_SCALAR_OP_EQUAL,
-    RPP_SCALAR_OP_NOTEQUAL,
-    RPP_SCALAR_OP_LESS,
-    RPP_SCALAR_OP_LESSEQ,
-    RPP_SCALAR_OP_GREATER,
-    RPP_SCALAR_OP_GREATEREQ,
-    RPP_SCALAR_OP_ADD,
-    RPP_SCALAR_OP_SUBTRACT,
-    RPP_SCALAR_OP_MULTIPLY,
-    RPP_SCALAR_OP_DIVIDE,
-    RPP_SCALAR_OP_MODULUS,
-    RPP_SCALAR_OP_MIN,
-    RPP_SCALAR_OP_MAX,
-} RppOp;
-
-/*! \brief RPP BitDepth Conversion type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    U8_S8,
-    S8_U8,
-} RppConvertBitDepthMode;
-#endif
-
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
  */
