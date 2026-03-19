@@ -197,23 +197,23 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
 // -------------------- audio_tensor_add_tensor --------------------
 
-RppStatus hip_exec_audio_tensor_add_tensor_tensor(Rpp32f *srcPtr1,
-                                                  Rpp32f *srcPtr2,
-                                                  RpptDescPtr srcDescPtr,
-                                                  Rpp32f *dstPtr,
-                                                  RpptDescPtr dstDescPtr,
-                                                  Rpp32s *srcLengthTensor,
-                                                  rpp::Handle& handle);
+RppStatus hip_exec_audio_tensor_add_tensor(Rpp32f *srcPtr1,
+                                           Rpp32f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
 
 // -------------------- audio_tensor_mul_scalar --------------------
 
-RppStatus hip_exec_audio_tensor_mul_scalar_tensor(Rpp32f *srcPtr,
-                                                  Rpp32f scalarValue,
-                                                  RpptDescPtr srcDescPtr,
-                                                  Rpp32f *dstPtr,
-                                                  RpptDescPtr dstDescPtr,
-                                                  Rpp32s *srcLengthTensor,
-                                                  rpp::Handle& handle);
+RppStatus hip_exec_audio_tensor_mul_scalar(Rpp32f *srcPtr,
+                                           Rpp32f scalarValue,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
 
 #endif // AUDIO_SUPPORT
 

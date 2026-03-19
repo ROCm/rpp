@@ -48,13 +48,13 @@ __global__ void audio_tensor_mul_scalar_hip_kernel(float *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
-RppStatus hip_exec_audio_tensor_mul_scalar_tensor(Rpp32f *srcPtr,
-                                                  Rpp32f scalarValue,
-                                                  RpptDescPtr srcDescPtr,
-                                                  Rpp32f *dstPtr,
-                                                  RpptDescPtr dstDescPtr,
-                                                  Rpp32s *srcLengthTensor,
-                                                  rpp::Handle& handle)
+RppStatus hip_exec_audio_tensor_mul_scalar(Rpp32f *srcPtr,
+                                           Rpp32f scalarValue,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle)
 {
     Rpp32s globalThreads_x = (srcDescPtr->strides.nStride + 7) >> 3;
     Rpp32s globalThreads_y = 1;

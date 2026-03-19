@@ -577,13 +577,13 @@ RppStatus rppt_audio_tensor_add_tensor(RppPtr_t srcPtr1,
     {
         if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            audio_tensor_add_tensor_host_tensor(static_cast<Rpp32f*>(srcPtr1),
-                                                static_cast<Rpp32f*>(srcPtr2),
-                                                srcDescPtr,
-                                                static_cast<Rpp32f*>(dstPtr),
-                                                dstDescPtr,
-                                                srcLengthTensor,
-                                                handle);
+            audio_tensor_add_tensor_host(static_cast<Rpp32f*>(srcPtr1),
+                                         static_cast<Rpp32f*>(srcPtr2),
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(dstPtr),
+                                         dstDescPtr,
+                                         srcLengthTensor,
+                                         handle);
         }
         else
         {
@@ -596,13 +596,13 @@ RppStatus rppt_audio_tensor_add_tensor(RppPtr_t srcPtr1,
     {
         if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            hip_exec_audio_tensor_add_tensor_tensor(static_cast<Rpp32f*>(srcPtr1),
-                                                    static_cast<Rpp32f*>(srcPtr2),
-                                                    srcDescPtr,
-                                                    static_cast<Rpp32f*>(dstPtr),
-                                                    dstDescPtr,
-                                                    srcLengthTensor,
-                                                    handle);
+            hip_exec_audio_tensor_add_tensor(static_cast<Rpp32f*>(srcPtr1),
+                                             static_cast<Rpp32f*>(srcPtr2),
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(dstPtr),
+                                             dstDescPtr,
+                                             srcLengthTensor,
+                                             handle);
         }
         else
         {
@@ -632,13 +632,13 @@ RppStatus rppt_audio_tensor_mul_scalar(RppPtr_t srcPtr,
     {
         if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            audio_tensor_mul_scalar_host_tensor(static_cast<Rpp32f*>(srcPtr),
-                                                scalarValue,
-                                                srcDescPtr,
-                                                static_cast<Rpp32f*>(dstPtr),
-                                                dstDescPtr,
-                                                srcLengthTensor,
-                                                handle);
+            audio_tensor_mul_scalar_host(static_cast<Rpp32f*>(srcPtr),
+                                         scalarValue,
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(dstPtr),
+                                         dstDescPtr,
+                                         srcLengthTensor,
+                                         handle);
         }
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -650,13 +650,13 @@ RppStatus rppt_audio_tensor_mul_scalar(RppPtr_t srcPtr,
     {
         if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            hip_exec_audio_tensor_mul_scalar_tensor(static_cast<Rpp32f*>(srcPtr),
-                                                    scalarValue,
-                                                    srcDescPtr,
-                                                    static_cast<Rpp32f*>(dstPtr),
-                                                    dstDescPtr,
-                                                    srcLengthTensor,
-                                                    handle);
+            hip_exec_audio_tensor_mul_scalar(static_cast<Rpp32f*>(srcPtr),
+                                             scalarValue,
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(dstPtr),
+                                             dstDescPtr,
+                                             srcLengthTensor,
+                                             handle);
         }
         else
             return RPP_ERROR_NOT_IMPLEMENTED;

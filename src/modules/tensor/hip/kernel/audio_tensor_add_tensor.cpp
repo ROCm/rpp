@@ -50,13 +50,13 @@ __global__ void audio_tensor_add_scalar_hip_tensor(float *srcPtr1,
 }
 
 
-RppStatus hip_exec_audio_tensor_add_tensor_tensor(Rpp32f *srcPtr1,
-                                                  Rpp32f *srcPtr2,
-                                                  RpptDescPtr srcDescPtr,
-                                                  Rpp32f *dstPtr,
-                                                  RpptDescPtr dstDescPtr,
-                                                  Rpp32s *srcLengthTensor,
-                                                  rpp::Handle& handle)
+RppStatus hip_exec_audio_tensor_add_tensor(Rpp32f *srcPtr1,
+                                           Rpp32f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle)
 {
     Rpp32s globalThreads_x = (srcDescPtr->strides.nStride + 7) >> 3;
     Rpp32s globalThreads_y = 1;

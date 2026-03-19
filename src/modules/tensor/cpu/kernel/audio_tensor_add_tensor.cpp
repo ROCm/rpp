@@ -24,13 +24,13 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 
-RppStatus audio_tensor_add_tensor_host_tensor(Rpp32f *srcPtr1,
-                                              Rpp32f *srcPtr2,
-                                              RpptDescPtr srcDescPtr,
-                                              Rpp32f *dstPtr,
-                                              RpptDescPtr dstDescPtr,
-                                              Rpp32s *srcLengthTensor,
-                                              rpp::Handle& handle)
+RppStatus audio_tensor_add_tensor_host(Rpp32f *srcPtr1,
+                                       Rpp32f *srcPtr2,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp32f *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32s *srcLengthTensor,
+                                       rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
 
