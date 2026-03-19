@@ -82,27 +82,9 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
-    
-    // Pre-allocate and broadcast filter coefficients for all batches before parallel loop
-    // Maximum kernel size is 9x9 = 81 coefficients
-    constexpr int MAX_FILTER_SIZE = 81;
-    __m256 *pFilterBatch = (__m256 *)aligned_alloc(32, dstDescPtr->n * MAX_FILTER_SIZE * sizeof(__m256));
-    if (pFilterBatch == nullptr)
-        return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    
-    // Pre-compute all Gaussian kernels and broadcast to AVX registers
-    int filterSize = kernelSize * kernelSize;
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-    {
-        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * kernelSize * kernelSize;
-        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
-        
-        __m256 *pFilter = pFilterBatch + batchCount * MAX_FILTER_SIZE;
-        for (int i = 0; i < filterSize; i++)
-            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-    }
+    constexpr int MAX_FILTER_SIZE = 81;  // Maximum kernel size is 9x9 = 81 coefficients
 #endif
-    
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -125,8 +107,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 #if __AVX2__
-        // Access pre-computed filter for this batch
-        __m256 *pFilter = pFilterBatch + batchCount * MAX_FILTER_SIZE;
+        // Compute filter coefficients for this batch
+        alignas(32) __m256 pFilter[MAX_FILTER_SIZE];
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        int filterSize = kernelSize * kernelSize;
+        for (int i = 0; i < filterSize; i++)
+            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
 #endif
         if (kernelSize == 3)
         {
@@ -1222,12 +1208,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             }
         }
     }
-    
-#if __AVX2__
-    // Free the pre-allocated filter memory
-    free(pFilterBatch);
-#endif
-    
+
     return RPP_SUCCESS;
 }
 

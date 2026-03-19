@@ -273,7 +273,6 @@ __device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_floa
     float* row2Ptr = row1Ptr + SMEM_LENGTH_X;
     float3 minVal_f3, maxVal_f3, medianVal_f3;
 
-    #pragma unroll
     for (int px = 0; px < 8; ++px)
     {
         float3 row0_f3 = make_float3(row0Ptr[px], row0Ptr[px + 1], row0Ptr[px + 2]);
@@ -300,12 +299,42 @@ __device__ void median_filter_3x3_row_hip_compute<float>(float* src_smem, d_floa
     }
 }
 
+// 5×5 sorting network helper - applies sorting network to find median at p[12]
+__device__ __forceinline__ float apply_sorting_network_5x5(float p[25])
+{
+    #define OP(a, b) { float t = min(p[a], p[b]); p[b] = max(p[a], p[b]); p[a] = t; }
+    OP(1, 2); OP(0, 1); OP(1, 2); OP(4, 5); OP(3, 4);
+    OP(4, 5); OP(0, 3); OP(2, 5); OP(2, 3); OP(1, 4);
+    OP(1, 2); OP(3, 4); OP(7, 8); OP(6, 7); OP(7, 8);
+    OP(10, 11); OP(9, 10); OP(10, 11); OP(6, 9); OP(8, 11);
+    OP(8, 9); OP(7, 10); OP(7, 8); OP(9, 10); OP(0, 6);
+    OP(4, 10); OP(4, 6); OP(2, 8); OP(2, 4); OP(6, 8);
+    OP(1, 7); OP(5, 11); OP(5, 7); OP(3, 9); OP(3, 5);
+    OP(7, 9); OP(1, 2); OP(3, 4); OP(5, 6); OP(7, 8);
+    OP(9, 10); OP(13, 14); OP(12, 13); OP(13, 14); OP(16, 17);
+    OP(15, 16); OP(16, 17); OP(12, 15); OP(14, 17); OP(14, 15);
+    OP(13, 16); OP(13, 14); OP(15, 16); OP(19, 20); OP(18, 19);
+    OP(19, 20); OP(21, 22); OP(23, 24); OP(21, 23); OP(22, 24);
+    OP(22, 23); OP(18, 21); OP(20, 23); OP(20, 21); OP(19, 22);
+    OP(22, 24); OP(19, 20); OP(21, 22); OP(23, 24); OP(12, 18);
+    OP(16, 22); OP(16, 18); OP(14, 20); OP(20, 24); OP(14, 16);
+    OP(18, 20); OP(22, 24); OP(13, 19); OP(17, 23); OP(17, 19);
+    OP(15, 21); OP(15, 17); OP(19, 21); OP(13, 14); OP(15, 16);
+    OP(17, 18); OP(19, 20); OP(21, 22); OP(23, 24); OP(0, 12);
+    OP(8, 20); OP(8, 12); OP(4, 16); OP(16, 24); OP(12, 16);
+    OP(2, 14); OP(10, 22); OP(10, 14); OP(6, 18); OP(6, 10);
+    OP(10, 12); OP(1, 13); OP(9, 21); OP(9, 13); OP(5, 17);
+    OP(13, 17); OP(3, 15); OP(11, 23); OP(11, 15); OP(7, 19);
+    OP(7, 11); OP(11, 13); OP(11, 12);
+    #undef OP
+    return p[12];
+}
+
 // Optimized 5×5 median using sorting network (processes 8 pixels simultaneously)
 template <typename T>
 __device__ void median_filter_5x5_row_hip_compute(T* src_smem, d_float8* median_f8)
 {
     // Process 8 pixels using optimized sorting network
-    #pragma unroll
     for (int px = 0; px < 8; ++px)
     {
         // Extract 5×5 window for current pixel
@@ -348,33 +377,7 @@ __device__ void median_filter_5x5_row_hip_compute(T* src_smem, d_float8* median_
         p[24] = static_cast<float>(src_smem[4 * SMEM_LENGTH_X + baseOffset + 4]);
 
         // Apply sorting network
-        #define OP(a, b) { float t = min(p[a], p[b]); p[b] = max(p[a], p[b]); p[a] = t; }
-        OP(1, 2); OP(0, 1); OP(1, 2); OP(4, 5); OP(3, 4);
-        OP(4, 5); OP(0, 3); OP(2, 5); OP(2, 3); OP(1, 4);
-        OP(1, 2); OP(3, 4); OP(7, 8); OP(6, 7); OP(7, 8);
-        OP(10, 11); OP(9, 10); OP(10, 11); OP(6, 9); OP(8, 11);
-        OP(8, 9); OP(7, 10); OP(7, 8); OP(9, 10); OP(0, 6);
-        OP(4, 10); OP(4, 6); OP(2, 8); OP(2, 4); OP(6, 8);
-        OP(1, 7); OP(5, 11); OP(5, 7); OP(3, 9); OP(3, 5);
-        OP(7, 9); OP(1, 2); OP(3, 4); OP(5, 6); OP(7, 8);
-        OP(9, 10); OP(13, 14); OP(12, 13); OP(13, 14); OP(16, 17);
-        OP(15, 16); OP(16, 17); OP(12, 15); OP(14, 17); OP(14, 15);
-        OP(13, 16); OP(13, 14); OP(15, 16); OP(19, 20); OP(18, 19);
-        OP(19, 20); OP(21, 22); OP(23, 24); OP(21, 23); OP(22, 24);
-        OP(22, 23); OP(18, 21); OP(20, 23); OP(20, 21); OP(19, 22);
-        OP(22, 24); OP(19, 20); OP(21, 22); OP(23, 24); OP(12, 18);
-        OP(16, 22); OP(16, 18); OP(14, 20); OP(20, 24); OP(14, 16);
-        OP(18, 20); OP(22, 24); OP(13, 19); OP(17, 23); OP(17, 19);
-        OP(15, 21); OP(15, 17); OP(19, 21); OP(13, 14); OP(15, 16);
-        OP(17, 18); OP(19, 20); OP(21, 22); OP(23, 24); OP(0, 12);
-        OP(8, 20); OP(8, 12); OP(4, 16); OP(16, 24); OP(12, 16);
-        OP(2, 14); OP(10, 22); OP(10, 14); OP(6, 18); OP(6, 10);
-        OP(10, 12); OP(1, 13); OP(9, 21); OP(9, 13); OP(5, 17);
-        OP(13, 17); OP(3, 15); OP(11, 23); OP(11, 15); OP(7, 19);
-        OP(7, 11); OP(11, 13); OP(11, 12);
-        #undef OP
-        
-        median_f8->f1[px] = p[12];
+        median_f8->f1[px] = apply_sorting_network_5x5(p);
     }
 }
 
@@ -387,7 +390,6 @@ __device__ void median_filter_5x5_row_hip_compute<float>(float* src_smem, d_floa
     float* row3Ptr = row2Ptr + SMEM_LENGTH_X;
     float* row4Ptr = row3Ptr + SMEM_LENGTH_X;
 
-    #pragma unroll
     for (int px = 0; px < 8; ++px)
     {
         // Load 5×5 window
@@ -398,121 +400,107 @@ __device__ void median_filter_5x5_row_hip_compute<float>(float* src_smem, d_floa
         p[15] = row3Ptr[px]; p[16] = row3Ptr[px + 1]; p[17] = row3Ptr[px + 2]; p[18] = row3Ptr[px + 3]; p[19] = row3Ptr[px + 4];
         p[20] = row4Ptr[px]; p[21] = row4Ptr[px + 1]; p[22] = row4Ptr[px + 2]; p[23] = row4Ptr[px + 3]; p[24] = row4Ptr[px + 4];
 
-        // Apply sorting network (OpenCV's 5×5 network - median at p[12])
-        #define OP(a, b) { float t = min(p[a], p[b]); p[b] = max(p[a], p[b]); p[a] = t; }
-        OP(1, 2); OP(0, 1); OP(1, 2); OP(4, 5); OP(3, 4);
-        OP(4, 5); OP(0, 3); OP(2, 5); OP(2, 3); OP(1, 4);
-        OP(1, 2); OP(3, 4); OP(7, 8); OP(6, 7); OP(7, 8);
-        OP(10, 11); OP(9, 10); OP(10, 11); OP(6, 9); OP(8, 11);
-        OP(8, 9); OP(7, 10); OP(7, 8); OP(9, 10); OP(0, 6);
-        OP(4, 10); OP(4, 6); OP(2, 8); OP(2, 4); OP(6, 8);
-        OP(1, 7); OP(5, 11); OP(5, 7); OP(3, 9); OP(3, 5);
-        OP(7, 9); OP(1, 2); OP(3, 4); OP(5, 6); OP(7, 8);
-        OP(9, 10); OP(13, 14); OP(12, 13); OP(13, 14); OP(16, 17);
-        OP(15, 16); OP(16, 17); OP(12, 15); OP(14, 17); OP(14, 15);
-        OP(13, 16); OP(13, 14); OP(15, 16); OP(19, 20); OP(18, 19);
-        OP(19, 20); OP(21, 22); OP(23, 24); OP(21, 23); OP(22, 24);
-        OP(22, 23); OP(18, 21); OP(20, 23); OP(20, 21); OP(19, 22);
-        OP(22, 24); OP(19, 20); OP(21, 22); OP(23, 24); OP(12, 18);
-        OP(16, 22); OP(16, 18); OP(14, 20); OP(20, 24); OP(14, 16);
-        OP(18, 20); OP(22, 24); OP(13, 19); OP(17, 23); OP(17, 19);
-        OP(15, 21); OP(15, 17); OP(19, 21); OP(13, 14); OP(15, 16);
-        OP(17, 18); OP(19, 20); OP(21, 22); OP(23, 24); OP(0, 12);
-        OP(8, 20); OP(8, 12); OP(4, 16); OP(16, 24); OP(12, 16);
-        OP(2, 14); OP(10, 22); OP(10, 14); OP(6, 18); OP(6, 10);
-        OP(10, 12); OP(1, 13); OP(9, 21); OP(9, 13); OP(5, 17);
-        OP(13, 17); OP(3, 15); OP(11, 23); OP(11, 15); OP(7, 19);
-        OP(7, 11); OP(11, 13); OP(11, 12);
-        #undef OP
-        
-        median_f8->f1[px] = p[12];
+        // Apply sorting network
+        median_f8->f1[px] = apply_sorting_network_5x5(p);
     }
 }
 
-
+// Quick-Select based median computation
 template<int kernelSize, typename T>
-__device__ __forceinline__ float compute_median(T *window)
+__device__ __forceinline__ float compute_median_quickselect(T *window)
 {
     constexpr int windowSize = kernelSize * kernelSize;
     constexpr int medianIndex = windowSize / 2;
 
-    // Use histogram method for U8 types with large kernels (7×7, 9×9)
+    int leftIdx = 0;
+    int rightIdx = windowSize - 1;
+
+    // Quick-Select partitioning algorithm with proper duplicate handling
+    while (leftIdx < rightIdx)
+    {
+        // Choose pivot using median-of-3 (first, mid, last)
+        int midIdx = (leftIdx + rightIdx) >> 1;
+        float3 val_f3 = make_float3(static_cast<float>(window[leftIdx]), static_cast<float>(window[midIdx]), static_cast<float>(window[rightIdx]));
+        T pivotVal = static_cast<T>(rpp_hip_median3(val_f3));
+
+        // Three-way partition (Dutch National Flag) to handle duplicates
+        int lt = leftIdx;      // window[leftIdx..lt-1] < pivot
+        int gt = rightIdx;     // window[gt+1..rightIdx] > pivot
+        int i = leftIdx;       // window[lt..i-1] == pivot, window[i..gt] unexamined
+
+        while (i <= gt)
+        {
+            if (window[i] < pivotVal)
+            {
+                T tmp = window[lt];
+                window[lt] = window[i];
+                window[i] = tmp;
+                ++lt;
+                ++i;
+            }
+            else if (window[i] > pivotVal)
+            {
+                T tmp = window[gt];
+                window[gt] = window[i];
+                window[i] = tmp;
+                --gt;
+            }
+            else
+            {
+                ++i;
+            }
+        }
+
+        // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
+        // Shrink search interval toward median position
+        if (medianIndex < lt)
+            rightIdx = lt - 1;
+        else if (medianIndex > gt)
+            leftIdx = gt + 1;
+        else
+            break; // medianIndex is in the equal-to-pivot region
+    }
+
+    return static_cast<float>(window[medianIndex]);
+}
+
+// Histogram-based median computation using shared memory (for U8 types with large kernels)
+template<int kernelSize>
+__device__ __forceinline__ float compute_median_histogram(uchar *window, int *hist_smem)
+{
+    constexpr int windowSize = kernelSize * kernelSize;
+    constexpr int medianIndex = windowSize / 2;
+
+    // Clear histogram
+    for (int i = 0; i < 256; i++)
+        hist_smem[i] = 0;
+
+    // Build histogram - count occurrences of each value
+    for (int i = 0; i < windowSize; ++i)
+        hist_smem[window[i]]++;
+
+    // Find median by accumulating counts
+    int count = 0;
+    for (int v = 0; v < 256; ++v)
+    {
+        count += hist_smem[v];
+        if (count > medianIndex)
+            return static_cast<float>(v);
+    }
+    return 0.0f;
+}
+
+template<int kernelSize, typename T>
+__device__ __forceinline__ float compute_median(T *window, int *hist_smem = nullptr)
+{
+    // Use histogram method for U8 types with large kernels (7×7, 9×9) when shared memory is available
     if constexpr (std::is_same<T, uchar>::value && kernelSize >= 7)
     {
-        // Build histogram (256 bins for U8)
-        int hist[256];
-        #pragma unroll 8
-        for (int i = 0; i < 256; i++)
-            hist[i] = 0;
-        
-        // Count occurrences
-        for (int i = 0; i < windowSize; i++)
-            hist[window[i]]++;
-        
-        // Find median by accumulating counts
-        int count = 0;
-        for (int v = 0; v < 256; v++)
-        {
-            count += hist[v];
-            if (count > medianIndex)
-                return static_cast<float>(v);
-        }
-        return 0.0f;
+        if (hist_smem != nullptr)
+            return compute_median_histogram<kernelSize>(window, hist_smem);
     }
-    else
-    {
-        // Use Quick-Select for other types or smaller kernels
-        int leftIdx = 0;
-        int rightIdx = windowSize - 1;
-
-        // Quick-Select partitioning algorithm with proper duplicate handling
-        while (leftIdx < rightIdx)
-        {
-            // Choose pivot using median-of-3 (first, mid, last)
-            int midIdx = (leftIdx + rightIdx) >> 1;
-            float3 val_f3 = make_float3(static_cast<float>(window[leftIdx]), static_cast<float>(window[midIdx]), static_cast<float>(window[rightIdx]));
-            T pivotVal = static_cast<T>(rpp_hip_median3(val_f3));
-
-            // Three-way partition (Dutch National Flag) to handle duplicates
-            int lt = leftIdx;      // window[leftIdx..lt-1] < pivot
-            int gt = rightIdx;     // window[gt+1..rightIdx] > pivot
-            int i = leftIdx;       // window[lt..i-1] == pivot, window[i..gt] unexamined
-
-            while (i <= gt)
-            {
-                if (window[i] < pivotVal)
-                {
-                    T tmp = window[lt];
-                    window[lt] = window[i];
-                    window[i] = tmp;
-                    ++lt;
-                    ++i;
-                }
-                else if (window[i] > pivotVal)
-                {
-                    T tmp = window[gt];
-                    window[gt] = window[i];
-                    window[i] = tmp;
-                    --gt;
-                }
-                else
-                {
-                    ++i;
-                }
-            }
-
-            // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
-            // Shrink search interval toward median position
-            if (medianIndex < lt)
-                rightIdx = lt - 1;
-            else if (medianIndex > gt)
-                leftIdx = gt + 1;
-            else
-                break; // medianIndex is in the equal-to-pivot region
-        }
-
-        return static_cast<float>(window[medianIndex]);
-    }
+    // Fall back to Quick-Select for other types or when no shared memory provided
+    return compute_median_quickselect<kernelSize>(window);
 }
 
 
