@@ -207,7 +207,7 @@ To add RPP to your CMake project, you can use the following code after installat
 list(APPEND CMAKE_PREFIX_PATH ${ENV{ROCM_PATH}})
 
 find_package(rpp REQUIRED)
-target_link_libraries(your_target PRIVATE rpp)
+target_link_libraries(your_target PRIVATE rpp::rpp)
 ```
 
 > [!NOTE]
