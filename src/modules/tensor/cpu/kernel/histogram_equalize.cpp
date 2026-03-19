@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -184,7 +184,7 @@ inline void build_lut_from_hist_host(const Rpp32u *hist,
         cdf[i] = cdfAccum;
         // Find the first non-zero CDF value (minimum CDF) required for histogram equalization formula:
         // equalized_value = ((cdf[i] - minCdf) / (imgSize - minCdf)) * 255
-        if(minCdf == 0 && cdf[i] != 0)
+        if(!minCdf && cdf[i])
             minCdf = cdf[i];
     }
 

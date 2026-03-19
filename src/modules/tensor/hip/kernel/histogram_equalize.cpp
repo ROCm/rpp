@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,6 @@ __device__ const float4 pCoeffCrR_f4 = {coeffCrR, coeffCrR, coeffCrR, coeffCrR};
 __device__ const float4 pCoeffCrG_f4 = {coeffCrG, coeffCrG, coeffCrG, coeffCrG};
 __device__ const float4 pCoeffCrB_f4 = {coeffCrB, coeffCrB, coeffCrB, coeffCrB};
 
-__device__ const float4 pMaxVal_f4 = {maxPixelVal, maxPixelVal, maxPixelVal, maxPixelVal};
 __device__ const float4 pChromaOffset_f4 = {chromaOffset, chromaOffset, chromaOffset, chromaOffset};
 
 // Clamp float4 values to specified range
@@ -107,12 +106,16 @@ __device__ inline void ycbcr_to_rgb_hip_compute(d_float24 &rgb_f24, d_float8 &y_
 // Histogram collection kernel
 __global__ void collect_hist_pln_hip_tensor(const unsigned char *__restrict__ srcPtr,
                                             RpptROIPtr roiTensorPtrSrc,
-                                            uint3 srcStridesNCH,
-                                            unsigned int *__restrict__ hist)
+                                            ulong2 srcStridesNH,
+                                            unsigned int *__restrict__ hist,
+                                            int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_z >= batchSize)
+        return;
 
     uint histOffset = id_z * HISTOGRAM_BINS;
     RpptRoiXywh roi = roiTensorPtrSrc[id_z].xywhROI;
@@ -129,7 +132,7 @@ __global__ void collect_hist_pln_hip_tensor(const unsigned char *__restrict__ sr
     bool withinBounds = (id_y < roi.roiHeight) && (id_x < roi.roiWidth);
     if(withinBounds)
     {
-        uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roi.xy.y) * srcStridesNCH.z) + (id_x + roi.xy.x);
+        uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roi.xy.y) * srcStridesNH.y) + (id_x + roi.xy.x);
         uint8_t pixVal = srcPtr[srcIdx];
         atomicAdd(&histShared[pixVal], 1);
     }
@@ -173,7 +176,7 @@ __global__ void build_lut_from_hist_kernel(const unsigned int *__restrict__ hist
         {
             cdfAccum += cdfShared[i];
             cdfShared[i] = cdfAccum;
-            if(minCdfShared == 0 && cdfShared[i] != 0)
+            if(!minCdfShared && cdfShared[i])
                 minCdfShared = cdfShared[i];
         }
     }
@@ -195,21 +198,25 @@ __global__ void build_lut_from_hist_kernel(const unsigned int *__restrict__ hist
 
 // LUT application kernel
 __global__ void apply_lut_pln1_hip_tensor(const unsigned char *__restrict__ srcPtr,
-                                          uint3 srcStridesNCH,
+                                          ulong2 srcStridesNH,
                                           unsigned char *__restrict__ dstPtr,
-                                          uint3 dstStridesNCH,
+                                          ulong2 dstStridesNH,
                                           const unsigned char *__restrict__ lut,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
+    if(id_z >= batchSize)
+        return;
+
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     unsigned char pixVal = srcPtr[srcIdx];
     dstPtr[dstIdx] = lut[id_z * HISTOGRAM_BINS + pixVal];
@@ -225,11 +232,15 @@ __global__ void convert_rgb_pkd3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
                                                unsigned char *__restrict__ cbPtr,
                                                unsigned char *__restrict__ crPtr,
                                                uint2 dstStridesWH,
-                                               RpptROIPtr roiTensorPtrSrc)
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_z >= batchSize)
+        return;
 
     // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
@@ -257,12 +268,16 @@ __global__ void convert_rgb_pln3_to_ycbcr_pln3(unsigned char *__restrict__ srcPt
                                                unsigned char *__restrict__ yPtr,
                                                unsigned char *__restrict__ cbPtr,
                                                unsigned char *__restrict__ crPtr,
-                                               uint2 dstStridesNH,
-                                               RpptROIPtr roiTensorPtrSrc)
+                                               ulong2 dstStridesNH,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_z >= batchSize)
+        return;
 
     // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
@@ -291,11 +306,15 @@ __global__ void convert_ycbcr_pln3_to_rgb_pln3(unsigned char *__restrict__ yPtr,
                                                uint2 srcStridesWH,
                                                unsigned char *__restrict__ dstPtr,
                                                uint3 dstStridesNCH,
-                                               RpptROIPtr roiTensorPtrSrc)
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_z >= batchSize)
+        return;
 
     // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
@@ -324,11 +343,15 @@ __global__ void convert_ycbcr_pln3_to_rgb_pkd3(unsigned char *__restrict__ yPtr,
                                                uint2 srcStridesWH,
                                                unsigned char *__restrict__ dstPtr,
                                                uint2 dstStridesNH,
-                                               RpptROIPtr roiTensorPtrSrc)
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_z >= batchSize)
+        return;
 
     // Early exit if starting position is outside ROI bounds
     if((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
@@ -360,17 +383,34 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
         hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int batchSize = dstDescPtr->n;
-    unsigned int *d_hist = reinterpret_cast<unsigned int*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-    unsigned char *d_lut = reinterpret_cast<unsigned char*>(d_hist + batchSize * HISTOGRAM_BINS);
+
+    // Calculate required scratch buffer size
+    // Layout: [d_hist | d_lut | yuvBuf (for 3-channel only)]
+    size_t histSize = batchSize * HISTOGRAM_BINS * sizeof(unsigned int);
+    size_t lutSize = batchSize * HISTOGRAM_BINS * sizeof(unsigned char);
+    size_t yuvSize = (srcDescPtr->c == 3) ? (3 * static_cast<size_t>(srcDescPtr->w) * static_cast<size_t>(srcDescPtr->h) * static_cast<size_t>(srcDescPtr->n)) : 0;
+    size_t requiredSize = histSize + lutSize + yuvSize;
+
+    // Pre-allocated scratch buffer size from handle (sizeof(Rpp32f) * 8294400)
+    constexpr size_t SCRATCH_BUFFER_SIZE = sizeof(Rpp32f) * 8294400;
+
+    // Use handle's pre-allocated scratch buffer if sufficient, otherwise reallocate overflow buffer
+    Rpp8u *scratchBuffer;
+    if(requiredSize <= SCRATCH_BUFFER_SIZE)
+        scratchBuffer = reinterpret_cast<Rpp8u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    else
+        // Reallocate overflow buffer if needed
+        CHECK_RETURN_STATUS(hipMalloc(&scratchBuffer, requiredSize));
+
+    unsigned int *d_hist = reinterpret_cast<unsigned int*>(scratchBuffer);
+    unsigned char *d_lut = reinterpret_cast<unsigned char*>(scratchBuffer + histSize);
 
     if(srcDescPtr->c == 3)
     {
         // Use size_t for all intermediate calculations to prevent overflow for large images
         const size_t planeSize = static_cast<size_t>(srcDescPtr->w) * static_cast<size_t>(srcDescPtr->h) * static_cast<size_t>(srcDescPtr->n);
-        size_t yuvBufferSize = 3 * planeSize * sizeof(Rpp8u);
-        
-        Rpp8u *yuvBuf = nullptr;
-        CHECK_RETURN_STATUS(hipMalloc(&yuvBuf, yuvBufferSize));
+
+        Rpp8u *yuvBuf = scratchBuffer + histSize + lutSize;
 
         Rpp8u *yBuf = yuvBuf;
         Rpp8u *cbBuf = yuvBuf + planeSize;
@@ -382,6 +422,10 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
             int globalThreads_y = dstDescPtr->h;
             int globalThreads_z = handle.GetBatchSize();
 
+            // Compute YCbCr buffer strides using 64-bit types to prevent overflow for large images
+            size_t yuvNStride = static_cast<size_t>(srcDescPtr->w) * static_cast<size_t>(srcDescPtr->h);
+            size_t yuvHStride = static_cast<size_t>(srcDescPtr->w);
+
             hipLaunchKernelGGL(convert_rgb_pkd3_to_ycbcr_pln3,
                                dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -390,7 +434,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                yBuf, cbBuf, crBuf,
                                make_uint2(srcDescPtr->w, srcDescPtr->h),
-                               roiTensorPtrSrc);
+                               roiTensorPtrSrc,
+                               batchSize);
 
             hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
 
@@ -400,8 +445,9 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0, handle.GetStream(),
                                yBuf, roiTensorPtrSrc,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
-                               d_hist);
+                               make_ulong2(yuvNStride, yuvHStride),
+                               d_hist,
+                               batchSize);
 
             hipLaunchKernelGGL(build_lut_from_hist_kernel,
                                dim3(batchSize), dim3(HISTOGRAM_BINS),
@@ -416,10 +462,12 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0, handle.GetStream(),
                                yBuf,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                               make_ulong2(yuvNStride, yuvHStride),
                                yBuf,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
-                               d_lut, roiTensorPtrSrc);
+                               make_ulong2(yuvNStride, yuvHStride),
+                               d_lut,
+                               roiTensorPtrSrc,
+                               batchSize);
 
             globalThreads_x = (dstDescPtr->w + 7) >> 3;
             globalThreads_y = dstDescPtr->h;
@@ -435,7 +483,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                    make_uint2(srcDescPtr->w, srcDescPtr->h),
                                    dstPtr,
                                    make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   roiTensorPtrSrc);
+                                   roiTensorPtrSrc,
+                                   batchSize);
             }
             else if(dstDescPtr->layout == RpptLayout::NCHW)
             {
@@ -447,7 +496,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                    make_uint2(srcDescPtr->w, srcDescPtr->h),
                                    dstPtr,
                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   roiTensorPtrSrc);
+                                   roiTensorPtrSrc,
+                                   batchSize);
             }
         }
         else if(srcDescPtr->layout == RpptLayout::NCHW)
@@ -456,6 +506,10 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
             int globalThreads_y = srcDescPtr->h;
             int globalThreads_z = srcDescPtr->n;
 
+            // Compute YCbCr buffer strides using 64-bit types to prevent overflow for large images
+            size_t yuvNStride = static_cast<size_t>(srcDescPtr->w) * static_cast<size_t>(srcDescPtr->h);
+            size_t yuvHStride = static_cast<size_t>(srcDescPtr->w);
+
             hipLaunchKernelGGL(convert_rgb_pln3_to_ycbcr_pln3,
                                dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -463,8 +517,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                yBuf, cbBuf, crBuf,
-                               make_uint2(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
-                               roiTensorPtrSrc);
+                               make_ulong2(yuvNStride, yuvHStride),
+                               roiTensorPtrSrc, batchSize);
 
             hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
 
@@ -474,8 +528,9 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0, handle.GetStream(),
                                yBuf, roiTensorPtrSrc,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
-                               d_hist);
+                               make_ulong2(yuvNStride, yuvHStride),
+                               d_hist,
+                               batchSize);
 
             hipLaunchKernelGGL(build_lut_from_hist_kernel,
                                dim3(batchSize), dim3(HISTOGRAM_BINS),
@@ -490,10 +545,11 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0, handle.GetStream(),
                                yBuf,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
+                               make_ulong2(yuvNStride, yuvHStride),
                                yBuf,
-                               make_uint3(srcDescPtr->w * srcDescPtr->h, srcDescPtr->w * srcDescPtr->h, srcDescPtr->w),
-                               d_lut, roiTensorPtrSrc);
+                               make_ulong2(yuvNStride, yuvHStride),
+                               d_lut, roiTensorPtrSrc,
+                               batchSize);
 
             globalThreads_x = (dstDescPtr->w + 7) >> 3;
             globalThreads_y = dstDescPtr->h;
@@ -509,7 +565,8 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                    make_uint2(srcDescPtr->w, srcDescPtr->h),
                                    dstPtr,
                                    make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   roiTensorPtrSrc);
+                                   roiTensorPtrSrc,
+                                   batchSize);
             }
             else if(dstDescPtr->layout == RpptLayout::NCHW)
             {
@@ -521,11 +578,10 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                    make_uint2(srcDescPtr->w, srcDescPtr->h),
                                    dstPtr,
                                    make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   roiTensorPtrSrc);
+                                   roiTensorPtrSrc,
+                                   batchSize);
             }
         }
-
-        CHECK_RETURN_STATUS(hipFree(yuvBuf));
 
         return RPP_SUCCESS;
     }
@@ -542,8 +598,9 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0, handle.GetStream(),
                        srcPtr, roiTensorPtrSrc,
-                       make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                       d_hist);
+                       make_ulong2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                       d_hist,
+                       batchSize);
 
     hipLaunchKernelGGL(build_lut_from_hist_kernel,
                        dim3(batchSize), dim3(HISTOGRAM_BINS),
@@ -559,10 +616,12 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0, handle.GetStream(),
                        srcPtr,
-                       make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                       make_ulong2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                        dstPtr,
-                       make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                       d_lut, roiTensorPtrSrc);
+                       make_ulong2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                       d_lut,
+                       roiTensorPtrSrc,
+                       batchSize);
 
     return RPP_SUCCESS;
 }
