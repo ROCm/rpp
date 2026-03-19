@@ -99,6 +99,30 @@ RppStatus rppt_channel_permute(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  */
 RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptSubpixelLayout srcSubpixelLayout, rppHandle_t rppHandle, RppBackend executionBackend);
 
+/*! \brief YUV to RGB color conversion on HIP backend (NV12 8-bit only)
+ * \details Converts semi-planar NV12 (Y plane + interleaved UV) to packed RGB24.<br>
+ * - Source: single pointer in HIP memory (Y then UV). yuv_pitch is the Y row stride in bytes; UV follows at offset (v_pitch * yuv_pitch).
+ * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride bgr_pitch bytes.
+ * - Supported execution backend: RppBackend::RPP_HIP_BACKEND only.
+ * \param [in] srcPtr pointer to YUV buffer in HIP memory (Y plane then interleaved UV)
+ * \param [in] srcDescPtr source tensor descriptor (dataType must be U8)
+ * \param [out] dstPtr pointer to RGB output buffer in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (dataType must be U8)
+ * \param [in] yuv_pitch row pitch of Y plane in bytes
+ * \param [in] bgr_pitch row pitch of RGB output in bytes
+ * \param [in] width image width in pixels
+ * \param [in] height image height in pixels
+ * \param [in] v_pitch number of Y rows (height); UV plane starts at srcPtr + v_pitch * yuv_pitch
+ * \param [in] col_standard color space standard (e.g. BT.601, BT.709)
+ * \param [in] color_range color range (e.g. studio 16-235, full 0-255)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
+ */
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u yuv_pitch, Rpp32u bgr_pitch, Rpp32u width, Rpp32u height, Rpp32u v_pitch, Rpp32s col_standard, Rpp32s color_range, rppHandle_t rppHandle, RppBackend executionBackend);
+
 /*! @}
  */
 

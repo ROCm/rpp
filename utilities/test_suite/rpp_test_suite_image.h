@@ -130,7 +130,8 @@ std::map<int, string> augmentationMap =
     {95, "solarize"},
     {96, "channel_dropout"},
     {99, "random_erase"},
-    {101, "emboss"}
+    {101, "emboss"},
+    {103, "yuv_to_rgb"}
 };
 
 enum Augmentation {
@@ -200,7 +201,8 @@ enum Augmentation {
     SOLARIZE = 95,
     CHANNEL_DROPOUT = 96,
     RANDOM_ERASE = 99,
-    EMBOSS = 101
+    EMBOSS = 101,
+    YUV_TO_RGB = 103
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, EMBOSS};
@@ -559,6 +561,141 @@ inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& ma
         maxHeight = max(maxHeight, height);
     }
     tjDestroy(tjInstance);
+}
+
+// Try to read width/height from sidecar .info file (same base path as .yuv). Format: "width=3840" and "height=2160" on separate lines.
+inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, int& width, int& height)
+{
+    width = 0;
+    height = 0;
+    std::string infoPath = yuvFilePath;
+    size_t dot = infoPath.find_last_of('.');
+    if (dot != std::string::npos)
+        infoPath = infoPath.substr(0, dot);
+    infoPath += ".info";
+    FILE* fp = fopen(infoPath.c_str(), "r");
+    if (!fp)
+        return false;
+    char line[128];
+    while (fgets(line, sizeof(line), fp))
+    {
+        int w = 0, h = 0;
+        if (sscanf(line, "width=%d", &w) == 1 && w > 0) width = w;
+        if (sscanf(line, "height=%d", &h) == 1 && h > 0) height = h;
+    }
+    fclose(fp);
+    return (width > 0 && height > 0);
+}
+
+// Parse dimensions: first try .info sidecar; else parse from filename (e.g. ..._3840x2160_....yuv).
+inline void parse_yuv_dimensions(const std::string& filePath, int& width, int& height)
+{
+    width = 0;
+    height = 0;
+    if (parse_yuv_dimensions_from_sidecar(filePath, width, height))
+        return;
+    std::string name = filePath;
+    size_t baseNameStart = name.find_last_of("/\\");
+    if (baseNameStart != std::string::npos)
+        name = name.substr(baseNameStart + 1);
+    size_t xPos = name.find('x');
+    if (xPos == std::string::npos || xPos == 0 || xPos == name.size() - 1)
+        return;
+    size_t wStart = xPos;
+    while (wStart > 0 && isdigit(name[wStart - 1])) wStart--;
+    size_t hEnd = xPos + 1;
+    while (hEnd < name.size() && isdigit(name[hEnd])) hEnd++;
+    if (wStart < xPos && hEnd > xPos + 1)
+    {
+        width = std::stoi(name.substr(wStart, xPos - wStart));
+        height = std::stoi(name.substr(xPos + 1, hEnd - (xPos + 1)));
+    }
+}
+
+inline void parse_yuv_dimensions_from_filename(const std::string& filePath, int& width, int& height)
+{
+    parse_yuv_dimensions(filePath, width, height);
+}
+
+// Derive reference file basename from YUV path for per-image QA.
+// Input and ref names match except extension: foo.yuv -> foo.rgb
+inline std::string get_yuv_ref_basename(const std::string& yuvFilePath)
+{
+    std::string name = yuvFilePath;
+    size_t baseNameStart = name.find_last_of("/\\");
+    if (baseNameStart != std::string::npos)
+        name = name.substr(baseNameStart + 1);
+    size_t dot = name.find_last_of('.');
+    if (dot != std::string::npos)
+        name = name.substr(0, dot);
+    return name;
+}
+
+// Sets max dimensions from YUV filenames (parses WxH from each path)
+inline void set_max_dimensions_yuv(vector<string> imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
+{
+    for (const std::string& imagePath : imagePaths)
+    {
+        int width = 0, height = 0;
+        parse_yuv_dimensions_from_filename(imagePath, width, height);
+        if (width <= 0 || height <= 0)
+            continue;
+        if ((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+            imagesMixed = 1;
+        maxWidth = std::max(maxWidth, width);
+        maxHeight = std::max(maxHeight, height);
+    }
+}
+
+// Sets ROI and dst sizes from YUV filenames
+inline void set_src_and_dst_roi_yuv(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+{
+    int i = 0;
+    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
+    {
+        int width = 0, height = 0;
+        parse_yuv_dimensions_from_filename(*imagePathIter, width, height);
+        if (width <= 0)
+            width = 1;
+        if (height <= 0)
+            height = 1;
+        roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
+        roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
+        dstImgSizes[i].width = width;
+        dstImgSizes[i].height = height;
+    }
+}
+
+// Read a batch of NV12 YUV files (Y plane then interleaved UV) into a contiguous buffer
+inline void read_yuv_batch_nv12(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
+{
+    size_t offset = 0;
+    for (int i = 0; i < descPtr->n; i++)
+    {
+        std::string inputPath = *(imagesNamesStart + i);
+        FILE* fp = fopen(inputPath.c_str(), "rb");
+        if (!fp)
+        {
+            std::cerr << "\nUnable to open YUV file: " << inputPath;
+            continue;
+        }
+        int width = 0, height = 0;
+        parse_yuv_dimensions_from_filename(inputPath, width, height);
+        if (width <= 0 || height <= 0)
+        {
+            fclose(fp);
+            continue;
+        }
+        size_t ySize = (size_t)width * height;
+        size_t uvSize = (size_t)width * height / 2;
+        size_t frameSize = ySize + uvSize;
+        Rpp8u* dst = input + offset;
+        size_t read = fread(dst, 1, frameSize, fp);
+        fclose(fp);
+        if (read != frameSize)
+            std::cerr << "\nYUV read size mismatch for " << inputPath;
+        offset += frameSize;
+    }
 }
 
 // sets roi xywh values and dstImg sizes
@@ -1035,6 +1172,8 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         Rpp32u width = dstImgSizes[j].width;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
+        // When kernel writes with per-image pitch (e.g. yuv_to_rgb), row stride = width*c; else use descriptor stride
+        Rpp32u rowStrideBytes = (width < (Rpp32u)dstDescPtr->w) ? elementsInRow : elementsInRowMax;
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
         Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
@@ -1042,9 +1181,14 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         {
             memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
             tempOutputRow += elementsInRow;
-            outputRow += elementsInRowMax;
+            outputRow += rowStrideBytes;
         }
         string outputImagePath = outputFolder + *(imagesNamesStart + j);
+        // OpenCV imwrite does not support .yuv; use .png for YUV-to-RGB dumps (input names are .yuv)
+        if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".yuv") == 0)
+        {
+            outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
+        }
         Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
@@ -1204,7 +1348,7 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, RpptDescPtr dstDesc
     }
 }
 
-inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, string kernelSizeAndGradientName, int additionalParam, int testCase, string dst, string scriptPath)
+inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, string kernelSizeAndGradientName, int additionalParam, int testCase, string dst, string scriptPath, const vector<string>* yuvImagePaths = nullptr)
 {
     string func = funcName;
     string refFile = "";
@@ -1213,6 +1357,11 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
     {
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
+    else if(testCase == YUV_TO_RGB)
+    {
+        refOutputWidth = dstDescPtr->w;
+        refOutputHeight = dstDescPtr->h;
     }
     else
     {
@@ -1315,18 +1464,52 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
 
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
-    if(dstDescPtr->dataType == RpptDataType::U8)
+    if(testCase == YUV_TO_RGB && yuvImagePaths != nullptr && (int)yuvImagePaths->size() >= dstDescPtr->n && dstDescPtr->dataType == RpptDataType::U8)
     {
-        Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
-        read_bin_file(refFile, binaryContent);
+        std::string refDir = scriptPath + "/../REFERENCE_OUTPUT/yuv_to_rgb/";
+        for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+        {
+            std::string refPath = refDir + get_yuv_ref_basename((*yuvImagePaths)[imageCnt]) + ".rgb";
+            int imgH = dstImgSizes[imageCnt].height;
+            int imgW = dstImgSizes[imageCnt].width;
+            int imgSize = imgH * imgW * dstDescPtr->c;
+            Rpp8u* refBuf = (Rpp8u*)malloc((size_t)imgSize * sizeof(Rpp8u));
+            FILE* rfp = fopen(refPath.c_str(), "rb");
+            if(rfp)
+            {
+                fread(refBuf, 1, (size_t)imgSize, rfp);
+                fclose(rfp);
+                Rpp8u* outSlice = (Rpp8u*)output + imageCnt * dstDescPtr->strides.nStride;
+                int rowStride = imgW * (int)dstDescPtr->c;  // yuv_to_rgb writes with per-image pitch
+                int matchedIdx = 0;
+                for(int i = 0; i < imgH; i++)
+                {
+                    Rpp8u* outRow = outSlice + i * rowStride;
+                    Rpp8u* refRow = refBuf + i * imgW * (int)dstDescPtr->c;
+                    for(int j = 0; j < imgW * (int)dstDescPtr->c; j++)
+                        if(abs((int)outRow[j] - (int)refRow[j]) <= CUTOFF) matchedIdx++;
+                }
+                if(matchedIdx == imgSize && matchedIdx != 0) fileMatch++;
+            }
+            free(refBuf);
+        }
+    }
+    else if(dstDescPtr->dataType == RpptDataType::U8)
+    {
+        // YUV_TO_RGB uses per-image .rgb refs only (one per input: YUV400, YUV420, YUV422); no single ref file
+        if(testCase != YUV_TO_RGB)
+        {
+            Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+            read_bin_file(refFile, binaryContent);
 
-        if(dstDescPtr->layout == RpptLayout::NHWC)
-            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-        else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-            compare_outputs_pln3((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-        else
-            compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
-        free(binaryContent);
+            if(dstDescPtr->layout == RpptLayout::NHWC)
+                compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+                compare_outputs_pln3((Rpp8u*)output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            else
+                compare_outputs_pkd_and_pln1((Rpp8u*)output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+            free(binaryContent);
+        }
     }
     else
     {

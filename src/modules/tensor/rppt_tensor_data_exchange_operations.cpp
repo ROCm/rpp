@@ -365,3 +365,46 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr,
 
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
+
+/******************** yuv_to_rgb ********************/
+
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32u yuv_pitch,
+                          Rpp32u bgr_pitch,
+                          Rpp32u width,
+                          Rpp32u height,
+                          Rpp32u v_pitch,
+                          Rpp32s col_standard,
+                          Rpp32s color_range,
+                          rppHandle_t rppHandle,
+                          RppBackend executionBackend)
+{
+    if (executionBackend != RppBackend::RPP_HIP_BACKEND)
+        return RPP_ERROR_INCOMPATIBLE_BACKEND;
+    if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+#ifdef GPU_SUPPORT
+    if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        return hip_exec_yuv_to_rgb<Rpp8u>(static_cast<Rpp8u*>(srcPtr),
+                                        yuv_pitch,
+                                        static_cast<Rpp8u*>(dstPtr),
+                                        bgr_pitch,
+                                        width,
+                                        height,
+                                        v_pitch,
+                                        col_standard,
+                                        color_range,
+                                        handle);
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
