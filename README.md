@@ -199,6 +199,24 @@ ctest -VV
 
 To test latest Image/Voxel/Audio/Miscellaneous functionalities of RPP using a python script please view [AMD ROCm Performance Primitives (RPP) Test Suite](utilities/test_suite/README.md)
 
+## Adding RPP to your CMake project
+To add RPP to your CMake project, you can use the following code after installation:
+
+```cmake
+# Ensure ROCM_PATH is added in the CMAKE_PREFIX_PATH to find RPP's CMake package config
+list(APPEND CMAKE_PREFIX_PATH ${ENV{ROCM_PATH}})
+
+find_package(rpp REQUIRED)
+target_link_libraries(your_target PRIVATE rpp)
+```
+
+> [!NOTE]
+> `find_package(rpp REQUIRED)` sets the following variables in your CMake project for use in downstream projects:
+> * `rpp_BACKEND_TYPE` - "HIP" or "CPU"
+> * `rpp_AUDIO_AUGMENTATIONS_SUPPORT` - ON or OFF
+
+
+
 ## MIVisionX support - OpenVX extension
 
 [MIVisionX](https://github.com/ROCm/MIVisionX) RPP extension
