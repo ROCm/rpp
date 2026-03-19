@@ -163,15 +163,8 @@ sudo zypper install rpp rpp-devel rpp-test
   make -j8
   sudo make install
   ```
-
-  + Run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
-
-  ```shell
-  make test
-  ```
-
-> [!IMPORTANT]
-> `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
+### Running Tests
+  After installing RPP, refer to the [Verify installation](#verify-installation) section below for instructions on running tests.
 
 ## Verify installation
 
