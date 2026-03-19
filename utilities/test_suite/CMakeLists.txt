@@ -58,7 +58,8 @@ elseif(NOT DEFINED CMAKE_CXX_COMPILER AND NOT EXISTS "${ROCM_PATH}/lib/llvm/bin/
 endif()
 
 project(rpp-test)
-# make test with CTest
+
+# Enable testing
 enable_testing()
 include(CTest)
 
@@ -70,84 +71,33 @@ List of high level dependency checks - for RPP QA tests in utilities/test_suite/
 - Pandas (For ALL tests - to run and display rocprof performance test results)
 - OpenMP (For ALL tests - to measure wall-times, and parallelize input tensor-image PKD3->PLN3 conversions across threads)
 - ROCm HIP (For ALL HIP tests - HIP to be installed and found to run all RPP GPU HIP backend API)
-- RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
-- libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
+- rpp_AUDIO_AUGMENTATIONS_SUPPORT from find_package(rpp) (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
+- libsnd (For AUDIO tests - if rpp_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
 - TurboJPEG (For IMAGE tests - to decode image inputs)
 ]]
-# add find modules
+# Add find modules
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
 set(RPP_TEST_SCRIPT_DIR "${ROCM_PATH}/share/rpp/test")
 
-if(BUILD_FROM_SOURCE)
-    # Source tree mode - Use parent CMakeLists.txt definitions for backend/audio support
-    message("-- ${White}${PROJECT_NAME}: Building from source tree${ColourReset}")
-    message("-- ${Yellow}${PROJECT_NAME}: Ensure RPP is built and installed before running CTests${ColourReset}")
-    
-    # Get backend/audio support from parent scope (already set by parent CMakeLists.txt)
-    if (DEFINED RPP_BACKEND_HIP)
-        set(rpp_BACKEND_HIP_FOUND ${RPP_BACKEND_HIP})
-    else()
-        set(rpp_BACKEND_HIP_FOUND 0)
-    endif()
-    if(DEFINED RPP_AUDIO_AUGMENTATIONS_SUPPORT)
-        set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${RPP_AUDIO_AUGMENTATIONS_SUPPORT})
-    else()
-        set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-    endif()
-else()
-    # Standalone mode - use find_package and installed paths
-    message("-- ${White}${PROJECT_NAME}: Standalone/installed mode${ColourReset}")
-    
-    find_package(rpp 3.0.0 QUIET)
-    if(rpp_FOUND)
-        message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+find_package(rpp 3.0.0 QUIET)
 
-        message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
-        message("-- \t${White}rpp_LIB_DIR -- ${rpp_LIB_DIR}${ColourReset}")
-        message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
-        message("-- \t${White}rpp_FOUND -- ${rpp_FOUND}${ColourReset}")
-        message("-- \t${White}rpp_VERSION -- ${rpp_VERSION}${ColourReset}")
-        message("-- \t${White}rpp_VERSION_MAJOR -- ${rpp_VERSION_MAJOR}${ColourReset}")
-        message("-- \t${White}rpp_VERSION_MINOR -- ${rpp_VERSION_MINOR}${ColourReset}")
-        message("-- \t${White}rpp_VERSION_PATCH -- ${rpp_VERSION_PATCH}${ColourReset}")
-        
-        set(RPP_GENERATED_INCLUDE_DIR "${rpp_INCLUDE_DIR}/rpp")
-        
-        # RPP installation - Backend check
-        set(rpp_BACKEND_HIP_FOUND 0)
-        if(EXISTS ${RPP_GENERATED_INCLUDE_DIR}/rpp_backend.h)
-            file(READ ${RPP_GENERATED_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
-            string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-            set(rpp_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-        endif()
-        
-        # RPP installation - Audio support check
-        set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-        if(EXISTS ${RPP_GENERATED_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
-            file(READ ${RPP_GENERATED_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
-            string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
-            set(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
-        endif()
-    else()
-        message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running CTests${ColourReset}")
-    endif()
-endif()
+if(rpp_FOUND)
+    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
+    message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
+    message("-- \t${White}rpp_LIB_DIR -- ${rpp_LIB_DIR}${ColourReset}")
+    message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+    message("-- \t${White}rpp_FOUND -- ${rpp_FOUND}${ColourReset}")
+    message("-- \t${White}rpp_VERSION -- ${rpp_VERSION}${ColourReset}")
+    message("-- \t${White}rpp_VERSION_MAJOR -- ${rpp_VERSION_MAJOR}${ColourReset}")
+    message("-- \t${White}rpp_VERSION_MINOR -- ${rpp_VERSION_MINOR}${ColourReset}")
+    message("-- \t${White}rpp_VERSION_PATCH -- ${rpp_VERSION_PATCH}${ColourReset}")
+    message("-- \t${White}rpp_BACKEND_TYPE -- ${rpp_BACKEND_TYPE}${ColourReset}")
+    message("-- \t${White}rpp_AUDIO_AUGMENTATIONS_SUPPORT -- ${rpp_AUDIO_AUGMENTATIONS_SUPPORT}${ColourReset}")
 
-# Set BACKEND based on findings
-if(NOT DEFINED BACKEND)
-    if(rpp_BACKEND_HIP_FOUND)
-        set(BACKEND "HIP")
-    else()
-        set(BACKEND "CPU")
-    endif()
-endif()
-message("-- ${White}${PROJECT_NAME}: Using RPP Backend: ${BACKEND}${ColourReset}")
-
-if(rpp_FOUND OR BUILD_FROM_SOURCE)
     # find required libraries
     set(Python3_FIND_VIRTUALENV FIRST)
     find_package(Python3 QUIET)
@@ -203,7 +153,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                 endif(NIFTI_FOUND)
 
                 # HOST test set 3 - rpp_qa_tests_tensor_audio_host_all - HOST Tensor-Audio QA PASS/FAIL tests
-                if(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
                     if(libsnd_LIBS)
                         add_test(
                             NAME rpp_qa_tests_tensor_audio_host_all
@@ -215,7 +165,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                     endif(libsnd_LIBS)
                 else()
                     message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 3 - rpp_qa_tests_tensor_audio_host_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
-                endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
 
                 # HOST test set 4 - rpp_qa_tests_tensor_misc_host_all - HOST Tensor-Misc QA PASS/FAIL tests
                 add_test(
@@ -224,7 +174,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )
 
-                if( "${BACKEND}" STREQUAL "HIP")
+                if(rpp_BACKEND_TYPE STREQUAL "HIP")
                     if(NOT DEFINED HIP_PATH)
                         if(NOT DEFINED ENV{HIP_PATH})
                             set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
@@ -267,7 +217,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                         endif(NIFTI_FOUND)
 
                         # HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all - HIP Tensor-Audio QA PASS/FAIL tests
-                        if(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
                             if(libsnd_LIBS)
                                 add_test(
                                     NAME rpp_qa_tests_tensor_audio_hip_all
@@ -279,7 +229,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                             endif(libsnd_LIBS)
                         else()
                             message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
-                        endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
 
                         # HIP test set 4 - rpp_qa_tests_tensor_misc_hip_all - HIP Tensor-Misc QA PASS/FAIL tests
                         add_test(
@@ -299,4 +249,6 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
     else()
         message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Python3 is not found!${ColourReset}")
     endif(Python3_FOUND)
-endif()
+else()
+    message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running CTests${ColourReset}")
+endif(rpp_FOUND)

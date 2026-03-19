@@ -427,12 +427,6 @@ install(EXPORT ${PROJECT_NAME}-targets
     COMPONENT dev
 )
 
-# CTest - Needs RPP Installed
-set(BUILD_FROM_SOURCE ON)
-enable_testing()
-include(CTest)
-add_subdirectory(utilities/test_suite)
-
 # Set package information
 set(PKG_MAINTAINER_NM  "mivisionx support")
 set(PKG_MAINTAINER_EMAIL  "mivisionx.support@amd.com")
