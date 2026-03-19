@@ -93,6 +93,15 @@ set(DEFAULT_BUILD_TYPE "Release")
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 
+option(RPP_PYPACKAGE  "Build RPP Python package"  OFF)
+set(PYTHON_VERSION_SUGGESTED "" CACHE STRING "User provided Python version for RPP pybind")
+
+# Validate Python version if provided
+if(PYTHON_VERSION_SUGGESTED AND (PYTHON_VERSION_SUGGESTED VERSION_LESS "3.8" OR PYTHON_VERSION_SUGGESTED VERSION_GREATER "3.13"))
+    message("-- ${Red}NOTE: RPP pybind supported on Python versions - 3.8 to 3.13. Please provide supported version${ColourReset}")
+    set(RPP_PYPACKAGE OFF)
+endif()
+
 # Set message options
 if(NOT WIN32)
     string(ASCII 27 Esc)
@@ -176,6 +185,8 @@ message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D RPP_PYPACKAGE=${RPP_PYPACKAGE} [Select RPP Python package Support [options:ON/OFF](default:OFF)]${ColourReset}")
+message("-- ${Cyan}     -D PYTHON_VERSION_SUGGESTED=${PYTHON_VERSION_SUGGESTED} [Python version for pybind (default:All supported)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
@@ -421,6 +432,13 @@ install(EXPORT ${PROJECT_NAME}-targets
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT dev
 )
+
+# Python Package
+if(RPP_PYPACKAGE)
+    add_subdirectory(rpp_pybind)
+else()
+    message("--${Yellow} RPP Python Module turned OFF by user option -D RPP_PYPACKAGE=OFF or unsupported Python version${ColourReset}")
+endif()
 
 # CTest - Needs RPP Installed
 set(BUILD_FROM_SOURCE ON)

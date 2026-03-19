@@ -6,6 +6,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 ### Added
 
+- pyRPP Python bindings for RPP using pybind11, supporting 10 augmentations (Brightness, Contrast, Resize, Rotate, Crop, Flip, Gamma Correction, Hue, Vignette, Pixelate)
 - Runtime backend selection parameter (`RppBackend executionBackend`) for all RPP tensor API functions
 - Backend tracking in `rppHandle_t` to store backend type (HOST or HIP)
 
