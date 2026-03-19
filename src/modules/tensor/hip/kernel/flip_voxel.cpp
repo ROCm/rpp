@@ -216,6 +216,7 @@ RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                    make_uint2(verticalTensor[batchCount], depthTensor[batchCount]),
                                    &roiGenericPtrSrc[batchCount],
                                    batchCount);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -231,6 +232,7 @@ RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                    dstGenericDescPtr->dims[1],
                                    make_uint2(verticalTensor[batchCount], depthTensor[batchCount]),
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -255,6 +257,7 @@ RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                    make_uint2(verticalTensor[batchCount], depthTensor[batchCount]),
                                    &roiGenericPtrSrc[batchCount],
                                    batchCount);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -269,6 +272,7 @@ RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                    make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                    make_uint2(verticalTensor[batchCount], depthTensor[batchCount]),
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
