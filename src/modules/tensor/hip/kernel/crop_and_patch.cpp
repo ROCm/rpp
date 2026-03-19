@@ -349,6 +349,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                            roiTensorPtrSrc,
                            cropTensorPtr,
                            patchTensorPtr);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -369,6 +370,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                roiTensorPtrSrc,
                                cropTensorPtr,
                                patchTensorPtr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -385,6 +387,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                roiTensorPtrSrc,
                                cropTensorPtr,
                                patchTensorPtr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -401,6 +404,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
             CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             hipLaunchKernelGGL(crop_and_patch_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -415,6 +419,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                roiTensorPtrSrc,
                                cropTensorPtr,
                                patchTensorPtr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -428,6 +433,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
             CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             hipLaunchKernelGGL(crop_and_patch_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -442,6 +448,7 @@ RppStatus hip_exec_crop_and_patch_tensor(T *srcPtr1,
                                roiTensorPtrSrc,
                                cropTensorPtr,
                                patchTensorPtr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

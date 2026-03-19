@@ -1947,6 +1947,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            filterTensor,
                            stdDevTensor,
                            handle.GetBatchSize());
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (kernelSize == 5)
     {
@@ -1958,6 +1959,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            filterTensor,
                            stdDevTensor,
                            handle.GetBatchSize());
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (kernelSize == 7)
     {
@@ -1969,6 +1971,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            filterTensor,
                            stdDevTensor,
                            handle.GetBatchSize());
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (kernelSize == 9)
     {
@@ -1980,6 +1983,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            filterTensor,
                            stdDevTensor,
                            handle.GetBatchSize());
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;
@@ -2037,6 +2041,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 5)
         {
@@ -2053,6 +2058,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 7)
         {
@@ -2069,6 +2075,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 9)
         {
@@ -2085,6 +2092,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -2105,6 +2113,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 5)
         {
@@ -2122,6 +2131,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 7)
         {
@@ -2139,6 +2149,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (kernelSize == 9)
         {
@@ -2156,6 +2167,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -2177,6 +2189,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 5)
             {
@@ -2193,6 +2206,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 7)
             {
@@ -2209,6 +2223,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 9)
             {
@@ -2225,6 +2240,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -2246,6 +2262,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 5)
             {
@@ -2262,6 +2279,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 7)
             {
@@ -2278,6 +2296,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (kernelSize == 9)
             {
@@ -2294,6 +2313,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    tileSize,
                                    roiTensorPtrSrc,
                                    filterTensor);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

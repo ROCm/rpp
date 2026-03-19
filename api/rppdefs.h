@@ -73,6 +73,16 @@ typedef halfhpp Rpp16f;
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
+/*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
+#define HIP_CHECK_LAUNCH_RETURN()                                              \
+  do {                                                                         \
+    hipError_t status = hipGetLastError();                                     \
+    if (status != hipSuccess) {                                                \
+      std::cerr << "AMD RPP: HIP Error Reported -- "                           \
+                << hipGetErrorString(status) << std::endl;                     \
+      return RPP_ERROR_HIP_LAUNCH;                                             \
+    }                                                                          \
+  } while (0)
 #else
 #define RPP_HOST_DEVICE
 #endif
@@ -84,6 +94,7 @@ const float ONE_OVER_255                    = 1.0f / 255;
 const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
 const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
 #define DROPOUT_FIXED_SEED                  42           // Constant fixed seed for reproducing the dropout output
+#define RANDOM_ERASE_NOISE_BUFFER_SIDE      255          // Random erase spatial noise buffer height and width. Changing this constant will result in QA test failures for tiled noise mapping
 
 /******************** RPP typedefs ********************/
 
@@ -172,7 +183,9 @@ typedef enum
     /*! \brief The specified axis is invalid or out of range. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_AXIS              = -26,
     /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
-    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27
+    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27,
+    /*! \brief HIP/GPU runtime or kernel launch error \ingroup group_rppdefs */
+    RPP_ERROR_HIP_LAUNCH                = -28
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums

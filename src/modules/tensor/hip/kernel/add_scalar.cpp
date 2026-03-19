@@ -109,6 +109,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
                                dstGenericDescPtr->dims[1],
                                addTensor[batchCount],
                                &roiGenericPtrSrc[batchCount]);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if (dstGenericDescPtr->layout == RpptLayout::NDHWC)
@@ -130,6 +131,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
                                make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                addTensor[batchCount],
                                &roiGenericPtrSrc[batchCount]);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
