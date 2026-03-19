@@ -303,6 +303,16 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
+# Match directory-level add_definitions; PUBLIC so find_package / rpp::rpp propagates to downstream TUs
+if("${BACKEND}" STREQUAL "HIP")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC RPP_BACKEND_HIP=1 GPU_SUPPORT)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC RPP_BACKEND_HIP=0)
+endif()
+if(RPP_AUDIO_SUPPORT)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC AUDIO_SUPPORT=1)
+endif()
+
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
 message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
@@ -395,6 +405,14 @@ set(BIN_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 set(RPP_PACKAGE_BACKEND_TYPE "${BACKEND}")
 # Audio augmentations (same effective flag as RPP_AUDIO_SUPPORT / rpp_audio_augmentations_support.h)
 set(RPP_PACKAGE_AUDIO_AUGMENTATIONS_SUPPORT "${RPP_AUDIO_SUPPORT}")
+# Semicolon-separated list for rpp-config.cmake fallback IMPORTED target (must match target_compile_definitions above)
+set(RPP_PACKAGE_INTERFACE_COMPILE_DEFINITIONS "RPP_BACKEND_HIP=0")
+if("${BACKEND}" STREQUAL "HIP")
+    set(RPP_PACKAGE_INTERFACE_COMPILE_DEFINITIONS "RPP_BACKEND_HIP=1;GPU_SUPPORT")
+endif()
+if(RPP_AUDIO_SUPPORT)
+    set(RPP_PACKAGE_INTERFACE_COMPILE_DEFINITIONS "${RPP_PACKAGE_INTERFACE_COMPILE_DEFINITIONS};AUDIO_SUPPORT=1")
+endif()
 
 # Generate Config File for rpp
 configure_package_config_file(

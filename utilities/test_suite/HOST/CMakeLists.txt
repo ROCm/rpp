@@ -202,7 +202,6 @@ else()
 
                     # HOST test set 3 - RPP Tensor-Audio HOST test suite
                     if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
-                        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
                         message("-- ${Green}${PROJECT_NAME} Tensor-Audio HOST tests set to build with RPP_AUDIO_SUPPORT set to ON${ColourReset}")
                         if(libsnd_LIBS)
                             include_directories(${SndFile_INCLUDE_DIRS})
