@@ -170,10 +170,10 @@ sudo zypper install rpp rpp-devel rpp-test
 
 The installer will copy
 
-* Libraries into `/opt/rocm/lib`
-* Header files into `/opt/rocm/include/rpp`
-* Samples, and test folder into `/opt/rocm/share/rpp`
-* Documents folder into `/opt/rocm/share/doc/rpp`
+* Libraries into `${ROCM_PATH}/lib`
+* Header files into `${ROCM_PATH}/include/rpp`
+* Samples, and test folder into `${ROCM_PATH}/share/rpp`
+* Documents folder into `${ROCM_PATH}/share/doc/rpp`
 
 ### Verify with rpp-test package
 
@@ -181,7 +181,7 @@ Test package will install CTest module to test rpp. Follow below steps to test p
 
 ```shell
 mkdir rpp-test && cd rpp-test
-cmake /opt/rocm/share/rpp/test/
+cmake ${ROCM_PATH}/share/rpp/test/
 ctest -VV
 ```
 > [!NOTE]
