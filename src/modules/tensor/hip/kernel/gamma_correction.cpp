@@ -259,6 +259,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                        handle.GetStream(),
                        gammaLUT,
                        gammaTensor);
+    HIP_CHECK_LAUNCH_RETURN();
 
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
@@ -277,6 +278,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            gammaLUT,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -292,6 +294,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                            dstDescPtr->c,
                            gammaLUT,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -308,6 +311,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                gammaLUT,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -323,6 +327,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                gammaLUT,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

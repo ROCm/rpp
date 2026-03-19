@@ -191,6 +191,7 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                            dstPtr,
                            dstGenericDescPtr->strides[0],
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (numDims == 2)
     {
@@ -209,6 +210,7 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (numDims == 3)
     {
@@ -229,6 +231,7 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                                dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                &roiTensor[batchCount * 6]);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else
@@ -250,6 +253,7 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                            dstPtr,
                            dstGenericDescPtr->strides,
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

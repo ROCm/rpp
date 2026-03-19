@@ -225,6 +225,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                rgbTensor,
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -240,6 +241,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                rgbTensor,
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -255,6 +257,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                rgbTensor,
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -271,6 +274,7 @@ RppStatus hip_exec_color_cast_tensor(T *srcPtr,
                                rgbTensor,
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
