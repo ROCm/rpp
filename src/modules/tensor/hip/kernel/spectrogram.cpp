@@ -306,6 +306,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        numWindowsTensor,
                        make_int4(nfft, windowLength, windowStep, windowCenterOffset),
                        reflectPadding);
+    HIP_CHECK_LAUNCH_RETURN();
 
     // compute the sin and cos factors required for FFT
     Rpp32f *cosTensor, *sinTensor;
@@ -320,6 +321,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        sinTensor,
                        numBins,
                        nfft);
+    HIP_CHECK_LAUNCH_RETURN();
 
     // compute the final output
     globalThreads_x = numBins;
@@ -338,6 +340,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        sinTensor,
                        make_int4(nfft, numBins, power, numTiles),
                        vertical);
+    HIP_CHECK_LAUNCH_RETURN();
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     return RPP_SUCCESS;

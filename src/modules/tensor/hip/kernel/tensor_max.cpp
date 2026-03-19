@@ -357,6 +357,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialMaxArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_max_grid_result_hip,
                            dim3(1, 1, gridDim_z),
@@ -366,6 +367,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            partialMaxArr,
                            gridDim_x * gridDim_y,
                            maxArr);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
@@ -382,6 +384,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            partialMaxArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_max_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
@@ -391,6 +394,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            partialMaxArr,
                            gridDim_x * gridDim_y,
                            maxArr);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
@@ -407,6 +411,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            partialMaxArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(tensor_max_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
@@ -416,6 +421,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            partialMaxArr,
                            gridDim_x * gridDim_y,
                            maxArr);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

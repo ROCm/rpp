@@ -158,6 +158,7 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                            dstPtr,
                            dstGenericDescPtr->strides[0],
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (numDims == 2)
     {
@@ -176,6 +177,7 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                            dstPtr,
                            make_uint2(dstGenericDescPtr->strides[0], dstGenericDescPtr->strides[1]),
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else
     {
@@ -196,6 +198,7 @@ RppStatus hip_exec_log1p_i16_f32_tensor(Rpp16s *srcPtr,
                            dstPtr,
                            dstGenericDescPtr->strides,
                            roiTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

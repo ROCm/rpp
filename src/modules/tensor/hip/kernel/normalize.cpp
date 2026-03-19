@@ -1570,6 +1570,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                maxParamVolume,
                                axisMask);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -1586,6 +1587,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                maxParamVolume,
                                axisMask);
+            HIP_CHECK_LAUNCH_RETURN();
         }
 
         if (axisMask == 2)
@@ -1604,6 +1606,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                axisMask,
                                tensorDims);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (axisMask == 3)
         {
@@ -1621,6 +1624,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                axisMask,
                                tensorDims);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if (tensorDims == 3)
@@ -1644,6 +1648,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                partialSumArr,
                                maxParamVolume,
                                axisMask);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -1660,6 +1665,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                partialSumArr,
                                maxParamVolume,
                                axisMask);
+            HIP_CHECK_LAUNCH_RETURN();
         }
 
         // perform final reduction on block wise sums for below cases
@@ -1680,6 +1686,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                axisMask,
                                tensorDims);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         // reduce on XY partial sums
         if (axisMask == 6)
@@ -1698,6 +1705,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                axisMask,
                                tensorDims);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         // reduce on XYZ block partial sums
         else if (axisMask == 7)
@@ -1716,6 +1724,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                roiTensor,
                                axisMask,
                                tensorDims);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else
@@ -1757,6 +1766,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                maxParamVolume,
                                tensorDims,
                                srcGenericDescPtr->strides[0]);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -1776,6 +1786,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                maxParamVolume,
                                tensorDims,
                                srcGenericDescPtr->strides[0]);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         hipLaunchKernelGGL(final_reduction_nd_hip_tensor,
                            dim3(ceil((float)maxParamVolume/1024), 1, globalThreads_z),
@@ -1789,6 +1800,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                            tensorDims,
                            maxParamVolume,
                            isMean);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     return RPP_SUCCESS;
@@ -1873,6 +1885,7 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
                            roiTensor,
                            make_uint2(maxParamVolume, axisMask),
                            computeStdDev);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (tensorDims == 3)
     {
@@ -1898,6 +1911,7 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
                                &roiTensor[batchCount * 6],
                                axisMask,
                                computeStdDev);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else
@@ -1928,6 +1942,7 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
                            make_uint2(maxParamVolume, srcGenericDescPtr->strides[0]),
                            tensorDims,
                            computeStdDev);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

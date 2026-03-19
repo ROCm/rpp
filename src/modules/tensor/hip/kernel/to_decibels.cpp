@@ -262,6 +262,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, 1),
                                srcDims,
                                partialMaxArr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (numDims == 2)
         {
@@ -278,6 +279,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                srcDims,
                                partialMaxArr);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     }
@@ -292,6 +294,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                        numBlocksPerSample,
                        computeMax,
                        inverseMagnitudeTensor);
+    HIP_CHECK_LAUNCH_RETURN();
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     // launch kernel for todecibels
@@ -312,6 +315,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            static_cast<double>(minRatio),
                            multiplier,
                            inverseMagnitudeTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (numDims == 2)
     {
@@ -330,6 +334,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            static_cast<double>(minRatio),
                            multiplier,
                            inverseMagnitudeTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;
