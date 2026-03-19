@@ -24,12 +24,12 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
-__global__ void audio_tensor_add_scalar_hip_tensor(float *srcPtr1,
-                                                   uint srcStride,
-                                                   float *dstPtr,
-                                                   uint dstStride,
-                                                   int *srcLengthTensor,
-                                                   float *scalarTensor)
+__global__ void audio_tensor_add_scalar_hip(float *srcPtr1,
+                                            uint srcStride,
+                                            float *dstPtr,
+                                            uint dstStride,
+                                            int *srcLengthTensor,
+                                            float *scalarTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -63,7 +63,7 @@ RppStatus hip_exec_audio_tensor_add_tensor(Rpp32f *srcPtr1,
     Rpp32s globalThreads_z = srcDescPtr->n;
 
     // Scalar per batch broadcasting: srcPtr2 has shape (batchSize, 1)
-    hipLaunchKernelGGL(audio_tensor_add_scalar_hip_tensor,
+    hipLaunchKernelGGL(audio_tensor_add_scalar_hip,
                        dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                        dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
