@@ -148,6 +148,7 @@ else()
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
 
                     # include and link directories
                     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
@@ -199,6 +200,7 @@ else()
 
                         # HIP test set 3 - RPP Tensor-Audio HIP test suite
                         if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
+                            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with RPP_AUDIO_SUPPORT set to ON${ColourReset}")
                             if(libsnd_LIBS)
                                 include_directories(${SndFile_INCLUDE_DIRS})
