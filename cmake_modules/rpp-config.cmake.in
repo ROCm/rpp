@@ -4,6 +4,8 @@
 #  use rpp_LIB_DIR       - library directory for rpp
 #  use rpp_LIBRARY       - library to link against
 #  use rpp_LIBRARIES     - library to link against
+#  use rpp_BACKEND_TYPE               - "HIP" or "CPU"
+#  use rpp_AUDIO_AUGMENTATIONS_SUPPORT - ON or OFF
 
 # compute paths
 get_filename_component(@PROJECT_NAME@_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -11,6 +13,8 @@ get_filename_component(@PROJECT_NAME@_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PAT
 # version
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-config-version.cmake)
 set(@PROJECT_NAME@_VERSION ${PACKAGE_VERSION})
+set(@PROJECT_NAME@_BACKEND_TYPE "@RPP_PACKAGE_BACKEND_TYPE@")
+set(@PROJECT_NAME@_AUDIO_AUGMENTATIONS_SUPPORT "@RPP_PACKAGE_AUDIO_AUGMENTATIONS_SUPPORT@")
 
 # targets
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake)

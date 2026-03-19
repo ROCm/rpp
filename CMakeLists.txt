@@ -391,6 +391,11 @@ set(LIB_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(BIN_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 
+# Backend string for package config (HIP or CPU after HIP fallback)
+set(RPP_PACKAGE_BACKEND_TYPE "${BACKEND}")
+# Audio augmentations (same effective flag as RPP_AUDIO_SUPPORT / rpp_audio_augmentations_support.h)
+set(RPP_PACKAGE_AUDIO_AUGMENTATIONS_SUPPORT "${RPP_AUDIO_SUPPORT}")
+
 # Generate Config File for rpp
 configure_package_config_file(
     ${CMAKE_MODULE_PATH}/${PROJECT_NAME}-config.cmake.in
