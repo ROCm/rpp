@@ -26,8 +26,10 @@ SOFTWARE.
 
 #include <type_traits>
 
-// Layout of YUV->RGB 3x3 matrix in constant memory
+// YUV->RGB: matrix
 __constant__ float rpp_nv12_yuv_to_rgb_mat[3][3];
+// okluma black level (0 full range, 16 studio) — must match host black in rpp_nv12_set_mat_yuv2rgb
+__constant__ int rpp_nv12_y_bias;
 
 namespace {
 
@@ -42,10 +44,9 @@ template <typename T>
 __device__ static void rpp_yuv_to_rgb_pixel(T y, T u, T v, T *r, T *g, T *b)
 {
     constexpr int kBits = (int)(sizeof(T) * 8);
-    const int low = 1 << (kBits - 4);
     const int mid = 1 << (kBits - 1);
     const float fmax = (float)((1 << kBits) - 1);
-    float fy = (int)y - low;
+    float fy = (float)((int)y - rpp_nv12_y_bias);
     float fu = (int)u - mid;
     float fv = (int)v - mid;
     float fr = rpp_clamp(rpp_nv12_yuv_to_rgb_mat[0][0] * fy + rpp_nv12_yuv_to_rgb_mat[0][1] * fu + rpp_nv12_yuv_to_rgb_mat[0][2] * fv, 0.0f, fmax);
@@ -105,7 +106,7 @@ static void rpp_nv12_set_mat_yuv2rgb(Rpp32s col_standard, Rpp32s color_range)
 {
     float wr = 0.2126f, wb = 0.0722f;
     int black = 16, white = 235, max_val = 255;
-    if (color_range == 2) {
+    if (color_range == 2) { // full range (0-255, Y bias 0)
         black = 0;
         white = 255;
     }
@@ -128,6 +129,8 @@ static void rpp_nv12_set_mat_yuv2rgb(Rpp32s col_standard, Rpp32s color_range)
         for (int j = 0; j < 3; j++)
             mat[i][j] = (float)(1.0 * max_val / (white - black) * mat[i][j]);
     hipError_t status = hipMemcpyToSymbol(rpp_nv12_yuv_to_rgb_mat, mat, sizeof(mat));
+    CHECK_RETURN_STATUS(status);
+    status = hipMemcpyToSymbol(rpp_nv12_y_bias, &black, sizeof(black));
     CHECK_RETURN_STATUS(status);
 }
 

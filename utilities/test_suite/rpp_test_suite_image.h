@@ -575,11 +575,20 @@ inline std::string yuv_sidecar_info_path(const std::string& yuvFilePath)
     return infoPath;
 }
 
-// Read width/height from sidecar .info only. Format: "width=3840" and "height=2160" on separate lines.
-inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, int& width, int& height)
+// NV12 QA sidecar: required width/height; optional col_standard / color_range for yuv_to_rgb (see rppt_tensor_data_exchange_operations.h).
+// Defaults if omitted: col_standard = 0 (BT.709), color_range = 2 (full range, Y bias 0). Use color_range = 0 for studio (16-235).
+struct RpptYuvNv12Sidecar
 {
-    width = 0;
-    height = 0;
+    int width = 0;
+    int height = 0;
+    Rpp32s col_standard = 0;
+    Rpp32s color_range = 2;
+};
+
+// Read full NV12 .info sidecar. Returns true when width and height are valid.
+inline bool parse_yuv_nv12_sidecar(const std::string& yuvFilePath, RpptYuvNv12Sidecar& out)
+{
+    out = RpptYuvNv12Sidecar();
     std::string infoPath = yuv_sidecar_info_path(yuvFilePath);
     FILE* fp = fopen(infoPath.c_str(), "r");
     if (!fp)
@@ -588,11 +597,29 @@ inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, in
     while (fgets(line, sizeof(line), fp))
     {
         int w = 0, h = 0;
-        if (sscanf(line, "width=%d", &w) == 1 && w > 0) width = w;
-        if (sscanf(line, "height=%d", &h) == 1 && h > 0) height = h;
+        int cs = 0, cr = 0;
+        if (sscanf(line, "width=%d", &w) == 1 && w > 0)
+            out.width = w;
+        if (sscanf(line, "height=%d", &h) == 1 && h > 0)
+            out.height = h;
+        if (sscanf(line, "col_standard=%d", &cs) == 1)
+            out.col_standard = (Rpp32s)cs;
+        if (sscanf(line, "color_range=%d", &cr) == 1)
+            out.color_range = (Rpp32s)cr;
     }
     fclose(fp);
-    return (width > 0 && height > 0);
+    return (out.width > 0 && out.height > 0);
+}
+
+// Read width/height from sidecar .info only. Format: "width=3840" and "height=2160" on separate lines; optional col_standard / color_range ignored here.
+inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, int& width, int& height)
+{
+    RpptYuvNv12Sidecar s;
+    if (!parse_yuv_nv12_sidecar(yuvFilePath, s))
+        return false;
+    width = s.width;
+    height = s.height;
+    return true;
 }
 
 // NV12/YUV dimensions: require a .info sidecar next to the .yuv file. Exits on failure.
@@ -1479,6 +1506,8 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
                 }
                 if(matchedIdx == imgSize && matchedIdx != 0) fileMatch++;
             }
+            else
+                std::cerr << "\nQA yuv_to_rgb: missing reference file (expected packed RGB24, same basename as .yuv): " << refPath << std::endl;
             free(refBuf);
         }
     }

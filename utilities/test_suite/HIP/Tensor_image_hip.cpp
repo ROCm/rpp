@@ -1824,14 +1824,20 @@ int main(int argc, char **argv)
                 case YUV_TO_RGB:
                 {
                     testCaseName = "yuv_to_rgb";
-                    Rpp32s col_standard = 0;
-                    Rpp32s color_range = 0;
+                    // Per-input col_standard / color_range from each file's .info sidecar (defaults: BT.709, full range).
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8)
                     {
                         size_t srcOffsetBytes = 0;
                         for (int i = 0; i < batchSize; i++)
                         {
+                            RpptYuvNv12Sidecar yuvSidecar;
+                            if (!parse_yuv_nv12_sidecar(*(imagesPathStart + i), yuvSidecar))
+                            {
+                                std::cerr << "\nyuv_to_rgb: missing or invalid .info for " << *(imagesPathStart + i) << std::endl;
+                                errorCodeCapture = RPP_ERROR;
+                                break;
+                            }
                             Rpp32u width = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiWidth;
                             Rpp32u height = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiHeight;
                             Rpp32u src_y_pitch = width * sizeof(Rpp8u);
@@ -1840,7 +1846,7 @@ int main(int argc, char **argv)
                             Rpp8u *srcY = (Rpp8u *)d_input + srcOffsetBytes;
                             Rpp8u *srcUV = srcY + (size_t)height * src_y_pitch;
                             void *dstImg = (Rpp8u *)d_output + (size_t)i * dstDescPtr->strides.nStride;
-                            errorCodeCapture = rppt_yuv_to_rgb(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, col_standard, color_range, handle, RppBackend::RPP_HIP_BACKEND);
+                            errorCodeCapture = rppt_yuv_to_rgb(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, yuvSidecar.col_standard, yuvSidecar.color_range, handle, RppBackend::RPP_HIP_BACKEND);
                             if (errorCodeCapture != RPP_SUCCESS)
                                 break;
                             srcOffsetBytes += (size_t)roiTensorPtrSrc[i].xywhROI.roiWidth * roiTensorPtrSrc[i].xywhROI.roiHeight * 3 / 2;
@@ -2141,6 +2147,7 @@ int main(int argc, char **argv)
             {
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
+                
                 // Reconvert other bit depths to 8u for output display purposes
                 convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
