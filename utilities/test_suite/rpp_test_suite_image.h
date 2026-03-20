@@ -42,6 +42,7 @@ SOFTWARE.
 #include <map>
 #include <unordered_set>
 #include <iomanip>
+#include <cstdlib>
 
 using namespace cv;
 using namespace std;
@@ -563,16 +564,23 @@ inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& ma
     tjDestroy(tjInstance);
 }
 
-// Try to read width/height from sidecar .info file (same base path as .yuv). Format: "width=3840" and "height=2160" on separate lines.
-inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, int& width, int& height)
+// Path to sidecar .info for a .yuv file (basename without last extension + ".info").
+inline std::string yuv_sidecar_info_path(const std::string& yuvFilePath)
 {
-    width = 0;
-    height = 0;
     std::string infoPath = yuvFilePath;
     size_t dot = infoPath.find_last_of('.');
     if (dot != std::string::npos)
         infoPath = infoPath.substr(0, dot);
     infoPath += ".info";
+    return infoPath;
+}
+
+// Read width/height from sidecar .info only. Format: "width=3840" and "height=2160" on separate lines.
+inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, int& width, int& height)
+{
+    width = 0;
+    height = 0;
+    std::string infoPath = yuv_sidecar_info_path(yuvFilePath);
     FILE* fp = fopen(infoPath.c_str(), "r");
     if (!fp)
         return false;
@@ -587,34 +595,25 @@ inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, in
     return (width > 0 && height > 0);
 }
 
-// Parse dimensions: first try .info sidecar; else parse from filename (e.g. ..._3840x2160_....yuv).
-inline void parse_yuv_dimensions(const std::string& filePath, int& width, int& height)
+// NV12/YUV dimensions: require a .info sidecar next to the .yuv file. Exits on failure.
+inline void parse_yuv_dimensions(const std::string& yuvFilePath, int& width, int& height)
 {
-    width = 0;
-    height = 0;
-    if (parse_yuv_dimensions_from_sidecar(filePath, width, height))
-        return;
-    std::string name = filePath;
-    size_t baseNameStart = name.find_last_of("/\\");
-    if (baseNameStart != std::string::npos)
-        name = name.substr(baseNameStart + 1);
-    size_t xPos = name.find('x');
-    if (xPos == std::string::npos || xPos == 0 || xPos == name.size() - 1)
-        return;
-    size_t wStart = xPos;
-    while (wStart > 0 && isdigit(name[wStart - 1])) wStart--;
-    size_t hEnd = xPos + 1;
-    while (hEnd < name.size() && isdigit(name[hEnd])) hEnd++;
-    if (wStart < xPos && hEnd > xPos + 1)
+    std::string infoPath = yuv_sidecar_info_path(yuvFilePath);
+    struct stat st;
+    if (stat(infoPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
     {
-        width = std::stoi(name.substr(wStart, xPos - wStart));
-        height = std::stoi(name.substr(xPos + 1, hEnd - (xPos + 1)));
+        std::cerr << "Error: no .info file for width and height.\n"
+                  << "  Expected sidecar: " << infoPath << "\n"
+                  << "  YUV input: " << yuvFilePath << "\n";
+        std::exit(1);
     }
-}
-
-inline void parse_yuv_dimensions_from_filename(const std::string& filePath, int& width, int& height)
-{
-    parse_yuv_dimensions(filePath, width, height);
+    if (!parse_yuv_dimensions_from_sidecar(yuvFilePath, width, height))
+    {
+        std::cerr << "Error: .info file must define valid width and height (e.g. width=1920 and height=1080).\n"
+                  << "  Sidecar: " << infoPath << "\n"
+                  << "  YUV input: " << yuvFilePath << "\n";
+        std::exit(1);
+    }
 }
 
 // Derive reference file basename from YUV path for per-image QA.
@@ -631,15 +630,13 @@ inline std::string get_yuv_ref_basename(const std::string& yuvFilePath)
     return name;
 }
 
-// Sets max dimensions from YUV filenames (parses WxH from each path)
+// Sets max dimensions from YUV inputs using required .info sidecars (parse_yuv_dimensions exits if missing/invalid).
 inline void set_max_dimensions_yuv(vector<string> imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
 {
     for (const std::string& imagePath : imagePaths)
     {
         int width = 0, height = 0;
-        parse_yuv_dimensions_from_filename(imagePath, width, height);
-        if (width <= 0 || height <= 0)
-            continue;
+        parse_yuv_dimensions(imagePath, width, height);
         if ((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
             imagesMixed = 1;
         maxWidth = std::max(maxWidth, width);
@@ -647,18 +644,14 @@ inline void set_max_dimensions_yuv(vector<string> imagePaths, int& maxHeight, in
     }
 }
 
-// Sets ROI and dst sizes from YUV filenames
+// Sets ROI and dst sizes from YUV inputs using required .info sidecars
 inline void set_src_and_dst_roi_yuv(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
 {
     int i = 0;
     for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
     {
         int width = 0, height = 0;
-        parse_yuv_dimensions_from_filename(*imagePathIter, width, height);
-        if (width <= 0)
-            width = 1;
-        if (height <= 0)
-            height = 1;
+        parse_yuv_dimensions(*imagePathIter, width, height);
         roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
         roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
         dstImgSizes[i].width = width;
@@ -673,17 +666,12 @@ inline void read_yuv_batch_nv12(Rpp8u *input, RpptDescPtr descPtr, vector<string
     for (int i = 0; i < descPtr->n; i++)
     {
         std::string inputPath = *(imagesNamesStart + i);
+        int width = 0, height = 0;
+        parse_yuv_dimensions(inputPath, width, height);
         FILE* fp = fopen(inputPath.c_str(), "rb");
         if (!fp)
         {
             std::cerr << "\nUnable to open YUV file: " << inputPath;
-            continue;
-        }
-        int width = 0, height = 0;
-        parse_yuv_dimensions_from_filename(inputPath, width, height);
-        if (width <= 0 || height <= 0)
-        {
-            fclose(fp);
             continue;
         }
         size_t ySize = (size_t)width * height;
