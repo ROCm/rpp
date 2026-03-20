@@ -118,6 +118,7 @@ add_compile_options("-Wno-unused-result")
 
 # Add library
 add_library(${PROJECT_NAME} OBJECT ${Rpp_Source})
+target_link_libraries(${PROJECT_NAME} PUBLIC HALF::half)
 
 # Target settings
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -127,6 +128,8 @@ target_include_directories( ${PROJECT_NAME}
         ${RPP_SOURCE_DIR}/third_party/ffts/include
         ${ROCM_INC}
     PRIVATE
+        ${CMAKE_BINARY_DIR}
+        ${CMAKE_BINARY_DIR}/api
         ${RPP_SOURCE_DIR}/src/include/common
         ${RPP_SOURCE_DIR}/src/include/common/cpu
         ${RPP_SOURCE_DIR}/src/include/tensor
@@ -138,5 +141,5 @@ if( "${BACKEND}" STREQUAL "HIP")
     PRIVATE
         ${RPP_SOURCE_DIR}/src/include/common/hip
     )
-    target_link_libraries(${PROJECT_NAME} hip::device)
+    target_link_libraries(${PROJECT_NAME} PRIVATE hip::device)
 endif()
