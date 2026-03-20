@@ -83,172 +83,173 @@ list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
 set(RPP_TEST_SCRIPT_DIR "${ROCM_PATH}/share/rpp/test")
 
-find_package(rpp 3.0.0 QUIET)
-
-if(rpp_FOUND)
-    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
-    message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
-    message("-- \t${White}rpp_LIB_DIR -- ${rpp_LIB_DIR}${ColourReset}")
-    message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
-    message("-- \t${White}rpp_FOUND -- ${rpp_FOUND}${ColourReset}")
-    message("-- \t${White}rpp_VERSION -- ${rpp_VERSION}${ColourReset}")
-    message("-- \t${White}rpp_VERSION_MAJOR -- ${rpp_VERSION_MAJOR}${ColourReset}")
-    message("-- \t${White}rpp_VERSION_MINOR -- ${rpp_VERSION_MINOR}${ColourReset}")
-    message("-- \t${White}rpp_VERSION_PATCH -- ${rpp_VERSION_PATCH}${ColourReset}")
-    message("-- \t${White}rpp_BACKEND_TYPE -- ${rpp_BACKEND_TYPE}${ColourReset}")
-    message("-- \t${White}rpp_AUDIO_AUGMENTATIONS_SUPPORT -- ${rpp_AUDIO_AUGMENTATIONS_SUPPORT}${ColourReset}")
-
-    # find required libraries
-    set(Python3_FIND_VIRTUALENV FIRST)
-    find_package(Python3 QUIET)
-    find_package(NIFTI QUIET)
-    find_library(libsnd_LIBS
-        NAMES sndfile libsndfile
-        PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
-        PATH_SUFFIXES lib lib64)
-    find_package(OpenMP COMPONENTS CXX QUIET)
-    find_package(OpenCV QUIET)
-    find_package(TurboJpeg QUIET)
-
-    # find required python3-pip imports
-    execute_process(
-        COMMAND ${Python3_EXECUTABLE} -m pip show pandas
-        RESULT_VARIABLE PANDAS_FOUND
-        OUTPUT_QUIET
-        ERROR_QUIET
-    )
-
-    if(Python3_FOUND)
-        if (PANDAS_FOUND EQUAL 0)
-            if(OpenMP_CXX_FOUND)
-                message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
-                # HOST test set 1 - rpp_qa_tests_tensor_image_host_all - HOST Tensor-Image QA PASS/FAIL tests
-                if(TurboJpeg_FOUND)
-                    if(OpenCV_FOUND)
-                        add_test(
-                            NAME rpp_qa_tests_tensor_image_host_all
-                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runImageTests.py --qa_mode 1 --batch_size 3
-                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                        )
-                    else()
-                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since OpenCV is not found!${ColourReset}")
-                    endif(OpenCV_FOUND)
-                else()
-                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since TurboJpeg is not found!${ColourReset}")
-                endif(TurboJpeg_FOUND)
-
-                # HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all - HOST Tensor-Voxel QA PASS/FAIL tests
-                if(NIFTI_FOUND)
-                    if(OpenCV_FOUND)
-                        add_test(
-                            NAME rpp_qa_tests_tensor_voxel_host_all
-                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
-                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                        )
-                    else()
-                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all' since OpenCV is not found!${ColourReset}")
-                    endif(OpenCV_FOUND)
-                else()
-                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all' since libniftiio is not found!${ColourReset}")
-                endif(NIFTI_FOUND)
-
-                # HOST test set 3 - rpp_qa_tests_tensor_audio_host_all - HOST Tensor-Audio QA PASS/FAIL tests
-                if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
-                    if(libsnd_LIBS)
-                        add_test(
-                            NAME rpp_qa_tests_tensor_audio_host_all
-                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
-                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                        )
-                    else()
-                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 3 - rpp_qa_tests_tensor_audio_host_all' since libsnd is not found!${ColourReset}")
-                    endif(libsnd_LIBS)
-                else()
-                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 3 - rpp_qa_tests_tensor_audio_host_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
-                endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
-
-                # HOST test set 4 - rpp_qa_tests_tensor_misc_host_all - HOST Tensor-Misc QA PASS/FAIL tests
-                add_test(
-                    NAME rpp_qa_tests_tensor_misc_host_all
-                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runMiscTests.py --qa_mode 1 --batch_size 3
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                )
-
-                if(rpp_BACKEND_TYPE STREQUAL "HIP")
-                    if(NOT DEFINED HIP_PATH)
-                        if(NOT DEFINED ENV{HIP_PATH})
-                            set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
-                        else()
-                            set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
-                        endif()
-                    endif()
-                    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
-                    find_package(HIP QUIET)
-                    if(HIP_FOUND)
-                        message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
-                        # HIP test set 1 - rpp_qa_tests_tensor_image_hip_all - HIP Tensor-Image QA PASS/FAIL tests
-                        if(TurboJpeg_FOUND)
-                            if(OpenCV_FOUND)
-                                add_test(
-                                    NAME rpp_qa_tests_tensor_image_hip_all
-                                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runImageTests.py --qa_mode 1 --batch_size 3
-                                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                                )
-                            else()
-                                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since OpenCV is not found!${ColourReset}")
-                            endif(OpenCV_FOUND)
-                        else()
-                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since TurboJpeg is not found!${ColourReset}")
-                        endif(TurboJpeg_FOUND)
-
-                        # HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all - HIP Tensor-Voxel QA PASS/FAIL tests
-                        if(NIFTI_FOUND)
-                            if(OpenCV_FOUND)
-                                add_test(
-                                    NAME rpp_qa_tests_tensor_voxel_hip_all
-                                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
-                                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                                )
-                            else()
-                                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all' since OpenCV is not found!${ColourReset}")
-                            endif(OpenCV_FOUND)
-                        else()
-                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all' since libniftiio is not found!${ColourReset}")
-                        endif(NIFTI_FOUND)
-
-                        # HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all - HIP Tensor-Audio QA PASS/FAIL tests
-                        if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
-                            if(libsnd_LIBS)
-                                add_test(
-                                    NAME rpp_qa_tests_tensor_audio_hip_all
-                                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
-                                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                                )
-                            else()
-                                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all' since libsnd is not found!${ColourReset}")
-                            endif(libsnd_LIBS)
-                        else()
-                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
-                        endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
-
-                        # HIP test set 4 - rpp_qa_tests_tensor_misc_hip_all - HIP Tensor-Misc QA PASS/FAIL tests
-                        add_test(
-                            NAME rpp_qa_tests_tensor_misc_hip_all
-                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runMiscTests.py --qa_mode 1 --batch_size 3
-                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                        )
-
-                    endif(HIP_FOUND)
-                endif()
-            else()
-                message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since OpenMP is not found!${ColourReset}")
-            endif(OpenMP_CXX_FOUND)
-        else()
-            message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Pandas is not found!${ColourReset}")
-        endif(PANDAS_FOUND EQUAL 0)
-    else()
-        message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Python3 is not found!${ColourReset}")
-    endif(Python3_FOUND)
+# We need to handle the in-tree build of RPP separately since find_package(rpp) will not work.
+if (NOT TARGET rpp)
+    find_package(rpp 3.0.0 REQUIRED)
+    message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp REQUIRED)${ColourReset}")
 else()
-    message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running CTests${ColourReset}")
-endif(rpp_FOUND)
+    message("-- ${White}${PROJECT_NAME}: rpp found with target rpp (in-tree build)${ColourReset}")
+    message("-- ${Yellow}${PROJECT_NAME}: Please install RPP before running CTests${ColourReset}")
+    set(rpp_AUDIO_AUGMENTATIONS_SUPPORT ${RPP_AUDIO_SUPPORT})
+    set(rpp_BACKEND_TYPE ${BACKEND})
+endif()
+
+# Display RPP information
+message("-- \t${White}rpp_VERSION -- ${rpp_VERSION}${ColourReset}")
+message("-- \t${White}rpp_VERSION_MAJOR -- ${rpp_VERSION_MAJOR}${ColourReset}")
+message("-- \t${White}rpp_VERSION_MINOR -- ${rpp_VERSION_MINOR}${ColourReset}")
+message("-- \t${White}rpp_VERSION_PATCH -- ${rpp_VERSION_PATCH}${ColourReset}")
+message("-- \t${White}rpp_BACKEND_TYPE -- ${rpp_BACKEND_TYPE}${ColourReset}")
+message("-- \t${White}rpp_AUDIO_AUGMENTATIONS_SUPPORT -- ${rpp_AUDIO_AUGMENTATIONS_SUPPORT}${ColourReset}")
+
+# find required libraries
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 QUIET)
+find_package(NIFTI QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
+find_package(OpenMP COMPONENTS CXX QUIET)
+find_package(OpenCV QUIET)
+find_package(TurboJpeg QUIET)
+
+# find required python3-pip imports
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -m pip show pandas
+    RESULT_VARIABLE PANDAS_FOUND
+    OUTPUT_QUIET
+    ERROR_QUIET
+)
+
+if(Python3_FOUND)
+    if (PANDAS_FOUND EQUAL 0)
+        if(OpenMP_CXX_FOUND)
+            message("-- ${White}${PROJECT_NAME}: Adding RPP HOST tests${ColourReset}")
+            # HOST test set 1 - rpp_qa_tests_tensor_image_host_all - HOST Tensor-Image QA PASS/FAIL tests
+            if(TurboJpeg_FOUND)
+                if(OpenCV_FOUND)
+                    add_test(
+                        NAME rpp_qa_tests_tensor_image_host_all
+                        COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runImageTests.py --qa_mode 1 --batch_size 3
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    )
+                else()
+                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since OpenCV is not found!${ColourReset}")
+                endif(OpenCV_FOUND)
+            else()
+                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since TurboJpeg is not found!${ColourReset}")
+            endif(TurboJpeg_FOUND)
+
+            # HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all - HOST Tensor-Voxel QA PASS/FAIL tests
+            if(NIFTI_FOUND)
+                if(OpenCV_FOUND)
+                    add_test(
+                        NAME rpp_qa_tests_tensor_voxel_host_all
+                        COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    )
+                else()
+                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all' since OpenCV is not found!${ColourReset}")
+                endif(OpenCV_FOUND)
+            else()
+                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 2 - rpp_qa_tests_tensor_voxel_host_all' since libniftiio is not found!${ColourReset}")
+            endif(NIFTI_FOUND)
+
+            # HOST test set 3 - rpp_qa_tests_tensor_audio_host_all - HOST Tensor-Audio QA PASS/FAIL tests
+            if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
+                if(libsnd_LIBS)
+                    add_test(
+                        NAME rpp_qa_tests_tensor_audio_host_all
+                        COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    )
+                else()
+                    message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 3 - rpp_qa_tests_tensor_audio_host_all' since libsnd is not found!${ColourReset}")
+                endif(libsnd_LIBS)
+            else()
+                message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 3 - rpp_qa_tests_tensor_audio_host_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
+            endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
+
+            # HOST test set 4 - rpp_qa_tests_tensor_misc_host_all - HOST Tensor-Misc QA PASS/FAIL tests
+            add_test(
+                NAME rpp_qa_tests_tensor_misc_host_all
+                COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runMiscTests.py --qa_mode 1 --batch_size 3
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+
+            if(rpp_BACKEND_TYPE STREQUAL "HIP")
+                if(NOT DEFINED HIP_PATH)
+                    if(NOT DEFINED ENV{HIP_PATH})
+                        set(HIP_PATH ${ROCM_PATH} CACHE PATH "Path to which HIP has been installed")
+                    else()
+                        set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
+                    endif()
+                endif()
+                list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
+                find_package(HIP QUIET)
+                if(HIP_FOUND)
+                    message("-- ${White}${PROJECT_NAME}: Adding RPP HIP tests${ColourReset}")
+                    # HIP test set 1 - rpp_qa_tests_tensor_image_hip_all - HIP Tensor-Image QA PASS/FAIL tests
+                    if(TurboJpeg_FOUND)
+                        if(OpenCV_FOUND)
+                            add_test(
+                                NAME rpp_qa_tests_tensor_image_hip_all
+                                COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runImageTests.py --qa_mode 1 --batch_size 3
+                                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            )
+                        else()
+                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since OpenCV is not found!${ColourReset}")
+                        endif(OpenCV_FOUND)
+                    else()
+                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since TurboJpeg is not found!${ColourReset}")
+                    endif(TurboJpeg_FOUND)
+
+                    # HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all - HIP Tensor-Voxel QA PASS/FAIL tests
+                    if(NIFTI_FOUND)
+                        if(OpenCV_FOUND)
+                            add_test(
+                                NAME rpp_qa_tests_tensor_voxel_hip_all
+                                COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
+                                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            )
+                        else()
+                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all' since OpenCV is not found!${ColourReset}")
+                        endif(OpenCV_FOUND)
+                    else()
+                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 2 - rpp_qa_tests_tensor_voxel_hip_all' since libniftiio is not found!${ColourReset}")
+                    endif(NIFTI_FOUND)
+
+                    # HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all - HIP Tensor-Audio QA PASS/FAIL tests
+                    if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
+                        if(libsnd_LIBS)
+                            add_test(
+                                NAME rpp_qa_tests_tensor_audio_hip_all
+                                COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
+                                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            )
+                        else()
+                            message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all' since libsnd is not found!${ColourReset}")
+                        endif(libsnd_LIBS)
+                    else()
+                        message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 3 - rpp_qa_tests_tensor_audio_hip_all' since RPP_AUDIO_AUGMENTATIONS_SUPPORT is not found!${ColourReset}")
+                    endif(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
+
+                    # HIP test set 4 - rpp_qa_tests_tensor_misc_hip_all - HIP Tensor-Misc QA PASS/FAIL tests
+                    add_test(
+                        NAME rpp_qa_tests_tensor_misc_hip_all
+                        COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runMiscTests.py --qa_mode 1 --batch_size 3
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    )
+
+                endif(HIP_FOUND)
+            endif()
+        else()
+            message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since OpenMP is not found!${ColourReset}")
+        endif(OpenMP_CXX_FOUND)
+    else()
+        message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Pandas is not found!${ColourReset}")
+    endif(PANDAS_FOUND EQUAL 0)
+else()
+    message("-- ${Yellow}Warning: Skipping all 4 RPP-ctest test sets since Python3 is not found!${ColourReset}")
+endif(Python3_FOUND)

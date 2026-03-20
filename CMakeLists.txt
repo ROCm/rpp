@@ -357,6 +357,11 @@ endif()
 
 add_subdirectory(addkernels)
 
+# Test suite
+enable_testing()
+include(CTest)
+add_subdirectory(utilities/test_suite)
+
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
