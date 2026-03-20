@@ -100,19 +100,21 @@ RppStatus rppt_channel_permute(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptSubpixelLayout srcSubpixelLayout, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief YUV to RGB color conversion on HIP backend (NV12 8-bit only)
- * \details Converts semi-planar NV12 (Y plane + interleaved UV) to packed RGB24.<br>
- * - Source: single pointer in HIP memory (Y then UV). yuv_pitch is the Y row stride in bytes; UV follows at offset (v_pitch * yuv_pitch).
- * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride bgr_pitch bytes.
+ * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24.<br>
+ * - Source: srcYPtr = luma plane, srcUVPtr = interleaved UV
+ * - src_y_pitch / src_uv_pitch: row strides in bytes
+ * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride dst_pitch bytes.
  * - Supported execution backend: RppBackend::RPP_HIP_BACKEND only.
- * \param [in] srcPtr pointer to YUV buffer in HIP memory (Y plane then interleaved UV)
+ * \param [in] srcYPtr pointer to Y plane in HIP memory
+ * \param [in] srcUVPtr pointer to interleaved UV plane in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (dataType must be U8)
  * \param [out] dstPtr pointer to RGB output buffer in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (dataType must be U8)
- * \param [in] yuv_pitch row pitch of Y plane in bytes
- * \param [in] bgr_pitch row pitch of RGB output in bytes
+ * \param [in] src_y_pitch row pitch of Y plane in bytes
+ * \param [in] src_uv_pitch row pitch of UV plane in bytes
+ * \param [in] dst_pitch row pitch of RGB output in bytes
  * \param [in] width image width in pixels
  * \param [in] height image height in pixels
- * \param [in] v_pitch number of Y rows (height); UV plane starts at srcPtr + v_pitch * yuv_pitch
  * \param [in] col_standard color space standard (e.g. BT.601, BT.709)
  * \param [in] color_range color range (e.g. studio 16-235, full 0-255)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
@@ -121,7 +123,7 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
  */
-RppStatus rppt_yuv_to_rgb(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u yuv_pitch, Rpp32u bgr_pitch, Rpp32u width, Rpp32u height, Rpp32u v_pitch, Rpp32s col_standard, Rpp32s color_range, rppHandle_t rppHandle, RppBackend executionBackend);
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, Rpp32s col_standard, Rpp32s color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! @}
  */

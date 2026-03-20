@@ -1826,9 +1826,6 @@ int main(int argc, char **argv)
                     testCaseName = "yuv_to_rgb";
                     Rpp32s col_standard = 0;
                     Rpp32s color_range = 0;
-                    // argv[11] is often a fixed "0" from runImageTests.py; use env for debug when needed
-                    const char *yuvDbgEnv = getenv("RPP_YUV_TO_RGB_DEBUG");
-                    const bool yuvDebugPrint = (verbosity == 1) || (yuvDbgEnv && yuvDbgEnv[0] == '1');
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8)
                     {
@@ -1837,12 +1834,13 @@ int main(int argc, char **argv)
                         {
                             Rpp32u width = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiWidth;
                             Rpp32u height = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiHeight;
-                            Rpp32u yuv_pitch = width* sizeof(Rpp8u);
+                            Rpp32u src_y_pitch = width * sizeof(Rpp8u);
+                            Rpp32u src_uv_pitch = src_y_pitch;  // tight NV12: same row pitch as Y
                             Rpp32u bgr_pitch = width * 3 * sizeof(Rpp8u);
-                            Rpp32u v_pitch = height;
-                            void *srcImg = (Rpp8u *)d_input + srcOffsetBytes;
+                            Rpp8u *srcY = (Rpp8u *)d_input + srcOffsetBytes;
+                            Rpp8u *srcUV = srcY + (size_t)height * src_y_pitch;
                             void *dstImg = (Rpp8u *)d_output + (size_t)i * dstDescPtr->strides.nStride;
-                            errorCodeCapture = rppt_yuv_to_rgb(srcImg, srcDescPtr, dstImg, dstDescPtr, yuv_pitch, bgr_pitch, width, height, v_pitch, col_standard, color_range, handle, RppBackend::RPP_HIP_BACKEND);
+                            errorCodeCapture = rppt_yuv_to_rgb(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, col_standard, color_range, handle, RppBackend::RPP_HIP_BACKEND);
                             if (errorCodeCapture != RPP_SUCCESS)
                                 break;
                             srcOffsetBytes += (size_t)roiTensorPtrSrc[i].xywhROI.roiWidth * roiTensorPtrSrc[i].xywhROI.roiHeight * 3 / 2;

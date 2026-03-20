@@ -31,25 +31,23 @@ __constant__ float rpp_nv12_yuv_to_rgb_mat[3][3];
 
 namespace {
 
-// 8-bit: low=16, mid=128, max=255 (studio)
-constexpr int RPP_NV12_LOW  = 16;
-constexpr int RPP_NV12_MID  = 128;
-constexpr int RPP_NV12_MAX  = 255;
-
 template <typename T>
 __device__ static T rpp_clamp(T x, T lower, T upper)
 {
     return x < lower ? lower : (x > upper ? upper : x);
 }
 
-// YUV to RGB for one pixel using __constant__ matrix
+// YUV to RGB for one pixel using __constant__ matrix.
 template <typename T>
-__device__ static void rpp_yuv_to_rgb_pixel(T y, T u, T v, T *r, T *g, T *b, int low, int mid, int max_val)
+__device__ static void rpp_yuv_to_rgb_pixel(T y, T u, T v, T *r, T *g, T *b)
 {
+    constexpr int kBits = (int)(sizeof(T) * 8);
+    const int low = 1 << (kBits - 4);
+    const int mid = 1 << (kBits - 1);
+    const float fmax = (float)((1 << kBits) - 1);
     float fy = (int)y - low;
     float fu = (int)u - mid;
     float fv = (int)v - mid;
-    float fmax = (float)max_val;
     float fr = rpp_clamp(rpp_nv12_yuv_to_rgb_mat[0][0] * fy + rpp_nv12_yuv_to_rgb_mat[0][1] * fu + rpp_nv12_yuv_to_rgb_mat[0][2] * fv, 0.0f, fmax);
     float fg = rpp_clamp(rpp_nv12_yuv_to_rgb_mat[1][0] * fy + rpp_nv12_yuv_to_rgb_mat[1][1] * fu + rpp_nv12_yuv_to_rgb_mat[1][2] * fv, 0.0f, fmax);
     float fb = rpp_clamp(rpp_nv12_yuv_to_rgb_mat[2][0] * fy + rpp_nv12_yuv_to_rgb_mat[2][1] * fu + rpp_nv12_yuv_to_rgb_mat[2][2] * fv, 0.0f, fmax);
@@ -58,18 +56,16 @@ __device__ static void rpp_yuv_to_rgb_pixel(T y, T u, T v, T *r, T *g, T *b, int
     *b = (T)(fb + 0.5f);
 }
 
-// NV12 → packed RGB; T = Rpp8u
+// NV12 → packed RGB; T = Rpp8u. Y and UV are separate planes
 template <typename T>
-__global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_yuv,
-                                      int yuv_pitch,
+__global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_y,
+                                      int y_pitch,
+                                      uint8_t *__restrict__ dp_uv,
+                                      int uv_pitch,
                                       uint8_t *__restrict__ dp_rgb,
                                       int rgb_pitch,
                                       int width,
-                                      int height,
-                                      int v_pitch,
-                                      int low,
-                                      int mid,
-                                      int max_val)
+                                      int height)
 {
     constexpr int rgb_pp = (int)(sizeof(T) * 3);  // 3 components per pixel in bytes
     int x = (threadIdx.x + blockIdx.x * blockDim.x) * 2;
@@ -77,25 +73,24 @@ __global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_yuv,
     if (x + 1 >= width || y + 1 >= height)
         return;
 
-    T *p_src = (T *)(dp_yuv + x * sizeof(T) + y * yuv_pitch);
+    T *p_y = (T *)(dp_y + x * sizeof(T) + y * y_pitch);
     T *p_dst = (T *)(dp_rgb + x * rgb_pp + y * rgb_pitch);
-    T *p_dst1 = (T *)(p_dst + rgb_pitch);
+    T *p_dst1 = (T *)((uint8_t *)p_dst + rgb_pitch);
 
-    T y00 = p_src[0];
-    T y01 = p_src[1];
-    T y10 = p_src[yuv_pitch / sizeof(T)];
-    T y11 = p_src[yuv_pitch / sizeof(T) + 1];
+    T y00 = p_y[0];
+    T y01 = p_y[1];
+    T y10 = p_y[y_pitch / sizeof(T)];
+    T y11 = p_y[y_pitch / sizeof(T) + 1];
 
-    // NV12 UV
-    T *p_ch = (T *)((uint8_t *)dp_yuv + (v_pitch + y / 2) * yuv_pitch + x * sizeof(T));
+    T *p_ch = (T *)(dp_uv + (y / 2) * uv_pitch + x * sizeof(T));
     T u = p_ch[0];
     T v = p_ch[1];
 
     T r00, g00, b00, r01, g01, b01, r10, g10, b10, r11, g11, b11;
-    rpp_yuv_to_rgb_pixel<T>(y00, u, v, &r00, &g00, &b00, low, mid, max_val);
-    rpp_yuv_to_rgb_pixel<T>(y01, u, v, &r01, &g01, &b01, low, mid, max_val);
-    rpp_yuv_to_rgb_pixel<T>(y10, u, v, &r10, &g10, &b10, low, mid, max_val);
-    rpp_yuv_to_rgb_pixel<T>(y11, u, v, &r11, &g11, &b11, low, mid, max_val);
+    rpp_yuv_to_rgb_pixel<T>(y00, u, v, &r00, &g00, &b00);
+    rpp_yuv_to_rgb_pixel<T>(y01, u, v, &r01, &g01, &b01);
+    rpp_yuv_to_rgb_pixel<T>(y10, u, v, &r10, &g10, &b10);
+    rpp_yuv_to_rgb_pixel<T>(y11, u, v, &r11, &g11, &b11);
 
     p_dst[0] = r00; p_dst[1] = g00; p_dst[2] = b00;
     p_dst[3] = r01; p_dst[4] = g01; p_dst[5] = b01;
@@ -137,13 +132,14 @@ static void rpp_nv12_set_mat_yuv2rgb(Rpp32s col_standard, Rpp32s color_range)
 }
 
 template <typename T>
-RppStatus hip_exec_yuv_to_rgb(T *srcPtr,
-                              Rpp32u nv12_pitch,
+RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
+                              Rpp32u src_y_pitch,
+                              T *srcUVPtr,
+                              Rpp32u src_uv_pitch,
                               T *dstPtr,
-                              Rpp32u bgr_pitch,
+                              Rpp32u dst_pitch,
                               Rpp32u width,
                               Rpp32u height,
-                              Rpp32u v_pitch,
                               Rpp32s col_standard,
                               Rpp32s color_range,
                               rpp::Handle &handle)
@@ -151,34 +147,30 @@ RppStatus hip_exec_yuv_to_rgb(T *srcPtr,
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
                   "hip_exec_yuv_to_rgb is only supported for Rpp8u (NV12 8-bit)");
     rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
-    const int low = RPP_NV12_LOW; // renmove this as a aprameter to launch call
-    const int mid = RPP_NV12_MID;
-    const int max_val = RPP_NV12_MAX;
     hipLaunchKernelGGL(yuv_to_rgb_hip_kernel<T>,
                        dim3((width + 63) / 32 / 2, (height + 3) / 2 / 2, 1),
                        dim3(32, 2, 1),
                        0,
                        handle.GetStream(),
-                       (uint8_t *)srcPtr,
-                       (int)nv12_pitch,
+                       (uint8_t *)srcYPtr,
+                       (int)src_y_pitch,
+                       (uint8_t *)srcUVPtr,
+                       (int)src_uv_pitch,
                        (uint8_t *)dstPtr,
-                       (int)bgr_pitch,
+                       (int)dst_pitch,
                        (int)width,
-                       (int)height,
-                       (int)v_pitch,
-                       low,
-                       mid,
-                       max_val);
+                       (int)height);
     return RPP_SUCCESS;
 }
 
-template RppStatus hip_exec_yuv_to_rgb<Rpp8u>(Rpp8u *srcPtr,
-                                              Rpp32u nv12_pitch,
+template RppStatus hip_exec_yuv_to_rgb<Rpp8u>(Rpp8u *srcYPtr,
+                                              Rpp32u src_y_pitch,
+                                              Rpp8u *srcUVPtr,
+                                              Rpp32u src_uv_pitch,
                                               Rpp8u *dstPtr,
-                                              Rpp32u bgr_pitch,
+                                              Rpp32u dst_pitch,
                                               Rpp32u width,
                                               Rpp32u height,
-                                              Rpp32u v_pitch,
                                               Rpp32s col_standard,
                                               Rpp32s color_range,
                                               rpp::Handle &handle);

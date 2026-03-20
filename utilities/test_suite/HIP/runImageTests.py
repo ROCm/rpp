@@ -60,7 +60,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
     if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
-        # NV12 yuv_to_rgb is U8-only; skip all other bit-depth variants (incl. 16-bit paths)
+        # NV12 yuv_to_rgb is U8-only; skip all other bit-depth variants
         bitDepths = [BitDepthTestMode.U8_TO_U8]
     elif qaMode:
         bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]

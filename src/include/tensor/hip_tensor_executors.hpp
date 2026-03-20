@@ -414,16 +414,17 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           Rpp32u *permutationTensor,
                                           rpp::Handle& handle);
 
-// -------------------- yuv_to_rgb (NV12 8-bit; template instantiated for Rpp8u only) --------------------
+// -------------------- yuv_to_rgb (NV12 8-bit) --------------------
 
 template <typename T>
-RppStatus hip_exec_yuv_to_rgb(T *srcPtr,
-                              Rpp32u nv12_pitch,
+RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
+                              Rpp32u src_y_pitch,
+                              T *srcUVPtr,
+                              Rpp32u src_uv_pitch,
                               T *dstPtr,
-                              Rpp32u bgr_pitch,
+                              Rpp32u dst_pitch,
                               Rpp32u width,
                               Rpp32u height,
-                              Rpp32u v_pitch,
                               Rpp32s col_standard,
                               Rpp32s color_range,
                               rpp::Handle& handle);
