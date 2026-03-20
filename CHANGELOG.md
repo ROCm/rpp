@@ -24,6 +24,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 * Enhanced layout validation for image augmentations within unified API
 * CMakeLists.txt updated to remove batch PD references
 * Updated test suite to use `rpp_BACKEND_TYPE` and `rpp_AUDIO_AUGMENTATIONS_SUPPORT` variables from RPP CMake package config instead of header parsing.
+* `find_package(rpp)` now automatically passes on public include directories to the target link interface.
 
 
 ## RPP 2.2.1 for ROCm 7.2.1
