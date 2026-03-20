@@ -31,9 +31,16 @@ set_and_check(@PROJECT_NAME@_LIB_DIR "@PACKAGE_LIB_INSTALL_DIR@")
 set_and_check(@PROJECT_NAME@_LIBRARY "@PACKAGE_LIB_INSTALL_DIR@/lib@PROJECT_NAME@.${LIB_TYPE}")
 set_and_check(@PROJECT_NAME@_LIBRARIES "@PACKAGE_LIB_INSTALL_DIR@/lib@PROJECT_NAME@.${LIB_TYPE}")
 
+# If install(EXPORT) fragments (rpp-targets-*.cmake) are missing, the above include
+# does not define @PROJECT_NAME@::@PROJECT_NAME@. This fallback must still expose the
+# same usage requirements as the exported target, or target_link_libraries will not
+# get include directories or other interface properties.
 if(NOT TARGET @PROJECT_NAME@::@PROJECT_NAME@)
   add_library(@PROJECT_NAME@::@PROJECT_NAME@ INTERFACE IMPORTED)
-  set_target_properties(@PROJECT_NAME@::@PROJECT_NAME@ PROPERTIES INTERFACE_LINK_LIBRARIES ${@PROJECT_NAME@_LIBRARY})
+  set_target_properties(@PROJECT_NAME@::@PROJECT_NAME@ PROPERTIES
+    INTERFACE_LINK_LIBRARIES "${@PROJECT_NAME@_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${@PROJECT_NAME@_INCLUDE_DIR}"
+  )
 endif ()
 
 include(FindPackageHandleStandardArgs)
