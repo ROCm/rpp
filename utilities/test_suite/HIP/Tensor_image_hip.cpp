@@ -404,13 +404,16 @@ int main(int argc, char **argv)
     Rpp32f *colorBuffer;
     RpptRoiLtrb *anchorBoxInfoTensor;
     Rpp32u *numOfBoxes;
-    if(testCase == ERASE)
+    if(testCase == ERASE || testCase == CUTOUT_DROPOUT)
     {
-        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * srcDescPtr->c * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
         CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
     }
+    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
+    if(testCase == GRID_DROPOUT)
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * numGridsPerRow * numGridsPerColumn * sizeof(RpptRoiLtrb)));
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
@@ -1946,6 +1949,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case CUTOUT_DROPOUT:
+                {
+                    testCaseName = "cutout_dropout";
+                    boxesInEachImage = 1;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, seed, 1, colorBuffer);
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_cutout_dropout(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case GRID_DROPOUT:
+                {
+                    testCaseName = "grid_dropout";
+                    Rpp32f holeRatio = 0.4f;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+
+                    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    Rpp32u maxHoleW = 0, maxHoleH = 0;
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                       errorCodeCapture = rppt_grid_dropout(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case EMBOSS:
                 {
                     testCaseName = "emboss";
@@ -2214,7 +2251,7 @@ int main(int argc, char **argv)
         if(testCase == TENSOR_STDDEV)
             CHECK_RETURN_STATUS(hipHostFree(mean));
     }
-    if(testCase == ERASE)
+    if(testCase == ERASE || testCase == CUTOUT_DROPOUT)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
