@@ -76,7 +76,7 @@ SOFTWARE.
     roiTensorPtrSrc_i4->w += (roiTensorPtrSrc_i4->y - 1);
 }
 
-[[maybe_unused]] static RppStatus hip_exec_roi_converison_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc,
+[[maybe_unused]] static RppStatus hip_exec_roi_conversion_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc,
                                                                        rpp::Handle& handle)
 {
     int localThreads_x = 256;
