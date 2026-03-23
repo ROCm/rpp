@@ -676,6 +676,21 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
 
+// -------------------- grid_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRoiLtrb *anchorBoxInfoTensor,
+                                       Rpp32u boxesInEachImage,
+                                       Rpp32u maxHoleW,
+                                       Rpp32u maxHoleH,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
+
 // -------------------- random_erase --------------------
 
 template <typename T>
