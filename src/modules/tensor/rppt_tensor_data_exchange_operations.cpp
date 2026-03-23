@@ -378,8 +378,8 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr,
                           Rpp32u dst_pitch,
                           Rpp32u width,
                           Rpp32u height,
-                          Rpp32s col_standard,
-                          Rpp32s color_range,
+                          RpptColorStandard col_standard,
+                          RpptColorRange color_range,
                           rppHandle_t rppHandle,
                           RppBackend executionBackend)
 {

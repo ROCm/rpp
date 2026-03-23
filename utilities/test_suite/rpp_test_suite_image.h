@@ -575,14 +575,14 @@ inline std::string yuv_sidecar_info_path(const std::string& yuvFilePath)
     return infoPath;
 }
 
-// NV12 QA sidecar: required width/height; optional col_standard / color_range for yuv_to_rgb (see rppt_tensor_data_exchange_operations.h).
-// Defaults if omitted: col_standard = 0 (BT.709), color_range = 2 (full range, Y bias 0). Use color_range = 0 for studio (16-235).
+// NV12 QA sidecar: required width/height; optional col_standard / color_range for yuv_to_rgb (see RpptColorStandard / RpptColorRange in rppdefs.h).
+// Defaults if omitted: BT.709 + full range. In .info use integer codes (e.g. color_range=0 studio, color_range=2 full).
 struct RpptYuvNv12Sidecar
 {
     int width = 0;
     int height = 0;
-    Rpp32s col_standard = 0;
-    Rpp32s color_range = 2;
+    RpptColorStandard col_standard = RpptColorStandard_BT709;
+    RpptColorRange color_range = RpptColorRange_FULL;
 };
 
 // Read full NV12 .info sidecar. Returns true when width and height are valid.
@@ -603,9 +603,9 @@ inline bool parse_yuv_nv12_sidecar(const std::string& yuvFilePath, RpptYuvNv12Si
         if (sscanf(line, "height=%d", &h) == 1 && h > 0)
             out.height = h;
         if (sscanf(line, "col_standard=%d", &cs) == 1)
-            out.col_standard = (Rpp32s)cs;
+            out.col_standard = static_cast<RpptColorStandard>(cs);
         if (sscanf(line, "color_range=%d", &cr) == 1)
-            out.color_range = (Rpp32s)cr;
+            out.color_range = static_cast<RpptColorRange>(cr);
     }
     fclose(fp);
     return (out.width > 0 && out.height > 0);

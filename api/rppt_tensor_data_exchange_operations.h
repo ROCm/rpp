@@ -115,15 +115,15 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] dst_pitch row pitch of RGB output in bytes
  * \param [in] width image width in pixels
  * \param [in] height image height in pixels
- * \param [in] col_standard luma coefficients for the YUV->RGB matrix: 4=FCC; 5–6=BT.470/BT.601; 7=SMPTE240M; 9–10=BT.2020; 0 or other=BT.709 (default coefficients wr=0.2126, wb=0.0722)
- * \param [in] color_range 0 = studio (luma 16-235, matrix scaled accordingly, Y bias 16); 2 = full range (0-255, Y bias 0). Other values behave like 0.
+ * \param [in] col_standard Luma/matrix family: \ref RpptColorStandard (unknown values use BT.709).
+ * \param [in] color_range Luma range: \ref RpptColorRange_STUDIO or \ref RpptColorRange_FULL (other values behave like studio).
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
  * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
  */
-RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, Rpp32s col_standard, Rpp32s color_range, rppHandle_t rppHandle, RppBackend executionBackend);
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! @}
  */

@@ -102,23 +102,37 @@ __global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_y,
 } // namespace
 
 // Build YUV->RGB 3x3 matrix and copy to device constant
-static void rpp_nv12_set_mat_yuv2rgb(Rpp32s col_standard, Rpp32s color_range)
+static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRange color_range)
 {
     float wr = 0.2126f, wb = 0.0722f;
     int black = 16, white = 235, max_val = 255;
-    if (color_range == 2) { // full range (0-255, Y bias 0)
+    if (color_range == RpptColorRange_FULL) {
         black = 0;
         white = 255;
     }
     switch (col_standard)
     {
-    case 4:  wr = 0.30f;   wb = 0.11f; break;     // FCC
-    case 5:
-    case 6:  wr = 0.2990f; wb = 0.1140f; break;   // BT470, BT601
-    case 7:  wr = 0.212f;  wb = 0.087f; break;    // SMPTE240M
-    case 9:
-    case 10: wr = 0.2627f; wb = 0.0593f; break;   // BT2020
-    default: break;  // BT709
+    case RpptColorStandard_FCC:
+        wr = 0.30f;
+        wb = 0.11f;
+        break;
+    case RpptColorStandard_BT470BG:
+    case RpptColorStandard_BT601:
+        wr = 0.2990f;
+        wb = 0.1140f;
+        break;
+    case RpptColorStandard_SMPTE240M:
+        wr = 0.212f;
+        wb = 0.087f;
+        break;
+    case RpptColorStandard_BT2020_NCL:
+    case RpptColorStandard_BT2020_CL:
+        wr = 0.2627f;
+        wb = 0.0593f;
+        break;
+    case RpptColorStandard_BT709:
+    default:
+        break;
     }
     float mat[3][3] = {
         1.0f, 0.0f, (1.0f - wr) / 0.5f,
@@ -143,8 +157,8 @@ RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
                               Rpp32u dst_pitch,
                               Rpp32u width,
                               Rpp32u height,
-                              Rpp32s col_standard,
-                              Rpp32s color_range,
+                              RpptColorStandard col_standard,
+                              RpptColorRange color_range,
                               rpp::Handle &handle)
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
@@ -174,6 +188,6 @@ template RppStatus hip_exec_yuv_to_rgb<Rpp8u>(Rpp8u *srcYPtr,
                                               Rpp32u dst_pitch,
                                               Rpp32u width,
                                               Rpp32u height,
-                                              Rpp32s col_standard,
-                                              Rpp32s color_range,
+                                              RpptColorStandard col_standard,
+                                              RpptColorRange color_range,
                                               rpp::Handle &handle);
