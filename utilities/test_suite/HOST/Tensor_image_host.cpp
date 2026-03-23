@@ -1869,6 +1869,48 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case CUTOUT_DROPOUT:
+                {
+                    testCaseName = "cutout_dropout";
+                    Rpp32u boxesInEachImage = 1;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
+                    Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
+                    Rpp32f colorBuffer[batchSize * boxesInEachImage * srcDescPtr->c];
+                    
+                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, seed, 1, colorBuffer);
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_cutout_dropout(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numBoxesTensor, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case GRID_DROPOUT:
+                {
+                    testCaseName = "grid_dropout";
+                    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
+                    Rpp32f holeRatio = 0.4f;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+
+                    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
+                    Rpp32u maxHoleW = 0, maxHoleH = 0;
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_grid_dropout(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case EMBOSS:
                 {
                     testCaseName = "emboss";
