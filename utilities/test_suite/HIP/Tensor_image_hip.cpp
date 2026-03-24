@@ -637,6 +637,13 @@ int main(int argc, char **argv)
     if(testCase == CHANNEL_DROPOUT)
         CHECK_RETURN_STATUS(hipHostMalloc(&dropoutTensor, batchSize * srcDescPtr->c * sizeof(Rpp8u)));
 
+    Rpp32u maxBoxesPerImage;
+    if(testCase == COARSE_DROPOUT)
+    {
+        maxBoxesPerImage = 8;
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * maxBoxesPerImage * sizeof(RpptRoiLtrb)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
+    }
     if(testCase == RANDOM_ERASE)
     {
         boxesInEachImage = 1;
@@ -1953,8 +1960,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "cutout_dropout";
                     boxesInEachImage = 1;
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
-                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, seed, 1, colorBuffer);
+                    bool seed = qaFlag ? false : true;
+                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, seed, 1);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -2009,11 +2016,24 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "random_erase";
                     Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
-                    init_dropout_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
+                    init_dropout_random_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_random_erase(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case COARSE_DROPOUT:
+                {
+                    testCaseName = "coarse";
+                    bool randomSeed = qaFlag ? false : true;
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, nullptr, srcDescPtr->dataType, randomSeed, 4);
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_coarse_dropout(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, numOfBoxes, maxBoxesPerImage, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -2366,6 +2386,11 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(dropoutTensor));
     if (permutationTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(permutationTensor));
+    if (testCase == COARSE_DROPOUT)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+        CHECK_RETURN_STATUS(hipHostFree(numOfBoxes));
+    }
     if (testCase == RANDOM_ERASE)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
