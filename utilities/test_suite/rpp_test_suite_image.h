@@ -132,6 +132,7 @@ std::map<int, string> augmentationMap =
     {97, "cutout_dropout"},
     {98, "grid_dropout"},
     {99, "random_erase"},
+    {100, "coarse_dropout"},
     {101, "emboss"}
 };
 
@@ -204,7 +205,16 @@ enum Augmentation {
     CUTOUT_DROPOUT = 97,
     GRID_DROPOUT = 98,
     RANDOM_ERASE = 99,
+    COARSE_DROPOUT = 100,
     EMBOSS = 101
+};
+
+// Enum for dropout types
+enum DropoutType
+{
+    DROPOUT_CUTOUT = 1,
+    DROPOUT_RANDOM_ERASING = 3,
+    DROPOUT_COARSE = 4
 };
 
 const unordered_set<int> additionalParamCases = {NOISE, RESIZE, ROTATE, WARP_AFFINE, WARP_PERSPECTIVE, ERODE, DILATE, BOX_FILTER, SOBEL_FILTER, MEDIAN_FILTER, GAUSSIAN_FILTER, REMAP, CHANNEL_PERMUTE, EMBOSS};
@@ -1766,16 +1776,18 @@ void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbabil
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, int inputBitDepth, int seed, int dropoutType, void *colorBuffer = NULL)
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode, bool randomSeed, int dropoutType)
 {
+    // Initialize Random Number Generators
+    int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
-
-    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
-    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
-    Rpp32f *colors32f = reinterpret_cast<Rpp32f *>(colorBuffer);
-    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+    std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
+    std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
+    int minCoarseBoxes = std::max(0, std::min(5, maxBoxesPerImage));
+    int maxCoarseBoxes = std::max(minCoarseBoxes, maxBoxesPerImage);
+    std::uniform_int_distribution<int> coarse_box_count_dist(minCoarseBoxes, maxCoarseBoxes);
 
     for (int i = 0; i < batchSize; i++)
     {
@@ -1785,42 +1797,142 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
         const float roiX = static_cast<float>(roi.xy.x);
         const float roiY = static_cast<float>(roi.xy.y);
 
+        int actualBoxCount = 1;
+        std::uniform_real_distribution<float> *curr_wh_ratio = &wh_ratio_cutout;
+
+        if (dropoutType == DROPOUT_RANDOM_ERASING) // Random Erasing
+            curr_wh_ratio = &wh_ratio_random;
+        else if (dropoutType == DROPOUT_COARSE) // Coarse Dropout
+        {
+            actualBoxCount = coarse_box_count_dist(rng);
+            curr_wh_ratio = &wh_ratio_coarse;
+        }
+
+        int boxOffset = i * maxBoxesPerImage;
+        int validBoxCount = 0;
+
+        for (int b = 0; b < actualBoxCount; b++)
+        {
+            float boxW, boxH;
+
+            if (dropoutType == DROPOUT_CUTOUT) // Cutout: Perfect square
+            {
+                float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
+                boxW = boxH = std::max(1.0f, squareSize);
+            }
+            else // Rectangular boxes
+            {
+                boxW = std::max(1.0f, (*curr_wh_ratio)(rng) * roiW);
+                boxH = std::max(1.0f, (*curr_wh_ratio)(rng) * roiH);
+            }
+
+            const float x_slack = std::max(0.0f, roiW - boxW);
+            const float y_slack = std::max(0.0f, roiH - boxH);
+
+            const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * x_slack, x_slack));
+            const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * y_slack, y_slack));
+
+            // Set Bounding Box Coordinates
+            RpptRoiLtrb &box = anchorBoxInfoTensor[boxOffset + b];
+            box.lt.x = static_cast<Rpp32u>(roiX + x_start);
+            box.lt.y = static_cast<Rpp32u>(roiY + y_start);
+            Rpp32u boxWInt = static_cast<Rpp32u>(boxW);
+            Rpp32u boxHInt = static_cast<Rpp32u>(boxH);
+            box.rb.x = box.lt.x + boxWInt - 1;
+            box.rb.y = box.lt.y + boxHInt - 1;
+            validBoxCount++;
+        }
+        numOfBoxes[i] = validBoxCount;
+    }
+}
+
+// Dropout Region initializer for unit and performance testing
+void init_dropout_random_erase(Rpp32u batchSize, Rpp32u maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb *anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, Rpp32u channels, Rpp8u BitDepthTestMode, int seed, Rpp8u dropoutType, void *colorBuffer = NULL)
+{
+    std::mt19937 rng(seed);
+    std::mt19937 rng_noise(seed);
+
+    if (dropoutType == DROPOUT_RANDOM_ERASING && colorBuffer != nullptr)
+    {
+        std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
+        std::uniform_int_distribution<int> dist_i(0, 255);
+        
+        Rpp32u noiseSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * channels;
+
+        if (BitDepthTestMode == U8_TO_U8) // U8
+            for (Rpp32u i = 0; i < noiseSize; i++)
+                ((Rpp8u*)colorBuffer)[i] = (Rpp8u)dist_i(rng_noise);
+        else if (BitDepthTestMode == F32_TO_F32) // F32
+            for (Rpp32u i = 0; i < noiseSize; i++)
+                ((Rpp32f*)colorBuffer)[i] = (Rpp32f)dist_f(rng_noise);
+        else if (BitDepthTestMode == F16_TO_F16) // F16
+            for (Rpp32u i = 0; i < noiseSize; i++)
+                ((Rpp16f*)colorBuffer)[i] = (Rpp16f)dist_f(rng_noise);
+        else if (BitDepthTestMode == I8_TO_I8) // I8
+            for (Rpp32u i = 0; i < noiseSize; i++)
+                ((Rpp8s*)colorBuffer)[i] = (Rpp8s)(dist_i(rng_noise) - 128);
+    }
+
+    std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
+    std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
+    std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
+
+    for (int i = 0; i < batchSize; i++)
+    {
+        const auto &roi = roiTensorPtrSrc[i].xywhROI;
+        const float roiW = static_cast<float>(roi.roiWidth);
+        const float roiH = static_cast<float>(roi.roiHeight);
+        const float roiX = static_cast<float>(roi.xy.x);
+        const float roiY = static_cast<float>(roi.xy.y);
+
+        std::uniform_real_distribution<float> &curr_wh_ratio = (dropoutType == 3) ? wh_ratio_random : wh_ratio_cutout;
+
         float boxW, boxH;
         if (dropoutType == 1) // Cutout: Perfect square
         {
-            float squareSize = wh_ratio_cutout(rng) * std::min(roiW, roiH);
+            float squareSize = curr_wh_ratio(rng) * std::min(roiW, roiH);
             boxW = boxH = std::max(1.0f, squareSize);
         }
-        else // Standard Dropout / Random Erase
+        else // Dropout or Random Erase: Rectangular
         {
-            boxW = std::max(1.0f, wh_ratio_cutout(rng) * roiW);
-            boxH = std::max(1.0f, wh_ratio_cutout(rng) * roiH);
+            boxW = std::max(1.0f, curr_wh_ratio(rng) * roiW);
+            boxH = std::max(1.0f, curr_wh_ratio(rng) * roiH);
         }
 
-        const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
-        const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
+        const float x_slack = std::max(0.0f, roiW - boxW);
+        const float y_slack = std::max(0.0f, roiH - boxH);
+
+        const float x_start = std::max(1.0f, std::min(pos_ratio(rng) * x_slack, x_slack));
+        const float y_start = std::max(1.0f, std::min(pos_ratio(rng) * y_slack, y_slack));
 
         RpptRoiLtrb &box = anchorBoxInfoTensor[i * maxBoxesPerImage];
         box.lt.x = static_cast<Rpp32u>(roiX + x_start);
         box.lt.y = static_cast<Rpp32u>(roiY + y_start);
-        box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW - 1.0f);
-        box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH - 1.0f);
+        box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW);
+        box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH);
 
-        if (colorBuffer != nullptr)
+        if (dropoutType != 3 && colorBuffer != nullptr)
         {
             int colorOffset = (i * maxBoxesPerImage) * channels;
             Rpp32f dropoutColor = 0.0f;
-            for (int c = 0; c < channels; c++)
-                if (inputBitDepth == 0)
-                    colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
-                else if (inputBitDepth == 2)
-                    colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
-                else if (inputBitDepth == 1)
-                    colors32f[colorOffset + c] = (Rpp32f)(dropoutColor);
-                else if (inputBitDepth == 3)
-                    colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+
+            if (BitDepthTestMode == U8_TO_U8)
+                for (int c = 0; c < channels; c++)
+                    ((Rpp8u*)colorBuffer)[colorOffset + c] = (Rpp8u)dropoutColor;
+            else if (BitDepthTestMode == F32_TO_F32)
+                for (int c = 0; c < channels; c++)
+                    ((Rpp32f*)colorBuffer)[colorOffset + c] = (Rpp32f)dropoutColor;
+            else if (BitDepthTestMode == F16_TO_F16)
+                for (int c = 0; c < channels; c++)
+                    ((Rpp16f*)colorBuffer)[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+            else if (BitDepthTestMode == I8_TO_I8)
+                for (int c = 0; c < channels; c++)
+                    ((Rpp8s*)colorBuffer)[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
         }
-        numOfBoxes[i] = 1;
+        
+        // Only set numOfBoxes if it's provided
+        if (numOfBoxes != nullptr)
+            numOfBoxes[i] = 1;
     }
 }
 
