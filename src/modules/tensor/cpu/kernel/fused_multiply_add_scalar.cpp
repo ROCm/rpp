@@ -42,9 +42,9 @@ RppStatus fused_multiply_add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
 {
     RpptROI3D roiDefault;
     if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]);
     else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

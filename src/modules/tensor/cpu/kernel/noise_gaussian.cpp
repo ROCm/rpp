@@ -198,7 +198,7 @@ RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -531,7 +531,7 @@ RppStatus gaussian_noise_f32_f32_host_tensor(Rpp32f *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -853,7 +853,7 @@ RppStatus gaussian_noise_f16_f16_host_tensor(Rpp16f *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1230,7 +1230,7 @@ RppStatus gaussian_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1565,9 +1565,9 @@ RppStatus gaussian_noise_voxel_u8_u8_host_tensor(Rpp8u *srcPtr,
 {
     RpptROI3D roiDefault;
     if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]);
     else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]);
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -1815,9 +1815,9 @@ RppStatus gaussian_noise_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
 {
     RpptROI3D roiDefault;
     if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]);
     else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
+        roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]);
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 

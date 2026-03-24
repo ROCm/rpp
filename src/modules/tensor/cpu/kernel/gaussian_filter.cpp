@@ -79,7 +79,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -1230,7 +1230,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

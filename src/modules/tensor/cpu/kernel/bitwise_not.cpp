@@ -36,7 +36,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& Handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);

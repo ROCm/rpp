@@ -177,7 +177,7 @@ RppStatus erode_char_host_tensor(T *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
     static_assert((std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value), "T must be Rpp8u or Rpp8s");
 
@@ -1564,7 +1564,7 @@ RppStatus erode_float_host_tensor(T *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
     static_assert((std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value), "T must be Rpp32f or Rpp16f");
 
@@ -2696,7 +2696,7 @@ RppStatus erode_generic_host_tensor(T *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

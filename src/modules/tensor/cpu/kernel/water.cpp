@@ -57,7 +57,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
+    RpptROI roiDefault = rpp_make_roi_xywh_full(static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h));
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -318,7 +318,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
+    RpptROI roiDefault = rpp_make_roi_xywh_full(static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h));
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -579,7 +579,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
+    RpptROI roiDefault = rpp_make_roi_xywh_full(static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h));
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -742,7 +742,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
+    RpptROI roiDefault = rpp_make_roi_xywh_full(static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h));
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

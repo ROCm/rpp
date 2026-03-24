@@ -32,7 +32,7 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -225,7 +225,7 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -417,7 +417,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -608,7 +608,7 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)

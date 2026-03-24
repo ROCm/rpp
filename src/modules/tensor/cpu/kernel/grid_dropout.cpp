@@ -39,7 +39,7 @@ RppStatus grid_dropout_host_tensor(T *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     T fillValue{};

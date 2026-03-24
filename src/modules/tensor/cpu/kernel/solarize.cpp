@@ -46,7 +46,7 @@ RppStatus solarize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -219,7 +219,7 @@ RppStatus solarize_f32_f32_host_tensor(Rpp32f *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -396,7 +396,7 @@ RppStatus solarize_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -573,7 +573,7 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

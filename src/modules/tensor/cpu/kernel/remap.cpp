@@ -57,7 +57,7 @@ RppStatus remap_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
@@ -287,7 +287,7 @@ RppStatus remap_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
@@ -510,7 +510,7 @@ RppStatus remap_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
@@ -740,7 +740,7 @@ RppStatus remap_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
@@ -854,7 +854,7 @@ RppStatus remap_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 #if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
@@ -1136,7 +1136,7 @@ RppStatus remap_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
 #if __AVX2__
@@ -1419,7 +1419,7 @@ RppStatus remap_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                            RppLayoutParams ,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
 #if __AVX2__
@@ -1707,7 +1707,7 @@ RppStatus remap_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
 #if __AVX2__

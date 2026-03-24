@@ -618,7 +618,7 @@ RppStatus resize_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                                       RppLayoutParams srcLayoutParams,
                                       rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -839,7 +839,7 @@ RppStatus resize_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                                         RppLayoutParams srcLayoutParams,
                                         rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1052,7 +1052,7 @@ RppStatus resize_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                                       RppLayoutParams srcLayoutParams,
                                       rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1273,7 +1273,7 @@ RppStatus resize_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams srcLayoutParams,
                                         rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1383,7 +1383,7 @@ RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1625,7 +1625,7 @@ RppStatus resize_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RppLayoutParams srcLayoutParams,
                                               rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -1869,7 +1869,7 @@ RppStatus resize_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                                               RppLayoutParams srcLayoutParams,
                                               rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -2113,7 +2113,7 @@ RppStatus resize_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -2359,7 +2359,7 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptInterpolationType interpolationType,
                                        rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);

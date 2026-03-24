@@ -2392,7 +2392,7 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         for (Rpp32s i = 0; i < 2; i++)
         {
             internalDstImgSizes[i] = {srcDescPtr->w, srcDescPtr->h};
-            internalRoiTensorPtrSrc[i].xywhROI = {0, 0, 1920, 1080};
+            internalRoiTensorPtrSrc[i].xywhROI = {{0, 0}, 1920, 1080};
         }
         RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         Rpp32f *resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f *>(internalRoiTensorPtrSrc + 2);
@@ -2487,7 +2487,7 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         for (Rpp32s i = 0; i < 2; i++)
         {
             internalDstImgSizes[i] = {srcDescPtr->w, srcDescPtr->h};
-            internalRoiTensorPtrSrc[i].xywhROI = {0, 0, 1920, 1080};
+            internalRoiTensorPtrSrc[i].xywhROI = {{0, 0}, 1920, 1080};
         }
         RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
 

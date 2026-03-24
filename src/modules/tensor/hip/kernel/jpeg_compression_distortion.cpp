@@ -933,7 +933,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
 
     // Shared memory declaration
     __shared__ float src_smem[16][128];  // Assuming 16 rows (aligned height for 1 channel)
-    d_float8 zeroes_f8 = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    d_float8 zeroes_f8 = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
     *(d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8] = zeroes_f8;
     __syncthreads();
 
