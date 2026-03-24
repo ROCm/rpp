@@ -2499,7 +2499,7 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         Rpp32u maskSizeInBytes = maskSize * sizeof(Rpp32f);
 
         // Copying fog alpha mask from host to device asynchronously
-        Rpp32f *d_fogAlphaMaskPtr, *d_fogIntensityMaskPtr, *d_resizedFogAlphaMaskPtr, *d_resizedFogIntensityMaskPtr;
+        Rpp32f *d_fogAlphaMaskPtr, *d_resizedFogAlphaMaskPtr, *d_resizedFogIntensityMaskPtr;
         d_fogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         d_resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(d_fogAlphaMaskPtr + (2 * maskSize));
         d_resizedFogIntensityMaskPtr = d_resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
