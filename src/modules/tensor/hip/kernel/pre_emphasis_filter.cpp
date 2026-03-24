@@ -90,6 +90,7 @@ RppStatus hip_exec_pre_emphasis_filter_tensor(Rpp32f *srcPtr,
                        coeffTensor,
                        srcLengthTensor,
                        borderType);
+    HIP_CHECK_LAUNCH_RETURN();
 
     return RPP_SUCCESS;
 }

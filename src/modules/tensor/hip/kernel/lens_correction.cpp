@@ -190,6 +190,7 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        handle.GetStream(),
                        reinterpret_cast<d_float9 *>(cameraMatrix),
                        reinterpret_cast<d_float9 *>(inverseMatrix));
+    HIP_CHECK_LAUNCH_RETURN();
     hipLaunchKernelGGL(compute_remap_tables_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -202,6 +203,7 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        reinterpret_cast<d_float8 *>(distanceCoeffs),
                        make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                        roiTensorPtrSrc);
+    HIP_CHECK_LAUNCH_RETURN();
 
     return RPP_SUCCESS;
 }

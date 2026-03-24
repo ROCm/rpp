@@ -451,6 +451,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            meanTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_stddev_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -461,6 +462,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
@@ -477,6 +479,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -487,6 +490,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
@@ -503,6 +507,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -513,6 +518,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;
