@@ -594,13 +594,11 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32u paramStride[3];
             Rpp32u srcReductionDims[3], srcStride[3];
-            Rpp32u reductionDims;
             bool isConsecutive = true;
             switch(axisMask)
             {
                 case 1: // Normalize axes 0
                 {
-                    reductionDims = length[1] * length[2];
                     paramStride[0] = 0;
                     paramStride[1] = paramStride[2] = 1;
                     srcReductionDims[0] = length[1];
@@ -613,7 +611,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 2: // Normalize axes 1
                 {
-                    reductionDims = length[0] * length[2];
                     paramStride[1] = 0;
                     paramStride[0] = paramStride[2] = 1;
                     srcReductionDims[0] = length[0];
@@ -626,7 +623,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 3: // Normalize axes 0, 1
                 {
-                    reductionDims = length[2];
                     paramStride[0] = paramStride[1] = 0;
                     paramStride[2] = 1;
                     srcReductionDims[0] = 1;
@@ -639,7 +635,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 4: // Normalize across 2
                 {
-                    reductionDims = length[0] * length[1];
                     paramStride[2] = 0;
                     paramStride[0] = paramStride[1] = 1;
                     srcReductionDims[0] = length[0];
@@ -652,7 +647,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 5: // Normalize across 0, 2
                 {
-                    reductionDims = length[1];
                     paramStride[0] = paramStride[2] = 0;
                     paramStride[1] = 1;
                     srcReductionDims[0] = length[1];
@@ -666,7 +660,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 6: // Normalize across 1, 2
                 {
-                    reductionDims = length[0];
                     paramStride[1] = paramStride[2] = 0;
                     paramStride[0] = 1;
                     srcReductionDims[0] = 1;
@@ -679,7 +672,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 case 7: // Normalize across 0, 1, 2
                 {
-                    reductionDims = 1;
                     paramStride[0] = paramStride[1] = paramStride[2] = 0;
                     srcReductionDims[0] = 1;
                     srcReductionDims[1] = 1;
