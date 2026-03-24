@@ -52,9 +52,9 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
                                                       RpptROIPtr roiTensorPtrSrc,
                                                       rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *rowRemapTableTemp, *colRemapTableTemp;

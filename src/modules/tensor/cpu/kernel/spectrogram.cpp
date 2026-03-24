@@ -109,11 +109,10 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         hann_window(windowFn, windowLength);
     else
         memcpy(windowFn, windowFunction, windowLength * sizeof(Rpp32f));
-    Rpp32u numThreads = handle.GetNumThreads();
-
     // Get windows output
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32s batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;

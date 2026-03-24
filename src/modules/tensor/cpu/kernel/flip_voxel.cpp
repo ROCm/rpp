@@ -41,10 +41,9 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
         roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]);
     else if (srcGenericDescPtr->layout == RpptLayout::NDHWC)
         roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]);
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
     {
         RpptROI3D roi;
@@ -237,10 +236,9 @@ RppStatus flip_voxel_u8_u8_host_tensor(Rpp8u *srcPtr,
         roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]);
     else if (srcGenericDescPtr->layout == RpptLayout::NDHWC)
         roiDefault = rpp_make_roi3d_xyzwhd_full((Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]);
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
     {
         RpptROI3D roi;

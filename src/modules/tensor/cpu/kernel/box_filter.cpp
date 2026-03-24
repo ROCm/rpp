@@ -258,7 +258,6 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                                       rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
-    Rpp32u numThreads = handle.GetNumThreads();
     static_assert((std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value), "T must be Rpp8u or Rpp8s");
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -271,7 +270,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 #endif
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -1742,7 +1742,6 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
-    Rpp32u numThreads = handle.GetNumThreads();
     static_assert((std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value), "T must be Rpp32f or Rpp16f");
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -1755,7 +1754,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 #endif
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -2925,10 +2925,9 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                                          rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

@@ -192,12 +192,12 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                                         Rpp32u *roiTensor,
                                         rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;  // exclude batchsize from input dims
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f *srcPtrTemp, *dstPtrTemp;
@@ -416,12 +416,12 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                                         Rpp32u *roiTensor,
                                         rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;  // exclude batchsize from input dims
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         T *srcPtrTemp, *dstPtrTemp;
