@@ -51,14 +51,11 @@ const __m256 pCoeffCrG = _mm256_set1_ps(-0.418688f);
 const __m256 pCoeffCrB = _mm256_set1_ps(-0.081312f);
 
 // Coefficients for YCbCr to RGB conversion
-const __m256 pCoeffRY = avx_p1;
 const __m256 pCoeffRCr = _mm256_set1_ps(1.402f);
 
-const __m256 pCoeffGY = avx_p1;
 const __m256 pCoeffGCb = _mm256_set1_ps(-0.344136f);
 const __m256 pCoeffGCr = _mm256_set1_ps(-0.714136f);
 
-const __m256 pCoeffBY = avx_p1;
 const __m256 pCoeffBCb = _mm256_set1_ps(1.772f);
 
 const __m256i pxMask = _mm256_setr_epi32(0, 1, 4, 5, 2, 3, 6, 7);
@@ -768,7 +765,6 @@ RppStatus jpeg_compression_distortion_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 16) * 16;
-        Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32s qualityParam = qualityTensor[batchCount];
         Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + (batchCount * (16 * 16 * 3));  // (16 * 16) is the block size, and 3 represents the number of channels
@@ -1155,7 +1151,6 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 16) * 16;
-        Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32s qualityParam = qualityTensor[batchCount];
         Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + (batchCount * (16 * 16 * 3));  // (16 * 16) is the block size, and 3 represents the number of channels
@@ -1577,7 +1572,6 @@ RppStatus jpeg_compression_distortion_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 16) * 16;
-        Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32s qualityParam = qualityTensor[batchCount];
         Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + (batchCount * (16 * 16 * 3));  // (16 * 16) is the block size, and 3 represents the number of channels
@@ -1998,7 +1992,6 @@ RppStatus jpeg_compression_distortion_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u alignedLength = (bufferLength / 16) * 16;
-        Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
         Rpp32s qualityParam = qualityTensor[batchCount];
         Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + (batchCount * (16 * 16 * 3));  // (16 * 16) is the block size, and 3 represents the number of channels

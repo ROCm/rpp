@@ -150,7 +150,7 @@ inline void compute_snow_host(RpptFloatRGB *pixel, Rpp32f brightnessCoefficient,
 
 inline void compute_snow_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pSnowParams)
 {
-    __m256 pA, pH, pS, pL, pCmax, pCmin, pDelta, pAdd;
+    __m256 pH, pS, pL, pCmax, pCmin, pDelta, pAdd;
     __m256 pMask[4];
     __m256 pHueCoefficient[3];
 

@@ -101,7 +101,6 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
         pInvMat3 = _mm256_set1_ps(invMat[3]);
         pInvMat6 = _mm256_set1_ps(invMat[6]);
 
-        __m256 pXCameraInit, pYCameraInit, pZCameraInit;
         __m256 pXCameraIncrement, pYCameraIncrement, pZCameraIncrement;
         pXCameraIncrement = _mm256_mul_ps(pInvMat0, avx_p8);
         pYCameraIncrement = _mm256_mul_ps(pInvMat3, avx_p8);

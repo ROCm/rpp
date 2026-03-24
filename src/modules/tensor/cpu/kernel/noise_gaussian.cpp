@@ -53,7 +53,7 @@ inline void compute_gaussian_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, _
 
 inline void compute_gaussian_noise_voxel_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pGaussianNoiseParams)
 {
-    __m256 pRngVals[2], pSqrt[2];
+    __m256 pRngVals[2];
 
     rpp_host_rng_16_gaussian_f32_avx(pRngVals, pxXorwowStateX, pxXorwowStateCounter);               // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm256_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);   // rngVal = rngVal * stdDev + mean;
@@ -77,7 +77,7 @@ inline void compute_gaussian_noise_8_host(__m128 *p, __m128i *pxXorwowStateX, __
 
 inline void compute_gaussian_noise_voxel_8_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
 {
-    __m128 pRngVals[2], pSqrt[2];
+    __m128 pRngVals[2];
 
     rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
@@ -162,7 +162,7 @@ inline void compute_gaussian_noise_voxel_12_host(__m128 *p, __m128i *pxXorwowSta
 {
     compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);
 
-    __m128 pRngVals[2], pSqrt;
+    __m128 pRngVals[2];
     rpp_host_rng_8_gaussian_f32_sse(pRngVals, pxXorwowStateX, pxXorwowStateCounter);            // rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     pRngVals[0] = _mm_fmadd_ps(pRngVals[0], pGaussianNoiseParams[1], pGaussianNoiseParams[0]);  // rngVal = rngVal * stdDev + mean;
     p[2] = _mm_add_ps(p[2], pRngVals[0]);                                                       // return pixVal + rngVal;
@@ -180,7 +180,7 @@ inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMul
 
 inline Rpp32f compute_gaussian_noise_voxel_1_host(Rpp32f pixVal, RpptXorwowStateBoxMuller *xorwowStatePtr, Rpp32f mean, Rpp32f stdDev)
 {
-    Rpp32f rngVal, pixSqrt;
+    Rpp32f rngVal;
     rngVal = rpp_host_rng_1_gaussian_f32(xorwowStatePtr);
     rngVal = rngVal * stdDev + mean;
     return pixVal + rngVal;

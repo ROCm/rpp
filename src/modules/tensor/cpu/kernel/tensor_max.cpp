@@ -241,7 +241,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
-                Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+                Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
                 srcPtrRowR = srcPtrChannel;
                 srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
                 srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -843,7 +843,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
-                Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+                Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
                 srcPtrRowR = srcPtrChannel;
                 srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
                 srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;

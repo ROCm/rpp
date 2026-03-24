@@ -825,7 +825,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
-                            __m256i pxRow[5], pxRowHalf[2], pxResult;
+                            __m256i pxRow[5], pxRowHalf[2];
                             rpp_morphological_load_NxN<5, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and max
@@ -1014,7 +1014,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                         __m256i pxResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
-                            __m256i pxRow[7], pxRowHalf[2], pxResult;
+                            __m256i pxRow[7], pxRowHalf[2];
                             rpp_morphological_load_NxN<7, T, MorphPad_Dilate>(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and max
@@ -1318,7 +1318,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
 
                         // get the accumalated result for first 8 elements
-                        __m128i px128[8], pxTemp[7], pxDst[2];
+                        __m128i px128[8], pxDst[2];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
@@ -1414,7 +1414,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             else
                                 unpack_and_max_host<9>(pxRow, pxRowHalf);
 
-                            __m128i pxTemp[3], pxDst;
+                            __m128i pxTemp[3];
                             extract_3sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_max_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
@@ -1492,7 +1492,7 @@ RppStatus dilate_char_host_tensor(T *srcPtr,
                             unpack_and_max_host<9>(pxRow, pxRowHalf);
 
                         // get the accumalated result for first 8 elements
-                        __m128i px128[8], pxTemp[7], pxDst[2];
+                        __m128i px128[8], pxDst[2];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
                         blend_shuffle_max_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 

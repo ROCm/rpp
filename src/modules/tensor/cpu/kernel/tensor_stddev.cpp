@@ -157,7 +157,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             Rpp32f meanB     = meanTensor[idx + 2];
             Rpp32f meanImage = meanTensor[idx + 3];
 
-            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -940,7 +940,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             Rpp32f meanB     = meanTensor[idx + 2] + 128;
             Rpp32f meanImage = meanTensor[idx + 3] + 128;
 
-            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;

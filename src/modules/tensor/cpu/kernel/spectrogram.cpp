@@ -87,10 +87,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     if (centerWindows) windowCenterOffset = windowLength / 2;
     if (nfft == 0) nfft = windowLength;
     const Rpp32s numBins = nfft / 2 + 1;
-    const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     const Rpp32u hStride = dstDescPtr->strides.hStride;
-    const Rpp32s alignedNfftLength = nfft & ~7;
-    const Rpp32s alignedNbinsLength = numBins & ~7;
     const Rpp32s alignedWindowLength = windowLength & ~7;
     const Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     const Rpp32u windowOutputStride = maxNumWindows * nfft;

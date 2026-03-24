@@ -195,7 +195,6 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     Rpp32s filterKernelRadiusWStrided = (Rpp32s)(filter.radius) * inputDescPtr->strides.wStride;
 
     Rpp32s inputWidthLimit = (inputImgSize.width - 1) * inputDescPtr->strides.wStride;
-    __m128i pxInputWidthLimit = _mm_set1_epi32(inputWidthLimit);
 
     // For PLN3 inputs
     if(inputDescPtr->c == 3 && inputDescPtr->layout == RpptLayout::NCHW)
@@ -1294,8 +1293,6 @@ RppStatus resize_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * srcLayoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = dstImgSize[batchCount].width & ~3;
-        Rpp32s srcLocationColumnArray[4] = {0};
         Rpp32s srcLocationRow, srcLocationColumn;
 
         // Resize with 3 channel inputs and outputs

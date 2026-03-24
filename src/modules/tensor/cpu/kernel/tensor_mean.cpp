@@ -103,7 +103,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
             Rpp32u sumAvxG[8] = {0};
             Rpp32u sumAvxB[8] = {0};
 
-            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -700,7 +700,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             Rpp32s sumAvxG[8] = {0};
             Rpp32s sumAvxB[8] = {0};
 
-            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;

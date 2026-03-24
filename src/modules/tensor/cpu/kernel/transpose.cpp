@@ -324,8 +324,6 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                 // Optimized AVX version for 3D inputs and permutation order (0, 2, 1)
                 else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
                 {
-                    Rpp32f *srcPtrRow = srcPtrTemp;
-                    Rpp32f *dstPtrRow = dstPtrTemp;
                     for(int i = 0; i < length[0]; i++)
                     {
                         compute_2d_pln1_transpose(srcPtrTemp, dstPtrTemp, length[1], length[2], srcGenericDescPtr->strides[2], dstGenericDescPtr->strides[2]);

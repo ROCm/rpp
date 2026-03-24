@@ -30,7 +30,7 @@ SOFTWARE.
 
 inline void compute_color_twist_24_host(__m256 &pVecR, __m256 &pVecG, __m256 &pVecB, __m256 *pColorTwistParams)
 {
-    __m256 pA, pH, pS, pV, pAdd;
+    __m256 pH, pS, pV, pAdd;
 
     // RGB to HSV
     rgb_to_hsv(pVecR, pVecG, pVecB, pH, pS, pV, pAdd);

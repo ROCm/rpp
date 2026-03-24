@@ -738,8 +738,6 @@ RppStatus remap_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
-    __m128 pSrcChannel = _mm_set1_ps(srcDescPtr->c);
-    __m128 pSrcStride = _mm_set1_ps(srcDescPtr->strides.hStride);
 
 omp_set_dynamic(0);
 omp_set_num_threads(handle.GetNumThreads());
@@ -852,7 +850,6 @@ RppStatus remap_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 #if __AVX2__
-    __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
     __m256i pxSrcStridesCHW[3];
     pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
@@ -1134,7 +1131,6 @@ RppStatus remap_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 #if __AVX2__
-    __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
     __m256i pxSrcStridesCHW[3];
     pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
@@ -1416,7 +1412,6 @@ RppStatus remap_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 #if __AVX2__
-    __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
     __m256i pxSrcStridesCHW[3];
     pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
@@ -1703,7 +1698,6 @@ RppStatus remap_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 #if __AVX2__
-    __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
     __m256i pxSrcStridesCHW[3];
     pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
