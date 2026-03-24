@@ -456,7 +456,6 @@ RppStatus rppt_posterize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  */
 RppStatus rppt_solarize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f* thresholdTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
-
 /*! \brief Snow augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The Snow augmentation adds a snowed-in effect on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
@@ -500,6 +499,53 @@ RppStatus rppt_snow(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rp
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_channel_dropout(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp8u *dropoutTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
+
+/*! \brief Cutout dropout augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
+ * \details Cutout dropout function erases random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_cutout_dropout_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] anchorBoxInfoTensor precomputed cutout erase regions for the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), stored as a flat array of RpptRoiLtrb of size (batchSize * maxBoxesPerImage), where maxBoxesPerImage = max(numBoxesTensor[n])
+ * \param [in] colorsTensor pointer to erase color values for each erase region in HIP memory (for HIP backend) or HOST memory (for HOST backend), laid out identically to anchorBoxInfoTensor, i.e., of size (batchSize * maxBoxesPerImage), with colorsTensor[(n * maxBoxesPerImage) + k]
+ * \param [in] numBoxesTensor number of erase regions per image in the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend) (1D tensor of size batchSize, Data Type - Rpp32u*)
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_cutout_dropout(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, RppPtr_t colorsTensor, Rpp32u *numBoxesTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
+
+/*! \brief Grid dropout augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
+ * \details Grid dropout function erases grid wise random regions from an image, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_grid_dropout_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] anchorBoxInfoTensor Precomputed grid erase regions for the batch in pinned / HIP memory (for HIP backend) or HOST memory (for HOST backend), stored as an array of RpptRoiLtrb of size (batchSize * boxesInEachImage)
+ * \param [in] boxesInEachImage Number of grid boxes per image (Data Type - Rpp32u)
+ * \param [in] maxHoleW Maximum hole width across all grid boxes (Data Type - Rpp32u)
+ * \param [in] maxHoleH Maximum hole height across all grid boxes (Data Type - Rpp32u)
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_grid_dropout(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, Rpp32u boxesInEachImage, Rpp32u maxHoleW, Rpp32u maxHoleH, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief Random Erase augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details This function erases random regions from an image and fills with random noise, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>

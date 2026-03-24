@@ -791,6 +791,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -809,6 +810,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -825,6 +827,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -845,6 +848,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -863,6 +867,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -879,6 +884,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -899,6 +905,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -917,6 +924,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -933,6 +941,7 @@ RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

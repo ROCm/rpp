@@ -187,6 +187,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                    dstGenericDescPtr->dims[1],
                                    make_uint3(maxDepth, maxHeight, maxWidth),
                                    fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (needPadding && dstGenericDescPtr->layout == RpptLayout::NDHWC)
             {
@@ -199,6 +200,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                    make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                    make_uint3(maxDepth, maxHeight, maxWidth),
                                    fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -246,6 +248,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                    dstGenericDescPtr->dims[1],
                                    make_uint3(1, shape[1], shape[2]),
                                    fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (needPadding && dstGenericDescPtr->layout == RpptLayout::NHWC)
             {
@@ -258,6 +261,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                    make_uint2(1, dstGenericDescPtr->strides[1]),
                                    make_uint3(1, maxHeight, maxWidth),
                                    fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -294,6 +298,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                     1,
                                     make_uint3(1, shape[0], shape[1]),
                                     fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -327,6 +332,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                    1,
                                    make_uint3(1, 1, shape[0]),
                                    fillValue);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -406,6 +412,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
                                    dstGenericDescPtr->dims[1],
                                    make_uint3(maxDepth, maxHeight, maxWidth));
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (dstGenericDescPtr->layout == RpptLayout::NDHWC)
             {
@@ -421,6 +428,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    dstPtrTemp,
                                    make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                    make_uint3(maxDepth, maxHeight, maxWidth));
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -465,6 +473,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    make_uint3(dstGenericDescPtr->strides[1], 0, dstGenericDescPtr->strides[2]),
                                    dstGenericDescPtr->dims[1],
                                    make_uint3(1, maxHeight, maxWidth));
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if (dstGenericDescPtr->layout == RpptLayout::NHWC)
             {
@@ -480,6 +489,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    dstPtrTemp,
                                    make_uint2(1, dstGenericDescPtr->strides[1]),
                                    make_uint3(1, maxHeight, maxWidth));
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -511,6 +521,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                make_uint3(0, 0, dstGenericDescPtr->strides[1]),
                                1,
                                make_uint3(1, maxHeight, maxWidth));
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if (numDims == 1)
@@ -539,6 +550,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                make_uint3(0, 0, 1),
                                1,
                                make_uint3(1, 1, maxLength));
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

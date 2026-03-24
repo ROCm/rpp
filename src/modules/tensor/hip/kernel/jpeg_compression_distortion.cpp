@@ -1088,6 +1088,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            tableY,
                            tableCbCr,
                            qualityTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 3))
@@ -1105,6 +1106,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            tableY,
                            tableCbCr,
                            qualityTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && (srcDescPtr->c == 1))
@@ -1121,6 +1123,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            roiTensorPtrSrc,
                            tableY,
                            qualityTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     if((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1138,6 +1141,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            tableY,
                            tableCbCr,
                            qualityTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     if((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -1155,6 +1159,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                            tableY,
                            tableCbCr,
                            qualityTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     return RPP_SUCCESS;
 }

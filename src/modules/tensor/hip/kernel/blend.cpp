@@ -210,6 +210,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            alphaTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -226,6 +227,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            dstDescPtr->c,
                            alphaTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -243,6 +245,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -259,6 +262,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                alphaTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

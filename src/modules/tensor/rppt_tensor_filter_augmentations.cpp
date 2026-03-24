@@ -580,7 +580,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             inputDesc = dstDescPtr;
         }
         srcPtr = (tempPtr == nullptr) ? srcPtr : tempPtr;
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {

@@ -162,6 +162,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
             globalThreads_x = dstDescPtr->w;
             CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         }
@@ -179,6 +180,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                reinterpret_cast<uchar3*>(colorsTensor),
                                numBoxesTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
@@ -193,6 +195,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                reinterpret_cast<d_half3_s*>(colorsTensor),
                                numBoxesTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
@@ -207,6 +210,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                reinterpret_cast<float3*>(colorsTensor),
                                numBoxesTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if (srcDescPtr->dataType == RpptDataType::I8)
         {
@@ -221,6 +225,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                reinterpret_cast<d_schar3_s*>(colorsTensor),
                                numBoxesTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)
@@ -238,6 +243,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                            colorsTensor,
                            numBoxesTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 3)
     {
@@ -254,6 +260,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                            colorsTensor,
                            numBoxesTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -270,6 +277,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
             CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             globalThreads_x = dstDescPtr->w;
             hipLaunchKernelGGL(erase_pln3_hip_tensor,
@@ -283,6 +291,7 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
                                colorsTensor,
                                numBoxesTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
