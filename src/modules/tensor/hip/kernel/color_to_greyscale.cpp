@@ -140,6 +140,7 @@ RppStatus hip_exec_color_to_greyscale_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            make_float3(channelWeights[0], channelWeights[1], channelWeights[2]),
                            make_uint2(srcDescPtr->w, srcDescPtr->h));
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if (srcDescPtr->layout == RpptLayout::NCHW)
     {
@@ -154,6 +155,7 @@ RppStatus hip_exec_color_to_greyscale_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            make_float3(channelWeights[0], channelWeights[1], channelWeights[2]),
                            make_uint2(srcDescPtr->w, srcDescPtr->h));
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

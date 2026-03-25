@@ -1764,6 +1764,51 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle);
 
+// -------------------- coarse_dropout --------------------
+
+template <typename T>
+RppStatus coarse_dropout_host_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptRoiLtrb *anchorBoxInfoTensor,
+                                     Rpp32u *numBoxesTensor,
+                                     Rpp32u maxBoxesPerImage,       
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
+// -------------------- grid_dropout --------------------
+
+template<typename T>
+RppStatus grid_dropout_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptRoiLtrb *anchorBoxInfoTensor,
+                                   Rpp32u boxesInEachImage,
+                                   Rpp32u maxHoleW,
+                                   Rpp32u maxHoleH,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
+// -------------------- random_erase --------------------
+
+template <typename T>
+RppStatus random_erase_host_tensor(T *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   T *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptRoiLtrb *anchorBoxInfoTensor,
+                                   T *noiseBuffer,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- gaussian_filter --------------------
@@ -1841,6 +1886,32 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
+
+// -------------------- emboss --------------------
+
+template<typename T>
+RppStatus emboss_host_tensor(T *srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             T *dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *strength,
+                             Rpp32u kernelSize,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             RppLayoutParams layoutParams,
+                             rpp::Handle& handle);
+
+template<typename T>
+RppStatus emboss_generic_host_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32f *strength,
+                                     Rpp32u kernelSize,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
 
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 

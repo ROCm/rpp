@@ -362,6 +362,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                dstGenericDescPtr->strides,
                                srcDims1,
                                srcDims2);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if(numDims == 3)
@@ -476,6 +477,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                dstGenericDescPtr->strides,
                                srcDims1,
                                srcDims2);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else
@@ -551,6 +553,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                        mergedRoiTensor,
                        srcOffsets,
                        dstOffsets);
+        HIP_CHECK_LAUNCH_RETURN();
     }
 
     return RPP_SUCCESS;

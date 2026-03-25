@@ -676,6 +676,48 @@ RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
 
+// -------------------- coarse_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptRoiLtrb *anchorBoxInfoTensor,
+                                         Rpp32u *numBoxesTensor,
+                                         Rpp32u maxBoxesPerImage,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle);
+
+// -------------------- grid_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRoiLtrb *anchorBoxInfoTensor,
+                                       Rpp32u boxesInEachImage,
+                                       Rpp32u maxHoleW,
+                                       Rpp32u maxHoleH,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
+
+// -------------------- random_erase --------------------
+
+template <typename T>
+RppStatus hip_exec_random_erase_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRoiLtrb *anchorBoxInfoTensor,
+                                       T *noiseBuffer,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- box_filter --------------------
@@ -727,6 +769,19 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
                                         RpptROIPtr roiTensorPtrSrc,
                                         RpptRoiType roiType,
                                         rpp::Handle& handle);
+
+// -------------------- emboss --------------------
+
+template <typename T>
+RppStatus hip_exec_emboss_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *strength,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
 
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
