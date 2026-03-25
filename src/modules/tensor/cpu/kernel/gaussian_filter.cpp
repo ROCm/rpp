@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+#define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
+
+
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
 {
     Rpp32f expFactor = - (iSquare + (j * j)) * mulFactor;
@@ -86,7 +89,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
-#define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
 #endif
 
     omp_set_dynamic(0);
