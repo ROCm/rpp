@@ -39,22 +39,26 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
     int rowIdx = 0;
 
     // Compute values for only top left quarter and replicate the values
+    // Combine kernel generation with sum computation for efficiency
+    Rpp32f kernelSum = 0.0f;
     for (int i = -kernelHalfSize; i <= 0; i++, rowIdx += kernelSize)
     {
         int iSquare = i * i;
+        Rpp32f rowSum = 0.0f;
         for (int j = -kernelHalfSize; j <= 0; j++)
         {
-            filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
+            Rpp32f val = gaussian(iSquare, j, mulFactor);
+            filter[rowIdx + (kernelHalfSize + j)] = filter[rowIdx + (kernelHalfSize - j)] = val;
+            rowSum += (j == 0) ? val : 2.0f * val;  // center once, mirrored pair twice
         }
-        if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
+        // If this row was memcpy'd to a mirrored row, count it twice
+        bool mirrored = ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx);
+        kernelSum += mirrored ? 2.0f * rowSum : rowSum;
+        if (mirrored)
             std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
     }
 
     // Normalize the kernel
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-        kernelSum += filter[i];
-    
     Rpp32f invSum = 1.0f / kernelSum;
     for (int i = 0; i < kernelSize * kernelSize; i++)
         filter[i] *= invSum;
@@ -82,7 +86,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
-    constexpr int MAX_FILTER_SIZE = 81;  // Maximum kernel size is 9x9 = 81 coefficients
+#define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
 #endif
 
     omp_set_dynamic(0);
