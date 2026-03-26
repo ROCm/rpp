@@ -1764,6 +1764,21 @@ RppStatus channel_dropout_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle);
 
+// -------------------- coarse_dropout --------------------
+
+template <typename T>
+RppStatus coarse_dropout_host_tensor(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptRoiLtrb *anchorBoxInfoTensor,
+                                     Rpp32u *numBoxesTensor,
+                                     Rpp32u maxBoxesPerImage,       
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle);
+
 // -------------------- grid_dropout --------------------
 
 template<typename T>

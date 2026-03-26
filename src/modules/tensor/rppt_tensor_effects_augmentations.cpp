@@ -3742,3 +3742,157 @@ RppStatus rppt_random_erase(RppPtr_t srcPtr,
 
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
+
+/******************** coarse_dropout ********************/
+
+RppStatus rppt_coarse_dropout(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptDescPtr dstDescPtr,
+                              RpptRoiLtrb *anchorBoxInfoTensor,
+                              Rpp32u *numBoxesTensor,
+                              Rpp32u maxBoxesPerImage,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle,
+                              RppBackend executionBackend)
+{
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcDescPtr->c != dstDescPtr->c)  return RPP_ERROR_INVALID_ARGUMENTS;
+    // Validate maxBoxesPerImage
+    if (maxBoxesPerImage == 0) return RPP_ERROR_INVALID_ARGUMENTS;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if (executionBackend == RppBackend::RPP_HOST_BACKEND)
+    {
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            coarse_dropout_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+        {
+            coarse_dropout_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                       srcDescPtr,
+                                       reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            coarse_dropout_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                       srcDescPtr,
+                                       reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            coarse_dropout_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       anchorBoxInfoTensor,
+                                       numBoxesTensor,
+                                       maxBoxesPerImage,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#ifdef GPU_SUPPORT
+    else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_coarse_dropout_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                           dstDescPtr,
+                                           anchorBoxInfoTensor,
+                                           numBoxesTensor,
+                                           maxBoxesPerImage,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+        {
+            hip_exec_coarse_dropout_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                           srcDescPtr,
+                                           reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                           dstDescPtr,
+                                           anchorBoxInfoTensor,
+                                           numBoxesTensor,
+                                           maxBoxesPerImage,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            hip_exec_coarse_dropout_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                           srcDescPtr,
+                                           reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                           dstDescPtr,
+                                           anchorBoxInfoTensor,
+                                           numBoxesTensor,
+                                           maxBoxesPerImage,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            hip_exec_coarse_dropout_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                           dstDescPtr,
+                                           anchorBoxInfoTensor,
+                                           numBoxesTensor,
+                                           maxBoxesPerImage,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
