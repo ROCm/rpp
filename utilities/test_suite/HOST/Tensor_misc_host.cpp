@@ -462,7 +462,7 @@ int main(int argc, char **argv)
 
     if(qaMode)
     {
-        compare_output(output, nDim, batchSize, BitDepthTestMode, oBufferSize, dst, func, testCaseName, additionalParam, scriptPath, broadCastCase ? broadCastFlag : 0, externalMeanStd);
+        compare_output(output, nDim, batchSize, BitDepthTestMode, oBufferSize, dst, func, testCaseName, additionalParam, scriptPath, broadCastCase ? broadCastFlag : 0, "HOST", externalMeanStd);
     }
     else
     {

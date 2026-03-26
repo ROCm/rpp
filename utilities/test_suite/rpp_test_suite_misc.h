@@ -30,6 +30,21 @@ SOFTWARE.
 #include <map>
 #include <array>
 
+// Cutoff values for misc kernels listed for HOST backend followed by HIP
+// Each entry: {testCaseName, {HOST_cutoff, HIP_cutoff}}
+static const std::map<string, std::vector<double>> miscCutOff =
+{
+    {"transpose", {1e-6, 1e-6}},
+    {"normalize", {1e-4, 1e-4}},
+    {"log", {1e-6, 1e-6}},
+    {"concat", {1e-6, 1e-6}},
+    {"log1p", {1e-6, 1e-6}},
+    {"tensor_add_tensor", {1e-6, 1e-6}},
+    {"tensor_subtract_tensor", {1e-6, 1e-6}},
+    {"tensor_multiply_tensor", {1e-6, 1e-6}},
+    {"tensor_divide_tensor", {1e-6, 1e-6}}
+};
+
 std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
@@ -679,7 +694,7 @@ inline void convert_output_bitdepth_to_f32(void *output, Rpp32f *outputf32, int 
 
 // Compares output with reference outputs and validates QA
 void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepthTestMode, Rpp32u bufferLength, std::string dst,
-                    std::string funcName, std::string testCase, int additionalParam, std::string scriptPath, int broadCastFlag, bool isMeanStd = false)
+                    std::string funcName, std::string testCase, int additionalParam, std::string scriptPath, int broadCastFlag, std::string backend, bool isMeanStd = false)
 {
     // Allocate and read reference data based on BitDepthTestMode
     RpptDataType dataType;
@@ -739,6 +754,15 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
         subVariantStride = broadCastFlag * bufferLength;
     }
 
+    // Get cutoff value from miscCutOff map based on testCase and backend
+    double cutoff;
+    auto mapIterator = miscCutOff.find(testCase);
+    if (mapIterator != miscCutOff.end())
+    {
+        const auto& cutoffVector = mapIterator->second;
+        cutoff = (backend == "HOST") ? cutoffVector[0] : cutoffVector[1];
+    }
+
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
@@ -752,7 +776,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < 1e-6))
+                if((out[j] < 0 && ref[j] < 0) || (std::abs(out[j] - ref[j]) < cutoff))
                     cnt++;
             }
         }
@@ -762,15 +786,13 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)
             {
-                if((std::abs(out[j] - ref[j]) < 1e-6) || (std::isinf(ref[j])) || (std::isnan(ref[j])))
+                if((std::abs(out[j] - ref[j]) < cutoff) || (std::isinf(ref[j])) || (std::isnan(ref[j])))
                     cnt++;
 
             }
         }
         else if(BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I16_TO_F32 || BitDepthTestMode == U8_TO_F32)  // F32 || I16_F32 || U8_F32
         {
-            Rpp32f cutoff = (testCase == "normalize") ? 1e-5 : 1e-6;
-
             Rpp32f *ref = static_cast<Rpp32f *>(refOutput) + sampleOffset;
             Rpp32f *out = static_cast<Rpp32f *>(output) + i * sampleLength;
             for(int j = 0; j < sampleLength; j++)

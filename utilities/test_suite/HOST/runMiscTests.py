@@ -101,7 +101,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
-    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies if the broadcasting case to be used. Default is 0.")
+    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies the broadcast mode to be used (0 = Non-broadcast / 1 = second tensor broadcasted / 2 = First tensor broadcasted). Default is [0, 1, 2].")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     print_case_list(miscAugmentationMap, "HOST", parser)
     args = parser.parse_args()
