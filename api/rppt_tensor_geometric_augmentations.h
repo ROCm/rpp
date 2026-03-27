@@ -431,7 +431,7 @@ RppStatus rppt_concat(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr src
  *          applying quantization, and then reconstructing the image using the inverse DCT (IDCT).
  *          This process introduces compression-related distortions similar to those in JPEG images.
  * \image html img150x150.png Sample Input
- * \image html geometric_augmentations_jpeg_compression_distortion_img150x150.png Sample Output
+ * \image html geometric_augmentations_jpeg_compression_distortion_img_150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)

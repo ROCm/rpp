@@ -142,7 +142,8 @@ imageAugmentationMap = {
     98: ["grid_dropout", "HOST", "HIP"],
     99: ["random_erase", "HOST", "HIP"],
     100: ["coarse_dropout", "HOST", "HIP"],
-    101: ["emboss","HOST","HIP"]
+    101: ["emboss","HOST","HIP"],
+    103: ["yuv_to_rgb", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -197,7 +198,7 @@ ImageAugmentationGroupMap = {
         "bitwise_and", "bitwise_not", "bitwise_xor", "bitwise_or"
     ],
     "data_exchange_operations": [
-        "copy", "channel_permute", "color_to_greyscale"
+        "copy", "channel_permute", "color_to_greyscale", "yuv_to_rgb"
     ],
     "statistical_operations": [
         "threshold", "tensor_sum", "tensor_min", "tensor_max", "tensor_mean", "tensor_stddev"

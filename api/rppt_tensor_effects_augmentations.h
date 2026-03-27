@@ -440,7 +440,7 @@ RppStatus rppt_posterize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html effects_augmentations_solarize_img150x150.png Sample Output
+ * \image html effects_augmentations_solarize_img150x150.jpg Sample Output
  * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
