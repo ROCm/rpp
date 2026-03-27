@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -242,6 +242,21 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
+// -------------------- tensor_bitwise_operations --------------------
+
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
+                                                       T *srcPtr2,
+                                                       RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                       RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                       T *dstPtr,
+                                                       RpptGenericDescPtr dstGenericDescPtr,
+                                                       RpptBitwiseOp tensorOp,
+                                                       RpptBroadcastMode broadcastMode,
+                                                       Rpp32u *roiTensor1,
+                                                       Rpp32u *roiTensor2,
+                                                       rpp::Handle& handle);
+
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------
@@ -413,6 +428,21 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32u *permutationTensor,
                                           rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb (NV12 8-bit) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
+                              Rpp32u src_y_pitch,
+                              T *srcUVPtr,
+                              Rpp32u src_uv_pitch,
+                              T *dstPtr,
+                              Rpp32u dst_pitch,
+                              Rpp32u width,
+                              Rpp32u height,
+                              RpptColorStandard col_standard,
+                              RpptColorRange color_range,
+                              rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 

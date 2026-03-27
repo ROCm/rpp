@@ -40,7 +40,7 @@ __device__ __forceinline__ float compute_posterizeBitsFactor(uchar imgPosterizeL
 // Helper for U8 and I8 data type images - Bitwise AND with mask to represent with lesser number of bits
 __device__ void posterize_hip_compute(d_uchar8 *src_uc8, d_uchar8* src_mask_u8, d_uchar8 *dst_uc8)
 {
-    rpp_hip_math_bitwiseAnd8(src_uc8, src_mask_u8, dst_uc8);
+    rpp_hip_math_bitwise_op8<BitwiseAnd>(src_uc8, src_mask_u8, dst_uc8);
 }
 
 // Helper for F16 data type images - Scaled up to 0-255, bitwise and is performed, and normalized back to 0-1

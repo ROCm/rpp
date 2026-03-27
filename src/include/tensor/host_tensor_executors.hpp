@@ -304,6 +304,21 @@ RppStatus bitwise_xor_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                         RppLayoutParams layoutParams,
                                         rpp::Handle& Handle);
 
+// -------------------- tensor_bitwise_operations --------------------
+
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
+                                                        T *srcPtr2,
+                                                        RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                        RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                        T *dstPtr,
+                                                        RpptGenericDescPtr dstGenericDescPtr,
+                                                        RpptBitwiseOp tensorOp,
+                                                        RpptBroadcastMode broadcastMode,
+                                                        Rpp32u *srcPtr1roiTensor,
+                                                        Rpp32u *srcPtr2roiTensor,
+                                                        rpp::Handle& handle);
+
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------
