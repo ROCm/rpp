@@ -59,6 +59,8 @@ typedef halfhpp Rpp16f;
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
+/*! \brief RPP maximum dimensions in tensor for a sample (except batch size) \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_DIMS_SAMPLE   ( 4 )
 /*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
@@ -213,6 +215,29 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
+/*! \brief RPP Tensor Operations type enum
+ * \ingroup group_rppdefs
+*/
+typedef enum
+{
+    RPP_TENSOR_OP_AND,
+    RPP_TENSOR_OP_OR,
+    RPP_TENSOR_OP_XOR
+} RpptBitwiseOp;
+
+/*!
+ * \brief Broadcast support mode for RPP Tensor operations.
+ * \ingroup group_defs
+ *
+ * This enum specifies whether broadcasting is enabled or disabled
+ * when applying tensor operations.
+ */
+typedef enum
+{
+    RPP_BROADCAST_ENABLE,
+    RPP_BROADCAST_DISABLE    // Broadcasting is disabled; Requires input tensors to be of the same shape
+} RpptBroadcastMode;
+
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
  */
@@ -265,7 +290,10 @@ typedef enum
     F32,
     F16,
     I8,
-    I16
+    I16,
+    U16,
+    I32,
+    U32
 } RpptDataType;
 
 /*! \brief RPPT Tensor layout type enum
