@@ -141,13 +141,9 @@ imageAugmentationMap = {
     97: ["cutout_dropout", "HOST", "HIP"],
     98: ["grid_dropout", "HOST", "HIP"],
     99: ["random_erase", "HOST", "HIP"],
-<<<<<<< lk/color_convert_kernels
+    100: ["coarse_dropout", "HOST", "HIP"],
     101: ["emboss","HOST","HIP"],
     103: ["yuv_to_rgb", "HIP"]
-=======
-    100: ["coarse_dropout", "HOST", "HIP"],
-    101: ["emboss","HOST","HIP"]
->>>>>>> develop
 }
 
 audioAugmentationMap = {
