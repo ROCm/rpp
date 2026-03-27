@@ -305,6 +305,27 @@ RppStatus rppt_lut(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp
  */
 RppStatus rppt_color_temperature(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *adjustmentValueTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
+/*! \brief Histogram Equalize augmentation on HIP/HOST backend for a NCHW/NHWC layout tensor
+ * \details The histogram equalize augmentation performs histogram equalization on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * For RGB images, equalization is performed on the luminance (Y) channel in YCbCr color space, preserving chrominance information.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255).
+ * - dstPtr depth ranges - Rpp8u (0 to 255).
+ * \image html img150x150.png Sample Input
+ * \image html color_augmentations_histogram_equalize_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory (for HIP backend) or HOST memory (for HOST backend), for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_histogram_equalize(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
+
 /*! @}
  */
 

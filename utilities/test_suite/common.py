@@ -151,6 +151,7 @@ imageAugmentationMap = {
     99: ["random_erase", "HOST", "HIP"],
     100: ["coarse_dropout", "HOST", "HIP"],
     101: ["emboss","HOST","HIP"],
+    102: ["histogram_equalize", "HOST", "HIP"],
     103: ["yuv_to_rgb", "HIP"]
 }
 
@@ -190,7 +191,7 @@ miscAugmentationMap  = {
 
 ImageAugmentationGroupMap = {
     "color_augmentations": [
-        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
+        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
     ],
     "effects_augmentations": [
         "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow", "coarse_dropout"

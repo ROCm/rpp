@@ -418,6 +418,16 @@ RppStatus hip_exec_lut_tensor(T *srcPtr,
                               RpptRoiType roiType,
                               rpp::Handle& handle);
 
+// -------------------- histogram_equalize --------------------
+
+RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             rpp::Handle& handle);
+
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- color_to_greyscale --------------------

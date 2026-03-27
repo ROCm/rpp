@@ -919,6 +919,16 @@ RppStatus solarize_i8_i8_host_tensor(Rpp8s *srcPtr,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle);
 
+// -------------------- histogram_equalize --------------------
+
+RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp8u *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
 
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
