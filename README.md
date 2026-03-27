@@ -207,6 +207,24 @@ find_package(rpp REQUIRED)
 target_link_libraries(your_target PRIVATE rpp::rpp)
 ```
 
+### Enable RPP HIP backend in your CMake project
+
+To make the RPP HIP specific functionalities available in your CMake project, you can use the following code:
+
+```cmake
+find_package(rpp REQUIRED)
+target_link_libraries(your_target PRIVATE rpp::rpp)
+
+# Enable RPP HIP backend in your CMake project if available
+if (rpp_BACKEND_TYPE STREQUAL "HIP")
+  find_package(HIP REQUIRED)
+  target_compile_definitions(your_target PRIVATE -DRPP_BACKEND_HIP=1)
+  target_link_libraries(your_target PRIVATE hip::host)
+endif()
+```
+
+A minimal project that follows this pattern (including the HIP branch) lives under [`examples/cmake_find_package_smoke/`](examples/cmake_find_package_smoke/); see that folder’s README for build steps.
+
 > [!NOTE]
 > `find_package(rpp REQUIRED)` sets the following variables in your CMake project for use in downstream projects:
 > * `rpp_BACKEND_TYPE` - "HIP" or "CPU"
@@ -216,7 +234,6 @@ target_link_libraries(your_target PRIVATE rpp::rpp)
 > If CMake is unable to find RPP, the following fixes can be tried:
 > * Ensure `${ROCM_PATH}/bin` is in your `PATH`: `export PATH=${ROCM_PATH}/bin:$PATH`.
 > * Ensure `CMAKE_PREFIX_PATH` includes `${ROCM_PATH}/lib/cmake`.
-
 
 
 ## MIVisionX support - OpenVX extension
