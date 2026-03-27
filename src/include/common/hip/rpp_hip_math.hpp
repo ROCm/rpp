@@ -26,6 +26,35 @@ SOFTWARE.
 #define RPP_HIP_MATH_HPP
 #define RPP_HIP_MATH_DEPENDENCIES
 
+// -------------------- Set 1 - scalar helper kernels --------------------
+
+// Functor for bitwise AND operation
+struct BitwiseAnd {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b)
+    {
+        return a & b;
+    }
+};
+
+// Functor for bitwise OR operation
+struct BitwiseOr {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b) 
+    {
+        return a | b;
+    }
+};
+
+// Functor for bitwise XOR operation
+struct BitwiseXor {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b)
+    {
+        return a ^ b;
+    }
+};
+
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
 // float8 min
@@ -218,18 +247,46 @@ __device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_f
     dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
 }
 
-// d_uchar8 bitwiseAND
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
+// Generic bitwise operation function for d_uchar8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] & src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] & src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] & src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] & src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] & src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] & src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] & src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
+        dst_uc8->uc1[0] = Operation::op(src1_uc8->uc1[0], src2_uc8->uc1[0]);
+        dst_uc8->uc1[1] = Operation::op(src1_uc8->uc1[1], src2_uc8->uc1[1]);
+        dst_uc8->uc1[2] = Operation::op(src1_uc8->uc1[2], src2_uc8->uc1[2]);
+        dst_uc8->uc1[3] = Operation::op(src1_uc8->uc1[3], src2_uc8->uc1[3]);
+        dst_uc8->uc1[4] = Operation::op(src1_uc8->uc1[4], src2_uc8->uc1[4]);
+        dst_uc8->uc1[5] = Operation::op(src1_uc8->uc1[5], src2_uc8->uc1[5]);
+        dst_uc8->uc1[6] = Operation::op(src1_uc8->uc1[6], src2_uc8->uc1[6]);
+        dst_uc8->uc1[7] = Operation::op(src1_uc8->uc1[7], src2_uc8->uc1[7]);
+}
+
+// Generic bitwise operation function for d_ushort8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
+{
+        dst_us8->us1[0] = Operation::op(src1_us8->us1[0], src2_us8->us1[0]);
+        dst_us8->us1[1] = Operation::op(src1_us8->us1[1], src2_us8->us1[1]);
+        dst_us8->us1[2] = Operation::op(src1_us8->us1[2], src2_us8->us1[2]);
+        dst_us8->us1[3] = Operation::op(src1_us8->us1[3], src2_us8->us1[3]);
+        dst_us8->us1[4] = Operation::op(src1_us8->us1[4], src2_us8->us1[4]);
+        dst_us8->us1[5] = Operation::op(src1_us8->us1[5], src2_us8->us1[5]);
+        dst_us8->us1[6] = Operation::op(src1_us8->us1[6], src2_us8->us1[6]);
+        dst_us8->us1[7] = Operation::op(src1_us8->us1[7], src2_us8->us1[7]);
+}
+
+// Generic bitwise operation function for d_uint8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
+{
+        dst_ui8->ui1[0] = Operation::op(src1_ui8->ui1[0], src2_ui8->ui1[0]);
+        dst_ui8->ui1[1] = Operation::op(src1_ui8->ui1[1], src2_ui8->ui1[1]);
+        dst_ui8->ui1[2] = Operation::op(src1_ui8->ui1[2], src2_ui8->ui1[2]);
+        dst_ui8->ui1[3] = Operation::op(src1_ui8->ui1[3], src2_ui8->ui1[3]);
+        dst_ui8->ui1[4] = Operation::op(src1_ui8->ui1[4], src2_ui8->ui1[4]);
+        dst_ui8->ui1[5] = Operation::op(src1_ui8->ui1[5], src2_ui8->ui1[5]);
+        dst_ui8->ui1[6] = Operation::op(src1_ui8->ui1[6], src2_ui8->ui1[6]);
+        dst_ui8->ui1[7] = Operation::op(src1_ui8->ui1[7], src2_ui8->ui1[7]);
 }
 
 // Used to do bitwise and of the scaled float image representations - Values scaled from 0 to 255 with constant mask
@@ -243,34 +300,6 @@ __device__ __forceinline__ void rpp_hip_math_scaled_bitwiseAnd8(d_float8 *src_f8
         dst_f8->f1[5] = (float)((uchar)nearbyintf(src_f8->f1[5]) & src_mask_u8->uc1[5]);
         dst_f8->f1[6] = (float)((uchar)nearbyintf(src_f8->f1[6]) & src_mask_u8->uc1[6]);
         dst_f8->f1[7] = (float)((uchar)nearbyintf(src_f8->f1[7]) & src_mask_u8->uc1[7]);
-}
-
-// d_uchar8 bitwiseOR
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
-{
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] | src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] | src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] | src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] | src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] | src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] | src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] | src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
-}
-
-// d_uchar8 bitwiseXOR
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
-{
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] ^ src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] ^ src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] ^ src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] ^ src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] ^ src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] ^ src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] ^ src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
 
 // d_uchar8 bitwiseNOT
