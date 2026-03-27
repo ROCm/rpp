@@ -165,6 +165,11 @@ int main(int argc, char **argv)
     // RpptResamplingWindow instance used for resample augmentation
     RpptResamplingWindow window;
 
+    // allocate second input buffer for audio_tensor_add_tensor
+    Rpp32f *inputf32Second = nullptr;
+    if(testCase == AUDIO_TENSOR_ADD_TENSOR)
+        inputf32Second = (Rpp32f *)calloc(batchSize, sizeof(Rpp32f));
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
@@ -378,6 +383,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case AUDIO_TENSOR_ADD_TENSOR:
+                {
+                    testCaseName = "audio_tensor_add_tensor";
+                    
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                        inputf32Second[i] = 2.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    errorCodeCapture = rppt_audio_tensor_add_tensor(inputf32, inputf32Second, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, handle, RPP_HOST_BACKEND);
+
+                    break;
+                }
+                case AUDIO_TENSOR_MUL_SCALAR:
+                {
+                    testCaseName = "audio_tensor_mul_scalar";
+                    
+                    // Use a scalar multiplier value
+                    Rpp32f scalarValue = 2.0f;
+                    
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    errorCodeCapture = rppt_audio_tensor_mul_scalar(inputf32, scalarValue, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, handle, RPP_HOST_BACKEND);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -448,6 +487,8 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
+    if (inputf32Second != nullptr)
+        free(inputf32Second);
 
     return 0;
 }
