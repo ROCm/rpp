@@ -1869,6 +1869,48 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case CUTOUT_DROPOUT:
+                {
+                    testCaseName = "cutout_dropout";
+                    Rpp32u boxesInEachImage = 1;
+                    bool randomSeed = qaFlag ? false : true;
+
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
+                    Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
+                    Rpp32f colorBuffer[batchSize * boxesInEachImage * srcDescPtr->c];
+                    
+                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 1);
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_cutout_dropout(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numBoxesTensor, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case GRID_DROPOUT:
+                {
+                    testCaseName = "grid_dropout";
+                    Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
+                    Rpp32f holeRatio = 0.4f;
+                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+
+                    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
+                    RpptRoiLtrb anchorBoxInfoTensor[totalBoxes];
+                    Rpp32u maxHoleW = 0, maxHoleH = 0;
+                    init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_grid_dropout(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH, roiTensorPtrSrc, roiTypeSrc, handle, RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case EMBOSS:
                 {
                     testCaseName = "emboss";
@@ -1901,12 +1943,30 @@ int main(int argc, char **argv)
                     Rpp32u noiseBufferSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c;
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32f *colorBuffer[noiseBufferSize];
-                    init_dropout_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
+                    init_dropout_random_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_random_erase(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HOST_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case COARSE_DROPOUT:
+                {
+                    testCaseName = "coarse";
+                    Rpp32u maxBoxesPerImage = 8;
+                    bool randomSeed = qaFlag ? false : true;
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * maxBoxesPerImage];
+                    Rpp32u numOfBoxes[batchSize];
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, nullptr, srcDescPtr->dataType, randomSeed, 4);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                        errorCodeCapture = rppt_coarse_dropout(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, numOfBoxes, maxBoxesPerImage, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HOST_BACKEND);
                     else
                         missingFuncFlag = 1;
 
