@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,8 @@ SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <iomanip>
+#include <cstdlib>
 #include "rpp.h"
 #include "../rpp_test_suite_image.h"
 #include <sys/types.h>
@@ -103,7 +105,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == YUV_TO_RGB || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -113,6 +115,13 @@ int main(int argc, char **argv)
             cout << "\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
         }
+    }
+
+    // yuv_to_rgb outputs packed RGB only; only PKD3 (layout 0) is supported
+    if (testCase == YUV_TO_RGB && layoutType != 0)
+    {
+        cout << "\nyuv_to_rgb only supports PKD3 (packed RGB) output. Use layout type 0.\n";
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
@@ -230,7 +239,10 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
+    if(testCase == YUV_TO_RGB)
+        search_files_recursive(src, imageNames, imageNamesPath, ".yuv");
+    else
+        search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
     if(dualInputCase)
     {
         search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, ".jpg");
@@ -284,7 +296,10 @@ int main(int argc, char **argv)
     Rpp32u dstOffsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
+    if(testCase == YUV_TO_RGB)
+        set_max_dimensions_yuv(imageNamesPath, maxHeight, maxWidth, imagesMixed);
+    else
+        set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
     if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
@@ -314,6 +329,11 @@ int main(int argc, char **argv)
     Rpp64u oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
     Rpp64u inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
     Rpp64u outputBufferSize = oBufferSize * get_size_of_data_type(dstDescPtr->dataType) + dstDescPtr->offsetInBytes;
+    if(testCase == YUV_TO_RGB)
+    {
+        inputBufferSize = batchSize * ((Rpp64u)maxWidth * maxHeight * 3 / 2);
+        ioBufferSizeInBytes_u8 = inputBufferSize;
+    }
 
     // Initialize 8u host buffers for src/dst
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
@@ -663,33 +683,44 @@ int main(int argc, char **argv)
         vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
 
         // Set ROIs for src/dst
-        set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        if(testCase == YUV_TO_RGB)
+            set_src_and_dst_roi_yuv(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        else
+            set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
 
         //Read images
-        if(decoderType == 0)
-            read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+        if(testCase == YUV_TO_RGB)
+        {
+            read_yuv_batch_nv12(inputu8, srcDescPtr, imagesPathStart);
+            CHECK_RETURN_STATUS(hipMemcpy(d_input, inputu8, inputBufferSize, hipMemcpyHostToDevice));
+        }
         else
-            read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
-
-        // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
-        if (layoutType == 1)
-            convert_pkd3_to_pln3(inputu8, srcDescPtr);
-
-        if(dualInputCase)
         {
             if(decoderType == 0)
-                read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
             else
-                read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+
+            // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
-                convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+                convert_pkd3_to_pln3(inputu8, srcDescPtr);
+
+            if(dualInputCase)
+            {
+                if(decoderType == 0)
+                    read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                else
+                    read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                if (layoutType == 1)
+                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+            }
+
+            // Convert inputs to correponding bit depth specified by user
+            convert_input_bitdepth(input, input_second, inputu8, inputu8Second, BitDepthTestMode, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
+
+            //copy decoded inputs to hip buffers
+            CHECK_RETURN_STATUS(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
         }
-
-        // Convert inputs to correponding bit depth specified by user
-        convert_input_bitdepth(input, input_second, inputu8, inputu8Second, BitDepthTestMode, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
-
-        //copy decoded inputs to hip buffers
-        CHECK_RETURN_STATUS(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
         CHECK_RETURN_STATUS(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
         if(dualInputCase)
             CHECK_RETURN_STATUS(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
@@ -1800,6 +1831,41 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case YUV_TO_RGB:
+                {
+                    testCaseName = "yuv_to_rgb";
+                    // Per-input col_standard / color_range from each file's .info sidecar (defaults: BT.709, full range).
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8)
+                    {
+                        size_t srcOffsetBytes = 0;
+                        for (int i = 0; i < batchSize; i++)
+                        {
+                            RpptYuvNv12Sidecar yuvSidecar;
+                            if (!parse_yuv_nv12_sidecar(*(imagesPathStart + i), yuvSidecar))
+                            {
+                                std::cerr << "\nyuv_to_rgb: missing or invalid .info for " << *(imagesPathStart + i) << std::endl;
+                                errorCodeCapture = RPP_ERROR;
+                                break;
+                            }
+                            Rpp32u width = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiWidth;
+                            Rpp32u height = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiHeight;
+                            Rpp32u src_y_pitch = width * sizeof(Rpp8u);
+                            Rpp32u src_uv_pitch = src_y_pitch;  // tight NV12: same row pitch as Y
+                            Rpp32u bgr_pitch = width * 3 * sizeof(Rpp8u);
+                            Rpp8u *srcY = (Rpp8u *)d_input + srcOffsetBytes;
+                            Rpp8u *srcUV = srcY + (size_t)height * src_y_pitch;
+                            void *dstImg = (Rpp8u *)d_output + (size_t)i * dstDescPtr->strides.nStride;
+                            errorCodeCapture = rppt_yuv_to_rgb(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, yuvSidecar.col_standard, yuvSidecar.color_range, handle, RppBackend::RPP_HIP_BACKEND);
+                            if (errorCodeCapture != RPP_SUCCESS)
+                                break;
+                            srcOffsetBytes += (size_t)roiTensorPtrSrc[i].xywhROI.roiWidth * roiTensorPtrSrc[i].xywhROI.roiHeight * 3 / 2;
+                        }
+                    }
+                    else
+                        missingFuncFlag = 1;
+                    break;
+                }
                 case TENSOR_SUM:
                 {
                     testCaseName = "tensor_sum";
@@ -2138,6 +2204,7 @@ int main(int argc, char **argv)
             {
                 CHECK_RETURN_STATUS(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
+                
                 // Reconvert other bit depths to 8u for output display purposes
                 convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
@@ -2193,7 +2260,12 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (!(randomOutputCase) && !(nonQACase)))
-                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, kernelSizeAndGradientName, additionalParam, testCase, dst, scriptPath);
+                {
+                    vector<string> batchYuvPaths;
+                    if(testCase == YUV_TO_RGB)
+                        batchYuvPaths.assign(imagesPathStart, imagesPathEnd);
+                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, kernelSizeAndGradientName, additionalParam, testCase, dst, scriptPath, testCase == YUV_TO_RGB ? &batchYuvPaths : nullptr);
+                }
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)

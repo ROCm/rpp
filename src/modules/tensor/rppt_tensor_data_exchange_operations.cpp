@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -360,6 +360,51 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr,
         }
 
         return RPP_SUCCESS;
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
+
+/******************** yuv_to_rgb ********************/
+
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr,
+                          RppPtr_t srcUVPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32u src_y_pitch,
+                          Rpp32u src_uv_pitch,
+                          Rpp32u dst_pitch,
+                          Rpp32u width,
+                          Rpp32u height,
+                          RpptColorStandard col_standard,
+                          RpptColorRange color_range,
+                          rppHandle_t rppHandle,
+                          RppBackend executionBackend)
+{
+    if (executionBackend != RppBackend::RPP_HIP_BACKEND)
+        return RPP_ERROR_INCOMPATIBLE_BACKEND;
+    if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+#ifdef GPU_SUPPORT
+    if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        return hip_exec_yuv_to_rgb<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
+                                        src_y_pitch,
+                                        static_cast<Rpp8u*>(srcUVPtr),
+                                        src_uv_pitch,
+                                        static_cast<Rpp8u*>(dstPtr),
+                                        dst_pitch,
+                                        width,
+                                        height,
+                                        col_standard,
+                                        color_range,
+                                        handle);
     }
 #endif
 
