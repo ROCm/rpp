@@ -124,6 +124,65 @@ RppStatus rppt_bitwise_or(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDes
  */
 RppStatus rppt_bitwise_not(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle, RppBackend executionBackend);
 
+/*! \brief Bitwise AND Generic augmentation on HIP/HOST backend with broadcasting support
+ * \details This function computes bitwise AND between two 2D, 3D or ND tensors with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_and_tensor(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle, RppBackend executionBackend);
+
+/*! \brief Bitwise OR Generic augmentation on HIP/HOST backend with broadcasting support
+ * \details This function computes bitwise OR between two 2D, 3D or ND tensors with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_or_tensor(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle, RppBackend executionBackend);
+
+/*! \brief Bitwise XOR Generic augmentation on HIP/HOST backend with broadcasting support
+ * \details This function computes bitwise XOR between two 2D, 3D or ND tensors with broadcasting support
+ *          Broadcasting is permitted when, for each axis, the corresponding dimensions of the input tensors are either equal or one of them is 1
+ * \param [in] srcPtr1 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 source tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr1GenericDescPtr source tensor descriptor for the input tensor srcPtr1
+ * \param [in] srcPtr2GenericDescPtr source tensor descriptor for the input tensor srcPtr2
+ * \param [out] dstPtr destination tensor memory in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] broadcastMode enum used to represent if broadcast support is enabled or disabled for the binary operation (can only be disabled if input tensors are of same shape).
+ * \param [in] srcPtr1roiTensor values to represent dimensions of input tensor srcPtr1
+ * \param [in] srcPtr2roiTensor values to represent dimensions of input tensor srcPtr2
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_xor_tensor(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptGenericDescPtr srcGenericDescPtr1, RpptGenericDescPtr srcGenericDescPtr2, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptBroadcastMode broadcastMode, Rpp32u *roiTensor1, Rpp32u *roiTensor2, rppHandle_t rppHandle, RppBackend executionBackend);
 /*! @}
  */
 

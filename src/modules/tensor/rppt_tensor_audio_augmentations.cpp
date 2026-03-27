@@ -559,4 +559,112 @@ RppStatus rppt_resample(RppPtr_t srcPtr,
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
+/******************** audio_tensor_add_tensor ********************/
+
+RppStatus rppt_audio_tensor_add_tensor(RppPtr_t srcPtr1,
+                                       RppPtr_t srcPtr2,
+                                       RpptDescPtr srcDescPtr,
+                                       RppPtr_t dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32s *srcLengthTensor,
+                                       rppHandle_t rppHandle,
+                                       RppBackend executionBackend)
+{
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
+    {
+        if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            audio_tensor_add_tensor_host(static_cast<Rpp32f*>(srcPtr1),
+                                         static_cast<Rpp32f*>(srcPtr2),
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(dstPtr),
+                                         dstDescPtr,
+                                         srcLengthTensor,
+                                         handle);
+        }
+        else
+        {
+            return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        return RPP_SUCCESS;
+    }
+#ifdef GPU_SUPPORT
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            hip_exec_audio_tensor_add_tensor(static_cast<Rpp32f*>(srcPtr1),
+                                             static_cast<Rpp32f*>(srcPtr2),
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(dstPtr),
+                                             dstDescPtr,
+                                             srcLengthTensor,
+                                             handle);
+        }
+        else
+        {
+            return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        return RPP_SUCCESS;
+    }
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
+
+/******************** audio_tensor_mul_scalar ********************/
+
+RppStatus rppt_audio_tensor_mul_scalar(RppPtr_t srcPtr,
+                                       Rpp32f scalarValue,
+                                       RpptDescPtr srcDescPtr,
+                                       RppPtr_t dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32s *srcLengthTensor,
+                                       rppHandle_t rppHandle,
+                                       RppBackend executionBackend)
+{
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if(executionBackend == RppBackend::RPP_HOST_BACKEND)
+    {
+        if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            audio_tensor_mul_scalar_host(static_cast<Rpp32f*>(srcPtr),
+                                         scalarValue,
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(dstPtr),
+                                         dstDescPtr,
+                                         srcLengthTensor,
+                                         handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#ifdef GPU_SUPPORT
+    else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            hip_exec_audio_tensor_mul_scalar(static_cast<Rpp32f*>(srcPtr),
+                                             scalarValue,
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(dstPtr),
+                                             dstDescPtr,
+                                             srcLengthTensor,
+                                             handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#endif
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
+
 #endif // AUDIO_SUPPORT
