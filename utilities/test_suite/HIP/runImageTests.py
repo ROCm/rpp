@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
+yuvInFilePath = scriptPath + "/../TEST_IMAGES/three_images_yuv"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
@@ -53,14 +54,23 @@ def get_log_file_list(preserveOutput):
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
+    # yuv_to_rgb outputs packed RGB only; run only PKD3 (layout 0)
+    if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and layout != Layout.PKD3.value:
+        return
     bitDepths = list(BitDepthTestMode)
     outputFormatToggles = list(OutputFormat)
-    if qaMode:
+    if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+        # NV12 yuv_to_rgb is U8-only; skip all other bit-depth variants
+        bitDepths = [BitDepthTestMode.U8_TO_U8]
+    elif qaMode:
         bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
+                continue
+            # yuv_to_rgb outputs packed RGB only; skip pkd->pln (TOGGLE)
+            if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter", "emboss"}:
@@ -110,10 +120,19 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
-    for bitDepth in list(BitDepthTestMode):
+    # yuv_to_rgb outputs packed RGB only; run only PKD3
+    if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and layout != Layout.PKD3.value:
+        return
+    perfBitDepths = list(BitDepthTestMode)
+    if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+        perfBitDepths = [BitDepthTestMode.U8_TO_U8]
+    for bitDepth in perfBitDepths:
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
+                continue
+            # yuv_to_rgb outputs packed RGB only; skip pkd->pln
+            if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
 
             if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter", "emboss"}:
@@ -323,14 +342,21 @@ if(testType == TestType.UNIT_TEST.value):
         elif imageAugmentationMap[int(case)][0] == "lens_correction" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
+        elif imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+            # yuv_to_rgb uses a single directory of .yuv files; only input_path1 is used
+            srcPath1 = args.input_path1 if "--input_path1" in sys.argv else yuvInFilePath
+            srcPath2 = srcPath1
+            validate_path(srcPath1)
         else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction"}):
+        if qaMode and (imageAugmentationMap[int(case)][0] not in {"ricap", "lens_correction", "yuv_to_rgb"}):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        for layout in list(Layout):
+        # yuv_to_rgb outputs packed RGB only; run only PKD3 layout
+        layouts = [Layout.PKD3] if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" else list(Layout)
+        for layout in layouts:
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
             if not qaMode:
@@ -355,7 +381,11 @@ else:
             if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
-            for layout in list(Layout):
+            if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+                srcPath1 = args.input_path1 if "--input_path1" in sys.argv else yuvInFilePath
+                srcPath2 = srcPath1
+            layouts_perf = [Layout.PKD3] if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" else list(Layout)
+            for layout in layouts_perf:
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
                 run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
@@ -375,14 +405,24 @@ else:
             if imageAugmentationMap[int(case)][0] == "lens_correction" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = lensCorrectionInFilePath
                 srcPath2 = lensCorrectionInFilePath
-            for layout in list(Layout):
+            if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+                srcPath1 = args.input_path1 if "--input_path1" in sys.argv else yuvInFilePath
+                srcPath2 = srcPath1
+            layouts_prof = [Layout.PKD3] if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" else list(Layout)
+            for layout in layouts_prof:
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
                 print("\n")
-                for bitDepth in list(BitDepthTestMode):
-                    for outputFormatToggle in list(outputFormat):
+                prof_bit_depths = list(BitDepthTestMode)
+                if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
+                    prof_bit_depths = [BitDepthTestMode.U8_TO_U8]
+                for bitDepth in prof_bit_depths:
+                    for outputFormatToggle in list(OutputFormat):
                         # There is no layout toggle for PLN1 case, so skip this case
                         if layout == Layout.PLN1.value and outputFormatToggle == OutputFormat.TOGGLE:
+                            continue
+                        # yuv_to_rgb outputs packed RGB only; skip pkd->pln
+                        if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and outputFormatToggle == OutputFormat.TOGGLE:
                             continue
 
                         if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
