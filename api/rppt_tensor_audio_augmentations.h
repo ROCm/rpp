@@ -170,6 +170,41 @@ RppStatus rppt_mel_filter_bank(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 */
 RppStatus rppt_resample(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle, RppBackend executionBackend);
 
+/*! \brief Audio Tensor Add Tensor augmentation on HIP/HOST backend
+ * \details Audio Tensor Add Tensor augmentation for audio data. Performs scalar broadcasting addition where
+ *          srcPtr2 contains one scalar value per batch (shape: batchSize) that is broadcasted and added to
+ *          all elements in the corresponding batch of srcPtr1.
+ * \param [in] srcPtr1 first source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] srcPtr2 second source tensor containing one scalar per batch in HIP memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend RPP execution backend (HOST or HIP)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_audio_tensor_add_tensor(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, rppHandle_t rppHandle, RppBackend executionBackend);
+
+/*! \brief Audio Tensor Multiply Scalar augmentation on HIP/HOST backend
+ * \details Audio Tensor Multiply Scalar augmentation for audio data. Multiplies each element in srcPtr by a single scalar value.
+ *          The scalar value is broadcasted and multiplied to all elements across the entire tensor.
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] scalarValue scalar value to multiply with all elements in the tensor
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in pinned memory (for HIP backend) or HOST memory (for HOST backend), of size batchSize)
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend RPP execution backend (HOST or HIP)
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_audio_tensor_mul_scalar(RppPtr_t srcPtr, Rpp32f scalarValue, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, rppHandle_t rppHandle, RppBackend executionBackend);
+
 /*! @}
  */
 

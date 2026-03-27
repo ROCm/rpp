@@ -1629,3 +1629,67 @@ RppStatus rppt_color_temperature(RppPtr_t srcPtr,
 #endif
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
+
+
+/******************** histogram_equalize ********************/
+
+RppStatus rppt_histogram_equalize(RppPtr_t srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  RppPtr_t dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rppHandle_t rppHandle,
+                                  RppBackend executionBackend)
+{
+    if (srcDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstDescPtr->dataType != RpptDataType::U8) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if ((srcDescPtr->layout == RpptLayout::NCDHW) || (srcDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout == RpptLayout::NCDHW) || (dstDescPtr->layout == RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+    if (executionBackend == RppBackend::RPP_HOST_BACKEND)
+    {
+        RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            histogram_equalize_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                 srcDescPtr,
+                                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                 dstDescPtr,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 layoutParams,
+                                                 handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#ifdef GPU_SUPPORT
+    else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            hip_exec_histogram_equalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                               srcDescPtr,
+                                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                               dstDescPtr,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               handle);
+        }
+        else
+            return RPP_ERROR_NOT_IMPLEMENTED;
+
+        return RPP_SUCCESS;
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
