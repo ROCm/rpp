@@ -223,8 +223,6 @@ if (rpp_BACKEND_TYPE STREQUAL "HIP")
 endif()
 ```
 
-A minimal project that follows this pattern (including the HIP branch) lives under [`examples/cmake_find_package_smoke/`](examples/cmake_find_package_smoke/); see that folder’s README for build steps.
-
 > [!NOTE]
 > `find_package(rpp REQUIRED)` sets the following variables in your CMake project for use in downstream projects:
 > * `rpp_BACKEND_TYPE` - "HIP" or "CPU"
