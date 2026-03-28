@@ -151,7 +151,9 @@ imageAugmentationMap = {
     98: ["grid_dropout", "HOST", "HIP"],
     99: ["random_erase", "HOST", "HIP"],
     100: ["coarse_dropout", "HOST", "HIP"],
-    101: ["emboss","HOST","HIP"]
+    101: ["emboss","HOST","HIP"],
+    102: ["histogram_equalize", "HOST", "HIP"],
+    103: ["yuv_to_rgb", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -162,7 +164,9 @@ audioAugmentationMap = {
     4: ["spectrogram", "HOST", "HIP"],
     5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST", "HIP"]
+    7: ["mel_filter_bank", "HOST", "HIP"],
+    8: ["audio_tensor_add_tensor", "HOST", "HIP"],
+    9: ["audio_tensor_mul_scalar", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
@@ -181,6 +185,9 @@ miscAugmentationMap  = {
     2: ["log", "HOST", "HIP"],
     3: ["concat","HOST","HIP"],
     4: ["log1p", "HOST", "HIP"],
+    5: ["tensor_and_tensor", "HOST", "HIP"],
+    6: ["tensor_or_tensor", "HOST", "HIP"],
+    7: ["tensor_xor_tensor", "HOST", "HIP"],
     8: ["tensor_add_tensor", "HOST", "HIP"],
     9: ["tensor_subtract_tensor", "HOST", "HIP"],
     10: ["tensor_multiply_tensor", "HOST", "HIP"],
@@ -189,7 +196,7 @@ miscAugmentationMap  = {
 
 ImageAugmentationGroupMap = {
     "color_augmentations": [
-        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
+        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
     ],
     "effects_augmentations": [
         "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow", "coarse_dropout"
@@ -210,7 +217,7 @@ ImageAugmentationGroupMap = {
         "bitwise_and", "bitwise_not", "bitwise_xor", "bitwise_or"
     ],
     "data_exchange_operations": [
-        "copy", "channel_permute", "color_to_greyscale"
+        "copy", "channel_permute", "color_to_greyscale", "yuv_to_rgb"
     ],
     "statistical_operations": [
         "threshold", "tensor_sum", "tensor_min", "tensor_max", "tensor_mean", "tensor_stddev"

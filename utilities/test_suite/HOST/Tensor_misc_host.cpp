@@ -45,16 +45,16 @@ int main(int argc, char **argv)
     BitDepthTestMode = atoi(argv[7]);
     string dst = argv[9];
     string scriptPath = argv[10];
-    qaMode = (testType == UNIT_TEST); // unit test mode
+    qaMode = (testType == 0);
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
-    bool broadCastCase = (testCase == TENSOR_ADD_TENSOR || testCase == TENSOR_SUBTRACT_TENSOR || testCase == TENSOR_MULTIPLY_TENSOR || testCase == TENSOR_DIVIDE_TENSOR);
+    bool broadCastCase = (testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR || testCase == TENSOR_ADD_TENSOR || testCase == TENSOR_SUBTRACT_TENSOR || testCase == TENSOR_MULTIPLY_TENSOR || testCase == TENSOR_DIVIDE_TENSOR);
     int additionalParam = (axisMaskCase || permOrderCase || broadCastCase) ? atoi(argv[8]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam, broadCastFlag = additionalParam;
 
     if(qaMode && batchSize != 3)
     {
-        cout<<"QA mode can only run with batchsize 3" << std::endl;
+        cout << "QA mode can only run with batchsize 3" << std::endl;
         return -1;
     }
 
@@ -92,9 +92,9 @@ int main(int argc, char **argv)
         func += "_axisMask" + std::to_string(axisMask);
     if(permOrderCase)
         func += "_permOrder" + std::to_string(permOrder);
-    if(broadCastFlag == 1)
+    if((broadCastFlag == 1) && (broadCastCase))
         func += "_broadcast_input2";
-    else if(broadCastFlag == 2)
+    else if((broadCastFlag == 2) && (broadCastCase))
         func += "_broadcast_input1";
 
     // fill roi based on mode and number of dimensions
@@ -197,12 +197,19 @@ int main(int argc, char **argv)
                 for (int i = 0; i < iBufferSizeSecond; i++)
                     inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
             }
+            else{
+            Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
+            Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
+            for (int i = 0; i < iBufferSizeSecond; i++)
+                inputSecondTemp[i] = inputU8[i+1];
+            }
         }
     }
     else
     {
         // Generic random data filling based on BitDepthTestMode
         Rpp32f *inputF32 = NULL, *inputF32Second = NULL, *outputF32 = NULL;
+        Rpp16s *inputI16 = NULL;
         inputF32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
         outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
         if((testCase == CONCAT) || (broadCastCase))
@@ -213,13 +220,21 @@ int main(int argc, char **argv)
         if((BitDepthTestMode == I32_TO_I32) || (BitDepthTestMode == U32_TO_U32))
             valLimit = 262143;
 
+        // Generate sample values in range based on number of bits for representation
+        // Note : I32/U32 can represent higher range of values - Limit set just for testing purposes
+        Rpp32u valLimit = 255;
+        if((BitDepthTestMode == I16_TO_I16) || (BitDepthTestMode == U16_TO_U16))
+            valLimit = 65535;
+        if((BitDepthTestMode == I32_TO_I32) || (BitDepthTestMode == U32_TO_U32))
+            valLimit = 262143;
+
         std::srand(0);
         for(int i = 0; i < iBufferSize; i++)
-            inputF32[i] = static_cast<float>(std::rand() % valLimit);
+            inputF32[i] = static_cast<float>((std::rand() % valLimit));
         if((testCase == CONCAT) || (broadCastCase))
         {
             for(int i = 0; i < iBufferSizeSecond; i++)
-                inputF32Second[i] = static_cast<float>(std::rand() % valLimit);
+                inputF32Second[i] = static_cast<float>((std::rand() % valLimit));
         }
 
         convert_input_bitdepth(inputF32, inputF32Second, input, inputSecond, BitDepthTestMode, iBufferSize, iBufferSizeSecond, iBufferSizeInBytes, iBufferSizeSecondInBytes, srcDescriptorPtrND, srcDescriptorPtrNDSecond, testCase);
@@ -343,6 +358,62 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if(BitDepthTestMode == I16_TO_F32)
                     errorCodeCapture = rppt_log1p(inputI16, srcDescriptorPtrND, output, dstDescriptorPtrND, roiTensor, handle, RPP_HOST_BACKEND);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
+            case TENSOR_AND_TENSOR:
+            {
+                testCaseName  = "tensor_and_tensor";
+
+                startWallTime = omp_get_wtime();
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
+                {
+                    if(broadCastFlag == 1)
+                        errorCodeCapture = rppt_tensor_and_tensor(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle, RppBackend::RPP_HOST_BACKEND);
+                    else if(broadCastFlag == 2)
+                        errorCodeCapture = rppt_tensor_and_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                    else
+                        errorCodeCapture = rppt_tensor_and_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case TENSOR_OR_TENSOR:
+            {
+                testCaseName  = "tensor_or_tensor";
+
+                startWallTime = omp_get_wtime();
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
+                {
+                    if(broadCastFlag == 1)
+                        errorCodeCapture = rppt_tensor_or_tensor(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle, RppBackend::RPP_HOST_BACKEND);
+                    else if(broadCastFlag == 2)
+                        errorCodeCapture = rppt_tensor_or_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                    else
+                        errorCodeCapture = rppt_tensor_or_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case TENSOR_XOR_TENSOR:
+            {
+                testCaseName  = "tensor_xor_tensor";
+
+                startWallTime = omp_get_wtime();
+                if(BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == I8_TO_I8 || BitDepthTestMode == I16_TO_I16 || BitDepthTestMode == U16_TO_U16 || BitDepthTestMode == I32_TO_I32 || BitDepthTestMode == U32_TO_U32)
+                {
+                    if(broadCastFlag == 1)
+                        errorCodeCapture = rppt_tensor_xor_tensor(inputSecond, input, srcDescriptorPtrNDSecond, srcDescriptorPtrND, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensorSecond, roiTensor, handle, RppBackend::RPP_HOST_BACKEND);
+                    else if(broadCastFlag == 2)
+                        errorCodeCapture = rppt_tensor_xor_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_ENABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                    else
+                        errorCodeCapture = rppt_tensor_xor_tensor(input, inputSecond, srcDescriptorPtrND, srcDescriptorPtrNDSecond, output, dstDescriptorPtrND, RPP_BROADCAST_DISABLE, roiTensor, roiTensorSecond, handle, RppBackend::RPP_HOST_BACKEND);
+                }
                 else
                     missingFuncFlag = 1;
 
@@ -472,7 +543,7 @@ int main(int argc, char **argv)
         avgWallTime /= numRuns;
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-
+    
     rppDestroy(handle, backend);
 
     free(input);

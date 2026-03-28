@@ -84,15 +84,18 @@ def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFi
             bitDepths = [BitDepthTestMode.I16_TO_F32]
         if miscAugmentationMap[int(case)][0] == "tensor_divide_tensor":
             bitDepths = [BitDepthTestMode.F32_TO_F32, BitDepthTestMode.U8_TO_F32]
+        # Tensor AND/OR/XOR (cases 5/6/7) are only executed for integer bit depths
+        if int(case) in (5, 6, 7):
+            bitDepths = [BitDepthTestMode.U8_TO_U8]
     for bitDepth in bitDepths:
-        print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
+        print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg))
         result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth.value), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth.value)), get_misc_func_name(int(case), numDims, additionalArg))
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth, outFilePath, additionalArg):
     with open(loggingFolder + "/Tensor_misc_hip_raw_performance_log.txt", "a") as logFile:
-        logFile.write("./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns)+ " " + str(bitDepth) + " " + str(additionalArg) + "\n")
+        logFile.write("./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(bitDepth) + " " + str(additionalArg) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(bitDepth), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         log_detected(process, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
@@ -109,11 +112,20 @@ def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
+    bitDepths = [0, 2]
+    if int(case) == 2:   
+        bitDepths = [2, 4]
+    elif int(case) == 4:
+        bitDepths = [11]
+    elif int(case) in (5, 6, 7) and testType == TestType.PERFORMANCE_TEST.value:
+            bitDepths = [0, 5, 7, 8, 9, 10]
+    elif testType == TestType.PERFORMANCE_TEST.value:
+        bitDepths = [0, 1, 2, 5]
     if testType == TestType.UNIT_TEST.value:
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == TestType.PERFORMANCE_TEST.value:
         # U8, F16, F32 and I8 bit depths available for augmentations. Log and Log1p cases customized to run with available bit depths
-        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
+        bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.I8_TO_I8, BitDepthTestMode.I16_TO_I16, BitDepthTestMode.U16_TO_U16, BitDepthTestMode.I32_TO_I32, BitDepthTestMode.U32_TO_U32]
         if miscAugmentationMap[int(case)][0] == "log":
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
         if miscAugmentationMap[int(case)][0] == "log1p":
@@ -245,6 +257,7 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HIP" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
+
 if noCaseSupported:
     print("\ncase numbers %s are not supported" % caseList)
     exit(0)
@@ -265,7 +278,7 @@ for case in caseList:
             for axisMask in range(0, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
         # Runs broadcast functionality for all broadcast values
-        elif miscAugmentationMap[int(case)][0] in ["tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor", "tensor_divide_tensor"]:
+        elif miscAugmentationMap[int(case)][0] in ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor", "tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor", "tensor_divide_tensor"]:
             for broadcastFlag in broadcast:
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, broadcastFlag, profilingOption)
         # Runs all other functionalities
@@ -278,7 +291,7 @@ if (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
 
     CASE_NUM_LIST = caseList
-    BIT_DEPTH_LIST = [BitDepthTestMode.F32_TO_F32]
+    BIT_DEPTH_LIST = [2]
     OFT_LIST = [0]
 
     # Open csv file

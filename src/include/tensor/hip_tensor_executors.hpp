@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -210,6 +210,26 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                       Rpp32f referenceMagnitude,
                                       rpp::Handle& handle);
 
+// -------------------- audio_tensor_add_tensor --------------------
+
+RppStatus hip_exec_audio_tensor_add_tensor(Rpp32f *srcPtr1,
+                                           Rpp32f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
+
+// -------------------- audio_tensor_mul_scalar --------------------
+
+RppStatus hip_exec_audio_tensor_mul_scalar(Rpp32f *srcPtr,
+                                           Rpp32f scalarValue,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
+
 #endif // AUDIO_SUPPORT
 
 /**************************************** BITWISE OPERATIONS ****************************************/
@@ -256,6 +276,21 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
+
+// -------------------- tensor_bitwise_operations --------------------
+
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
+                                                       T *srcPtr2,
+                                                       RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                       RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                       T *dstPtr,
+                                                       RpptGenericDescPtr dstGenericDescPtr,
+                                                       RpptBitwiseOp tensorOp,
+                                                       RpptBroadcastMode broadcastMode,
+                                                       Rpp32u *roiTensor1,
+                                                       Rpp32u *roiTensor2,
+                                                       rpp::Handle& handle);
 
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
@@ -398,6 +433,16 @@ RppStatus hip_exec_lut_tensor(T *srcPtr,
                               RpptRoiType roiType,
                               rpp::Handle& handle);
 
+// -------------------- histogram_equalize --------------------
+
+RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             rpp::Handle& handle);
+
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- color_to_greyscale --------------------
@@ -428,6 +473,21 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32u *permutationTensor,
                                           rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb (NV12 8-bit) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
+                              Rpp32u src_y_pitch,
+                              T *srcUVPtr,
+                              Rpp32u src_uv_pitch,
+                              T *dstPtr,
+                              Rpp32u dst_pitch,
+                              Rpp32u width,
+                              Rpp32u height,
+                              RpptColorStandard col_standard,
+                              RpptColorRange color_range,
+                              rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 

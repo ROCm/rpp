@@ -29,7 +29,7 @@ SOFTWARE.
 
 __device__ void bitwise_and_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-    rpp_hip_math_bitwiseAnd8(src1_uc8, src2_uc8, dst_uc8);
+    rpp_hip_math_bitwise_op8<BitwiseAnd>(src1_uc8, src2_uc8, dst_uc8);
 }
 
 __global__ void bitwise_and_pkd_hip_tensor(Rpp8u *srcPtr1,

@@ -228,56 +228,26 @@ typedef enum
 
 /*! \brief RPPT Broadcast Mode type enum
  * \ingroup group_rppdefs
+*/
+typedef enum
+{
+    RPP_TENSOR_OP_AND,
+    RPP_TENSOR_OP_OR,
+    RPP_TENSOR_OP_XOR
+} RpptBitwiseOp;
+
+/*!
+ * \brief Broadcast support mode for RPP Tensor operations.
+ * \ingroup group_defs
+ *
+ * This enum specifies whether broadcasting is enabled or disabled
+ * when applying tensor operations.
  */
 typedef enum
 {
     RPP_BROADCAST_ENABLE,
-    RPP_BROADCAST_DISABLE
+    RPP_BROADCAST_DISABLE    // Broadcasting is disabled; Requires input tensors to be of the same shape
 } RpptBroadcastMode;
-
-#ifdef LEGACY_SUPPORT
-/*! \brief RPP Operations type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPP_SCALAR_OP_AND       = 1,
-    RPP_SCALAR_OP_OR,
-    RPP_SCALAR_OP_XOR,
-    RPP_SCALAR_OP_NAND,
-    RPP_SCALAR_OP_EQUAL,
-    RPP_SCALAR_OP_NOTEQUAL,
-    RPP_SCALAR_OP_LESS,
-    RPP_SCALAR_OP_LESSEQ,
-    RPP_SCALAR_OP_GREATER,
-    RPP_SCALAR_OP_GREATEREQ,
-    RPP_SCALAR_OP_ADD,
-    RPP_SCALAR_OP_SUBTRACT,
-    RPP_SCALAR_OP_MULTIPLY,
-    RPP_SCALAR_OP_DIVIDE,
-    RPP_SCALAR_OP_MODULUS,
-    RPP_SCALAR_OP_MIN,
-    RPP_SCALAR_OP_MAX,
-} RppOp;
-
-/*! \brief RPP BitDepth Conversion type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    U8_S8,
-    S8_U8,
-} RppConvertBitDepthMode;
-
-/*! \brief RPP polar point
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f rho;
-    Rpp32f theta;
-} RppPointPolar;
-#endif
 
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
@@ -350,6 +320,33 @@ typedef enum
     NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
     NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
+
+/*! \brief Color space standard for NV12 to RGB (YUV/YCbCr to RGB matrix).
+ * \details Selects which industry **color space standard** defines the luma coefficients (\e wr, \e wb). 
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RpptColorStandard_BT709    = 0,  /*!< ITU-R BT.709 (default wr=0.2126, wb=0.0722) */
+    RpptColorStandard_FCC      = 4,  /*!< FCC */
+    RpptColorStandard_BT470BG  = 5,  /*!< ITU-R BT.470 System B, G */
+    RpptColorStandard_BT601    = 6,  /*!< ITU-R BT.601 / SMPTE 170M */
+    RpptColorStandard_SMPTE240M = 7, /*!< SMPTE 240M */
+    RpptColorStandard_BT2020_NCL = 9, /*!< ITU-R BT.2020 non-constant luminance */
+    RpptColorStandard_BT2020_CL  = 10 /*!< ITU-R BT.2020 constant luminance */
+} RpptColorStandard;
+
+/*! \brief Color range (luma/chroma legal levels) for NV12 to RGB.
+ * \details **Color range** specifies how 8-bit Y (and scaling of the matrix) is interpreted: **limited** (studio / TV / MPEG) vs **full** (JPEG / PC). 
+ * \ref RpptColorRange_STUDIO: luma nominally 16–235, chroma centered with Y bias 16. 
+ * \ref RpptColorRange_FULL: luma 0–255, Y bias 0.
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RpptColorRange_STUDIO = 0, /*!< Limited / MPEG / TV range */
+    RpptColorRange_FULL  = 2  /*!< Full / JPEG / PC range */
+} RpptColorRange;
 
 /*! \brief RPPT Tensor 2D ROI type enum
  * \ingroup group_rppdefs
