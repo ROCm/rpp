@@ -64,7 +64,7 @@ struct ArithmeticDivide
     {
         return static_cast<float>(a) / static_cast<float>(b);
     }
-}
+};
 
 // -------------------- Set 1 - scalar helper kernels --------------------
 

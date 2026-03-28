@@ -81,10 +81,6 @@ int main(int argc, char **argv)
         case I32_TO_I32: bitdepthStr = "i32"; break;
         case U32_TO_U32: bitdepthStr = "u32"; break;
         case I8_TO_F32: bitdepthStr = "i8_f32"; break;
-        case I16_TO_I16: bitdepthStr = "i16"; break;
-        case U16_TO_U16: bitdepthStr = "u16"; break;
-        case I32_TO_I32: bitdepthStr = "i32"; break;
-        case U32_TO_U32: bitdepthStr = "u32"; break;
         case I16_TO_F32: bitdepthStr = "i16_f32"; break;
         case U16_TO_F32: bitdepthStr = "u16_f32"; break;
         case U32_TO_F32: bitdepthStr = "u32_f32"; break;

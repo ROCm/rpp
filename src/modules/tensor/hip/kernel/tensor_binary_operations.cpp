@@ -169,10 +169,7 @@ __global__ void tensor_op_tensor_1d_hip_tensor(T1 *srcPtr1,
             id_x++;
         }
 
-        //VectorType1 src1_vec8, src2_vec8;
         VectorType2 dst_vec8;
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr1, &src1_vec8);
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr2, &src2_vec8);
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
         ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
@@ -221,16 +218,31 @@ __global__ void tensor_op_tensor_non_broadcast_1d_hip_tensor(T1 *src1Ptr,
     if (id_x >= width)
         return;
 
-    uint srcIdx1 = (id_z * strides) + id_x + beginX1;
-    uint srcIdx2 = (id_z * strides) + id_x + beginX2;
-    uint dstIdx = (id_z * strides) + id_x;
+    uint numElements = width - id_x;
 
-    VectorType1 src1_vec8, src2_vec8;
-    VectorType2 dst_vec8;
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    if (numElements >= 8)
+    {
+        uint srcIdx1 = (id_z * strides) + id_x + beginX1;
+        uint srcIdx2 = (id_z * strides) + id_x + beginX2;
+        uint dstIdx = (id_z * strides) + id_x;
+
+        VectorType1 src1_vec8, src2_vec8;
+        VectorType2 dst_vec8;
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+        ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
+    {
+        for (uint i = 0; i < numElements; i++)
+        {
+            uint srcIdx1 = (id_z * strides) + id_x + i + beginX1;
+            uint srcIdx2 = (id_z * strides) + id_x + i + beginX2;
+            uint dstIdx = (id_z * strides) + id_x + i;
+            dstPtr[dstIdx] = Operation::op(src1Ptr[srcIdx1], src2Ptr[srcIdx2]);
+        }
+    }
 }
 
 template <typename T1, typename T2, typename Operation>
@@ -281,10 +293,7 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
             id_x++;
         }
 
-        //VectorType1 src1_vec8, src2_vec8;
         VectorType2 dst_vec8;
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr1, &src1_vec8);
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr2, &src2_vec8);
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
         ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
@@ -336,16 +345,31 @@ __global__ void tensor_op_tensor_non_broadcast_2d_hip_tensor(T1 *src1Ptr,
     if (id_x >= width || id_y >= height)
         return;
 
-    uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
-    uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
-    uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
+    uint numElements = width - id_x;
 
-    VectorType1 src1_vec8, src2_vec8;
-    VectorType2 dst_vec8;
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    if (numElements >= 8)
+    {
+        uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + beginX1;
+        uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + beginX2;
+        uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x;
+
+        VectorType1 src1_vec8, src2_vec8;
+        VectorType2 dst_vec8;
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+        ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
+    {
+        for (uint i = 0; i < numElements; i++)
+        {
+            uint srcIdx1 = (id_z * stridesNH.x) + ((id_y + beginY1) * stridesNH.y) + id_x + i + beginX1;
+            uint srcIdx2 = (id_z * stridesNH.x) + ((id_y + beginY2) * stridesNH.y) + id_x + i + beginX2;
+            uint dstIdx = (id_z * stridesNH.x) + (id_y * stridesNH.y) + id_x + i;
+            dstPtr[dstIdx] = Operation::op(src1Ptr[srcIdx1], src2Ptr[srcIdx2]);
+        }
+    }
 }
 
 template <typename T1, typename T2, typename Operation>
@@ -391,10 +415,7 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
             id_x++;
         }
 
-        //VectorType1 src1_vec8, src2_vec8;
         VectorType2 dst_vec8;
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr1, &src1_vec8);
-        //ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(srcArr2, &src2_vec8);
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
         ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstBaseIdx, &dst_vec8);
     }
@@ -449,16 +470,31 @@ __global__ void tensor_op_tensor_non_broadcast_3d_hip_tensor(T1 *src1Ptr,
     if (id_x >= lengthX2 || id_y >= lengthY2 || id_z >= lengthZ2)
         return;
 
-    uint srcIdx1 = ((id_z + beginZ1) * stridesDH.x) + ((id_y + beginY1) * stridesDH.y) + id_x + beginX1;
-    uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + beginX2;
-    uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x;
+    uint numElements = lengthX2 - id_x;
 
-    VectorType1 src1_vec8, src2_vec8;
-    VectorType2 dst_vec8;
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
-    ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
-    ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
-    ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    if (numElements >= 8)
+    {
+        uint srcIdx1 = ((id_z + beginZ1) * stridesDH.x) + ((id_y + beginY1) * stridesDH.y) + id_x + beginX1;
+        uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + beginX2;
+        uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x;
+
+        VectorType1 src1_vec8, src2_vec8;
+        VectorType2 dst_vec8;
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src1Ptr + srcIdx1, &src1_vec8);
+        ArithmeticLoadStoreExecute<T1>::rpp_hip_load8(src2Ptr + srcIdx2, &src2_vec8);
+        ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8(&src1_vec8, &src2_vec8, &dst_vec8);
+        ArithmeticLoadStoreExecute<T2>::rpp_hip_pack_and_store8(dstPtr + dstIdx, &dst_vec8);
+    }
+    else
+    {
+        for (uint i = 0; i < numElements; i++)
+        {
+            uint srcIdx1 = ((id_z + beginZ1) * stridesDH.x) + ((id_y + beginY1) * stridesDH.y) + id_x + i + beginX1;
+            uint srcIdx2 = ((id_z + beginZ2) * stridesDH.x) + ((id_y + beginY2) * stridesDH.y) + id_x + i + beginX2;
+            uint dstIdx = (id_z * stridesDH.x) + (id_y * stridesDH.y) + id_x + i;
+            dstPtr[dstIdx] = Operation::op(src1Ptr[srcIdx1], src2Ptr[srcIdx2]);
+        }
+    }
 }
 
 template <typename T1, typename T2, typename Operation>

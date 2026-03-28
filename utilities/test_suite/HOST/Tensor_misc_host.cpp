@@ -214,11 +214,6 @@ int main(int argc, char **argv)
         outputF32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
         if((testCase == CONCAT) || (broadCastCase))
             inputF32Second = static_cast<Rpp32f *>(calloc(iBufferSizeSecond, sizeof(Rpp32f)));
-        Rpp32u valLimit = 255;
-        if((BitDepthTestMode == I16_TO_I16) || (BitDepthTestMode == U16_TO_U16))
-            valLimit = 65535;
-        if((BitDepthTestMode == I32_TO_I32) || (BitDepthTestMode == U32_TO_U32))
-            valLimit = 262143;
 
         // Generate sample values in range based on number of bits for representation
         // Note : I32/U32 can represent higher range of values - Limit set just for testing purposes

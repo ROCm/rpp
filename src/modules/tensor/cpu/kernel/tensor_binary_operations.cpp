@@ -116,7 +116,7 @@ struct Multiply
             prod_lo = _mm256_and_si256(prod_lo, avx_mask8);
             prod_hi = _mm256_and_si256(prod_hi, avx_mask8);
 
-            return _mm256_packus_epi16(prod_lo, prod_hi);
+            return _mm256_packs_epi16(prod_lo, prod_hi);
         }
     }
 
@@ -132,7 +132,10 @@ struct Divide
 {
     static inline void scalar_op(T1 *dst, T2 *src1, T2 *src2)
     {
-        *dst = static_cast<T1>(*src1) / static_cast<T1>(*src2);
+        if (*src2 == 0)
+            *dst = 0;
+        else
+            *dst = static_cast<T1>(*src1) / static_cast<T1>(*src2);
     }
 
     static inline __m256 simd_op(__m256 &a, __m256 &b)
