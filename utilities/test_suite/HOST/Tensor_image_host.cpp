@@ -1873,13 +1873,13 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "cutout_dropout";
                     Rpp32u boxesInEachImage = 1;
-                    bool randomSeed = qaFlag ? false : true;
+                    Rpp32f randomSeed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
                     Rpp32f colorBuffer[batchSize * boxesInEachImage * srcDescPtr->c];
                     
-                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 1);
+                    init_cutout_dropout(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, srcDescPtr->dataType, randomSeed, 1, colorBuffer);
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
