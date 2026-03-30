@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+#define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
+
+
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
 {
     Rpp32f expFactor = - (iSquare + (j * j)) * mulFactor;
@@ -39,25 +42,29 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
     int rowIdx = 0;
 
     // Compute values for only top left quarter and replicate the values
+    // Combine kernel generation with sum computation for efficiency
+    Rpp32f kernelSum = 0.0f;
     for (int i = -kernelHalfSize; i <= 0; i++, rowIdx += kernelSize)
     {
         int iSquare = i * i;
+        Rpp32f rowSum = 0.0f;
         for (int j = -kernelHalfSize; j <= 0; j++)
         {
-            filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
+            Rpp32f val = gaussian(iSquare, j, mulFactor);
+            filter[rowIdx + (kernelHalfSize + j)] = filter[rowIdx + (kernelHalfSize - j)] = val;
+            rowSum += (j == 0) ? val : 2.0f * val;  // center once, mirrored pair twice
         }
-        if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
+        // If this row was memcpy'd to a mirrored row, count it twice
+        bool mirrored = ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx);
+        kernelSum += mirrored ? 2.0f * rowSum : rowSum;
+        if (mirrored)
             std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
     }
 
     // Normalize the kernel
-    Rpp32f kernelSum = 0.0f;
+    Rpp32f invSum = 1.0f / kernelSum;
     for (int i = 0; i < kernelSize * kernelSize; i++)
-        kernelSum += filter[i];
-    kernelSum = 1.0f / kernelSum;
-
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-        filter[i] *= kernelSum;
+        filter[i] *= invSum;
 }
 
 template<typename T>
@@ -83,6 +90,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
 #endif
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -104,11 +112,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
-        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
 #if __AVX2__
-        int size = kernelSize * kernelSize;
-        __m256 pFilter[size];
-        for (int i = 0; i < size; i++)
+        // Compute filter coefficients for this batch
+        alignas(32) __m256 pFilter[MAX_FILTER_SIZE];
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        int filterSize = kernelSize * kernelSize;
+        for (int i = 0; i < filterSize; i++)
             pFilter[i] = _mm256_set1_ps(filterTensor[i]);
 #endif
         if (kernelSize == 3)
@@ -133,7 +142,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                     {
                         int vectorLoopCount = 0;
-                        bool padLengthRows = (i < padLength) ? 1: 0;
+                        bool padLengthRows = (i < padLength);
                         T *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                         T *dstPtrTemp = dstPtrRow;
 
@@ -145,6 +154,13 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         dstPtrTemp += padLength;
 #if __AVX2__
                         Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                        // Prefetch next row for better cache performance
+                        if (i + 1 < roi.xywhROI.roiHeight)
+                        {
+                            int prefetchCount = (kernelSize < 3) ? kernelSize : 3;
+                            for (int k = 0; k < prefetchCount; k++)
+                                _mm_prefetch((const char*)(srcPtrRow[k] + srcDescPtr->strides.hStride), _MM_HINT_T0);
+                        }
                         // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
@@ -152,11 +168,16 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
-                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
-                            {
-                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
-                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
-                            }
+                            
+                            // Unrolled convolution loop for 3x3 kernel
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[0], pRow[1], &pFilter[0], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[1], avx_p0, &pFilter[0], pxMaskPln);
+                            
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[2], pRow[3], &pFilter[3], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[3], avx_p0, &pFilter[3], pxMaskPln);
+                            
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[4], pRow[5], &pFilter[6], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[5], avx_p0, &pFilter[6], pxMaskPln);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
@@ -1193,6 +1214,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             }
         }
     }
+
     return RPP_SUCCESS;
 }
 

@@ -697,7 +697,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
         // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64s sum;
+            Rpp64s sum = 0;
             Rpp32s sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
             Rpp32s sumAvxR[8] = {0};
@@ -751,7 +751,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
 #endif
 
-            sum = static_cast<Rpp64u>(sum) + static_cast<Rpp64u>(sumG) + static_cast<Rpp64u>(sumB);
+            sum = static_cast<Rpp64s>(sumR) + static_cast<Rpp64s>(sumG) + static_cast<Rpp64s>(sumB);
             mean = (static_cast<Rpp64f>(sum) / (totalPixelsPerChannel * 3));
             meanR = (static_cast<Rpp32f>(sumR) / totalPixelsPerChannel);
             meanG = (static_cast<Rpp32f>(sumG) / totalPixelsPerChannel);

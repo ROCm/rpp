@@ -38,7 +38,7 @@ namespace rpp {
 hipCtx_t get_ctx()
 {
     CHECK_RETURN_STATUS(hipInit(0));
-    hipCtx_t ctx;
+    hipCtx_t ctx{};
     auto status = 0;
     if(status != hipSuccess)
         RPP_THROW("No device");
@@ -85,7 +85,7 @@ int get_device_id() // Get random device
 
 void set_ctx(hipCtx_t ctx)
 {
-    auto status =  0;
+    auto status = 0;
     if(status != hipSuccess)
         RPP_THROW("Error setting context");
 }

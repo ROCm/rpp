@@ -27,9 +27,11 @@ SOFTWARE.
 
 #include <hip/hip_runtime.h>
 
+// TODO: Remove [[maybe_unused]] once these helpers are used in the codebase.
+
 // LTRB to XYWH
 
-static __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
+[[maybe_unused]] static __global__ void roi_conversion_ltrb_to_xywh(int *roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
 
@@ -40,8 +42,8 @@ static __global__ void roi_converison_ltrb_to_xywh(int *roiTensorPtrSrc)
     roiTensorPtrSrc_i4->w -= (roiTensorPtrSrc_i4->y - 1);
 }
 
-static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
-                                                      rpp::Handle& handle)
+[[maybe_unused]] static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc,
+                                                                       rpp::Handle& handle)
 {
     int localThreads_x = 256;
     int localThreads_y = 1;
@@ -50,7 +52,7 @@ static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc
     int globalThreads_y = 1;
     int globalThreads_z = 1;
 
-    hipLaunchKernelGGL(roi_converison_ltrb_to_xywh,
+    hipLaunchKernelGGL(roi_conversion_ltrb_to_xywh,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
@@ -63,7 +65,7 @@ static RppStatus hip_exec_roi_conversion_ltrb_to_xywh(RpptROIPtr roiTensorPtrSrc
 
 // XYWH to LTRB
 
-static __global__ void roi_converison_xywh_to_ltrb(int *roiTensorPtrSrc)
+[[maybe_unused]] static __global__ void roi_conversion_xywh_to_ltrb(int *roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 4;
 
@@ -74,8 +76,8 @@ static __global__ void roi_converison_xywh_to_ltrb(int *roiTensorPtrSrc)
     roiTensorPtrSrc_i4->w += (roiTensorPtrSrc_i4->y - 1);
 }
 
-static RppStatus hip_exec_roi_converison_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc,
-                                                      rpp::Handle& handle)
+[[maybe_unused]] static RppStatus hip_exec_roi_conversion_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc,
+                                                                       rpp::Handle& handle)
 {
     int localThreads_x = 256;
     int localThreads_y = 1;
@@ -84,7 +86,7 @@ static RppStatus hip_exec_roi_converison_xywh_to_ltrb(RpptROIPtr roiTensorPtrSrc
     int globalThreads_y = 1;
     int globalThreads_z = 1;
 
-    hipLaunchKernelGGL(roi_converison_xywh_to_ltrb,
+    hipLaunchKernelGGL(roi_conversion_xywh_to_ltrb,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,

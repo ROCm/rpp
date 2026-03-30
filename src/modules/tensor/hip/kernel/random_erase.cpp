@@ -138,8 +138,8 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
         // if src layout is NHWC, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
-            hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         }
         // if src layout is NCHW, convert src from NCHW to NHWC
         else if (srcDescPtr->layout == RpptLayout::NCHW)
@@ -156,7 +156,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
             globalThreads_x = dstDescPtr->w;
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         }
 
         if (srcDescPtr->dataType == RpptDataType::U8)
@@ -218,8 +218,8 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)
     {
-        hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(random_erase_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -234,8 +234,8 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 3)
     {
-        hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream()));
+        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
         hipLaunchKernelGGL(random_erase_pln3_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -263,7 +263,7 @@ RppStatus hip_exec_random_erase_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
-            hipStreamSynchronize(handle.GetStream());
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             globalThreads_x = dstDescPtr->w;
             hipLaunchKernelGGL(random_erase_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
