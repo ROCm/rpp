@@ -175,6 +175,17 @@ int main(int argc, char **argv)
     if(testCase == PRE_EMPHASIS_FILTER)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
+    // allocate second input buffer for audio_tensor_add_tensor
+    // srcPtr2 is a 1D tensor of size batchSize (one scalar value per batch)
+    // Each scalar value is broadcasted and added to all elements in the corresponding batch of srcPtr1
+    Rpp32f *inputf32Second = nullptr;
+    void *d_inputf32Second = nullptr;
+    if(testCase == AUDIO_TENSOR_ADD_TENSOR)
+    {
+        inputf32Second = static_cast<Rpp32f *>(calloc(batchSize, sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputf32Second, batchSize * sizeof(Rpp32f)));
+    }
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
@@ -369,6 +380,42 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case AUDIO_TENSOR_ADD_TENSOR:
+                {
+                    testCaseName = "audio_tensor_add_tensor";
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                        inputf32Second[i] = 2.0f;
+                    }
+                    
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32Second, inputf32Second, batchSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    errorCodeCapture = rppt_audio_tensor_add_tensor(d_inputf32, d_inputf32Second, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, handle, RPP_HIP_BACKEND);
+
+                    break;
+                }
+                case AUDIO_TENSOR_MUL_SCALAR:
+                {
+                    testCaseName = "audio_tensor_mul_scalar";
+                    
+                    // Use a scalar multiplier value
+                    Rpp32f scalarValue = 2.0f;
+                    
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    errorCodeCapture = rppt_audio_tensor_mul_scalar(d_inputf32, scalarValue, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, handle, RPP_HIP_BACKEND);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -464,6 +511,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
     if (outRateTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
+    if (inputf32Second != nullptr)
+        free(inputf32Second);
+    if (d_inputf32Second != nullptr)
+        CHECK_RETURN_STATUS(hipFree(d_inputf32Second));
 
     return 0;
 }

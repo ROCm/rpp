@@ -49,7 +49,9 @@ std::map<int, string> audioAugmentationMap =
     {4, "spectrogram"},
     {5, "slice"},
     {6, "resample"},
-    {7, "mel_filter_bank"}
+    {7, "mel_filter_bank"},
+    {8, "audio_tensor_add_tensor"},
+    {9, "audio_tensor_mul_scalar"}
 };
 
 enum Augmentation {
@@ -60,7 +62,9 @@ enum Augmentation {
     SPECTROGRAM = 4,
     SLICE = 5,
     RESAMPLE = 6,
-    MEL_FILTER_BANK = 7
+    MEL_FILTER_BANK = 7,
+    AUDIO_TENSOR_ADD_TENSOR = 8,
+    AUDIO_TENSOR_MUL_SCALAR = 9
 };
 
 // Cutoff values for audio kernels listed for HOST backend followed by HIP
@@ -72,7 +76,9 @@ static const std::map<string, std::vector<double>> audioCutOff =
     {"spectrogram", {1e-20, 1e-3}},
     {"slice",  {1e-20, 1e-20}},
     {"resample", {1e-7, 1e-6}},
-    {"mel_filter_bank", {1e-20, 1e-5}}
+    {"mel_filter_bank", {1e-20, 1e-5}},
+    {"audio_tensor_add_tensor", {1e-20, 1e-6}},
+    {"audio_tensor_mul_scalar", {1e-20, 1e-6}}
 };
 
 // sets descriptor dimensions and strides of src/dst

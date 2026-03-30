@@ -135,6 +135,7 @@ std::map<int, string> augmentationMap =
     {99, "random_erase"},
     {100, "coarse_dropout"},
     {101, "emboss"},
+    {102, "histogram_equalize"},
     {103, "yuv_to_rgb"}
 };
 
@@ -207,13 +208,10 @@ enum Augmentation {
     CUTOUT_DROPOUT = 97,
     GRID_DROPOUT = 98,
     RANDOM_ERASE = 99,
-<<<<<<< lk/color_convert_kernels
-    EMBOSS = 101,
-    YUV_TO_RGB = 103
-=======
     COARSE_DROPOUT = 100,
-    EMBOSS = 101
->>>>>>> develop
+    EMBOSS = 101,
+    HISTOGRAM_EQUALIZE = 102,
+    YUV_TO_RGB = 103
 };
 
 // Enum for dropout types
