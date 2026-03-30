@@ -1,44 +1,53 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![doc](https://img.shields.io/badge/doc-readthedocs-blueviolet)](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
-<p align="center"><img width="70%" src="https://github.com/ROCm/rpp/raw/master/docs/data/AMD_RPP_logo.png" /></p>
+<p align="center"><img width="70%" src="docs/data/AMD_RPP_logo.png" /></p>
 
 
 > [!NOTE]
 > The published documentation is available at [ROCm Performance Primitives (RPP)](https://rocm.docs.amd.com/projects/rpp/en/latest/index.html) in an organized, easy-to-read format, with search and a table of contents. The documentation source files reside in the `docs` folder of this repository. As with all ROCm projects, the documentation is open source. For more information on contributing to the documentation, see [Contribute to ROCm documentation](https://rocm.docs.amd.com/en/latest/contribute/contributing.html).
 
 AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
-vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends.
+vision library for AMD processors that have `HIP`, or `CPU` backends.
 
-<p align="center"><img width="35%" src="https://github.com/ROCm/rpp/raw/master/docs/data/rpp_structure_4.png" /></p>
+<p align="center"><img width="35%" src="docs/data/rpp_structure_4.png" /></p>
 
 #### Latest release
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/ROCm/rpp/releases)
 
-## Supported functionalities and variants
+## Supported Augmentations / Primitives
 
-<p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities.png" /></p>
+RPP supports various 2D image, 3D image (voxel), audio and miscellaneous augmentations and primitives as listed below.
 
-<p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities_samples.jpg" /></p>
+<p align="center"><img width="90%" src="docs/data/supported_functionalities.png" /></p>
 
-### Supported 3D Functionalities Samples
+## Supported 2D Image Augmentations Samples
 
-Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 3D image)
-:-------------------------:|:-------------------------:
-![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
+<p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
 
-## Supported audio functionalities and variants
-* Below are the list of audio functions supported
-  * Non Silent Region Detection (HOST and HIP)
-  * To Decibels (HOST and HIP)
-  * Downmixing (HOST and HIP)
-  * Preemphasis Filter (HOST and HIP)
-  * Resample (HOST and HIP)
-  * Mel Filter Bank (HOST and HIP)
-  * Spectrogram (HOST and HIP)
+## Supported 3D Image Augmentations Samples
 
-Spectrogram kernel output represented as a image <br><br>
-![](docs/data/spectrogramOutput.png)
+<div align="center">
+
+| &nbsp; | Input<br>(3D voxel image) | &nbsp; |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+| &nbsp; | ![](docs/data/doxygenInputs/input150x150x4.gif) | &nbsp; |
+| add_scalar<br>(3D scalar addition) | subtract_scalar<br>(3D scalar subtraction) | multiply_scalar<br>(3D scalar multiplication) |
+| ![](docs/data/doxygenOutputs/arithmetic_operations_add_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/arithmetic_operations_subtract_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/arithmetic_operations_multiply_scalar_150x150x4.gif) |
+| fused_multiply_add_scalar<br>(brightened 3D image) | gaussian_noise<br>(3D noise augmentation) | flip<br>(3D flip augmentation) |
+| ![](docs/data/doxygenOutputs/arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif) | ![](docs/data/doxygenOutputs/effects_augmentations_gaussian_noise_150x150x4.gif) | ![](docs/data/doxygenOutputs/geometric_augmentations_flip_150x150x4.gif) |
+
+</div>
+
+slice (3D slice - 100x200 from 240x240x155):
+
+<p align="center"><img src="docs/data/doxygenOutputs/geometric_augmentations_slice_100x200x155.gif" /></p>
+
+## Supported Audio Augmentations Samples
+
+Spectrogram functionality output represented as an image:
+
+<p align="center"><img width="55%" src="docs/data/spectrogramOutput.png" /></p>
   
 ## Prerequisites
 
@@ -150,9 +159,6 @@ sudo zypper install rpp rpp-devel rpp-test
   ```shell
   git clone https://github.com/ROCm/rpp.git
   ```
-
-> [!NOTE]
-> RPP has support for two GPU backends: **OPENCL** and **HIP**:
 
 #### HIP Backend
 
