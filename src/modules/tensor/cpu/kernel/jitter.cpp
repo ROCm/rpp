@@ -661,12 +661,11 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                     Rpp32s loc;
                     __m256 pRow;
 
+                    compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         srcPtrTemp_ps[cnt] = (Rpp16f)srcPtrChannel[loc + cnt];
                     }
-
-                    compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, &pRow);
                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, &pRow);
 

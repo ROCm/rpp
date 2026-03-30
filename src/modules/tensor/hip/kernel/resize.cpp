@@ -749,7 +749,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::XYWH)
-        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
     {

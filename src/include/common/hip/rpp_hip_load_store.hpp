@@ -1406,7 +1406,7 @@ __device__ __forceinline__ void rpp_hip_load8_to_uchar8(uchar *srcPtr, uchar *sr
 
 __device__ __forceinline__ void rpp_hip_load8_to_uchar8(float *srcPtr, uchar *srcPtr_uc8)
 {
-    d_float8 src_f8 = {0};
+    d_float8 src_f8 = {{0}};
     *(d_float8_s *)&src_f8 = *(d_float8_s *)srcPtr;
 
     uint2 *srcPtr_ui2;
@@ -1462,7 +1462,7 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(uchar *srcPtr
 
 __device__ __forceinline__ void rpp_hip_load24_pkd3_to_uchar8_pln3(float *srcPtr, uchar **srcPtrs_uc8)
 {
-    d_float24 src_f24 = {0};
+    d_float24 src_f24 = {{0}};
     *(d_float24_s *)&src_f24 = *(d_float24_s *)srcPtr;
 
     d_uint6 src_ui6;

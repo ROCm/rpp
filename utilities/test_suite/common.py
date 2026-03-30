@@ -151,6 +151,7 @@ imageAugmentationMap = {
     99: ["random_erase", "HOST", "HIP"],
     100: ["coarse_dropout", "HOST", "HIP"],
     101: ["emboss","HOST","HIP"],
+    102: ["histogram_equalize", "HOST", "HIP"],
     103: ["yuv_to_rgb", "HIP"]
 }
 
@@ -162,7 +163,9 @@ audioAugmentationMap = {
     4: ["spectrogram", "HOST", "HIP"],
     5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST", "HIP"]
+    7: ["mel_filter_bank", "HOST", "HIP"],
+    8: ["audio_tensor_add_tensor", "HOST", "HIP"],
+    9: ["audio_tensor_mul_scalar", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
@@ -188,7 +191,7 @@ miscAugmentationMap  = {
 
 ImageAugmentationGroupMap = {
     "color_augmentations": [
-        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
+        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
     ],
     "effects_augmentations": [
         "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow", "coarse_dropout"

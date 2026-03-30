@@ -2105,6 +2105,18 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case HISTOGRAM_EQUALIZE:
+                {
+                    testCaseName = "histogram_equalize";
+
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8)
+                        errorCodeCapture = rppt_histogram_equalize(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
