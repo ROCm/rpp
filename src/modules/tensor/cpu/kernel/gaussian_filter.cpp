@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+#define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
+
+
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
 {
     Rpp32f expFactor = - (iSquare + (j * j)) * mulFactor;
@@ -39,22 +42,26 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
     int rowIdx = 0;
 
     // Compute values for only top left quarter and replicate the values
+    // Combine kernel generation with sum computation for efficiency
+    Rpp32f kernelSum = 0.0f;
     for (int i = -kernelHalfSize; i <= 0; i++, rowIdx += kernelSize)
     {
         int iSquare = i * i;
+        Rpp32f rowSum = 0.0f;
         for (int j = -kernelHalfSize; j <= 0; j++)
         {
-            filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
+            Rpp32f val = gaussian(iSquare, j, mulFactor);
+            filter[rowIdx + (kernelHalfSize + j)] = filter[rowIdx + (kernelHalfSize - j)] = val;
+            rowSum += (j == 0) ? val : 2.0f * val;  // center once, mirrored pair twice
         }
-        if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
+        // If this row was memcpy'd to a mirrored row, count it twice
+        bool mirrored = ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx);
+        kernelSum += mirrored ? 2.0f * rowSum : rowSum;
+        if (mirrored)
             std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
     }
 
     // Normalize the kernel
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < kernelSize * kernelSize; i++)
-        kernelSum += filter[i];
-    
     Rpp32f invSum = 1.0f / kernelSum;
     for (int i = 0; i < kernelSize * kernelSize; i++)
         filter[i] *= invSum;
@@ -101,7 +108,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             pFilter[i] = _mm256_set1_ps(filterTensor[i]);
     }
 #endif
-    
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -124,8 +131,12 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 #if __AVX2__
-        // Access pre-computed filter for this batch
-        __m256 *pFilter = pFilterBatch + batchCount * MAX_FILTER_SIZE;
+        // Compute filter coefficients for this batch
+        alignas(32) __m256 pFilter[MAX_FILTER_SIZE];
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        int filterSize = kernelSize * kernelSize;
+        for (int i = 0; i < filterSize; i++)
+            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
 #endif
         if (kernelSize == 3)
         {
@@ -164,7 +175,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         // Prefetch next row for better cache performance
                         if (i + 1 < roi.xywhROI.roiHeight)
                         {
-                            for (int k = 0; k < kernelSize; k++)
+                            int prefetchCount = (kernelSize < 3) ? kernelSize : 3;
+                            for (int k = 0; k < prefetchCount; k++)
                                 _mm_prefetch((const char*)(srcPtrRow[k] + srcDescPtr->strides.hStride), _MM_HINT_T0);
                         }
                         // process alignedLength number of columns in each row - alignedLength set based on convolution operations per pass
@@ -1220,12 +1232,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
             }
         }
     }
-    
-#if __AVX2__
-    // Free the pre-allocated filter memory
-    free(pFilterBatch);
-#endif
-    
+
     return RPP_SUCCESS;
 }
 

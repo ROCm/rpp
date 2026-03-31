@@ -38,10 +38,10 @@ Algorithm Selection (based on kernel size):
    - Processes 8-32 elements simultaneously with SIMD
    - No branching in inner loops
 
-2. Large kernels (7×7, 9×9+): Constant-time O(1) histogram method (U8 only)
-   - Two-tier histogram: coarse (4 MSB) + fine (full 8 bits)
-   - Maintains column histograms, slides window horizontally
-   - O(1) median finding regardless of kernel size
+2. Large kernels (7×7, 9×9+): Histogram-based method (U8 only)
+   - Single-level 256-bin histogram over the current kernel window
+   - Histogram is rebuilt from scratch for each output pixel (no sliding window)
+   - Median found by cumulative count scan; cost grows with kernel area
 
 3. Fallback: Generic std::nth_element (for non-U8 types with large kernels)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,7 +57,7 @@ x  x  x  x  x  x  x  x  x  x  ..  x  x
 
 For each output pixel:
 1. Load 3×3 window with border replication (nearest-neighbor padding)
-2. Apply sorting network (25 compare-swap operations)
+2. Apply sorting network (19 compare-swap operations)
 3. Extract median value (element at position 4 after sorting)
 4. Write to output
 
@@ -219,6 +219,8 @@ inline void rpp_median_histogram_u8_pkd_host(const Rpp8u *src,
     }
 }
 
+#if __AVX2__
+
 // -------------------- AVX2 Sorting Network Implementations --------------------
 
 // 3×3 Median - U8 PLN1
@@ -248,6 +250,7 @@ inline void rpp_median3x3_pln_u8_avx(const Rpp8u *row0,
         // Handle tail
         if (j > width - 1 - nlanes)
         {
+            // Exit vectorized loop for small widths or in-place operation to avoid reading overwritten data
             if (j == 1 || (const Rpp8u *)dstRow == row1)
                 break;
             j = width - 1 - nlanes;
@@ -1071,7 +1074,7 @@ inline void rpp_median5x5_pkd_u8_avx(const Rpp8u *row0,
     for (; j < limit; j++)
     {
         int j1 = j >= channels ? j - channels : j;
-        int j0 = j >= channels * 2 ? j -  channels * 2 : j1;
+        int j0 = j >= channels * 2 ? j - channels * 2 : j1;
         int j3 = j < widthBytes - channels ? j + channels : j;
         int j4 = j < widthBytes - channels * 2 ? j + channels * 2 : j3;
 
@@ -1118,11 +1121,11 @@ inline void rpp_median5x5_pkd_u8_avx(const Rpp8u *row0,
         __m256i p18 = _mm256_loadu_si256((const __m256i *)(row3 + j + channels));
         __m256i p23 = _mm256_loadu_si256((const __m256i *)(row4 + j + channels));
 
-        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j +  channels * 2));
-        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j +  channels * 2));
-        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j +  channels * 2));
-        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j +  channels * 2));
-        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j +  channels * 2));
+        __m256i p4 = _mm256_loadu_si256((const __m256i *)(row0 + j + channels * 2));
+        __m256i p9 = _mm256_loadu_si256((const __m256i *)(row1 + j + channels * 2));
+        __m256i p14 = _mm256_loadu_si256((const __m256i *)(row2 + j + channels * 2));
+        __m256i p19 = _mm256_loadu_si256((const __m256i *)(row3 + j + channels * 2));
+        __m256i p24 = _mm256_loadu_si256((const __m256i *)(row4 + j + channels * 2));
 
 #define OP(a, b)         \
     {                    \
@@ -1184,14 +1187,14 @@ inline void rpp_median5x5_pkd_u8_avx(const Rpp8u *row0,
 // Used when AVX2 is not available or for border pixels
 
 template <typename T>
-inline void median_filter_3x3_sortnet_tensor(T *srcPtrTemp,
-                                             T *dstPtrTemp,
-                                             Rpp32s rowIdx,
-                                             Rpp32s colIdx,
-                                             Rpp32s heightLimit,
-                                             Rpp32s widthLimit,
-                                             Rpp32s channels,
-                                             RpptDescPtr srcDescPtr)
+inline void median_filter_3x3_sortnet(T *srcPtrTemp,
+                                      T *dstPtrTemp,
+                                      Rpp32s rowIdx,
+                                      Rpp32s colIdx,
+                                      Rpp32s heightLimit,
+                                      Rpp32s widthLimit,
+                                      Rpp32s channels,
+                                      RpptDescPtr srcDescPtr)
 {
     using WT = std::conditional_t<std::is_integral<T>::value, int, T>;
 
@@ -1228,14 +1231,14 @@ inline void median_filter_3x3_sortnet_tensor(T *srcPtrTemp,
 }
 
 template <typename T>
-inline void median_filter_5x5_sortnet_tensor(T *srcPtrTemp,
-                                             T *dstPtrTemp,
-                                             Rpp32s rowIdx,
-                                             Rpp32s colIdx,
-                                             Rpp32s heightLimit,
-                                             Rpp32s widthLimit,
-                                             Rpp32s channels,
-                                             RpptDescPtr srcDescPtr)
+inline void median_filter_5x5_sortnet(T *srcPtrTemp,
+                                      T *dstPtrTemp,
+                                      Rpp32s rowIdx,
+                                      Rpp32s colIdx,
+                                      Rpp32s heightLimit,
+                                      Rpp32s widthLimit,
+                                      Rpp32s channels,
+                                      RpptDescPtr srcDescPtr)
 {
     using WT = std::conditional_t<std::is_integral<T>::value, int, T>;
 
@@ -1272,21 +1275,26 @@ inline void median_filter_5x5_sortnet_tensor(T *srcPtrTemp,
 }
 
 // Generic median filter implementation
+// Max kernel size is 9x9 = 81, max channels is 4, so max buffer size is 81 * 4 = 324
+constexpr Rpp32s MAX_KERNEL_SIZE_SQUARED = 81;  // 9x9 kernel
+constexpr Rpp32s MAX_CHANNELS = 4;
+
 template<typename T>
-inline void median_filter_generic_tensor(T *srcPtrTemp,
-                                         T *dstPtrTemp,
-                                         Rpp32s rowIdx,
-                                         Rpp32s colIdx,
-                                         Rpp32s kernelSizeSquared,
-                                         Rpp32s padLength,
-                                         Rpp32s heightLimit,
-                                         Rpp32s widthLimit,
-                                         Rpp32s channels,
-                                         RpptDescPtr srcDescPtr,
-                                         RpptDescPtr dstDescPtr)
+inline void median_filter_generic(T *srcPtrTemp,
+                                  T *dstPtrTemp,
+                                  Rpp32s rowIdx,
+                                  Rpp32s colIdx,
+                                  Rpp32s kernelSizeSquared,
+                                  Rpp32s padLength,
+                                  Rpp32s heightLimit,
+                                  Rpp32s widthLimit,
+                                  Rpp32s channels,
+                                  RpptDescPtr srcDescPtr,
+                                  RpptDescPtr dstDescPtr)
 {
-    // Temporary buffer to hold kernel window data for all channels
-    T blockData[kernelSizeSquared * channels];
+    // Fixed-size buffer to hold kernel window data for all channels
+    // Using fixed-size array instead of VLA for C++ standard compliance and stack safety
+    T blockData[MAX_KERNEL_SIZE_SQUARED * MAX_CHANNELS];
     Rpp32s index = 0, medianIndex = kernelSizeSquared / 2;
 
     // Fill blockData with padded values from the source image using nearest neighbor padding
@@ -1310,7 +1318,8 @@ inline void median_filter_generic_tensor(T *srcPtrTemp,
 
     for (Rpp32s ch = 0; ch < channels; ch++)
     {
-        T channelBlock[kernelSizeSquared];
+        // Fixed-size buffer instead of VLA for C++ standard compliance
+        T channelBlock[MAX_KERNEL_SIZE_SQUARED];
 
         for (Rpp32s i = 0; i < kernelSizeSquared; i++)
             channelBlock[i] = blockData[i * channels + ch];
@@ -1378,129 +1387,114 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                 for(Rpp32s c = 0; c < srcDescPtr->c; c++)
                 {
 #if __AVX2__
-                    if ((useSortNet3 || useSortNet5))
+                    if ((useSortNet3 || useSortNet5) && std::is_same<T, Rpp8u>::value)
                     {
-                        bool useAvx = false;
-
-                        if (std::is_same<T, Rpp8u>::value)
+                        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
                         {
-                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            Rpp8u *dstRow = (Rpp8u *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                            if (useSortNet3)
                             {
-                                Rpp8u *dstRow = (Rpp8u *)dstPtrChannel + i * dstDescPtr->strides.hStride;
-                                if (useSortNet3)
-                                {
-                                    const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median3x3_pln_u8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
-                                }
-                                else
-                                {
-                                    const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r3 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    const Rpp8u *r4 = (const Rpp8u *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median5x5_pln_u8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
-                                }
+                                const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median3x3_pln_u8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
                             }
-                            useAvx = true;
-                        }
-                        else if (std::is_same<T, Rpp8s>::value)
-                        {
-                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                            else
                             {
-                                Rpp8s *dstRow = (Rpp8s *)dstPtrChannel + i * dstDescPtr->strides.hStride;
-                                if (useSortNet3)
-                                {
-                                    const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median3x3_pln_i8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
-                                }
-                                else
-                                {
-                                    const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r3 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    const Rpp8s *r4 = (const Rpp8s *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median5x5_pln_i8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
-                                }
+                                const Rpp8u *r0 = (const Rpp8u *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8u *r1 = (const Rpp8u *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8u *r2 = (const Rpp8u *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp8u *r3 = (const Rpp8u *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                const Rpp8u *r4 = (const Rpp8u *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median5x5_pln_u8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
                             }
-                            useAvx = true;
-                        }
-                        else if (std::is_same<T, Rpp32f>::value)
-                        {
-                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
-                            {
-                                Rpp32f *dstRow = (Rpp32f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
-                                if (useSortNet3)
-                                {
-                                    const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median3x3_pln_f32_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
-                                }
-                                else
-                                {
-                                    const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r3 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    const Rpp32f *r4 = (const Rpp32f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median5x5_pln_f32_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
-                                }
-                            }
-                            useAvx = true;
-                        }
-                        else if (std::is_same<T, Rpp16f>::value)
-                        {
-                            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
-                            {
-                                Rpp16f *dstRow = (Rpp16f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
-                                if (useSortNet3)
-                                {
-                                    const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median3x3_pln_f16_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
-                                }
-                                else
-                                {
-                                    const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r3 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    const Rpp16f *r4 = (const Rpp16f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
-                                    rpp_median5x5_pln_f16_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
-                                }
-                            }
-                            useAvx = true;
-                        }
-
-                        if (useAvx)
-                        {
-                            srcPtrChannel += srcDescPtr->strides.cStride;
-                            dstPtrChannel += dstDescPtr->strides.cStride;
-                            continue;
                         }
                     }
+                    else if ((useSortNet3 || useSortNet5) && std::is_same<T, Rpp8s>::value)
+                    {
+                        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                        {
+                            Rpp8s *dstRow = (Rpp8s *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                            if (useSortNet3)
+                            {
+                                const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median3x3_pln_i8_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                            }
+                            else
+                            {
+                                const Rpp8s *r0 = (const Rpp8s *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8s *r1 = (const Rpp8s *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp8s *r2 = (const Rpp8s *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp8s *r3 = (const Rpp8s *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                const Rpp8s *r4 = (const Rpp8s *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median5x5_pln_i8_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                            }
+                        }
+                    }
+                    else if ((useSortNet3 || useSortNet5) && std::is_same<T, Rpp32f>::value)
+                    {
+                        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                        {
+                            Rpp32f *dstRow = (Rpp32f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                            if (useSortNet3)
+                            {
+                                const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median3x3_pln_f32_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                            }
+                            else
+                            {
+                                const Rpp32f *r0 = (const Rpp32f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                const Rpp32f *r1 = (const Rpp32f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp32f *r2 = (const Rpp32f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp32f *r3 = (const Rpp32f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                const Rpp32f *r4 = (const Rpp32f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median5x5_pln_f32_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                            }
+                        }
+                    }
+                    else if ((useSortNet3 || useSortNet5) && std::is_same<T, Rpp16f>::value)
+                    {
+                        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                        {
+                            Rpp16f *dstRow = (Rpp16f *)dstPtrChannel + i * dstDescPtr->strides.hStride;
+                            if (useSortNet3)
+                            {
+                                const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median3x3_pln_f16_avx(r0, r1, r2, dstRow, roi.xywhROI.roiWidth);
+                            }
+                            else
+                            {
+                                const Rpp16f *r0 = (const Rpp16f *)srcPtrChannel + std::max(i - 2, 0) * srcDescPtr->strides.hStride;
+                                const Rpp16f *r1 = (const Rpp16f *)srcPtrChannel + std::max(i - 1, 0) * srcDescPtr->strides.hStride;
+                                const Rpp16f *r2 = (const Rpp16f *)srcPtrChannel + i * srcDescPtr->strides.hStride;
+                                const Rpp16f *r3 = (const Rpp16f *)srcPtrChannel + std::min(i + 1, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                const Rpp16f *r4 = (const Rpp16f *)srcPtrChannel + std::min(i + 2, roi.xywhROI.roiHeight - 1) * srcDescPtr->strides.hStride;
+                                rpp_median5x5_pln_f16_avx(r0, r1, r2, r3, r4, dstRow, roi.xywhROI.roiWidth);
+                            }
+                        }
+                    }
+                    else
 #endif
                     {
-                        // Scalar fallback
+                        // Scalar fallback for non-AVX2 or unsupported types/kernel sizes
                         T *dstPtrRow = dstPtrChannel;
-                        for(Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+                        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
                         {
                             T *dstPtrTemp = dstPtrRow;
-                            for(Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
+                            for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                             {
                                 if (useSortNet3)
-                                    median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                    median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                                 else if (useSortNet5)
-                                    median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                    median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                                 else
-                                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                                    median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                                 dstPtrTemp++;
                             }
                             dstPtrRow += dstDescPtr->strides.hStride;
@@ -1511,7 +1505,7 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                 }
             }
         }
-        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
 #if __AVX2__
             // Use simplified histogram method for U8 PKD with large kernels
@@ -1564,41 +1558,15 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
                         else
-                            median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr, dstDescPtr);
                         dstPtrTemp += dstDescPtr->c;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-            }
-        }
-        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-        {
-            T *dstPtrRow = dstPtrChannel;
-            for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
-            {
-                T *dstPtrTemp = dstPtrRow;
-                for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
-                {
-                    T *dstPtrTempChn = dstPtrTemp;
-                    T *srcPtrTempChn = srcPtrChannel;
-                    for (Rpp32s c = 0; c < srcDescPtr->c; c++)
-                    {
-                        if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
-                        else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
-                        else
-                            median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
-                        srcPtrTempChn += srcDescPtr->strides.cStride;
-                        dstPtrTempChn++;
-                    }
-                    dstPtrTemp += dstDescPtr->c;
-                }
-                dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1885,11 +1853,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                     for (Rpp32s c = 0; c < srcDescPtr->c; c++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrTempChn, dstPtrTempChn, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrTempChn, dstPtrTempChn, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else
-                            median_filter_generic_tensor(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn++;
                     }
@@ -1909,11 +1877,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                     for (Rpp32s j = 0; j < roiPtrSrc->xywhROI.roiWidth; j++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else
-                            median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -1922,6 +1890,7 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
+    }
 
     return RPP_SUCCESS;
 }
