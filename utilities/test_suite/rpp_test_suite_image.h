@@ -2035,6 +2035,7 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
+    std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
     std::uniform_real_distribution<float> wh_ratio_random(0.1f, 0.5f);
     std::uniform_real_distribution<float> wh_ratio_coarse(0.05f, 0.1f);
     int minCoarseBoxes = std::max(0, std::min(5, maxBoxesPerImage));

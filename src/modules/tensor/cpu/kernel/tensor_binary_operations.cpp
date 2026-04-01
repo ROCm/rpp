@@ -132,10 +132,8 @@ struct Divide
 {
     static inline void scalar_op(T1 *dst, T2 *src1, T2 *src2)
     {
-        if (*src2 == 0)
-            *dst = 0;
-        else
-            *dst = static_cast<T1>(*src1) / static_cast<T1>(*src2);
+        T1 divisor = *src2 ? static_cast<T1>(*src2) : static_cast<T1>(1);
+        *dst = (*src2 == 0) ? static_cast<T1>(0) : static_cast<T1>(*src1) / divisor;
     }
 
     static inline __m256 simd_op(__m256 &a, __m256 &b)
@@ -343,17 +341,20 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
-    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
-    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+    Rpp32u dstDim = std::max(src1NDim, src2NDim); // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = std::min(src1NDim, src2NDim); // Minimum of input dimensions
 
     // Overall dimension compatibility check for the entire batch
     for(int test = 0; test < minDim; test++)
-        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
-            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
-            }
+    {
+        Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
+        Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
+        if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
+        {
+            printf("Incompatible dimensions for the batch\n");
+            return RPP_SUCCESS;
+        }
+    }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -387,57 +388,55 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             for(int i = 0; i < minDim; i++)
             {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
-                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                Rpp32u dim1 = src1Dims[src1NDim - i - 1];
+                Rpp32u dim2 = src2Dims[src2NDim - i - 1];
+                src1BroadcastDims[curIndex]    = dim1;
+                src2BroadcastDims[curIndex]    = dim2;
                 src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                dstBroadcastStrides[curIndex]  = dstStrides[dstDim - i];
                 // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
-                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
-                    incompatibleDims = true;
-                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+                incompatibleDims |= (dim1 != dim2 && dim1 != 1 && dim2 != 1);
+                dstBroadcastDims[curIndex] = std::max(dim1, dim2);
             }
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
                 printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
 
-            // Handle cases of mismatching num dims
-            if(src1NDim < src2NDim)
+            // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
+            if(src1NDim != src2NDim)
+            {
+                bool src1IsShorter = src1NDim < src2NDim;
+                const Rpp32u *longerDims    = src1IsShorter ? src2Dims    : src1Dims;
+                const Rpp32u *longerStrides = src1IsShorter ? src2Strides : src1Strides;
+                Rpp32u longerNDim           = src1IsShorter ? src2NDim    : src1NDim;
+                Rpp32u *shorterBroadcastDims    = src1IsShorter ? src1BroadcastDims    : src2BroadcastDims;
+                Rpp32u *longerBroadcastDims     = src1IsShorter ? src2BroadcastDims    : src1BroadcastDims;
+                Rpp32u *shorterBroadcastStrides = src1IsShorter ? src1BroadcastStrides : src2BroadcastStrides;
+                Rpp32u *longerBroadcastStrides  = src1IsShorter ? src2BroadcastStrides : src1BroadcastStrides;
+
                 for(int i = minDim; i < dstDim; i++)
                 {
                     Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src1BroadcastDims[curIndex] = 1;
-                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    src1BroadcastStrides[curIndex] = 0;
-                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                    shorterBroadcastDims[curIndex]    = 1;
+                    longerBroadcastDims[curIndex]     = longerDims[longerNDim - i];
+                    dstBroadcastDims[curIndex]        = longerDims[longerNDim - i];
+                    shorterBroadcastStrides[curIndex] = 0;
+                    longerBroadcastStrides[curIndex]  = longerStrides[longerNDim - i];
+                    dstBroadcastStrides[curIndex]     = dstStrides[dstDim - i];
                 }
-            else if(src1NDim > src2NDim)
-                for(int i = minDim; i < dstDim; i++)
-                {
-                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src2BroadcastDims[curIndex] = 1;
-                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-                    src2BroadcastStrides[curIndex] = 0;
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-                }
+            }
 
             // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
             // Setting stride to zero will allow for repetition of values operated required for broadcasting
             for(int i = 0; i < minDim; i++)
             {
-                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
-                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - 1 - i;
+                if(src1BroadcastDims[curIndex] == 1)
+                    src1BroadcastStrides[curIndex] = 0;
+                if(src2BroadcastDims[curIndex] == 1)
+                    src2BroadcastStrides[curIndex] = 0;
             }
 
             Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
@@ -861,17 +860,20 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
-    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
-    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+    Rpp32u dstDim = std::max(src1NDim, src2NDim); // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = std::min(src1NDim, src2NDim); // Minimum of input dimensions
 
     // Overall dimension compatibility check for the entire batch
     for(int test = 0; test < minDim; test++)
-        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
-            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
-            }
+    {
+        Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
+        Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
+        if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
+        {
+            printf("Incompatible dimensions for the batch\n");
+            return RPP_SUCCESS;
+        }
+    }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -905,57 +907,55 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
             for(int i = 0; i < minDim; i++)
             {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
-                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                Rpp32u dim1 = src1Dims[src1NDim - i - 1];
+                Rpp32u dim2 = src2Dims[src2NDim - i - 1];
+                src1BroadcastDims[curIndex]    = dim1;
+                src2BroadcastDims[curIndex]    = dim2;
                 src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                dstBroadcastStrides[curIndex]  = dstStrides[dstDim - i];
                 // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
-                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
-                    incompatibleDims = true;
-                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+                incompatibleDims |= (dim1 != dim2 && dim1 != 1 && dim2 != 1);
+                dstBroadcastDims[curIndex] = std::max(dim1, dim2);
             }
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
                 printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
 
-            // Handle cases of mismatching num dims
-            if(src1NDim < src2NDim)
+            // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
+            if(src1NDim != src2NDim)
+            {
+                bool src1IsShorter = src1NDim < src2NDim;
+                const Rpp32u *longerDims    = src1IsShorter ? src2Dims    : src1Dims;
+                const Rpp32u *longerStrides = src1IsShorter ? src2Strides : src1Strides;
+                Rpp32u longerNDim           = src1IsShorter ? src2NDim    : src1NDim;
+                Rpp32u *shorterBroadcastDims    = src1IsShorter ? src1BroadcastDims    : src2BroadcastDims;
+                Rpp32u *longerBroadcastDims     = src1IsShorter ? src2BroadcastDims    : src1BroadcastDims;
+                Rpp32u *shorterBroadcastStrides = src1IsShorter ? src1BroadcastStrides : src2BroadcastStrides;
+                Rpp32u *longerBroadcastStrides  = src1IsShorter ? src2BroadcastStrides : src1BroadcastStrides;
+
                 for(int i = minDim; i < dstDim; i++)
                 {
                     Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src1BroadcastDims[curIndex] = 1;
-                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    src1BroadcastStrides[curIndex] = 0;
-                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                    shorterBroadcastDims[curIndex]    = 1;
+                    longerBroadcastDims[curIndex]     = longerDims[longerNDim - i];
+                    dstBroadcastDims[curIndex]        = longerDims[longerNDim - i];
+                    shorterBroadcastStrides[curIndex] = 0;
+                    longerBroadcastStrides[curIndex]  = longerStrides[longerNDim - i];
+                    dstBroadcastStrides[curIndex]     = dstStrides[dstDim - i];
                 }
-            else if(src1NDim > src2NDim)
-                for(int i = minDim; i < dstDim; i++)
-                {
-                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src2BroadcastDims[curIndex] = 1;
-                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-                    src2BroadcastStrides[curIndex] = 0;
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-                }
+            }
 
             // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
             // Setting stride to zero will allow for repetition of values operated required for broadcasting
             for(int i = 0; i < minDim; i++)
             {
-                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
-                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - 1 - i;
+                if(src1BroadcastDims[curIndex] == 1)
+                    src1BroadcastStrides[curIndex] = 0;
+                if(src2BroadcastDims[curIndex] == 1)
+                    src2BroadcastStrides[curIndex] = 0;
             }
 
             Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
@@ -1374,17 +1374,20 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
-    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
-    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+    Rpp32u dstDim = std::max(src1NDim, src2NDim); // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = std::min(src1NDim, src2NDim); // Minimum of input dimensions
 
     // Overall dimension compatibility check for the entire batch
     for(int test = 0; test < minDim; test++)
-        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
-            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
-            }
+    {
+        Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
+        Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
+        if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
+        {
+            printf("Incompatible dimensions for the batch\n");
+            return RPP_SUCCESS;
+        }
+    }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -1418,57 +1421,55 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
             for(int i = 0; i < minDim; i++)
             {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
-                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                Rpp32u dim1 = src1Dims[src1NDim - i - 1];
+                Rpp32u dim2 = src2Dims[src2NDim - i - 1];
+                src1BroadcastDims[curIndex]    = dim1;
+                src2BroadcastDims[curIndex]    = dim2;
                 src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                dstBroadcastStrides[curIndex]  = dstStrides[dstDim - i];
                 // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
-                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
-                    incompatibleDims = true;
-                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+                incompatibleDims |= (dim1 != dim2 && dim1 != 1 && dim2 != 1);
+                dstBroadcastDims[curIndex] = std::max(dim1, dim2);
             }
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
                 printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
 
-            // Handle cases of mismatching num dims
-            if(src1NDim < src2NDim)
+            // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
+            if(src1NDim != src2NDim)
+            {
+                bool src1IsShorter = src1NDim < src2NDim;
+                const Rpp32u *longerDims    = src1IsShorter ? src2Dims    : src1Dims;
+                const Rpp32u *longerStrides = src1IsShorter ? src2Strides : src1Strides;
+                Rpp32u longerNDim           = src1IsShorter ? src2NDim    : src1NDim;
+                Rpp32u *shorterBroadcastDims    = src1IsShorter ? src1BroadcastDims    : src2BroadcastDims;
+                Rpp32u *longerBroadcastDims     = src1IsShorter ? src2BroadcastDims    : src1BroadcastDims;
+                Rpp32u *shorterBroadcastStrides = src1IsShorter ? src1BroadcastStrides : src2BroadcastStrides;
+                Rpp32u *longerBroadcastStrides  = src1IsShorter ? src2BroadcastStrides : src1BroadcastStrides;
+
                 for(int i = minDim; i < dstDim; i++)
                 {
                     Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src1BroadcastDims[curIndex] = 1;
-                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    src1BroadcastStrides[curIndex] = 0;
-                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                    shorterBroadcastDims[curIndex]    = 1;
+                    longerBroadcastDims[curIndex]     = longerDims[longerNDim - i];
+                    dstBroadcastDims[curIndex]        = longerDims[longerNDim - i];
+                    shorterBroadcastStrides[curIndex] = 0;
+                    longerBroadcastStrides[curIndex]  = longerStrides[longerNDim - i];
+                    dstBroadcastStrides[curIndex]     = dstStrides[dstDim - i];
                 }
-            else if(src1NDim > src2NDim)
-                for(int i = minDim; i < dstDim; i++)
-                {
-                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src2BroadcastDims[curIndex] = 1;
-                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-                    src2BroadcastStrides[curIndex] = 0;
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-                }
+            }
 
             // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
             // Setting stride to zero will allow for repetition of values operated required for broadcasting
             for(int i = 0; i < minDim; i++)
             {
-                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
-                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - 1 - i;
+                if(src1BroadcastDims[curIndex] == 1)
+                    src1BroadcastStrides[curIndex] = 0;
+                if(src2BroadcastDims[curIndex] == 1)
+                    src2BroadcastStrides[curIndex] = 0;
             }
 
             Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;
@@ -1838,17 +1839,20 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
-    Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
-    Rpp32u minDim = src1NDim < src2NDim ? src1NDim : src2NDim; // Minimum of input dimensions
+    Rpp32u dstDim = std::max(src1NDim, src2NDim); // Destination dimension set to maximum of the input dimensions
+    Rpp32u minDim = std::min(src1NDim, src2NDim); // Minimum of input dimensions
 
     // Overall dimension compatibility check for the entire batch
     for(int test = 0; test < minDim; test++)
-        if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
-            if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_SUCCESS;
-            }
+    {
+        Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
+        Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
+        if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
+        {
+            printf("Incompatible dimensions for the batch\n");
+            return RPP_SUCCESS;
+        }
+    }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -1882,57 +1886,55 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             for(int i = 0; i < minDim; i++)
             {
                 Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                src1BroadcastDims[curIndex] = src1Dims[src1NDim - i - 1];
-                src2BroadcastDims[curIndex] = src2Dims[src2NDim - i - 1];
+                Rpp32u dim1 = src1Dims[src1NDim - i - 1];
+                Rpp32u dim2 = src2Dims[src2NDim - i - 1];
+                src1BroadcastDims[curIndex]    = dim1;
+                src2BroadcastDims[curIndex]    = dim2;
                 src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
                 src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                dstBroadcastStrides[curIndex]  = dstStrides[dstDim - i];
                 // Check compatibility of dimension i.e check for equal shape or one of the input dims to be 1
-                if((src1BroadcastDims[curIndex] != src2BroadcastDims[curIndex]) && (src1BroadcastDims[curIndex] != 1) && (src2BroadcastDims[curIndex] != 1))
-                    incompatibleDims = true;
-                dstBroadcastDims[curIndex] = std::max(src1BroadcastDims[curIndex], src2BroadcastDims[curIndex]);
+                incompatibleDims |= (dim1 != dim2 && dim1 != 1 && dim2 != 1);
+                dstBroadcastDims[curIndex] = std::max(dim1, dim2);
             }
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
                 printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
 
-            // Handle cases of mismatching num dims
-            if(src1NDim < src2NDim)
+            // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
+            if(src1NDim != src2NDim)
+            {
+                bool src1IsShorter = src1NDim < src2NDim;
+                const Rpp32u *longerDims    = src1IsShorter ? src2Dims    : src1Dims;
+                const Rpp32u *longerStrides = src1IsShorter ? src2Strides : src1Strides;
+                Rpp32u longerNDim           = src1IsShorter ? src2NDim    : src1NDim;
+                Rpp32u *shorterBroadcastDims    = src1IsShorter ? src1BroadcastDims    : src2BroadcastDims;
+                Rpp32u *longerBroadcastDims     = src1IsShorter ? src2BroadcastDims    : src1BroadcastDims;
+                Rpp32u *shorterBroadcastStrides = src1IsShorter ? src1BroadcastStrides : src2BroadcastStrides;
+                Rpp32u *longerBroadcastStrides  = src1IsShorter ? src2BroadcastStrides : src1BroadcastStrides;
+
                 for(int i = minDim; i < dstDim; i++)
                 {
                     Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src1BroadcastDims[curIndex] = 1;
-                    src2BroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    dstBroadcastDims[curIndex] = src2Dims[src2NDim - i];
-                    src1BroadcastStrides[curIndex] = 0;
-                    src2BroadcastStrides[curIndex] = src2Strides[src2NDim - i];
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
+                    shorterBroadcastDims[curIndex]    = 1;
+                    longerBroadcastDims[curIndex]     = longerDims[longerNDim - i];
+                    dstBroadcastDims[curIndex]        = longerDims[longerNDim - i];
+                    shorterBroadcastStrides[curIndex] = 0;
+                    longerBroadcastStrides[curIndex]  = longerStrides[longerNDim - i];
+                    dstBroadcastStrides[curIndex]     = dstStrides[dstDim - i];
                 }
-            else if(src1NDim > src2NDim)
-                for(int i = minDim; i < dstDim; i++)
-                {
-                    Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - i - 1;
-                    src2BroadcastDims[curIndex] = 1;
-                    src1BroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    dstBroadcastDims[curIndex] = src1Dims[src1NDim - i];
-                    src1BroadcastStrides[curIndex] = src1Strides[src1NDim - i];
-                    src2BroadcastStrides[curIndex] = 0;
-                    dstBroadcastStrides[curIndex] = dstStrides[dstDim - i];
-                }
+            }
 
             // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes
             // Setting stride to zero will allow for repetition of values operated required for broadcasting
             for(int i = 0; i < minDim; i++)
             {
-                if((src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src1BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src1BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
-                if((src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] != dstBroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i]) && (src2BroadcastDims[RPPT_MAX_DIMS_SAMPLE - 1 - i] == 1))
-                {
-                    src2BroadcastStrides[RPPT_MAX_DIMS_SAMPLE - 1 - i] = 0;
-                }
+                Rpp32u curIndex = RPPT_MAX_DIMS_SAMPLE - 1 - i;
+                if(src1BroadcastDims[curIndex] == 1)
+                    src1BroadcastStrides[curIndex] = 0;
+                if(src2BroadcastDims[curIndex] == 1)
+                    src2BroadcastStrides[curIndex] = 0;
             }
 
             Rpp32u testOffset = RPPT_MAX_DIMS_SAMPLE - dstDim;

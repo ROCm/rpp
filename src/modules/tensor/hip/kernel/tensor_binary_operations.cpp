@@ -290,8 +290,8 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
             uint srcIdx2 = srcBaseIdx2 + (id_x * src2SampleStrides[2]);
             srcArr1[i1] = srcPtr1[srcIdx1];
             srcArr2[i1] = srcPtr2[srcIdx2];
-            id_x++;
         }
+        id_x += 8;
 
         VectorType2 dst_vec8;
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
@@ -412,8 +412,8 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
             uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[3]);
             srcArr1[i1] = srcPtr1[srcIdx1];
             srcArr2[i1] = srcPtr2[srcIdx2];
-            id_x++;
         }
+        id_x += 8;
 
         VectorType2 dst_vec8;
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
@@ -526,10 +526,11 @@ __global__ void tensor_op_tensor_nd_hip_tensor(T1 *srcPtr1,
 
     for(int i = numDims - 1; i >= 0; i--)
     {
-        int index = id_x % dstSampleDims[i];
-        srcIdx1 = srcIdx1 + (index * src1SampleStrides[i + 1]);
-        srcIdx2 = srcIdx2 + (index * src2SampleStrides[i + 1]);
-        id_x = id_x / dstSampleDims[i];
+        uint dim = dstSampleDims[i];
+        uint index = id_x % dim;
+        id_x = id_x / dim;
+        srcIdx1 += index * src1SampleStrides[i + 1];
+        srcIdx2 += index * src2SampleStrides[i + 1];
     }
 
     srcIdx1 += src1BeginOffsets[id_z];
@@ -617,13 +618,12 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
 
     for(int i = 0; i < minDim; i++)
     {
-        if(srcGenericDescPtr1->dims[src1NDim - i] != srcGenericDescPtr2->dims[src2NDim - i])
+        Rpp32u dim1 = srcGenericDescPtr1->dims[src1NDim - i];
+        Rpp32u dim2 = srcGenericDescPtr2->dims[src2NDim - i];
+        if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
         {
-            if((srcGenericDescPtr1->dims[src1NDim - i] != 1) && (srcGenericDescPtr2->dims[src2NDim - i] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_ERROR_INVALID_ARGUMENTS;
-            }
+            printf("Incompatible dimensions for the batch\n");
+            return RPP_ERROR_INVALID_ARGUMENTS;
         }
     }
 
@@ -1199,15 +1199,3 @@ template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp32f, Rpp32
                                                                            Rpp32u*,
                                                                            Rpp32u*,
                                                                            rpp::Handle&);
-
-/*template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<half>(half*,
-                                                                         half*,
-                                                                         RpptGenericDescPtr,
-                                                                         RpptGenericDescPtr,
-                                                                         half*,
-                                                                         RpptGenericDescPtr,
-                                                                         RpptOp,
-                                                                         RpptBroadcastMode,
-                                                                         Rpp32u*,
-                                                                         Rpp32u*,
-                                                                         rpp::Handle&);*/

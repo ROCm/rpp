@@ -26,35 +26,24 @@ SOFTWARE.
 #define RPP_HIP_MATH_HPP
 #define RPP_HIP_MATH_DEPENDENCIES
 
-// Arithmetic Addition operation
-struct ArithmeticAdd
+// Arithmetic operations: Add (+), Subtract (-), Multiply (*)
+enum class ArithmeticOp { Add, Subtract, Multiply };
+
+template<ArithmeticOp Op>
+struct Arithmetic
 {
     template<typename T>
     __device__ __forceinline__ static T op(T a, T b)
     {
-        return a + b;
+        if constexpr (Op == ArithmeticOp::Add)      return a + b;
+        if constexpr (Op == ArithmeticOp::Subtract) return a - b;
+        if constexpr (Op == ArithmeticOp::Multiply) return a * b;
     }
 };
 
-// Arithmetic Subtract operation
-struct ArithmeticSubtract
-{
-    template<typename T>
-    __device__ __forceinline__ static T op(T a, T b)
-    {
-        return a - b;
-    }
-};
-
-// Arithmetic Multiply operation
-struct ArithmeticMultiply
-{
-    template<typename T>
-    __device__ __forceinline__ static T op(T a, T b)
-    {
-        return a * b;
-    }
-};
+using ArithmeticAdd      = Arithmetic<ArithmeticOp::Add>;
+using ArithmeticSubtract = Arithmetic<ArithmeticOp::Subtract>;
+using ArithmeticMultiply = Arithmetic<ArithmeticOp::Multiply>;
 
 // Arithmetic DIVIDE operation
 template <typename T>
