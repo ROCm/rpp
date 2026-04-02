@@ -98,11 +98,15 @@ inline std::map<RppStatus, std::string> rppStatusToString = {
 // True if basename extension (substring after the last '.') matches extension without its leading dot (e.g. ".yuv" -> foo.nv12.yuv yes, foo.info no).
 inline bool filename_matches_requested_extension(const std::string& fileName, const std::string& extension)
 {
-    if (extension.empty() || extension[0] != '.')
+    if (extension.empty() || extension[0] != '.') {
+        std::cout << "ERROR: Extension is empty: " << extension << std::endl;
         return false;
+    }
     const std::string ext = extension.substr(1);
-    if (ext.empty())
+    if (ext.empty()) {
+        std::cout << "ERROR: Extension is empty: " << extension << std::endl;
         return false;
+    }
     size_t dot = fileName.find_last_of('.');
     if (dot == std::string::npos || dot + 1 >= fileName.size()) {
         std::cout << "ERROR: File name does not contain a valid extension: " << fileName << std::endl;
