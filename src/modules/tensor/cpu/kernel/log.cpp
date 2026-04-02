@@ -57,12 +57,12 @@ RppStatus log_generic_host_tensor(Rpp8u *srcPtr,
                                   Rpp32u *roiTensor,
                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
@@ -183,12 +183,12 @@ RppStatus log_generic_host_tensor(Rpp8s *srcPtr,
                                   Rpp32u *roiTensor,
                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
@@ -309,12 +309,12 @@ RppStatus log_generic_host_tensor(Rpp32f *srcPtr,
                                   Rpp32u *roiTensor,
                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
@@ -435,12 +435,12 @@ RppStatus log_generic_host_tensor(Rpp16f *srcPtr,
                                   Rpp32u *roiTensor,
                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1; // Omitting batchSize here to get tensor dimension.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;

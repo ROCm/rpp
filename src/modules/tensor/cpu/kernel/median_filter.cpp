@@ -1331,11 +1331,10 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(Rpp32s batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

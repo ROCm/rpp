@@ -101,11 +101,11 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   Rpp32s resetInterval,
                                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;

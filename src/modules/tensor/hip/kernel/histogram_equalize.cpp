@@ -437,7 +437,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                roiTensorPtrSrc,
                                batchSize);
 
-            hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
             globalThreads_x = srcDescPtr->w;
             hipLaunchKernelGGL(collect_hist_pln_hip_tensor,
@@ -520,7 +520,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                make_ulong2(yuvNStride, yuvHStride),
                                roiTensorPtrSrc, batchSize);
 
-            hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
+            CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
             globalThreads_x = srcDescPtr->w;
             hipLaunchKernelGGL(collect_hist_pln_hip_tensor,
@@ -587,7 +587,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
     }
 
     // Single channel processing
-    hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream());
+    CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
     int globalThreads_x = srcDescPtr->w;
     int globalThreads_y = srcDescPtr->h;

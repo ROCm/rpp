@@ -77,7 +77,6 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
                                                Rpp32u *srcPtr2roiTensor,
                                                rpp::Handle& handle) {
 
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u src1NDim = srcPtr1GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u src2NDim = srcPtr2GenericDescPtr->numDims - 1;  // Omitting batchSize here to get tensor dimension
     Rpp32u dstDim = src1NDim > src2NDim ? src1NDim : src2NDim; // Destination dimension set to maximum of the input dimensions
@@ -95,7 +94,8 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
