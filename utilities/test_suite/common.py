@@ -189,6 +189,10 @@ miscAugmentationMap  = {
     7: ["tensor_xor_tensor", "HOST", "HIP"],
 }
 
+# Supported test cases for single image processing
+# Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51}  # brightness, blend, flip, resize, crop, box_filter, median_filter
+
 ImageAugmentationGroupMap = {
     "color_augmentations": [
         "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"

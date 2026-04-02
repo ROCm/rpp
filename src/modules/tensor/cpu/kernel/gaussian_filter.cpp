@@ -89,6 +89,24 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+    
+    // Pre-allocate and broadcast filter coefficients for all batches before parallel loop
+    // Maximum kernel size is 9x9 = 81 coefficients
+    constexpr int MAX_FILTER_SIZE = 81;
+    __m256 *pFilterBatch = (__m256 *)aligned_alloc(32, dstDescPtr->n * MAX_FILTER_SIZE * sizeof(__m256));
+    if (!pFilterBatch)
+        return gaussian_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+    // Pre-compute all Gaussian kernels and broadcast to AVX registers
+    int filterSize = kernelSize * kernelSize;
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * kernelSize * kernelSize;
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+        
+        __m256 *pFilter = pFilterBatch + batchCount * MAX_FILTER_SIZE;
+        for (int i = 0; i < filterSize; i++)
+            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
+    }
 #endif
 
     omp_set_dynamic(0);
@@ -1408,6 +1426,474 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+// ==================== SINGLE IMAGE PROCESSING ====================
+
+template<typename T>
+RppStatus gaussian_filter_host_single_image(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32f stdDev,
+                                            Rpp32u kernelSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle)
+{
+    if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
+    {
+        Rpp32f filterTensor[kernelSize * kernelSize];
+        create_gaussian_kernel_host(filterTensor, stdDev, kernelSize);
+        return gaussian_filter_generic_host_single_image(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDev, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+    }
+
+    Rpp32u padLength = kernelSize / 2;
+    Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+    Rpp32u unpaddedHeight = roiTensorPtrSrc->xywhROI.roiHeight - padLength;
+    Rpp32u unpaddedWidth = roiTensorPtrSrc->xywhROI.roiWidth - padLength;
+
+    Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
+    create_gaussian_kernel_host(filterTensor, stdDev, kernelSize);
+
+#if __AVX2__
+    // Pre-compute and broadcast filter coefficients
+    int filterSize = kernelSize * kernelSize;
+    __m256 pFilter[filterSize];
+    for (int i = 0; i < filterSize; i++)
+        pFilter[i] = _mm256_set1_ps(filterTensor[i]);
+
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+#endif
+
+    if (kernelSize == 3)
+    {
+        T *srcPtrRow[3], *dstPtrRow;
+        for (int i = 0; i < 3; i++)
+            srcPtrRow[i] = srcPtr + i * srcDescPtr->strides.hStride;
+        dstPtrRow = dstPtr;
+
+        // gaussian filter without fused output-layout toggle (NCHW -> NCHW)
+        if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
+            for (int c = 0; c < srcDescPtr->c; c++)
+            {
+                srcPtrRow[0] = srcPtr;
+                srcPtrRow[1] = srcPtrRow[0] + srcDescPtr->strides.hStride;
+                srcPtrRow[2] = srcPtrRow[1] + srcDescPtr->strides.hStride;
+                dstPtrRow = dstPtr;
+                for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength);
+                    T *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                    T *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit = kernelSize;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                    RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+                    dstPtrTemp += padLength;
+#if __AVX2__
+                    Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                    {
+                        __m256 pRow[6], pDst[2];
+                        rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+                        pDst[0] = avx_p0;
+                        pDst[1] = avx_p0;
+                        
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[0], pRow[1], &pFilter[0], pxMaskPln);
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[1], avx_p0, &pFilter[0], pxMaskPln);
+                        
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[2], pRow[3], &pFilter[3], pxMaskPln);
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[3], avx_p0, &pFilter[3], pxMaskPln);
+                        
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[4], pRow[5], &pFilter[6], pxMaskPln);
+                        permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[5], avx_p0, &pFilter[6], pxMaskPln);
+
+                        if constexpr (std::is_same<T, Rpp32f>::value)
+                            rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp16f>::value)
+                            rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8s>::value)
+                            rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
+                        else if constexpr (std::is_same<T, Rpp8u>::value)
+                            rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 14);
+                        dstPtrTemp += 14;
+                    }
+#endif
+                    vectorLoopCount += padLength;
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+                srcPtr += srcDescPtr->strides.cStride;
+                dstPtr += dstDescPtr->strides.cStride;
+            }
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
+
+            for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength);
+                T *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                T *dstPtrTemp = dstPtrRow;
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+                dstPtrTemp += padLength * 3;
+#if __AVX2__
+                Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                {
+                    __m256 pRow[12], pDst[3];
+                    rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+
+                    pDst[0] = avx_p0;
+                    pDst[1] = avx_p0;
+                    pDst[2] = avx_p0;
+
+                    for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
+                    {
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
+                    }
+
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                    if constexpr (std::is_same<T, Rpp32f>::value)
+                        rpp_store24_f32_to_f32_avx(dstPtrTemp, pDst);
+                    else if constexpr (std::is_same<T, Rpp16f>::value)
+                        rpp_store24_f32_to_f16_avx(dstPtrTemp, pDst);
+                    else if constexpr (std::is_same<T, Rpp8s>::value)
+                        rpp_store24_f32_to_i8_avx(dstPtrTemp, pDst);
+                    else if constexpr (std::is_same<T, Rpp8u>::value)
+                        rpp_store24_f32_to_u8_avx(dstPtrTemp, pDst);
+                    dstPtrTemp += 24;
+                }
+#endif
+                vectorLoopCount += padLength * 3;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    dstPtrTemp++;
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
+            T *dstPtrChannels[3];
+            for (int i = 0; i < 3; i++)
+                dstPtrChannels[i] = dstPtr + i * dstDescPtr->strides.cStride;
+            for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength);
+                T *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                T *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+#if __AVX2__
+                Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                {
+                    __m256 pRow[12], pDst[3];
+                    rpp_load_filter_NxN_pkd_host<3>(pRow, srcPtrTemp, rowKernelLoopLimit, padIndex);
+
+                    pDst[0] = avx_p0;
+                    pDst[1] = avx_p0;
+                    pDst[2] = avx_p0;
+                    for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 4)
+                    {
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
+                        permute_blend_add_3x3<7, 63, 0, 1>(pDst[2], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex], pxMaskPkd);
+                    }
+
+                    __m128 pDstPln[6];
+                    rpp_convert24_f32pkd3_to_f32pln3(pDst, pDstPln);
+                    rpp_store24_float_pkd_pln(dstPtrTempChannels, pDstPln);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                    increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
+                }
+#endif
+                vectorLoopCount += padLength * 3;
+                for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
+                {
+                    int channel = c % 3;
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    dstPtrTempChannels[channel]++;
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
+            for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength);
+                T *srcPtrTemp[3][3] = {
+                                            {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]},
+                                            {srcPtrRow[0] + srcDescPtr->strides.cStride, srcPtrRow[1] + srcDescPtr->strides.cStride, srcPtrRow[2] + srcDescPtr->strides.cStride},
+                                            {srcPtrRow[0] + 2 * srcDescPtr->strides.cStride, srcPtrRow[1] + 2 * srcDescPtr->strides.cStride, srcPtrRow[2] + 2 * srcDescPtr->strides.cStride}
+                                            };
+
+                T *dstPtrTemp = dstPtrRow;
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+
+                for (int k = 0; k < padLength; k++)
+                {
+                    for (int c = 0; c < 3; c++)
+                    {
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
+                        dstPtrTemp++;
+                    }
+                }
+#if __AVX2__
+                Rpp32s padIndex = (padVertical == RpptImageBorderEdge::BOTTOM_EDGE) ?  rowKernelLoopLimit - 1 : 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                {
+                    __m256 pResult[6];
+                    for (int c = 0; c < 3; c++)
+                    {
+                        int channelStride = c * 2;
+                        __m256 pRow[6];
+                        rpp_load_filter_NxN_pln_host<3>(pRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
+                        pResult[channelStride] = avx_p0;
+                        pResult[channelStride + 1] = avx_p0;
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
+                        {
+                            permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                            permute_blend_add_3x3<1, 3, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
+                        }
+
+                        increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
+                    }
+                    if constexpr (std::is_same<T, Rpp32f>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp16f>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp8u>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResult);
+                    else if constexpr (std::is_same<T, Rpp8s>::value)
+                        rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, pResult);
+                    dstPtrTemp += 42;
+                }
+#endif
+                vectorLoopCount += padLength;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    for (int c = 0; c < 3; c++)
+                    {
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical);
+                        increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+    // Add support for other kernel sizes if needed (5, 7, 9)
+    // For now, fall back to generic implementation for non-3x3 kernels in single image mode
+    else
+    {
+        return gaussian_filter_generic_host_single_image(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDev, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+    }
+
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+RppStatus gaussian_filter_generic_host_single_image(T *srcPtr,
+                                                    RpptDescPtr srcDescPtr,
+                                                    T *dstPtr,
+                                                    RpptDescPtr dstDescPtr,
+                                                    Rpp32f stdDev,
+                                                    Rpp32u kernelSize,
+                                                    RpptROIPtr roiTensorPtrSrc,
+                                                    RpptRoiType roiType,
+                                                    RppLayoutParams layoutParams,
+                                                    rpp::Handle& handle)
+{
+    Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
+    create_gaussian_kernel_host(filterTensor, stdDev, kernelSize);
+
+    Rpp32u padLength = kernelSize / 2;
+    Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
+    Rpp32u unpaddedHeight = roiTensorPtrSrc->xywhROI.roiHeight - padLength;
+    Rpp32u unpaddedWidth = roiTensorPtrSrc->xywhROI.roiWidth - padLength;
+
+    T *srcPtrRow[kernelSize], *dstPtrRow;
+    for (int k = 0; k < kernelSize; k++)
+        srcPtrRow[k] = srcPtr + k * srcDescPtr->strides.hStride;
+    dstPtrRow = dstPtr;
+
+    if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        for (int c = 0; c < srcDescPtr->c; c++)
+        {
+            srcPtrRow[0] = srcPtr;
+            for (int k = 1; k < kernelSize; k++)
+                srcPtrRow[k] = srcPtrRow[k - 1] + srcDescPtr->strides.hStride;
+            dstPtrRow = dstPtr;
+            for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength);
+                T *srcPtrTemp[kernelSize];
+                for (int k = 0; k < kernelSize; k++)
+                    srcPtrTemp[k] = srcPtrRow[k];
+                T *dstPtrTemp = dstPtrRow;
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+                RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+                process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+                dstPtrTemp += padLength;
+                vectorLoopCount += padLength;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    dstPtrTemp++;
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+            srcPtr += srcDescPtr->strides.cStride;
+            dstPtr += dstDescPtr->strides.cStride;
+        }
+    }
+    else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+        {
+            int vectorLoopCount = 0;
+            bool padLengthRows = (i < padLength);
+            T *srcPtrTemp[kernelSize];
+            for (int k = 0; k < kernelSize; k++)
+                srcPtrTemp[k] = srcPtrRow[k];
+            T *dstPtrTemp = dstPtrRow;
+
+            Rpp32s rowKernelLoopLimit = kernelSize;
+            get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+            RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+            process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+            dstPtrTemp += padLength * 3;
+            vectorLoopCount += padLength * 3;
+            for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+            {
+                convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical);
+                increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                dstPtrTemp++;
+            }
+            increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+            dstPtrRow += dstDescPtr->strides.hStride;
+        }
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+        {
+            int vectorLoopCount = 0;
+            bool padLengthRows = (i < padLength);
+            T *srcPtrTemp[3][kernelSize];
+            for (int c = 0; c < 3; c++)
+            {
+                Rpp32u channelStride = c * srcDescPtr->strides.cStride;
+                for (int k = 0; k < kernelSize; k++)
+                    srcPtrTemp[c][k] = srcPtrRow[k] + channelStride;
+            }
+            T *dstPtrTemp = dstPtrRow;
+
+            Rpp32s rowKernelLoopLimit = kernelSize;
+            get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+            RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+
+            for (int k = 0; k < padLength; k++)
+            {
+                for (int c = 0; c < 3; c++)
+                {
+                    convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical, RpptImageBorderEdge::LEFT_EDGE);
+                    dstPtrTemp++;
+                }
+            }
+            vectorLoopCount += padLength;
+            for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+            {
+                for (int c = 0; c < srcDescPtr->c; c++)
+                {
+                    convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 1, padVertical);
+                    increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                    dstPtrTemp++;
+                }
+            }
+            increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+            dstPtrRow += dstDescPtr->strides.hStride;
+        }
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        T *dstPtrChannels[3];
+        for (int c = 0; c < 3; c++)
+            dstPtrChannels[c] = dstPtr + c * dstDescPtr->strides.cStride;
+        for(int i = 0; i < roiTensorPtrSrc->xywhROI.roiHeight; i++)
+        {
+            int vectorLoopCount = 0;
+            bool padLengthRows = (i < padLength);
+            T *srcPtrTemp[kernelSize];
+            for (int k = 0; k < kernelSize; k++)
+                srcPtrTemp[k] = srcPtrRow[k];
+            T *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+            Rpp32s rowKernelLoopLimit = kernelSize;
+            get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
+            RpptImageBorderEdge padVertical = i < padLength ? RpptImageBorderEdge::TOP_EDGE : RpptImageBorderEdge::BOTTOM_EDGE;
+            process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, padVertical);
+            vectorLoopCount += padLength * 3;
+            for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+            {
+                int channel = vectorLoopCount % 3;
+                convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3, padVertical);
+                increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                dstPtrTempChannels[channel]++;
+            }
+            increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+            increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
+        }
+    }
+    return RPP_SUCCESS;
+}
+
 template RppStatus gaussian_filter_host_tensor<Rpp8u>(Rpp8u*,
                                                       RpptDescPtr,
                                                       Rpp8u*,
@@ -1448,6 +1934,47 @@ template RppStatus gaussian_filter_host_tensor<Rpp8s>(Rpp8s*,
                                                       RpptRoiType,
                                                       RppLayoutParams,
                                                       rpp::Handle&);
+
+template RppStatus gaussian_filter_host_single_image<Rpp8u>(Rpp8u*,
+                                                            RpptDescPtr,
+                                                            Rpp8u*,
+                                                            RpptDescPtr,
+                                                            Rpp32f,
+                                                            Rpp32u,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            RppLayoutParams,
+                                                            rpp::Handle&);
+template RppStatus gaussian_filter_host_single_image<Rpp32f>(Rpp32f*,
+                                                             RpptDescPtr,
+                                                             Rpp32f*,
+                                                             RpptDescPtr,
+                                                             Rpp32f,
+                                                             Rpp32u,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             RppLayoutParams,
+                                                             rpp::Handle&);
+template RppStatus gaussian_filter_host_single_image<Rpp16f>(Rpp16f*,
+                                                             RpptDescPtr,
+                                                             Rpp16f*,
+                                                             RpptDescPtr,
+                                                             Rpp32f,
+                                                             Rpp32u,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             RppLayoutParams,
+                                                             rpp::Handle&);
+template RppStatus gaussian_filter_host_single_image<Rpp8s>(Rpp8s*,
+                                                            RpptDescPtr,
+                                                            Rpp8s*,
+                                                            RpptDescPtr,
+                                                            Rpp32f,
+                                                            Rpp32u,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            RppLayoutParams,
+                                                            rpp::Handle&);
 template RppStatus gaussian_filter_generic_host_tensor<Rpp8u>(Rpp8u*,
                                                               RpptDescPtr,
                                                               Rpp8u*,
@@ -1488,3 +2015,44 @@ template RppStatus gaussian_filter_generic_host_tensor<Rpp8s>(Rpp8s*,
                                                               RpptRoiType,
                                                               RppLayoutParams,
                                                               rpp::Handle&);
+
+template RppStatus gaussian_filter_generic_host_single_image<Rpp8u>(Rpp8u*,
+                                                                    RpptDescPtr,
+                                                                    Rpp8u*,
+                                                                    RpptDescPtr,
+                                                                    Rpp32f,
+                                                                    Rpp32u,
+                                                                    RpptROIPtr,
+                                                                    RpptRoiType,
+                                                                    RppLayoutParams,
+                                                                    rpp::Handle&);
+template RppStatus gaussian_filter_generic_host_single_image<Rpp32f>(Rpp32f*,
+                                                                     RpptDescPtr,
+                                                                     Rpp32f*,
+                                                                     RpptDescPtr,
+                                                                     Rpp32f,
+                                                                     Rpp32u,
+                                                                     RpptROIPtr,
+                                                                     RpptRoiType,
+                                                                     RppLayoutParams,
+                                                                     rpp::Handle&);
+template RppStatus gaussian_filter_generic_host_single_image<Rpp16f>(Rpp16f*,
+                                                                     RpptDescPtr,
+                                                                     Rpp16f*,
+                                                                     RpptDescPtr,
+                                                                     Rpp32f,
+                                                                     Rpp32u,
+                                                                     RpptROIPtr,
+                                                                     RpptRoiType,
+                                                                     RppLayoutParams,
+                                                                     rpp::Handle&);
+template RppStatus gaussian_filter_generic_host_single_image<Rpp8s>(Rpp8s*,
+                                                                    RpptDescPtr,
+                                                                    Rpp8s*,
+                                                                    RpptDescPtr,
+                                                                    Rpp32f,
+                                                                    Rpp32u,
+                                                                    RpptROIPtr,
+                                                                    RpptRoiType,
+                                                                    RppLayoutParams,
+                                                                    rpp::Handle&);
