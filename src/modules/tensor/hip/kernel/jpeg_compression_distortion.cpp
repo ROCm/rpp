@@ -197,7 +197,6 @@ __device__ inline void dct_fwd_8x8_1d(float *vec, bool offset128)
 __device__ inline void dct_inv_8x8_1d(float *vec, bool offset128)
 {
     int val = (128.0f * offset128);
-    float4 val4 = MAKE_FLOAT4((float)val);
 
     // Load data into float4 vectors
     float4 vec1_f4 = *(float4*)&vec[0];
@@ -916,7 +915,6 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
     float qScale = get_quality_factor(qualityTensor[id_z]);
 
     int hipThreadIdx_x8 = hipThreadIdx_x * 8;
-    int hipThreadIdx_x4 = hipThreadIdx_x * 4;
 
     int alignedWidth = (roiTensorPtrSrc[id_z].xywhROI.roiWidth + 15) & ~15;
     int alignedHeight = (roiTensorPtrSrc[id_z].xywhROI.roiHeight + 15) & ~15;
@@ -933,7 +931,7 @@ __global__ void jpeg_compression_distortion_pln1_hip_tensor(T *srcPtr,
 
     // Shared memory declaration
     __shared__ float src_smem[16][128];  // Assuming 16 rows (aligned height for 1 channel)
-    d_float8 zeroes_f8 = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    d_float8 zeroes_f8 = {{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
     *(d_float8*)&src_smem[hipThreadIdx_y][hipThreadIdx_x8] = zeroes_f8;
     __syncthreads();
 

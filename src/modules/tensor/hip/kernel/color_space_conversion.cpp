@@ -135,9 +135,9 @@ static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRa
         break;
     }
     float mat[3][3] = {
-        1.0f, 0.0f, (1.0f - wr) / 0.5f,
-        1.0f, -wb * (1.0f - wb) / 0.5f / (1 - wb - wr), -wr * (1 - wr) / 0.5f / (1 - wb - wr),
-        1.0f, (1.0f - wb) / 0.5f, 0.0f,
+        {1.0f, 0.0f, (1.0f - wr) / 0.5f},
+        {1.0f, -wb * (1.0f - wb) / 0.5f / (1 - wb - wr), -wr * (1 - wr) / 0.5f / (1 - wb - wr)},
+        {1.0f, (1.0f - wb) / 0.5f, 0.0f},
     };
     for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)

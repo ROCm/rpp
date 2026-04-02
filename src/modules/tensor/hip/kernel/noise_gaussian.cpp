@@ -57,7 +57,7 @@ __device__ void gaussian_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStat
 
 __device__ void gaussian_noise_voxel_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
-    d_float8 rngVals_f8, pixSqrt_f8;
+    d_float8 rngVals_f8;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f8, xorwowState);
     rpp_hip_math_multiply8_const(&rngVals_f8, &rngVals_f8, MAKE_FLOAT4(stdDev));
     rpp_hip_math_add8_const(&rngVals_f8, &rngVals_f8, MAKE_FLOAT4(mean));
@@ -66,7 +66,7 @@ __device__ void gaussian_noise_voxel_8_hip_compute(d_float8 *pix_f8, RpptXorwowS
 
 __device__ void gaussian_noise_voxel_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
-    d_float24 rngVals_f24, pixSqrt_f24;
+    d_float24 rngVals_f24;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[0], xorwowState);
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[1], xorwowState);
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[2], xorwowState);

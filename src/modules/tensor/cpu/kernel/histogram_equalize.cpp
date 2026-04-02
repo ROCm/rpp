@@ -273,7 +273,7 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                RppLayoutParams layoutParams,
                                                rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
+    RpptROI roiDefault = rpp_make_roi_xywh_full(static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h));
     Rpp32u numThreads = handle.GetNumThreads();
 
     // Pre-allocate YCbCr buffers for 3-channel images outside the parallel loop
@@ -301,7 +301,8 @@ RppStatus histogram_equalize_u8_u8_host_tensor(Rpp8u *srcPtr,
     }
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(static_cast<int>(numThreads));
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

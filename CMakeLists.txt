@@ -152,19 +152,11 @@ endif()
 # Enable -Wall warnings for both release and debug builds
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-# These are warning categories that are not yet cleaned up in source (phase 2+).
-# TODO: Remove these warnings as they are addressed in the following phases. Once done, remove this block
-# and enable -Werror to ensure all warnings are treated as errors.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-const-variable")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-but-set-variable")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-function")
-
 # Clang-specific warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # These warnings are suppressed since we are always using a Clang compiler, which supports VLA.
+    # TBD: Determine if we must remove this flag later for standard compliance.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-vla-cxx-extension")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sometimes-uninitialized")
 endif()
 
 message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")

@@ -278,8 +278,6 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             Rpp32s *shape = &shapeTensor[batchCount * numDims];
             Rpp32u *roi = roiTensor + batchCount * numDims * 2;
             Rpp32s *length = reinterpret_cast<Rpp32s *>(&roi[numDims]);
-            Rpp32u maxHeight = std::min(shape[0], length[0] - anchor[0]);
-            Rpp32u maxWidth = std::min(shape[1], length[1] - anchor[1]);
 
             // check if padding is needed
             bool needPadding = (((anchor[0] + shape[0]) > length[0]) ||
@@ -314,7 +312,6 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             Rpp32s *shape = &shapeTensor[batchCount * numDims];
             Rpp32u *roi = roiTensor + batchCount * numDims * 2;
             Rpp32s *length = reinterpret_cast<Rpp32s *>(&roi[numDims]);
-            Rpp32u maxLength = std::min(shape[0], length[0] - anchor[0]);
 
             // check if padding is needed
             bool needPadding = ((anchor[0] + shape[0]) > length[0]);

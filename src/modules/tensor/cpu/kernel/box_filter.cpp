@@ -87,7 +87,6 @@ inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s colu
 
     // find the colKernelLoopLimit based on columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
-    Rpp32s rowStart, rowEnd, colStart, colEnd;
     // Conditions separately handled to avoid branching inside loops
     if((kernelSize != rowKernelLoopLimit) || (kernelSize != columnKernelLoopLimit))
     {
@@ -257,8 +256,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                                       RppLayoutParams layoutParams,
                                       rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     static_assert((std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value), "T must be Rpp8u or Rpp8s");
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -271,7 +269,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 #endif
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -954,7 +953,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         __m256i pxResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
-                            __m256i pxRow[5], pxRowHalf[2], pxResult;
+                            __m256i pxRow[5], pxRowHalf[2];
                             rpp_load_box_filter_char_5x5_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
 
                             // pack lower and higher half of each of 5 loaded row values from 8 bit to 16 bit and add
@@ -1152,7 +1151,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         __m256i pxResultPln[3];
                         for (int c = 0; c < 3; c++)
                         {
-                            __m256i pxRow[7], pxRowHalf[2], pxResult;
+                            __m256i pxRow[7], pxRowHalf[2];
                             rpp_load_box_filter_char_7x7_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit, padIndex);
 
                             // unpack lower and higher half of each of 7 loaded row values from 8 bit to 16 bit and add
@@ -1477,7 +1476,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         }
 
                         // get the accumalated result for first 8 elements
-                        __m128i px128[8], pxTemp[7], pxDst[4];
+                        __m128i px128[8], pxDst[4];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
                         blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
@@ -1585,7 +1584,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                                 unpack_and_add_host<9>(pxRow, pxRowHalf);
                             }
 
-                            __m128i pxTemp[3], pxDst;
+                            __m128i pxTemp[3];
                             extract_3sse_registers(pxRowHalf, pxTemp);
                             blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
                             blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
@@ -1664,7 +1663,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         }
 
                         // get the accumalated result for first 8 elements
-                        __m128i px128[8], pxTemp[7], pxDst[4];
+                        __m128i px128[8], pxDst[4];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
                         blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
@@ -1741,8 +1740,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     static_assert((std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value), "T must be Rpp32f or Rpp16f");
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
@@ -1755,7 +1753,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 #endif
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -2924,11 +2923,10 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                                          RppLayoutParams layoutParams,
                                          rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

@@ -72,11 +72,10 @@ RppStatus warp_affine_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RppLayoutParams srcLayoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -299,11 +298,10 @@ RppStatus warp_affine_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                                              RppLayoutParams srcLayoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -526,11 +524,10 @@ RppStatus warp_affine_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                                            RppLayoutParams srcLayoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -753,11 +750,10 @@ RppStatus warp_affine_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                                              RppLayoutParams srcLayoutParams,
                                              rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -811,10 +807,6 @@ RppStatus warp_affine_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp16f *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -897,11 +889,10 @@ RppStatus warp_affine_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                  RppLayoutParams srcLayoutParams,
                                                  rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -927,10 +918,6 @@ RppStatus warp_affine_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
-        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
-        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
-        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
-        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
         __m256 pAffineMatrix0 = _mm256_set1_ps(affineMatrix_f6->data[0]);
         __m256 pAffineMatrix3 = _mm256_set1_ps(affineMatrix_f6->data[3]);
         __m256 pRoiLTRB[4];
@@ -1167,11 +1154,10 @@ RppStatus warp_affine_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                    RppLayoutParams srcLayoutParams,
                                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -1197,10 +1183,6 @@ RppStatus warp_affine_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
-        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
-        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
-        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
-        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
         __m256 pAffineMatrix0 = _mm256_set1_ps(affineMatrix_f6->data[0]);
         __m256 pAffineMatrix3 = _mm256_set1_ps(affineMatrix_f6->data[3]);
         __m256 pRoiLTRB[4];
@@ -1436,11 +1418,10 @@ RppStatus warp_affine_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                                  RppLayoutParams srcLayoutParams,
                                                  rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -1466,10 +1447,6 @@ RppStatus warp_affine_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
-        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
-        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
-        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
-        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
         __m256 pAffineMatrix0 = _mm256_set1_ps(affineMatrix_f6->data[0]);
         __m256 pAffineMatrix3 = _mm256_set1_ps(affineMatrix_f6->data[3]);
         __m256 pRoiLTRB[4];
@@ -1710,11 +1687,10 @@ RppStatus warp_affine_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                                                    RppLayoutParams srcLayoutParams,
                                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
@@ -1740,10 +1716,6 @@ RppStatus warp_affine_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
-        __m256 pAffineMatrixTerm0 = _mm256_setr_ps(0, affineMatrix_f6->data[0], affineMatrix_f6->data[0] * 2, affineMatrix_f6->data[0] * 3, affineMatrix_f6->data[0] * 4, affineMatrix_f6->data[0] * 5, affineMatrix_f6->data[0] * 6, affineMatrix_f6->data[0] * 7);
-        __m256 pAffineMatrixTerm3 = _mm256_setr_ps(0, affineMatrix_f6->data[3], affineMatrix_f6->data[3] * 2, affineMatrix_f6->data[3] * 3, affineMatrix_f6->data[3] * 4, affineMatrix_f6->data[3] * 5, affineMatrix_f6->data[3] * 6, affineMatrix_f6->data[3] * 7);
-        __m256 pAffineMatrixTerm0Incr = _mm256_set1_ps(affineMatrix_f6->data[0] * 8);
-        __m256 pAffineMatrixTerm3Incr = _mm256_set1_ps(affineMatrix_f6->data[3] * 8);
         __m256 pAffineMatrix0 = _mm256_set1_ps(affineMatrix_f6->data[0]);
         __m256 pAffineMatrix3 = _mm256_set1_ps(affineMatrix_f6->data[3]);
         __m256 pRoiLTRB[4];

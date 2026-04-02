@@ -594,7 +594,6 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_pkd3(T *sr
     }
     else
     {
-        uint src;
         int srcIdx = locSrc.y * srcStrideH + locSrc.x * 3;
         rpp_hip_interpolate3_nearest_neighbor_load_pkd3(srcPtr + srcIdx, dst_f3);
     }

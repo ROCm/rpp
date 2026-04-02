@@ -54,10 +54,9 @@ RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp8u *srcPtrImage, *dstPtrImage;
@@ -94,7 +93,7 @@ RppStatus channel_permute_u8_u8_host_tensor(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p[6], pPermute[6];
+                    __m256i p[6];
                     rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);    // simd loads
                     rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTemp[permutationOrder[0]], dstPtrTemp[permutationOrder[1]], dstPtrTemp[permutationOrder[2]], p);    // simd stores with channel permute
                     srcPtrTemp += vectorIncrement;
@@ -269,10 +268,9 @@ RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -310,7 +308,7 @@ RppStatus channel_permute_f32_f32_host_tensor(Rpp32f *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[3], pPermute[3];
+                    __m256 p[3];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTemp[permutationOrder[0]], dstPtrTemp[permutationOrder[1]], dstPtrTemp[permutationOrder[2]], p);    // simd stores with channel permute
                     srcPtrTemp += vectorIncrement;
@@ -487,10 +485,9 @@ RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -528,7 +525,7 @@ RppStatus channel_permute_f16_f16_host_tensor(Rpp16f *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[3], pPermute[3];
+                    __m256 p[3];
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTemp[permutationOrder[0]], dstPtrTemp[permutationOrder[1]], dstPtrTemp[permutationOrder[2]], p);    // simd stores with channel permute
                     srcPtrTemp += vectorIncrement;
@@ -705,10 +702,9 @@ RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp8s *srcPtrImage, *dstPtrImage;
@@ -746,7 +742,7 @@ RppStatus channel_permute_i8_i8_host_tensor(Rpp8s *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p[6], pPermute[6];
+                    __m256 p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTemp[permutationOrder[0]], dstPtrTemp[permutationOrder[1]], dstPtrTemp[permutationOrder[2]], p);    // simd stores with channel permute
                     srcPtrTemp += vectorIncrement;
