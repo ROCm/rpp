@@ -104,8 +104,10 @@ inline bool filename_matches_requested_extension(const std::string& fileName, co
     if (ext.empty())
         return false;
     size_t dot = fileName.find_last_of('.');
-    if (dot == std::string::npos || dot + 1 >= fileName.size())
+    if (dot == std::string::npos || dot + 1 >= fileName.size()) {
+        std::cout << "ERROR: File name does not contain a valid extension: " << fileName << std::endl;
         return false;
+    }
     return fileName.compare(dot + 1, std::string::npos, ext) == 0;
 }
 
