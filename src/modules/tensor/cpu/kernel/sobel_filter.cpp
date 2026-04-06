@@ -56,6 +56,9 @@ Rpp32f sobel7x7Y[49] = {-1,   -6,  -15,  -20,  -15,   -6,   -1,
                          4,   24,   60,   80,   60,   24,    4,
                          1,    6,   15,   20,   15,    6,    1};
 
+namespace rpp_sobel_filter
+{
+
 template<typename T>
 inline void sobel_filter_bidirection_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                                      Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
@@ -140,6 +143,10 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
         dstPtrTemp++;
     }
 }
+
+} // namespace rpp_sobel_filter
+
+using namespace rpp_sobel_filter;
 
 template<typename T>
 RppStatus sobel_filter_host_tensor(T *srcPtr,

@@ -75,6 +75,9 @@ Below steps are followed for getting outputs for the first 0-16 locations in 1st
     Repeat the same process for remaining alignedLength columns and store in output
 3. Process remaining non aligned columns in each row again using raw c code*/
 
+namespace rpp_box_filter
+{
+
 // generic raw c code for box filter
 template<typename T>
 inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
@@ -244,6 +247,10 @@ inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
 }
+
+} // namespace rpp_box_filter
+
+using namespace rpp_box_filter;
 
 template<typename T>
 RppStatus box_filter_char_host_tensor(T *srcPtr,

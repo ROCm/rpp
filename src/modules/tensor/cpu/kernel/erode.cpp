@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+namespace rpp_erode
+{
+
 // generic raw c code for erode 
 template<typename T>
 inline void erode_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
@@ -165,6 +168,10 @@ inline void min_rows_9x9(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_min_ps(pDst[0], _mm256_min_ps(_mm256_min_ps(pRow[3], pRow[4]), pRow[5]));
     pDst[0] = _mm256_min_ps(pDst[0], _mm256_min_ps(_mm256_min_ps(pRow[6], pRow[7]), pRow[8]));
 }
+
+} // namespace rpp_erode
+
+using namespace rpp_erode;
 
 template<typename T>
 RppStatus erode_char_host_tensor(T *srcPtr,
