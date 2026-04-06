@@ -87,10 +87,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     if (centerWindows) windowCenterOffset = windowLength / 2;
     if (nfft == 0) nfft = windowLength;
     const Rpp32s numBins = nfft / 2 + 1;
-    const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     const Rpp32u hStride = dstDescPtr->strides.hStride;
-    const Rpp32s alignedNfftLength = nfft & ~7;
-    const Rpp32s alignedNbinsLength = numBins & ~7;
     const Rpp32s alignedWindowLength = windowLength & ~7;
     const Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     const Rpp32u windowOutputStride = maxNumWindows * nfft;
@@ -109,11 +106,10 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         hann_window(windowFn, windowLength);
     else
         memcpy(windowFn, windowFunction, windowLength * sizeof(Rpp32f));
-    Rpp32u numThreads = handle.GetNumThreads();
-
     // Get windows output
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32s batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;

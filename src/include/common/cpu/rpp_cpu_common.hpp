@@ -175,6 +175,30 @@ inline void compute_ltrb_from_xywh_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPt
     roiPtrImage->ltrbROI.rb.y = roiPtrInput->xywhROI.xy.y + roiPtrInput->xywhROI.roiHeight - 1;
 }
 
+// Makes a full-tensor default ROI with explicit member assignment.
+inline RpptROI rpp_make_roi_xywh_full(Rpp32s roiWidth, Rpp32s roiHeight)
+{
+    RpptROI roi{};
+    roi.xywhROI.xy.x = 0;
+    roi.xywhROI.xy.y = 0;
+    roi.xywhROI.roiWidth = roiWidth;
+    roi.xywhROI.roiHeight = roiHeight;
+    return roi;
+}
+
+// Makes a full-tensor default ROI3D with explicit member assignment.
+inline RpptROI3D rpp_make_roi3d_xyzwhd_full(Rpp32s roiWidth, Rpp32s roiHeight, Rpp32s roiDepth)
+{
+    RpptROI3D roi{};
+    roi.xyzwhdROI.xyz.x = 0;
+    roi.xyzwhdROI.xyz.y = 0;
+    roi.xyzwhdROI.xyz.z = 0;
+    roi.xyzwhdROI.roiWidth = roiWidth;
+    roi.xyzwhdROI.roiHeight = roiHeight;
+    roi.xyzwhdROI.roiDepth = roiDepth;
+    return roi;
+}
+
 inline void compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)
 {
     roiPtr->xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiPtrImage->xywhROI.xy.x);

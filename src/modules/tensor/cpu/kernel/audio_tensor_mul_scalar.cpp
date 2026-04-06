@@ -32,13 +32,12 @@ RppStatus audio_tensor_mul_scalar_host(Rpp32f *srcPtr,
                                        Rpp32s *srcLengthTensor,
                                        rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     // Broadcast the scalar value for SIMD operations
     __m256 pScalar = _mm256_set1_ps(scalarValue);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32u batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;

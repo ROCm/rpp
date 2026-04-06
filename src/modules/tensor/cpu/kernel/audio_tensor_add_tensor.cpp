@@ -32,10 +32,9 @@ RppStatus audio_tensor_add_tensor_host(Rpp32f *srcPtr1,
                                        Rpp32s *srcLengthTensor,
                                        rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtr1Temp = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
