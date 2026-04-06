@@ -58,7 +58,7 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
 
 inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPtr, RpptRoiType type)
 {
-    int x, y, w, h;
+    int x = 0, y = 0, w = 0, h = 0;
     if (type == RpptRoiType::XYWH)
     {
         x = ((0 <= roiPtrImage->xywhROI.xy.x) && (roiPtrImage->xywhROI.xy.x < srcDescPtr->w)) ? roiPtrImage->xywhROI.xy.x : -1;
@@ -72,9 +72,15 @@ inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPt
         y = ((0 <= roiPtrImage->ltrbROI.lt.y) && (roiPtrImage->ltrbROI.lt.y < srcDescPtr->h)) ? roiPtrImage->ltrbROI.lt.y : -1;
         w = ((0 <= roiPtrImage->ltrbROI.rb.x) && (roiPtrImage->ltrbROI.rb.x < srcDescPtr->w)) ? roiPtrImage->ltrbROI.rb.x - roiPtrImage->ltrbROI.lt.x + 1 : -1;
         h = ((0 <= roiPtrImage->ltrbROI.rb.y) && (roiPtrImage->ltrbROI.rb.y < srcDescPtr->h)) ? roiPtrImage->ltrbROI.rb.y - roiPtrImage->ltrbROI.lt.y + 1 : -1;
-    }
-    if ((x < 0) || (y < 0) || (w < 0) || (h < 0))
+    } else {
+        // Invalid ROI type
         return -1;
+    }
+
+    if ((x < 0) || (y < 0) || (w < 0) || (h < 0)) {
+        return -1;
+    }
+    
     return 0;
 }
 

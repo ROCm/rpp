@@ -1544,7 +1544,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                               rpp::Handle& handle)
 {
     Rpp32f *partialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    Rpp32u partialSumArrLength, partialSumBlocksPerSample;
+    Rpp32u partialSumBlocksPerSample;
 
     int globalThreads_x, globalThreads_y, globalThreads_z;
     int localThreads_x, localThreads_y, localThreads_z;
@@ -1733,7 +1733,6 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
         globalThreads_x = srcGenericDescPtr->strides[0];
         globalThreads_y = 1;
         globalThreads_z = srcGenericDescPtr->dims[0];
-        Rpp32u batchSize = globalThreads_z;
 
         // allocate tensor for src strides
         Rpp32u *srcMaxDims = &srcGenericDescPtr->dims[1];

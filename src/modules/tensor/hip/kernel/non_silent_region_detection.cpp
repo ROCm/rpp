@@ -101,7 +101,6 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
                                               float windowFactor,
                                               int inputTileLength)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     uint srcLength = srcLengthTensor[id_z];
     uint batchStride = id_z * nStride;

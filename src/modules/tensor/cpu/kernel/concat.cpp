@@ -380,7 +380,6 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -418,7 +417,8 @@ RppStatus concat_f32_f32_host_tensor(Rpp32f *srcPtr1,
     }
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;
@@ -490,7 +490,6 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = srcPtr1GenericDescPtr->numDims - 1;  // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -528,7 +527,8 @@ RppStatus concat_u8_u8_host_tensor(Rpp8u *srcPtr1,
     }
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;
@@ -602,7 +602,6 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
                                      RppLayoutParams layoutParams,
                                      rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = srcPtr1GenericDescPtr->numDims - 1; // Ignoring batchSize here to get tensor dimensions.
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
@@ -640,7 +639,8 @@ RppStatus concat_generic_host_tensor(T1 *srcPtr1,
     }
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
         Rpp32u *roi1 = roiTensorSrc1 + batchCount * tensorDims * 2;

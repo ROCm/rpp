@@ -34,8 +34,6 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                                   Rpp32f referenceMagnitude,
                                   rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     // Calculate the intermediate values needed for DB conversion
     Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
     if(minRatio == 0.0f)
@@ -45,7 +43,8 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     multiplier *= log10Factor;
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
