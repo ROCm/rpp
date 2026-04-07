@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+namespace rpp_emboss
+{
+
 inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kernelSize)
 {
     Rpp32f clampedStrength = (strength > 2.0f) ? 2.0f : strength;
@@ -86,6 +89,10 @@ inline void create_emboss_kernel_host(Rpp32f* filter, Rpp32f strength, int kerne
             filter[i] = kernel[i] * clampedStrength;
     }
 }
+
+} // namespace rpp_emboss
+
+using namespace rpp_emboss;
 
 template<typename T>
 RppStatus emboss_host_tensor(T *srcPtr,

@@ -25,6 +25,9 @@ SOFTWARE.
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_filter.hpp"
 
+namespace rpp_dilate
+{
+
 // generic raw c code for dilate 
 template<typename T>
 inline void dilate_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
@@ -164,6 +167,11 @@ inline void max_rows_9x9(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_max_ps(pDst[0], _mm256_max_ps(_mm256_max_ps(pRow[3], pRow[4]), pRow[5]));
     pDst[0] = _mm256_max_ps(pDst[0], _mm256_max_ps(_mm256_max_ps(pRow[6], pRow[7]), pRow[8]));
 }
+
+} // namespace rpp_dilate
+
+// Make dilate-local helpers visible for dilate_*_host_tensor definitions below (ODR-safe vs erode.cpp).
+using namespace rpp_dilate;
 
 template<typename T>
 RppStatus dilate_char_host_tensor(T *srcPtr,

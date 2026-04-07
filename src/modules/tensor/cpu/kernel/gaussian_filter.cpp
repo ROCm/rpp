@@ -27,6 +27,8 @@ SOFTWARE.
 
 #define MAX_FILTER_SIZE 81  // Maximum kernel size is 9x9 = 81 coefficients
 
+namespace rpp_gaussian_filter
+{
 
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
 {
@@ -66,6 +68,10 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
     for (int i = 0; i < kernelSize * kernelSize; i++)
         filter[i] *= invSum;
 }
+
+} // namespace rpp_gaussian_filter
+
+using namespace rpp_gaussian_filter;
 
 template<typename T>
 RppStatus gaussian_filter_host_tensor(T *srcPtr,
