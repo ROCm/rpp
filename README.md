@@ -224,7 +224,7 @@ target_link_libraries(your_target PRIVATE rpp::rpp)
 # Enable RPP HIP backend in your CMake project if available
 if (rpp_BACKEND_TYPE STREQUAL "HIP")
   find_package(HIP REQUIRED)
-  target_compile_definitions(your_target PRIVATE -DRPP_BACKEND_HIP=1)
+  target_compile_definitions(your_target PRIVATE RPP_BACKEND_HIP=1)
   target_link_libraries(your_target PRIVATE hip::host)
 endif()
 ```
