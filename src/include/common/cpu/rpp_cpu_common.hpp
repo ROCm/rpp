@@ -38,6 +38,7 @@ SOFTWARE.
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define RPP_128_OVER_255                0.50196078431f
+#define RPPMIN2(a,b)                    (((a) < (b)) ? (a) : (b))
 #define RPPMIN3(a,b,c)                  ((a < b) && (a < c) ?  a : ((b < c) ? b : c))
 #define RPPMAX3(a,b,c)                  ((a > b) && (a > c) ?  a : ((b > c) ? b : c))
 #define RPPINRANGE(a, x, y)             ((a >= x) && (a <= y) ? 1 : 0)
@@ -172,6 +173,30 @@ inline void compute_ltrb_from_xywh_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPt
     roiPtrImage->ltrbROI.lt.y = roiPtrInput->xywhROI.xy.y;
     roiPtrImage->ltrbROI.rb.x = roiPtrInput->xywhROI.xy.x + roiPtrInput->xywhROI.roiWidth - 1;
     roiPtrImage->ltrbROI.rb.y = roiPtrInput->xywhROI.xy.y + roiPtrInput->xywhROI.roiHeight - 1;
+}
+
+// Makes a full-tensor default ROI with explicit member assignment.
+inline RpptROI rpp_make_roi_xywh_full(Rpp32s roiWidth, Rpp32s roiHeight)
+{
+    RpptROI roi{};
+    roi.xywhROI.xy.x = 0;
+    roi.xywhROI.xy.y = 0;
+    roi.xywhROI.roiWidth = roiWidth;
+    roi.xywhROI.roiHeight = roiHeight;
+    return roi;
+}
+
+// Makes a full-tensor default ROI3D with explicit member assignment.
+inline RpptROI3D rpp_make_roi3d_xyzwhd_full(Rpp32s roiWidth, Rpp32s roiHeight, Rpp32s roiDepth)
+{
+    RpptROI3D roi{};
+    roi.xyzwhdROI.xyz.x = 0;
+    roi.xyzwhdROI.xyz.y = 0;
+    roi.xyzwhdROI.xyz.z = 0;
+    roi.xyzwhdROI.roiWidth = roiWidth;
+    roi.xyzwhdROI.roiHeight = roiHeight;
+    roi.xyzwhdROI.roiDepth = roiDepth;
+    return roi;
 }
 
 inline void compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault)

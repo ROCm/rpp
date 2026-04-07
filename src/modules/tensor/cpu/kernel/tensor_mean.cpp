@@ -33,11 +33,10 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -104,7 +103,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
             Rpp32u sumAvxG[8] = {0};
             Rpp32u sumAvxB[8] = {0};
 
-            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -233,11 +232,10 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -433,11 +431,10 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -632,11 +629,10 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -697,14 +693,14 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
         // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64s sum;
+            Rpp64s sum = 0;
             Rpp32s sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
             Rpp32s sumAvxR[8] = {0};
             Rpp32s sumAvxG[8] = {0};
             Rpp32s sumAvxB[8] = {0};
 
-            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -751,7 +747,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
 #endif
 
-            sum = static_cast<Rpp64u>(sum) + static_cast<Rpp64u>(sumG) + static_cast<Rpp64u>(sumB);
+            sum = static_cast<Rpp64s>(sumR) + static_cast<Rpp64s>(sumG) + static_cast<Rpp64s>(sumB);
             mean = (static_cast<Rpp64f>(sum) / (totalPixelsPerChannel * 3));
             meanR = (static_cast<Rpp32f>(sumR) / totalPixelsPerChannel);
             meanG = (static_cast<Rpp32f>(sumG) / totalPixelsPerChannel);

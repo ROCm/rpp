@@ -101,7 +101,6 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
                                               float windowFactor,
                                               int inputTileLength)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     uint srcLength = srcLengthTensor[id_z];
     uint batchStride = id_z * nStride;
@@ -398,6 +397,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        windowLength,
                        windowFactor,
                        inputTileLength);
+    HIP_CHECK_LAUNCH_RETURN();
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (!referencePower);
@@ -417,6 +417,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                            srcDescPtr->strides.nStride,
                            partialMaxArr,
                            srcLengthTensor);
+        HIP_CHECK_LAUNCH_RETURN();
         cutOffMagKernelBlockSize = 256;
     }
     // find the cutoff value in magnitude
@@ -432,6 +433,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        cutOff,
                        referencePower,
                        referenceMax);
+    HIP_CHECK_LAUNCH_RETURN();
 
     // find the begin and length values of NSR in inputs
     hipLaunchKernelGGL(find_region_hip_tensor,
@@ -446,5 +448,6 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        cutOffMagPtr,
                        srcLengthTensor,
                        windowLength);
+    HIP_CHECK_LAUNCH_RETURN();
     return RPP_SUCCESS;
 }

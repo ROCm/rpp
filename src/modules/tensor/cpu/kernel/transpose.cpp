@@ -192,12 +192,12 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                                         Rpp32u *roiTensor,
                                         rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;  // exclude batchsize from input dims
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f *srcPtrTemp, *dstPtrTemp;
@@ -324,8 +324,6 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                 // Optimized AVX version for 3D inputs and permutation order (0, 2, 1)
                 else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
                 {
-                    Rpp32f *srcPtrRow = srcPtrTemp;
-                    Rpp32f *dstPtrRow = dstPtrTemp;
                     for(int i = 0; i < length[0]; i++)
                     {
                         compute_2d_pln1_transpose(srcPtrTemp, dstPtrTemp, length[1], length[2], srcGenericDescPtr->strides[2], dstGenericDescPtr->strides[2]);
@@ -416,12 +414,12 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                                         Rpp32u *roiTensor,
                                         rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;  // exclude batchsize from input dims
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         T *srcPtrTemp, *dstPtrTemp;

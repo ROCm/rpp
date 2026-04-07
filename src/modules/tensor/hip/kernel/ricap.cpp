@@ -52,6 +52,8 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
         srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNH.y) + (id_x + (cropRegion[2].xywhROI.xy.x) * 3);
     else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth * 3))
         srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNH.y) + (id_x - (cropRegion[2].xywhROI.roiWidth) * 3 + (cropRegion[3].xywhROI.xy.x) * 3);
+    else
+        return;
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
@@ -89,6 +91,8 @@ __global__ void ricap_pln_tensor(T *srcPtr,
         srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[2].xywhROI.xy.x);
     else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth))
         srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x);
+    else
+        return;
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -140,6 +144,8 @@ __global__ void ricap_pkd3_pln3_tensor(T *srcPtr,
         srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + cropRegion[2].xywhROI.xy.x)*3);
     else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth))
         srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNH.y) + ((id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x)*3);
+    else
+        return;
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -176,6 +182,8 @@ __global__ void ricap_pln3_pkd3_tensor(T *srcPtr,
         srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[2].xywhROI.xy.x);
     else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth))
         srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x);
+    else
+        return;
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
@@ -215,6 +223,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            permutationTensor,
                            roiPtrInputCropRegion,
                            make_uint2(srcDescPtr->w, srcDescPtr->h));
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -231,6 +240,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            permutationTensor,
                            roiPtrInputCropRegion,
                            make_uint2(srcDescPtr->w, srcDescPtr->h));
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -248,6 +258,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                permutationTensor,
                                roiPtrInputCropRegion,
                                make_uint2(srcDescPtr->w, srcDescPtr->h));
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -264,6 +275,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                permutationTensor,
                                roiPtrInputCropRegion,
                                make_uint2(srcDescPtr->w, srcDescPtr->h));
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

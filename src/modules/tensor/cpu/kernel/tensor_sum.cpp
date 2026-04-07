@@ -32,7 +32,7 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -225,7 +225,7 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -417,7 +417,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -608,7 +608,7 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -629,7 +629,6 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
-        Rpp32u totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
 
         // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))

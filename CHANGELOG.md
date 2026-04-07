@@ -2,36 +2,79 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 2.2.1 for ROCm 7.2.0
+## (Unreleased) RPP 3.1.1
 
 ### Added
-* HOST and HIP - pinned buffers API support
+
+* Runtime backend selection parameter (`RppBackend executionBackend`) for all RPP tensor API functions
+* Backend tracking in `rppHandle_t` to store backend type (HOST or HIP)
+* Added `RPP_ERROR_HIP_LAUNCH` error type for reporting HIP kernel launch errors.
+
+### Removed
+* BatchPD legacy support completely removed
+* LEGACY_SUPPORT compilation flag and all code enclosed within it
+* OpenCL backend support
+* Batch PD test suite and installation
 
 ### Changed
-* CXX Compiler: AMDClang++ - Use compiler core location `${ROCM_PATH}/lib/llvm/bin`
-* Mem Copy eliminated - Helper functions responsible for these copies copy_param_float(), copy_param_uint() have been removed and buffers now consistently use pinned/HIP memory
+
+* All RPP tensor API functions now unified with a single function signature
+* Updated all test suite calls to use unified API with backend parameter
+* Enhanced layout validation for image augmentations within unified API
+* CMakeLists.txt updated to remove batch PD references
+
+
+## RPP 2.2.1 for ROCm 7.2.1
+
+### Added
+
+* Error-code capture in test scripts for all C++ tests.
+
+### Optimized
+
+* Optimized F16 variants by replacing scalar load/store operations with AVX2 intrinsics for spatter, log, blend, color_cast, flip, crop_mirror_normalize, and exposure kernels.
+
+
+## RPP 2.2.0 for ROCm 7.2.0
+
+### Added
+
+* Pinned buffer API support for HOST and HIP
+
+### Changed
+
+* AMDClag++ compiler has moved to `${ROCM_PATH}/lib/llvm/bin`
+
+### Removed
+
+* The `copy_param_float()`  and `copy_param_uint()` mem copy helper functions have been removed as buffers now consistently use pinned/HIP memory
 
 ### Resolved issues
+
 * Test Suite - Error Code Capture updates
 
 ## RPP 2.1.0 for ROCm 7.1.0
 
 ### Added
+
 * Solarize augmentation for HOST and HIP
 * Hue and Saturation adjustment augmentations for HOST and HIP
 * Find RPP - cmake module
 * Posterize augmentation for HOST and HIP
 
 ### Changed
+
 * HALF - Fix half.hpp path updates
 * Box filter - padding updates
 
 
 ### Removed
+
 * Packaging - Remove Meta Package dependency for HIP
 * SLES 15 SP6 support
 
 ### Resolved issues
+
 * Test Suite - Fixes for accuracy
 * HIP Backend - Check return status warning fixes
 * Bugfix - HIP vector types init

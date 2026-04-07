@@ -29,7 +29,7 @@ SOFTWARE.
 
 __device__ void bitwise_or_hip_compute(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-    rpp_hip_math_bitwiseOr8(src1_uc8, src2_uc8, dst_uc8);
+    rpp_hip_math_bitwise_op8<BitwiseOr>(src1_uc8, src2_uc8, dst_uc8);
 }
 
 __global__ void bitwise_or_pkd_hip_tensor(Rpp8u *srcPtr1,
@@ -197,6 +197,7 @@ RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -212,6 +213,7 @@ RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -228,6 +230,7 @@ RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -243,6 +246,7 @@ RppStatus hip_exec_bitwise_or_tensor(Rpp8u *srcPtr1,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

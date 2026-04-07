@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,119 +42,88 @@ extern "C" {
  * @{
  */
 
-/*! \brief Copy operation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Copy operation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The copy operation runs a buffer copy for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html data_exchange_operations_copy_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_copy_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle);
+RppStatus rppt_copy(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Copy operation on HIP backend for a NCHW/NHWC layout tensor
- * \details The copy operation runs a buffer copy for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.png Sample Input
- * \image html data_exchange_operations_copy_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_copy_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
-
-/*! \brief Channel permute operation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Channel permute operation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details This function performs one of six possible channel permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
  * for an image in a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html data_exchange_operations_channel_permute_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] permutationTensor A tensor in HOST memory specifying the channel permutation for each image. Size: 3 × srcDescPtr->n. Each value must satisfy: 0 ≤ permutationTensor[i] ≤ 2.
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] permutationTensor A tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend) specifying the channel permutation for each image. Size: 3 × srcDescPtr->n. Each value must satisfy: 0 ≤ permutationTensor[i] ≤ 2.
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_channel_permute_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor, rppHandle_t rppHandle);
+RppStatus rppt_channel_permute(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Channel permute operation on HIP backend for a NCHW/NHWC layout tensor
- * \details This function performs one of six possible channel permutations (R-G-B, R-B-G, G-R-B, G-B-R, B-R-G, B-G-R)
- * for an image in a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.png Sample Input
- * \image html data_exchange_operations_channel_permute_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] permutation A tensor in HIP / Pinned memory specifying the channel permutation for each image. Size: 3 × srcDescPtr->n. Each value must satisfy: 0 ≤ permutationTensor[i] ≤ 2.
- * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
- */
-RppStatus rppt_channel_permute_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutationTensor, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
-
-/*! \brief Color to greyscale operation on HOST backend for a NCHW/NHWC layout tensor
+/*! \brief Color to greyscale operation on HIP/HOST backend for a NCHW/NHWC layout tensor
  * \details The color to greyscale operation runs for a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
  * \image html data_exchange_operations_color_to_greyscale_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor in HIP memory (for HIP backend) or HOST memory (for HOST backend)
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] srcSubpixelLayout A RpptSubpixelLayout type enum to specify source subpixel layout (RGBtype or BGRtype)
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] rppHandle RPP HIP/HOST handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend backend for execution (RppBackend::RPP_HOST_BACKEND or RppBackend::RPP_HIP_BACKEND)
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_color_to_greyscale_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptSubpixelLayout srcSubpixelLayout, rppHandle_t rppHandle);
+RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptSubpixelLayout srcSubpixelLayout, rppHandle_t rppHandle, RppBackend executionBackend);
 
-#ifdef GPU_SUPPORT
-/*! \brief Color to greyscale operation on HIP backend for a NCHW/NHWC layout tensor
- * \details The color to greyscale operation runs for a batch of RGB(3 channel) images with an NHWC/NCHW tensor layout.<br>
- * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
- * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.png Sample Input
- * \image html data_exchange_operations_color_to_greyscale_img150x150.png Sample Output
- * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 3)
- * \param [out] dstPtr destination tensor in HIP memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] srcSubpixelLayout A RpptSubpixelLayout type enum to specify source subpixel layout (RGBtype or BGRtype)
+/*! \brief YUV to RGB color conversion on HIP backend (NV12 8-bit only)
+ * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24.<br>
+ * - Source: srcYPtr = luma plane, srcUVPtr = interleaved UV
+ * - src_y_pitch / src_uv_pitch: row strides in bytes
+ * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride dst_pitch bytes.
+ * - Supported execution backend: RppBackend::RPP_HIP_BACKEND only.
+ * \param [in] srcYPtr pointer to Y plane in HIP memory
+ * \param [in] srcUVPtr pointer to interleaved UV plane in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (dataType must be U8)
+ * \param [out] dstPtr pointer to RGB output buffer in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (dataType must be U8)
+ * \param [in] src_y_pitch row pitch of Y plane in bytes
+ * \param [in] src_uv_pitch row pitch of UV plane in bytes
+ * \param [in] dst_pitch row pitch of RGB output in bytes
+ * \param [in] width image width in pixels
+ * \param [in] height image height in pixels
+ * \param [in] col_standard Luma/matrix family: \ref RpptColorStandard (unknown values use BT.709).
+ * \param [in] color_range Luma range: \ref RpptColorRange_STUDIO or \ref RpptColorRange_FULL (other values behave like studio).
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreate()</tt>
+ * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
+ * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
  */
-RppStatus rppt_color_to_greyscale_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptSubpixelLayout srcSubpixelLayout, rppHandle_t rppHandle);
-#endif // GPU_SUPPORT
+RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! @}
  */
