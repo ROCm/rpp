@@ -52,9 +52,9 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
                                                       RpptROIPtr roiTensorPtrSrc,
                                                       rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
@@ -101,11 +101,6 @@ void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,
         pInvMat3 = _mm256_set1_ps(invMat[3]);
         pInvMat6 = _mm256_set1_ps(invMat[6]);
 
-        __m256 pXCameraInit, pYCameraInit, pZCameraInit;
-        __m256 pXCameraIncrement, pYCameraIncrement, pZCameraIncrement;
-        pXCameraIncrement = _mm256_mul_ps(pInvMat0, avx_p8);
-        pYCameraIncrement = _mm256_mul_ps(pInvMat3, avx_p8);
-        pZCameraIncrement = _mm256_mul_ps(pInvMat6, avx_p8);
         for(int i = 0; i < height; i++)
         {
             Rpp32f *rowRemapTableRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;

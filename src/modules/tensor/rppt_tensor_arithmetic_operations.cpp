@@ -654,6 +654,10 @@ RppStatus rppt_tensor_add_tensor(RppPtr_t srcPtr1,
                                                               roiTensorSrc2,
                                                               rpp::deref(rppHandle));
         }
+        else
+        {
+            return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+        }
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
@@ -757,6 +761,7 @@ RppStatus rppt_tensor_add_tensor(RppPtr_t srcPtr1,
                                                             roiTensorSrc2,
                                                             rpp::deref(rppHandle));
         }
+        
         return RPP_SUCCESS;
     }
 #endif

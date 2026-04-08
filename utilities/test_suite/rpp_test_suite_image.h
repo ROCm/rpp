@@ -2029,10 +2029,9 @@ void inline init_cutout_dropout(int batchSize, int maxBoxesPerImage, Rpp32u* num
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode, bool randomSeed, int dropoutType)
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, int BitDepthTestMode, int seed, int dropoutType)
 {
     // Initialize Random Number Generators
-    int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);

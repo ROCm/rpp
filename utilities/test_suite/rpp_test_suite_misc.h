@@ -763,7 +763,7 @@ void compare_output(void *output, Rpp32u nDim, Rpp32u batchSize, Rpp32u BitDepth
     }
 
     // Get cutoff value from miscCutOff map based on testCase and backend
-    double cutoff;
+    double cutoff = 1e-6;
     auto mapIterator = miscCutOff.find(testCase);
     if (mapIterator != miscCutOff.end())
     {

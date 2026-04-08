@@ -34,10 +34,9 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                                RpptResamplingWindow &window,
                                rpp::Handle& handle)
 {
-    Rpp32u numThreads = handle.GetNumThreads();
-
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -55,7 +54,6 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
         else
         {
             Rpp32s outEnd = std::ceil(srcLength * outRate / inRate);
-            Rpp32s inPos = 0;
             Rpp32s block = 1 << 8;
             Rpp64f scale = static_cast<Rpp64f>(inRate) / outRate;
             Rpp32f fscale = scale;

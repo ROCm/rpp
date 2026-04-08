@@ -56,6 +56,9 @@ Rpp32f sobel7x7Y[49] = {-1,   -6,  -15,  -20,  -15,   -6,   -1,
                          4,   24,   60,   80,   60,   24,    4,
                          1,    6,   15,   20,   15,    6,    1};
 
+namespace rpp_sobel_filter
+{
+
 template<typename T>
 inline void sobel_filter_bidirection_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                                      Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
@@ -141,6 +144,10 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
     }
 }
 
+} // namespace rpp_sobel_filter
+
+using namespace rpp_sobel_filter;
+
 template<typename T>
 RppStatus sobel_filter_host_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
@@ -157,15 +164,13 @@ RppStatus sobel_filter_host_tensor(T *srcPtr,
     if (srcDescPtr->c != 1)
         return RPP_ERROR_INVALID_SRC_CHANNELS;
 
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
-    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
 #endif
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

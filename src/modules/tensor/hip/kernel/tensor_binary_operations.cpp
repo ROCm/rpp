@@ -687,27 +687,24 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
         }
 
         // Handle cases of mismatching num dims
-        if (src1NDim < src2NDim)
+        if (src1NDim != src2NDim)
         {
             int extraDims = dstDim - minDim;
-            memset(src1SampleDims + minDim, 1, extraDims * sizeof(Rpp32u));
-            memcpy(src2SampleDims + minDim, src2Dims + minDim, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleDims  + minDim, src2Dims + minDim, extraDims * sizeof(Rpp32u));
+            bool src1IsShorter = (src1NDim < src2NDim);
+            Rpp32u *longerDims    = src1IsShorter ? src2Dims    : src1Dims;
+            Rpp32u *longerStrides = src1IsShorter ? src2Strides : src1Strides;
+            Rpp32u *shorterSampleDims    = src1IsShorter ? src1SampleDims    : src2SampleDims;
+            Rpp32u *longerSampleDims     = src1IsShorter ? src2SampleDims    : src1SampleDims;
+            Rpp32u *shorterSampleStrides = src1IsShorter ? src1SampleStrides : src2SampleStrides;
+            Rpp32u *longerSampleStrides  = src1IsShorter ? src2SampleStrides : src1SampleStrides;
 
-            memset(src1SampleStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
-            memcpy(src2SampleStrides + minDim + 1, src2Strides + minDim + 1, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleStrides  + minDim + 1, dstStrides  + minDim + 1, extraDims * sizeof(Rpp32u));
-        }
-        else if (src1NDim > src2NDim)
-        {
-            int extraDims = dstDim - minDim;
-            memcpy(src1SampleDims + minDim, src1Dims + minDim, extraDims * sizeof(Rpp32u));
-            memset(src2SampleDims + minDim, 1, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleDims  + minDim, src1Dims + minDim, extraDims * sizeof(Rpp32u));
-
-            memcpy(src1SampleStrides + minDim + 1, src1Strides + minDim + 1, extraDims * sizeof(Rpp32u));
-            memset(src2SampleStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
-            memcpy(dstSampleStrides + minDim + 1, dstStrides + minDim + 1, extraDims * sizeof(Rpp32u));
+            //memset(shorterSampleDims    + minDim,     1, extraDims * sizeof(Rpp32u));
+            std::fill(shorterSampleDims + minDim,     (shorterSampleDims + minDim + extraDims), 1);
+            memcpy(longerSampleDims     + minDim, longerDims    + minDim,     extraDims * sizeof(Rpp32u));
+            memcpy(dstSampleDims        + minDim, longerDims    + minDim,     extraDims * sizeof(Rpp32u));
+            memset(shorterSampleStrides + minDim + 1, 0, extraDims * sizeof(Rpp32u));
+            memcpy(longerSampleStrides  + minDim + 1, longerStrides + minDim + 1, extraDims * sizeof(Rpp32u));
+            memcpy(dstSampleStrides     + minDim + 1, dstStrides    + minDim + 1, extraDims * sizeof(Rpp32u));
         }
 
         // Source strides for sample set to zero if corresponding axis shape = 1 for broadcasting purposes

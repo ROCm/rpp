@@ -94,7 +94,6 @@ __global__ void max_reduction_1d_hip_tensor(float *srcPtr,
                                             RpptImagePatchPtr srcDims,
                                             float *maxArr)
 {
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
 
