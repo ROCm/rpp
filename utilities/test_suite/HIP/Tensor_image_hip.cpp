@@ -134,6 +134,12 @@ int main(int argc, char **argv)
         cout << "\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
+    else if(batchSize == 1 && singleImageSupportedCases.find(testCase) == singleImageSupportedCases.end())
+    {
+        std::cerr << "\ncase " << testCase << " is not supported by the single-image API (batch size 1)."
+                  << " Supported cases: 0=brightness, 2=blend, 20=flip, 21=resize, 37=crop, 49=box_filter, 51=median_filter\n";
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
     else if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";

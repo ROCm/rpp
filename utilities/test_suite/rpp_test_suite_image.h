@@ -232,6 +232,9 @@ const unordered_set<int> reductionTypeCases = {TENSOR_SUM, TENSOR_MIN, TENSOR_MA
 const unordered_set<int> noiseTypeCases = {NOISE};
 const unordered_set<int> pln1OutTypeCases = {COLOR_TO_GREYSCALE, SOBEL_FILTER};
 const unordered_set<int> kernelSizeAndGradientCases = {SOBEL_FILTER};
+// Cases supported by the single-image API (rppt_*_single_image). Must stay in sync with
+// api/rppt_tensor_single_image_augmentations.h and SINGLE_IMAGE_SUPPORTED_CASES in common.py.
+const unordered_set<int> singleImageSupportedCases = {BRIGHTNESS, BLEND, FLIP, RESIZE, CROP, BOX_FILTER, MEDIAN_FILTER};
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs_U8 =

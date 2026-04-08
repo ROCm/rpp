@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -70,6 +70,13 @@ class BitDepthTestMode(Enum):
 
 
 bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i8_f32_", 12: "_i16_f32_", 13: "_u16_f32_", 14: "_u32_f32_", 15: "_i32_f32_"}
+
+# Cases supported by the single-image operators.
+#   0=brightness, 2=blend, 20=flip, 21=resize, 37=crop, 49=box_filter, 51=median_filter
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51}
+# Only homogeneous bit-depth modes are supported by the single-image API wrappers.
+# Used as an allowlist: any mode not in this set is skipped by the Python runner.
+SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS = {BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8}
 
 class OutputFormat(Enum):
     NON_TOGGLE = 0

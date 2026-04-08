@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -124,18 +124,13 @@ int main(int argc, char **argv)
         cout << "\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
+    else if(batchSize == 1 && singleImageSupportedCases.find(testCase) == singleImageSupportedCases.end())
+    {
+        std::cerr << "\ncase " << testCase << " is not supported by the single-image API (batch size 1)."
+                  << " Supported cases: 0=brightness, 2=blend, 20=flip, 21=resize, 37=crop, 49=box_filter, 51=median_filter\n";
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
     else if(batchSize > MAX_BATCH_SIZE)
-    {
-        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
-        exit(0);
-    }
-    else if(testCase == RICAP && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
-
-    if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);

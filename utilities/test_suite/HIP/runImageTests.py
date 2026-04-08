@@ -52,7 +52,7 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_image_hip_pln1_raw_performance_log.txt"
     ]
 
-def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList, singleImage=0):
     print("\n")
     # yuv_to_rgb outputs packed RGB only; run only PKD3 (layout 0)
     if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and layout != Layout.PKD3.value:
@@ -62,6 +62,8 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
         # NV12 yuv_to_rgb is U8-only; skip all other bit-depth variants
         bitDepths = [BitDepthTestMode.U8_TO_U8]
+    elif singleImage and int(case) in SINGLE_IMAGE_SUPPORTED_CASES:
+        bitDepths = [bd for bd in bitDepths if bd in SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS]
     elif qaMode:
         bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
     for bitDepth in bitDepths:
@@ -118,7 +120,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
         read_from_subprocess_and_write_to_log(process, logFile)
         log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(bitDepth), get_image_layout_type(layout, outputFormatToggle, "HIP"))
 
-def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList, singleImage=0):
     print("\n")
     # yuv_to_rgb outputs packed RGB only; run only PKD3
     if imageAugmentationMap[int(case)][0] == "yuv_to_rgb" and layout != Layout.PKD3.value:
@@ -126,6 +128,8 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
     perfBitDepths = list(BitDepthTestMode)
     if imageAugmentationMap[int(case)][0] == "yuv_to_rgb":
         perfBitDepths = [BitDepthTestMode.U8_TO_U8]
+    elif singleImage and int(case) in SINGLE_IMAGE_SUPPORTED_CASES:
+        perfBitDepths = [bd for bd in perfBitDepths if bd in SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS]
     for bitDepth in perfBitDepths:
         for outputFormatToggle in list(OutputFormat):
             # There is no layout toggle for PLN1 case, so skip this case
@@ -198,6 +202,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--roi', nargs = 4, help = "specifies the roi values", required = False)
+    parser.add_argument('--single_image', type = int, default = 0, help = "Run with single-image API? Forces batch size to 1 and restricts to supported cases/bit-depths - (0 / 1)", required = False)
     print_case_list(imageAugmentationMap, "HIP", parser)
     args = parser.parse_args()
 
@@ -230,6 +235,9 @@ def rpp_test_suite_parser_and_validator():
         exit(0)
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
+        exit(0)
+    elif args.single_image < 0 or args.single_image > 1:
+        print("Single image must be in the 0/1 (0 = disabled / 1 = enabled). Aborting")
         exit(0)
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
@@ -279,6 +287,19 @@ numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
+singleImage = args.single_image
+
+if singleImage:
+    if batchSize != 1:
+        print("WARNING: --batch_size " + str(batchSize) + " ignored; single-image mode always uses batch size 1.")
+    batchSize = 1
+    if qaMode:
+        print("--single_image and --qa_mode cannot be used together. QA mode requires batch size 3; single-image mode processes one image at a time.")
+        exit(0)
+    caseList = [c for c in caseList if int(c) in SINGLE_IMAGE_SUPPORTED_CASES]
+    if not caseList:
+        print("No single-image-supported cases found in the requested case list. Supported cases: " + str(sorted(SINGLE_IMAGE_SUPPORTED_CASES)))
+        exit(0)
 
 if qaMode and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
@@ -363,7 +384,7 @@ if(testType == TestType.UNIT_TEST.value):
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList, singleImage)
 
     if not qaMode:
         create_layout_directories(dstPath)
@@ -388,7 +409,7 @@ else:
             for layout in layouts_perf:
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", ImageAugmentationGroupMap, func_group_finder, imageAugmentationMap)
 
-                run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
+                run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList, singleImage)
 
     elif (testType == TestType.PERFORMANCE_TEST.value and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 67, 69]
