@@ -102,6 +102,21 @@ RppStatus hip_exec_subtract_scalar_tensor(Rpp32f *srcPtr,
                                           Rpp32f *subtractTensor,
                                           rpp::Handle& handle);
 
+// -------------------- tensor_arithmetic_operations --------------------
+
+template <typename T1, typename T2>
+RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
+                                                          T1 *srcPtr2,
+                                                          RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                          RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                          T2 *dstPtr,
+                                                          RpptGenericDescPtr dstGenericDescPtr,
+                                                          RpptOp tensorOp,
+                                                          RpptBroadcastMode broadcastMode,
+                                                          Rpp32u *roiTensor1,
+                                                          Rpp32u *roiTensor2,
+                                                          rpp::Handle& handle);
+
 /**************************************** AUDIO AUGMENTATIONS ****************************************/
 
 #ifdef AUDIO_SUPPORT

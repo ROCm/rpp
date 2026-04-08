@@ -3200,4 +3200,31 @@ RppStatus jpeg_compression_distortion_i8_i8_host_tensor(Rpp8s *srcPtr,
                                                         RppLayoutParams layoutParams,
                                                         rpp::Handle& handle);
 
+// -------------------- tensor_binary_operation --------------------
+
+RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
+                                                        Rpp32f *srcPtr2,
+                                                        RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                        RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                        Rpp32f *dstPtr,
+                                                        RpptGenericDescPtr dstGenericDescPtr,
+                                                        RpptOp tensorOp,
+                                                        RpptBroadcastMode broadcastMode,
+                                                        Rpp32u *srcPtr1roiTensor,
+                                                        Rpp32u *srcPtr2roiTensor,
+                                                        rpp::Handle& handle);
+
+template <typename T1, typename T2>
+RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
+                                                            T1 *srcPtr2,
+                                                            RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                            RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                            T2 *dstPtr,
+                                                            RpptGenericDescPtr dstGenericDescPtr,
+                                                            RpptOp tensorOp,
+                                                            RpptBroadcastMode broadcastMode,
+                                                            Rpp32u *srcPtr1roiTensor,
+                                                            Rpp32u *srcPtr2roiTensor,
+                                                            rpp::Handle& handle);
+
 #endif // HOST_TENSOR_EXECUTORS_HPP

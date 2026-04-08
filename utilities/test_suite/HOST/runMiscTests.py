@@ -55,6 +55,8 @@ def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFi
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F32_TO_F32]
         if miscAugmentationMap[int(case)][0] == "log1p":
             bitDepths = [BitDepthTestMode.I16_TO_F32]
+        if miscAugmentationMap[int(case)][0] == "tensor_divide_tensor":
+            bitDepths = [BitDepthTestMode.F32_TO_F32, BitDepthTestMode.U8_TO_F32]
         # Tensor AND/OR/XOR (cases 5/6/7) are only executed for integer bit depths
         if int(case) in (5, 6, 7):
             bitDepths = [BitDepthTestMode.U8_TO_U8]
@@ -90,6 +92,11 @@ def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize,
             bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8]
         if miscAugmentationMap[int(case)][0] == "log1p":
             bitDepths = [BitDepthTestMode.I16_TO_F32]
+        if (miscAugmentationMap[int(case)][0] == "tensor_add_tensor" or miscAugmentationMap[int(case)][0] == "tensor_subtract_tensor" or miscAugmentationMap[int(case)][0] == "tensor_multiply_tensor"):
+            bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8, BitDepthTestMode.I16_TO_I16, BitDepthTestMode.U16_TO_U16, BitDepthTestMode.I32_TO_I32, BitDepthTestMode.U32_TO_U32]
+        if miscAugmentationMap[int(case)][0] == "tensor_divide_tensor":
+            bitDepths = [BitDepthTestMode.U8_TO_F32, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.U16_TO_F32, BitDepthTestMode.U32_TO_F32, BitDepthTestMode.I8_TO_F32, BitDepthTestMode.I16_TO_F32, BitDepthTestMode.I32_TO_F32]
+        
         for bitDepth in bitDepths:
             run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, bitDepth.value, outFilePath, additionalArg)
 
@@ -105,7 +112,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
-    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies if the broadcasting case to be used (e.g., 0 1 2)")
+    parser.add_argument('--broadcast', type = int, nargs = "+", default = [0, 1, 2], help = "Specifies the broadcast mode to be used (0 = Non-broadcast / 1 = second tensor broadcasted / 2 = First tensor broadcasted). Default is [0, 1, 2].")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     print_case_list(miscAugmentationMap, "HOST", parser)
     args = parser.parse_args()
@@ -162,6 +169,7 @@ caseList = args.case_list
 numDimsList = args.num_dims_list
 numRuns = args.num_runs
 batchSize = args.batch_size
+broadcast = args.broadcast
 qaMode = args.qa_mode
 if qaMode:
     testType = 0
@@ -224,7 +232,7 @@ for case in caseList:
             for axisMask in range(0, numDims):
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
         # Runs tensor operations for all broadcast values
-        elif miscAugmentationMap[int(case)][0] in ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor"]:
+        elif miscAugmentationMap[int(case)][0] in ["tensor_and_tensor", "tensor_or_tensor", "tensor_xor_tensor", "tensor_add_tensor", "tensor_subtract_tensor", "tensor_multiply_tensor", "tensor_divide_tensor"]:
             for broadcastFlag in broadcast:
                 run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, broadcastFlag)
         # Runs all other functionalities
