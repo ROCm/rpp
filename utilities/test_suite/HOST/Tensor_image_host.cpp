@@ -1854,7 +1854,7 @@ int main(int argc, char **argv)
                     testCaseName = "channel_dropout";
 
                     Rpp32f dropoutProbability[batchSize];
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     for (i = 0; i < batchSize; i++)
                         dropoutProbability[i] = 0.4f;
                     Rpp8u dropoutTensor[batchSize * srcDescPtr->c];
@@ -1873,13 +1873,21 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "cutout_dropout";
                     Rpp32u boxesInEachImage = 1;
-                    bool randomSeed = qaFlag ? false : true;
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
-                    Rpp32f colorBuffer[batchSize * boxesInEachImage * srcDescPtr->c];
-                    
-                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, randomSeed, 1);
+                    size_t colorBufferElementCount = batchSize * boxesInEachImage * srcDescPtr->c;
+                    size_t colorBufferElementSize = sizeof(Rpp32f);
+                    if (BitDepthTestMode == U8_TO_U8)
+                        colorBufferElementSize = sizeof(Rpp8u);
+                    else if (BitDepthTestMode == F16_TO_F16)
+                        colorBufferElementSize = sizeof(Rpp16f);
+                    else if (BitDepthTestMode == I8_TO_I8)
+                        colorBufferElementSize = sizeof(Rpp8s);
+                    unsigned char colorBuffer[colorBufferElementCount * colorBufferElementSize];
+
+                    init_dropout_erase(batchSize, boxesInEachImage, numBoxesTensor, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 1, colorBuffer);
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -1894,7 +1902,7 @@ int main(int argc, char **argv)
                     testCaseName = "grid_dropout";
                     Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                     Rpp32f holeRatio = 0.4f;
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
                     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
@@ -1939,7 +1947,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "random_erase";
                     Rpp32u boxesInEachImage = 1;
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     Rpp32u noiseBufferSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c;
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32f *colorBuffer[noiseBufferSize];
@@ -1958,10 +1966,10 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "coarse";
                     Rpp32u maxBoxesPerImage = 8;
-                    bool randomSeed = qaFlag ? false : true;
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * maxBoxesPerImage];
                     Rpp32u numOfBoxes[batchSize];
-                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, nullptr, srcDescPtr->dataType, randomSeed, 4);
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 4, nullptr);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

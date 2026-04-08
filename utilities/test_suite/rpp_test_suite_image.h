@@ -1978,10 +1978,10 @@ void generate_channel_dropout_mask(Rpp8u* dropoutTensor, Rpp32f* dropoutProbabil
 }
 
 // Dropout Region initializer for unit and performance testing
-void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int BitDepthTestMode, bool randomSeed, int dropoutType)
+void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, 
+    RpptROIPtr roiTensorPtrSrc, int channels, int BitDepthTestMode, int seed, int dropoutType, void *colorBuffer = NULL)
 {
     // Initialize Random Number Generators
-    int seed = randomSeed ? std::random_device{}() : 42;
     std::mt19937 rng(seed);
     std::uniform_real_distribution<float> pos_ratio(0.1f, 0.9f);
     std::uniform_real_distribution<float> wh_ratio_cutout(0.4f, 0.6f);
@@ -1990,6 +1990,11 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
     int minCoarseBoxes = std::max(0, std::min(5, maxBoxesPerImage));
     int maxCoarseBoxes = std::max(minCoarseBoxes, maxBoxesPerImage);
     std::uniform_int_distribution<int> coarse_box_count_dist(minCoarseBoxes, maxCoarseBoxes);
+
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = reinterpret_cast<Rpp32f *>(colorBuffer);
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
 
     for (int i = 0; i < batchSize; i++)
     {
@@ -2021,28 +2026,53 @@ void inline init_dropout_erase(int batchSize, int maxBoxesPerImage, Rpp32u* numO
             {
                 float squareSize = (*curr_wh_ratio)(rng) * std::min(roiW, roiH);
                 boxW = boxH = std::max(1.0f, squareSize);
+
+                const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiW - boxW), roiW - boxW));
+                const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * (roiH - boxH), roiH - boxH));
+
+                RpptRoiLtrb &box = anchorBoxInfoTensor[boxOffset + b];
+                box.lt.x = static_cast<Rpp32u>(roiX + x_start);
+                box.lt.y = static_cast<Rpp32u>(roiY + y_start);
+                box.rb.x = static_cast<Rpp32u>(roiX + x_start + boxW - 1.0f);
+                box.rb.y = static_cast<Rpp32u>(roiY + y_start + boxH - 1.0f);
+                validBoxCount++;
+
+                if (colorBuffer != nullptr)
+                {
+                    int colorOffset = (boxOffset + b) * channels;
+                    Rpp32f dropoutColor = 0.0f; 
+                    for (int c = 0; c < channels; c++)
+                        if (BitDepthTestMode == U8_TO_U8)
+                            colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
+                        else if (BitDepthTestMode == F16_TO_F16)
+                            colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
+                        else if (BitDepthTestMode == F32_TO_F32)
+                            colors32f[colorOffset + c] = (Rpp32f)(dropoutColor);
+                        else if (BitDepthTestMode == I8_TO_I8)
+                            colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+                }
             }
             else // Rectangular boxes
             {
                 boxW = std::max(1.0f, (*curr_wh_ratio)(rng) * roiW);
                 boxH = std::max(1.0f, (*curr_wh_ratio)(rng) * roiH);
+
+                const float x_slack = std::max(0.0f, roiW - boxW);
+                const float y_slack = std::max(0.0f, roiH - boxH);
+
+                const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * x_slack, x_slack));
+                const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * y_slack, y_slack));
+
+                // Set Bounding Box Coordinates
+                RpptRoiLtrb &box = anchorBoxInfoTensor[boxOffset + b];
+                box.lt.x = static_cast<Rpp32u>(roiX + x_start);
+                box.lt.y = static_cast<Rpp32u>(roiY + y_start);
+                Rpp32u boxWInt = static_cast<Rpp32u>(boxW);
+                Rpp32u boxHInt = static_cast<Rpp32u>(boxH);
+                box.rb.x = box.lt.x + boxWInt - 1;
+                box.rb.y = box.lt.y + boxHInt - 1;
+                validBoxCount++;
             }
-
-            const float x_slack = std::max(0.0f, roiW - boxW);
-            const float y_slack = std::max(0.0f, roiH - boxH);
-
-            const float x_start = std::max(0.0f, std::min(pos_ratio(rng) * x_slack, x_slack));
-            const float y_start = std::max(0.0f, std::min(pos_ratio(rng) * y_slack, y_slack));
-
-            // Set Bounding Box Coordinates
-            RpptRoiLtrb &box = anchorBoxInfoTensor[boxOffset + b];
-            box.lt.x = static_cast<Rpp32u>(roiX + x_start);
-            box.lt.y = static_cast<Rpp32u>(roiY + y_start);
-            Rpp32u boxWInt = static_cast<Rpp32u>(boxW);
-            Rpp32u boxHInt = static_cast<Rpp32u>(boxH);
-            box.rb.x = box.lt.x + boxWInt - 1;
-            box.rb.y = box.lt.y + boxHInt - 1;
-            validBoxCount++;
         }
         numOfBoxes[i] = validBoxCount;
     }
