@@ -2009,7 +2009,7 @@ int main(int argc, char **argv)
                     testCaseName = "channel_dropout";
 
                     Rpp32f dropoutProbability[batchSize];
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     for (i = 0; i < batchSize; i++)
                         dropoutProbability[i] = 0.4f;
                     generate_channel_dropout_mask(dropoutTensor, dropoutProbability, batchSize, srcDescPtr->c, seed);
@@ -2025,9 +2025,9 @@ int main(int argc, char **argv)
                 case CUTOUT_DROPOUT:
                 {
                     testCaseName = "cutout_dropout";
-                    boxesInEachImage = 1;
-                    bool seed = qaFlag ? false : true;
-                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, srcDescPtr->dataType, seed, 1);
+                    Rpp32u boxesInEachImage = 1;
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    init_dropout_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 1, colorBuffer);
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
@@ -2041,7 +2041,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "grid_dropout";
                     Rpp32f holeRatio = 0.4f;
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
                     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
@@ -2081,7 +2081,7 @@ int main(int argc, char **argv)
                 case RANDOM_ERASE:
                 {
                     testCaseName = "random_erase";
-                    Rpp32f seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
                     init_dropout_random_erase(batchSize, boxesInEachImage, NULL, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 3, colorBuffer);
 
                     startWallTime = omp_get_wtime();
@@ -2095,8 +2095,8 @@ int main(int argc, char **argv)
                 case COARSE_DROPOUT:
                 {
                     testCaseName = "coarse";
-                    bool randomSeed = qaFlag ? false : true;
-                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, nullptr, srcDescPtr->dataType, randomSeed, 4);
+                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 4, nullptr);
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_coarse_dropout(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, numOfBoxes, maxBoxesPerImage, roiTensorPtrSrc, roiTypeSrc, handle, RppBackend::RPP_HIP_BACKEND);
