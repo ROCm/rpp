@@ -2014,15 +2014,16 @@ void inline init_cutout_dropout(int batchSize, int maxBoxesPerImage, Rpp32u* num
         {
             int colorOffset = (i * maxBoxesPerImage) * channels;
             Rpp32f dropoutColor = 0.0f;
-            for (int c = 0; c < channels; c++)
-                if (inputBitDepth == 0)
+            for (int c = 0; c < channels; c++) {
+                if (inputBitDepth == U8_TO_U8)
                     colors8u[colorOffset + c] = (Rpp8u)dropoutColor;
-                else if (inputBitDepth == 2)
+                else if (inputBitDepth == F16_TO_F16)
                     colors16f[colorOffset + c] = (Rpp16f)(dropoutColor * ONE_OVER_255);
-                else if (inputBitDepth == 1)
+                else if (inputBitDepth == F32_TO_F32)
                     colors32f[colorOffset + c] = (Rpp32f)(dropoutColor);
-                else if (inputBitDepth == 3)
+                else if (inputBitDepth == I8_TO_I8)
                     colors8s[colorOffset + c] = (Rpp8s)(dropoutColor - 128);
+            }
         }
         numOfBoxes[i] = 1;
     }
