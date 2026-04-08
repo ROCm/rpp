@@ -2044,7 +2044,6 @@ int main(int argc, char **argv)
                     Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
-                    Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
                     Rpp32u maxHoleW = 0, maxHoleH = 0;
                     init_grid_dropout(srcDescPtr->n, anchorBoxInfoTensor, roiTensorPtrSrc, numGridsPerRow, numGridsPerColumn, maxHoleW, maxHoleH, holeRatio, seed);
 
@@ -2480,6 +2479,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
         CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
     }
+    if (testCase == GRID_DROPOUT)
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
     if (qualityTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(qualityTensor));
     return 0;

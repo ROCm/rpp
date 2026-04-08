@@ -29,7 +29,7 @@ SOFTWARE.
 
 template <typename T>
 __global__ void grid_dropout_pkd_hip_tensor(T *dstPtr,
-                                            uint2 dstStridesNH,
+                                            uint3 dstStridesNHW,
                                             RpptRoiLtrb *anchorBoxInfoTensor,
                                             uint boxesInEachImage)
 {
@@ -42,23 +42,24 @@ __global__ void grid_dropout_pkd_hip_tensor(T *dstPtr,
     if ((id_y >= (anchorBoxInfoTensor[id_z].rb.y - anchorBoxInfoTensor[id_z].lt.y + 1)) || (id_x >= (anchorBoxInfoTensor[id_z].rb.x - anchorBoxInfoTensor[id_z].lt.x + 1)))
         return;
 
-    uint dstIdx = (batch_idx * dstStridesNH.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNH.y + (id_x + anchorBoxInfoTensor[id_z].lt.x);
+    // NHWC: element offset = n * nStride + y * hStride + x * wStride (matches CPU grid_dropout NHWC path)
+    uint dstIdx = (batch_idx * dstStridesNHW.x) + (id_y + anchorBoxInfoTensor[id_z].lt.y) * dstStridesNHW.y + (id_x + anchorBoxInfoTensor[id_z].lt.x) * dstStridesNHW.z;
 
     if constexpr (std::is_same<T, Rpp8s>::value)
     {
-        *reinterpret_cast<char3 *>(&dstPtr[dstIdx * 3]) = make_char3(-128, -128, -128);
+        *reinterpret_cast<char3 *>(&dstPtr[dstIdx]) = make_char3(-128, -128, -128);
     }
     else if constexpr (std::is_same<T, Rpp8u>::value)
     {
-        *reinterpret_cast<uchar3 *>(&dstPtr[dstIdx * 3]) = make_uchar3(0, 0, 0);
+        *reinterpret_cast<uchar3 *>(&dstPtr[dstIdx]) = make_uchar3(0, 0, 0);
     }
     else if constexpr (std::is_same<T, Rpp32f>::value)
     {
-        *reinterpret_cast<float3 *>(&dstPtr[dstIdx * 3]) = make_float3(0.0f, 0.0f, 0.0f);
+        *reinterpret_cast<float3 *>(&dstPtr[dstIdx]) = make_float3(0.0f, 0.0f, 0.0f);
     }
     else // half
     {
-        *reinterpret_cast<d_half3_s *>(&dstPtr[dstIdx * 3]) = {(half)0, (half)0, (half)0};
+        *reinterpret_cast<d_half3_s *>(&dstPtr[dstIdx]) = {(half)0, (half)0, (half)0};
     }
 }
 
@@ -169,7 +170,7 @@ RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
                            0,
                            handle.GetStream(),
                            dstPtr,
-                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride, dstDescPtr->strides.wStride),
                            anchorBoxInfoTensor,
                            boxesInEachImage);
     }
