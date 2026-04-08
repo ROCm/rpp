@@ -299,7 +299,7 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim,
             descriptorPtr3D->dataType = isDestination ? RpptDataType::F16 : RpptDataType::U8;
             break;
         case U8_TO_I8:
-            descriptorPtr3D->dataType = RpptDataType::I8;
+            descriptorPtr3D->dataType = isDestination ? RpptDataType::I8 : RpptDataType::U8;
             break;
         case I16_TO_I16:
             descriptorPtr3D->dataType = RpptDataType::I16;
