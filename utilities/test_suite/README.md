@@ -73,6 +73,7 @@ The image test suite accepts the following command line arguments:
 -   num_runs: Specifies the number of runs for running the performance tests
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
+-   single_image: Forces batch size to 1 and restricts execution to supported cases and homogeneous bit-depth modes - (0 / 1). Default is 0
 
 ### Running the Tests for HOST Backend (RPP Image Test Suite)
 The test suite can be run with the following command:
@@ -125,6 +126,26 @@ To run performance tests with AMD rocprof kernel profiler for HIP backend varian
 python runImageTests.py --test_type 1 --profiling YES
 ```
 
+-   Single-image mode - Runs API wrappers with a forced batch size of 1. Only the cases listed below are supported; any other case requested alongside `--single_image 1` will be skipped automatically. Compatible with unit tests and performance tests; cannot be combined with `--qa_mode 1`.
+
+| Case | Augmentation   |
+|------|----------------|
+| 0    | brightness     |
+| 2    | blend          |
+| 20   | flip           |
+| 21   | resize         |
+| 37   | crop           |
+| 49   | box_filter     |
+| 51   | median_filter  |
+
+Supported bit-depth modes: `U8→U8`, `F16→F16`, `F32→F32`, `I8→I8` (homogeneous only).
+``` python
+# Unit test - single image, specific cases
+python runImageTests.py --case_list 0 2 20 21 37 49 51 --test_type 0 --single_image 1
+# Performance test - single image
+python runImageTests.py --case_list 0 2 20 21 37 49 51 --test_type 1 --single_image 1
+```
+
 ### Summary of features (RPP Image Test Suite)
 The image test suite includes:
 -   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images
@@ -133,6 +154,7 @@ The image test suite includes:
 -   Unit and Performance tests are included for various input/output bitdepths including U8/F32/F16/I8.
 -   Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant. (Current support only for U8 variants)
 -   Support for TurboJPEG and OpenCV decoder for decoding input images
+-   Single-image mode (`--single_image 1`) that exercises the API wrappers (batch size forced to 1) for cases: 0=brightness, 2=blend, 20=flip, 21=resize, 37=crop, 49=box_filter, 51=median_filter, with homogeneous bit-depth modes only (U8→U8, F16→F16, F32→F32, I8→I8)
 
 ## RPP Voxel Test Suite
 The 3D Voxel test suite can be executed under 2 backend scenarios - (HOST/HIP):
