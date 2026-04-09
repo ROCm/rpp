@@ -2210,7 +2210,7 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
-    if(testCase == REMAP)
+    if(testCase == REMAP || testCase == LENS_CORRECTION)
     {
         free(rowRemapTable);
         free(colRemapTable);
