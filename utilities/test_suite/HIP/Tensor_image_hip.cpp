@@ -2407,7 +2407,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_input_second));
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(testCase == PIXELATE)
-        CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
+        CHECK_RETURN_STATUS(hipHostFree(d_interDstPtr));
     if(alpha != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
     if(beta != NULL)
@@ -2483,6 +2483,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     if (posterizeLevelBits != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(posterizeLevelBits));
+    if (thresholdTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(thresholdTensor));
     if(dropoutTensor != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(dropoutTensor));
     if (permutationTensor != nullptr)
