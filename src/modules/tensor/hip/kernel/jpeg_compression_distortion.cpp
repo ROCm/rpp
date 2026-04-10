@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -357,9 +357,10 @@ __device__ __forceinline__ void process_jpeg_distortion(float src_smem[48][128],
     __syncthreads();
 
     // ----------- Step 2: Downsample CbCr -----------
+    float4 cb_f4 = {0.0f, 0.0f, 0.0f, 0.0f};
+    float4 cr_f4 = {0.0f, 0.0f, 0.0f, 0.0f};
     if (localThreadIdx_y < 8)
     {
-        float4 cb_f4, cr_f4;
         downsample_cbcr_hip_compute(
             (d_float8*)&src_smem[cbcrY][hipThreadIdx_x8],
             (d_float8*)&src_smem[cbcrY + 1][hipThreadIdx_x8],
@@ -368,7 +369,11 @@ __device__ __forceinline__ void process_jpeg_distortion(float src_smem[48][128],
             (d_float8*)&src_smem[cbcrY + 32][hipThreadIdx_x8],
             (d_float8*)&src_smem[cbcrY + 33][hipThreadIdx_x8],
             &cb_f4, &cr_f4);
+    }
+    __syncthreads();  // all smem reads must complete before any thread writes Cb/Cr back
 
+    if (localThreadIdx_y < 8)
+    {
         *(float4*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cb_f4;
         *(float4*)&src_smem[8 + hipThreadIdx_y_channel.y][hipThreadIdx_x4] = cr_f4;
     }
@@ -433,7 +438,6 @@ __device__ __forceinline__ void process_jpeg_distortion(float src_smem[48][128],
     clamp_range((float*)&src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
     __syncthreads();
 
-    float4 cb_f4, cr_f4;
     cbcrY = localThreadIdx_y / 2;
     cb_f4 = *(float4*)&src_smem[cbcrY + 16][hipThreadIdx_x4];
     cr_f4 = *(float4*)&src_smem[cbcrY + 24][hipThreadIdx_x4];
