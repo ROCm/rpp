@@ -63,35 +63,35 @@ __device__ const float4 maxVal128_f4 = {128.0f, 128.0f, 128.0f, 128.0f};
 __device__ inline void clamp_range(schar *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], -128), 127);
+        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 255.0f);
 }
 
 // Clamping for float
 __device__ inline void clamp_range(float *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], 0.0f), 1.0f);
+        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 1.0f);
 }
 
 // Clamping for half
 __device__ inline void clamp_range(half *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], 0.0f), 1.0f);
+        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 1.0f);
 }
 
 // Clamping for unsigned char (uchar)
 __device__ inline void clamp_range(uchar *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], 0), 255);
+        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 255.0f);
 }
 
 // Generic clamping when no specific type is provided (default to 0-255)
 __device__ inline void clamp_range(float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = fminf(fmaxf(values[j], 0.0f), 255.0f);
+        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 255.0f);
 }
 
 // Computing Y from R G B
