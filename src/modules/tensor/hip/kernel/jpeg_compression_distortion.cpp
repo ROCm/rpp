@@ -63,7 +63,7 @@ __device__ const float4 maxVal128_f4 = {128.0f, 128.0f, 128.0f, 128.0f};
 __device__ inline void clamp_range(schar *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 255.0f);
+        values[j] = __builtin_amdgcn_fmed3f(-128, values[j], 127);
 }
 
 // Clamping for float
@@ -84,7 +84,7 @@ __device__ inline void clamp_range(half *src, float* values)
 __device__ inline void clamp_range(uchar *src, float* values)
 {
     for (int j = 0; j < 8; j++)
-        values[j] = __builtin_amdgcn_fmed3f(0.0f, values[j], 255.0f);
+        values[j] = __builtin_amdgcn_fmed3f(0, values[j], 255);
 }
 
 // Generic clamping when no specific type is provided (default to 0-255)
