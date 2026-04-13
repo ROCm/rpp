@@ -23,8 +23,7 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
-#include "ffts.h"
-#include "ffts_attributes.h"
+#include <ffts/ffts.h>
 #include <complex>
 
 inline bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
@@ -177,8 +176,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         }
 
         // Set temporary buffers to 0
-        Rpp32f FFTS_ALIGN(32) *fftInBuf = static_cast<Rpp32f*>(_mm_malloc(fftInSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
-        Rpp32f FFTS_ALIGN(32) *fftOutBuf = static_cast<Rpp32f*>(_mm_malloc(fftOutSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
+        alignas(32) Rpp32f *fftInBuf = static_cast<Rpp32f*>(_mm_malloc(fftInSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
+        alignas(32) Rpp32f *fftOutBuf = static_cast<Rpp32f*>(_mm_malloc(fftOutSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
 
         for (Rpp32s w = 0; w < numWindows; w++)
         {
