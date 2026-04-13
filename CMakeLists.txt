@@ -179,8 +179,17 @@ find_package(HALF REQUIRED)
 include_directories(${HALF_INCLUDE_DIRS})
 
 if (RPP_AUDIO_SUPPORT)
-    add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
-    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
+    find_package(FFTS QUIET)
+    if(FFTS_FOUND)
+        add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
+        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
+        message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
+    else()
+        set(RPP_AUDIO_SUPPORT OFF)              # Disable audio support if FFTS not found
+        message("-- ${Yellow}FFTS not found. ${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
+    endif()
+else()
+    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
@@ -326,17 +335,13 @@ if(USING_THE_ROCK)
 endif()
 
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/third_party/ffts/lib/libffts.a)
-    message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
-else()
-    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
+    target_link_libraries(${PROJECT_NAME} FFTS::FFTS)
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/api
-        $<$<BOOL:${RPP_AUDIO_SUPPORT}>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include>
         ${ROCM_PATH}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
@@ -383,9 +388,13 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/test_suite/ DESTINATION 
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
-set(CPACK_RESOURCE_FILE_FFTS_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/FFTS_LICENSE")
-install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
-install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+if(RPP_AUDIO_SUPPORT AND FFTS_FOUND)
+    set(CPACK_RESOURCE_FILE_FFTS_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/COPYRIGHT")
+    if(EXISTS ${CPACK_RESOURCE_FILE_FFTS_LICENSE})
+        install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
+        install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+    endif()
+endif()
 
 # Cmake module config file configurations
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/" CACHE INTERNAL "Default module path.")
