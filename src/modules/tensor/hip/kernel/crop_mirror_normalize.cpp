@@ -24,39 +24,49 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 
+// F32 CMN must use one FMA rounding (matches HOST std::fma / AVX fmadd); plain (a*b)+c can differ.
+__device__ inline float4 cmn_f32_fma_float4(float4 src, float4 mul, float4 off)
+{
+    return make_float4(
+        fmaf(src.x, mul.x, off.x),
+        fmaf(src.y, mul.y, off.y),
+        fmaf(src.z, mul.z, off.z),
+        fmaf(src.w, mul.w, off.w));
+}
+
 __device__ void cmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[0] = cmn_f32_fma_float4(pix_f8->f4[0], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = cmn_f32_fma_float4(pix_f8->f4[1], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(uchar *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[0] = cmn_f32_fma_float4(pix_f8->f4[0], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = cmn_f32_fma_float4(pix_f8->f4[1], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(uchar *srcPtr, uchar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1]);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1]);
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(cmn_f32_fma_float4(pix_f8->f4[0], cmnParams_f8->f4[0], cmnParams_f8->f4[1]));
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(cmn_f32_fma_float4(pix_f8->f4[1], cmnParams_f8->f4[0], cmnParams_f8->f4[1]));
 }
 
 __device__ void cmn_hip_compute(float *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[0] = cmn_f32_fma_float4(pix_f8->f4[0], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = cmn_f32_fma_float4(pix_f8->f4[1], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
 }
 
 __device__ void cmn_hip_compute(schar *srcPtr, schar *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to255((pix_f8->f4[0] + FLOAT4_128) * cmnParams_f8->f4[0] +  cmnParams_f8->f4[1]) - FLOAT4_128;
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to255((pix_f8->f4[1] + FLOAT4_128) * cmnParams_f8->f4[0] +  cmnParams_f8->f4[1]) - FLOAT4_128;
+    pix_f8->f4[0] = rpp_hip_pixel_check_0to255(cmn_f32_fma_float4(pix_f8->f4[0] + FLOAT4_128, cmnParams_f8->f4[0], cmnParams_f8->f4[1])) - FLOAT4_128;
+    pix_f8->f4[1] = rpp_hip_pixel_check_0to255(cmn_f32_fma_float4(pix_f8->f4[1] + FLOAT4_128, cmnParams_f8->f4[0], cmnParams_f8->f4[1])) - FLOAT4_128;
 }
 __device__ void cmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *cmnParams_f8)
 {
-    pix_f8->f4[0] = (pix_f8->f4[0] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
-    pix_f8->f4[1] = (pix_f8->f4[1] * cmnParams_f8->f4[0]) + cmnParams_f8->f4[1];
+    pix_f8->f4[0] = cmn_f32_fma_float4(pix_f8->f4[0], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
+    pix_f8->f4[1] = cmn_f32_fma_float4(pix_f8->f4[1], cmnParams_f8->f4[0], cmnParams_f8->f4[1]);
 }
 
 template <typename T, typename U>

@@ -23,6 +23,13 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
+#include <cmath>
+
+// Scalar F32 CMN must match _mm256_fmadd_ps (one rounding); plain (a*b)+c can differ from FMA and across compilers.
+inline Rpp32f cmn_f32_fma(Rpp32f src, Rpp32f mul, Rpp32f off)
+{
+    return std::fma(src, mul, off);
+}
 
 inline void compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
 {
@@ -563,9 +570,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        *dstPtrTempR = ((srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        *dstPtrTempG = ((srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        *dstPtrTempB = ((srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        *dstPtrTempR = cmn_f32_fma(srcPtrTemp[0], multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        *dstPtrTempG = cmn_f32_fma(srcPtrTemp[1], multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        *dstPtrTempB = cmn_f32_fma(srcPtrTemp[2], multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
 
                         srcPtrTemp += 3;
                         dstPtrTempR++;
@@ -613,9 +620,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
-                        *dstPtrTempR = ((srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        *dstPtrTempG = ((srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        *dstPtrTempB = ((srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        *dstPtrTempR = cmn_f32_fma(srcPtrTemp[0], multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        *dstPtrTempG = cmn_f32_fma(srcPtrTemp[1], multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        *dstPtrTempB = cmn_f32_fma(srcPtrTemp[2], multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
 
                         dstPtrTempR++;
                         dstPtrTempG++;
@@ -665,9 +672,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dstPtrTemp[0] = ((*srcPtrTempR * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = ((*srcPtrTempG * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = ((*srcPtrTempB * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = cmn_f32_fma(*srcPtrTempR, multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        dstPtrTemp[1] = cmn_f32_fma(*srcPtrTempG, multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        dstPtrTemp[2] = cmn_f32_fma(*srcPtrTempB, multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
 
                         srcPtrTempR++;
                         srcPtrTempG++;
@@ -718,9 +725,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTempG--;
                         srcPtrTempB--;
 
-                        dstPtrTemp[0] = ((*srcPtrTempR * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = ((*srcPtrTempG * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = ((*srcPtrTempB * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = cmn_f32_fma(*srcPtrTempR, multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        dstPtrTemp[1] = cmn_f32_fma(*srcPtrTempG, multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        dstPtrTemp[2] = cmn_f32_fma(*srcPtrTempB, multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
 
                         dstPtrTemp += 3;
                     }
@@ -762,9 +769,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        dstPtrTemp[0] = ((srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = ((srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = ((srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = cmn_f32_fma(srcPtrTemp[0], multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        dstPtrTemp[1] = cmn_f32_fma(srcPtrTemp[1], multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        dstPtrTemp[2] = cmn_f32_fma(srcPtrTemp[2], multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
                         srcPtrTemp += 3;
                         dstPtrTemp += 3;
                     }
@@ -800,9 +807,9 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
-                        dstPtrTemp[0] = ((srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = ((srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = ((srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = cmn_f32_fma(srcPtrTemp[0], multiplierTensor[cmnParamLocs[0]], offsetTensor[cmnParamLocs[0]]);
+                        dstPtrTemp[1] = cmn_f32_fma(srcPtrTemp[1], multiplierTensor[cmnParamLocs[1]], offsetTensor[cmnParamLocs[1]]);
+                        dstPtrTemp[2] = cmn_f32_fma(srcPtrTemp[2], multiplierTensor[cmnParamLocs[2]], offsetTensor[cmnParamLocs[2]]);
                         dstPtrTemp += 3;
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
@@ -843,7 +850,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            *dstPtrTemp = ((*srcPtrTemp * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]);
+                            *dstPtrTemp = cmn_f32_fma(*srcPtrTemp, multiplierTensor[cmnParamLocs[c]], offsetTensor[cmnParamLocs[c]]);
 
                             srcPtrTemp++;
                             dstPtrTemp++;
@@ -887,7 +894,7 @@ RppStatus crop_mirror_normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                         {
                             srcPtrTemp--;
 
-                            *dstPtrTemp = ((*srcPtrTemp * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]);
+                            *dstPtrTemp = cmn_f32_fma(*srcPtrTemp, multiplierTensor[cmnParamLocs[c]], offsetTensor[cmnParamLocs[c]]);
                             dstPtrTemp++;
                         }
                         srcPtrRow += srcDescPtr->strides.hStride;
