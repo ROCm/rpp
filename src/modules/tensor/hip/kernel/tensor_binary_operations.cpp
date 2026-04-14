@@ -642,8 +642,6 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
 #pragma omp parallel for num_threads(batchSize)
     for (int i = 0; i < batchSize; i++)
     {
-        bool incompatibleDims = false;
-
         Rpp32u *src1roi = roiTensor1 + i * src1NDim * 2;
         Rpp32u *src1Begin = src1roi;
         Rpp32u *src1Dims = src1Begin + src1NDim;
@@ -678,9 +676,6 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
         // Compute begin offsets based on ROIs & check incompatibility of dimensions
         for (int j = 0; j < minDim; j++)
         {
-            if ((src1SampleDims[j] != src2SampleDims[j]) && (src1SampleDims[j] != 1) && (src2SampleDims[j] != 1))
-                incompatibleDims = true;
-
             dstSampleDims[j] = std::max(src1SampleDims[j], src2SampleDims[j]);
             src1BeginOffsets[i] += src1Begin[j] * src1Strides[j + 1];
             src2BeginOffsets[i] += src2Begin[j] * src2Strides[j + 1];
