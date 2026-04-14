@@ -566,7 +566,9 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
         {
             size_t elementSize = (srcDescPtr->dataType == RpptDataType::F32) ? 4 : 
                                     (srcDescPtr->dataType == RpptDataType::F16) ? 2 : 1;
-            size_t dataSize = dstDescPtr->strides.nStride * dstDescPtr->n * elementSize;
+            // rppt_color_to_greyscale above writes to (uint8_t*)tempPtr + dstDescPtr->offsetInBytes; allocation must cover that prefix.
+            size_t dataSize = static_cast<size_t>(dstDescPtr->offsetInBytes) +
+                               static_cast<size_t>(dstDescPtr->strides.nStride) * static_cast<size_t>(dstDescPtr->n) * elementSize;
 
             CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
 
