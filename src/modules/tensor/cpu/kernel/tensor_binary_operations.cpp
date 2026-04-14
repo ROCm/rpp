@@ -359,7 +359,8 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(numThreads);
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
@@ -878,7 +879,8 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(numThreads);
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
@@ -1392,7 +1394,8 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(numThreads);
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
@@ -1857,7 +1860,8 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(numThreads);
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32u *src1roi = srcPtr1roiTensor + batchCount * src1NDim * 2;
