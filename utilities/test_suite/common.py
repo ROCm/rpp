@@ -418,7 +418,7 @@ def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileNam
         resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
         resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden output QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)
     print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
     if numPassed != numLines:
