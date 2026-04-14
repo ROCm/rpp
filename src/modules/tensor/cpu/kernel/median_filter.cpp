@@ -219,8 +219,6 @@ inline void rpp_median_histogram_u8_pkd_host(const Rpp8u *src,
     }
 }
 
-#if __AVX2__
-
 // -------------------- AVX2 Sorting Network Implementations --------------------
 
 // 3×3 Median - U8 PLN1
@@ -1580,11 +1578,11 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                     for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else
-                            median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -1761,11 +1759,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                             for(Rpp32s j = 0; j < roiPtrSrc->xywhROI.roiWidth; j++)
                             {
                                 if (useSortNet3)
-                                    median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                    median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                                 else if (useSortNet5)
-                                    median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
+                                    median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                                 else
-                                    median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                                    median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                                 dstPtrTemp++;
                             }
                             dstPtrRow += dstDescPtr->strides.hStride;
@@ -1829,11 +1827,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                     for (Rpp32s j = 0; j < roiPtrSrc->xywhROI.roiWidth; j++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet_tensor(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr);
                         else
-                            median_filter_generic_tensor(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, srcDescPtr->c, srcDescPtr, dstDescPtr);
                         dstPtrTemp += dstDescPtr->c;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -1853,11 +1851,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                     for (Rpp32s c = 0; c < srcDescPtr->c; c++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else
-                            median_filter_generic(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn++;
                     }
@@ -1877,11 +1875,11 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                     for (Rpp32s j = 0; j < roiPtrSrc->xywhROI.roiWidth; j++)
                     {
                         if (useSortNet3)
-                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_3x3_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else if (useSortNet5)
-                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                            median_filter_5x5_sortnet(srcPtrChannel, dstPtrTemp, i, j, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr);
                         else
-                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                            median_filter_generic(srcPtrChannel, dstPtrTemp, i, j, kernelSizeSquared, padLength, roiPtrSrc->xywhROI.roiHeight - 1, roiPtrSrc->xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
                         dstPtrTemp++;
                     }
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -1890,7 +1888,6 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
-    }
 
     return RPP_SUCCESS;
 }

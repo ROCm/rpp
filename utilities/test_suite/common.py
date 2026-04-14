@@ -193,6 +193,10 @@ miscAugmentationMap  = {
 # Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
 SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51}  # brightness, blend, flip, resize, crop, box_filter, median_filter
 
+# Only homogeneous bit-depth modes are supported by the single-image API wrappers.
+# Used as an allowlist: any mode not in this set is skipped by the Python runner.
+SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS = {BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8}
+
 ImageAugmentationGroupMap = {
     "color_augmentations": [
         "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"

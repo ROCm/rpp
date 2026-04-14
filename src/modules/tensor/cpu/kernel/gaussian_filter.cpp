@@ -91,8 +91,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
     
     // Pre-allocate and broadcast filter coefficients for all batches before parallel loop
-    // Maximum kernel size is 9x9 = 81 coefficients
-    constexpr int MAX_FILTER_SIZE = 81;
+    // Maximum kernel size is 9x9 = 81 coefficients    
     __m256 *pFilterBatch = (__m256 *)aligned_alloc(32, dstDescPtr->n * MAX_FILTER_SIZE * sizeof(__m256));
     if (!pFilterBatch)
         return gaussian_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);

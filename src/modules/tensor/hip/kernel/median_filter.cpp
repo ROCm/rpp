@@ -451,10 +451,10 @@ __device__ __forceinline__ float compute_median_quickselect(T *window)
             }
 
             // Shrink search interval toward median position
-            if (medianIndex <= j)
-                rightIdx = j;
-            else if (i <= medianIndex)
-                leftIdx = i;
+            if (medianIndex <= lt)
+                rightIdx = lt - 1;
+            else if (medianIndex > gt)
+                leftIdx = gt + 1;
             else
                 break; // midVal is the median
         }

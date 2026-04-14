@@ -694,22 +694,49 @@ int main(int argc, char **argv)
     int roiHeightList[noOfImages], roiWidthList[noOfImages];
     initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
 
-    // Initialize output buffers with correct size based on actual image dimensions (not padded)
+    // For CROP, the output descriptor must match the crop ROI dimensions, not the input dimensions.
+    // Re-initialize dstDescPtr using the crop output size so allocations and strides are correct.
+    if (testCase == CROP)
+    {
+        for (int i = 0; i < noOfImages; i++)
+        {
+            Rpp32u cropW = roiWidthList[i];
+            Rpp32u cropH = roiHeightList[i];
+            // Pad width to next multiple of 8 (same rule as initializeDescriptors)
+            dstDescPtr[i].w = (cropW % 8 == 0) ? cropW : (cropW / 8) * 8 + 8;
+            dstDescPtr[i].h = cropH;
+            if (dstDescPtr[i].layout == RpptLayout::NHWC)
+            {
+                dstDescPtr[i].strides.nStride = dstDescPtr[i].h * dstDescPtr[i].w * outputChannel;
+                dstDescPtr[i].strides.hStride = dstDescPtr[i].w * outputChannel;
+            }
+            else
+            {
+                dstDescPtr[i].strides.nStride = dstDescPtr[i].h * dstDescPtr[i].w * outputChannel;
+                dstDescPtr[i].strides.hStride = dstDescPtr[i].w;
+                dstDescPtr[i].strides.cStride = dstDescPtr[i].h * dstDescPtr[i].w;
+            }
+        }
+    }
+
+    // Initialize output buffers with correct size
     vector<Mat> outputVec(noOfImages);
     vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
     for (int i = 0; i < noOfImages; i++)
     {
-        // Store actual dimensions before padding
         actualInputWidth[i] = inputVec[i].cols;
         actualInputHeight[i] = inputVec[i].rows;
-        
+
+        // For CROP the output dimensions are the ROI dimensions, not the input image dimensions
+        Rpp32u outW = (testCase == CROP) ? roiWidthList[i] : actualInputWidth[i];
+        Rpp32u outH = (testCase == CROP) ? roiHeightList[i] : actualInputHeight[i];
+
         int cvType = get_cv_type(dstDescPtr[i].dataType, 1);
-        
-        // Allocate buffer using input dimensions
+
         if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
-            outputVec[i] = Mat(actualInputHeight[i] * dstDescPtr[i].c, actualInputWidth[i], cvType);
+            outputVec[i] = Mat(outH * dstDescPtr[i].c, outW, cvType);
         else
-            outputVec[i] = Mat(actualInputHeight[i], actualInputWidth[i], get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
+            outputVec[i] = Mat(outH, outW, get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
         
         // Prepare input buffers as contiguous memory for direct device copy
         if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
@@ -733,8 +760,10 @@ int main(int argc, char **argv)
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
+    vector<RpptROI> savedRoi(roi);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
+        roi = savedRoi;
         for (int i = 0; i < noOfImages; i++)
         {
             RppStatus errorCodeCapture = RPP_SUCCESS;
@@ -984,7 +1013,7 @@ int main(int argc, char **argv)
                     for(int j = 0; j < outputHeight; j++)
                     {
                         Rpp8u *d_outputRowTemp = d_output_offsetted + (c * dstDescPtr[i].strides.cStride + j * dstDescPtr[i].strides.hStride) * outElementSize;
-                        Rpp8u *outputRowTemp = outputTemp + (c * actualInputHeight[i] + j) * outputVec[i].step[0];
+                        Rpp8u *outputRowTemp = outputTemp + (c * outputHeight + j) * outputVec[i].step[0];
                         CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
                     }
                 }
