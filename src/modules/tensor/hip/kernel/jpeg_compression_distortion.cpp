@@ -235,7 +235,9 @@ __device__ inline void quantize(float* value, float* coeff, float qScale)
     for(int i = 0; i < 8; i++)
     {
         float qCoeff = coeff[i] * qScale;  // Runtime multiplication (matches HOST)
-        value[i] = qCoeff * roundf(value[i] / qCoeff);  // Uses roundf; HOST AVX2 uses std::round with equivalent behavior (no clamping)
+        float quotient = value[i] / qCoeff;
+        // roundf matches HOST scalar/AVX quantization (half-away-from-zero, same as std::round for float quotient)
+        value[i] = qCoeff * roundf(quotient);
     }
 }
 

@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
+#include <cmath>
 
 Rpp32s BLOCK_SIZE = 8;
 
@@ -165,7 +166,7 @@ inline void quantize_block(Rpp32f *block, const Rpp32f *quantTable, Rpp32s strid
         for (Rpp32s col = 0; col < 8; col++)
         {
             Rpp32f qCoeff = quantTable[rowQuantIdx + col] * qualityFactor;
-            block[rowIdx + col] = qCoeff * roundf(block[rowIdx + col] / qCoeff);
+            block[rowIdx + col] = qCoeff * std::round(block[rowIdx + col] / qCoeff);
         }
     }
 }
@@ -1519,6 +1520,11 @@ RppStatus jpeg_compression_distortion_f32_f32_host_tensor(Rpp32f *srcPtr,
                             p[row] = _mm256_mul_ps(p[row], avx_p1op255);
                             rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTempRow, p[row]);                                 // simd loads
                         }
+                    }
+#else
+                    {
+                        Rpp32s rowLimit = ((vectorLoopCount + 8) <= roi.xywhROI.roiWidth) ? 8 : (roi.xywhROI.roiWidth - vectorLoopCount);
+                        jpeg_compression_distortion_pln1_generic(srcPtrTemp, dstPtrTemp, scratchMem, rowLimit, colLimit, srcDescPtr, dstDescPtr, qualityParam);
                     }
 #endif
                     dstPtrTemp += 8;

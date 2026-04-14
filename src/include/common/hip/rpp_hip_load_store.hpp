@@ -124,7 +124,7 @@ struct RoundToNearest {};
 #define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
 #define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
 #define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
-#define FLOAT4_ONE_OVER_255 make_float4(0.003921569f, 0.003921569f, 0.003921569f, 0.003921569f)
+#define FLOAT4_ONE_OVER_255 make_float4(ONE_OVER_255, ONE_OVER_255, ONE_OVER_255, ONE_OVER_255)
 #define FLOAT4_255 make_float4(255.0f, 255.0f, 255.0f, 255.0f)
 #define FLOAT4_128 make_float4(128.0f, 128.0f, 128.0f, 128.0f)
 #define FLOAT4_I8_MIN_VALUE make_float4(-128.0f, -128.0f, -128.0f, -128.0f)
