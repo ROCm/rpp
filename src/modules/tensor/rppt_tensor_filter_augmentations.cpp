@@ -636,7 +636,11 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             return RPP_ERROR_NOT_IMPLEMENTED;
 
         if (tempPtr != nullptr)
+        {
+            // Sobel runs asynchronously on the same stream; wait before freeing the greyscale scratch buffer.
+            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
             CHECK_RETURN_STATUS(hipFree(tempPtr));
+        }
 
         return RPP_SUCCESS;
     }
