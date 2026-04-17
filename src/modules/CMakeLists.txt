@@ -124,8 +124,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC HALF::half)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories( ${PROJECT_NAME}
     PUBLIC
-        ${RPP_SOURCE_DIR}/api
-        ${RPP_SOURCE_DIR}/third_party/ffts/include
+        ${CMAKE_SOURCE_DIR}/api
         ${ROCM_INC}
     PRIVATE
         ${CMAKE_BINARY_DIR}
