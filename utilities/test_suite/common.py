@@ -397,24 +397,42 @@ def generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR):
 
 # Read the data from QA logs, process the data and print the results as a summary
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
-    f = open(qaFilePath, 'r+')
     numLines = 0
     numPassed = 0
-    for line in f:
-        sys.stdout.write(line)
-        numLines += 1
-        if "PASSED" in line:
-            numPassed += 1
-        sys.stdout.flush()
-    resultsInfo = "\n\nFinal Results of Tests:"
-    resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-    resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-    resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
-    resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
-    resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-    resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-    f.write(resultsInfo)
+    resultsInfo = ""
+    with open(qaFilePath, 'r+') as f:
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            if not line.strip():
+                continue
+            # Count only verdict lines so blank lines / stray text do not skew totals
+            if "PASSED" not in line and "FAILED" not in line:
+                continue
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden output QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
     print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    if numPassed != numLines:
+        print(
+            "ERROR: QA failures: "
+            + str(numLines - numPassed)
+            + " of "
+            + str(numLines)
+            + " test verdict(s) did not pass (see "
+            + qaFilePath
+            + ").",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 # Read the data from performance logs, process the data and print the results as a summary
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
