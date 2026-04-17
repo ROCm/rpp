@@ -290,8 +290,8 @@ __global__ void tensor_op_tensor_2d_hip_tensor(T1 *srcPtr1,
             uint srcIdx2 = srcBaseIdx2 + (id_x * src2SampleStrides[2]);
             srcArr1[i1] = srcPtr1[srcIdx1];
             srcArr2[i1] = srcPtr2[srcIdx2];
+            id_x++;
         }
-        id_x += 8;
 
         VectorType2 dst_vec8;
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
@@ -412,8 +412,8 @@ __global__ void tensor_op_tensor_3d_hip_tensor(T1 *srcPtr1,
             uint srcIdx2 = srcBaseIdx2 + (id_x * srcStrides2[3]);
             srcArr1[i1] = srcPtr1[srcIdx1];
             srcArr2[i1] = srcPtr2[srcIdx2];
+            id_x++;
         }
-        id_x += 8;
 
         VectorType2 dst_vec8;
         ArithmeticOperationExecute<VectorType1, Operation>::rpp_hip_math_arithmeticOp8((VectorType1*)srcArr1, (VectorType1*)srcArr2, (VectorType2*)&dst_vec8);
