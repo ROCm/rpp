@@ -69,6 +69,7 @@ class BitDepthTestMode(Enum):
     I32_TO_F32 = 15 # Input: I32 -> Output: F32
 
 
+
 bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i8_f32_", 12: "_i16_f32_", 13: "_u16_f32_", 14: "_u32_f32_", 15: "_i32_f32_"}
 
 class OutputFormat(Enum):
@@ -187,6 +188,10 @@ miscAugmentationMap  = {
     5: ["tensor_and_tensor", "HOST", "HIP"],
     6: ["tensor_or_tensor", "HOST", "HIP"],
     7: ["tensor_xor_tensor", "HOST", "HIP"],
+    8: ["tensor_add_tensor", "HOST", "HIP"],
+    9: ["tensor_subtract_tensor", "HOST", "HIP"],
+    10: ["tensor_multiply_tensor", "HOST", "HIP"],
+    11: ["tensor_divide_tensor", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {
@@ -589,8 +594,8 @@ def get_voxel_layout_type(layout, backend):
        result += "_PLN1_toPLN1"
     return result
 
-def get_bit_depth(bitDepth):
-    result = str(bitDepthDict[bitDepth])
+def get_bit_depth(BitDepthTestMode):
+    result = str(bitDepthDict[BitDepthTestMode])
     return result
 
 def get_signal_name_from_return_code(returnCode):

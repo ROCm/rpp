@@ -220,6 +220,17 @@ typedef enum
 */
 typedef enum
 {
+    RPP_TENSOR_OP_ADD,
+    RPP_TENSOR_OP_SUBTRACT,
+    RPP_TENSOR_OP_MULTIPLY,
+    RPP_TENSOR_OP_DIVIDE
+} RpptOp;
+
+/*! \brief RPPT Broadcast Mode type enum
+ * \ingroup group_rppdefs
+*/
+typedef enum
+{
     RPP_TENSOR_OP_AND,
     RPP_TENSOR_OP_OR,
     RPP_TENSOR_OP_XOR

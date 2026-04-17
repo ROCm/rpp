@@ -128,6 +128,7 @@ const __m256i avx_px5 = _mm256_set1_epi32(5);
 const __m256i avx_px6 = _mm256_set1_epi32(6);
 const __m256i avx_px7 = _mm256_set1_epi32(7);
 const __m256i avx_pxConvertI8 = _mm256_set1_epi8((char)128);
+const __m256i avx_mask8 =  _mm256_set1_epi16(0x00FF);
 const __m256 avx_pDstLocInit = _mm256_setr_ps(0, 1, 2, 3, 4, 5, 6, 7);
 
 const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0, 0x80, 0x80, 0x80, 1, 0x80, 0x80, 0x80, 2, 0x80, 0x80, 0x80, 3, 0x80, 0x80, 0x80);
