@@ -50,6 +50,9 @@ int main(int argc, char **argv)
     bool axisMaskCase = (testCase == NORMALIZE || testCase == CONCAT);
     bool permOrderCase = (testCase == TRANSPOSE);
     bool broadCastCase = (testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR || testCase == TENSOR_ADD_TENSOR || testCase == TENSOR_SUBTRACT_TENSOR || testCase == TENSOR_MULTIPLY_TENSOR || testCase == TENSOR_DIVIDE_TENSOR);
+    // Golden bitwise references use a linear shifted second tensor with zero past the last sample (no wrap);
+    // arithmetic goldens use wraparound (i+1) % N — see second-input fill below.
+    bool bitwiseTensorCase = (testCase == TENSOR_AND_TENSOR || testCase == TENSOR_OR_TENSOR || testCase == TENSOR_XOR_TENSOR);
     int additionalParam = (axisMaskCase || permOrderCase || broadCastCase) ? atoi(argv[8]) : 1;
     int axisMask = additionalParam, permOrder = additionalParam, broadCastFlag = additionalParam;
 
@@ -198,13 +201,23 @@ int main(int argc, char **argv)
                 Rpp32f *inputSecondTemp = static_cast<Rpp32f *>(inputSecond);
                 Rpp32f *inputU8 = static_cast<Rpp32f *>(input);
                 for (int i = 0; i < iBufferSizeSecond; i++)
-                    inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+                {
+                    if(bitwiseTensorCase && (iBufferSizeSecond == iBufferSize))
+                        inputSecondTemp[i] = ((Rpp32u)i + 1u < iBufferSize) ? inputU8[i + 1] : 0.0f;
+                    else
+                        inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+                }
             }
             else if((BitDepthTestMode == U8_TO_U8) || (BitDepthTestMode == U8_TO_F32)) {
                 Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
                 Rpp8u *inputU8 = static_cast<Rpp8u *>(input);
                 for (int i = 0; i < iBufferSizeSecond; i++)
-                    inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+                {
+                    if(bitwiseTensorCase && (iBufferSizeSecond == iBufferSize))
+                        inputSecondTemp[i] = ((Rpp32u)i + 1u < iBufferSize) ? inputU8[i + 1] : 0;
+                    else
+                        inputSecondTemp[i] = inputU8[(i+1) % iBufferSize];
+                }
             }
             else{
             Rpp8u *inputSecondTemp = static_cast<Rpp8u *>(inputSecond);
