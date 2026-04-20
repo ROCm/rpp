@@ -2344,7 +2344,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
             case RPP_TENSOR_OP_MULTIPLY:
                 return tensor_binary_op_int_host_tensor<T1, Multiply<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             default:
-                break;
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
     if constexpr (std::is_same_v<T2, Rpp32f>)
@@ -2353,7 +2353,7 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
             case RPP_TENSOR_OP_DIVIDE:
                 return tensor_binary_divide_host_tensor<T1, Divide<T2, T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             default:
-                break;
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
 

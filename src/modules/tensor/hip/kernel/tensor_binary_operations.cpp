@@ -961,7 +961,7 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_MULTIPLY:
                     return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
                 default:
                     return RPP_ERROR_NOT_IMPLEMENTED;
             }
@@ -973,11 +973,11 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
                 case RPP_TENSOR_OP_DIVIDE:
                     return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 default:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
             }
         }
     }
@@ -994,7 +994,7 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_MULTIPLY:
                     return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
                 default:
                     return RPP_ERROR_NOT_IMPLEMENTED;
             }
@@ -1006,11 +1006,11 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
                 case RPP_TENSOR_OP_DIVIDE:
                     return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 default:
-                    break;
+                    return RPP_ERROR_NOT_IMPLEMENTED;
             }
         }
     }
