@@ -1418,6 +1418,8 @@ RppStatus set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
             RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
+        default:
+            return RPP_ERROR_INVALID_AXIS;
     }
     return RPP_SUCCESS;
 }
@@ -1525,6 +1527,8 @@ RppStatus set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
+        default:
+            return RPP_ERROR_INVALID_AXIS;
     }
     return RPP_SUCCESS;
 }
