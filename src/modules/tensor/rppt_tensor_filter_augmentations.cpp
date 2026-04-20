@@ -573,7 +573,9 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             RppStatus errorStatus = rppt_color_to_greyscale(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle, RppBackend::RPP_HIP_BACKEND);        
             if(errorStatus != RPP_SUCCESS)
             {
-                RPP_HIP_RETURN_IF_ERROR(hipFree(tempPtr));
+                // Ignore the error status of hipFree to preserve the root cause of the error
+                auto status = hipFree(tempPtr);
+                (void)status;
                 return errorStatus;
             }
             inputDesc = dstDescPtr;

@@ -24,7 +24,6 @@ SOFTWARE.
 
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
-#include <atomic>
 #include <omp.h>
 
 // -------------------- Set 1 - scalar helper kernels --------------------
@@ -961,9 +960,9 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_MULTIPLY:
                     return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
                 default:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
             }
         }
         if constexpr (std::is_same_v<T2, Rpp32f>)
@@ -973,11 +972,11 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
                 case RPP_TENSOR_OP_DIVIDE:
                     return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 default:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
             }
         }
     }
@@ -994,9 +993,9 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_MULTIPLY:
                     return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
                 default:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
             }
         }
         if constexpr (std::is_same_v<T2, Rpp32f>)
@@ -1006,16 +1005,16 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
                 case RPP_TENSOR_OP_DIVIDE:
                     return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 default:
-                    return RPP_ERROR_NOT_IMPLEMENTED;
+                    break;
             }
         }
     }
 
-    return RPP_SUCCESS;
+    return RPP_ERROR_NOT_IMPLEMENTED;
 }
 
 template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u, Rpp8u>(Rpp8u*,
