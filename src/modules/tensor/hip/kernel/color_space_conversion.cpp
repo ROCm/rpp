@@ -102,7 +102,7 @@ __global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_y,
 } // namespace
 
 // Build YUV->RGB 3x3 matrix and copy to device constant
-static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRange color_range)
+static hipError_t rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRange color_range)
 {
     float wr = 0.2126f, wb = 0.0722f;
     int black = 16, white = 235, max_val = 255;
@@ -143,9 +143,9 @@ static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRa
         for (int j = 0; j < 3; j++)
             mat[i][j] = (float)(1.0 * max_val / (white - black) * mat[i][j]);
     hipError_t status = hipMemcpyToSymbol(rpp_nv12_yuv_to_rgb_mat, mat, sizeof(mat));
-    CHECK_RETURN_STATUS(status);
-    status = hipMemcpyToSymbol(rpp_nv12_y_bias, &black, sizeof(black));
-    CHECK_RETURN_STATUS(status);
+    if(status != hipSuccess)
+        return status;
+    return hipMemcpyToSymbol(rpp_nv12_y_bias, &black, sizeof(black));
 }
 
 template <typename T>
@@ -163,7 +163,7 @@ RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
                   "hip_exec_yuv_to_rgb is only supported for Rpp8u (NV12 8-bit)");
-    rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
+    RPP_HIP_RETURN_IF_ERROR(rpp_nv12_set_mat_yuv2rgb(col_standard, color_range));
     hipLaunchKernelGGL(yuv_to_rgb_hip_kernel<T>,
                        dim3((width + 63) / 32 / 2, (height + 3) / 2 / 2, 1),
                        dim3(32, 2, 1),

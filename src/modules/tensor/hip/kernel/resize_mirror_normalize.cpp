@@ -352,8 +352,8 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         int globalThreads_z = handle.GetBatchSize();
 
         // Set output pixels to zero
-        CHECK_RETURN_STATUS(hipMemsetAsync(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U), handle.GetStream()));
-        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U), handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {

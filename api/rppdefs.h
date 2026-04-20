@@ -64,14 +64,6 @@ typedef halfhpp Rpp16f;
 /*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
-#define CHECK_RETURN_STATUS(x) do { \
-  int retval = (x); \
-  if (retval != 0) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
-} while (0)
-
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
