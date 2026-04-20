@@ -2357,7 +2357,9 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
         }
     }
 
-    return RPP_SUCCESS;
+    // If we reach this point, the combination of T1, T2, and tensorOp is not supported
+    // and we should return an error.
+    return RPP_ERROR_NOT_IMPLEMENTED;
 }
 
 template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u, Rpp8u>(Rpp8u*,
