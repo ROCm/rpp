@@ -1,5 +1,6 @@
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
+#include <atomic>
 
 // Bitwise operation structures that encapsulate both scalar and SIMD operations
 template<typename T>
@@ -86,12 +87,11 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
     for(int test = 0; test < minDim; test++)
         if(srcPtr1GenericDescPtr->dims[src1NDim - test] != srcPtr2GenericDescPtr->dims[src2NDim - test])
             if((srcPtr1GenericDescPtr->dims[src1NDim - test] != 1) && (srcPtr2GenericDescPtr->dims[src2NDim - test] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_ERROR_INVALID_ARGUMENTS;
-            }
+                return RPP_ERROR_INVALID_DIM_LENGTHS;
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
     omp_set_num_threads(handle.GetNumThreads());
@@ -137,7 +137,10 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
-                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            {
+                broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+                continue;
+            }
 
             // Handle cases of mismatching num dims
             if(src1NDim < src2NDim)
@@ -527,6 +530,9 @@ RppStatus tensor_binary_bitwise_op_host_tensor(T *srcPtr1,
             tensor_binary_bitwise_op_recursive<T, Operation>(srcPtrTemp1, srcPtrTemp2, src1ValidStrides, src2ValidStrides, dstPtrTemp, dstValidStrides, length, dstDim);
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
     return RPP_SUCCESS;
 }
 
@@ -559,9 +565,9 @@ RppStatus tensor_binary_bitwise_op_dispatch_host_tensor(T *srcPtr1,
 
         case RPP_TENSOR_OP_XOR:
             return tensor_binary_bitwise_op_host_tensor<T, BitwiseXor<T>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+        default:
+            return RPP_ERROR_NOT_IMPLEMENTED;
     }
-
-    return RPP_SUCCESS;
 }
 
 template RppStatus tensor_binary_bitwise_op_dispatch_host_tensor<Rpp8u>(Rpp8u*,

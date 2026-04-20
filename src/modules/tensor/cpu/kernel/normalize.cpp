@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
+#include <atomic>
 
 // Recursive reduction helper function to compute difference of input with mean and squares them up
 template<typename T>
@@ -532,6 +533,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         maxSize = 0;
     }
 
+    std::atomic<RppStatus> axisMaskStatus{RPP_SUCCESS};
     omp_set_dynamic(0);
     omp_set_num_threads(handle.GetNumThreads());
 #pragma omp parallel for
@@ -680,7 +682,8 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     break;
                 }
                 default:
-                    std::cout<<"Invalid Axis mask"<<std::endl;
+                    axisMaskStatus.store(RPP_ERROR_INVALID_AXIS, std::memory_order_relaxed);
+                    continue;
             }
 
             for(Rpp32u i = 1; i < tensorDims; i++)
@@ -746,6 +749,9 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
     }
 
+    RppStatus axisSt = axisMaskStatus.load();
+    if (axisSt != RPP_SUCCESS)
+        return axisSt;
     return RPP_SUCCESS;
 }
 

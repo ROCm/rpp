@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 #include <ffts/ffts.h>
+#include <atomic>
 #include <complex>
 
 inline bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
@@ -106,6 +107,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     else
         memcpy(windowFn, windowFunction, windowLength * sizeof(Rpp32f));
     // Get windows output
+    std::atomic<RppStatus> fftPlanStatus{RPP_SUCCESS};
     omp_set_dynamic(0);
     omp_set_num_threads(handle.GetNumThreads());
 #pragma omp parallel for
@@ -171,8 +173,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
         if (!p)
         {
-            printf("FFT Plan is unsupported. Exiting the code\n");
-            exit(0);
+            fftPlanStatus.store(RPP_ERROR_NOT_IMPLEMENTED, std::memory_order_relaxed);
+            continue;
         }
 
         // Set temporary buffers to 0
@@ -242,5 +244,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     }
     if(windowFn)
         free(windowFn);
+    RppStatus st = fftPlanStatus.load();
+    if (st != RPP_SUCCESS)
+        return st;
     return RPP_SUCCESS;
 }

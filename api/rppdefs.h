@@ -75,13 +75,18 @@ typedef halfhpp Rpp16f;
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
+/*! \brief If a HIP API call fails, return \ref RPP_ERROR_HIP_LAUNCH from the enclosing function (no stderr). \ingroup group_rppdefs */
+#define RPP_HIP_RETURN_IF_ERROR(expr)                                          \
+  do {                                                                         \
+    hipError_t _rpp_hip_err = (expr);                                          \
+    if (_rpp_hip_err != hipSuccess)                                            \
+      return RPP_ERROR_HIP_LAUNCH;                                             \
+  } while (0)
 /*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
 #define HIP_CHECK_LAUNCH_RETURN()                                              \
   do {                                                                         \
     hipError_t status = hipGetLastError();                                     \
     if (status != hipSuccess) {                                                \
-      std::cerr << "AMD RPP: HIP Error Reported -- "                           \
-                << hipGetErrorString(status) << std::endl;                     \
       return RPP_ERROR_HIP_LAUNCH;                                             \
     }                                                                          \
   } while (0)
