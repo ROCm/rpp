@@ -487,7 +487,7 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         output = process.stdout.readline()
         if not output and process.poll() is not None:
             break
-        output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+        output = output.decode('utf-8', errors='replace').strip()  # Decode bytes to string and strip extra whitespace
         if output:
             print(output)
             logFile.write(output + '\n')

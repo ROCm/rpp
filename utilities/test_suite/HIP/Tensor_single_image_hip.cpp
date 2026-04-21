@@ -30,7 +30,7 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "../rpp_test_suite_image.h"
+#include "../rpp_test_suite_single_image_utils.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -41,7 +41,6 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <vector>
 #include <filesystem>
-#include "../rpp_test_suite_single_image_utils.hpp"
 
 using namespace cv;
 using namespace std;
