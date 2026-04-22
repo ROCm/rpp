@@ -180,6 +180,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                             COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runImageTests.py --qa_mode 1 --batch_size 3
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
+                        # qa_mode 0 runs the full BitDepthTestMode matrix in runImageTests.py; qa_mode 1 only U8 and F32 for golden QA.
+                        add_test(
+                            NAME rpp_qa_tests_tensor_image_host_qa_mode_0
+                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runImageTests.py --qa_mode 0 --batch_size 3
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                        )
                     else()
                         message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since OpenCV is not found!${ColourReset}")
                     endif(OpenCV_FOUND)
@@ -193,6 +199,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                         add_test(
                             NAME rpp_qa_tests_tensor_voxel_host_all
                             COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                        )
+                        # qa_mode 0 runs U8 and F32 voxel unit tests; qa_mode 1 runs F32-only for golden QA.
+                        add_test(
+                            NAME rpp_qa_tests_tensor_voxel_host_qa_mode_0
+                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runVoxelTests.py --qa_mode 0 --batch_size 3
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
                     else()
@@ -223,6 +235,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                     COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runMiscTests.py --qa_mode 1 --batch_size 3
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )
+                # runMiscTests.py uses a different bit-depth matrix for test_type 1 (performance) than for test_type 0 (unit); only misc needs both.
+                add_test(
+                    NAME rpp_qa_tests_tensor_misc_host_test_type_1
+                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runMiscTests.py --test_type 1 --batch_size 3
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                )
 
                 if( "${BACKEND}" STREQUAL "HIP")
                     if(NOT DEFINED HIP_PATH)
@@ -244,6 +262,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                                     COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runImageTests.py --qa_mode 1 --batch_size 3
                                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                                 )
+                                # qa_mode 0 runs the full BitDepthTestMode matrix in runImageTests.py; qa_mode 1 only U8 and F32 for golden QA.
+                                add_test(
+                                    NAME rpp_qa_tests_tensor_image_hip_qa_mode_0
+                                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runImageTests.py --qa_mode 0 --batch_size 3
+                                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                                )
                             else()
                                 message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since OpenCV is not found!${ColourReset}")
                             endif(OpenCV_FOUND)
@@ -257,6 +281,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                                 add_test(
                                     NAME rpp_qa_tests_tensor_voxel_hip_all
                                     COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
+                                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                                )
+                                # qa_mode 0 runs U8 and F32 voxel unit tests; qa_mode 1 runs F32-only for golden QA.
+                                add_test(
+                                    NAME rpp_qa_tests_tensor_voxel_hip_qa_mode_0
+                                    COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runVoxelTests.py --qa_mode 0 --batch_size 3
                                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                                 )
                             else()
@@ -285,6 +315,12 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                         add_test(
                             NAME rpp_qa_tests_tensor_misc_hip_all
                             COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runMiscTests.py --qa_mode 1 --batch_size 3
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                        )
+                        # runMiscTests.py uses a different bit-depth matrix for test_type 1 (performance) than for test_type 0 (unit); only misc needs both.
+                        add_test(
+                            NAME rpp_qa_tests_tensor_misc_hip_test_type_1
+                            COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runMiscTests.py --test_type 1 --batch_size 3
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
 
