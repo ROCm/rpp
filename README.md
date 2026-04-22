@@ -213,25 +213,11 @@ find_package(rpp REQUIRED)
 target_link_libraries(your_target PRIVATE rpp::rpp)
 ```
 
-### Enable RPP HIP backend in your CMake project
-
-To make the RPP HIP specific functionalities available in your CMake project, you can use the following code:
-
-```cmake
-find_package(rpp REQUIRED)
-target_link_libraries(your_target PRIVATE rpp::rpp)
-
-# Enable RPP HIP backend in your CMake project if available
-if (rpp_BACKEND_TYPE STREQUAL "HIP")
-  find_package(HIP REQUIRED)
-  target_compile_definitions(your_target PRIVATE RPP_BACKEND_HIP=1)
-  target_link_libraries(your_target PRIVATE hip::host)
-endif()
-```
+HIP backend support is automatic: `rpp::rpp` transitively propagates the HIP include paths and link libraries, and `rpp/rpp.h` includes `rpp_backend.h` which sets `RPP_BACKEND_HIP` for your compiled sources.
 
 > [!NOTE]
-> `find_package(rpp REQUIRED)` sets the following variables in your CMake project for use in downstream projects:
-> * `rpp_BACKEND_TYPE` - "HIP" or "CPU"
+> `find_package(rpp REQUIRED)` sets the following variables in your CMake project:
+> * `rpp_BACKEND_TYPE` - "HIP" or "CPU" — useful for conditional CMake logic (e.g. adding HIP-specific sources)
 > * `rpp_AUDIO_AUGMENTATIONS_SUPPORT` - ON or OFF
 
 > [!TIP]
