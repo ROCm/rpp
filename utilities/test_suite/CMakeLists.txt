@@ -62,6 +62,10 @@ project(rpp-test)
 enable_testing()
 include(CTest)
 
+# Per-test CTest TIMEOUT (seconds) for selected long-running suites; all other tests use DartConfiguration.tcl TimeOut.
+# Increased timeout for: rpp_qa_tests_tensor_image_host_qa_mode_0, rpp_qa_tests_tensor_misc_host_test_type_1, rpp_qa_tests_tensor_image_hip_qa_mode_0
+set(RPP_CTEST_LONG_TEST_TIMEOUT_SEC 2000 CACHE STRING "CTest TIMEOUT override in seconds for long RPP tests (see set_tests_properties below).")
+
 #[[
 List of high level dependency checks - for RPP QA tests in utilities/test_suite/CMakeLists.txt are below.
 (The utilities/test_suite/HOST and utilities/test_suite/HIP folders are also designed to be built separately, so list of checks for those are present in the files "utilities/test_suite/HOST/CMakeLists.txt" and "utilities/test_suite/HIP/CMakeLists.txt")
@@ -186,6 +190,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                             COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runImageTests.py --qa_mode 0 --batch_size 3
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                         )
+                        set_tests_properties(rpp_qa_tests_tensor_image_host_qa_mode_0 PROPERTIES TIMEOUT ${RPP_CTEST_LONG_TEST_TIMEOUT_SEC})
                     else()
                         message("-- ${Yellow}Warning: Skipping RPP-ctest 'HOST test set 1 - rpp_qa_tests_tensor_image_host_all' since OpenCV is not found!${ColourReset}")
                     endif(OpenCV_FOUND)
@@ -241,6 +246,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                     COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HOST/runMiscTests.py --test_type 1 --batch_size 3
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )
+                set_tests_properties(rpp_qa_tests_tensor_misc_host_test_type_1 PROPERTIES TIMEOUT ${RPP_CTEST_LONG_TEST_TIMEOUT_SEC})
 
                 if( "${BACKEND}" STREQUAL "HIP")
                     if(NOT DEFINED HIP_PATH)
@@ -268,6 +274,7 @@ if(rpp_FOUND OR BUILD_FROM_SOURCE)
                                     COMMAND ${Python3_EXECUTABLE} ${RPP_TEST_SCRIPT_DIR}/HIP/runImageTests.py --qa_mode 0 --batch_size 3
                                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                                 )
+                                set_tests_properties(rpp_qa_tests_tensor_image_hip_qa_mode_0 PROPERTIES TIMEOUT ${RPP_CTEST_LONG_TEST_TIMEOUT_SEC})
                             else()
                                 message("-- ${Yellow}Warning: Skipping RPP-ctest 'HIP test set 1 - rpp_qa_tests_tensor_image_hip_all' since OpenCV is not found!${ColourReset}")
                             endif(OpenCV_FOUND)
