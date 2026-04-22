@@ -67,13 +67,18 @@ typedef halfhpp Rpp16f;
 #ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
-/*! \brief If a HIP API call fails, return \ref RPP_ERROR_HIP_LAUNCH from the enclosing function (no stderr). \ingroup group_rppdefs */
+
+/*! \brief If a HIP API call fails, return \ref RPP_ERROR_HIP_RUNTIME from the enclosing function and print the error message to stderr. \ingroup group_rppdefs */
 #define RPP_HIP_RETURN_IF_ERROR(expr)                                          \
   do {                                                                         \
     hipError_t _rpp_hip_err = (expr);                                          \
     if (_rpp_hip_err != hipSuccess)                                            \
-      return RPP_ERROR_HIP_LAUNCH;                                             \
+    {                                                                          \
+        fprintf(stderr, "HIP runtime error: %s returned %d at %s:%d", #expr, _rpp_hip_err, __FILE__, __LINE__); \
+        return RPP_ERROR_HIP_RUNTIME;                                          \
+    }                                                                          \
   } while (0)
+
 /*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
 #define HIP_CHECK_LAUNCH_RETURN()                                              \
   do {                                                                         \
@@ -184,7 +189,9 @@ typedef enum
     /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
     RPP_ERROR_INCOMPATIBLE_BACKEND      = -27,
     /*! \brief HIP/GPU runtime or kernel launch error \ingroup group_rppdefs */
-    RPP_ERROR_HIP_LAUNCH                = -28
+    RPP_ERROR_HIP_LAUNCH                = -28,
+    /*! \brief Internal HIP/GPU runtime error \ingroup group_rppdefs */
+    RPP_ERROR_HIP_RUNTIME               = -29,
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums
