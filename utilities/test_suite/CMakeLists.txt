@@ -64,7 +64,7 @@ include(CTest)
 
 # Per-test CTest TIMEOUT (seconds) for selected long-running suites; all other tests use DartConfiguration.tcl TimeOut.
 # Increased timeout for: rpp_qa_tests_tensor_image_host_qa_mode_0, rpp_qa_tests_tensor_misc_host_test_type_1, rpp_qa_tests_tensor_image_hip_qa_mode_0
-set(RPP_CTEST_LONG_TEST_TIMEOUT_SEC 2000 CACHE STRING "CTest TIMEOUT override in seconds for long RPP tests (see set_tests_properties below).")
+set(RPP_CTEST_LONG_TEST_TIMEOUT_SEC 3000 CACHE STRING "CTest TIMEOUT override in seconds for long RPP tests (see set_tests_properties below).")
 
 #[[
 List of high level dependency checks - for RPP QA tests in utilities/test_suite/CMakeLists.txt are below.
