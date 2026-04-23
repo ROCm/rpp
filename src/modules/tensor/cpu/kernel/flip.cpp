@@ -1152,13 +1152,15 @@ RppStatus flip_u8_u8_host_single_image(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8u *dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       Rpp32u horizontalFlag,
-                                       Rpp32u verticalFlag,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
+        Rpp32u horizontalFlag = horizontalTensor[0];
+        Rpp32u verticalFlag = verticalTensor[0];
         Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtr;
@@ -1411,13 +1413,15 @@ RppStatus flip_f32_f32_host_single_image(Rpp32f *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          Rpp32f *dstPtr,
                                          RpptDescPtr dstDescPtr,
-                                         Rpp32u horizontalFlag,
-                                         Rpp32u verticalFlag,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          RppLayoutParams layoutParams,
                                          rpp::Handle& handle)
 {
+        Rpp32u horizontalFlag = horizontalTensor[0];
+        Rpp32u verticalFlag = verticalTensor[0];
         Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtr;
@@ -1676,13 +1680,15 @@ RppStatus flip_f16_f16_host_single_image(Rpp16f *srcPtr,
                                          RpptDescPtr srcDescPtr,
                                          Rpp16f *dstPtr,
                                          RpptDescPtr dstDescPtr,
-                                         Rpp32u horizontalFlag,
-                                         Rpp32u verticalFlag,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
                                          RppLayoutParams layoutParams,
                                          rpp::Handle& handle)
 {
+        Rpp32u horizontalFlag = horizontalTensor[0];
+        Rpp32u verticalFlag = verticalTensor[0];
         Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp16f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtr;
@@ -1945,13 +1951,15 @@ RppStatus flip_i8_i8_host_single_image(Rpp8s *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8s *dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       Rpp32u horizontalFlag,
-                                       Rpp32u verticalFlag,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle)
 {
+        Rpp32u horizontalFlag = horizontalTensor[0];
+        Rpp32u verticalFlag = verticalTensor[0];
         Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp8s *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtr;

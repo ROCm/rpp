@@ -1124,8 +1124,8 @@ RppStatus brightness_u8_u8_host_single_image(Rpp8u *srcPtr,
                                              RpptDescPtr srcDescPtr,
                                              Rpp8u *dstPtr,
                                              RpptDescPtr dstDescPtr,
-                                             Rpp32f alpha,
-                                             Rpp32f beta,
+                                             Rpp32f *alphaTensor,
+                                             Rpp32f *betaTensor,
                                              RpptROIPtr roiTensorPtrSrc,
                                              RpptRoiType roiType,
                                              RppLayoutParams layoutParams,
@@ -1135,6 +1135,9 @@ RppStatus brightness_u8_u8_host_single_image(Rpp8u *srcPtr,
     Rpp32u alignedLength = (bufferLength / 48) * 48;
     Rpp32u vectorIncrement = 48;
     Rpp32u vectorIncrementPerChannel = 16;
+
+    Rpp32f alpha = alphaTensor[0];
+    Rpp32f beta = betaTensor[0];
 
 #if __AVX2__
     __m256 pAlpha = _mm256_set1_ps(alpha);
@@ -1311,29 +1314,30 @@ RppStatus brightness_f32_f32_host_single_image(Rpp32f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp32f *dstPtr,
                                               RpptDescPtr dstDescPtr,
-                                              Rpp32f alpha,
-                                              Rpp32f beta,
+                                              Rpp32f *alphaTensor,
+                                              Rpp32f *betaTensor,
                                               RpptROIPtr roiTensorPtrSrc,
                                               RpptRoiType roiType,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle)
 {
-    beta = beta * ONE_OVER_255;
+    Rpp32f alpha = alphaTensor[0];
+    Rpp32f beta = betaTensor[0] * ONE_OVER_255;
     Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
 #if __AVX2__
     Rpp32u alignedLength = (bufferLength / 24) * 24;
     Rpp32u vectorIncrement = 24;
     Rpp32u vectorIncrementPerChannel = 8;
 
-    __m256 pAlpha = _mm256_set1_ps(alpha);
-    __m256 pBeta = _mm256_set1_ps(beta);
+    __m256 pAlpha = _mm256_set1_ps(alphaTensor[0]);
+    __m256 pBeta = _mm256_set1_ps(betaTensor[0]);
 #else
     Rpp32u alignedLength = (bufferLength / 12) * 12;
     Rpp32u vectorIncrement = 12;
     Rpp32u vectorIncrementPerChannel = 4;
 
-    __m128 pAlpha = _mm_set1_ps(alpha);
-    __m128 pBeta = _mm_set1_ps(beta);
+    __m128 pAlpha = _mm_set1_ps(alphaTensor[0]);
+    __m128 pBeta = _mm_set1_ps(betaTensor[0]);
 #endif
 
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
@@ -1510,14 +1514,15 @@ RppStatus brightness_f16_f16_host_single_image(Rpp16f *srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                Rpp16f *dstPtr,
                                                RpptDescPtr dstDescPtr,
-                                               Rpp32f alpha,
-                                               Rpp32f beta,
+                                               Rpp32f *alphaTensor,
+                                               Rpp32f *betaTensor,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                RppLayoutParams layoutParams,
                                                rpp::Handle& handle)
 {
-    beta = beta * ONE_OVER_255;
+    Rpp32f alpha = alphaTensor[0];
+    Rpp32f beta = betaTensor[0] * ONE_OVER_255;
 
     Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -1526,15 +1531,15 @@ RppStatus brightness_f16_f16_host_single_image(Rpp16f *srcPtr,
     Rpp32u vectorIncrement = 24;
     Rpp32u vectorIncrementPerChannel = 8;
 
-    __m256 pAlpha = _mm256_set1_ps(alpha);
-    __m256 pBeta = _mm256_set1_ps(beta);
+    __m256 pAlpha = _mm256_set1_ps(alphaTensor[0]);
+    __m256 pBeta = _mm256_set1_ps(betaTensor[0]);
 #else
     Rpp32u alignedLength = (bufferLength / 12) * 12;
     Rpp32u vectorIncrement = 12;
     Rpp32u vectorIncrementPerChannel = 4;
 
-    __m128 pAlpha = _mm_set1_ps(alpha);
-    __m128 pBeta = _mm_set1_ps(beta);
+    __m128 pAlpha = _mm_set1_ps(alphaTensor[0]);
+    __m128 pBeta = _mm_set1_ps(betaTensor[0]);
 #endif
         // Brightness with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1746,24 +1751,26 @@ RppStatus brightness_i8_i8_host_single_image(Rpp8s *srcPtr,
                                              RpptDescPtr srcDescPtr,
                                              Rpp8s *dstPtr,
                                              RpptDescPtr dstDescPtr,
-                                             Rpp32f alpha,
-                                             Rpp32f beta,
+                                             Rpp32f *alphaTensor,
+                                             Rpp32f *betaTensor,
                                              RpptROIPtr roiTensorPtrSrc,
                                              RpptRoiType roiType,
                                              RppLayoutParams layoutParams,
                                              rpp::Handle& handle)
 {
+    Rpp32f alpha = alphaTensor[0];
+    Rpp32f beta = betaTensor[0];
     Rpp32u bufferLength = roiTensorPtrSrc->xywhROI.roiWidth * layoutParams.bufferMultiplier;
     Rpp32u alignedLength = (bufferLength / 48) * 48;
     Rpp32u vectorIncrement = 48;
     Rpp32u vectorIncrementPerChannel = 16;
 
 #if __AVX2__
-    __m256 pAlpha = _mm256_set1_ps(alpha);
-    __m256 pBeta = _mm256_set1_ps(beta);
+    __m256 pAlpha = _mm256_set1_ps(alphaTensor[0]);
+    __m256 pBeta = _mm256_set1_ps(betaTensor[0]);
 #else
-    __m128 pAlpha = _mm_set1_ps(alpha);
-    __m128 pBeta = _mm_set1_ps(beta);
+    __m128 pAlpha = _mm_set1_ps(alphaTensor[0]);
+    __m128 pBeta = _mm_set1_ps(betaTensor[0]);
 #endif
 
         // Brightness with fused output-layout toggle (NHWC -> NCHW)

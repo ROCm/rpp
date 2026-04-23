@@ -421,7 +421,7 @@ RppStatus hip_exec_blend_single_image(T *srcPtr1,
                                       RpptDescPtr srcDescPtr,
                                       T *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp32f alpha,
+                                      Rpp32f *alphaTensor,
                                       RpptROIPtr roiSrc,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle)
@@ -444,7 +444,7 @@ RppStatus hip_exec_blend_single_image(T *srcPtr1,
                            srcDescPtr->strides.hStride,
                            dstPtr,
                            dstDescPtr->strides.hStride,
-                           alpha,
+                           alphaTensor[0],
                            *roiSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -460,7 +460,7 @@ RppStatus hip_exec_blend_single_image(T *srcPtr1,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           alpha,
+                           alphaTensor[0],
                            *roiSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -477,7 +477,7 @@ RppStatus hip_exec_blend_single_image(T *srcPtr1,
                                srcDescPtr->strides.hStride,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               alpha,
+                               alphaTensor[0],
                                *roiSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -493,7 +493,7 @@ RppStatus hip_exec_blend_single_image(T *srcPtr1,
                                make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                dstDescPtr->strides.hStride,
-                               alpha,
+                               alphaTensor[0],
                                *roiSrc);
         }
     }
@@ -546,7 +546,7 @@ template RppStatus hip_exec_blend_single_image<Rpp8u>(Rpp8u*,
                                                       RpptDescPtr,
                                                       Rpp8u*,
                                                       RpptDescPtr,
-                                                      Rpp32f,
+                                                      Rpp32f*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       rpp::Handle&);
@@ -556,7 +556,7 @@ template RppStatus hip_exec_blend_single_image<half>(half*,
                                                      RpptDescPtr,
                                                      half*,
                                                      RpptDescPtr,
-                                                     Rpp32f,
+                                                     Rpp32f*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
                                                      rpp::Handle&);
@@ -566,7 +566,7 @@ template RppStatus hip_exec_blend_single_image<Rpp32f>(Rpp32f*,
                                                        RpptDescPtr,
                                                        Rpp32f*,
                                                        RpptDescPtr,
-                                                       Rpp32f,
+                                                       Rpp32f*,
                                                        RpptROIPtr,
                                                        RpptRoiType,
                                                        rpp::Handle&);
@@ -576,7 +576,7 @@ template RppStatus hip_exec_blend_single_image<Rpp8s>(Rpp8s*,
                                                       RpptDescPtr,
                                                       Rpp8s*,
                                                       RpptDescPtr,
-                                                      Rpp32f,
+                                                      Rpp32f*,
                                                       RpptROIPtr,
                                                       RpptRoiType,
                                                       rpp::Handle&);
