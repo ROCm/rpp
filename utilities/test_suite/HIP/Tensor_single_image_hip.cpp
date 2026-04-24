@@ -193,8 +193,9 @@ int main(int argc, char **argv)
         noOfImages = batchSize;
     }
     vector<RpptDesc> srcDescPtr(noOfImages), dstDescPtr(noOfImages);
-    vector<RpptROI> roi(noOfImages);
-    memset(roi.data(), 0, noOfImages * sizeof(RpptROI));
+    RpptROI *roi = nullptr;
+    CHECK_RETURN_STATUS(hipHostMalloc(&roi, noOfImages * sizeof(RpptROI)));
+    memset(roi, 0, noOfImages * sizeof(RpptROI));
     RpptImagePatch dstImgSizes[noOfImages];
 
     int inputChannel = set_input_channels(layoutType);
@@ -262,6 +263,19 @@ int main(int argc, char **argv)
                 inputVecSecond[i] = convert_pkd3_to_pln3(inputVecSecond[i]);
         }
     }
+
+    /* Initialize alpha and beta for blend and brightness kernels*/
+    Rpp32f *alpha = nullptr;
+    Rpp32f *beta = nullptr;
+
+    if(testCase == BLEND)
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, sizeof(Rpp32f)));
+        
+    if(testCase == BRIGHTNESS)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&beta, sizeof(Rpp32f)));
+    }
     
     Rpp32u numThreads = 1;
 
@@ -275,10 +289,10 @@ int main(int argc, char **argv)
 
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
-    vector<RpptROI> savedRoi(roi);
+
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
-        roi = savedRoi;
+        initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
         for (int i = 0; i < noOfImages; i++)
         {
             RppStatus errorCodeCapture = RPP_SUCCESS;
@@ -340,12 +354,12 @@ int main(int argc, char **argv)
                 case BRIGHTNESS:
                 {
                     testCaseName = "brightness";
-                    Rpp32f alpha = 1.75f;
-                    Rpp32f beta = 50.0f;
+                    *alpha = 1.75f;
+                    *beta = 50.0f;
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                        errorCodeCapture = rppt_brightness(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
+                        errorCodeCapture = rppt_brightness(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], alpha, beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -355,11 +369,11 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "blend";
 
-                    Rpp32f alpha = 0.4;
-
+                    *alpha = 0.4f;
+                    
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                            errorCodeCapture = rppt_blend(d_input, d_inputSecond, &srcDescPtr[i], d_output, &dstDescPtr[i], &alpha, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
+                            errorCodeCapture = rppt_blend(d_input, d_inputSecond, &srcDescPtr[i], d_output, &dstDescPtr[i], alpha, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -586,6 +600,16 @@ int main(int argc, char **argv)
 
         saveBatchOutput(dst, noOfImages, outputVec, dstDescPtr, dstImgSizes);
     }
+
+    if(testCase == BLEND)
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
+    if(testCase == BRIGHTNESS)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(alpha));
+        CHECK_RETURN_STATUS(hipHostFree(beta));
+    }
+    CHECK_RETURN_STATUS(hipHostFree(roi));
+    
     rppDestroy(handle, backend);
     if(testType == PERFORMANCE_TEST) // performance test mode
     {

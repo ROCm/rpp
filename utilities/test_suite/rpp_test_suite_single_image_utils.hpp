@@ -348,6 +348,32 @@ inline void initializeROI(const vector<Mat>& imgs, vector<RpptROI>& rois, vector
     }
 }
 
+inline void initializeROI(const vector<Mat>& imgs, RpptROI *rois, vector<RpptDesc>& descPtr, int* roiList, int* roiHeightList, int* roiWidthList)
+{
+    int batchSize = imgs.size();
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+
+    for (int i = 0; i < batchSize; ++i)
+    {
+        rois[i].xywhROI.xy.x = 0;
+        rois[i].xywhROI.xy.y = 0;
+        rois[i].xywhROI.roiWidth = imgs[i].cols;
+        rois[i].xywhROI.roiHeight = imgs[i].rows;
+        if (invalidROI)
+        {
+            roiList[0] = 10;
+            roiList[1] = 10;
+            roiWidthList[i] = rois[i].xywhROI.roiWidth / 2;
+            roiHeightList[i] = rois[i].xywhROI.roiHeight / 2;
+        }
+        else
+        {
+            roiWidthList[i] = roiList[2];
+            roiHeightList[i] = roiList[3];
+        }
+    }
+}
+
 // alignWidthTo8: when true (HIP path), pads descriptor width to next multiple of 8.
 // additionalStride / offsetInBytes: HIP-only padding parameters (default 0).
 inline void initializeDescriptors(const vector<Mat>& imgs, vector<RpptDesc>& descPtr, int channel,
