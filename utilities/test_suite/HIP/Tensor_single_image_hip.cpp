@@ -276,6 +276,15 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&beta, sizeof(Rpp32f)));
     }
+
+    Rpp32u *horizontalFlag = nullptr;
+    Rpp32u *verticalFlag = nullptr;
+
+    if(testCase == FLIP)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&horizontalFlag, sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&verticalFlag, sizeof(Rpp32u)));
+    }
     
     Rpp32u numThreads = 1;
 
@@ -383,8 +392,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "flip";
 
-                    Rpp32u horizontalFlag = 1;
-                    Rpp32u verticalFlag = 0;
+                    *horizontalFlag = 1;
+                    *verticalFlag = 0;
 
                     Rpp32u x = roi[i].xywhROI.xy.x;
                     Rpp32u y = roi[i].xywhROI.xy.y;
@@ -398,7 +407,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
-                        errorCodeCapture = rppt_flip(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::LTRB, handle, RPP_HIP_BACKEND);
+                        errorCodeCapture = rppt_flip(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], horizontalFlag, verticalFlag, &roi[i], RpptRoiType::LTRB, handle, RPP_HIP_BACKEND);
                     else
                         missingFuncFlag = 1;
 
@@ -607,6 +616,11 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostFree(alpha));
         CHECK_RETURN_STATUS(hipHostFree(beta));
+    }
+    if(testCase == FLIP)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(horizontalFlag));
+        CHECK_RETURN_STATUS(hipHostFree(verticalFlag));
     }
     CHECK_RETURN_STATUS(hipHostFree(roi));
     

@@ -370,247 +370,6 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-// -------------------- Single Image Processing --------------------
-
-template <typename T>
-__global__ void flip_pkd_hip_single_image(T *srcPtr,
-                                          uint srcStrideH,
-                                          T *dstPtr,
-                                          uint dstStrideH,
-                                          uint2 dstDimsWH,
-                                          unsigned int horizontalFlag,
-                                          unsigned int verticalFlag,
-                                          RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    uint dstIdx = (id_y * dstStrideH) + id_x * 3;
-    d_float24 pix_f24;
-    uint srcIdx = 0;
-
-    if(horizontalFlag == 0 && verticalFlag == 0)
-    {
-        srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + (id_x + roiSrc.ltrbROI.lt.x) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    }
-    else if(horizontalFlag == 1 && verticalFlag == 1)
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStrideH) + (roiSrc.ltrbROI.rb.x - id_x - 7) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
-    }
-    else if(horizontalFlag == 1)
-    {
-        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
-        {
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + roiSrc.ltrbROI.lt.x * 3;
-            dstIdx -= (id_x + 8 - (roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1)) * 3;
-        }
-        else
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + (roiSrc.ltrbROI.rb.x - id_x - 7) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
-    }
-    else
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStrideH) + (id_x + roiSrc.ltrbROI.lt.x) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    }
-
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
-}
-
-template <typename T>
-__global__ void flip_pln_hip_single_image(T *srcPtr,
-                                          uint2 srcStridesCH,
-                                          T *dstPtr,
-                                          uint2 dstStridesCH,
-                                          uint2 dstDimsWH,
-                                          int channelsDst,
-                                          unsigned int horizontalFlag,
-                                          unsigned int verticalFlag,
-                                          RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-        return;
-
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-    uint srcIdx = 0;
-
-    if(horizontalFlag == 0 && verticalFlag == 0)
-        srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + (id_x + roiSrc.ltrbROI.lt.x);
-    else if(horizontalFlag == 1 && verticalFlag == 1)
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStridesCH.y) + (roiSrc.ltrbROI.rb.x - id_x - 7);
-    else if(horizontalFlag == 1)
-    {
-        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
-        {
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + roiSrc.ltrbROI.lt.x;
-            dstIdx -= (id_x + 8 -(roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1));
-        }
-        else
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + (roiSrc.ltrbROI.rb.x - id_x - 7);
-    }
-    else
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStridesCH.y) + (id_x + roiSrc.ltrbROI.lt.x);
-
-    d_float8 pix_f8;
-
-    if(horizontalFlag)
-    {
-        rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-
-        if (channelsDst == 3)
-        {
-            srcIdx += srcStridesCH.x;
-            dstIdx += dstStridesCH.x;
-
-            rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-
-            srcIdx += srcStridesCH.x;
-            dstIdx += dstStridesCH.x;
-
-            rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-        }
-    }
-    else
-    {
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-
-        if (channelsDst == 3)
-        {
-            srcIdx += srcStridesCH.x;
-            dstIdx += dstStridesCH.x;
-
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-
-            srcIdx += srcStridesCH.x;
-            dstIdx += dstStridesCH.x;
-
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-        }
-    }
-
-    return;
-}
-
-template <typename T>
-__global__ void flip_pkd3_pln3_hip_single_image(T *srcPtr,
-                                                uint srcStrideH,
-                                                T *dstPtr,
-                                                uint2 dstStridesCH,
-                                                uint2 dstDimsWH,
-                                                unsigned int horizontalFlag,
-                                                unsigned int verticalFlag,
-                                                RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    d_float24 pix_f24;
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-
-    if(horizontalFlag == 0 && verticalFlag == 0)
-    {
-        srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + (id_x + roiSrc.ltrbROI.lt.x) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    }
-    else if(horizontalFlag == 1 && verticalFlag == 1)
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStrideH) + (roiSrc.ltrbROI.rb.x - id_x - 7) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
-    }
-    else if(horizontalFlag == 1)
-    {
-        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
-        {
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + roiSrc.ltrbROI.lt.x * 3;
-            dstIdx -= (id_x + 8 - (roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1));
-        }
-        else
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStrideH) + (roiSrc.ltrbROI.rb.x - id_x - 7) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, &pix_f24);
-    }
-    else
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStrideH) + (id_x + roiSrc.ltrbROI.lt.x) * 3;
-        rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    }
-
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesCH.x, &pix_f24);
-}
-
-template <typename T>
-__global__ void flip_pln3_pkd3_hip_single_image(T *srcPtr,
-                                                uint2 srcStridesCH,
-                                                T *dstPtr,
-                                                uint dstStrideH,
-                                                uint2 dstDimsWH,
-                                                unsigned int horizontalFlag,
-                                                unsigned int verticalFlag,
-                                                RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    d_float24 pix_f24;
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStrideH) + id_x * 3;
-
-    if(horizontalFlag == 0 && verticalFlag == 0)
-    {
-        srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + (id_x + roiSrc.ltrbROI.lt.x);
-        rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesCH.y, &pix_f24);
-    }
-    else if(horizontalFlag == 1 && verticalFlag == 1)
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStridesCH.y) + (roiSrc.ltrbROI.rb.x - id_x - 7);
-        rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesCH.y, &pix_f24);
-    }
-    else if(horizontalFlag == 1)
-    {
-        if((id_y == 0) && (id_x + 8) > roiSrc.xywhROI.roiWidth)
-        {
-            srcIdx = ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + roiSrc.ltrbROI.lt.x;
-            dstIdx -= (id_x + 8 -(roiSrc.ltrbROI.rb.x - roiSrc.ltrbROI.lt.x + 1)) * 3;
-        }
-        else
-            srcIdx += ((id_y + roiSrc.ltrbROI.lt.y) * srcStridesCH.y) + (roiSrc.ltrbROI.rb.x - id_x - 7);
-        rpp_hip_load24_pln3_and_unpack_to_float24_pln3_mirror(srcPtr + srcIdx, srcStridesCH.x, &pix_f24);
-    }
-    else
-    {
-        srcIdx += ((roiSrc.ltrbROI.rb.y - id_y) * srcStridesCH.y) + (id_x + roiSrc.ltrbROI.lt.x);
-        rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesCH.x, &pix_f24);
-    }
-
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
-}
-
 template <typename T>
 RppStatus hip_exec_flip_single_image(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
@@ -618,86 +377,88 @@ RppStatus hip_exec_flip_single_image(T *srcPtr,
                                      RpptDescPtr dstDescPtr,
                                      Rpp32u *horizontalTensor,
                                      Rpp32u *verticalTensor,
-                                     RpptROIPtr roiSrc,
+                                     RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle)
 {
-    Rpp32u horizontalFlag = horizontalTensor[0];
-    Rpp32u verticalFlag = verticalTensor[0];
     if (roiType == RpptRoiType::XYWH)
-        hip_exec_roi_converison_xywh_to_ltrb(roiSrc, handle);
+        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = 1;
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(flip_pkd_hip_single_image,
+        hipLaunchKernelGGL(flip_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.hStride,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.hStride,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            make_uint2(dstDescPtr->w, dstDescPtr->h),
-                           horizontalFlag,
-                           verticalFlag,
-                           *roiSrc);
+                           horizontalTensor,
+                           verticalTensor,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(flip_pln_hip_single_image,
+        hipLaunchKernelGGL(flip_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            make_uint2(dstDescPtr->w, dstDescPtr->h),
                            dstDescPtr->c,
-                           horizontalFlag,
-                           verticalFlag,
-                           *roiSrc);
+                           horizontalTensor,
+                           verticalTensor,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(flip_pkd3_pln3_hip_single_image,
+            hipLaunchKernelGGL(flip_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
-                               horizontalFlag,
-                               verticalFlag,
-                               *roiSrc);
+                               horizontalTensor,
+                               verticalTensor,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(flip_pln3_pkd3_hip_single_image,
+            hipLaunchKernelGGL(flip_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.hStride,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                make_uint2(dstDescPtr->w, dstDescPtr->h),
-                               horizontalFlag,
-                               verticalFlag,
-                               *roiSrc);
+                               horizontalTensor,
+                               verticalTensor,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
