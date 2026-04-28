@@ -206,152 +206,6 @@ __global__ void resize_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
-// -------------------- Set 1 - Nearest Neighbor Interpolation Single Image Processing --------------------
-
-template <typename T>
-__global__ void resize_nearest_neighbor_pkd_hip_single_image(T *srcPtr,
-                                                             uint srcStrideH,
-                                                             T *dstPtr,
-                                                             uint dstStrideH,
-                                                             RpptImagePatch dstImgSize,
-                                                             RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    uint2 dstDimsWH;
-    dstDimsWH.x = dstImgSize.width;
-    dstDimsWH.y = dstImgSize.height;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStrideH) + id_x * 3;
-
-    int4 srcRoi_i4 = *(int4 *)&roiSrc;
-    d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
-
-    d_float24 dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStrideH, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
-}
-
-template <typename T>
-__global__ void resize_nearest_neighbor_pln_hip_single_image(T *srcPtr,
-                                                             uint2 srcStridesCH,
-                                                             T *dstPtr,
-                                                             uint2 dstStridesCH,
-                                                             int channelsDst,
-                                                             RpptImagePatch dstImgSize,
-                                                             RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    uint2 dstDimsWH;
-    dstDimsWH.x = dstImgSize.width;
-    dstDimsWH.y = dstImgSize.height;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-
-    int4 srcRoi_i4 = *(int4 *)&roiSrc;
-    d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
-
-    d_float8 dst_f8;
-    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesCH.y, &locSrc_f16, &srcRoi_i4, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-
-    if (channelsDst == 3)
-    {
-        srcIdx += srcStridesCH.x;
-        dstIdx += dstStridesCH.x;
-
-        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesCH.y, &locSrc_f16, &srcRoi_i4, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-
-        srcIdx += srcStridesCH.x;
-        dstIdx += dstStridesCH.x;
-
-        rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesCH.y, &locSrc_f16, &srcRoi_i4, &dst_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-    }
-}
-
-template <typename T>
-__global__ void resize_nearest_neighbor_pkd3_pln3_hip_single_image(T *srcPtr,
-                                                                   uint srcStrideH,
-                                                                   T *dstPtr,
-                                                                   uint2 dstStridesCH,
-                                                                   RpptImagePatch dstImgSize,
-                                                                   RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    uint2 dstDimsWH;
-    dstDimsWH.x = dstImgSize.width;
-    dstDimsWH.y = dstImgSize.height;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-
-    int4 srcRoi_i4 = *(int4 *)&roiSrc;
-    d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
-
-    d_float24 dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStrideH, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pln3(dstPtr + dstIdx, dstStridesCH.x, &dst_f24);
-}
-
-template <typename T>
-__global__ void resize_nearest_neighbor_pln3_pkd3_hip_single_image(T *srcPtr,
-                                                                   uint2 srcStridesCH,
-                                                                   T *dstPtr,
-                                                                   uint dstStrideH,
-                                                                   RpptImagePatch dstImgSize,
-                                                                   RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    uint2 dstDimsWH;
-    dstDimsWH.x = dstImgSize.width;
-    dstDimsWH.y = dstImgSize.height;
-
-    if ((id_y >= dstDimsWH.y) || (id_x >= dstDimsWH.x))
-    {
-        return;
-    }
-
-    uint srcIdx = 0;
-    uint dstIdx = (id_y * dstStrideH) + id_x * 3;
-
-    int4 srcRoi_i4 = *(int4 *)&roiSrc;
-    d_float16 locSrc_f16;
-    resize_roi_and_srclocs_hip_compute(&srcRoi_i4, &dstDimsWH, id_x, id_y, &locSrc_f16);
-
-    d_float24 dst_f24;
-    rpp_hip_interpolate24_nearest_neighbor_pln3(srcPtr + srcIdx, &srcStridesCH, &locSrc_f16, &srcRoi_i4, &dst_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
-}
-
 // -------------------- Set 2 - Bilinear Interpolation --------------------
 
 template <typename T>
@@ -1152,65 +1006,69 @@ RppStatus hip_exec_resize_single_image(T *srcPtr,
     {
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
-        int globalThreads_z = handle.GetBatchSize();
+        int globalThreads_z = 1;
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_hip_single_image,
+            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            srcDescPtr->strides.hStride,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                             dstPtr,
-                            dstDescPtr->strides.hStride,
-                            *dstImgSize,
-                            *roiSrc);
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            dstImgSize,
+                            roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(resize_nearest_neighbor_pln_hip_single_image,
+            hipLaunchKernelGGL(resize_nearest_neighbor_pln_hip_tensor,
                             dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                             dstPtr,
-                            make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                             dstDescPtr->c,
-                            *dstImgSize,
-                            *roiSrc);
+                            dstImgSize,
+                            roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
             if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_hip_single_image,
+                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_hip_tensor,
                                 dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                 dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                 0,
                                 handle.GetStream(),
                                 srcPtr,
-                                srcDescPtr->strides.hStride,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                 dstPtr,
-                                make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                *dstImgSize,
-                                *roiSrc);
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_hip_single_image,
+                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_hip_tensor,
                                 dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                 dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                 0,
                                 handle.GetStream(),
                                 srcPtr,
-                                make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                 dstPtr,
-                                dstDescPtr->strides.hStride,
-                                *dstImgSize,
-                                *roiSrc);
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
