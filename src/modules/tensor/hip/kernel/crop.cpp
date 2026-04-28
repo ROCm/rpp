@@ -213,112 +213,6 @@ RppStatus hip_exec_crop_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-// -------------------- Single Image Processing --------------------
-
-template <typename T>
-__global__ void crop_pkd_hip_single_image(T *srcPtr,
-                                          uint srcStrideH,
-                                          T *dstPtr,
-                                          uint dstStrideH,
-                                          RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= roiSrc.xywhROI.roiHeight) || (id_x >= roiSrc.xywhROI.roiWidth * 3))
-    {
-        return;
-    }
-
-    uint srcIdx = ((id_y + roiSrc.xywhROI.xy.y) * srcStrideH) + (id_x + roiSrc.xywhROI.xy.x * 3);
-    uint dstIdx = (id_y * dstStrideH) + id_x;
-
-    d_float8 pix_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-}
-
-template <typename T>
-__global__ void crop_pln_hip_single_image(T *srcPtr,
-                                          uint2 srcStridesCH,
-                                          T *dstPtr,
-                                          uint2 dstStridesCH,
-                                          int channelsDst,
-                                          RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= roiSrc.xywhROI.roiHeight) || (id_x >= roiSrc.xywhROI.roiWidth))
-    {
-        return;
-    }
-
-    uint srcIdx = ((id_y + roiSrc.xywhROI.xy.y) * srcStridesCH.y) + (id_x + roiSrc.xywhROI.xy.x);
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-
-    d_float8 pix_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-    if (channelsDst == 3)
-    {
-        srcIdx += srcStridesCH.x;
-        dstIdx += dstStridesCH.x;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-        srcIdx += srcStridesCH.x;
-        dstIdx += dstStridesCH.x;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
-    }
-}
-
-template <typename T>
-__global__ void crop_pkd3_pln3_hip_single_image(T *srcPtr,
-                                                uint srcStrideH,
-                                                T *dstPtr,
-                                                uint2 dstStridesCH,
-                                                RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= roiSrc.xywhROI.roiHeight) || (id_x >= roiSrc.xywhROI.roiWidth))
-    {
-        return;
-    }
-
-    uint srcIdx = ((id_y + roiSrc.xywhROI.xy.y) * srcStrideH) + ((id_x + roiSrc.xywhROI.xy.x) * 3);
-    uint dstIdx = (id_y * dstStridesCH.y) + id_x;
-
-    d_float24 pix_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesCH.x, &pix_f24);
-}
-
-template <typename T>
-__global__ void crop_pln3_pkd3_hip_single_image(T *srcPtr,
-                                                uint2 srcStridesCH,
-                                                T *dstPtr,
-                                                uint dstStrideH,
-                                                RpptROI roiSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-    if ((id_y >= roiSrc.xywhROI.roiHeight) || (id_x >= roiSrc.xywhROI.roiWidth))
-    {
-        return;
-    }
-
-    uint srcIdx = ((id_y + roiSrc.xywhROI.xy.y) * srcStridesCH.y) + (id_x + roiSrc.xywhROI.xy.x);
-    uint dstIdx = (id_y * dstStrideH) + id_x * 3;
-
-    d_float24 pix_f24;
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesCH.x, &pix_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
-}
-
 template <typename T>
 RppStatus hip_exec_crop_single_image(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
@@ -333,63 +227,67 @@ RppStatus hip_exec_crop_single_image(T *srcPtr,
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = 1;
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(crop_pkd_hip_single_image,
+        hipLaunchKernelGGL(crop_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcDescPtr->strides.hStride,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           dstDescPtr->strides.hStride,
-                           *roiSrc);
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           roiSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(crop_pln_hip_single_image,
+        hipLaunchKernelGGL(crop_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
-                           make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           *roiSrc);
+                           roiSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(crop_pkd3_pln3_hip_single_image,
+            hipLaunchKernelGGL(crop_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               srcDescPtr->strides.hStride,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               make_uint2(dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               *roiSrc);
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(crop_pln3_pkd3_hip_single_image,
+            hipLaunchKernelGGL(crop_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
-                               make_uint2(srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
-                               dstDescPtr->strides.hStride,
-                               *roiSrc);
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
