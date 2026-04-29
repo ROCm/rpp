@@ -574,8 +574,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             if(errorStatus != RPP_SUCCESS)
             {
                 // Ignore the error status of hipFree to preserve the root cause of the error
-                auto status = hipFree(tempPtr);
-                (void)status;
+                (void)hipFree(tempPtr);
                 return errorStatus;
             }
             inputDesc = dstDescPtr;
