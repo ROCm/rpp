@@ -121,16 +121,16 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
+ * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_INCOMPATIBLE_BACKEND if executionBackend is not HIP).
  */
 RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief YUV to RGB color conversion with bicubic vertical chroma upsampling on HIP backend (NV12 8-bit only)
  * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24,
- * using Catmull-Rom bicubic interpolation (a=-0.5) to vertically upsample chroma from 4 adjacent
- * UV rows per output pixel. Horizontal chroma upsampling remains nearest-neighbor.<br>
- * This produces smoother chroma transitions compared to \ref rppt_yuv_to_rgb which uses
- * nearest-neighbor chroma upsampling in both dimensions.
+ * using Mitchell-Netravali bicubic interpolation (B=0, C=0.6) to vertically upsample chroma,
+ * matching FFmpeg's default SWS_BICUBIC behavior. Odd luma rows pass through chroma unchanged
+ * (identity); even luma rows use a symmetric 4-tap filter. Horizontal chroma upsampling remains
+ * nearest-neighbor.
  * - Source: srcYPtr = luma plane, srcUVPtr = interleaved UV
  * - src_y_pitch / src_uv_pitch: row strides in bytes
  * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride dst_pitch bytes.
@@ -151,7 +151,7 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDe
  * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
+ * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_INCOMPATIBLE_BACKEND if executionBackend is not HIP).
  */
 RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
@@ -181,7 +181,7 @@ RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDes
  * \param [in] executionBackend must be RppBackend::RPP_HIP_BACKEND
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_NOT_IMPLEMENTED if executionBackend is not HIP).
+ * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_INCOMPATIBLE_BACKEND if executionBackend is not HIP).
  */
 RppStatus rppt_yuv_to_rgb_bilinear_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 

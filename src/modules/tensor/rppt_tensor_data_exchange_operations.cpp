@@ -432,6 +432,8 @@ RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr,
         return RPP_ERROR_INCOMPATIBLE_BACKEND;
     if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (height < 2 || width < 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
@@ -477,6 +479,8 @@ RppStatus rppt_yuv_to_rgb_bilinear_v(RppPtr_t srcYPtr,
         return RPP_ERROR_INCOMPATIBLE_BACKEND;
     if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
         return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (height < 2 || width < 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
