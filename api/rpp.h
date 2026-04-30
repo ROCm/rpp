@@ -31,6 +31,8 @@ SOFTWARE.
  * \brief RPP API to create and destroy RPP HOST/GPU handle.
  */
 
+#include "rpp_backend.h"
+
 #if RPP_BACKEND_HIP
 
 #include <hip/hip_runtime_api.h>

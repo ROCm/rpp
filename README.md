@@ -169,24 +169,17 @@ sudo zypper install rpp rpp-devel rpp-test
   make -j8
   sudo make install
   ```
-
-  + Run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
-
-  ```shell
-  make test
-  ```
-
-> [!IMPORTANT]
-> `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
+### Running Tests
+  After installing RPP, refer to the [Verify installation](#verify-installation) section below for instructions on running tests.
 
 ## Verify installation
 
 The installer will copy
 
-* Libraries into `/opt/rocm/lib`
-* Header files into `/opt/rocm/include/rpp`
-* Samples, and test folder into `/opt/rocm/share/rpp`
-* Documents folder into `/opt/rocm/share/doc/rpp`
+* Libraries into `${ROCM_PATH}/lib`
+* Header files into `${ROCM_PATH}/include/rpp`
+* Samples, and test folder into `${ROCM_PATH}/share/rpp`
+* Documents folder into `${ROCM_PATH}/share/doc/rpp`
 
 ### Verify with rpp-test package
 
@@ -194,7 +187,7 @@ Test package will install CTest module to test rpp. Follow below steps to test p
 
 ```shell
 mkdir rpp-test && cd rpp-test
-cmake /opt/rocm/share/rpp/test/
+cmake ${ROCM_PATH}/share/rpp/test/
 ctest -VV
 ```
 > [!NOTE]
@@ -211,6 +204,27 @@ ctest -VV
 ## Test Functionalities
 
 To test latest Image/Voxel/Audio/Miscellaneous functionalities of RPP using a python script please view [AMD ROCm Performance Primitives (RPP) Test Suite](utilities/test_suite/README.md)
+
+## Adding RPP to your CMake project
+To add RPP to your CMake project, you can use the following code after installation:
+
+```cmake
+find_package(rpp REQUIRED)
+target_link_libraries(your_target PRIVATE rpp::rpp)
+```
+
+HIP backend support is automatic: `rpp::rpp` transitively propagates the HIP include paths and link libraries, and `rpp/rpp.h` includes `rpp_backend.h` which sets `RPP_BACKEND_HIP` for your compiled sources.
+
+> [!NOTE]
+> `find_package(rpp REQUIRED)` sets the following variables in your CMake project:
+> * `rpp_BACKEND_TYPE` - "HIP" or "CPU" — useful for conditional CMake logic (e.g. adding HIP-specific sources)
+> * `rpp_AUDIO_AUGMENTATIONS_SUPPORT` - ON or OFF
+
+> [!TIP]
+> If CMake is unable to find RPP, the following fixes can be tried:
+> * Ensure `${ROCM_PATH}/bin` is in your `PATH`: `export PATH=${ROCM_PATH}/bin:$PATH`.
+> * Ensure `CMAKE_PREFIX_PATH` includes `${ROCM_PATH}/lib/cmake`.
+
 
 ## MIVisionX support - OpenVX extension
 
