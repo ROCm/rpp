@@ -504,6 +504,8 @@ RppStatus hip_exec_yuv_to_rgb_bicubic_v(T *srcYPtr,
                                         RpptColorRange color_range,
                                         rpp::Handle& handle);
 
+// -------------------- yuv_to_rgb_bilinear_v (NV12 8-bit, bilinear vertical chroma upsample) --------------------
+
 template <typename T>
 RppStatus hip_exec_yuv_to_rgb_bilinear_v(T *srcYPtr,
                                          Rpp32u src_y_pitch,
