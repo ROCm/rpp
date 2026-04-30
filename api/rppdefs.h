@@ -80,12 +80,13 @@ typedef halfhpp Rpp16f;
   } while (0)
 
 /*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
-#define HIP_CHECK_LAUNCH_RETURN()                                              \
-  do {                                                                         \
-    hipError_t status = hipGetLastError();                                     \
-    if (status != hipSuccess) {                                                \
-      return RPP_ERROR_HIP_LAUNCH;                                             \
-    }                                                                          \
+#define HIP_CHECK_LAUNCH_RETURN()                                                                     \
+  do {                                                                                                \
+    hipError_t status = hipGetLastError();                                                            \
+    if (status != hipSuccess) {                                                                       \
+        fprintf(stderr, "HIP kernel launch error: returned %d at %s:%d", status, __FILE__, __LINE__); \
+        return RPP_ERROR_HIP_LAUNCH;                                                                  \
+    }                                                                                                 \
   } while (0)
 #else
 #define RPP_HOST_DEVICE
