@@ -83,13 +83,16 @@ rppStatus_t try_(F f, bool output = true)
     }
     catch(const Exception& ex)
     {
-        (void)output;
+        if (output) {
+            std::cerr << ex.what() << std::endl;
+        }
         return ex.status;
     }
     catch(const std::exception& ex)
     {
-        (void)output;
-        (void)ex;
+        if (output) {
+            std::cerr << ex.what() << std::endl;
+        }
         return rppStatusUnknownError;
     }
     catch(...)
