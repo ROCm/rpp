@@ -174,9 +174,8 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Half
+# Half (HALF::half carries INTERFACE include dirs for transitive use via rpp::rpp)
 find_package(HALF REQUIRED)
-include_directories(${HALF_INCLUDE_DIRS})
 
 if (RPP_AUDIO_SUPPORT)
     find_package(FFTS QUIET)
@@ -200,11 +199,11 @@ message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP au
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
-# STD Filesystem
+# STD Filesystem (private to rpp; not part of the link interface)
+set(RPP_PRIVATE_LINK_LIBS "")
 if(NOT APPLE)
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+    list(APPEND RPP_PRIVATE_LINK_LIBS stdc++fs)
 endif()
 
 # set global compiler flags for the project
@@ -230,7 +229,8 @@ endif()
 
 #Generate version info
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/api/rpp_version.h.in ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h @ONLY)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+set(RPP_HIP_HOST_TARGET "")
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -279,10 +279,9 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-        # link To HIP Host library -- [hip::host] to use host API
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
+        # hip::host supplies HIP/ROCm host headers and is linked PUBLIC on rpp::rpp for transitive usage
+        set(RPP_HIP_HOST_TARGET hip::host)
 
         # Add modules
         set(MODULES_LIST modules)
@@ -325,8 +324,16 @@ endif()
 
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
 message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
-target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    OpenMP::OpenMP_CXX
+    HALF::half
+)
+if(RPP_HIP_HOST_TARGET)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${RPP_HIP_HOST_TARGET})
+endif()
+if(RPP_PRIVATE_LINK_LIBS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${RPP_PRIVATE_LINK_LIBS})
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
@@ -335,34 +342,44 @@ if(USING_THE_ROCK)
 endif()
 
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} FFTS::FFTS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE FFTS::FFTS)
+    message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
+else()
+    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
+# Public headers: build tree vs install tree (GNUInstallDirs paths are relative to the install prefix).
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/api
-        ${ROCM_PATH}/include
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>"
+        "${ROCM_PATH}/include"
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
-        ${INCLUDE_LIST}
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/common"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific"
+        "${INCLUDE_LIST}"
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
-    target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip"
     )
 endif()
 
 add_subdirectory(addkernels)
 
+# Test suite
+enable_testing()
+include(CTest)
+add_subdirectory(utilities/test_suite)
+
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY)
+install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_COMPONENT dev)
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp
@@ -399,9 +416,6 @@ endif()
 # Cmake module config file configurations
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/" CACHE INTERNAL "Default module path.")
 
-# Export the package for use from the build-tree
-# (this registers the build-tree with a global CMake-registry)
-export(PACKAGE ${PROJECT_NAME})
 set(CONF_LIB_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
 # Create the rpp-config.cmake and rpp-config-version files
@@ -410,6 +424,11 @@ set(CONFIG_PACKAGE_INSTALL_DIR ${CONF_LIB_DIR}/cmake/${PROJECT_NAME})
 set(LIB_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(BIN_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
+
+# Backend string for package config (HIP or CPU after HIP fallback)
+set(RPP_PACKAGE_BACKEND_TYPE "${BACKEND}")
+# Audio augmentations (same effective flag as RPP_AUDIO_SUPPORT / rpp_audio_augmentations_support.h)
+set(RPP_PACKAGE_AUDIO_AUGMENTATIONS_SUPPORT "${RPP_AUDIO_SUPPORT}")
 
 # Generate Config File for rpp
 configure_package_config_file(
@@ -441,12 +460,6 @@ install(EXPORT ${PROJECT_NAME}-targets
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT dev
 )
-
-# CTest - Needs RPP Installed
-set(BUILD_FROM_SOURCE ON)
-enable_testing()
-include(CTest)
-add_subdirectory(utilities/test_suite)
 
 # Set package information
 set(PKG_MAINTAINER_NM  "mivisionx support")
