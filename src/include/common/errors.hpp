@@ -84,14 +84,14 @@ rppStatus_t try_(F f, bool output = true)
     catch(const Exception& ex)
     {
         if (output) {
-            std::cerr << ex.what() << std::endl;
+            fprintf(stderr, "RPP Error: %s\n", ex.what());
         }
         return ex.status;
     }
     catch(const std::exception& ex)
     {
         if (output) {
-            std::cerr << ex.what() << std::endl;
+            fprintf(stderr, "RPP Error: %s\n", ex.what());
         }
         return rppStatusUnknownError;
     }
