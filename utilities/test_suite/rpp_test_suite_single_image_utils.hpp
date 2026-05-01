@@ -331,8 +331,8 @@ inline void initializeROI(const vector<Mat>& imgs, vector<RpptROI>& rois, vector
     {
         rois[i].xywhROI.xy.x = 0;
         rois[i].xywhROI.xy.y = 0;
-        rois[i].xywhROI.roiWidth = imgs[i].cols;
-        rois[i].xywhROI.roiHeight = imgs[i].rows;
+        rois[i].xywhROI.roiWidth = descPtr[i].w;
+        rois[i].xywhROI.roiHeight = descPtr[i].h;
         if (invalidROI)
         {
             roiList[0] = 10;
@@ -357,8 +357,8 @@ inline void initializeROI(const vector<Mat>& imgs, RpptROI *rois, vector<RpptDes
     {
         rois[i].xywhROI.xy.x = 0;
         rois[i].xywhROI.xy.y = 0;
-        rois[i].xywhROI.roiWidth = imgs[i].cols;
-        rois[i].xywhROI.roiHeight = imgs[i].rows;
+        rois[i].xywhROI.roiWidth = descPtr[i].w;
+        rois[i].xywhROI.roiHeight = descPtr[i].h;
         if (invalidROI)
         {
             roiList[0] = 10;
