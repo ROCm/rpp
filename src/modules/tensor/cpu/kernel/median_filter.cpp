@@ -117,15 +117,6 @@ inline T rpp_median_5x5_sortnet(T *p)
     return p[12];
 }
 
-#if __AVX2__
-
-// Two-tier histogram structure
-struct RppMedianHistogram
-{
-    Rpp16u coarse[16];
-    Rpp16u fine[16][16];
-};
-
 // Simplified O(1) histogram for single-channel PLN1
 inline void rpp_median_histogram_u8_pln1_host(const Rpp8u *src,
                                                Rpp8u *dst,
@@ -218,6 +209,8 @@ inline void rpp_median_histogram_u8_pkd_host(const Rpp8u *src,
         }
     }
 }
+
+#if __AVX2__
 
 // -------------------- AVX2 Sorting Network Implementations --------------------
 
@@ -1483,7 +1476,7 @@ static inline RppStatus median_filter_generic_host_impl(T *srcPtrImage, RpptDesc
             }
         }
     }
-    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+    else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
 #if __AVX2__
         // Use simplified histogram method for U8 PKD with large kernels
@@ -1545,6 +1538,32 @@ static inline RppStatus median_filter_generic_host_impl(T *srcPtrImage, RpptDesc
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
+        }
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        T *dstPtrRow = dstPtrChannel;
+        for (Rpp32s i = 0; i < roi.xywhROI.roiHeight; i++)
+        {
+            T *dstPtrTemp = dstPtrRow;
+            for (Rpp32s j = 0; j < roi.xywhROI.roiWidth; j++)
+            {
+                T *dstPtrTempChn = dstPtrTemp;
+                T *srcPtrTempChn = srcPtrChannel;
+                for (Rpp32s c = 0; c < srcDescPtr->c; c++)
+                {
+                    if (useSortNet3)
+                        median_filter_3x3_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                    else if (useSortNet5)
+                        median_filter_5x5_sortnet(srcPtrTempChn, dstPtrTempChn, i, j, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr);
+                    else
+                        median_filter_generic(srcPtrTempChn, dstPtrTempChn, i, j, kernelSizeSquared, padLength, roi.xywhROI.roiHeight - 1, roi.xywhROI.roiWidth - 1, 1, srcDescPtr, dstDescPtr);
+                    srcPtrTempChn += srcDescPtr->strides.cStride;
+                    dstPtrTempChn++;
+                }
+                dstPtrTemp += dstDescPtr->c;
+            }
+            dstPtrRow += dstDescPtr->strides.hStride;
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
