@@ -31,15 +31,6 @@ __constant__ float rpp_nv12_yuv_to_rgb_mat[3][3];
 // okluma black level (0 full range, 16 studio) — must match host black in rpp_nv12_set_mat_yuv2rgb
 __constant__ int rpp_nv12_y_bias;
 
-// FFmpeg-compatible bicubic vertical chroma upsample weights.
-// Mitchell-Netravali with B=0, C=0.6 (FFmpeg's default bicubic).
-// For YUV420 with MPEG chroma siting, chroma position c_pos = y * 0.5 - 0.25,
-// giving two alternating phases:
-//   Even y (frac=0.75): [-0.028125, 0.240625, 0.871875, -0.084375]
-//   Odd  y (frac=0.25): [-0.084375, 0.871875, 0.240625, -0.028125]  (reversed)
-__constant__ float rpp_bicubic_v_weights_even[4] = { -0.028125f, 0.240625f, 0.871875f, -0.084375f };
-__constant__ float rpp_bicubic_v_weights_odd[4]  = { -0.084375f, 0.871875f, 0.240625f, -0.028125f };
-
 namespace {
 
 template <typename T>
@@ -108,13 +99,13 @@ __global__ void yuv_to_rgb_hip_kernel(uint8_t *__restrict__ dp_y,
     p_dst1[3] = r11; p_dst1[4] = g11; p_dst1[5] = b11;
 }
 
-// NV12 → packed RGB with FFmpeg-compatible bicubic vertical chroma upsampling.
+// NV12 → packed RGB with cubic vertical chroma upsampling.
 // One thread per output pixel. Horizontal chroma is nearest-neighbor.
-// Uses two alternating 4-tap phases matching FFmpeg's initFilter (B=0, C=0.6):
-//   Even y (frac=0.75): cr_base = (y>>1) - 2, weights = rpp_bicubic_v_weights_even
-//   Odd  y (frac=0.25): cr_base = (y>>1) - 1, weights = rpp_bicubic_v_weights_odd
+// Uses two alternating 4-tap phases (B=0, C=0.6):
+//   Even y (frac=0.75): cr_base = (y>>1) - 2, weights = rpp_cubic_v_weights_even
+//   Odd  y (frac=0.25): cr_base = (y>>1) - 1, weights = rpp_cubic_v_weights_odd
 template <typename T>
-__global__ void yuv_to_rgb_bicubic_v_hip_kernel(uint8_t *__restrict__ dp_y,
+__global__ void yuv_to_rgb_cubic_v_hip_kernel(uint8_t *__restrict__ dp_y,
                                                 int y_pitch,
                                                 uint8_t *__restrict__ dp_uv,
                                                 int uv_pitch,
@@ -136,29 +127,23 @@ __global__ void yuv_to_rgb_bicubic_v_hip_kernel(uint8_t *__restrict__ dp_y,
     int uv_x_offset = (x & ~1) * (int)sizeof(T);
     int chroma_height = height / 2;
 
-    // Select phase-dependent base row and weights
-    int cr_base;
-    const float *weights;
-    if (y & 1)
-    {
-        cr_base = (y >> 1) - 1;
-        weights = rpp_bicubic_v_weights_odd;
-    }
-    else
-    {
-        cr_base = (y >> 1) - 2;
-        weights = rpp_bicubic_v_weights_even;
-    }
-
-    // 4-tap bicubic vertical chroma interpolation
-    float u_acc = 0.0f, v_acc = 0.0f;
-    for (int i = 0; i < 4; i++)
-    {
-        int row = rpp_clamp(cr_base + i, 0, chroma_height - 1);
-        T *p_uv = (T *)(dp_uv + row * uv_pitch + uv_x_offset);
-        u_acc += weights[i] * (float)p_uv[0];
-        v_acc += weights[i] * (float)p_uv[1];
-    }
+    // 4-tap cubic vertical chroma interpolation (B=0, C=0.6).
+    // Even y (frac=0.75): base = (y>>1)-2, weights = {-0.028125, 0.240625, 0.871875, -0.084375}
+    // Odd  y (frac=0.25): base = (y>>1)-1, weights = {-0.084375, 0.871875, 0.240625, -0.028125}
+    int cr_base = (y & 1) ? (y >> 1) - 1 : (y >> 1) - 2;
+    int r0 = rpp_clamp(cr_base,     0, chroma_height - 1);
+    int r1 = rpp_clamp(cr_base + 1, 0, chroma_height - 1);
+    int r2 = rpp_clamp(cr_base + 2, 0, chroma_height - 1);
+    int r3 = rpp_clamp(cr_base + 3, 0, chroma_height - 1);
+    T *p0 = (T *)(dp_uv + r0 * uv_pitch + uv_x_offset);
+    T *p1 = (T *)(dp_uv + r1 * uv_pitch + uv_x_offset);
+    T *p2 = (T *)(dp_uv + r2 * uv_pitch + uv_x_offset);
+    T *p3 = (T *)(dp_uv + r3 * uv_pitch + uv_x_offset);
+    float w0, w1, w2, w3;
+    if (y & 1) { w0 = -0.084375f; w1 = 0.871875f; w2 = 0.240625f; w3 = -0.028125f; }
+    else       { w0 = -0.028125f; w1 = 0.240625f; w2 = 0.871875f; w3 = -0.084375f; }
+    float u_acc = w0 * (float)p0[0] + w1 * (float)p1[0] + w2 * (float)p2[0] + w3 * (float)p3[0];
+    float v_acc = w0 * (float)p0[1] + w1 * (float)p1[1] + w2 * (float)p2[1] + w3 * (float)p3[1];
     T u_val = (T)rpp_clamp(u_acc + 0.5f, 0.0f, 255.0f);
     T v_val = (T)rpp_clamp(v_acc + 0.5f, 0.0f, 255.0f);
 
@@ -172,12 +157,12 @@ __global__ void yuv_to_rgb_bicubic_v_hip_kernel(uint8_t *__restrict__ dp_y,
     p_dst[2] = b_out;
 }
 
-// NV12 → packed RGB with bilinear vertical chroma upsampling; T = Rpp8u.
+// NV12 → packed RGB with linear vertical chroma upsampling; T = Rpp8u.
 // One thread per output pixel. Horizontal chroma is nearest-neighbor.
-// FFmpeg coordinate model: odd luma rows → identity chroma passthrough,
+// Coordinate model: odd luma rows → identity chroma passthrough,
 // even luma rows → average of two nearest chroma rows (bilinear at frac=0.5).
 template <typename T>
-__global__ void yuv_to_rgb_bilinear_v_hip_kernel(uint8_t *__restrict__ dp_y,
+__global__ void yuv_to_rgb_linear_v_hip_kernel(uint8_t *__restrict__ dp_y,
                                                  int y_pitch,
                                                  uint8_t *__restrict__ dp_uv,
                                                  int uv_pitch,
@@ -212,7 +197,7 @@ __global__ void yuv_to_rgb_bilinear_v_hip_kernel(uint8_t *__restrict__ dp_y,
     else
     {
         // Even luma row: chroma position (y-1)/2 has frac=0.5
-        // Bilinear: average the two nearest chroma rows (floor and ceil)
+        // Linear: average the two nearest chroma rows (floor and ceil)
         int cr0 = y / 2 - 1;  // floor((y-1)/2.0) for even y>=2
         int cr1 = y / 2;      // ceil((y-1)/2.0)
         cr0 = rpp_clamp(cr0, 0, chroma_height - 1);
@@ -327,7 +312,7 @@ template RppStatus hip_exec_yuv_to_rgb<Rpp8u>(Rpp8u *srcYPtr,
                                               rpp::Handle &handle);
 
 template <typename T>
-RppStatus hip_exec_yuv_to_rgb_bicubic_v(T *srcYPtr,
+RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
                                         Rpp32u src_y_pitch,
                                         T *srcUVPtr,
                                         Rpp32u src_uv_pitch,
@@ -340,9 +325,9 @@ RppStatus hip_exec_yuv_to_rgb_bicubic_v(T *srcYPtr,
                                         rpp::Handle &handle)
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
-                  "hip_exec_yuv_to_rgb_bicubic_v is only supported for Rpp8u (NV12 8-bit)");
+                  "hip_exec_yuv_to_rgb_cubic_v is only supported for Rpp8u (NV12 8-bit)");
     rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
-    hipLaunchKernelGGL(yuv_to_rgb_bicubic_v_hip_kernel<T>,
+    hipLaunchKernelGGL(yuv_to_rgb_cubic_v_hip_kernel<T>,
                        dim3((width + 31) / 32, (height + 7) / 8, 1),
                        dim3(32, 8, 1),
                        0,
@@ -358,7 +343,7 @@ RppStatus hip_exec_yuv_to_rgb_bicubic_v(T *srcYPtr,
     return RPP_SUCCESS;
 }
 
-template RppStatus hip_exec_yuv_to_rgb_bicubic_v<Rpp8u>(Rpp8u *srcYPtr,
+template RppStatus hip_exec_yuv_to_rgb_cubic_v<Rpp8u>(Rpp8u *srcYPtr,
                                                         Rpp32u src_y_pitch,
                                                         Rpp8u *srcUVPtr,
                                                         Rpp32u src_uv_pitch,
@@ -371,7 +356,7 @@ template RppStatus hip_exec_yuv_to_rgb_bicubic_v<Rpp8u>(Rpp8u *srcYPtr,
                                                         rpp::Handle &handle);
 
 template <typename T>
-RppStatus hip_exec_yuv_to_rgb_bilinear_v(T *srcYPtr,
+RppStatus hip_exec_yuv_to_rgb_linear_v(T *srcYPtr,
                                          Rpp32u src_y_pitch,
                                          T *srcUVPtr,
                                          Rpp32u src_uv_pitch,
@@ -384,9 +369,9 @@ RppStatus hip_exec_yuv_to_rgb_bilinear_v(T *srcYPtr,
                                          rpp::Handle &handle)
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
-                  "hip_exec_yuv_to_rgb_bilinear_v is only supported for Rpp8u (NV12 8-bit)");
+                  "hip_exec_yuv_to_rgb_linear_v is only supported for Rpp8u (NV12 8-bit)");
     rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
-    hipLaunchKernelGGL(yuv_to_rgb_bilinear_v_hip_kernel<T>,
+    hipLaunchKernelGGL(yuv_to_rgb_linear_v_hip_kernel<T>,
                        dim3((width + 31) / 32, (height + 7) / 8, 1),
                        dim3(32, 8, 1),
                        0,
@@ -402,7 +387,7 @@ RppStatus hip_exec_yuv_to_rgb_bilinear_v(T *srcYPtr,
     return RPP_SUCCESS;
 }
 
-template RppStatus hip_exec_yuv_to_rgb_bilinear_v<Rpp8u>(Rpp8u *srcYPtr,
+template RppStatus hip_exec_yuv_to_rgb_linear_v<Rpp8u>(Rpp8u *srcYPtr,
                                                           Rpp32u src_y_pitch,
                                                           Rpp8u *srcUVPtr,
                                                           Rpp32u src_uv_pitch,
@@ -413,3 +398,4 @@ template RppStatus hip_exec_yuv_to_rgb_bilinear_v<Rpp8u>(Rpp8u *srcYPtr,
                                                           RpptColorStandard col_standard,
                                                           RpptColorRange color_range,
                                                           rpp::Handle &handle);
+                                                          

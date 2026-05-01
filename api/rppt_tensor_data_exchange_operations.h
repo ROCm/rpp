@@ -127,10 +127,9 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDe
 
 /*! \brief YUV to RGB color conversion with bicubic vertical chroma upsampling on HIP backend (NV12 8-bit only)
  * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24,
- * using Mitchell-Netravali bicubic interpolation (B=0, C=0.6) to vertically upsample chroma,
- * matching FFmpeg's default SWS_BICUBIC behavior. Odd luma rows pass through chroma unchanged
- * (identity); even luma rows use a symmetric 4-tap filter. Horizontal chroma upsampling remains
- * nearest-neighbor.
+ * using Mitchell-Netravali cubic interpolation (B=0, C=0.6) to vertically upsample chroma.
+ * Odd luma rows pass through chroma unchanged (identity); even luma rows use a symmetric 4-tap
+ * filter. Horizontal chroma upsampling remains nearest-neighbor.
  * - Source: srcYPtr = luma plane, srcUVPtr = interleaved UV
  * - src_y_pitch / src_uv_pitch: row strides in bytes
  * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride dst_pitch bytes.
@@ -153,14 +152,13 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDe
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_INCOMPATIBLE_BACKEND if executionBackend is not HIP).
  */
-RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
+RppStatus rppt_yuv_to_rgb_cubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! \brief YUV to RGB color conversion with bilinear vertical chroma upsampling on HIP backend (NV12 8-bit only)
  * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24,
- * using bilinear interpolation to vertically upsample chroma. Odd luma rows pass through chroma
+ * using linear interpolation to vertically upsample chroma. Odd luma rows pass through chroma
  * unchanged (identity); even luma rows average the two nearest chroma rows (frac=0.5).
  * Horizontal chroma upsampling remains nearest-neighbor.<br>
- * This matches FFmpeg's filtergraph default (SWS_BILINEAR) chroma upsampling behavior.
  * - Source: srcYPtr = luma plane, srcUVPtr = interleaved UV
  * - src_y_pitch / src_uv_pitch: row strides in bytes
  * - Destination: packed RGB at dstPtr (RGB24, Rpp8u) with row stride dst_pitch bytes.
@@ -183,7 +181,7 @@ RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDes
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion (e.g. RPP_ERROR_INCOMPATIBLE_BACKEND if executionBackend is not HIP).
  */
-RppStatus rppt_yuv_to_rgb_bilinear_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
+RppStatus rppt_yuv_to_rgb_linear_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
 /*! @}
  */

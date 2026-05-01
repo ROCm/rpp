@@ -411,9 +411,9 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr,
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
-/******************** yuv_to_rgb_bicubic_v ********************/
+/******************** yuv_to_rgb_cubic_v ********************/
 
-RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr,
+RppStatus rppt_yuv_to_rgb_cubic_v(RppPtr_t srcYPtr,
                                     RppPtr_t srcUVPtr,
                                     RpptDescPtr srcDescPtr,
                                     RppPtr_t dstPtr,
@@ -441,7 +441,7 @@ RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr,
 #ifdef GPU_SUPPORT
     if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        return hip_exec_yuv_to_rgb_bicubic_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
+        return hip_exec_yuv_to_rgb_cubic_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
                                                     src_y_pitch,
                                                     static_cast<Rpp8u*>(srcUVPtr),
                                                     src_uv_pitch,
@@ -458,9 +458,9 @@ RppStatus rppt_yuv_to_rgb_bicubic_v(RppPtr_t srcYPtr,
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 
-/******************** yuv_to_rgb_bilinear_v ********************/
+/******************** yuv_to_rgb_linear_v ********************/
 
-RppStatus rppt_yuv_to_rgb_bilinear_v(RppPtr_t srcYPtr,
+RppStatus rppt_yuv_to_rgb_linear_v(RppPtr_t srcYPtr,
                                      RppPtr_t srcUVPtr,
                                      RpptDescPtr srcDescPtr,
                                      RppPtr_t dstPtr,
@@ -488,7 +488,7 @@ RppStatus rppt_yuv_to_rgb_bilinear_v(RppPtr_t srcYPtr,
 #ifdef GPU_SUPPORT
     if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
-        return hip_exec_yuv_to_rgb_bilinear_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
+        return hip_exec_yuv_to_rgb_linear_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
                                                      src_y_pitch,
                                                      static_cast<Rpp8u*>(srcUVPtr),
                                                      src_uv_pitch,
