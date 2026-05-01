@@ -196,7 +196,8 @@ int main(int argc, char **argv)
     RpptROI *roi = nullptr;
     CHECK_RETURN_STATUS(hipHostMalloc(&roi, noOfImages * sizeof(RpptROI)));
     memset(roi, 0, noOfImages * sizeof(RpptROI));
-    RpptImagePatch dstImgSizes[noOfImages];
+    RpptImagePatch *dstImgSizes = nullptr;
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstImgSizes, noOfImages * sizeof(RpptImagePatch)));
 
     int inputChannel = set_input_channels(layoutType);
     int outputChannel = inputChannel;
@@ -622,6 +623,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(horizontalFlag));
         CHECK_RETURN_STATUS(hipHostFree(verticalFlag));
     }
+    CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
     CHECK_RETURN_STATUS(hipHostFree(roi));
     
     rppDestroy(handle, backend);
