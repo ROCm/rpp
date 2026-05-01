@@ -125,7 +125,7 @@ RppStatus rppt_color_to_greyscale(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  */
 RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
-/*! \brief YUV to RGB color conversion with bicubic vertical chroma upsampling on HIP backend (NV12 8-bit only)
+/*! \brief YUV to RGB color conversion with cubic vertical chroma upsampling on HIP backend (NV12 8-bit only)
  * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24,
  * using Mitchell-Netravali cubic interpolation (B=0, C=0.6) to vertically upsample chroma.
  * Odd luma rows pass through chroma unchanged (identity); even luma rows use a symmetric 4-tap
@@ -154,7 +154,7 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDe
  */
 RppStatus rppt_yuv_to_rgb_cubic_v(RppPtr_t srcYPtr, RppPtr_t srcUVPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u src_y_pitch, Rpp32u src_uv_pitch, Rpp32u dst_pitch, Rpp32u width, Rpp32u height, RpptColorStandard col_standard, RpptColorRange color_range, rppHandle_t rppHandle, RppBackend executionBackend);
 
-/*! \brief YUV to RGB color conversion with bilinear vertical chroma upsampling on HIP backend (NV12 8-bit only)
+/*! \brief YUV to RGB color conversion with linear vertical chroma upsampling on HIP backend (NV12 8-bit only)
  * \details Converts semi-planar NV12 (separate Y and interleaved UV planes) to packed RGB24,
  * using linear interpolation to vertically upsample chroma. Odd luma rows pass through chroma
  * unchanged (identity); even luma rows average the two nearest chroma rows (frac=0.5).

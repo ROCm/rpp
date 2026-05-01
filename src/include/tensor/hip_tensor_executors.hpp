@@ -489,7 +489,7 @@ RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
                               RpptColorRange color_range,
                               rpp::Handle& handle);
 
-// -------------------- yuv_to_rgb_cubic_v (NV12 8-bit, bicubic vertical chroma upsample) --------------------
+// -------------------- yuv_to_rgb_cubic_v (NV12 8-bit, cubic vertical chroma upsample) --------------------
 
 template <typename T>
 RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
@@ -504,7 +504,7 @@ RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
                                         RpptColorRange color_range,
                                         rpp::Handle& handle);
 
-// -------------------- yuv_to_rgb_bilinear_v (NV12 8-bit, bilinear vertical chroma upsample) --------------------
+// -------------------- yuv_to_rgb_linear_v (NV12 8-bit, linear vertical chroma upsample) --------------------
 
 template <typename T>
 RppStatus hip_exec_yuv_to_rgb_linear_v(T *srcYPtr,

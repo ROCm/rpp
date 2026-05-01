@@ -160,7 +160,7 @@ __global__ void yuv_to_rgb_cubic_v_hip_kernel(uint8_t *__restrict__ dp_y,
 // NV12 → packed RGB with linear vertical chroma upsampling; T = Rpp8u.
 // One thread per output pixel. Horizontal chroma is nearest-neighbor.
 // Coordinate model: odd luma rows → identity chroma passthrough,
-// even luma rows → average of two nearest chroma rows (bilinear at frac=0.5).
+// even luma rows → average of two nearest chroma rows (linear at frac=0.5).
 template <typename T>
 __global__ void yuv_to_rgb_linear_v_hip_kernel(uint8_t *__restrict__ dp_y,
                                                  int y_pitch,
