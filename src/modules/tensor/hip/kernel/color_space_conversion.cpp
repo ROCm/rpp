@@ -106,9 +106,12 @@ static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRa
 {
     float wr = 0.2126f, wb = 0.0722f;
     int black = 16, white = 235, max_val = 255;
+    int chroma_min = 16, chroma_max = 240;
     if (color_range == RpptColorRange_FULL) {
         black = 0;
         white = 255;
+        chroma_min = 0;
+        chroma_max = 255;
     }
     switch (col_standard)
     {
@@ -139,9 +142,17 @@ static void rpp_nv12_set_mat_yuv2rgb(RpptColorStandard col_standard, RpptColorRa
         {1.0f, -wb * (1.0f - wb) / 0.5f / (1 - wb - wr), -wr * (1 - wr) / 0.5f / (1 - wb - wr)},
         {1.0f, (1.0f - wb) / 0.5f, 0.0f},
     };
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            mat[i][j] = (float)(1.0 * max_val / (white - black) * mat[i][j]);
+    // Luma and chroma have different ranges in studio/TV mode:
+    //   Y:     [black, white]       = [16, 235] → span 219
+    //   Cb/Cr: [chroma_min, chroma_max] = [16, 240] → span 224
+    // Full range uses [0, 255] for both.
+    float y_scale = (float)max_val / (white - black);
+    float c_scale = (float)max_val / (chroma_max - chroma_min);
+    for (int i = 0; i < 3; i++) {
+        mat[i][0] *= y_scale;
+        mat[i][1] *= c_scale;
+        mat[i][2] *= c_scale;
+    }
     hipError_t status = hipMemcpyToSymbol(rpp_nv12_yuv_to_rgb_mat, mat, sizeof(mat));
     CHECK_RETURN_STATUS(status);
     status = hipMemcpyToSymbol(rpp_nv12_y_bias, &black, sizeof(black));
