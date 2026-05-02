@@ -449,14 +449,6 @@ __device__ __forceinline__ float compute_median_quickselect(T *window)
             {
                 ++i;
             }
-
-            // Shrink search interval toward median position
-            if (medianIndex <= lt)
-                rightIdx = lt - 1;
-            else if (medianIndex > gt)
-                leftIdx = gt + 1;
-            else
-                break; // midVal is the median
         }
 
         // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
@@ -468,6 +460,8 @@ __device__ __forceinline__ float compute_median_quickselect(T *window)
         else
             break; // medianIndex is in the equal-to-pivot region
     }
+
+    return static_cast<float>(window[medianIndex]);
 }
 
 // Histogram-based median computation using shared memory (for U8 types with large kernels)
