@@ -449,6 +449,14 @@ __device__ __forceinline__ float compute_median_quickselect(T *window)
             {
                 ++i;
             }
+
+            // Shrink search interval toward median position
+            if (medianIndex <= lt)
+                rightIdx = lt - 1;
+            else if (medianIndex > gt)
+                leftIdx = gt + 1;
+            else
+                break; // medianIndex is in the equal-to-pivot region
         }
 
         // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
