@@ -50,6 +50,11 @@ set(HALF_FOUND ${HALF_FOUND} CACHE INTERNAL "")
 set(HALF_INCLUDE_DIRS ${HALF_INCLUDE_DIRS} CACHE INTERNAL "")
 
 if(HALF_FOUND)
+    if(NOT TARGET HALF::half)
+        add_library(HALF::half INTERFACE IMPORTED)
+        set_target_properties(HALF::half PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${HALF_INCLUDE_DIRS}")
+    endif()
     message("-- ${White}Using HALF -- \n\tIncludes:${HALF_INCLUDE_DIRS}${ColourReset}")
 else()
     if(HALF_FIND_REQUIRED)
