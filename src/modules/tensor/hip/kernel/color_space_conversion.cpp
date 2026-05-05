@@ -184,29 +184,15 @@ __global__ void yuv_to_rgb_linear_v_hip_kernel(uint8_t *__restrict__ dp_y,
     int uv_x_offset = (x & ~1) * (int)sizeof(T);
     int chroma_height = height / 2;
 
-    T u_val, v_val;
-    if (y & 1)
-    {
-        // Odd luma row: chroma position (y-1)/2 is integer → identity passthrough
-        int cr = (y - 1) / 2;
-        cr = rpp_clamp(cr, 0, chroma_height - 1);
-        T *p_uv = (T *)(dp_uv + cr * uv_pitch + uv_x_offset);
-        u_val = p_uv[0];
-        v_val = p_uv[1];
-    }
-    else
-    {
-        // Even luma row: chroma position (y-1)/2 has frac=0.5
-        // Linear: average the two nearest chroma rows (floor and ceil)
-        int cr0 = y / 2 - 1;  // floor((y-1)/2.0) for even y>=2
-        int cr1 = y / 2;      // ceil((y-1)/2.0)
-        cr0 = rpp_clamp(cr0, 0, chroma_height - 1);
-        cr1 = rpp_clamp(cr1, 0, chroma_height - 1);
-        T *p_uv0 = (T *)(dp_uv + cr0 * uv_pitch + uv_x_offset);
-        T *p_uv1 = (T *)(dp_uv + cr1 * uv_pitch + uv_x_offset);
-        u_val = (T)(((float)p_uv0[0] + (float)p_uv1[0]) * 0.5f + 0.5f);
-        v_val = (T)(((float)p_uv0[1] + (float)p_uv1[1]) * 0.5f + 0.5f);
-    }
+    // Linear vertical chroma interpolation (branch-free).
+    // cr0 and cr1 are the two nearest chroma rows: for odd y they are equal
+    // (identity passthrough), for even y they differ by 1 (average at frac=0.5).
+    int cr0 = rpp_clamp((y - 1) / 2, 0, chroma_height - 1);
+    int cr1 = rpp_clamp(y / 2,       0, chroma_height - 1);
+    T *p_uv0 = (T *)(dp_uv + cr0 * uv_pitch + uv_x_offset);
+    T *p_uv1 = (T *)(dp_uv + cr1 * uv_pitch + uv_x_offset);
+    T u_val = (T)(((float)p_uv0[0] + (float)p_uv1[0]) * 0.5f + 0.5f);
+    T v_val = (T)(((float)p_uv0[1] + (float)p_uv1[1]) * 0.5f + 0.5f);
 
     // YUV → RGB conversion
     T r_out, g_out, b_out;
