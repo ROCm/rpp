@@ -362,6 +362,7 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
             else
                 return RPP_ERROR_NOT_IMPLEMENTED;
         }
+        else
         {
             if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
             {
