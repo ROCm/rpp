@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == YUV_TO_RGB || testCase == HUE || testCase == SATURATION)
+        if(testCase == COLOR_TWIST || testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || (testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V) || testCase == HUE || testCase == SATURATION)
         {
             cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     }
 
     // yuv_to_rgb outputs packed RGB only; only PKD3 (layout 0) is supported
-    if (testCase == YUV_TO_RGB && layoutType != 0)
+    if ((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V) && layoutType != 0)
     {
         cout << "\nyuv_to_rgb only supports PKD3 (packed RGB) output. Use layout type 0.\n";
         return RPP_ERROR_NOT_IMPLEMENTED;
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    if(testCase == YUV_TO_RGB)
+    if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
         search_files_recursive(src, imageNames, imageNamesPath, ".yuv");
     else
         search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
     Rpp32u dstOffsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    if(testCase == YUV_TO_RGB)
+    if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
         set_max_dimensions_yuv(imageNamesPath, maxHeight, maxWidth, imagesMixed);
     else
         set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
@@ -329,7 +329,7 @@ int main(int argc, char **argv)
     Rpp64u oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
     Rpp64u inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
     Rpp64u outputBufferSize = oBufferSize * get_size_of_data_type(dstDescPtr->dataType) + dstDescPtr->offsetInBytes;
-    if(testCase == YUV_TO_RGB)
+    if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
     {
         inputBufferSize = batchSize * ((Rpp64u)maxWidth * maxHeight * 3 / 2);
         ioBufferSizeInBytes_u8 = inputBufferSize;
@@ -683,13 +683,13 @@ int main(int argc, char **argv)
         vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
 
         // Set ROIs for src/dst
-        if(testCase == YUV_TO_RGB)
+        if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
             set_src_and_dst_roi_yuv(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
         else
             set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
 
         //Read images
-        if(testCase == YUV_TO_RGB)
+        if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
         {
             read_yuv_batch_nv12(inputu8, srcDescPtr, imagesPathStart);
             CHECK_RETURN_STATUS(hipMemcpy(d_input, inputu8, inputBufferSize, hipMemcpyHostToDevice));
@@ -1866,6 +1866,74 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
                     break;
                 }
+                case YUV_TO_RGB_CUBIC_V:
+                {
+                    testCaseName = "yuv_to_rgb_cubic_v";
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8)
+                    {
+                        size_t srcOffsetBytes = 0;
+                        for (int i = 0; i < batchSize; i++)
+                        {
+                            RpptYuvNv12Sidecar yuvSidecar;
+                            if (!parse_yuv_nv12_sidecar(*(imagesPathStart + i), yuvSidecar))
+                            {
+                                std::cerr << "\nyuv_to_rgb_cubic_v: missing or invalid .info for " << *(imagesPathStart + i) << std::endl;
+                                errorCodeCapture = RPP_ERROR;
+                                break;
+                            }
+                            Rpp32u width = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiWidth;
+                            Rpp32u height = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiHeight;
+                            Rpp32u src_y_pitch = width * sizeof(Rpp8u);
+                            Rpp32u src_uv_pitch = src_y_pitch;
+                            Rpp32u bgr_pitch = width * 3 * sizeof(Rpp8u);
+                            Rpp8u *srcY = (Rpp8u *)d_input + srcOffsetBytes;
+                            Rpp8u *srcUV = srcY + (size_t)height * src_y_pitch;
+                            void *dstImg = (Rpp8u *)d_output + (size_t)i * dstDescPtr->strides.nStride;
+                            errorCodeCapture = rppt_yuv_to_rgb_cubic_v(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, yuvSidecar.col_standard, yuvSidecar.color_range, handle, RppBackend::RPP_HIP_BACKEND);
+                            if (errorCodeCapture != RPP_SUCCESS)
+                                break;
+                            srcOffsetBytes += (size_t)roiTensorPtrSrc[i].xywhROI.roiWidth * roiTensorPtrSrc[i].xywhROI.roiHeight * 3 / 2;
+                        }
+                    }
+                    else
+                        missingFuncFlag = 1;
+                    break;
+                }
+                case YUV_TO_RGB_LINEAR_V:
+                {
+                    testCaseName = "yuv_to_rgb_linear_v";
+                    startWallTime = omp_get_wtime();
+                    if (BitDepthTestMode == U8_TO_U8)
+                    {
+                        size_t srcOffsetBytes = 0;
+                        for (int i = 0; i < batchSize; i++)
+                        {
+                            RpptYuvNv12Sidecar yuvSidecar;
+                            if (!parse_yuv_nv12_sidecar(*(imagesPathStart + i), yuvSidecar))
+                            {
+                                std::cerr << "\nyuv_to_rgb_linear_v: missing or invalid .info for " << *(imagesPathStart + i) << std::endl;
+                                errorCodeCapture = RPP_ERROR;
+                                break;
+                            }
+                            Rpp32u width = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiWidth;
+                            Rpp32u height = (Rpp32u)roiTensorPtrDst[i].xywhROI.roiHeight;
+                            Rpp32u src_y_pitch = width * sizeof(Rpp8u);
+                            Rpp32u src_uv_pitch = src_y_pitch;
+                            Rpp32u bgr_pitch = width * 3 * sizeof(Rpp8u);
+                            Rpp8u *srcY = (Rpp8u *)d_input + srcOffsetBytes;
+                            Rpp8u *srcUV = srcY + (size_t)height * src_y_pitch;
+                            void *dstImg = (Rpp8u *)d_output + (size_t)i * dstDescPtr->strides.nStride;
+                            errorCodeCapture = rppt_yuv_to_rgb_linear_v(srcY, srcUV, srcDescPtr, dstImg, dstDescPtr, src_y_pitch, src_uv_pitch, bgr_pitch, width, height, yuvSidecar.col_standard, yuvSidecar.color_range, handle, RppBackend::RPP_HIP_BACKEND);
+                            if (errorCodeCapture != RPP_SUCCESS)
+                                break;
+                            srcOffsetBytes += (size_t)roiTensorPtrSrc[i].xywhROI.roiWidth * roiTensorPtrSrc[i].xywhROI.roiHeight * 3 / 2;
+                        }
+                    }
+                    else
+                        missingFuncFlag = 1;
+                    break;
+                }
                 case TENSOR_SUM:
                 {
                     testCaseName = "tensor_sum";
@@ -2273,9 +2341,9 @@ int main(int argc, char **argv)
                 if(qaFlag && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F32_TO_F32) && (!(randomOutputCase) && !(nonQACase)))
                 {
                     vector<string> batchYuvPaths;
-                    if(testCase == YUV_TO_RGB)
+                    if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V))
                         batchYuvPaths.assign(imagesPathStart, imagesPathEnd);
-                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, kernelSizeAndGradientName, additionalParam, testCase, dst, scriptPath, testCase == YUV_TO_RGB ? &batchYuvPaths : nullptr);
+                    compare_output(output, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, kernelSizeAndGradientName, additionalParam, testCase, dst, scriptPath, (testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V) ? &batchYuvPaths : nullptr);
                 }
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

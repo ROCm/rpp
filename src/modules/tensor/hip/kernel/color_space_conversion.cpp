@@ -320,7 +320,7 @@ RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
                   "hip_exec_yuv_to_rgb_cubic_v is only supported for Rpp8u (NV12 8-bit)");
-    rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
+    RPP_HIP_RETURN_IF_ERROR(rpp_nv12_set_mat_yuv2rgb(col_standard, color_range));
     hipLaunchKernelGGL(yuv_to_rgb_cubic_v_hip_kernel<T>,
                        dim3((width + 31) / 32, (height + 7) / 8, 1),
                        dim3(32, 8, 1),
@@ -364,7 +364,7 @@ RppStatus hip_exec_yuv_to_rgb_linear_v(T *srcYPtr,
 {
     static_assert(sizeof(T) == 1 && std::is_same<typename std::remove_cv<T>::type, Rpp8u>::value,
                   "hip_exec_yuv_to_rgb_linear_v is only supported for Rpp8u (NV12 8-bit)");
-    rpp_nv12_set_mat_yuv2rgb(col_standard, color_range);
+    RPP_HIP_RETURN_IF_ERROR(rpp_nv12_set_mat_yuv2rgb(col_standard, color_range));
     hipLaunchKernelGGL(yuv_to_rgb_linear_v_hip_kernel<T>,
                        dim3((width + 31) / 32, (height + 7) / 8, 1),
                        dim3(32, 8, 1),

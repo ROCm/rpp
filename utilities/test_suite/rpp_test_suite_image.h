@@ -128,7 +128,9 @@ std::map<int, string> augmentationMap =
     {100, "coarse_dropout"},
     {101, "emboss"},
     {102, "histogram_equalize"},
-    {103, "yuv_to_rgb"}
+    {103, "yuv_to_rgb"},
+    {104, "yuv_to_rgb_cubic_v"},
+    {105, "yuv_to_rgb_linear_v"}
 };
 
 enum Augmentation {
@@ -203,7 +205,9 @@ enum Augmentation {
     COARSE_DROPOUT = 100,
     EMBOSS = 101,
     HISTOGRAM_EQUALIZE = 102,
-    YUV_TO_RGB = 103
+    YUV_TO_RGB = 103,
+    YUV_TO_RGB_CUBIC_V = 104,
+    YUV_TO_RGB_LINEAR_V = 105
 };
 
 // Enum for dropout types
@@ -1381,7 +1385,7 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
         refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
     }
-    else if(testCase == YUV_TO_RGB)
+    else if(testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V)
     {
         refOutputWidth = dstDescPtr->w;
         refOutputHeight = dstDescPtr->h;
@@ -1487,9 +1491,11 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
 
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
-    if(testCase == YUV_TO_RGB && yuvImagePaths != nullptr && (int)yuvImagePaths->size() >= dstDescPtr->n && dstDescPtr->dataType == RpptDataType::U8)
+    if((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V) && yuvImagePaths != nullptr && (int)yuvImagePaths->size() >= dstDescPtr->n && dstDescPtr->dataType == RpptDataType::U8)
     {
-        std::string refDir = scriptPath + "/../REFERENCE_OUTPUT/yuv_to_rgb/";
+        // cubic_v uses CUTOFF=3 due to GPU FMA rounding in the 4-tap chroma accumulation
+        int yuvCutoff = (testCase == YUV_TO_RGB_CUBIC_V) ? 3 : CUTOFF;
+        std::string refDir = scriptPath + "/../REFERENCE_OUTPUT/" + augmentationMap[testCase] + "/";
         for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
         {
             std::string refPath = refDir + get_yuv_ref_basename((*yuvImagePaths)[imageCnt]) + ".rgb";
@@ -1510,7 +1516,7 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
                     Rpp8u* outRow = outSlice + i * rowStride;
                     Rpp8u* refRow = refBuf + i * imgW * (int)dstDescPtr->c;
                     for(int j = 0; j < imgW * (int)dstDescPtr->c; j++)
-                        if(abs((int)outRow[j] - (int)refRow[j]) <= CUTOFF) matchedIdx++;
+                        if(abs((int)outRow[j] - (int)refRow[j]) <= yuvCutoff) matchedIdx++;
                 }
                 if(matchedIdx == imgSize && matchedIdx != 0) fileMatch++;
             }
@@ -1521,8 +1527,8 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
     }
     else if(dstDescPtr->dataType == RpptDataType::U8)
     {
-        // YUV_TO_RGB uses per-image .rgb refs only (one per input: YUV400, YUV420, YUV422); no single ref file
-        if(testCase != YUV_TO_RGB)
+        // YUV_TO_RGB variants use per-image .rgb refs only; no single ref file
+        if(testCase != YUV_TO_RGB && testCase != YUV_TO_RGB_CUBIC_V && testCase != YUV_TO_RGB_LINEAR_V)
         {
             Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
             read_bin_file(refFile, binaryContent);
