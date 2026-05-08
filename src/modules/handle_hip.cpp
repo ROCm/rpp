@@ -37,11 +37,10 @@ namespace rpp {
 // We leak resources for now as there is no hipCtxRetain API
 hipCtx_t get_ctx()
 {
-    CHECK_RETURN_STATUS(hipInit(0));
-    hipCtx_t ctx{};
-    auto status = 0;
+    auto status = hipInit(0);
     if(status != hipSuccess)
-        RPP_THROW("No device");
+        RPP_THROW_HIP_STATUS(status, "hipInit failed");
+    hipCtx_t ctx{};
     return ctx;
 }
 
@@ -71,7 +70,9 @@ void* default_allocator(void*, size_t sz)
 
 void default_deallocator(void*, void* mem)
 {
-    CHECK_RETURN_STATUS(hipFree(mem));
+    auto status = hipFree(mem);
+    if(status != hipSuccess)
+        RPP_THROW_HIP_STATUS(status, "hipFree failed");
 }
 
 int get_device_id() // Get random device
@@ -115,7 +116,11 @@ struct HandleImpl
     void elapsed_time(hipEvent_t start, hipEvent_t stop)
     {
         if(enable_profiling)
-            CHECK_RETURN_STATUS(hipEventElapsedTime(&this->profiling_result, start, stop));
+        {
+            auto status = hipEventElapsedTime(&this->profiling_result, start, stop);
+            if(status != hipSuccess)
+                RPP_THROW_HIP_STATUS(status, "hipEventElapsedTime failed");
+        }
     }
 
     std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
@@ -158,11 +163,15 @@ struct HandleImpl
         //      - 600000 is the maximum size that will be required for MMS buffer based on Librispeech dataset
         //      - 293 is the size required for storing reduction outputs for 600000 size sample
         //      - 192 is the size required for storing cutOffDB values for batch size 192
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 372877312));
+        auto status = hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 372877312);
 #else
-        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400));   // 3840 x 2160
+        auto status = hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400);   // 3840 x 2160
 #endif
-        CHECK_RETURN_STATUS(hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400));    // 3840 x 2160
+        if(status != hipSuccess)
+            RPP_THROW_HIP_STATUS(status, "hipMalloc failed for scratchBufferHip");
+        status = hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
+        if(status != hipSuccess)
+            RPP_THROW_HIP_STATUS(status, "hipHostMalloc failed for scratchBufferPinned");
     }
 };
 
@@ -205,8 +214,12 @@ void Handle::rpp_destroy_object_gpu()
 {
     this->rpp_destroy_object_host();
 
-    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
-    CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
+    auto status = hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    if(status != hipSuccess)
+        RPP_THROW_HIP_STATUS(status, "hipFree failed for scratchBufferHip");
+    status = hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    if(status != hipSuccess)
+        RPP_THROW_HIP_STATUS(status, "hipHostFree failed for scratchBufferPinned");
 
     delete this->GetInitHandle();
     this->impl = nullptr;
@@ -279,7 +292,9 @@ std::size_t Handle::GetGlobalMemorySize()
 std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
-    CHECK_RETURN_STATUS(hipGetDeviceProperties(&props, this->impl->device));
+    auto status = hipGetDeviceProperties(&props, this->impl->device);
+    if(status != hipSuccess)
+        RPP_THROW_HIP_STATUS(status, "hipGetDeviceProperties failed");
     std::string name(props.gcnArchName);
     return name;
 }

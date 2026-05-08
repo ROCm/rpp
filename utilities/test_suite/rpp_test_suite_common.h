@@ -29,9 +29,27 @@ SOFTWARE.
 #include <fstream>
 #include <algorithm>
 #include <map>
+#include <cstdio>
+#include <cstdlib>
 
 #define DEBUG_MODE 0
 using namespace std;
+
+// Test-suite convenience macro used by the HIP test binaries. On any non-zero
+// return the macro prints the failing expression to stderr and aborts the test
+// process. The main RPP library no longer uses this macro: library code must
+// propagate HIP failures via RppStatus (see RPP_HIP_RETURN_IF_ERROR in
+// api/rppdefs.h).
+#ifndef CHECK_RETURN_STATUS
+#define CHECK_RETURN_STATUS(x) do {                                                     \
+    int retval = (x);                                                                   \
+    if (retval != 0) {                                                                  \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval,           \
+                __FILE__, __LINE__);                                                    \
+        exit(-1);                                                                       \
+    }                                                                                   \
+} while (0)
+#endif
 
 // This is a test-suite enum to specify the Bit-Depth Testing Mode. 
 // RPP supports different combinations of the following 9 testing modes

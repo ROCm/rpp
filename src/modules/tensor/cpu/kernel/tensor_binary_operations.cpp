@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 #include "rpp_cpu_simd_math.hpp"
+#include <atomic>
 
 // Arithmetic operation structures that encapsulate scalar and SIMD ops 
 template<typename T>
@@ -350,13 +351,12 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
         Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
         Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
         if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
-        {
-            printf("Incompatible dimensions for the batch\n");
-            return RPP_SUCCESS;
-        }
+            return RPP_ERROR_INVALID_DIM_LENGTHS;
     }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
@@ -403,7 +403,10 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
-                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            {
+                broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+                continue;
+            }
 
             // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
             if(src1NDim != src2NDim)
@@ -809,6 +812,9 @@ RppStatus tensor_binary_op_f32_f32_host_tensor(Rpp32f *srcPtr1,
             tensor_binary_arithmetic_op_recursive<Rpp32f, Rpp32f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
     return RPP_SUCCESS;
 }
 
@@ -826,23 +832,16 @@ RppStatus tensor_binary_op_dispatch_f32_f32_host_tensor(Rpp32f *srcPtr1,
 {
     switch(tensorOp) {
         case RPP_TENSOR_OP_ADD:
-            tensor_binary_op_f32_f32_host_tensor<Add<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
+            return tensor_binary_op_f32_f32_host_tensor<Add<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
         case RPP_TENSOR_OP_SUBTRACT:
-            tensor_binary_op_f32_f32_host_tensor<Subtract<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
+            return tensor_binary_op_f32_f32_host_tensor<Subtract<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
         case RPP_TENSOR_OP_MULTIPLY:
-            tensor_binary_op_f32_f32_host_tensor<Multiply<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
+            return tensor_binary_op_f32_f32_host_tensor<Multiply<Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
         case RPP_TENSOR_OP_DIVIDE:
-            tensor_binary_op_f32_f32_host_tensor<Divide<Rpp32f, Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-            break;
-        default :
-            printf("Operation not supported\n");
-            break;
+            return tensor_binary_op_f32_f32_host_tensor<Divide<Rpp32f, Rpp32f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+        default:
+            return RPP_ERROR_NOT_IMPLEMENTED;
     }
-
-    return RPP_SUCCESS;
 }
 
 template<typename Operation>
@@ -870,13 +869,12 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
         Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
         Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
         if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
-        {
-            printf("Incompatible dimensions for the batch\n");
-            return RPP_SUCCESS;
-        }
+            return RPP_ERROR_INVALID_DIM_LENGTHS;
     }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
@@ -923,7 +921,10 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
-                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            {
+                broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+                continue;
+            }
 
             // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
             if(src1NDim != src2NDim)
@@ -1326,6 +1327,9 @@ RppStatus tensor_binary_op_f16_f16_host_tensor(Rpp16f *srcPtr1,
             tensor_binary_arithmetic_op_recursive<Rpp16f, Rpp16f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
     return RPP_SUCCESS;
 }
 
@@ -1344,19 +1348,15 @@ RppStatus tensor_binary_op_dispatch_f16_f16_host_tensor(Rpp16f *srcPtr1,
         switch(tensorOp) {
             case RPP_TENSOR_OP_ADD:
                 return tensor_binary_op_f16_f16_host_tensor<Add<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
             case RPP_TENSOR_OP_SUBTRACT:
                 return tensor_binary_op_f16_f16_host_tensor<Subtract<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
             case RPP_TENSOR_OP_MULTIPLY:
                 return tensor_binary_op_f16_f16_host_tensor<Multiply<Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
             case RPP_TENSOR_OP_DIVIDE:
                 return tensor_binary_op_f16_f16_host_tensor<Divide<Rpp16f, Rpp16f>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
+            default:
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
-
-        return RPP_SUCCESS;
     }
 
 template<typename T, typename Operation>
@@ -1385,13 +1385,12 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
         Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
         Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
         if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
-        {
-            printf("Incompatible dimensions for the batch\n");
-            return RPP_SUCCESS;
-        }
+            return RPP_ERROR_INVALID_DIM_LENGTHS;
     }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
@@ -1438,7 +1437,10 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
-                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            {
+                broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+                continue;
+            }
 
             // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
             if(src1NDim != src2NDim)
@@ -1823,6 +1825,9 @@ RppStatus tensor_binary_op_int_host_tensor(T *srcPtr1,
             tensor_binary_arithmetic_op_recursive<T, T, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
     return RPP_SUCCESS;
 }
 
@@ -1851,13 +1856,12 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
         Rpp32u dim1 = srcPtr1GenericDescPtr->dims[src1NDim - test];
         Rpp32u dim2 = srcPtr2GenericDescPtr->dims[src2NDim - test];
         if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
-        {
-            printf("Incompatible dimensions for the batch\n");
-            return RPP_SUCCESS;
-        }
+            return RPP_ERROR_INVALID_DIM_LENGTHS;
     }
 
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
     omp_set_num_threads(numThreads);
@@ -1904,7 +1908,10 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
 
             // Dimension compatibility failure case
             if(incompatibleDims == true)
-                printf("Incompatible dimensions for operation for sample %d inside batch\n", batchCount);
+            {
+                broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+                continue;
+            }
 
             // Handle cases of mismatching num dims - the shorter tensor is broadcast (its extra dims are treated as size 1)
             if(src1NDim != src2NDim)
@@ -2298,6 +2305,9 @@ RppStatus tensor_binary_divide_host_tensor(T *srcPtr1,
             tensor_binary_arithmetic_op_recursive<T, Rpp32f, Operation>(srcPtrTemp1, srcPtrTemp2, src1BcastStrides, src2BcastStrides, dstPtrTemp, dstBcastStrides, length, dstDim);
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
     return RPP_SUCCESS;
 }
 
@@ -2328,32 +2338,28 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_ADD:
-                tensor_binary_op_int_host_tensor<T1, Add<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
+                return tensor_binary_op_int_host_tensor<T1, Add<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             case RPP_TENSOR_OP_SUBTRACT:
-                tensor_binary_op_int_host_tensor<T1, Subtract<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
+                return tensor_binary_op_int_host_tensor<T1, Subtract<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
             case RPP_TENSOR_OP_MULTIPLY:
-                tensor_binary_op_int_host_tensor<T1, Multiply<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            default :
-                printf("Operation not supported\n");
-                break;
+                return tensor_binary_op_int_host_tensor<T1, Multiply<T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            default:
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
     if constexpr (std::is_same_v<T2, Rpp32f>)
     {
         switch(tensorOp) {
             case RPP_TENSOR_OP_DIVIDE:
-                tensor_binary_divide_host_tensor<T1, Divide<T2, T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                break;
-            default :
-                printf("Operation not supported\n");
-                break;
+                return tensor_binary_divide_host_tensor<T1, Divide<T2, T1>>(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, broadcastMode, vectorIncrement, srcPtr1roiTensor, srcPtr2roiTensor, handle);
+            default:
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
     }
 
-    return RPP_SUCCESS;
+    // If we reach this point, the combination of T1, T2, and tensorOp is not supported
+    // and we should return an error.
+    return RPP_ERROR_NOT_IMPLEMENTED;
 }
 
 template RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor<Rpp8u, Rpp8u>(Rpp8u*,

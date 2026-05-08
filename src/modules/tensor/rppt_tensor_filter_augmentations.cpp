@@ -567,19 +567,20 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             size_t elementSize = (srcDescPtr->dataType == RpptDataType::F32) ? 4 : 
                                     (srcDescPtr->dataType == RpptDataType::F16) ? 2 : 1;
             size_t dataSize = dstDescPtr->strides.nStride * dstDescPtr->n * elementSize;
-            CHECK_RETURN_STATUS(hipMalloc(&tempPtr, dataSize));
+            RPP_HIP_RETURN_IF_ERROR(hipMalloc(&tempPtr, dataSize));
 
             RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
             RppStatus errorStatus = rppt_color_to_greyscale(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle, RppBackend::RPP_HIP_BACKEND);        
             if(errorStatus != RPP_SUCCESS)
             {
-                CHECK_RETURN_STATUS(hipFree(tempPtr));
+                // Ignore the error status of hipFree to preserve the root cause of the error
+                (void)hipFree(tempPtr);
                 return errorStatus;
             }
             inputDesc = dstDescPtr;
         }
         srcPtr = (tempPtr == nullptr) ? srcPtr : tempPtr;
-        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -635,8 +636,8 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
         if (tempPtr != nullptr)
         {
             // Sobel runs asynchronously on the same stream; wait before freeing the greyscale scratch buffer.
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
-            CHECK_RETURN_STATUS(hipFree(tempPtr));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipFree(tempPtr));
         }
 
         return RPP_SUCCESS;

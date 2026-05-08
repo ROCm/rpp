@@ -400,7 +400,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
         scratchBuffer = reinterpret_cast<Rpp8u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
     else
         // Reallocate overflow buffer if needed
-        CHECK_RETURN_STATUS(hipMalloc(&scratchBuffer, requiredSize));
+        RPP_HIP_RETURN_IF_ERROR(hipMalloc(&scratchBuffer, requiredSize));
 
     unsigned int *d_hist = reinterpret_cast<unsigned int*>(scratchBuffer);
     unsigned char *d_lut = reinterpret_cast<unsigned char*>(scratchBuffer + histSize);
@@ -437,7 +437,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                roiTensorPtrSrc,
                                batchSize);
 
-            CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
             globalThreads_x = srcDescPtr->w;
             hipLaunchKernelGGL(collect_hist_pln_hip_tensor,
@@ -520,7 +520,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
                                make_ulong2(yuvNStride, yuvHStride),
                                roiTensorPtrSrc, batchSize);
 
-            CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
             globalThreads_x = srcDescPtr->w;
             hipLaunchKernelGGL(collect_hist_pln_hip_tensor,
@@ -587,7 +587,7 @@ RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
     }
 
     // Single channel processing
-    CHECK_RETURN_STATUS(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(d_hist, 0, batchSize * HISTOGRAM_BINS * sizeof(unsigned int), handle.GetStream()));
 
     int globalThreads_x = srcDescPtr->w;
     int globalThreads_y = srcDescPtr->h;

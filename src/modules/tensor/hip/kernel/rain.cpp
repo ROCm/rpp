@@ -253,7 +253,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr,
     }
 
     T *rainLayerHip = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-    CHECK_RETURN_STATUS(hipMemcpyAsync(rainLayerHip, rainLayer, srcDescPtr->w * srcDescPtr->h * sizeof(T), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(rainLayerHip, rainLayer, srcDescPtr->w * srcDescPtr->h * sizeof(T), hipMemcpyHostToDevice, handle.GetStream()));
 
     int globalThreads_x = (dstDescPtr->w + 7) >> 3;;
     int globalThreads_y = dstDescPtr->h;

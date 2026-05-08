@@ -102,7 +102,7 @@ RppStatus hip_exec_transpose_tensor(T *srcPtr,
 
     if (copyInput)
     {
-        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, dstGenericDescPtr->dims[0] * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice, handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(dstPtr, srcPtr, dstGenericDescPtr->dims[0] * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice, handle.GetStream()));
     }
     else
     {

@@ -1,5 +1,6 @@
 #include "hip_tensor_executors.hpp"
 #include "rpp_hip_math.hpp"
+#include <atomic>
 #include <omp.h>
 
 // -------------------- Set 1 - vector helper kernels --------------------
@@ -602,10 +603,7 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         if(srcGenericDescPtr1->dims[src1NDim - i] != srcGenericDescPtr2->dims[src2NDim - i])
         {
             if((srcGenericDescPtr1->dims[src1NDim - i] != 1) && (srcGenericDescPtr2->dims[src2NDim - i] != 1))
-            {
-                printf("Incompatible dimensions for the batch\n");
-                return RPP_ERROR_INVALID_ARGUMENTS;
-            }
+                return RPP_ERROR_INVALID_DIM_LENGTHS;
         }
     }
 
@@ -619,6 +617,8 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     Rpp32u *src1BroadcastStrides = src2BeginOffsets + batchSize;
     Rpp32u *src2BroadcastStrides = src1BroadcastStrides + (batchSize * RPPT_MAX_DIMS);
     Rpp32u *dstBroadcastStrides = src2BroadcastStrides + (batchSize * RPPT_MAX_DIMS);
+
+    std::atomic<RppStatus> broadcastCompatStatus{RPP_SUCCESS};
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(batchSize)
@@ -677,7 +677,8 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
 
         if(incompatibleDims == true)
         {
-            printf("Incompatible dimensions for operation for sample %d inside batch\n", i);
+            broadcastCompatStatus.store(RPP_ERROR_INVALID_DIM_LENGTHS, std::memory_order_relaxed);
+            continue;
         }
 
         // Compute begin offsets for src1 and src2
@@ -697,6 +698,10 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
         }
     }
 
+    RppStatus compatSt = broadcastCompatStatus.load();
+    if (compatSt != RPP_SUCCESS)
+        return compatSt;
+
     // Allocate device memory for HIP kernel inputs - Strides and Dims for each sample in batch
     Rpp32u *d_dstBroadcastDims, *d_src1BeginOffsets, *d_src2BeginOffsets;
     Rpp32u *d_src1BroadcastStrides, *d_src2BroadcastStrides, *d_dstBroadcastStrides;
@@ -709,12 +714,12 @@ RppStatus hip_exec_tensor_binary_bitwise_generic_tensor(T *srcPtr1,
     d_dstBroadcastStrides = d_src2BroadcastStrides + (batchSize * RPPT_MAX_DIMS);
 
     // Copy to device
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
 
     // based on number of dimensions call the corresponding kernel
     if(dstDim == 1)

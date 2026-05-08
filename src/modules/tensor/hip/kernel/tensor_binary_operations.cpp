@@ -621,10 +621,7 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
         Rpp32u dim1 = srcGenericDescPtr1->dims[src1NDim - i];
         Rpp32u dim2 = srcGenericDescPtr2->dims[src2NDim - i];
         if(dim1 != dim2 && dim1 != 1 && dim2 != 1)
-        {
-            printf("Incompatible dimensions for the batch\n");
-            return RPP_ERROR_INVALID_ARGUMENTS;
-        }
+            return RPP_ERROR_INVALID_DIM_LENGTHS;
     }
 
     // Allocate pinned buffers for broadcast dims/strides - Strides and Dims for each sample in batch
@@ -724,12 +721,12 @@ RppStatus hip_exec_tensor_binary_arithmetic_generic_tensor(T1 *srcPtr1,
     d_dstBroadcastStrides = d_src2BroadcastStrides + (batchSize * RPPT_MAX_DIMS);
 
     // Copy to device
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_dstBroadcastDims, dstBroadcastDims, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src1BeginOffsets, src1BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src2BeginOffsets, src2BeginOffsets, batchSize * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src1BroadcastStrides, src1BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_src2BroadcastStrides, src2BroadcastStrides, batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_dstBroadcastStrides, dstBroadcastStrides,  batchSize * RPPT_MAX_DIMS * sizeof(Rpp32u), hipMemcpyHostToDevice, handle.GetStream()));
 
     // based on number of dimensions call the corresponding kernel
     if(dstDim == 1)
@@ -957,19 +954,14 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
             switch(tensorOp)
             {
                 case RPP_TENSOR_OP_ADD:
-                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_SUBTRACT:
-                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_MULTIPLY:
-                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    //Empty case - Will be handled in the switch case below
                     break;
-                default :
-                    printf("Operation not supported\n");
+                default:
                     break;
             }
         }
@@ -977,16 +969,13 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
         {
             switch(tensorOp)
             {
-                // Add, Subtract and Multiply have only F32_TO_F32 support which is handled in the above switch case
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
                     break;
                 case RPP_TENSOR_OP_DIVIDE:
-                    hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
-                default :
-                    printf("Operation not supported\n");
+                    return hip_exec_tensor_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                default:
                     break;
             }
         }
@@ -998,19 +987,14 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
             switch(tensorOp)
             {
                 case RPP_TENSOR_OP_ADD:
-                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticAdd(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_SUBTRACT:
-                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticSubtract(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_MULTIPLY:
-                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
+                    return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticMultiply(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
                 case RPP_TENSOR_OP_DIVIDE:
-                    //Empty case - Will be handled in the switch case below
                     break;
-                default :
-                    printf("Operation not supported\n");
+                default:
                     break;
             }
         }
@@ -1018,22 +1002,19 @@ RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
         {
             switch(tensorOp)
             {
-                // Add, Subtract and Multiply have only F32_TO_F32 support which is handled in the above switch case
                 case RPP_TENSOR_OP_ADD:
                 case RPP_TENSOR_OP_SUBTRACT:
                 case RPP_TENSOR_OP_MULTIPLY:
                     break;
                 case RPP_TENSOR_OP_DIVIDE:
-                    hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
-                    break;
-                default :
-                    printf("Operation not supported\n");
+                    return hip_exec_tensor_non_broadcast_binary_arithmetic_generic_tensor(srcPtr1, srcPtr2, srcPtr1GenericDescPtr, srcPtr2GenericDescPtr, dstPtr, dstGenericDescPtr, ArithmeticDivide<T1>(), srcPtr1roiTensor, srcPtr2roiTensor, handle);
+                default:
                     break;
             }
         }
     }
 
-    return RPP_SUCCESS;
+    return RPP_ERROR_NOT_IMPLEMENTED;
 }
 
 template RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor<Rpp8u, Rpp8u>(Rpp8u*,

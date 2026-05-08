@@ -274,7 +274,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     // copy the hanning window values to hip memory
     Rpp32f *d_windowFn = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    CHECK_RETURN_STATUS(hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream()));
 
     // compute the number of windows required for each input in the batch
     Rpp32s *numWindowsTensor = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
@@ -286,7 +286,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     Rpp32u windowOutputStride = maxNumWindows * nfft;
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
-    CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, windowOutputStride * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(windowOutput, 0, windowOutputStride * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
 
     // compute the windowOutput for all samples in a batch. Each sample will be of shape (numWindows, nfft)
     Rpp32s globalThreads_x = windowLength;
@@ -341,7 +341,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        make_int4(nfft, numBins, power, numTiles),
                        vertical);
     HIP_CHECK_LAUNCH_RETURN();
-    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
 
     return RPP_SUCCESS;
 }

@@ -81,7 +81,7 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
 {
     if (srcDescPtr->layout == dstDescPtr->layout)
     {
-        CHECK_RETURN_STATUS(hipMemcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(T), hipMemcpyDeviceToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(T), hipMemcpyDeviceToDevice));
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {

@@ -1364,16 +1364,16 @@ __global__ void final_reduction_nd_hip_tensor(float *meanTensor,
 
 // -------------------- Set 7 - mean and stddev compute kernels launch helpers --------------------
 
-void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
-                                 int &globalThreads_x,
-                                 int &globalThreads_y,
-                                 int &globalThreads_z,
-                                 int &localThreads_x,
-                                 int &localThreads_y,
-                                 int &localThreads_z,
-                                 Rpp32u axisMask,
-                                 Rpp32f *partialSumArr,
-                                 rpp::Handle& handle)
+RppStatus set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
+                                      int &globalThreads_x,
+                                      int &globalThreads_y,
+                                      int &globalThreads_z,
+                                      int &localThreads_x,
+                                      int &localThreads_y,
+                                      int &localThreads_z,
+                                      Rpp32u axisMask,
+                                      Rpp32f *partialSumArr,
+                                      rpp::Handle& handle)
 {
     switch (axisMask)
     {
@@ -1399,8 +1399,8 @@ void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = srcGenericDescPtr->dims[0] * srcGenericDescPtr->dims[1] * globalThreads_x;
-            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along XY direction
@@ -1414,23 +1414,26 @@ void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
+        default:
+            return RPP_ERROR_INVALID_AXIS;
     }
+    return RPP_SUCCESS;
 }
 
-void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
-                                 int &globalThreads_x,
-                                 int &globalThreads_y,
-                                 int &globalThreads_z,
-                                 int &localThreads_x,
-                                 int &localThreads_y,
-                                 int &localThreads_z,
-                                 Rpp32u axisMask,
-                                 Rpp32f *partialSumArr,
-                                 rpp::Handle& handle)
+RppStatus set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
+                                      int &globalThreads_x,
+                                      int &globalThreads_y,
+                                      int &globalThreads_z,
+                                      int &localThreads_x,
+                                      int &localThreads_y,
+                                      int &localThreads_z,
+                                      Rpp32u axisMask,
+                                      Rpp32f *partialSumArr,
+                                      rpp::Handle& handle)
 {
     switch (axisMask)
     {
@@ -1467,8 +1470,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along X direction
@@ -1504,8 +1507,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
         // compute along XYZ direction
@@ -1520,11 +1523,14 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
-            CHECK_RETURN_STATUS(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             break;
         }
+        default:
+            return RPP_ERROR_INVALID_AXIS;
     }
+    return RPP_SUCCESS;
 }
 
 // -------------------- Set 8 - mean and stddev compute kernels executor --------------------
@@ -1552,9 +1558,10 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
     if (tensorDims == 2)
     {
         // set the block and grid configuration based on axisMask
-        set_kernel_launch_config_2d(srcGenericDescPtr, globalThreads_x, globalThreads_y, globalThreads_z,
-                                    localThreads_x, localThreads_y, localThreads_z, axisMask,
-                                    partialSumArr, handle);
+        if (RppStatus cfgStatus = set_kernel_launch_config_2d(srcGenericDescPtr, globalThreads_x, globalThreads_y, globalThreads_z,
+                                                              localThreads_x, localThreads_y, localThreads_z, axisMask,
+                                                              partialSumArr, handle); cfgStatus != RPP_SUCCESS)
+            return cfgStatus;
 
         if (isMean)
         {
@@ -1630,9 +1637,10 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
     else if (tensorDims == 3)
     {
         // set the block and grid configuration based on axisMask
-        set_kernel_launch_config_3d(srcGenericDescPtr, globalThreads_x, globalThreads_y, globalThreads_z,
-                                    localThreads_x, localThreads_y, localThreads_z, axisMask,
-                                    partialSumArr, handle);
+        if (RppStatus cfgStatus = set_kernel_launch_config_3d(srcGenericDescPtr, globalThreads_x, globalThreads_y, globalThreads_z,
+                                                              localThreads_x, localThreads_y, localThreads_z, axisMask,
+                                                              partialSumArr, handle); cfgStatus != RPP_SUCCESS)
+            return cfgStatus;
 
         if (isMean)
         {
@@ -1801,7 +1809,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                            isMean);
         HIP_CHECK_LAUNCH_RETURN();
     }
-    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+    RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
     return RPP_SUCCESS;
 }
 
@@ -1845,9 +1853,9 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
 
     // Zero-initialize the mean and standard deviation tensors
     if (computeMean)
-        CHECK_RETURN_STATUS(hipMemsetAsync(meanTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(meanTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
     if (computeStdDev)
-        CHECK_RETURN_STATUS(hipMemsetAsync(stdDevTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipMemsetAsync(stdDevTensor, 0, sizeof(float) * maxParamVolume * batchSize, handle.GetStream()));
 
     // if computeMean is set, compute mean values by processing over input based on axisMask values
     if (computeMean)

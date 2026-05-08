@@ -131,7 +131,7 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
     {
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            CHECK_RETURN_STATUS(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8u)));
+            RPP_HIP_RETURN_IF_ERROR(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8u)));
             hip_exec_gridmask_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                      srcDescPtr,
                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
@@ -146,7 +146,7 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            CHECK_RETURN_STATUS(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(half)));
+            RPP_HIP_RETURN_IF_ERROR(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(half)));
             hip_exec_gridmask_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
@@ -161,7 +161,7 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            CHECK_RETURN_STATUS(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp32f)));
+            RPP_HIP_RETURN_IF_ERROR(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp32f)));
             hip_exec_gridmask_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
@@ -176,7 +176,7 @@ RppStatus rppt_gridmask(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            CHECK_RETURN_STATUS(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), -128, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8s)));
+            RPP_HIP_RETURN_IF_ERROR(hipMemset((void *)(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes), -128, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8s)));
             hip_exec_gridmask_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                      srcDescPtr,
                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
@@ -290,7 +290,7 @@ RppStatus rppt_spatter(RppPtr_t srcPtr,
     else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
         RpptROI roiTensorPtrSrcHost[dstDescPtr->n];
-        CHECK_RETURN_STATUS(hipMemcpy(roiTensorPtrSrcHost, roiTensorPtrSrc, dstDescPtr->n * sizeof(RpptROI), hipMemcpyDeviceToHost));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(roiTensorPtrSrcHost, roiTensorPtrSrc, dstDescPtr->n * sizeof(RpptROI), hipMemcpyDeviceToHost));
         if (roiType == RpptRoiType::XYWH)
         {
             for(int i = 0; i < dstDescPtr->n; i++)
@@ -307,8 +307,8 @@ RppStatus rppt_spatter(RppPtr_t srcPtr,
         std::random_device rd;  // Random number engine seed
         std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
         Rpp32u *maskLocArrHostX = nullptr, *maskLocArrHostY = nullptr;
-        CHECK_RETURN_STATUS(hipHostMalloc(&maskLocArrHostX, dstDescPtr->n * sizeof(Rpp32u)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&maskLocArrHostY, dstDescPtr->n * sizeof(Rpp32u)));
+        RPP_HIP_RETURN_IF_ERROR(hipHostMalloc(&maskLocArrHostX, dstDescPtr->n * sizeof(Rpp32u)));
+        RPP_HIP_RETURN_IF_ERROR(hipHostMalloc(&maskLocArrHostY, dstDescPtr->n * sizeof(Rpp32u)));
 
         for(int i = 0; i < dstDescPtr->n; i++)
         {
@@ -372,8 +372,8 @@ RppStatus rppt_spatter(RppPtr_t srcPtr,
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
 
-        CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostX));
-        CHECK_RETURN_STATUS(hipHostFree(maskLocArrHostY));
+        RPP_HIP_RETURN_IF_ERROR(hipHostFree(maskLocArrHostX));
+        RPP_HIP_RETURN_IF_ERROR(hipHostFree(maskLocArrHostY));
 
         return RPP_SUCCESS;
     }
@@ -496,7 +496,7 @@ RppStatus rppt_salt_and_pepper_noise(RppPtr_t srcPtr,
 
         RpptXorwowState *d_xorwowInitialStatePtr;
         d_xorwowInitialStatePtr = (RpptXorwowState *) handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -669,7 +669,7 @@ RppStatus rppt_shot_noise(RppPtr_t srcPtr,
 
         RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
         d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -831,7 +831,7 @@ RppStatus rppt_gaussian_noise(RppPtr_t srcPtr,
 
         RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
         d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -973,7 +973,7 @@ RppStatus rppt_gaussian_noise_voxel(RppPtr_t srcPtr,
 
         RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
         d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
         if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
         {
@@ -1695,7 +1695,7 @@ RppStatus rppt_ricap(RppPtr_t srcPtr,
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
         Rpp32u *permutationHipTensor = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        CHECK_RETURN_STATUS(hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -1979,7 +1979,7 @@ RppStatus rppt_jitter(RppPtr_t srcPtr,
 
         RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
         d_xorwowInitialStatePtr = reinterpret_cast<RpptXorwowStateBoxMuller *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -2221,7 +2221,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
             for (int i = 0; i < srcDescPtr->n; i++)
             {
@@ -2241,7 +2241,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    internalRoiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -2254,7 +2254,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
             for (int i = 0; i < srcDescPtr->n; i++)
             {
@@ -2274,7 +2274,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    internalRoiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -2287,7 +2287,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
             for (int i = 0; i < srcDescPtr->n; i++)
             {
@@ -2307,7 +2307,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    internalRoiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -2320,7 +2320,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
             interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
             for (int i = 0; i < srcDescPtr->n; i++)
             {
@@ -2340,7 +2340,7 @@ RppStatus rppt_pixelate(RppPtr_t srcPtr,
                                    internalRoiTensorPtrSrc,
                                    roiType,
                                    handle);
-            CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
         }
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
@@ -2504,11 +2504,11 @@ RppStatus rppt_fog(RppPtr_t srcPtr,
         d_resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(d_fogAlphaMaskPtr + (2 * maskSize));
         d_resizedFogIntensityMaskPtr = d_resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
 
-        CHECK_RETURN_STATUS(hipMemcpyAsync(d_fogAlphaMaskPtr, &fogMask_1920_1080[0], maskSizeInBytes * 2, hipMemcpyHostToDevice, handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpyAsync(d_fogAlphaMaskPtr, &fogMask_1920_1080[0], maskSizeInBytes * 2, hipMemcpyHostToDevice, handle.GetStream()));
 
         // Resize the mask to the maximum size present in the batch
         rppt_resize(d_fogAlphaMaskPtr, fogMaskSrcDescPtr, d_resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle, RPP_HIP_BACKEND);
-        CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+        RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
 
         // Resetting the batch size in handle to match the user passed batch size
         rppSetBatchSize(rppHandle, srcDescPtr->n);
