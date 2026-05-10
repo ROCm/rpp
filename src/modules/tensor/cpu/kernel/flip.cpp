@@ -24,34 +24,15 @@ SOFTWARE.
 
 #include "host_tensor_executors.hpp"
 
-RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp8u *dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32u *horizontalTensor,
-                                 Rpp32u *verticalTensor,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams,
-                                 rpp::Handle& handle)
+static inline RppStatus flip_u8_u8_host_impl(Rpp8u *srcPtrImage,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtrImage,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32u horizontalFlag,
+                                             Rpp32u verticalFlag,
+                                             RpptROI roi,
+                                             RppLayoutParams layoutParams)
 {
-    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
-    omp_set_dynamic(0);
-    omp_set_num_threads(handle.GetNumThreads());
-#pragma omp parallel for
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-    {
-        RpptROI roi;
-        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
-
-        Rpp32u horizontalFlag = horizontalTensor[batchCount];
-        Rpp32u verticalFlag = verticalTensor[batchCount];
-
-        Rpp8u *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
@@ -296,21 +277,20 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
-    }
 
     return RPP_SUCCESS;
 }
 
-RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   Rpp32u *horizontalTensor,
-                                   Rpp32u *verticalTensor,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams,
-                                   rpp::Handle& handle)
+RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8u *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u *horizontalTensor,
+                                 Rpp32u *verticalTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
@@ -322,13 +302,25 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u horizontalFlag = horizontalTensor[batchCount];
-        Rpp32u verticalFlag = verticalTensor[batchCount];
+        Rpp8u *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8u *dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        flip_u8_u8_host_impl(srcPtrImage, srcDescPtr, dstPtrImage, dstDescPtr,
+                             horizontalTensor[batchCount], verticalTensor[batchCount],
+                             roi, layoutParams);
+    }
 
-        Rpp32f *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+    return RPP_SUCCESS;
+}
 
+static inline RppStatus flip_f32_f32_host_impl(Rpp32f *srcPtrImage,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32f *dstPtrImage,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32u horizontalFlag,
+                                               Rpp32u verticalFlag,
+                                               RpptROI roi,
+                                               RppLayoutParams layoutParams)
+{
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
@@ -579,14 +571,13 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
-    }
 
     return RPP_SUCCESS;
 }
 
-RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
+RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                                    RpptDescPtr srcDescPtr,
-                                   Rpp16f *dstPtr,
+                                   Rpp32f *dstPtr,
                                    RpptDescPtr dstDescPtr,
                                    Rpp32u *horizontalTensor,
                                    Rpp32u *verticalTensor,
@@ -605,13 +596,25 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u horizontalFlag = horizontalTensor[batchCount];
-        Rpp32u verticalFlag = verticalTensor[batchCount];
+        Rpp32f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        flip_f32_f32_host_impl(srcPtrImage, srcDescPtr, dstPtrImage, dstDescPtr,
+                               horizontalTensor[batchCount], verticalTensor[batchCount],
+                               roi, layoutParams);
+    }
 
-        Rpp16f *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+    return RPP_SUCCESS;
+}
 
+static inline RppStatus flip_f16_f16_host_impl(Rpp16f *srcPtrImage,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp16f *dstPtrImage,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32u horizontalFlag,
+                                               Rpp32u verticalFlag,
+                                               RpptROI roi,
+                                               RppLayoutParams layoutParams)
+{
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp16f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
@@ -861,21 +864,20 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
-    }
 
     return RPP_SUCCESS;
 }
 
-RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp8s *dstPtr,
-                                 RpptDescPtr dstDescPtr,
-                                 Rpp32u *horizontalTensor,
-                                 Rpp32u *verticalTensor,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams,
-                                 rpp::Handle& handle)
+RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp16f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32u *horizontalTensor,
+                                   Rpp32u *verticalTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle)
 {
     RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     omp_set_dynamic(0);
@@ -887,13 +889,25 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u horizontalFlag = horizontalTensor[batchCount];
-        Rpp32u verticalFlag = verticalTensor[batchCount];
+        Rpp16f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp16f *dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        flip_f16_f16_host_impl(srcPtrImage, srcDescPtr, dstPtrImage, dstDescPtr,
+                               horizontalTensor[batchCount], verticalTensor[batchCount],
+                               roi, layoutParams);
+    }
 
-        Rpp8s *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+    return RPP_SUCCESS;
+}
 
+static inline RppStatus flip_i8_i8_host_impl(Rpp8s *srcPtrImage,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8s *dstPtrImage,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32u horizontalFlag,
+                                             Rpp32u verticalFlag,
+                                             RpptROI roi,
+                                             RppLayoutParams layoutParams)
+{
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp8s *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
@@ -1137,7 +1151,115 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp8s *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32u *horizontalTensor,
+                                 Rpp32u *verticalTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle)
+{
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    omp_set_dynamic(0);
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp8s *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8s *dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        flip_i8_i8_host_impl(srcPtrImage, srcDescPtr, dstPtrImage, dstDescPtr,
+                             horizontalTensor[batchCount], verticalTensor[batchCount],
+                             roi, layoutParams);
     }
 
     return RPP_SUCCESS;
+}
+
+// -------------------- Single Image Processing --------------------
+
+RppStatus flip_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
+{
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(&roiTensorPtrSrc[0], &roi, &roiDefault, roiType);
+    return flip_u8_u8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                horizontalTensor[0], verticalTensor[0],
+                                roi, layoutParams);
+}
+
+RppStatus flip_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
+{
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(&roiTensorPtrSrc[0], &roi, &roiDefault, roiType);
+    return flip_f32_f32_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                  horizontalTensor[0], verticalTensor[0],
+                                  roi, layoutParams);
+}
+
+RppStatus flip_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
+{
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(&roiTensorPtrSrc[0], &roi, &roiDefault, roiType);
+    return flip_f16_f16_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                  horizontalTensor[0], verticalTensor[0],
+                                  roi, layoutParams);
+}
+
+RppStatus flip_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8s *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
+{
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(&roiTensorPtrSrc[0], &roi, &roiDefault, roiType);
+    return flip_i8_i8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                horizontalTensor[0], verticalTensor[0],
+                                roi, layoutParams);
 }

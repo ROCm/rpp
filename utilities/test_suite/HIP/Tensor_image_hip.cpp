@@ -756,8 +756,21 @@ int main(int argc, char **argv)
         // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
         // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
 
+        // Save the XYWH ROI before the performance loop. The HIP executor converts
+        // roiTensorPtrSrc in-place from XYWH to LTRB (it is pinned host memory, so the
+        // GPU write is immediately visible on the host). Without saving and restoring,
+        // every subsequent rppt_* call would re-convert already-LTRB data, progressively
+        // corrupting rb.x / rb.y and causing GPU out-of-bounds memory accesses.
+        vector<RpptROI> savedRoiTensorPtrSrc(batchSize);
+        memcpy(savedRoiTensorPtrSrc.data(), roiTensorPtrSrc, batchSize * sizeof(RpptROI));
+
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+
+            // Restore the original XYWH ROI before each API call so the in-place
+            // XYWH→LTRB conversion inside the executor always starts from valid data.
+            memcpy(roiTensorPtrSrc, savedRoiTensorPtrSrc.data(), batchSize * sizeof(RpptROI));
+            
             RppStatus errorCodeCapture = RPP_SUCCESS;
             double startWallTime, endWallTime;
             switch (testCase)

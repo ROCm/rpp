@@ -49,6 +49,7 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr,
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
+    if (srcDescPtr->n != dstDescPtr->n) return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
@@ -57,56 +58,112 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr,
     {
         RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            box_filter_char_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            box_filter_float_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                         srcDescPtr,
-                                         reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                         dstDescPtr,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         layoutParams,
-                                         handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            box_filter_float_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                         srcDescPtr,
-                                         reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                         dstDescPtr,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         layoutParams,
-                                         handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            box_filter_char_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                box_filter_char_host_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                  srcDescPtr,
+                                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                box_filter_float_host_single_image(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                   srcDescPtr,
+                                                   reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                   dstDescPtr,
+                                                   kernelSize,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   layoutParams,
+                                                   rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                box_filter_float_host_single_image(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                   srcDescPtr,
+                                                   reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                   dstDescPtr,
+                                                   kernelSize,
+                                                   roiTensorPtrSrc,
+                                                   roiType,
+                                                   layoutParams,
+                                                   rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                box_filter_char_host_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                  srcDescPtr,
+                                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle));
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                box_filter_char_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                box_filter_float_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                box_filter_float_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                box_filter_char_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
@@ -118,52 +175,104 @@ RppStatus rppt_box_filter(RppPtr_t srcPtr,
         if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
             return RPP_ERROR_LOW_OFFSET;
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            hip_exec_box_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                       srcDescPtr,
-                                       static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                       dstDescPtr,
-                                       kernelSize,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            hip_exec_box_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                       dstDescPtr,
-                                       kernelSize,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            hip_exec_box_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                       dstDescPtr,
-                                       kernelSize,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            hip_exec_box_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                       srcDescPtr,
-                                       static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                       dstDescPtr,
-                                       kernelSize,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_box_filter_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                 srcDescPtr,
+                                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                 dstDescPtr,
+                                                 kernelSize,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_box_filter_single_image((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                 srcDescPtr,
+                                                 (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                 dstDescPtr,
+                                                 kernelSize,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_box_filter_single_image((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                 srcDescPtr,
+                                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                 dstDescPtr,
+                                                 kernelSize,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 rpp::deref(rppHandle));
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_box_filter_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                 srcDescPtr,
+                                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                 dstDescPtr,
+                                                 kernelSize,
+                                                 roiTensorPtrSrc,
+                                                 roiType,
+                                                 rpp::deref(rppHandle));
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_box_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                           dstDescPtr,
+                                           kernelSize,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_box_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                           srcDescPtr,
+                                           reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                           dstDescPtr,
+                                           kernelSize,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_box_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                           srcDescPtr,
+                                           reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                           dstDescPtr,
+                                           kernelSize,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_box_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                           dstDescPtr,
+                                           kernelSize,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
@@ -191,6 +300,7 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (borderType != RpptImageBorderType::REPLICATE) return RPP_ERROR_NOT_IMPLEMENTED;
+    if (srcDescPtr->n != dstDescPtr->n) return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
@@ -199,56 +309,112 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
     {
         RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            median_filter_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                             srcDescPtr,
-                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                             dstDescPtr,
-                                             kernelSize,
-                                             roiTensorPtrSrc,
-                                             roiType,
-                                             layoutParams,
-                                             handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            median_filter_generic_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                              srcDescPtr,
-                                              reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                              dstDescPtr,
-                                              kernelSize,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              layoutParams,
-                                              handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            median_filter_generic_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                              srcDescPtr,
-                                              reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                              dstDescPtr,
-                                              kernelSize,
-                                              roiTensorPtrSrc,
-                                              roiType,
-                                              layoutParams,
-                                              handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            median_filter_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                             srcDescPtr,
-                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                             dstDescPtr,
-                                             kernelSize,
-                                             roiTensorPtrSrc,
-                                             roiType,
-                                             layoutParams,
-                                             handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                median_filter_generic_host_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                        srcDescPtr,
+                                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                        dstDescPtr,
+                                                        kernelSize,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                median_filter_generic_host_single_image(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                        srcDescPtr,
+                                                        reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                        dstDescPtr,
+                                                        kernelSize,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                median_filter_generic_host_single_image(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                        srcDescPtr,
+                                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                        dstDescPtr,
+                                                        kernelSize,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                median_filter_generic_host_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                        srcDescPtr,
+                                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                        dstDescPtr,
+                                                        kernelSize,
+                                                        roiTensorPtrSrc,
+                                                        roiType,
+                                                        layoutParams,
+                                                        handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                median_filter_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                median_filter_generic_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                srcDescPtr,
+                                                reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                median_filter_generic_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                srcDescPtr,
+                                                reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                median_filter_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                layoutParams,
+                                                handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
@@ -257,52 +423,104 @@ RppStatus rppt_median_filter(RppPtr_t srcPtr,
     {
         if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2)) return RPP_ERROR_LOW_OFFSET;
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            hip_exec_median_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                          srcDescPtr,
-                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                          dstDescPtr,
-                                          kernelSize,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            hip_exec_median_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          kernelSize,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            hip_exec_median_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                          srcDescPtr,
-                                          reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                          dstDescPtr,
-                                          kernelSize,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            hip_exec_median_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                          srcDescPtr,
-                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                          dstDescPtr,
-                                          kernelSize,
-                                          roiTensorPtrSrc,
-                                          roiType,
-                                          handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_median_filter_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                    srcDescPtr,
+                                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                    dstDescPtr,
+                                                    kernelSize,
+                                                    roiTensorPtrSrc,
+                                                    roiType,
+                                                    handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_median_filter_single_image(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                    srcDescPtr,
+                                                    reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                    dstDescPtr,
+                                                    kernelSize,
+                                                    roiTensorPtrSrc,
+                                                    roiType,
+                                                    handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_median_filter_single_image(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                    srcDescPtr,
+                                                    reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                    dstDescPtr,
+                                                    kernelSize,
+                                                    roiTensorPtrSrc,
+                                                    roiType,
+                                                    handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_median_filter_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                    srcDescPtr,
+                                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                    dstDescPtr,
+                                                    kernelSize,
+                                                    roiTensorPtrSrc,
+                                                    roiType,
+                                                    handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_median_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              kernelSize,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_median_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              kernelSize,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_median_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                              dstDescPtr,
+                                              kernelSize,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_median_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                              srcDescPtr,
+                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                              dstDescPtr,
+                                              kernelSize,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
@@ -330,6 +548,7 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcDescPtr->n != dstDescPtr->n) return RPP_ERROR_INVALID_ARGUMENTS;
 
     rpp::Handle &handle = rpp::deref(rppHandle);
     RppBackend handleBackend = handle.GetBackend();
@@ -340,60 +559,120 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
     {
         RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            gaussian_filter_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        stdDevTensor,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            gaussian_filter_host_tensor(reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                        srcDescPtr,
-                                        reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                        dstDescPtr,
-                                        stdDevTensor,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            gaussian_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                        srcDescPtr,
-                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                        dstDescPtr,
-                                        stdDevTensor,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            gaussian_filter_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                        dstDescPtr,
-                                        stdDevTensor,
-                                        kernelSize,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams,
-                                        handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                gaussian_filter_host_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                  srcDescPtr,
+                                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  *stdDevTensor,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                gaussian_filter_host_single_image(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  *stdDevTensor,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                gaussian_filter_host_single_image(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                  srcDescPtr,
+                                                  reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  *stdDevTensor,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                gaussian_filter_host_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                  srcDescPtr,
+                                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  *stdDevTensor,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  layoutParams,
+                                                  handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                gaussian_filter_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            stdDevTensor,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                gaussian_filter_host_tensor(reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            stdDevTensor,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                gaussian_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            stdDevTensor,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                gaussian_filter_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            stdDevTensor,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
@@ -403,56 +682,112 @@ RppStatus rppt_gaussian_filter(RppPtr_t srcPtr,
         if (srcDescPtr->offsetInBytes < 12 * (kernelSize / 2))
             return RPP_ERROR_LOW_OFFSET;
 
-        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        if (srcDescPtr->n == 1 && dstDescPtr->n == 1)
         {
-            hip_exec_gaussian_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                            srcDescPtr,
-                                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                            dstDescPtr,
-                                            stdDevTensor,
-                                            kernelSize,
-                                            roiTensorPtrSrc,
-                                            roiType,
-                                            handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-        {
-            hip_exec_gaussian_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                            srcDescPtr,
-                                            reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                            dstDescPtr,
-                                            stdDevTensor,
-                                            kernelSize,
-                                            roiTensorPtrSrc,
-                                            roiType,
-                                            handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            hip_exec_gaussian_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                            srcDescPtr,
-                                            reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                            dstDescPtr,
-                                            stdDevTensor,
-                                            kernelSize,
-                                            roiTensorPtrSrc,
-                                            roiType,
-                                            handle);
-        }
-        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
-        {
-            hip_exec_gaussian_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                            srcDescPtr,
-                                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                            dstDescPtr,
-                                            stdDevTensor,
-                                            kernelSize,
-                                            roiTensorPtrSrc,
-                                            roiType,
-                                            handle);
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_gaussian_filter_single_image(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                      srcDescPtr,
+                                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                      dstDescPtr,
+                                                      *stdDevTensor,
+                                                      kernelSize,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_gaussian_filter_single_image(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                      srcDescPtr,
+                                                      reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                      dstDescPtr,
+                                                      *stdDevTensor,
+                                                      kernelSize,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_gaussian_filter_single_image(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                      srcDescPtr,
+                                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                      dstDescPtr,
+                                                      *stdDevTensor,
+                                                      kernelSize,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_gaussian_filter_single_image(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                      srcDescPtr,
+                                                      static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                      dstDescPtr,
+                                                      *stdDevTensor,
+                                                      kernelSize,
+                                                      roiTensorPtrSrc,
+                                                      roiType,
+                                                      handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+        {
+            if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+            {
+                hip_exec_gaussian_filter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                stdDevTensor,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+            {
+                hip_exec_gaussian_filter_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                srcDescPtr,
+                                                reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                stdDevTensor,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+            {
+                hip_exec_gaussian_filter_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                srcDescPtr,
+                                                reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                dstDescPtr,
+                                                stdDevTensor,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                handle);
+            }
+            else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+            {
+                hip_exec_gaussian_filter_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                srcDescPtr,
+                                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                dstDescPtr,
+                                                stdDevTensor,
+                                                kernelSize,
+                                                roiTensorPtrSrc,
+                                                roiType,
+                                                handle);
+            }
+            else
+                return RPP_ERROR_NOT_IMPLEMENTED;
+        }
 
         return RPP_SUCCESS;
     }
