@@ -2700,6 +2700,46 @@ RppStatus resize_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle);
 
+RppStatus resize_bilinear_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                                   RpptDescPtr srcDescPtr,
+                                                   Rpp8u *dstPtr,
+                                                   RpptDescPtr dstDescPtr,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc,
+                                                   RpptRoiType roiType,
+                                                   RppLayoutParams srcLayoutParams,
+                                                   rpp::Handle& handle);
+
+RppStatus resize_bilinear_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                                     RpptDescPtr srcDescPtr,
+                                                     Rpp32f *dstPtr,
+                                                     RpptDescPtr dstDescPtr,
+                                                     RpptImagePatchPtr dstImgSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     RpptRoiType roiType,
+                                                     RppLayoutParams srcLayoutParams,
+                                                     rpp::Handle& handle);
+
+RppStatus resize_bilinear_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                                     RpptDescPtr srcDescPtr,
+                                                     Rpp16f *dstPtr,
+                                                     RpptDescPtr dstDescPtr,
+                                                     RpptImagePatchPtr dstImgSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     RpptRoiType roiType,
+                                                     RppLayoutParams srcLayoutParams,
+                                                     rpp::Handle& handle);
+
+RppStatus resize_bilinear_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                                   RpptDescPtr srcDescPtr,
+                                                   Rpp8s *dstPtr,
+                                                   RpptDescPtr dstDescPtr,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc,
+                                                   RpptRoiType roiType,
+                                                   RppLayoutParams srcLayoutParams,
+                                                   rpp::Handle& handle);
+
 template <typename T>
 RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
@@ -2713,6 +2753,20 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RppLayoutParams srcLayoutParams,
                                        RpptInterpolationType interpolationType,
                                        rpp::Handle& handle);
+
+template <typename T>
+RppStatus resize_separable_host_single_image(T *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             T *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *tempPtr,
+                                             RpptDescPtr tempDescPtr,
+                                             RpptImagePatchPtr dstImgSize,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams srcLayoutParams,
+                                             RpptInterpolationType interpolationType,
+                                             rpp::Handle& handle);
 
 // -------------------- resize_crop_mirror --------------------
 
