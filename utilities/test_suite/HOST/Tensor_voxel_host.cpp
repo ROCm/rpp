@@ -500,6 +500,7 @@ int main(int argc, char * argv[])
 
                         write_nifti_file(&niftiHeaderTemp[batchCount], niftiDataArray[batchCount], index, i, dstPath, testCaseName);
 
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
                         if(i == 0)
                         {
                             std::string command = "convert -delay 10 -loop 0 " + std::string(dstPath) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_0_*.jpg " + std::string(dstPath) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
@@ -515,6 +516,7 @@ int main(int argc, char * argv[])
                             std::string command = "convert -delay 10 -loop 0 " + std::string(dstPath) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_2_*.jpg " + std::string(dstPath) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
                             system(command.c_str());
                         }
+#endif
                         free(niftiDataU8);
                         free(outputBufferOpenCV);
                     }

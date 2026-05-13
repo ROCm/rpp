@@ -25,9 +25,6 @@ SOFTWARE.
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
@@ -40,7 +37,6 @@ SOFTWARE.
 #include <omp.h>
 #include <fstream>
 
-using namespace cv;
 using namespace std;
 
 int main(int argc, char **argv)
@@ -181,7 +177,6 @@ int main(int argc, char **argv)
     Rpp64u ioBufferSize = 0;
     Rpp64u oBufferSize = 0;
     static int noOfImages = 0;
-    Mat image, imageSecond;
 
     // String ops on input path
     string inputPath = src;
@@ -698,8 +693,21 @@ int main(int argc, char **argv)
         {
             if(decoderType == 0)
                 read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
             else
                 read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+#else
+            else if(decoderType == 1)
+            {
+                cerr << "\nError: decoder_type 1 (OpenCV) requested but Tensor_image was built without OpenCV (RPP_TEST_SUITE_HAVE_OPENCV). Aborting.\n";
+                exit(1);
+            }
+            else
+            {
+                cerr << "\nError: invalid decoder_type (expected 0 = TurboJPEG or 1 = OpenCV). Aborting.\n";
+                exit(1);
+            }
+#endif
 
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
@@ -709,8 +717,21 @@ int main(int argc, char **argv)
             {
                 if(decoderType == 0)
                     read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
                 else
                     read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
+#else
+                else if(decoderType == 1)
+                {
+                    cerr << "\nError: decoder_type 1 (OpenCV) requested but Tensor_image was built without OpenCV. Aborting.\n";
+                    exit(1);
+                }
+                else
+                {
+                    cerr << "\nError: invalid decoder_type (expected 0 = TurboJPEG or 1 = OpenCV). Aborting.\n";
+                    exit(1);
+                }
+#endif
                 if (layoutType == 1)
                     convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
             }
@@ -2370,7 +2391,13 @@ int main(int argc, char **argv)
                 }
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
+                {
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
                     write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
+#else
+                    cerr << "\nWarning: image dump skipped (qa_mode off) — Tensor_image built without OpenCV.\n";
+#endif
+                }
             }
         }
     }

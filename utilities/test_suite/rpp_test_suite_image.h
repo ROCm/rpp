@@ -25,9 +25,12 @@ SOFTWARE.
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+using namespace cv;
+#endif
 #include <iostream>
 #include "rpp.h"
 #include "rpp_test_suite_common.h"
@@ -44,7 +47,6 @@ SOFTWARE.
 #include <iomanip>
 #include <cstdlib>
 
-using namespace cv;
 using namespace std;
 
 #define CUTOFF 1
@@ -1097,6 +1099,7 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
 // Read a batch of images using the OpenCV library
 inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
@@ -1125,6 +1128,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
         }
     }
 }
+#endif /* RPP_TEST_SUITE_HAVE_OPENCV */
 
 // Read a batch of images using the turboJpeg decoder
 inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
@@ -1182,6 +1186,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
 // Write a batch of images using the OpenCV library
 inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
@@ -1239,6 +1244,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         free(tempOutput);
     }
 }
+#endif /* RPP_TEST_SUITE_HAVE_OPENCV */
 
 // compares the output of PKD3-PKD3 and PLN1-PLN1 variants
 void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
