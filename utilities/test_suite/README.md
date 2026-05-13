@@ -45,11 +45,6 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo apt install python3-pandas
   ```
 
-* Python: Openpyxl
-  ```shell
-  sudo apt install python3-openpyxl
-  ```
-
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
 > * Run `sudo ldconfig` to configure dynamic run-time bindings

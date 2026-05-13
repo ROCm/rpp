@@ -75,7 +75,6 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
 - TurboJPEG (For IMAGE tests - to decode image inputs)
-- Openpyxl (For IMAGE tests - to run and display QA performance test results)
 ]]
 
 # find RPP
@@ -125,12 +124,6 @@ else()
         execute_process(
             COMMAND ${Python3_EXECUTABLE} -m pip show pandas
             RESULT_VARIABLE PANDAS_FOUND
-            OUTPUT_QUIET
-            ERROR_QUIET
-        )
-        execute_process(
-            COMMAND ${Python3_EXECUTABLE} -m pip show openpyxl
-            RESULT_VARIABLE OPENPYXL_FOUND
             OUTPUT_QUIET
             ERROR_QUIET
         )

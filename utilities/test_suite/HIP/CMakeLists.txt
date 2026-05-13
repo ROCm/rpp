@@ -76,7 +76,6 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
 - TurboJPEG (For IMAGE tests - to decode image inputs)
-- Openpyxl (For IMAGE tests - to run and display QA performance test results)
 ]]
 
 # find RPP
@@ -132,12 +131,6 @@ else()
             OUTPUT_QUIET
             ERROR_QUIET
         )
-        # execute_process(                                          # added only on HOST
-        #     COMMAND ${Python3_EXECUTABLE} -m pip show openpyxl    # added only on HOST
-        #     RESULT_VARIABLE OPENPYXL_FOUND                        # added only on HOST
-        #     OUTPUT_QUIET                                          # added only on HOST
-        #     ERROR_QUIET                                           # added only on HOST
-        # )
 
         if(HIP_FOUND)
             message("-- ${Green}HIP found at HIP_INCLUDE_DIRS - ${HIP_INCLUDE_DIRS} and HIP_LIBRARIES - ${HIP_LIBRARIES}${ColourReset}")
