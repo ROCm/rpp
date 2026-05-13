@@ -72,7 +72,7 @@ List of high level dependency checks - for RPP QA tests in utilities/test_suite/
 (The utilities/test_suite/HOST and utilities/test_suite/HIP folders are also designed to be built separately, so list of checks for those are present in the files "utilities/test_suite/HOST/CMakeLists.txt" and "utilities/test_suite/HIP/CMakeLists.txt")
 - RPP (For ALL tests - to test any RPP functionalities)
 - Python3 (For ALL tests - to run any RPP tests)
-- Pandas (For ALL tests - to run and display rocprof performance test results)
+- Pandas (Optional - for pretty-printing consolidated rocprof CSV results; QA/unit drivers do not require it)
 - OpenMP (For ALL tests - to measure wall-times, and parallelize input tensor-image PKD3->PLN3 conversions across threads)
 - ROCm HIP (For ALL HIP tests - HIP to be installed and found to run all RPP GPU HIP backend API)
 - rpp_AUDIO_AUGMENTATIONS_SUPPORT from find_package(rpp) (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
@@ -126,14 +126,13 @@ execute_process(
     ERROR_QUIET
 )
 
-# Top-level guards: if any of these are missing, no RPP-ctests can be added at all.
+# Top-level guards: Python3 and OpenMP are required to register CTests. Pandas is optional (see warning below).
 if(NOT Python3_FOUND)
     message("-- ${Yellow}Warning: Skipping all RPP-ctest test sets since Python3 is not found!${ColourReset}")
     return()
 endif()
 if(NOT PANDAS_FOUND EQUAL 0)
-    message("-- ${Yellow}Warning: Skipping all RPP-ctest test sets since Pandas is not found!${ColourReset}")
-    return()
+    message("-- ${Yellow}Warning: Pandas not found — rocprof consolidated reports cannot be printed from Python; Tensor misc QA (and other suites) can still run without it.${ColourReset}")
 endif()
 if(NOT OpenMP_CXX_FOUND)
     message("-- ${Yellow}Warning: Skipping all RPP-ctest test sets since OpenMP is not found!${ColourReset}")
@@ -183,6 +182,11 @@ rpp_add_qa_test(rpp_qa_tests_tensor_misc_host_all         HOST/runMiscTests.py -
 # runMiscTests.py uses a different bit-depth matrix for test_type 1 (performance) than for test_type 0 (unit); only misc needs both.
 rpp_add_qa_test(rpp_qa_tests_tensor_misc_host_test_type_1 HOST/runMiscTests.py --test_type 1 --batch_size 3)
 set_tests_properties(rpp_qa_tests_tensor_misc_host_test_type_1 PROPERTIES TIMEOUT ${RPP_CTEST_LONG_TEST_TIMEOUT_SEC})
+# Misc suite: Tensor_misc_* links only RPP + OpenMP (HIP adds HIP runtime). No OpenCV / TurboJPEG / NIFTI / libsnd. Pandas optional at runtime.
+set_tests_properties(
+    rpp_qa_tests_tensor_misc_host_all
+    rpp_qa_tests_tensor_misc_host_test_type_1
+    PROPERTIES LABELS "rpp_rocm_stack_only")
 
 # HIP backend is opt-in; bail out before the HIP test sets if not selected or HIP isn't installed.
 if(NOT rpp_BACKEND_TYPE STREQUAL "HIP")
@@ -235,3 +239,8 @@ endif()
 rpp_add_qa_test(rpp_qa_tests_tensor_misc_hip_all         HIP/runMiscTests.py --qa_mode 1 --batch_size 3)
 # runMiscTests.py uses a different bit-depth matrix for test_type 1 (performance) than for test_type 0 (unit); only misc needs both.
 rpp_add_qa_test(rpp_qa_tests_tensor_misc_hip_test_type_1 HIP/runMiscTests.py --test_type 1 --batch_size 3)
+set_tests_properties(rpp_qa_tests_tensor_misc_hip_test_type_1 PROPERTIES TIMEOUT ${RPP_CTEST_LONG_TEST_TIMEOUT_SEC})
+set_tests_properties(
+    rpp_qa_tests_tensor_misc_hip_all
+    rpp_qa_tests_tensor_misc_hip_test_type_1
+    PROPERTIES LABELS "rpp_rocm_stack_only")

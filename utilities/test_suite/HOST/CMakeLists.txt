@@ -68,7 +68,7 @@ utilities/test_suite/HOST:
 Independent dependency-checks for Unit + Performance + QA tests in utilities/test_suite/HOST/CMakeLists.txt are:
 - RPP (For ALL tests - to test any RPP functionalities)
 - Python3 (For ALL tests - to run any RPP tests)
-- Pandas (For ALL tests - to run and display rocprof performance test results)
+- Pandas (Optional - to print consolidated rocprof CSV tables from Python; not required for QA/unit drivers or Tensor_misc HOST build)
 - OpenMP (For ALL tests - to measure wall-times, and parallelize input tensor-image PKD3->PLN3 conversions across threads)
 - RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
 - libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
@@ -130,19 +130,19 @@ else()
 
         if(Python3_FOUND)
             message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-            # Check pandas for all RPP rocprof performance test results
-            if (PANDAS_FOUND EQUAL 0)
-                message("-- ${Green}Pandas for Python3 found${ColourReset}")
+            if(NOT PANDAS_FOUND EQUAL 0)
+                message("-- ${Yellow}Warning: Pandas not found (optional — needed only to print consolidated rocprof CSV tables from Python).${ColourReset}")
+            endif()
 
-                # include and link directories
-                include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
-                link_directories(${ROCM_PATH}/lib /usr/local/lib)
+            # include and link directories
+            include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+            link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
-                if(NOT APPLE)
-                    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
-                endif()
+            if(NOT APPLE)
+                set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+            endif()
 
-                if(OpenMP_CXX_FOUND)
+            if(OpenMP_CXX_FOUND)
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
@@ -200,12 +200,9 @@ else()
                     add_executable(Tensor_misc_host Tensor_misc_host.cpp)
                     target_link_libraries(Tensor_misc_host ${LINK_LIBRARY_LIST})
 
-                else()
-                    message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
-                endif(OpenMP_CXX_FOUND)
             else()
-                message("-- ${Red}${PROJECT_NAME} Error: Pandas for Python3 must be installed to run any RPP test_suite performance tests with profiling successfully${ColourReset}")
-            endif(PANDAS_FOUND EQUAL 0)
+                message("-- ${Red}${PROJECT_NAME} Error: OpenMP must be installed to run any RPP tests successfully!${ColourReset}")
+            endif(OpenMP_CXX_FOUND)
         else()
             message("-- ${Red}${PROJECT_NAME} Error: Python3 must be installed to run any RPP test_suite tests successfully${ColourReset}")
         endif(Python3_FOUND)
