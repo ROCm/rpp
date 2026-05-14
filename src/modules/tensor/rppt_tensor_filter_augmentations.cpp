@@ -495,6 +495,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
     {
         // convert image to grey scale if input is RGB image
         RppPtr_t tempPtr = srcPtr;
+        RpptDescPtr inputDesc = srcDescPtr;
         if (srcDescPtr->c == 3)
         {
             RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
@@ -502,12 +503,14 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             RppStatus errorStatus = rppt_color_to_greyscale(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle, RppBackend::RPP_HOST_BACKEND);
             if(errorStatus != RPP_SUCCESS)
                 return errorStatus;
+            // Greyscale wrote to tempPtr using dstDescPtr's layout/offset; sobel must read with the same descriptor.
+            inputDesc = dstDescPtr;
         }
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            return sobel_filter_host_tensor(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                            dstDescPtr,
+            return sobel_filter_host_tensor(static_cast<Rpp8u*>(tempPtr) + inputDesc->offsetInBytes,
+                                            inputDesc,
                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                             dstDescPtr,
                                             sobelType,
@@ -518,8 +521,8 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            return sobel_filter_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                            dstDescPtr,
+            return sobel_filter_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(tempPtr) + inputDesc->offsetInBytes),
+                                            inputDesc,
                                             reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                             dstDescPtr,
                                             sobelType,
@@ -530,8 +533,8 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            return sobel_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                            dstDescPtr,
+            return sobel_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(tempPtr) + inputDesc->offsetInBytes),
+                                            inputDesc,
                                             reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                             dstDescPtr,
                                             sobelType,
@@ -542,8 +545,8 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            return sobel_filter_host_tensor(static_cast<Rpp8s*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                            dstDescPtr,
+            return sobel_filter_host_tensor(static_cast<Rpp8s*>(tempPtr) + inputDesc->offsetInBytes,
+                                            inputDesc,
                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                             dstDescPtr,
                                             sobelType,
