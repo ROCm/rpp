@@ -1,0 +1,7 @@
+width=1024
+height=768
+channels=1
+pixel_format=GRAY
+row_major=1
+byte_order=interleaved
+source_jpeg=img1024x768.jpg

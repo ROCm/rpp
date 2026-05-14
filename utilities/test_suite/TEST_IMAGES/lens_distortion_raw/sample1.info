@@ -1,0 +1,7 @@
+width=640
+height=480
+channels=1
+pixel_format=GRAY
+row_major=1
+byte_order=interleaved
+source_jpeg=sample1.jpg

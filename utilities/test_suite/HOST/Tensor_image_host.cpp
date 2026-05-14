@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         cout << "\ntest type - (0 = unit tests / 1 = performance tests) = " << argv[9];
         cout << "\nlayout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1) = " << argv[10];
         cout << "\nqa mode - 0/1 = " << argv[12];
-        cout << "\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = " << argv[13];
+        cout << "\ndecoder type - (0 = packed RAW + .info / 1 = OpenCV) = " << argv[13];
         cout << "\nbatch size = " << argv[14];
     }
 
@@ -236,10 +236,11 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
+    const char* inputExt = (decoderType == 0) ? ".raw" : ".jpg";
+    search_files_recursive(src, imageNames, imageNamesPath, inputExt);
     if(dualInputCase)
     {
-        search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, ".jpg");
+        search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, inputExt);
         if(imageNames.size() != imageNamesSecond.size())
         {
             std::cerr << " \n The number of images in the input folders must be the same.";
@@ -290,7 +291,7 @@ int main(int argc, char **argv)
     Rpp32u offsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed, decoderType);
     if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
@@ -402,11 +403,11 @@ int main(int argc, char **argv)
         vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
 
         // Set ROIs for src/dst
-        set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+        set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes, decoderType);
 
         //Read images
         if(decoderType == 0)
-            read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+            read_image_batch_packed_raw(inputu8, srcDescPtr, imagesPathStart);
 #if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
         else
             read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
@@ -418,7 +419,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            cerr << "\nError: invalid decoder_type (expected 0 = TurboJPEG or 1 = OpenCV). Aborting.\n";
+            cerr << "\nError: invalid decoder_type (expected 0 = packed RAW + .info or 1 = OpenCV). Aborting.\n";
             exit(1);
         }
 #endif
@@ -430,7 +431,7 @@ int main(int argc, char **argv)
         if(dualInputCase)
         {
             if(decoderType == 0)
-                read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                read_image_batch_packed_raw(inputu8Second, srcDescPtr, imagesPathSecondStart);
 #if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
             else
                 read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
@@ -442,7 +443,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                cerr << "\nError: invalid decoder_type (expected 0 = TurboJPEG or 1 = OpenCV). Aborting.\n";
+                cerr << "\nError: invalid decoder_type (expected 0 = packed RAW + .info or 1 = OpenCV). Aborting.\n";
                 exit(1);
             }
 #endif

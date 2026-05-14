@@ -1,0 +1,7 @@
+width=1280
+height=720
+channels=1
+pixel_format=GRAY
+row_major=1
+byte_order=interleaved
+source_jpeg=img1280x720.jpg

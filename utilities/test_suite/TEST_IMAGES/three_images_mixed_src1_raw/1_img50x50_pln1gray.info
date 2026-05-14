@@ -1,0 +1,7 @@
+width=50
+height=50
+channels=1
+pixel_format=GRAY
+row_major=1
+byte_order=interleaved
+source_jpeg=1_img50x50.jpg

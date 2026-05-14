@@ -31,12 +31,12 @@ from common import *
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
-inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
-inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
-ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
-lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
-qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
-perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
+inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1_raw"
+inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2_raw"
+ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1_raw"
+lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion_raw"
+qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1_raw"
+perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1_raw"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = min(imageAugmentationMap.keys())
@@ -155,7 +155,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "A list of specific case numbers to run separated by spaces", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
-    parser.add_argument('--decoder_type', type = int, default = 0, help = "Decoder for loading inputs — 0 = TurboJPEG / 1 = OpenCV (requires Tensor_image built with OpenCV)")
+    parser.add_argument('--decoder_type', type = int, default = 0, help = "Input loader — 0 = packed .raw + sidecar .info (default) / 1 = OpenCV (requires Tensor_image built with OpenCV)")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
@@ -183,7 +183,7 @@ def rpp_test_suite_parser_and_validator():
         print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.decoder_type < 0 or args.decoder_type > 1:
-        print("Decoder Type must be 0 or 1 (0 = TurboJPEG / 1 = OpenCV; OpenCV requires Tensor_image built with OpenCV). Aborting")
+        print("Decoder Type must be 0 or 1 (0 = packed .raw + .info / 1 = OpenCV; OpenCV requires Tensor_image built with OpenCV). Aborting")
         exit(0)
     elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")

@@ -40,7 +40,7 @@ using namespace cv;
 #include <time.h>
 #include <omp.h>
 #include <fstream>
-#include <turbojpeg.h>
+#include <vector>
 #include <random>
 #include <map>
 #include <unordered_set>
@@ -542,51 +542,125 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
-// sets values of maxHeight and maxWidth
-inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
+// Sidecar metadata: shared key=value format for NV12 .yuv inputs and packed-pixel .raw inputs
+// (see utilities/test_suite/scripts/README.md for .raw/.info fields and the JPEG dump script).
+struct RpptTestSuiteInfoSidecar
 {
-    tjhandle tjInstance = tjInitDecompress();
-    for (const std::string& imagePath : imagePaths)
-    {
-        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
-        if (!jpegFile) {
-            std::cerr << "Error opening file: " << imagePath << std::endl;
-            continue;
-        }
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    bool has_channels = false;
+    bool has_col_standard = false;
+    bool has_color_range = false;
+    int col_standard = 0;
+    int color_range = 0;
+};
 
-        fseek(jpegFile, 0, SEEK_END);
-        long fileSize = ftell(jpegFile);
-        fseek(jpegFile, 0, SEEK_SET);
-
-        std::vector<unsigned char> jpegBuffer(fileSize);
-        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
-        fclose(jpegFile);
-
-        int jpegSubsamp;
-        int width, height;
-        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
-            std::cerr << "Error decompressing file: " << imagePath << std::endl;
-            continue;
-        }
-
-        if((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
-            imagesMixed = 1;
-
-        maxWidth = max(maxWidth, width);
-        maxHeight = max(maxHeight, height);
-    }
-    tjDestroy(tjInstance);
-}
-
-// Path to sidecar .info for a .yuv file (basename without last extension + ".info").
-inline std::string yuv_sidecar_info_path(const std::string& yuvFilePath)
+// Path to sidecar .info (strip last extension, append ".info") — used for .yuv, .raw, etc.
+inline std::string test_suite_sidecar_info_path(const std::string& mediaFilePath)
 {
-    std::string infoPath = yuvFilePath;
+    std::string infoPath = mediaFilePath;
     size_t dot = infoPath.find_last_of('.');
     if (dot != std::string::npos)
         infoPath = infoPath.substr(0, dot);
     infoPath += ".info";
     return infoPath;
+}
+
+// Optional single-channel gray companion for color JPEG dumps: <stem>.raw → <stem>_pln1gray.bin (not matched by *.raw glob).
+inline std::string packed_raw_pln1gray_companion_path(const std::string& rawPath)
+{
+    if (rawPath.size() < 4)
+        return std::string();
+    if (rawPath.compare(rawPath.size() - 4, 4, ".raw") != 0)
+        return std::string();
+    return rawPath.substr(0, rawPath.size() - 4) + "_pln1gray.bin";
+}
+
+inline bool parse_test_suite_info_sidecar(const std::string& mediaFilePath, RpptTestSuiteInfoSidecar& out)
+{
+    out = RpptTestSuiteInfoSidecar();
+    std::string infoPath = test_suite_sidecar_info_path(mediaFilePath);
+    FILE* fp = fopen(infoPath.c_str(), "r");
+    if (!fp)
+        return false;
+    char line[256];
+    while (fgets(line, sizeof(line), fp))
+    {
+        int v;
+        if (sscanf(line, "width=%d", &v) == 1 && v > 0)
+            out.width = v;
+        if (sscanf(line, "height=%d", &v) == 1 && v > 0)
+            out.height = v;
+        if (sscanf(line, "channels=%d", &v) == 1 && v > 0)
+        {
+            out.channels = v;
+            out.has_channels = true;
+        }
+        if (sscanf(line, "col_standard=%d", &v) == 1)
+        {
+            out.col_standard = v;
+            out.has_col_standard = true;
+        }
+        if (sscanf(line, "color_range=%d", &v) == 1)
+        {
+            out.color_range = v;
+            out.has_color_range = true;
+        }
+    }
+    fclose(fp);
+    return (out.width > 0 && out.height > 0);
+}
+
+// sets values of maxHeight and maxWidth (decoderType 0: packed .raw + .info; 1: OpenCV image files)
+inline void set_max_dimensions(vector<string> imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed, int decoderType)
+{
+    if (decoderType == 0)
+    {
+        for (const std::string& imagePath : imagePaths)
+        {
+            RpptTestSuiteInfoSidecar info;
+            if (!parse_test_suite_info_sidecar(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+            {
+                std::cerr << "Error: missing or invalid packed-RAW sidecar .info (need width, height, channels) for: "
+                          << imagePath << std::endl;
+                continue;
+            }
+            int width = info.width;
+            int height = info.height;
+            if ((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+                imagesMixed = 1;
+            maxWidth = max(maxWidth, width);
+            maxHeight = max(maxHeight, height);
+        }
+        return;
+    }
+    if (decoderType == 1)
+    {
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
+        for (const std::string& imagePath : imagePaths)
+        {
+            Mat image = imread(imagePath, IMREAD_UNCHANGED);
+            if (image.empty())
+            {
+                std::cerr << "Error: OpenCV could not read image: " << imagePath << std::endl;
+                continue;
+            }
+            int width = image.cols;
+            int height = image.rows;
+            if ((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+                imagesMixed = 1;
+            maxWidth = max(maxWidth, width);
+            maxHeight = max(maxHeight, height);
+        }
+#else
+        std::cerr << "Error: decoder_type 1 (OpenCV) requires Tensor_image built with OpenCV.\n";
+        std::exit(1);
+#endif
+        return;
+    }
+    std::cerr << "Error: invalid decoder_type (expected 0 = packed RAW + .info, 1 = OpenCV).\n";
+    std::exit(1);
 }
 
 // NV12 QA sidecar: required width/height; optional col_standard / color_range for yuv_to_rgb (see RpptColorStandard / RpptColorRange in rppdefs.h).
@@ -603,25 +677,15 @@ struct RpptYuvNv12Sidecar
 inline bool parse_yuv_nv12_sidecar(const std::string& yuvFilePath, RpptYuvNv12Sidecar& out)
 {
     out = RpptYuvNv12Sidecar();
-    std::string infoPath = yuv_sidecar_info_path(yuvFilePath);
-    FILE* fp = fopen(infoPath.c_str(), "r");
-    if (!fp)
+    RpptTestSuiteInfoSidecar info;
+    if (!parse_test_suite_info_sidecar(yuvFilePath, info))
         return false;
-    char line[128];
-    while (fgets(line, sizeof(line), fp))
-    {
-        int w = 0, h = 0;
-        int cs = 0, cr = 0;
-        if (sscanf(line, "width=%d", &w) == 1 && w > 0)
-            out.width = w;
-        if (sscanf(line, "height=%d", &h) == 1 && h > 0)
-            out.height = h;
-        if (sscanf(line, "col_standard=%d", &cs) == 1)
-            out.col_standard = static_cast<RpptColorStandard>(cs);
-        if (sscanf(line, "color_range=%d", &cr) == 1)
-            out.color_range = static_cast<RpptColorRange>(cr);
-    }
-    fclose(fp);
+    out.width = info.width;
+    out.height = info.height;
+    if (info.has_col_standard)
+        out.col_standard = static_cast<RpptColorStandard>(info.col_standard);
+    if (info.has_color_range)
+        out.color_range = static_cast<RpptColorRange>(info.color_range);
     return (out.width > 0 && out.height > 0);
 }
 
@@ -639,7 +703,7 @@ inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, in
 // NV12/YUV dimensions: require a .info sidecar next to the .yuv file. Exits on failure.
 inline void parse_yuv_dimensions(const std::string& yuvFilePath, int& width, int& height)
 {
-    std::string infoPath = yuv_sidecar_info_path(yuvFilePath);
+    std::string infoPath = test_suite_sidecar_info_path(yuvFilePath);
     struct stat st;
     if (stat(infoPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
     {
@@ -727,33 +791,45 @@ inline void read_yuv_batch_nv12(Rpp8u *input, RpptDescPtr descPtr, vector<string
     }
 }
 
-// sets roi xywh values and dstImg sizes
-inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+// sets roi xywh values and dstImg sizes (decoderType 0: packed .raw + .info; 1: OpenCV image files)
+inline void set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes, int decoderType)
 {
-    tjhandle tjInstance = tjInitDecompress();
     int i = 0;
     for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
     {
         const string& imagePath = *imagePathIter;
-        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
-        if (!jpegFile) {
-            std::cerr << "Error opening file: " << imagePath << std::endl;
-            continue;
+        int width = 0, height = 0;
+        if (decoderType == 0)
+        {
+            RpptTestSuiteInfoSidecar info;
+            if (!parse_test_suite_info_sidecar(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+            {
+                std::cerr << "Error: invalid packed-RAW .info for ROI: " << imagePath << std::endl;
+                continue;
+            }
+            width = info.width;
+            height = info.height;
         }
-
-        fseek(jpegFile, 0, SEEK_END);
-        long fileSize = ftell(jpegFile);
-        fseek(jpegFile, 0, SEEK_SET);
-
-        std::vector<unsigned char> jpegBuffer(fileSize);
-        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
-        fclose(jpegFile);
-
-        int jpegSubsamp;
-        int width, height;
-        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
-            std::cerr << "Error decompressing file: " << imagePath << std::endl;
-            continue;
+        else if (decoderType == 1)
+        {
+#if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
+            Mat image = imread(imagePath, IMREAD_UNCHANGED);
+            if (image.empty())
+            {
+                std::cerr << "Error: OpenCV could not read image: " << imagePath << std::endl;
+                continue;
+            }
+            width = image.cols;
+            height = image.rows;
+#else
+            std::cerr << "Error: decoder_type 1 (OpenCV) requires Tensor_image built with OpenCV.\n";
+            std::exit(1);
+#endif
+        }
+        else
+        {
+            std::cerr << "Error: invalid decoder_type in set_src_and_dst_roi.\n";
+            std::exit(1);
         }
 
         roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
@@ -761,7 +837,6 @@ inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart,
         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
     }
-    tjDestroy(tjInstance);
 }
 
 // sets generic descriptor dimensions and strides of src/dst
@@ -1130,60 +1205,105 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
 }
 #endif /* RPP_TEST_SUITE_HAVE_OPENCV */
 
-// Read a batch of images using the turboJpeg decoder
-inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
+// Read a batch of packed raw images (row-major pixels) using sidecar .info (same key=value format as YUV .info; see scripts/README.md).
+// Descriptor c=1 on RGB-packed (.info channels=3) prefers optional ``<stem>_pln1gray.bin`` (+ ``<stem>_pln1gray.info``) produced by the JPEG dump script when present
+// (libjpeg-turbo TJPF_GRAY from the JPEG bitstream, matching prior in-process JPEG gray decode for PLN1). If that companion is absent, falls back to BT.601-style luma from RGB bytes.
+// c=3 loads RGB from single-channel files by replicating gray to R=G=B (same channel expansion as libjpeg-turbo grayscale JPEG → TJPF_RGB).
+inline void read_image_batch_packed_raw(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
-    tjhandle m_jpegDecompressor = tjInitDecompress();
-
-    // Loop through the input images
     for (int i = 0; i < descPtr->n; i++)
     {
-        // Read the JPEG compressed data from a file
-        std::string inputImagePath = *(imagesNamesStart + i);
-        FILE* fp = fopen(inputImagePath.c_str(), "rb");
-        if(!fp)
-            std::cerr << "\n unable to open file : "<<inputImagePath;
-        fseek(fp, 0, SEEK_END);
-        long jpegSize = ftell(fp);
-        rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
-        fread(jpegBuf, 1, jpegSize, fp);
+        std::string rawPath = *(imagesNamesStart + i);
+        RpptTestSuiteInfoSidecar info;
+        if (!parse_test_suite_info_sidecar(rawPath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+        {
+            std::cerr << "\n packed RAW: missing or invalid .info sidecar for " << rawPath;
+            continue;
+        }
+        const int outC = (int)descPtr->c;
+        std::string readMediaPath = rawPath;
+        if (outC == 1 && info.channels == 3)
+        {
+            const std::string grayPath = packed_raw_pln1gray_companion_path(rawPath);
+            if (!grayPath.empty())
+            {
+                RpptTestSuiteInfoSidecar ginfo;
+                if (parse_test_suite_info_sidecar(grayPath, ginfo) && ginfo.has_channels && ginfo.channels == 1 && ginfo.width == info.width
+                    && ginfo.height == info.height)
+                {
+                    info = ginfo;
+                    readMediaPath = grayPath;
+                }
+            }
+        }
+        const int inCh = info.channels;
+        if (!((inCh == outC) || (outC == 1 && inCh == 3) || (outC == 3 && inCh == 1)))
+        {
+            std::cerr << "\n packed RAW: unsupported .info channels (" << inCh << ") for descriptor c (" << outC << ") for " << rawPath;
+            continue;
+        }
+        const size_t expected = (size_t)info.width * (size_t)info.height * (size_t)inCh;
+        FILE* fp = fopen(readMediaPath.c_str(), "rb");
+        if (!fp)
+        {
+            std::cerr << "\n unable to open packed RAW file: " << readMediaPath;
+            continue;
+        }
+        std::vector<Rpp8u> fileBuf(expected);
+        size_t nread = fread(fileBuf.data(), 1, expected, fp);
         fclose(fp);
-
-        // Decompress the JPEG data into an RGB image buffer
-        int width, height, subsamp, color_space;
-        if(tjDecompressHeader2(m_jpegDecompressor, jpegBuf, jpegSize, &width, &height, &color_space) != 0)
-            std::cerr << "\n Jpeg image decode failed in tjDecompressHeader2";
-        Rpp8u* rgbBuf;
-        int elementsInRow;
-        if(descPtr->c == 3)
+        if (nread != expected)
         {
-            elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
-            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
-                std::cerr << "\n Jpeg image decode failed ";
+            std::cerr << "\n packed RAW read size mismatch for " << readMediaPath;
+            continue;
         }
-        else
-        {
-            elementsInRow = width;
-            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
-            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
-                std::cerr << "\n Jpeg image decode failed ";
-        }
-        // Copy the decompressed image buffer to the RPP input buffer
+        const int w = info.width;
+        const int h = info.height;
         Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
-        for (int j = 0; j < height; j++)
-        {
-            memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
-            inputTemp += descPtr->w * descPtr->c;
-        }
-        // Clean up
-        free(jpegBuf);
-        free(rgbBuf);
-    }
 
-    // Clean up
-    tjDestroy(m_jpegDecompressor);
+        if (inCh == outC)
+        {
+            const int elementsInRow = w * inCh;
+            for (int j = 0; j < h; j++)
+            {
+                memcpy(inputTemp, fileBuf.data() + (size_t)j * (size_t)elementsInRow, (size_t)elementsInRow * sizeof(Rpp8u));
+                inputTemp += descPtr->w * (Rpp32u)outC;
+            }
+        }
+        else if (outC == 1 && inCh == 3)
+        {
+            for (int j = 0; j < h; j++)
+            {
+                const Rpp8u* srcRow = fileBuf.data() + (size_t)j * (size_t)w * 3u;
+                for (int x = 0; x < w; x++)
+                {
+                    int r = (int)srcRow[3 * x];
+                    int g = (int)srcRow[3 * x + 1];
+                    int b = (int)srcRow[3 * x + 2];
+                    int yv = (77 * r + 150 * g + 29 * b + 128) >> 8;
+                    if (yv > 255)
+                        yv = 255;
+                    inputTemp[x] = (Rpp8u)yv;
+                }
+                inputTemp += descPtr->w;
+            }
+        }
+        else if (outC == 3 && inCh == 1)
+        {
+            for (int j = 0; j < h; j++)
+            {
+                const Rpp8u* srcRow = fileBuf.data() + (size_t)j * (size_t)w;
+                for (int x = 0; x < w; x++)
+                {
+                    Rpp8u yv = srcRow[x];
+                    inputTemp[3 * x] = yv;
+                    inputTemp[3 * x + 1] = yv;
+                    inputTemp[3 * x + 2] = yv;
+                }
+                inputTemp += descPtr->w * 3u;
+            }
+        }
+    }
 }
 
 #if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
@@ -1218,6 +1338,10 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         string outputImagePath = outputFolder + *(imagesNamesStart + j);
         // OpenCV imwrite does not support .yuv; use .png for YUV-to-RGB dumps (input names are .yuv)
         if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".yuv") == 0)
+        {
+            outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
+        }
+        else if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".raw") == 0)
         {
             outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
         }

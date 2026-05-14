@@ -74,7 +74,7 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 - libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
 - OpenCV (Optional — enables decoder_type 1, unit image dumps, voxel slice JPGs; Tensor_image/voxel build without it when absent)
-- TurboJPEG (For IMAGE tests - to decode image inputs)
+- Packed RAW inputs (decoder_type 0): Tensor-Image tests expect pre-decoded ``.raw`` files and matching ``.info`` sidecars; generate or refresh them with the scripts under ``utilities/test_suite/scripts/`` (see ``scripts/README.md``).
 ]]
 
 # find RPP
@@ -117,7 +117,6 @@ else()
             PATH_SUFFIXES lib lib64)
         find_package(OpenMP COMPONENTS CXX QUIET)
         find_package(OpenCV QUIET)
-        find_package(TurboJpeg QUIET)
         find_package(StdFilesystem QUIET)
 
         # find required python3-pip imports
@@ -147,24 +146,18 @@ else()
                     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                     message("-- ${Green}${PROJECT_NAME} All Tensor HOST tests set to build with OpenMP${ColourReset}")
 
-                    # HOST test set 1 - RPP Tensor-Image HOST test suite
-                    if(TurboJpeg_FOUND)
-                        include_directories(${TurboJpeg_INCLUDE_DIRS})
-                        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
-                        message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with TurboJpeg${ColourReset}")
-                        add_executable(Tensor_image_host Tensor_image_host.cpp)
-                        target_link_libraries(Tensor_image_host -lturbojpeg ${LINK_LIBRARY_LIST})
-                        if(OpenCV_FOUND)
-                            target_include_directories(Tensor_image_host PRIVATE ${OpenCV_INCLUDE_DIRS})
-                            target_link_libraries(Tensor_image_host ${OpenCV_LIBS})
-                            target_compile_definitions(Tensor_image_host PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=1)
-                            message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with OpenCV (decoder_type 1 and image dumps enabled)${ColourReset}")
-                        else()
-                            message("-- ${Yellow}Warning: OpenCV not found — Tensor_image_host builds without OpenCV; use TurboJPEG decode only and golden QA; decoder_type 1 / unit image dumps disabled.${ColourReset}")
-                        endif()
+                    # HOST test set 1 - RPP Tensor-Image HOST test suite (decoder_type 0: packed .raw + .info)
+                    add_executable(Tensor_image_host Tensor_image_host.cpp)
+                    target_link_libraries(Tensor_image_host ${LINK_LIBRARY_LIST})
+                    if(OpenCV_FOUND)
+                        target_include_directories(Tensor_image_host PRIVATE ${OpenCV_INCLUDE_DIRS})
+                        target_link_libraries(Tensor_image_host ${OpenCV_LIBS})
+                        target_compile_definitions(Tensor_image_host PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=1)
+                        message("-- ${Green}${PROJECT_NAME} Tensor-Image HOST tests set to build with OpenCV (decoder_type 1 and image dumps enabled)${ColourReset}")
                     else()
-                        message("-- ${Yellow}Warning: TurboJpeg must be installed to install ${PROJECT_NAME} Tensor-Image tests successfully!${ColourReset}")
-                    endif(TurboJpeg_FOUND)
+                        message("-- ${Yellow}Warning: OpenCV not found — Tensor_image_host builds without OpenCV; decoder_type 1 / unit image dumps disabled.${ColourReset}")
+                    endif()
+                    message("-- ${White}Tensor_image_host -- Link Libraries: see target_link_libraries${ColourReset}")
 
                     # HOST test set 2 - RPP Tensor-Voxel HOST test suite
                     if(NIFTI_FOUND)

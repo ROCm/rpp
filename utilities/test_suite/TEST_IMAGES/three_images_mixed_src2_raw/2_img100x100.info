@@ -1,0 +1,7 @@
+width=100
+height=100
+channels=3
+pixel_format=RGB
+row_major=1
+byte_order=interleaved
+source_jpeg=2_img100x100.jpg
