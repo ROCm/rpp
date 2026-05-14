@@ -410,3 +410,97 @@ RppStatus rppt_yuv_to_rgb(RppPtr_t srcYPtr,
 
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
+
+/******************** yuv_to_rgb_cubic_v ********************/
+
+RppStatus rppt_yuv_to_rgb_cubic_v(RppPtr_t srcYPtr,
+                                    RppPtr_t srcUVPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32u src_y_pitch,
+                                    Rpp32u src_uv_pitch,
+                                    Rpp32u dst_pitch,
+                                    Rpp32u width,
+                                    Rpp32u height,
+                                    RpptColorStandard col_standard,
+                                    RpptColorRange color_range,
+                                    rppHandle_t rppHandle,
+                                    RppBackend executionBackend)
+{
+    if (executionBackend != RppBackend::RPP_HIP_BACKEND)
+        return RPP_ERROR_INCOMPATIBLE_BACKEND;
+    if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (height < 2 || width < 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+#ifdef GPU_SUPPORT
+    if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        return hip_exec_yuv_to_rgb_cubic_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
+                                                    src_y_pitch,
+                                                    static_cast<Rpp8u*>(srcUVPtr),
+                                                    src_uv_pitch,
+                                                    static_cast<Rpp8u*>(dstPtr),
+                                                    dst_pitch,
+                                                    width,
+                                                    height,
+                                                    col_standard,
+                                                    color_range,
+                                                    handle);
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}
+
+/******************** yuv_to_rgb_linear_v ********************/
+
+RppStatus rppt_yuv_to_rgb_linear_v(RppPtr_t srcYPtr,
+                                     RppPtr_t srcUVPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u src_y_pitch,
+                                     Rpp32u src_uv_pitch,
+                                     Rpp32u dst_pitch,
+                                     Rpp32u width,
+                                     Rpp32u height,
+                                     RpptColorStandard col_standard,
+                                     RpptColorRange color_range,
+                                     rppHandle_t rppHandle,
+                                     RppBackend executionBackend)
+{
+    if (executionBackend != RppBackend::RPP_HIP_BACKEND)
+        return RPP_ERROR_INCOMPATIBLE_BACKEND;
+    if (srcDescPtr->dataType != RpptDataType::U8 || dstDescPtr->dataType != RpptDataType::U8)
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
+    if (height < 2 || width < 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+
+    rpp::Handle &handle = rpp::deref(rppHandle);
+    RppBackend handleBackend = handle.GetBackend();
+
+#ifdef GPU_SUPPORT
+    if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
+    {
+        return hip_exec_yuv_to_rgb_linear_v<Rpp8u>(static_cast<Rpp8u*>(srcYPtr),
+                                                     src_y_pitch,
+                                                     static_cast<Rpp8u*>(srcUVPtr),
+                                                     src_uv_pitch,
+                                                     static_cast<Rpp8u*>(dstPtr),
+                                                     dst_pitch,
+                                                     width,
+                                                     height,
+                                                     col_standard,
+                                                     color_range,
+                                                     handle);
+    }
+#endif
+
+    return RPP_ERROR_INCOMPATIBLE_BACKEND;
+}

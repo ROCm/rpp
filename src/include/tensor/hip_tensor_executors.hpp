@@ -511,6 +511,36 @@ RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
                               RpptColorRange color_range,
                               rpp::Handle& handle);
 
+// -------------------- yuv_to_rgb_cubic_v (NV12 8-bit, cubic vertical chroma upsample) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
+                                        Rpp32u src_y_pitch,
+                                        T *srcUVPtr,
+                                        Rpp32u src_uv_pitch,
+                                        T *dstPtr,
+                                        Rpp32u dst_pitch,
+                                        Rpp32u width,
+                                        Rpp32u height,
+                                        RpptColorStandard col_standard,
+                                        RpptColorRange color_range,
+                                        rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb_linear_v (NV12 8-bit, linear vertical chroma upsample) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb_linear_v(T *srcYPtr,
+                                         Rpp32u src_y_pitch,
+                                         T *srcUVPtr,
+                                         Rpp32u src_uv_pitch,
+                                         T *dstPtr,
+                                         Rpp32u dst_pitch,
+                                         Rpp32u width,
+                                         Rpp32u height,
+                                         RpptColorStandard col_standard,
+                                         RpptColorRange color_range,
+                                         rpp::Handle& handle);
+
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
 // -------------------- erase --------------------

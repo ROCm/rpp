@@ -153,7 +153,9 @@ imageAugmentationMap = {
     100: ["coarse_dropout", "HOST", "HIP"],
     101: ["emboss","HOST","HIP"],
     102: ["histogram_equalize", "HOST", "HIP"],
-    103: ["yuv_to_rgb", "HIP"]
+    103: ["yuv_to_rgb", "HIP"],
+    104: ["yuv_to_rgb_cubic_v", "HIP"],
+    105: ["yuv_to_rgb_linear_v", "HIP"]
 }
 
 audioAugmentationMap = {
