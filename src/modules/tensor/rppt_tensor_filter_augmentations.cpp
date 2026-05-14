@@ -506,56 +506,54 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
 
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            sobel_filter_host_tensor(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     sobelType,
-                                     kernelSize,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     handle);
+            return sobel_filter_host_tensor(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            sobelType,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            sobel_filter_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     sobelType,
-                                     kernelSize,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     handle);
+            return sobel_filter_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            sobelType,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            sobel_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                     dstDescPtr,
-                                     sobelType,
-                                     kernelSize,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     handle);
+            return sobel_filter_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(tempPtr) + srcDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                            dstDescPtr,
+                                            sobelType,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            sobel_filter_host_tensor(static_cast<Rpp8s*>(tempPtr) + srcDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     sobelType,
-                                     kernelSize,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     handle);
+            return sobel_filter_host_tensor(static_cast<Rpp8s*>(tempPtr) + srcDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                            dstDescPtr,
+                                            sobelType,
+                                            kernelSize,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            handle);
         }
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
-
-        return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
     else if ((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
@@ -580,67 +578,71 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             inputDesc = dstDescPtr;
         }
         srcPtr = (tempPtr == nullptr) ? srcPtr : tempPtr;
-        RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
 
+        RppStatus status = RPP_SUCCESS;
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
-            hip_exec_sobel_filter_tensor(static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes,
-                                         inputDesc,
-                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                         dstDescPtr,
-                                         sobelType,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         handle);
+            status = hip_exec_sobel_filter_tensor(static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes,
+                                                  inputDesc,
+                                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  sobelType,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
-            hip_exec_sobel_filter_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
-                                         inputDesc,
-                                         (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                         dstDescPtr,
-                                         sobelType,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         handle);
+            status = hip_exec_sobel_filter_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
+                                                  inputDesc,
+                                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  sobelType,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
-            hip_exec_sobel_filter_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
-                                         inputDesc,
-                                         (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                         dstDescPtr,
-                                         sobelType,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         handle);
+            status = hip_exec_sobel_filter_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + inputDesc->offsetInBytes),
+                                                  inputDesc,
+                                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                  dstDescPtr,
+                                                  sobelType,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  handle);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
-            hip_exec_sobel_filter_tensor(static_cast<Rpp8s*>(srcPtr) + inputDesc->offsetInBytes,
-                                         inputDesc,
-                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                         dstDescPtr,
-                                         sobelType,
-                                         kernelSize,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         handle);
+            status = hip_exec_sobel_filter_tensor(static_cast<Rpp8s*>(srcPtr) + inputDesc->offsetInBytes,
+                                                  inputDesc,
+                                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                  dstDescPtr,
+                                                  sobelType,
+                                                  kernelSize,
+                                                  roiTensorPtrSrc,
+                                                  roiType,
+                                                  handle);
         }
         else
-            return RPP_ERROR_NOT_IMPLEMENTED;
+            status = RPP_ERROR_NOT_IMPLEMENTED;
 
         if (tempPtr != nullptr)
         {
             // Sobel runs asynchronously on the same stream; wait before freeing the greyscale scratch buffer.
-            RPP_HIP_RETURN_IF_ERROR(hipStreamSynchronize(handle.GetStream()));
-            RPP_HIP_RETURN_IF_ERROR(hipFree(tempPtr));
+            hipError_t syncErr = hipStreamSynchronize(handle.GetStream());
+            hipError_t freeErr = hipFree(tempPtr);
+            if (status == RPP_SUCCESS && (syncErr != hipSuccess || freeErr != hipSuccess))
+            {
+                return RPP_ERROR_HIP_RUNTIME;
+            }
         }
 
-        return RPP_SUCCESS;
+        return status;
     }
 #endif
 
