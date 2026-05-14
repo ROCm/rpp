@@ -571,6 +571,7 @@ RppStatus rppt_sobel_filter(RppPtr_t srcPtr,
             RppStatus errorStatus = rppt_color_to_greyscale(srcPtr, srcDescPtr, tempPtr, dstDescPtr, srcSubpixelLayout, rppHandle, RppBackend::RPP_HIP_BACKEND);
             if(errorStatus != RPP_SUCCESS)
             {
+                // Ignore hipFree status to preserve the root cause of the error
                 (void)hipFreeAsync(tempPtr, handle.GetStream());
                 return errorStatus;
             }
