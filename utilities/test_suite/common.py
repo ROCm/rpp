@@ -237,6 +237,11 @@ voxelAugmentationGroupMap = {
     ]
 }
 
+def run_cmake_build(script_path):
+    """Configure and build using Ninja generator with parallel jobs matching CPU count."""
+    subprocess.check_call(["cmake", "-GNinja", script_path])   # nosec
+    subprocess.check_call(["cmake", "--build", ".", "--parallel", str(os.cpu_count())])    # nosec
+
 def get_case_number(map, case):
     # Check if the input is numeric (case number)
     if case.isdigit():

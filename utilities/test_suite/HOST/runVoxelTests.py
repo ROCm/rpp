@@ -212,8 +212,7 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.call(["cmake", "-GNinja", scriptPath], cwd=".")   # nosec
-subprocess.call(["cmake", "--build", ".", "--parallel", str(os.cpu_count())], cwd=".")  # nosec
+run_cmake_build(scriptPath)
 
 bitDepths = [BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F32_TO_F32]
 noCaseSupported = all(int(case) not in voxelAugmentationMap for case in caseList)

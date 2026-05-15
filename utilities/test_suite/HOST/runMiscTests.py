@@ -206,8 +206,7 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.call(["cmake", "-GNinja", scriptPath], cwd=".")   # nosec
-subprocess.call(["cmake", "--build", ".", "--parallel", str(os.cpu_count())], cwd=".")    # nosec
+run_cmake_build(scriptPath)
 
 supportedCaseList = [key for key, values in miscAugmentationMap.items() if "HOST" in values]
 noCaseSupported = all(int(case) not in supportedCaseList for case in caseList)
