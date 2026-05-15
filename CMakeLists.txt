@@ -375,6 +375,24 @@ enable_testing()
 include(CTest)
 add_subdirectory(utilities/test_suite)
 
+# Arithmetic engine
+option(BUILD_ARITH_ENGINE "Build rpp_arith_engine submodule" OFF)
+if(BUILD_ARITH_ENGINE)
+    add_subdirectory(rpp_arith_engine)
+    message("-- ${BoldBlue}${PROJECT_NAME} -- Building rpp_arith_engine${ColourReset}")
+else()
+    message("-- ${Cyan}${PROJECT_NAME} -- rpp_arith_engine disabled (enable with -DBUILD_ARITH_ENGINE=ON)${ColourReset}")
+endif()
+
+# Python bindings
+option(BUILD_PYTHON_BINDINGS "Build py_rpp Python extension module" OFF)
+if(BUILD_PYTHON_BINDINGS)
+    add_subdirectory(py_rpp)
+    message("-- ${BoldBlue}${PROJECT_NAME} -- Building Python bindings (py_rpp)${ColourReset}")
+else()
+    message("-- ${Cyan}${PROJECT_NAME} -- Python bindings disabled (enable with -DBUILD_PYTHON_BINDINGS=ON)${ColourReset}")
+endif()
+
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
 install(TARGETS ${PROJECT_NAME}

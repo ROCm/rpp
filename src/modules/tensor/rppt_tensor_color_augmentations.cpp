@@ -26,6 +26,7 @@ SOFTWARE.
 #include "rppt_validate.hpp"
 #include "rppt_tensor_color_augmentations.h"
 #include "host_tensor_executors.hpp"
+#include "logger.hpp"
 
 #ifdef GPU_SUPPORT
 #include "hip_tensor_executors.hpp"
@@ -44,6 +45,16 @@ RppStatus rppt_brightness(RppPtr_t srcPtr,
                           rppHandle_t rppHandle,
                           RppBackend executionBackend)
 {
+    RPP_LOG_T("ENTER rppt_brightness"
+              << "  src=" << srcPtr << "  dst=" << dstPtr
+              << "  N=" << srcDescPtr->n
+              << "  H=" << srcDescPtr->h
+              << "  W=" << srcDescPtr->w
+              << "  C=" << srcDescPtr->c
+              << "  layout=" << srcDescPtr->layout
+              << "  dataType=" << srcDescPtr->dataType
+              << "  backend=" << executionBackend);
+
     if (srcDescPtr->dataType != dstDescPtr->dataType) return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -53,9 +64,11 @@ RppStatus rppt_brightness(RppPtr_t srcPtr,
 
     if(executionBackend == RppBackend::RPP_HOST_BACKEND)
     {
+        RPP_LOG_I("rppt_brightness  dispatching HOST backend  dataType=" << srcDescPtr->dataType);
         RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
+            RPP_LOG_I("rppt_brightness  HOST  U8→U8");
             brightness_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                         srcDescPtr,
                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
@@ -109,13 +122,16 @@ RppStatus rppt_brightness(RppPtr_t srcPtr,
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
 
+        RPP_LOG_T("EXIT  rppt_brightness  HOST  RPP_SUCCESS");
         return RPP_SUCCESS;
     }
 #ifdef GPU_SUPPORT
     else if((handleBackend == RppBackend::RPP_HIP_BACKEND) && (executionBackend == RppBackend::RPP_HIP_BACKEND))
     {
+        RPP_LOG_I("rppt_brightness  dispatching HIP backend  dataType=" << srcDescPtr->dataType);
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
+            RPP_LOG_I("rppt_brightness  HIP  U8→U8");
             hip_exec_brightness_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                        srcDescPtr,
                                        static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
@@ -165,9 +181,12 @@ RppStatus rppt_brightness(RppPtr_t srcPtr,
         else
             return RPP_ERROR_NOT_IMPLEMENTED;
 
+        RPP_LOG_T("EXIT  rppt_brightness  HIP  RPP_SUCCESS");
         return RPP_SUCCESS;
     }
 #endif
+    RPP_LOG_E("rppt_brightness  incompatible backend: handle=" << static_cast<int>(handleBackend)
+              << "  requested=" << static_cast<int>(executionBackend));
     return RPP_ERROR_INCOMPATIBLE_BACKEND;
 }
 

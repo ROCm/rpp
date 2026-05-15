@@ -253,19 +253,20 @@ std::ostream& LogParam(std::ostream& os, std::string name, const T& x)
 
 std::string LoggingParseFunction(const char* func, const char* pretty_func);
 
-#define RPP_LOG(level, ...)                                                               \
-    // do                                                                                       \
-    // {                                                                                        \
-    //     if(rpp::IsLogging(level))                                                         \
-    //     {                                                                                    \
-    //         std::ostringstream rpp_log_ss;                                                \
-    //         rpp_log_ss << rpp::LoggingPrefix() << LoggingLevelToCString(level) << " [" \
-    //                       << rpp::LoggingParseFunction(__func__,            /* NOLINT */  \
-    //                                                       __PRETTY_FUNCTION__) /* NOLINT */  \
-    //                       << "] " << __VA_ARGS__ << std::endl;                               \
-    //         std::cerr << rpp_log_ss.str();                                                \
-    //     }                                                                                    \
-    // } while(false)
+#define RPP_LOG(level, ...)                                                                \
+    do                                                                                     \
+    {                                                                                      \
+        if(rpp::IsLogging(level))                                                          \
+        {                                                                                  \
+            std::ostringstream rpp_log_ss;                                                 \
+            rpp_log_ss << rpp::LoggingPrefix()                                             \
+                       << rpp::LoggingLevelToCString(level) << " ["                       \
+                       << rpp::LoggingParseFunction(__func__,       /* NOLINT */          \
+                                                    __PRETTY_FUNCTION__) /* NOLINT */     \
+                       << "] " << __VA_ARGS__ << std::endl;                               \
+            std::cerr << rpp_log_ss.str();                                                 \
+        }                                                                                  \
+    } while(false)
 
 #define RPP_LOG_E(...) RPP_LOG(rpp::LoggingLevel::Error, __VA_ARGS__)
 #define RPP_LOG_W(...) RPP_LOG(rpp::LoggingLevel::Warning, __VA_ARGS__)
