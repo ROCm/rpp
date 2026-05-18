@@ -123,13 +123,19 @@ else()
         find_package(OpenCV QUIET)
         find_package(StdFilesystem QUIET)
 
-        # find required python3-pip imports
+        # find required python3 imports
         execute_process(
-            COMMAND ${Python3_EXECUTABLE} -m pip show pandas
-            RESULT_VARIABLE PANDAS_FOUND
+            COMMAND ${Python3_EXECUTABLE} -c "import pandas"
+            RESULT_VARIABLE PANDAS_RESULT
             OUTPUT_QUIET
             ERROR_QUIET
         )
+        # execute_process returns 0 on success (pandas found), non-zero on failure (pandas not found)
+        if(PANDAS_RESULT EQUAL 0)
+            set(PANDAS_FOUND 1)
+        else()
+            set(PANDAS_FOUND 0)
+        endif()
 
         if(HIP_FOUND)
             message("-- ${Green}HIP found at HIP_INCLUDE_DIRS - ${HIP_INCLUDE_DIRS} and HIP_LIBRARIES - ${HIP_LIBRARIES}${ColourReset}")
@@ -138,7 +144,7 @@ else()
 
             if(Python3_FOUND)
                 message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
-                if(NOT PANDAS_FOUND EQUAL 0)
+                if(NOT PANDAS_FOUND)
                     message("-- ${Yellow}Warning: Pandas not found (optional — needed only to print consolidated rocprof CSV tables from Python).${ColourReset}")
                 endif()
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1")
@@ -166,6 +172,7 @@ else()
                         target_compile_definitions(Tensor_image_hip PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=1)
                         message("-- ${Green}${PROJECT_NAME} Tensor-Image HIP tests set to build with OpenCV (decoder_type 1 and image dumps enabled)${ColourReset}")
                     else()
+                        target_compile_definitions(Tensor_image_hip PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=0)
                         message("-- ${Yellow}Warning: OpenCV not found — Tensor_image_hip builds without OpenCV; decoder_type 1 / unit image dumps disabled.${ColourReset}")
                     endif()
                     message("-- ${White}Tensor_image_hip -- Link Libraries: see target_link_libraries${ColourReset}")
@@ -181,6 +188,7 @@ else()
                             target_compile_definitions(Tensor_voxel_hip PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=1)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HIP tests set to build with OpenCV (slice JPG dumps enabled)${ColourReset}")
                         else()
+                            target_compile_definitions(Tensor_voxel_hip PRIVATE RPP_TEST_SUITE_HAVE_OPENCV=0)
                             message("-- ${Yellow}Warning: OpenCV not found — Tensor_voxel_hip builds without OpenCV; F32 golden QA still runs; non-QA slice dumps disabled.${ColourReset}")
                         endif()
                         message("-- ${White}Tensor_voxel_hip -- Link Libraries: see target_link_libraries${ColourReset}")
