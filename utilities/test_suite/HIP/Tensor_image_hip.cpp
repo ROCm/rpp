@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     }
     if(dualInputCase)
     {
-        const char* inputExtSecond = ((testCase == YUV_TO_RGB || testCase == YUV_TO_RGB_CUBIC_V || testCase == YUV_TO_RGB_LINEAR_V)) ? ".yuv" : ((decoderType == 0) ? ".raw" : ".jpg");
+        const char* inputExtSecond = (decoderType == 0) ? ".raw" : ".jpg";
         search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, inputExtSecond);
         if(imageNames.size() != imageNamesSecond.size())
         {
