@@ -1430,8 +1430,10 @@ RppStatus resize_nn_u8_u8_host_single_image(Rpp8u *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle)
 {
-        RpptROI roi = roiTensorPtrSrc[0];
-        return resize_nn_u8_u8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return resize_nn_u8_u8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
 RppStatus resize_nn_f32_f32_host_single_image(Rpp32f *srcPtr,
@@ -1444,8 +1446,10 @@ RppStatus resize_nn_f32_f32_host_single_image(Rpp32f *srcPtr,
                                               RppLayoutParams srcLayoutParams,
                                               rpp::Handle& handle)
 {
-        RpptROI roi = roiTensorPtrSrc[0];
-        return resize_nn_f32_f32_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return resize_nn_f32_f32_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
 RppStatus resize_nn_i8_i8_host_single_image(Rpp8s *srcPtr,
@@ -1458,8 +1462,10 @@ RppStatus resize_nn_i8_i8_host_single_image(Rpp8s *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle)
 {
-        RpptROI roi = roiTensorPtrSrc[0];
-        return resize_nn_i8_i8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return resize_nn_i8_i8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
 RppStatus resize_nn_f16_f16_host_single_image(Rpp16f *srcPtr,
@@ -1472,8 +1478,10 @@ RppStatus resize_nn_f16_f16_host_single_image(Rpp16f *srcPtr,
                                               RppLayoutParams srcLayoutParams,
                                               rpp::Handle& handle)
 {
-        RpptROI roi = roiTensorPtrSrc[0];
-        return resize_nn_f16_f16_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return resize_nn_f16_f16_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
 /************* BILINEAR INTERPOLATION *************/
@@ -1742,7 +1750,9 @@ RppStatus resize_bilinear_u8_u8_host_single_image(Rpp8u *srcPtr,
                                                    RppLayoutParams srcLayoutParams,
                                                    rpp::Handle& handle)
 {
-    RpptROI roi = roiTensorPtrSrc[0];
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     return resize_bilinear_u8_u8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
@@ -2012,7 +2022,9 @@ RppStatus resize_bilinear_f32_f32_host_single_image(Rpp32f *srcPtr,
                                                      RppLayoutParams srcLayoutParams,
                                                      rpp::Handle& handle)
 {
-    RpptROI roi = roiTensorPtrSrc[0];
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     return resize_bilinear_f32_f32_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
@@ -2282,7 +2294,9 @@ RppStatus resize_bilinear_f16_f16_host_single_image(Rpp16f *srcPtr,
                                                      RppLayoutParams srcLayoutParams,
                                                      rpp::Handle& handle)
 {
-    RpptROI roi = roiTensorPtrSrc[0];
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     return resize_bilinear_f16_f16_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
@@ -2550,7 +2564,9 @@ RppStatus resize_bilinear_i8_i8_host_single_image(Rpp8s *srcPtr,
                                                    RppLayoutParams srcLayoutParams,
                                                    rpp::Handle& handle)
 {
-    RpptROI roi = roiTensorPtrSrc[0];
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     return resize_bilinear_i8_i8_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, roi, *dstImgSize, srcLayoutParams);
 }
 
@@ -2658,7 +2674,9 @@ RppStatus resize_separable_host_single_image(T *srcPtr,
                                              RpptInterpolationType interpolationType,
                                              rpp::Handle& handle)
 {
-    RpptROI roi = roiTensorPtrSrc[0];
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     return resize_separable_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, tempPtr, tempDescPtr, roi, *dstImgSize, srcLayoutParams, interpolationType);
 }
 

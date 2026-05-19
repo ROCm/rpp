@@ -3162,7 +3162,10 @@ RppStatus box_filter_char_host_single_image(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_single_image(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
-    return box_filter_char_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc[0], layoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return box_filter_char_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roi, layoutParams);
 }
 
 // F32 and F16 bitdepth
@@ -3182,7 +3185,10 @@ RppStatus box_filter_float_host_single_image(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_single_image(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
-    return box_filter_float_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc[0], layoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return box_filter_float_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roi, layoutParams);
 }
 
 template<typename T>
@@ -3196,7 +3202,10 @@ RppStatus box_filter_generic_host_single_image(T *srcPtr,
                                                RppLayoutParams layoutParams,
                                                rpp::Handle& handle)
 {
-    return box_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc[0], layoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+    return box_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roi, layoutParams);
 }
 
 template RppStatus box_filter_char_host_tensor<Rpp8u>(Rpp8u*,

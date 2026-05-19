@@ -1638,7 +1638,10 @@ RppStatus median_filter_generic_host_single_image(T *srcPtr,
                                                   RppLayoutParams layoutParams,
                                                   rpp::Handle& handle)
 {
-    return median_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiPtrSrc[0], layoutParams);
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiPtrSrc, &roi, &roiDefault, roiType);
+    return median_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roi, layoutParams);
 }
 
 template RppStatus median_filter_generic_host_tensor<Rpp8u>(Rpp8u*,

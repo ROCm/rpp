@@ -1480,9 +1480,12 @@ RppStatus gaussian_filter_generic_host_single_image(T *srcPtr,
                                                     RppLayoutParams layoutParams,
                                                     rpp::Handle& handle)
 {
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
     Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
     create_gaussian_kernel_host(filterTensor, stdDev, kernelSize);
-    return gaussian_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, filterTensor, kernelSize, roiTensorPtrSrc[0], layoutParams);
+    return gaussian_filter_generic_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr, filterTensor, kernelSize, roi, layoutParams);
 }
 
 template RppStatus gaussian_filter_host_tensor<Rpp8u>(Rpp8u*,
