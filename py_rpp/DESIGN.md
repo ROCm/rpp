@@ -452,9 +452,12 @@ python3 -m pytest tests/ -m "not hip" -q
 # Single module, verbose
 python3 -m pytest tests/test_color.py -v
 
-# With C++ call-trace logging
+# With C++ call-trace logging (rppCreate calls, backend selection)
 PY_RPP_DEBUG=1 python3 -m pytest tests/test_brightness.py -v -s
 ```
+
+Note: RPP itself does not expose a runtime debug log level via environment
+variable in this version. `PY_RPP_DEBUG=1` is the only logging layer available.
 
 ---
 
