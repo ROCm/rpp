@@ -226,16 +226,22 @@ py::array_t<uint8_t> run_img_op(
     {
         py::gil_scoped_release release;
         if (bk == Backend::HIP) {
-            GpuBuf src_d(img_bytes), dst_d(img_bytes);
+            // Some kernels (filter, morphological) require a prefix region before
+            // the image data in GPU memory; desc.offsetInBytes encodes that size.
+            uint32_t off = desc.offsetInBytes;
+            GpuBuf src_d(img_bytes + off), dst_d(img_bytes + off);
             GpuBuf roi_d(N * sizeof(RpptROI));
-            src_d.upload(src_host, img_bytes);
+            check_hip(hipMemcpy(static_cast<char*>(src_d.ptr) + off,
+                                src_host, img_bytes, hipMemcpyHostToDevice), "hipMemcpy H2D");
             roi_d.upload(rois_host.data(), N * sizeof(RpptROI));
             fn(src_d.ptr, dst_d.ptr,
                const_cast<RpptDesc*>(&desc),
                static_cast<RpptROIPtr>(roi_d.ptr),
                handle.h);
             check_hip(hipDeviceSynchronize(), "hipDeviceSynchronize");
-            dst_d.download(out.mutable_data(), img_bytes);
+            check_hip(hipMemcpy(out.mutable_data(),
+                                static_cast<char*>(dst_d.ptr) + off,
+                                img_bytes, hipMemcpyDeviceToHost), "hipMemcpy D2H");
         } else {
             fn(const_cast<void*>(src_host), out.mutable_data(),
                const_cast<RpptDesc*>(&desc),
@@ -255,6 +261,24 @@ py::array_t<uint8_t> run_img_op(
 {
     size_t img_bytes = static_cast<size_t>(N) * H * W * C;
     RpptDesc desc = make_nhwc_desc(N, H, W, C);
+    auto rois = make_full_rois(N, H, W);
+    RppHandle handle(N, bk);
+    return run_img_op(src_host, img_bytes, N, H, W, C, desc, rois, handle, bk,
+                      std::forward<Fn>(fn));
+}
+
+// Convenience overload for filter/morphological kernels:
+// RPP HIP filter kernels require offsetInBytes = 12 * (kernel_size / 2) in the
+// descriptor so they have a valid prefix region in the GPU buffer before the image.
+template<typename Fn>
+py::array_t<uint8_t> run_img_op(
+    const void* src_host,
+    uint32_t N, uint32_t H, uint32_t W, uint32_t C,
+    uint32_t kernel_size, Backend bk, Fn&& fn)
+{
+    size_t img_bytes = static_cast<size_t>(N) * H * W * C;
+    RpptDesc desc = make_nhwc_desc(N, H, W, C);
+    desc.offsetInBytes = (bk == Backend::HIP) ? 12 * (kernel_size / 2) : 0;
     auto rois = make_full_rois(N, H, W);
     RppHandle handle(N, bk);
     return run_img_op(src_host, img_bytes, N, H, W, C, desc, rois, handle, bk,

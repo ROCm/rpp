@@ -18,7 +18,7 @@ py::array_t<uint8_t> erode(
     if (kernel_size % 2 == 0)
         throw std::invalid_argument("kernel_size must be odd");
     Backend bk = parse_backend(backend);
-    return run_img_op(si.ptr, N, H, W, C, bk,
+    return run_img_op(si.ptr, N, H, W, C, kernel_size, bk,
         [bk, kernel_size](void* s, void* d, RpptDesc* desc, RpptROIPtr rois, rppHandle_t h) {
             if (bk == Backend::CPU) {
                 check_rpp(rppt_erode_host(s, desc, d, desc,
@@ -45,7 +45,7 @@ py::array_t<uint8_t> dilate(
     if (kernel_size % 2 == 0)
         throw std::invalid_argument("kernel_size must be odd");
     Backend bk = parse_backend(backend);
-    return run_img_op(si.ptr, N, H, W, C, bk,
+    return run_img_op(si.ptr, N, H, W, C, kernel_size, bk,
         [bk, kernel_size](void* s, void* d, RpptDesc* desc, RpptROIPtr rois, rppHandle_t h) {
             if (bk == Backend::CPU) {
                 check_rpp(rppt_dilate_host(s, desc, d, desc,

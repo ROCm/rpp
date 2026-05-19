@@ -13,7 +13,7 @@ py::array_t<uint8_t> box_filter(
         throw std::invalid_argument("kernel_size must be odd");
     Backend bk = parse_backend(backend);
     RppBackend rb = to_rpp_backend(bk);
-    return run_img_op(si.ptr, N, H, W, C, bk,
+    return run_img_op(si.ptr, N, H, W, C, kernel_size, bk,
         [&](void* s, void* d, RpptDesc* desc, RpptROIPtr rois, rppHandle_t h) {
             check_rpp(rppt_box_filter(s, desc, d, desc,
                 kernel_size, RpptImageBorderType::REPLICATE,
@@ -36,7 +36,7 @@ py::array_t<uint8_t> gaussian_filter(
     Backend bk = parse_backend(backend);
     RppBackend rb = to_rpp_backend(bk);
     ParamBuf sd_buf(sdi.ptr, N * sizeof(float), bk);
-    return run_img_op(si.ptr, N, H, W, C, bk,
+    return run_img_op(si.ptr, N, H, W, C, kernel_size, bk,
         [&](void* s, void* d, RpptDesc* desc, RpptROIPtr rois, rppHandle_t h) {
             check_rpp(rppt_gaussian_filter(s, desc, d, desc,
                 static_cast<Rpp32f*>(sd_buf.ptr()),
@@ -56,7 +56,7 @@ py::array_t<uint8_t> median_filter(
         throw std::invalid_argument("kernel_size must be odd");
     Backend bk = parse_backend(backend);
     RppBackend rb = to_rpp_backend(bk);
-    return run_img_op(si.ptr, N, H, W, C, bk,
+    return run_img_op(si.ptr, N, H, W, C, kernel_size, bk,
         [&](void* s, void* d, RpptDesc* desc, RpptROIPtr rois, rppHandle_t h) {
             check_rpp(rppt_median_filter(s, desc, d, desc,
                 kernel_size, RpptImageBorderType::REPLICATE,
