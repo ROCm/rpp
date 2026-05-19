@@ -1937,17 +1937,17 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     int globalThreads_y = 1;
     int globalThreads_z = 1;
 
-    void (*createKernelFn)(Rpp32f*, Rpp32f*, uint) = nullptr;
+    using CreateKernelType = void (*)(Rpp32f*, Rpp32f*, int);
+    CreateKernelType kernelFn = nullptr;
     switch (kernelSize)
     {
-        case 3: createKernelFn = create_gaussian_kernel_3x3; break;
-        case 5: createKernelFn = create_gaussian_kernel_5x5; break;
-        case 7: createKernelFn = create_gaussian_kernel_7x7; break;
-        case 9: createKernelFn = create_gaussian_kernel_9x9; break;
+        case 3: kernelFn = create_gaussian_kernel_3x3; break;
+        case 5: kernelFn = create_gaussian_kernel_5x5; break;
+        case 7: kernelFn = create_gaussian_kernel_7x7; break;
+        case 9: kernelFn = create_gaussian_kernel_9x9; break;
         default: return RPP_ERROR_NOT_IMPLEMENTED;
     }
-
-    hipLaunchKernelGGL(createKernelFn,
+    hipLaunchKernelGGL(kernelFn,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                        dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
@@ -1997,13 +1997,15 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
 
-        void (*kernelFn)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+        using PkdKernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*);
+        PkdKernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = gaussian_filter_3x3_pkd_tensor; break;
-            case 5: kernelFn = gaussian_filter_5x5_pkd_tensor; break;
-            case 7: kernelFn = gaussian_filter_7x7_pkd_tensor; break;
-            case 9: kernelFn = gaussian_filter_9x9_pkd_tensor; break;
+            case 3: kernelFn = gaussian_filter_3x3_pkd_tensor<T>; break;
+            case 5: kernelFn = gaussian_filter_5x5_pkd_tensor<T>; break;
+            case 7: kernelFn = gaussian_filter_7x7_pkd_tensor<T>; break;
+            case 9: kernelFn = gaussian_filter_9x9_pkd_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
                            dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2022,13 +2024,15 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        void (*kernelFn)(T*, uint3, T*, uint3, uint, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+        using PlnKernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr, Rpp32f*);
+        PlnKernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = gaussian_filter_3x3_pln_tensor; break;
-            case 5: kernelFn = gaussian_filter_5x5_pln_tensor; break;
-            case 7: kernelFn = gaussian_filter_7x7_pln_tensor; break;
-            case 9: kernelFn = gaussian_filter_9x9_pln_tensor; break;
+            case 3: kernelFn = gaussian_filter_3x3_pln_tensor<T>; break;
+            case 5: kernelFn = gaussian_filter_5x5_pln_tensor<T>; break;
+            case 7: kernelFn = gaussian_filter_7x7_pln_tensor<T>; break;
+            case 9: kernelFn = gaussian_filter_9x9_pln_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
                            dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2050,13 +2054,15 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            void (*kernelFn)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+            using Pkd3Pln3KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr, Rpp32f*);
+            Pkd3Pln3KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = gaussian_filter_3x3_pkd3_pln3_tensor; break;
-                case 5: kernelFn = gaussian_filter_5x5_pkd3_pln3_tensor; break;
-                case 7: kernelFn = gaussian_filter_7x7_pkd3_pln3_tensor; break;
-                case 9: kernelFn = gaussian_filter_9x9_pkd3_pln3_tensor; break;
+                case 3: kernelFn = gaussian_filter_3x3_pkd3_pln3_tensor<T>; break;
+                case 5: kernelFn = gaussian_filter_5x5_pkd3_pln3_tensor<T>; break;
+                case 7: kernelFn = gaussian_filter_7x7_pkd3_pln3_tensor<T>; break;
+                case 9: kernelFn = gaussian_filter_9x9_pkd3_pln3_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2077,13 +2083,15 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            void (*kernelFn)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+            using Pln3Pkd3KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*);
+            Pln3Pkd3KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = gaussian_filter_3x3_pln3_pkd3_tensor; break;
-                case 5: kernelFn = gaussian_filter_5x5_pln3_pkd3_tensor; break;
-                case 7: kernelFn = gaussian_filter_7x7_pln3_pkd3_tensor; break;
-                case 9: kernelFn = gaussian_filter_9x9_pln3_pkd3_tensor; break;
+                case 3: kernelFn = gaussian_filter_3x3_pln3_pkd3_tensor<T>; break;
+                case 5: kernelFn = gaussian_filter_5x5_pln3_pkd3_tensor<T>; break;
+                case 7: kernelFn = gaussian_filter_7x7_pln3_pkd3_tensor<T>; break;
+                case 9: kernelFn = gaussian_filter_9x9_pln3_pkd3_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2141,13 +2149,15 @@ RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
 
-        void (*kernelFn)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+        using PkdKernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*);
+        PkdKernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = gaussian_filter_3x3_pkd_tensor; break;
-            case 5: kernelFn = gaussian_filter_5x5_pkd_tensor; break;
-            case 7: kernelFn = gaussian_filter_7x7_pkd_tensor; break;
-            case 9: kernelFn = gaussian_filter_9x9_pkd_tensor; break;
+            case 3: kernelFn = gaussian_filter_3x3_pkd_tensor<T>; break;
+            case 5: kernelFn = gaussian_filter_5x5_pkd_tensor<T>; break;
+            case 7: kernelFn = gaussian_filter_7x7_pkd_tensor<T>; break;
+            case 9: kernelFn = gaussian_filter_9x9_pkd_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
                            dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2162,16 +2172,19 @@ RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
                            tileSize,
                            roiTensorPtrSrc,
                            filterTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        void (*kernelFn)(T*, uint3, T*, uint3, uint, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+        using PlnKernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr, Rpp32f*);
+        PlnKernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = gaussian_filter_3x3_pln_tensor; break;
-            case 5: kernelFn = gaussian_filter_5x5_pln_tensor; break;
-            case 7: kernelFn = gaussian_filter_7x7_pln_tensor; break;
-            case 9: kernelFn = gaussian_filter_9x9_pln_tensor; break;
+            case 3: kernelFn = gaussian_filter_3x3_pln_tensor<T>; break;
+            case 5: kernelFn = gaussian_filter_5x5_pln_tensor<T>; break;
+            case 7: kernelFn = gaussian_filter_7x7_pln_tensor<T>; break;
+            case 9: kernelFn = gaussian_filter_9x9_pln_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
                            dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2187,18 +2200,21 @@ RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
                            tileSize,
                            roiTensorPtrSrc,
                            filterTensor);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            void (*kernelFn)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+            using Pkd3Pln3KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr, Rpp32f*);
+            Pkd3Pln3KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = gaussian_filter_3x3_pkd3_pln3_tensor; break;
-                case 5: kernelFn = gaussian_filter_5x5_pkd3_pln3_tensor; break;
-                case 7: kernelFn = gaussian_filter_7x7_pkd3_pln3_tensor; break;
-                case 9: kernelFn = gaussian_filter_9x9_pkd3_pln3_tensor; break;
+                case 3: kernelFn = gaussian_filter_3x3_pkd3_pln3_tensor<T>; break;
+                case 5: kernelFn = gaussian_filter_5x5_pkd3_pln3_tensor<T>; break;
+                case 7: kernelFn = gaussian_filter_7x7_pkd3_pln3_tensor<T>; break;
+                case 9: kernelFn = gaussian_filter_9x9_pkd3_pln3_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2213,18 +2229,21 @@ RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            void (*kernelFn)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*) = nullptr;
+            using Pln3Pkd3KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr, Rpp32f*);
+            Pln3Pkd3KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = gaussian_filter_3x3_pln3_pkd3_tensor; break;
-                case 5: kernelFn = gaussian_filter_5x5_pln3_pkd3_tensor; break;
-                case 7: kernelFn = gaussian_filter_7x7_pln3_pkd3_tensor; break;
-                case 9: kernelFn = gaussian_filter_9x9_pln3_pkd3_tensor; break;
+                case 3: kernelFn = gaussian_filter_3x3_pln3_pkd3_tensor<T>; break;
+                case 5: kernelFn = gaussian_filter_5x5_pln3_pkd3_tensor<T>; break;
+                case 7: kernelFn = gaussian_filter_7x7_pln3_pkd3_tensor<T>; break;
+                case 9: kernelFn = gaussian_filter_9x9_pln3_pkd3_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -2239,6 +2258,7 @@ RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
                                tileSize,
                                roiTensorPtrSrc,
                                filterTensor);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

@@ -1813,13 +1813,14 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
 
-        void (*kernelFn)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr) = nullptr;
+        using KernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor; break;
-            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor; break;
-            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor; break;
-            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor; break;
+            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor<T>; break;
             default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
@@ -1838,13 +1839,14 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        void (*kernelFn)(T*, uint3, T*, uint3, uint, uint, uint2, RpptROIPtr) = nullptr;
+        using KernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = box_filter_3x3_pln_hip_tensor; break;
-            case 5: kernelFn = box_filter_5x5_pln_hip_tensor; break;
-            case 7: kernelFn = box_filter_7x7_pln_hip_tensor; break;
-            case 9: kernelFn = box_filter_9x9_pln_hip_tensor; break;
+            case 3: kernelFn = box_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pln_hip_tensor<T>; break;
             default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
@@ -1866,13 +1868,14 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            void (*kernelFn)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr) = nullptr;
+            using KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor; break;
-                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor; break;
-                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor; break;
-                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor; break;
+                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
                 default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
@@ -1893,13 +1896,14 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            void (*kernelFn)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr) = nullptr;
+            using KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor; break;
-                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor; break;
-                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor; break;
-                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor; break;
+                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
                 default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
@@ -1949,13 +1953,14 @@ RppStatus hip_exec_box_filter_single_image(T *srcPtr,
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
 
-        void (*kernelFn)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr) = nullptr;
+        using KernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor; break;
-            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor; break;
-            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor; break;
-            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor; break;
+            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor<T>; break;
             default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
@@ -1974,13 +1979,14 @@ RppStatus hip_exec_box_filter_single_image(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        void (*kernelFn)(T*, uint3, T*, uint3, uint, uint, uint2, RpptROIPtr) = nullptr;
+        using KernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
         switch (kernelSize)
         {
-            case 3: kernelFn = box_filter_3x3_pln_hip_tensor; break;
-            case 5: kernelFn = box_filter_5x5_pln_hip_tensor; break;
-            case 7: kernelFn = box_filter_7x7_pln_hip_tensor; break;
-            case 9: kernelFn = box_filter_9x9_pln_hip_tensor; break;
+            case 3: kernelFn = box_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pln_hip_tensor<T>; break;
             default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
         hipLaunchKernelGGL(kernelFn,
@@ -2002,13 +2008,14 @@ RppStatus hip_exec_box_filter_single_image(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            void (*kernelFn)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr) = nullptr;
+            using KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor; break;
-                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor; break;
-                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor; break;
-                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor; break;
+                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
                 default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
@@ -2029,13 +2036,14 @@ RppStatus hip_exec_box_filter_single_image(T *srcPtr,
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            void (*kernelFn)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr) = nullptr;
+            using KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
             switch (kernelSize)
             {
-                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor; break;
-                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor; break;
-                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor; break;
-                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor; break;
+                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
                 default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
             hipLaunchKernelGGL(kernelFn,
