@@ -97,24 +97,26 @@ py::array_t<uint8_t> pixelate(
     RppHandle handle(N, bk);
     auto out = py::array_t<uint8_t>(
         {(py::ssize_t)N, (py::ssize_t)H, (py::ssize_t)W, (py::ssize_t)C});
-
-    if (bk == Backend::HIP) {
-        GpuBuf src_d(img_bytes), dst_d(img_bytes), scratch_d(scratch_bytes),
-               roi_d(N * sizeof(RpptROI));
-        src_d.upload(si.ptr, img_bytes);
-        roi_d.upload(rois.data(), N * sizeof(RpptROI));
-        check_rpp(rppt_pixelate(src_d.ptr, &desc, dst_d.ptr, &desc,
-            scratch_d.ptr, pixelation_percentage,
-            static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
-            handle.h, rb), "rppt_pixelate");
-        check_hip(hipDeviceSynchronize(), "sync");
-        dst_d.download(out.mutable_data(), img_bytes);
-    } else {
-        std::vector<float> scratch_host(static_cast<size_t>(N) * H * W * C, 0.0f);
-        check_rpp(rppt_pixelate(si.ptr, &desc, out.mutable_data(), &desc,
-            scratch_host.data(), pixelation_percentage,
-            rois.data(), RpptRoiType::XYWH,
-            handle.h, rb), "rppt_pixelate");
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf src_d(img_bytes), dst_d(img_bytes), scratch_d(scratch_bytes),
+                   roi_d(N * sizeof(RpptROI));
+            src_d.upload(si.ptr, img_bytes);
+            roi_d.upload(rois.data(), N * sizeof(RpptROI));
+            check_rpp(rppt_pixelate(src_d.ptr, &desc, dst_d.ptr, &desc,
+                scratch_d.ptr, pixelation_percentage,
+                static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
+                handle.h, rb), "rppt_pixelate");
+            check_hip(hipDeviceSynchronize(), "sync");
+            dst_d.download(out.mutable_data(), img_bytes);
+        } else {
+            std::vector<float> scratch_host(static_cast<size_t>(N) * H * W * C, 0.0f);
+            check_rpp(rppt_pixelate(si.ptr, &desc, out.mutable_data(), &desc,
+                scratch_host.data(), pixelation_percentage,
+                rois.data(), RpptRoiType::XYWH,
+                handle.h, rb), "rppt_pixelate");
+        }
     }
     return out;
 }

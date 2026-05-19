@@ -63,19 +63,21 @@ py::array_t<uint8_t> crop(
     auto out = py::array_t<uint8_t>(
         {(py::ssize_t)N, (py::ssize_t)out_h, (py::ssize_t)out_w, (py::ssize_t)C});
     RppHandle handle(N, bk);
-
-    if (bk == Backend::HIP) {
-        GpuBuf src_d(src_bytes), dst_d(dst_bytes), roi_d(N * sizeof(RpptROI));
-        src_d.upload(si.ptr, src_bytes);
-        roi_d.upload(rois.data(), N * sizeof(RpptROI));
-        check_rpp(rppt_crop(src_d.ptr, &src_desc, dst_d.ptr, &dst_desc,
-            static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
-            handle.h, rb), "rppt_crop");
-        check_hip(hipDeviceSynchronize(), "sync");
-        dst_d.download(out.mutable_data(), dst_bytes);
-    } else {
-        check_rpp(rppt_crop(si.ptr, &src_desc, out.mutable_data(), &dst_desc,
-            rois.data(), RpptRoiType::XYWH, handle.h, rb), "rppt_crop");
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf src_d(src_bytes), dst_d(dst_bytes), roi_d(N * sizeof(RpptROI));
+            src_d.upload(si.ptr, src_bytes);
+            roi_d.upload(rois.data(), N * sizeof(RpptROI));
+            check_rpp(rppt_crop(src_d.ptr, &src_desc, dst_d.ptr, &dst_desc,
+                static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
+                handle.h, rb), "rppt_crop");
+            check_hip(hipDeviceSynchronize(), "sync");
+            dst_d.download(out.mutable_data(), dst_bytes);
+        } else {
+            check_rpp(rppt_crop(si.ptr, &src_desc, out.mutable_data(), &dst_desc,
+                rois.data(), RpptRoiType::XYWH, handle.h, rb), "rppt_crop");
+        }
     }
     return out;
 }
@@ -118,7 +120,7 @@ py::array_t<uint8_t> resize(
 
     RpptDesc src_desc = make_nhwc_desc(N, H, W, C);
     RpptDesc dst_desc = make_nhwc_desc(N, out_h, out_w, C);
-    auto rois = make_full_rois(N, W, H);
+    auto rois = make_full_rois(N, H, W);
 
     // dstImgSizes: one RpptImagePatch per image (uniform here)
     std::vector<RpptImagePatch> dst_sizes(N);
@@ -130,24 +132,26 @@ py::array_t<uint8_t> resize(
     auto out = py::array_t<uint8_t>(
         {(py::ssize_t)N, (py::ssize_t)out_h, (py::ssize_t)out_w, (py::ssize_t)C});
     RppHandle handle(N, bk);
-
-    if (bk == Backend::HIP) {
-        GpuBuf src_d(src_bytes), dst_d(dst_bytes), roi_d(N * sizeof(RpptROI));
-        GpuBuf sizes_d(N * sizeof(RpptImagePatch));
-        src_d.upload(si.ptr, src_bytes);
-        roi_d.upload(rois.data(), N * sizeof(RpptROI));
-        sizes_d.upload(dst_sizes.data(), N * sizeof(RpptImagePatch));
-        check_rpp(rppt_resize(src_d.ptr, &src_desc, dst_d.ptr, &dst_desc,
-            static_cast<RpptImagePatchPtr>(sizes_d.ptr),
-            RpptInterpolationType::BILINEAR,
-            static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
-            handle.h, rb), "rppt_resize");
-        check_hip(hipDeviceSynchronize(), "sync");
-        dst_d.download(out.mutable_data(), dst_bytes);
-    } else {
-        check_rpp(rppt_resize(si.ptr, &src_desc, out.mutable_data(), &dst_desc,
-            dst_sizes.data(), RpptInterpolationType::BILINEAR,
-            rois.data(), RpptRoiType::XYWH, handle.h, rb), "rppt_resize");
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf src_d(src_bytes), dst_d(dst_bytes), roi_d(N * sizeof(RpptROI));
+            GpuBuf sizes_d(N * sizeof(RpptImagePatch));
+            src_d.upload(si.ptr, src_bytes);
+            roi_d.upload(rois.data(), N * sizeof(RpptROI));
+            sizes_d.upload(dst_sizes.data(), N * sizeof(RpptImagePatch));
+            check_rpp(rppt_resize(src_d.ptr, &src_desc, dst_d.ptr, &dst_desc,
+                static_cast<RpptImagePatchPtr>(sizes_d.ptr),
+                RpptInterpolationType::BILINEAR,
+                static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH,
+                handle.h, rb), "rppt_resize");
+            check_hip(hipDeviceSynchronize(), "sync");
+            dst_d.download(out.mutable_data(), dst_bytes);
+        } else {
+            check_rpp(rppt_resize(si.ptr, &src_desc, out.mutable_data(), &dst_desc,
+                dst_sizes.data(), RpptInterpolationType::BILINEAR,
+                rois.data(), RpptRoiType::XYWH, handle.h, rb), "rppt_resize");
+        }
     }
     return out;
 }

@@ -160,7 +160,7 @@ inline RpptDesc make_nhwc_desc(Rpp32u n, Rpp32u h, Rpp32u w, Rpp32u c) {
 }
 
 // ─── ROI helpers ──────────────────────────────────────────────────────────────
-inline std::vector<RpptROI> make_full_rois(uint32_t N, uint32_t W, uint32_t H) {
+inline std::vector<RpptROI> make_full_rois(uint32_t N, uint32_t H, uint32_t W) {
     std::vector<RpptROI> rois(N);
     for (uint32_t i = 0; i < N; ++i) {
         rois[i].xywhROI.xy.x      = 0;
@@ -223,24 +223,25 @@ py::array_t<uint8_t> run_img_op(
 {
     auto out = py::array_t<uint8_t>(
         {(py::ssize_t)N, (py::ssize_t)H, (py::ssize_t)W, (py::ssize_t)C});
-
-    if (bk == Backend::HIP) {
-        GpuBuf src_d(img_bytes), dst_d(img_bytes);
-        GpuBuf roi_d(N * sizeof(RpptROI));
-        src_d.upload(src_host, img_bytes);
-        roi_d.upload(rois_host.data(), N * sizeof(RpptROI));
-        fn(src_d.ptr, dst_d.ptr,
-           const_cast<RpptDesc*>(&desc),
-           static_cast<RpptROIPtr>(roi_d.ptr),
-           handle.h);
-        check_hip(hipDeviceSynchronize(), "hipDeviceSynchronize");
-        dst_d.download(out.mutable_data(), img_bytes);
-    } else {
-        fn(const_cast<void*>(src_host), out.mutable_data(),
-           const_cast<RpptDesc*>(&desc),
-           const_cast<RpptROIPtr>(
-               reinterpret_cast<const RpptROI*>(rois_host.data())),
-           handle.h);
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf src_d(img_bytes), dst_d(img_bytes);
+            GpuBuf roi_d(N * sizeof(RpptROI));
+            src_d.upload(src_host, img_bytes);
+            roi_d.upload(rois_host.data(), N * sizeof(RpptROI));
+            fn(src_d.ptr, dst_d.ptr,
+               const_cast<RpptDesc*>(&desc),
+               static_cast<RpptROIPtr>(roi_d.ptr),
+               handle.h);
+            check_hip(hipDeviceSynchronize(), "hipDeviceSynchronize");
+            dst_d.download(out.mutable_data(), img_bytes);
+        } else {
+            fn(const_cast<void*>(src_host), out.mutable_data(),
+               const_cast<RpptDesc*>(&desc),
+               const_cast<RpptROIPtr>(rois_host.data()),
+               handle.h);
+        }
     }
     return out;
 }
@@ -254,7 +255,7 @@ py::array_t<uint8_t> run_img_op(
 {
     size_t img_bytes = static_cast<size_t>(N) * H * W * C;
     RpptDesc desc = make_nhwc_desc(N, H, W, C);
-    auto rois = make_full_rois(N, W, H);
+    auto rois = make_full_rois(N, H, W);
     RppHandle handle(N, bk);
     return run_img_op(src_host, img_bytes, N, H, W, C, desc, rois, handle, bk,
                       std::forward<Fn>(fn));
@@ -271,25 +272,28 @@ py::array_t<uint8_t> run_two_img_op(
 {
     size_t img_bytes = static_cast<size_t>(N) * H * W * C;
     RpptDesc desc = make_nhwc_desc(N, H, W, C);
-    auto rois = make_full_rois(N, W, H);
+    auto rois = make_full_rois(N, H, W);
     auto out = py::array_t<uint8_t>(
         {(py::ssize_t)N, (py::ssize_t)H, (py::ssize_t)W, (py::ssize_t)C});
     RppHandle handle(N, bk);
-    if (bk == Backend::HIP) {
-        GpuBuf s1_d(img_bytes), s2_d(img_bytes), dst_d(img_bytes),
-               roi_d(N * sizeof(RpptROI));
-        s1_d.upload(s1i.ptr, img_bytes);
-        s2_d.upload(s2i.ptr, img_bytes);
-        roi_d.upload(rois.data(), N * sizeof(RpptROI));
-        fn(s1_d.ptr, s2_d.ptr, &desc, dst_d.ptr,
-           static_cast<RpptROIPtr>(roi_d.ptr), handle.h);
-        check_hip(hipDeviceSynchronize(), "sync");
-        dst_d.download(out.mutable_data(), img_bytes);
-    } else {
-        fn(const_cast<void*>(s1i.ptr), const_cast<void*>(s2i.ptr),
-           &desc, out.mutable_data(),
-           const_cast<RpptROIPtr>(reinterpret_cast<const RpptROI*>(rois.data())),
-           handle.h);
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf s1_d(img_bytes), s2_d(img_bytes), dst_d(img_bytes),
+                   roi_d(N * sizeof(RpptROI));
+            s1_d.upload(s1i.ptr, img_bytes);
+            s2_d.upload(s2i.ptr, img_bytes);
+            roi_d.upload(rois.data(), N * sizeof(RpptROI));
+            fn(s1_d.ptr, s2_d.ptr, &desc, dst_d.ptr,
+               static_cast<RpptROIPtr>(roi_d.ptr), handle.h);
+            check_hip(hipDeviceSynchronize(), "sync");
+            dst_d.download(out.mutable_data(), img_bytes);
+        } else {
+            fn(const_cast<void*>(s1i.ptr), const_cast<void*>(s2i.ptr),
+               &desc, out.mutable_data(),
+               const_cast<RpptROIPtr>(rois.data()),
+               handle.h);
+        }
     }
     return out;
 }

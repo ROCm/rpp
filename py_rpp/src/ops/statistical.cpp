@@ -15,20 +15,23 @@ static py::array_t<OutT> reduction_op(
     const size_t out_bytes = out_len * sizeof(OutT);
     RppBackend rb = to_rpp_backend(bk);
     RpptDesc desc = make_nhwc_desc(N, H, W, C);
-    auto rois = make_full_rois(N, W, H);
+    auto rois = make_full_rois(N, H, W);
     RppHandle handle(N, bk);
     auto out = py::array_t<OutT>({(py::ssize_t)N, (py::ssize_t)(C + 1)});
-    if (bk == Backend::HIP) {
-        GpuBuf src_d(img_bytes), res_d(out_bytes), roi_d(N * sizeof(RpptROI));
-        src_d.upload(si.ptr, img_bytes);
-        roi_d.upload(rois.data(), N * sizeof(RpptROI));
-        check_rpp(kernel_fn(src_d.ptr, &desc, res_d.ptr, out_len,
-            static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH, handle.h, rb), name);
-        check_hip(hipDeviceSynchronize(), "sync");
-        res_d.download(out.mutable_data(), out_bytes);
-    } else {
-        check_rpp(kernel_fn(si.ptr, &desc, out.mutable_data(), out_len,
-            rois.data(), RpptRoiType::XYWH, handle.h, rb), name);
+    {
+        py::gil_scoped_release release;
+        if (bk == Backend::HIP) {
+            GpuBuf src_d(img_bytes), res_d(out_bytes), roi_d(N * sizeof(RpptROI));
+            src_d.upload(si.ptr, img_bytes);
+            roi_d.upload(rois.data(), N * sizeof(RpptROI));
+            check_rpp(kernel_fn(src_d.ptr, &desc, res_d.ptr, out_len,
+                static_cast<RpptROIPtr>(roi_d.ptr), RpptRoiType::XYWH, handle.h, rb), name);
+            check_hip(hipDeviceSynchronize(), "sync");
+            res_d.download(out.mutable_data(), out_bytes);
+        } else {
+            check_rpp(kernel_fn(si.ptr, &desc, out.mutable_data(), out_len,
+                rois.data(), RpptRoiType::XYWH, handle.h, rb), name);
+        }
     }
     return out;
 }
