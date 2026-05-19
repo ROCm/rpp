@@ -128,14 +128,10 @@ static inline RppStatus flip_u8_u8_host_impl(Rpp8u *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0]));
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1]));
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2]));
-
+                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0]));
+                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1]));
+                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2]));
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -182,14 +178,12 @@ static inline RppStatus flip_u8_u8_host_impl(Rpp8u *srcPtrImage,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempR));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempG));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempB));
-
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempR));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempG));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTempB));
                     srcPtrTempR += srcPtrIncrementPerPixel;
                     srcPtrTempG += srcPtrIncrementPerPixel;
                     srcPtrTempB += srcPtrIncrementPerPixel;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRowR += hStrideSrcIncrement;;
@@ -224,11 +218,10 @@ static inline RppStatus flip_u8_u8_host_impl(Rpp8u *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0]));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1]));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2]));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[0]));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[1]));
+                    *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK((Rpp32f) (srcPtrTemp[2]));
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -422,14 +415,10 @@ static inline RppStatus flip_f32_f32_host_impl(Rpp32f *srcPtrImage,
                 srcPtrTemp += hFlipFactor - elementsToSkip;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = srcPtrTemp[0];
-                    *dstPtrTempG = srcPtrTemp[1];
-                    *dstPtrTempB = srcPtrTemp[2];
-
+                    *dstPtrTempR++ = srcPtrTemp[0];
+                    *dstPtrTempG++ = srcPtrTemp[1];
+                    *dstPtrTempB++ = srcPtrTemp[2];
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -476,14 +465,12 @@ static inline RppStatus flip_f32_f32_host_impl(Rpp32f *srcPtrImage,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = *srcPtrTempR;
-                    dstPtrTemp[1] = *srcPtrTempG;
-                    dstPtrTemp[2] = *srcPtrTempB;
-
+                    *dstPtrTemp++ = *srcPtrTempR;
+                    *dstPtrTemp++ = *srcPtrTempG;
+                    *dstPtrTemp++ = *srcPtrTempB;
                     srcPtrTempR += srcPtrIncrementPerPixel;
                     srcPtrTempG += srcPtrIncrementPerPixel;
                     srcPtrTempB += srcPtrIncrementPerPixel;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRowR += hStrideSrcIncrement;
@@ -518,11 +505,10 @@ static inline RppStatus flip_f32_f32_host_impl(Rpp32f *srcPtrImage,
                 srcPtrTemp += hFlipFactor - elementsToSkip;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = srcPtrTemp[0];
-                    dstPtrTemp[1] = srcPtrTemp[1];
-                    dstPtrTemp[2] = srcPtrTemp[2];
+                    *dstPtrTemp++ = srcPtrTemp[0];
+                    *dstPtrTemp++ = srcPtrTemp[1];
+                    *dstPtrTemp++ = srcPtrTemp[2];
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -711,14 +697,10 @@ static inline RppStatus flip_f16_f16_host_impl(Rpp16f *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[0]);
-                    *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[1]);
-                    *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[2]);
-
+                    *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[0]);
+                    *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[1]);
+                    *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[2]);
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -765,14 +747,12 @@ static inline RppStatus flip_f16_f16_host_impl(Rpp16f *srcPtrImage,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempR);
-                    dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempG);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempB);
-
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempR);
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempG);
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)*srcPtrTempB);
                     srcPtrTempR += srcPtrIncrementPerPixel;
                     srcPtrTempG += srcPtrIncrementPerPixel;
                     srcPtrTempB += srcPtrIncrementPerPixel;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRowR += hStrideSrcIncrement;
@@ -809,11 +789,10 @@ static inline RppStatus flip_f16_f16_host_impl(Rpp16f *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[0]);
-                    dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[1]);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[2]);
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[0]);
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[1]);
+                    *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((Rpp32f)srcPtrTemp[2]);
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -1003,14 +982,10 @@ static inline RppStatus flip_i8_i8_host_impl(Rpp8s *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[0]));
-                    *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[1]));
-                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[2]));
-
+                    *dstPtrTempR++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[0]));
+                    *dstPtrTempG++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[1]));
+                    *dstPtrTempB++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[2]));
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;
@@ -1057,14 +1032,12 @@ static inline RppStatus flip_i8_i8_host_impl(Rpp8s *srcPtrImage,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempR));
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempG));
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempB));
-
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempR));
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempG));
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (*srcPtrTempB));
                     srcPtrTempR += srcPtrIncrementPerPixel;
                     srcPtrTempG += srcPtrIncrementPerPixel;
                     srcPtrTempB += srcPtrIncrementPerPixel;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRowR += hStrideSrcIncrement;;
@@ -1099,11 +1072,10 @@ static inline RppStatus flip_i8_i8_host_impl(Rpp8s *srcPtrImage,
                 srcPtrTemp += hFlipFactor;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[0]));
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[1]));
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[2]));
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[0]));
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[1]));
+                    *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((Rpp32f) (srcPtrTemp[2]));
                     srcPtrTemp += srcPtrIncrementPerRGB;
-                    dstPtrTemp += 3;
                 }
 
                 srcPtrRow += hStrideSrcIncrement;

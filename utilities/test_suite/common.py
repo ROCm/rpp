@@ -198,7 +198,7 @@ miscAugmentationMap  = {
 
 # Supported test cases for single image processing
 # Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
-SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51}  # brightness, blend, flip, resize, crop, box_filter, median_filter
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51, 54}  # brightness, blend, flip, resize, crop, box_filter, median_filter, gaussian_filter
 
 # Only homogeneous bit-depth modes are supported by the single-image API wrappers.
 # Used as an allowlist: any mode not in this set is skipped by the Python runner.

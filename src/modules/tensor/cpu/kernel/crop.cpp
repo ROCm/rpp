@@ -69,13 +69,10 @@ static inline RppStatus crop_u8_u8_host_impl(Rpp8u *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
             {
-                *dstPtrTempR = srcPtrTemp[0];
-                *dstPtrTempG = srcPtrTemp[1];
-                *dstPtrTempB = srcPtrTemp[2];
+                *dstPtrTempR++ = srcPtrTemp[0];
+                *dstPtrTempG++ = srcPtrTemp[1];
+                *dstPtrTempB++ = srcPtrTemp[2];
                 srcPtrTemp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtrRow += srcDescPtr->strides.hStride;
@@ -117,13 +114,12 @@ static inline RppStatus crop_u8_u8_host_impl(Rpp8u *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = *srcPtrTempR;
-                dstPtrTemp[1] = *srcPtrTempG;
-                dstPtrTemp[2] = *srcPtrTempB;
+                *dstPtrTemp++ = *srcPtrTempR;
+                *dstPtrTemp++ = *srcPtrTempG;
+                *dstPtrTemp++ = *srcPtrTempB;
                 srcPtrTempR++;
                 srcPtrTempG++;
                 srcPtrTempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtrRowR += srcDescPtr->strides.hStride;
@@ -231,13 +227,10 @@ static inline RppStatus crop_f32_f32_host_impl(Rpp32f *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
             {
-                *dstPtrTempR = srcPtrTemp[0];
-                *dstPtrTempG = srcPtrTemp[1];
-                *dstPtrTempB = srcPtrTemp[2];
+                *dstPtrTempR++ = srcPtrTemp[0];
+                *dstPtrTempG++ = srcPtrTemp[1];
+                *dstPtrTempB++ = srcPtrTemp[2];
                 srcPtrTemp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtrRow += srcDescPtr->strides.hStride;
@@ -279,13 +272,12 @@ static inline RppStatus crop_f32_f32_host_impl(Rpp32f *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = *srcPtrTempR;
-                dstPtrTemp[1] = *srcPtrTempG;
-                dstPtrTemp[2] = *srcPtrTempB;
+                *dstPtrTemp++ = *srcPtrTempR;
+                *dstPtrTemp++ = *srcPtrTempG;
+                *dstPtrTemp++ = *srcPtrTempB;
                 srcPtrTempR++;
                 srcPtrTempG++;
                 srcPtrTempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtrRowR += srcDescPtr->strides.hStride;
@@ -425,13 +417,10 @@ static inline RppStatus crop_f16_f16_host_impl(Rpp16f *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
             {
-                *dstPtrTempR = srcPtrTemp[0];
-                *dstPtrTempG = srcPtrTemp[1];
-                *dstPtrTempB = srcPtrTemp[2];
+                *dstPtrTempR++ = srcPtrTemp[0];
+                *dstPtrTempG++ = srcPtrTemp[1];
+                *dstPtrTempB++ = srcPtrTemp[2];
                 srcPtrTemp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtrRow += srcDescPtr->strides.hStride;
@@ -492,13 +481,12 @@ static inline RppStatus crop_f16_f16_host_impl(Rpp16f *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = *srcPtrTempR;
-                dstPtrTemp[1] = *srcPtrTempG;
-                dstPtrTemp[2] = *srcPtrTempB;
+                *dstPtrTemp++ = *srcPtrTempR;
+                *dstPtrTemp++ = *srcPtrTempG;
+                *dstPtrTemp++ = *srcPtrTempB;
                 srcPtrTempR++;
                 srcPtrTempG++;
                 srcPtrTempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtrRowR += srcDescPtr->strides.hStride;
@@ -608,14 +596,10 @@ static inline RppStatus crop_i8_i8_host_impl(Rpp8s *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount+=3)
             {
-                *dstPtrTempR = srcPtrTemp[0];
-                *dstPtrTempG = srcPtrTemp[1];
-                *dstPtrTempB = srcPtrTemp[2];
-
+                *dstPtrTempR++ = srcPtrTemp[0];
+                *dstPtrTempG++ = srcPtrTemp[1];
+                *dstPtrTempB++ = srcPtrTemp[2];
                 srcPtrTemp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtrRow += srcDescPtr->strides.hStride;
@@ -657,14 +641,12 @@ static inline RppStatus crop_i8_i8_host_impl(Rpp8s *srcPtrImage,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = *srcPtrTempR;
-                dstPtrTemp[1] = *srcPtrTempG;
-                dstPtrTemp[2] = *srcPtrTempB;
-
+                *dstPtrTemp++ = *srcPtrTempR;
+                *dstPtrTemp++ = *srcPtrTempG;
+                *dstPtrTemp++ = *srcPtrTempB;
                 srcPtrTempR++;
                 srcPtrTempG++;
                 srcPtrTempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtrRowR += srcDescPtr->strides.hStride;

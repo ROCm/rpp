@@ -91,15 +91,11 @@ static inline RppStatus blend_u8_u8_host_impl(Rpp8u *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
             {
-                *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0])));
-                *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1])));
-                *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2])));
-
+                *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0])));
+                *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1])));
+                *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2])));
                 srcPtr1Temp += 3;
                 srcPtr2Temp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtr1Row += srcDescPtr->strides.hStride;
@@ -166,17 +162,15 @@ static inline RppStatus blend_u8_u8_host_impl(Rpp8u *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR)));
-                dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG)));
-                dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB)));
-
+                *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR)));
+                *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG)));
+                *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB)));
                 srcPtr1TempR++;
                 srcPtr2TempR++;
                 srcPtr1TempG++;
                 srcPtr2TempG++;
                 srcPtr1TempB++;
                 srcPtr2TempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtr1RowR += srcDescPtr->strides.hStride;
@@ -306,13 +300,9 @@ static inline RppStatus blend_f32_f32_host_impl(Rpp32f *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
             {
-                *dstPtrTempR = RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
-                *dstPtrTempG = RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
-                *dstPtrTempB = RPPPIXELCHECKF32((srcPtr1Temp[2] - srcPtr2Temp[2]) * alpha + srcPtr2Temp[2]);
-
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
+                *dstPtrTempR++ = RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
+                *dstPtrTempG++ = RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
+                *dstPtrTempB++ = RPPPIXELCHECKF32((srcPtr1Temp[2] - srcPtr2Temp[2]) * alpha + srcPtr2Temp[2]);
                 srcPtr1Temp += 3;
                 srcPtr2Temp += 3;
             }
@@ -372,17 +362,15 @@ static inline RppStatus blend_f32_f32_host_impl(Rpp32f *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr1TempR - *srcPtr2TempR) * alpha + *srcPtr2TempR);
-                dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr1TempG - *srcPtr2TempG) * alpha + *srcPtr2TempG);
-                dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtr1TempB - *srcPtr2TempB) * alpha + *srcPtr2TempB);
-
+                *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr1TempR - *srcPtr2TempR) * alpha + *srcPtr2TempR);
+                *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr1TempG - *srcPtr2TempG) * alpha + *srcPtr2TempG);
+                *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr1TempB - *srcPtr2TempB) * alpha + *srcPtr2TempB);
                 srcPtr1TempR++;
                 srcPtr2TempR++;
                 srcPtr1TempG++;
                 srcPtr2TempG++;
                 srcPtr1TempB++;
                 srcPtr2TempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtr1RowR += srcDescPtr->strides.hStride;
@@ -551,13 +539,9 @@ static inline RppStatus blend_f16_f16_host_impl(Rpp16f *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
             {
-                *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
-                *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
-                *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[2] - srcPtr2Temp[2]) * alpha + srcPtr2Temp[2]);
-
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
+                *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[0] - srcPtr2Temp[0]) * alpha + srcPtr2Temp[0]);
+                *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[1] - srcPtr2Temp[1]) * alpha + srcPtr2Temp[1]);
+                *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32((srcPtr1Temp[2] - srcPtr2Temp[2]) * alpha + srcPtr2Temp[2]);
                 srcPtr1Temp += 3;
                 srcPtr2Temp += 3;
             }
@@ -647,17 +631,15 @@ static inline RppStatus blend_f16_f16_host_impl(Rpp16f *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempR - *srcPtr2TempR) * alpha + *srcPtr2TempR);
-                dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempG - *srcPtr2TempG) * alpha + *srcPtr2TempG);
-                dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempB - *srcPtr2TempB) * alpha + *srcPtr2TempB);
-
+                *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempR - *srcPtr2TempR) * alpha + *srcPtr2TempR);
+                *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempG - *srcPtr2TempG) * alpha + *srcPtr2TempG);
+                *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32((*srcPtr1TempB - *srcPtr2TempB) * alpha + *srcPtr2TempB);
                 srcPtr1TempR++;
                 srcPtr2TempR++;
                 srcPtr1TempG++;
                 srcPtr2TempG++;
                 srcPtr1TempB++;
                 srcPtr2TempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtr1RowR += srcDescPtr->strides.hStride;
@@ -816,15 +798,11 @@ static inline RppStatus blend_i8_i8_host_impl(Rpp8s *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
             {
-                *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0]));
-                *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1]));
-                *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2]));
-
+                *dstPtrTempR++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0]));
+                *dstPtrTempG++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1]));
+                *dstPtrTempB++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2]));
                 srcPtr1Temp += 3;
                 srcPtr2Temp += 3;
-                dstPtrTempR++;
-                dstPtrTempG++;
-                dstPtrTempB++;
             }
 
             srcPtr1Row += srcDescPtr->strides.hStride;
@@ -891,17 +869,15 @@ static inline RppStatus blend_i8_i8_host_impl(Rpp8s *srcPtr1Image,
             }
             for (; vectorLoopCount < bufferLength; vectorLoopCount++)
             {
-                dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR));
-                dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG));
-                dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB));
-
+                *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR));
+                *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG));
+                *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB));
                 srcPtr1TempR++;
                 srcPtr2TempR++;
                 srcPtr1TempG++;
                 srcPtr2TempG++;
                 srcPtr1TempB++;
                 srcPtr2TempB++;
-                dstPtrTemp += 3;
             }
 
             srcPtr1RowR += srcDescPtr->strides.hStride;

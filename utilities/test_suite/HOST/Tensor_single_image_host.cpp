@@ -83,7 +83,10 @@ int main(int argc, char **argv)
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        if (testType == UNIT_TEST) cout << "\ncase " << testCase << " is not supported\n";
+        if (testType == UNIT_TEST)
+        {
+            cout << "\ncase " << testCase << " is not supported\n";
+        }
         return -1;
     }
 
@@ -94,14 +97,20 @@ int main(int argc, char **argv)
     string func = funcName;
     set_descriptor_data_type_name(BitDepthTestMode, func);
     func += funcType;
-    if (kernelSizeCase) func += "_kernelSize" + std::to_string(additionalParam);
+    if (kernelSizeCase)
+    {
+        func += "_kernelSize" + std::to_string(additionalParam);
+    }
     // else if (interpolationTypeCase)
     // {
     //     interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
     //     func += "_interpolationType";
     //     func += interpolationTypeName.c_str();
     // }
-    if(!qaFlag) dst += "/" + func;
+    if (!qaFlag)
+    {
+        dst += "/" + func;
+    }
 
     int noOfImages = 0, missingFuncFlag = 0;
     Rpp32f conversionFactor = 1.0f / 255.0;
@@ -112,24 +121,33 @@ int main(int argc, char **argv)
     {
         inputVec = loadBatchImages_jpegd(src, noOfImages, isColor);
         if (dualInputCase)
+        {
             inputVecSecond = loadBatchImages_jpegd(srcSecond, noOfImages, isColor);
+        }
     }
     else
     {
         inputVec = loadBatchImages_cv(src, noOfImages, isColor);
         if (dualInputCase)
+        {
             inputVecSecond = loadBatchImages_cv(srcSecond, noOfImages, isColor);
+        }
     }
             
     if (noOfImages == 0) { cerr << "No images found!"; return -1; }
 
     convertBatchBitDepth(inputVec, BitDepthTestMode, conversionFactor);
     convertBatchBitDepth(inputVecSecond, BitDepthTestMode, conversionFactor);
-    if (noOfImages < batchSize) {
+    if (noOfImages < batchSize)
+    {
         for (int i = noOfImages; i < batchSize; i++)
+        {
             inputVec.push_back(inputVec[noOfImages - 1]);
             if (dualInputCase)
+            {
                 inputVecSecond.push_back(inputVecSecond[noOfImages - 1]);
+            }
+        }
         noOfImages = batchSize;
     }
 
@@ -140,8 +158,10 @@ int main(int argc, char **argv)
 
     int inputChannel = set_input_channels(layoutType);
     int outputChannel = inputChannel;
-    if(pln1OutTypeCase)
+    if (pln1OutTypeCase)
+    {
         outputChannel = 1;
+    }
     set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle, noOfImages);
     set_descriptor_data_type(BitDepthTestMode, srcDescPtr, dstDescPtr, noOfImages);
 
@@ -181,7 +201,9 @@ int main(int argc, char **argv)
         {
             inputVec[i] = convert_pkd3_to_pln3(inputVec[i]);
             if (dualInputCase)
+            {
                 inputVecSecond[i] = convert_pkd3_to_pln3(inputVecSecond[i]);
+            }
         }
     }
 
@@ -216,7 +238,9 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_brightness(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &beta, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -235,7 +259,9 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_blend(inputVec[i].data, inputVecSecond[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &alpha, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -256,7 +282,9 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_flip(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &horizontalFlag, &verticalFlag, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -280,7 +308,9 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_resize(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &dstImgSizes[i], interpolationType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -303,11 +333,13 @@ int main(int argc, char **argv)
                 {
                     omp_set_dynamic(0);
                     #pragma omp parallel for num_threads(numThreads)
-                    for (int i = 0; i < noOfImages; ++i) 
+                    for (int i = 0; i < noOfImages; ++i)
                         errorCodeCapture = rppt_crop(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -332,7 +364,9 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_box_filter(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -356,7 +390,37 @@ int main(int argc, char **argv)
                         errorCodeCapture = rppt_median_filter(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
                 }
                 else
+                {
                     missingFuncFlag = 1;
+                }
+
+                break;
+            }
+            case GAUSSIAN_FILTER:
+            {
+                testCaseName = "gaussian_filter";
+                Rpp32u kernelSize = additionalParam;
+                Rpp32f stdDev = 5.0f;
+
+                if (borderType != RpptImageBorderType::REPLICATE)
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                startWallTime = omp_get_wtime();
+                startCpuTime = clock();
+                if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
+                {
+                    omp_set_dynamic(0);
+                    #pragma omp parallel for num_threads(numThreads)
+                    for (int i = 0; i < noOfImages; ++i)
+                        errorCodeCapture = rppt_gaussian_filter(inputVec[i].data, &srcDescPtr[i], outputVec[i].data, &dstDescPtr[i], &stdDev, kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
+                }
+                else
+                {
+                    missingFuncFlag = 1;
+                }
 
                 break;
             }
@@ -402,9 +466,13 @@ int main(int argc, char **argv)
             string interpolationTypeName = "";
             string noiseTypeName = "";
             if (interpolationTypeCase)
+            {
                 interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
+            }
             if (noiseTypeCase)
+            {
                 noiseTypeName = get_noise_type(additionalParam);
+            }
 
             compare_output_single_image(outputVec, srcDescPtr, dstDescPtr, testCaseName, dstImgSizes, noOfImages, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
         }
