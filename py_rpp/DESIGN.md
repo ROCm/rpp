@@ -494,6 +494,31 @@ OpenMP thread-boundary write that lands just outside the destination buffer.
 Affected test: `test_threshold_all_in_range` (uses `tensor_min`/`tensor_max`
 before `threshold`). Workaround: N=1.
 
+### HIP filter/morphological ops require `offsetInBytes`
+
+RPP HIP filter and morphological kernels check that
+`srcDescPtr->offsetInBytes >= 12 * (kernelSize / 2)` and return
+`RPP_ERROR_LOW_OFFSET` (-3) if not. The check enforces that the GPU buffer
+has a valid prefix region before the image data that the kernel can freely
+read during border handling. CPU kernels have no such requirement.
+
+Workaround in `common.hpp`: the `run_img_op` overload that takes `kernel_size`
+sets `desc.offsetInBytes = 12 * (kernel_size / 2)` on HIP and allocates GPU
+buffers of `img_bytes + offsetInBytes` bytes, uploading image data at offset
+and downloading from offset. CPU path always uses `offsetInBytes=0`.
+
+### `tensor_min`/`tensor_max` HIP kernel crash (gfx1201)
+
+On RX 9070 XT (gfx1201), the `rppt_tensor_min` and `rppt_tensor_max` HIP
+kernels trigger an illegal memory access in the internal `scratchBufferHip`
+allocation. `rppDestroy` then fails to free the scratch buffer, and because
+RPP calls `hipInit` even when creating CPU handles, all subsequent `rppCreate`
+calls in the same process also fail with the same error.
+
+Workaround: the five affected tests are unconditionally skipped on the HIP
+backend (`pytest.skip`) so the HIP context is never corrupted. `tensor_mean`
+HIP is unaffected and passes normally.
+
 ---
 
 ## 9. Adding a New Op
