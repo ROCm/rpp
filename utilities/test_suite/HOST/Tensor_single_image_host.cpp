@@ -165,34 +165,111 @@ int main(int argc, char **argv)
     set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle, noOfImages);
     set_descriptor_data_type(BitDepthTestMode, srcDescPtr, dstDescPtr, noOfImages);
 
-    initializeDescriptors(inputVec, srcDescPtr, inputChannel);
-    initializeDescriptors(inputVec, dstDescPtr, outputChannel);
-    int roiHeightList[noOfImages], roiWidthList[noOfImages];
-    initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
+    initializeDescriptors(inputVec, srcDescPtr, inputChannel, true);
+    initializeDescriptors(inputVec, dstDescPtr, outputChannel, true);
 
-    // Track actual image dimensions (not padded descriptor width)
-    vector<Mat> outputVec(noOfImages);
+    // Capture actual image dimensions before padding
     vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
     for (int i = 0; i < noOfImages; i++)
     {
-        // Store actual dimensions before any padding
         actualInputWidth[i] = inputVec[i].cols;
         actualInputHeight[i] = inputVec[i].rows;
-        
+    }
+
+    // Override per-image dimensions to exactly match the batch reference test's descriptor.
+    // The reference was generated with a single descriptor: h=GOLDEN_OUTPUT_MAX_HEIGHT=150,
+    // w=((150/8)*8)+8=152, using calloc-zero buffers. Matching h and w ensures:
+    //   1. cStride (PLN3) = 150*152 = 22800 identical to batch — no cross-channel bleed at row boundaries.
+    //   2. SIMD reads past ROI width see zeros, same as the batch's zero-initialized stride region.
+    int refDescWidth  = ((GOLDEN_OUTPUT_MAX_WIDTH  / 8) * 8) + 8;  // 152
+    int refDescHeight = GOLDEN_OUTPUT_MAX_HEIGHT;                   // 150
+    for (int i = 0; i < noOfImages; i++)
+    {
+        auto overrideDims = [&](RpptDesc& desc)
+        {
+            desc.w = refDescWidth;
+            desc.h = refDescHeight;
+            if (desc.layout == RpptLayout::NHWC)
+            {
+                desc.strides.nStride = desc.h * desc.w * desc.c;
+                desc.strides.hStride = desc.w * desc.c;
+            }
+            else
+            {
+                desc.strides.nStride = desc.h * desc.w * desc.c;
+                desc.strides.hStride = desc.w;
+                desc.strides.cStride = desc.h * desc.w;
+            }
+        };
+        overrideDims(srcDescPtr[i]);
+        overrideDims(dstDescPtr[i]);
+    }
+
+    // Pad input images to refDescWidth x refDescHeight with zeros, matching the batch test's
+    // calloc-initialized buffers that span maxHeight x maxWidth for every image.
+    for (int i = 0; i < noOfImages; i++)
+    {
+        int padRight  = refDescWidth  - inputVec[i].cols;
+        int padBottom = refDescHeight - inputVec[i].rows;
+        if (padRight > 0 || padBottom > 0)
+        {
+            Mat padded;
+            copyMakeBorder(inputVec[i], padded, 0, padBottom, 0, padRight, BORDER_CONSTANT, 0);
+            inputVec[i] = padded;
+        }
+        if (dualInputCase)
+        {
+            int padRightS  = refDescWidth  - inputVecSecond[i].cols;
+            int padBottomS = refDescHeight - inputVecSecond[i].rows;
+            if (padRightS > 0 || padBottomS > 0)
+            {
+                Mat padded;
+                copyMakeBorder(inputVecSecond[i], padded, 0, padBottomS, 0, padRightS, BORDER_CONSTANT, 0);
+                inputVecSecond[i] = padded;
+            }
+        }
+    }
+    int roiHeightList[noOfImages], roiWidthList[noOfImages];
+    // Capture before initializeROI mutates roiList[0/1] on the invalidROI path.
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+    initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
+
+    // initializeDescriptors aligns descriptor width to 8 for SIMD safety, so
+    // initializeROI sets roiWidth to the aligned value. Override with actual image
+    // dimensions so operations and comparisons use the real pixel boundary.
+    for (int i = 0; i < noOfImages; i++)
+    {
+        roi[i].xywhROI.roiWidth  = actualInputWidth[i];
+        roi[i].xywhROI.roiHeight = actualInputHeight[i];
+        if (invalidROI)
+        {
+            roiWidthList[i]  = actualInputWidth[i] / 2;
+            roiHeightList[i] = actualInputHeight[i] / 2;
+        }
+        else
+        {
+            roiWidthList[i]  = roiList[2];
+            roiHeightList[i] = roiList[3];
+        }
+    }
+
+    vector<Mat> outputVec(noOfImages);
+    for (int i = 0; i < noOfImages; i++)
+    {
         int channels = dstDescPtr[i].c;
         if (dstDescPtr[i].layout == RpptLayout::NCHW)
         {
             int planarCvType = get_cv_type(dstDescPtr[i].dataType, 1);
             if (planarCvType == -1) { cerr << "Unsupported type for Image " << i << endl; continue; }
-            // Use actual dimensions, not padded descriptor width
-            outputVec[i] = Mat(actualInputHeight[i] * channels, actualInputWidth[i], planarCvType);
+            // Allocate full refDescHeight rows per channel so cStride is contiguous in the Mat.
+            // QA only reads actualInputHeight[i] rows per channel during comparison.
+            outputVec[i] = Mat(refDescHeight * channels, dstDescPtr[i].w, planarCvType, Scalar(0));
         }
         else
         {
             int packedCvType = get_cv_type(dstDescPtr[i].dataType, channels);
             if (packedCvType == -1) { cerr << "Unsupported type for Image " << i << endl; continue; }
-            // Use actual dimensions, not padded descriptor width
-            outputVec[i] = Mat(actualInputHeight[i], actualInputWidth[i], packedCvType);
+            outputVec[i] = Mat(refDescHeight, dstDescPtr[i].w, packedCvType, Scalar(0));
         }
     }
     if (isColor && srcDescPtr[0].layout == RpptLayout::NCHW)

@@ -1463,9 +1463,34 @@ RppStatus gaussian_filter_host_single_image(T *srcPtr,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle)
 {
-    Rpp32f stdDevTensor[1] = { stdDev };
-    return gaussian_filter_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
-                                       stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+    if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
+        return gaussian_filter_generic_host_single_image(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                                         stdDev, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
+    RpptROI roi;
+    compute_roi_validation_host(roiTensorPtrSrc, &roi, &roiDefault, roiType);
+
+    Rpp32f filterTensor[MAX_FILTER_SIZE];
+    create_gaussian_kernel_host(filterTensor, stdDev, kernelSize);
+
+#if __AVX2__
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+
+    int filterSize = kernelSize * kernelSize;
+    __m256 pFilterArr[MAX_FILTER_SIZE];
+    for (int i = 0; i < filterSize; i++)
+        pFilterArr[i] = _mm256_set1_ps(filterTensor[i]);
+
+    gaussian_filter_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                              filterTensor, kernelSize, roi, layoutParams,
+                              pFilterArr, pxMaskPln, pxMaskPkd);
+    return RPP_SUCCESS;
+#else
+    return gaussian_filter_host_impl(srcPtr, srcDescPtr, dstPtr, dstDescPtr,
+                                     filterTensor, kernelSize, roi, layoutParams);
+#endif
 }
 
 template<typename T>

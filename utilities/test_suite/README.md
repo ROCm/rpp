@@ -146,17 +146,18 @@ Single image processing is currently supported for the following augmentations:
 - Case 37: Crop
 - Case 49: Box Filter
 - Case 51: Median Filter
+- Case 54: Gaussian Filter
 
 **Running Single Image Tests:**
 To run single image tests, use the `--single_image` flag with the test suite:
 ``` python
-python runImageTests.py --case_list 0 2 20 21 37 49 51 --test_type 0 --single_image
+python runImageTests.py --case_list 0 2 20 21 37 49 51 54 --test_type 0 --single_image 1
 ```
 
 **QA Mode for Single Image:**
 Single image processing supports QA mode for validating outputs against golden references:
 ``` python
-python runImageTests.py --case_list 0 2 20 21 37 49 51 --test_type 0 --qa_mode 1 --batch_size 3 --single_image
+python runImageTests.py --case_list 0 2 20 21 37 49 51 54 --test_type 0 --qa_mode 1 --batch_size 3 --single_image 1
 ```
 
 **Notes:**

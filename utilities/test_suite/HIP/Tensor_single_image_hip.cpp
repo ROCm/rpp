@@ -229,8 +229,90 @@ int main(int argc, char **argv)
 
     initializeDescriptors(inputVec, srcDescPtr, inputChannel, true, additionalStride, srcOffsetInBytes);
     initializeDescriptors(inputVec, dstDescPtr, outputChannel, true, additionalStride, dstOffsetInBytes);
+
+    // Capture actual image dimensions before overrideDims expands descriptors.
+    vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
+    for (int i = 0; i < noOfImages; i++)
+    {
+        actualInputWidth[i] = inputVec[i].cols;
+        actualInputHeight[i] = inputVec[i].rows;
+    }
+
+    // Override descriptors to match the reference binary layout (150×152) for non-CROP cases.
+    // The batch golden outputs were generated with h=GOLDEN_OUTPUT_MAX_HEIGHT, w=((MAX_WIDTH/8)*8)+8.
+    // Matching these ensures cStride and hStride are identical so pixel offsets align with the reference.
+    // For kernel-size cases (box/median/gaussian filter), the batch test adds additionalStride to src w
+    // so each row has extra columns for the horizontal halo; we must match that here to avoid GPU faults.
+    int refDescWidth  = ((GOLDEN_OUTPUT_MAX_WIDTH  / 8) * 8) + 8;  // 152
+    int refDescHeight = GOLDEN_OUTPUT_MAX_HEIGHT;                   // 150
+    if (testCase != CROP)
+    {
+        for (int i = 0; i < noOfImages; i++)
+        {
+            auto overrideDims = [&](RpptDesc& desc, int extraW)
+            {
+                desc.w = refDescWidth + extraW;
+                desc.h = refDescHeight;
+                if (desc.layout == RpptLayout::NHWC)
+                {
+                    desc.strides.nStride = desc.h * desc.w * desc.c;
+                    desc.strides.hStride = desc.w * desc.c;
+                }
+                else
+                {
+                    desc.strides.nStride = desc.h * desc.w * desc.c;
+                    desc.strides.hStride = desc.w;
+                    desc.strides.cStride = desc.h * desc.w;
+                }
+            };
+            overrideDims(srcDescPtr[i], additionalStride);
+            overrideDims(dstDescPtr[i], 0);
+        }
+
+        // Pad inputs to (refDescWidth + additionalStride) x refDescHeight with zeros.
+        // The batch test allocates (maxWidth + additionalStride) wide buffers so the kernel
+        // can read horizontal halo pixels beyond the image; we must match that layout.
+        int srcPadWidth = refDescWidth + additionalStride;
+        for (int i = 0; i < noOfImages; i++)
+        {
+            int padRight  = srcPadWidth   - inputVec[i].cols;
+            int padBottom = refDescHeight - inputVec[i].rows;
+            if (padRight > 0 || padBottom > 0)
+            {
+                Mat padded;
+                copyMakeBorder(inputVec[i], padded, 0, padBottom, 0, padRight, BORDER_CONSTANT, 0);
+                inputVec[i] = padded;
+            }
+            if (dualInputCase)
+            {
+                int padRightS  = srcPadWidth   - inputVecSecond[i].cols;
+                int padBottomS = refDescHeight - inputVecSecond[i].rows;
+                if (padRightS > 0 || padBottomS > 0)
+                {
+                    Mat padded;
+                    copyMakeBorder(inputVecSecond[i], padded, 0, padBottomS, 0, padRightS, BORDER_CONSTANT, 0);
+                    inputVecSecond[i] = padded;
+                }
+            }
+        }
+    }
+
     int roiHeightList[noOfImages], roiWidthList[noOfImages];
+    // Capture before initializeROI mutates roiList on the invalidROI path.
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
     initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
+
+    // For CROP+invalidROI, initializeROI computes roiWidthList[i] = alignedW/2 (e.g. 152/2=76).
+    // The batch reference was generated with roiWidth = actualW/2 (e.g. 150/2=75).
+    // Override to match the batch test so the crop kernel reads the same pixel region.
+    if (testCase == CROP && invalidROI)
+    {
+        for (int i = 0; i < noOfImages; i++)
+        {
+            roiWidthList[i]  = actualInputWidth[i]  / 2;
+            roiHeightList[i] = actualInputHeight[i] / 2;
+        }
+    }
 
     // For CROP, the output descriptor must match the crop ROI dimensions, not the input dimensions.
     // Re-initialize dstDescPtr using the crop output size so allocations and strides are correct.
@@ -257,29 +339,43 @@ int main(int argc, char **argv)
         }
     }
 
-    // Initialize output buffers with correct size
-    vector<Mat> outputVec(noOfImages);
-    vector<Rpp32u> actualInputWidth(noOfImages), actualInputHeight(noOfImages);
+    // Save the roi state and roiWidthList/roiHeightList computed by the initial initializeROI.
+    // The perf loop restores from these saved values so it never re-calls initializeROI with
+    // the mutated roiList (initializeROI modifies roiList[0/1] on the invalidROI path, which
+    // corrupts subsequent calls and produces zero-width crop ROIs).
+    vector<RpptROI> savedRoi(noOfImages);
+    vector<int> savedRoiWidthList(noOfImages), savedRoiHeightList(noOfImages);
     for (int i = 0; i < noOfImages; i++)
     {
-        actualInputWidth[i] = inputVec[i].cols;
-        actualInputHeight[i] = inputVec[i].rows;
+        savedRoiWidthList[i] = roiWidthList[i];
+        savedRoiHeightList[i] = roiHeightList[i];
+        if (testCase == CROP)
+            savedRoi[i].xywhROI = {0, 0, (Rpp32s)dstDescPtr[i].w, (Rpp32s)dstDescPtr[i].h};
+        else
+            savedRoi[i].xywhROI = {0, 0, (Rpp32s)actualInputWidth[i], (Rpp32s)actualInputHeight[i]};
+    }
 
-        // For CROP the output dimensions are the ROI dimensions, not the input image dimensions
-        Rpp32u outW = (testCase == CROP) ? roiWidthList[i] : actualInputWidth[i];
-        Rpp32u outH = (testCase == CROP) ? roiHeightList[i] : actualInputHeight[i];
+    // Initialize output buffers with correct size
+    vector<Mat> outputVec(noOfImages);
+    for (int i = 0; i < noOfImages; i++)
+    {
+        // For CROP the output dimensions are the ROI dimensions, not the input image dimensions.
+        // For non-CROP, allocate refDescHeight rows so cStride is contiguous in the Mat and
+        // matChannelStride (rows/3) matches the reference binary's channel layout.
+        Rpp32u outW = (testCase == CROP) ? roiWidthList[i] : (Rpp32u)dstDescPtr[i].w;
+        Rpp32u outH = (testCase == CROP) ? roiHeightList[i] : (Rpp32u)refDescHeight;
 
         int cvType = get_cv_type(dstDescPtr[i].dataType, 1);
 
         if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
         {
-            outputVec[i] = Mat(outH * dstDescPtr[i].c, outW, cvType);
+            outputVec[i] = Mat(outH * dstDescPtr[i].c, outW, cvType, Scalar(0));
         }
         else
         {
-            outputVec[i] = Mat(outH, outW, get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c));
+            outputVec[i] = Mat(outH, outW, get_cv_type(dstDescPtr[i].dataType, dstDescPtr[i].c), Scalar(0));
         }
-        
+
         // Prepare input buffers as contiguous memory for direct device copy
         if (srcDescPtr[i].layout == RpptLayout::NCHW && isColor)
         {
@@ -295,16 +391,22 @@ int main(int argc, char **argv)
     /* Initialize alpha and beta for blend and brightness kernels*/
     Rpp32f *alpha = nullptr;
     Rpp32f *beta = nullptr;
+    Rpp32f *stdDev = nullptr;
 
     if (testCase == BLEND)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, sizeof(Rpp32f)));
     }
-        
+
     if(testCase == BRIGHTNESS)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&beta, sizeof(Rpp32f)));
+    }
+
+    if (testCase == GAUSSIAN_FILTER)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&stdDev, sizeof(Rpp32f)));
     }
 
     Rpp32u *horizontalFlag = nullptr;
@@ -331,7 +433,16 @@ int main(int argc, char **argv)
 
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
-        initializeROI(inputVec, roi, dstDescPtr, roiList, roiHeightList, roiWidthList);
+        // Restore roi and roiWidthList/roiHeightList from the saved initial state.
+        // HIP kernels convert roi XYWH→LTRB in-place on pinned memory, so each perf run
+        // must start from the original XYWH values. Using saved state avoids re-calling
+        // initializeROI with the mutated roiList.
+        for (int i = 0; i < noOfImages; i++)
+        {
+            roi[i] = savedRoi[i];
+            roiWidthList[i] = savedRoiWidthList[i];
+            roiHeightList[i] = savedRoiHeightList[i];
+        }
         for (int i = 0; i < noOfImages; i++)
         {
             RppStatus errorCodeCapture = RPP_SUCCESS;
@@ -556,7 +667,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
-                    Rpp32f stdDev = 5.0f;
+                    *stdDev = 5.0f;
 
                     if (borderType != RpptImageBorderType::REPLICATE)
                     {
@@ -567,7 +678,7 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8)
                     {
-                        errorCodeCapture = rppt_gaussian_filter(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], &stdDev, kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
+                        errorCodeCapture = rppt_gaussian_filter(d_input, &srcDescPtr[i], d_output, &dstDescPtr[i], stdDev, kernelSize, borderType, &roi[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND);
                     }
                     else
                     {
@@ -612,11 +723,12 @@ int main(int argc, char **argv)
             // Copy output data from device to host
             Rpp8u *d_output_offsetted = static_cast<Rpp8u*>(d_output) + dstDescPtr[i].offsetInBytes;
             Rpp8u *outputTemp = (outputVec[i].data);
-            
-            // For resize/crop, use roi dimensions; for others, use input dimensions
-            int outputWidth = (testCase == RESIZE || testCase == CROP) ? dstImgSizes[i].width : actualInputWidth[i];
-            int outputHeight = (testCase == RESIZE || testCase == CROP) ? dstImgSizes[i].height : actualInputHeight[i];
-            
+
+            // For resize/crop use roi dims; for others use the full descriptor dims so the
+            // Mat layout matches refDescHeight x refDescWidth and offsets agree with the reference.
+            int outputWidth  = (testCase == RESIZE || testCase == CROP) ? (int)dstImgSizes[i].width  : (int)dstDescPtr[i].w;
+            int outputHeight = (testCase == RESIZE || testCase == CROP) ? (int)dstImgSizes[i].height : refDescHeight;
+
             // Calculate correct row size based on layout
             size_t rowSizeInBytes;
             if (dstDescPtr[i].layout == RpptLayout::NCHW)
@@ -629,17 +741,23 @@ int main(int argc, char **argv)
                 // For packed layout, each row is width * channels
                 rowSizeInBytes = outputWidth * outputChannel * outElementSize;
             }
-            
+
             // Copy output based on layout
             if (dstDescPtr[i].layout == RpptLayout::NCHW && dstDescPtr[i].c == 3)
             {
-                // For PLN3, copy each channel separately - channels are at actualInputHeight intervals in Mat
+                // For PLN3, copy each channel separately.
+                // Use outputVec[i].rows / 3 as the per-channel row stride so it matches
+                // compare_output_single_image's matChannelStride = outputVec.rows / 3.
+                // For CROP:   Mat rows = cropH * 3,        stride = cropH   (== outputHeight)
+                // For RESIZE: Mat rows = refDescHeight * 3, stride = 150    (!= outputHeight=actualH/2)
+                // For others: Mat rows = refDescHeight * 3, stride = 150    (== outputHeight)
+                int matChannelStride = outputVec[i].rows / 3;
                 for(int c = 0; c < 3; c++)
                 {
                     for(int j = 0; j < outputHeight; j++)
                     {
                         Rpp8u *d_outputRowTemp = d_output_offsetted + (c * dstDescPtr[i].strides.cStride + j * dstDescPtr[i].strides.hStride) * outElementSize;
-                        Rpp8u *outputRowTemp = outputTemp + (c * outputHeight + j) * outputVec[i].step[0];
+                        Rpp8u *outputRowTemp = outputTemp + (c * matChannelStride + j) * outputVec[i].step[0];
                         CHECK_RETURN_STATUS(hipMemcpy(outputRowTemp, d_outputRowTemp, rowSizeInBytes, hipMemcpyDeviceToHost));
                     }
                 }
@@ -712,6 +830,10 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostFree(alpha));
         CHECK_RETURN_STATUS(hipHostFree(beta));
+    }
+    if (testCase == GAUSSIAN_FILTER)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(stdDev));
     }
     if(testCase == FLIP)
     {
