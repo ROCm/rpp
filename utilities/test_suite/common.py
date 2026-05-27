@@ -195,6 +195,14 @@ miscAugmentationMap  = {
     11: ["tensor_divide_tensor", "HOST", "HIP"]
 }
 
+# Supported test cases for single image processing
+# Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51, 54}  # brightness, blend, flip, resize, crop, box_filter, median_filter, gaussian_filter
+
+# Only homogeneous bit-depth modes are supported by the single-image API wrappers.
+# Used as an allowlist: any mode not in this set is skipped by the Python runner.
+SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS = {BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8}
+
 ImageAugmentationGroupMap = {
     "color_augmentations": [
         "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
@@ -508,7 +516,7 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         output = process.stdout.readline()
         if not output and process.poll() is not None:
             break
-        output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+        output = output.decode('utf-8', errors='replace').strip()  # Decode bytes to string and strip extra whitespace
         if output:
             print(output)
             logFile.write(output + '\n')

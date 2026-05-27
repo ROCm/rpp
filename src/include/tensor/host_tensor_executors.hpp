@@ -387,6 +387,50 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
+RppStatus brightness_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *alphaTensor,
+                                             Rpp32f *betaTensor,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
+RppStatus brightness_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *alphaTensor,
+                                               Rpp32f *betaTensor,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus brightness_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp16f *dstPtr,
+                                               RpptDescPtr dstDescPtr,
+                                               Rpp32f *alphaTensor,
+                                               Rpp32f *betaTensor,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               RpptRoiType roiType,
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle);
+
+RppStatus brightness_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8s *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *alphaTensor,
+                                             Rpp32f *betaTensor,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
 // -------------------- blend --------------------
 
 RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
@@ -432,6 +476,51 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle);
+
+
+RppStatus blend_u8_u8_host_single_image(Rpp8u *srcPtr1,
+                                        Rpp8u *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8u *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *alphaTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
+
+RppStatus blend_f32_f32_host_single_image(Rpp32f *srcPtr1,
+                                          Rpp32f *srcPtr2,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp32f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f *alphaTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus blend_f16_f16_host_single_image(Rpp16f *srcPtr1,
+                                          Rpp16f *srcPtr2,
+                                          RpptDescPtr srcDescPtr,
+                                          Rpp16f *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32f *alphaTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          RppLayoutParams layoutParams,
+                                          rpp::Handle& handle);
+
+RppStatus blend_i8_i8_host_single_image(Rpp8s *srcPtr1,
+                                        Rpp8s *srcPtr2,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp8s *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *alphaTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle);
 
 // -------------------- color_cast --------------------
 
@@ -1882,6 +1971,30 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                                               RppLayoutParams layoutParams,
                                               rpp::Handle& handle);
 
+template<typename T>
+RppStatus gaussian_filter_host_single_image(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32f stdDev,
+                                            Rpp32u kernelSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle);
+
+template<typename T>
+RppStatus gaussian_filter_generic_host_single_image(T *srcPtr,
+                                                    RpptDescPtr srcDescPtr,
+                                                    T *dstPtr,
+                                                    RpptDescPtr dstDescPtr,
+                                                    Rpp32f stdDev,
+                                                    Rpp32u kernelSize,
+                                                    RpptROIPtr roiTensorPtrSrc,
+                                                    RpptRoiType roiType,
+                                                    RppLayoutParams layoutParams,
+                                                    rpp::Handle& handle);
+
 // -------------------- box_filter --------------------
 
 template<typename T>
@@ -1907,6 +2020,29 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                                        RppLayoutParams layoutParams,
                                        rpp::Handle& handle);
 
+template<typename T>
+RppStatus box_filter_char_host_single_image(T *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            T *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            Rpp32u kernelSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams layoutParams,
+                                            rpp::Handle& handle);
+
+// F32 and F16 bitdepth
+template<typename T>
+RppStatus box_filter_float_host_single_image(T *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             T *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32u kernelSize,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams layoutParams,
+                                             rpp::Handle& handle);
+
 // -------------------- sobel_filter --------------------
 template<typename T>
 RppStatus sobel_filter_host_tensor(T *srcPtr,
@@ -1931,6 +2067,17 @@ RppStatus median_filter_generic_host_tensor(T *srcPtr,
                                             RpptRoiType roiType,
                                             RppLayoutParams layoutParams,
                                             rpp::Handle& handle);
+
+template<typename T>
+RppStatus median_filter_generic_host_single_image(T *srcPtr,
+                                                  RpptDescPtr srcDescPtr,
+                                                  T *dstPtr,
+                                                  RpptDescPtr dstDescPtr,
+                                                  Rpp32u kernelSize,
+                                                  RpptROIPtr roiTensorPtrSrc,
+                                                  RpptRoiType roiType,
+                                                  RppLayoutParams layoutParams,
+                                                  rpp::Handle& handle);
 
 // -------------------- emboss --------------------
 
@@ -1997,6 +2144,42 @@ RppStatus crop_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
+
+RppStatus crop_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus crop_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus crop_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus crop_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8s *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
 
 // -------------------- crop_and_patch --------------------
 
@@ -2220,6 +2403,51 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle);
 
+
+RppStatus flip_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8u *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
+RppStatus flip_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus flip_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u *horizontalTensor,
+                                         Rpp32u *verticalTensor,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle);
+
+RppStatus flip_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       Rpp8s *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32u *horizontalTensor,
+                                       Rpp32u *verticalTensor,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle);
+
 RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          RpptGenericDescPtr srcGenericDescPtr,
                                          Rpp32f *dstPtr,
@@ -2390,6 +2618,46 @@ RppStatus resize_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                                         RppLayoutParams srcLayoutParams,
                                         rpp::Handle& handle);
 
+RppStatus resize_nn_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8u *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptImagePatchPtr dstImgSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams srcLayoutParams,
+                                            rpp::Handle& handle);
+
+RppStatus resize_nn_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp32f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              RpptImagePatchPtr dstImgSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams srcLayoutParams,
+                                              rpp::Handle& handle);
+
+RppStatus resize_nn_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                            RpptDescPtr srcDescPtr,
+                                            Rpp8s *dstPtr,
+                                            RpptDescPtr dstDescPtr,
+                                            RpptImagePatchPtr dstImgSize,
+                                            RpptROIPtr roiTensorPtrSrc,
+                                            RpptRoiType roiType,
+                                            RppLayoutParams srcLayoutParams,
+                                            rpp::Handle& handle);
+
+RppStatus resize_nn_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              Rpp16f *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              RpptImagePatchPtr dstImgSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              RppLayoutParams srcLayoutParams,
+                                              rpp::Handle& handle);
+
 /************* BILINEAR INTERPOLATION *************/
 
 RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -2432,6 +2700,46 @@ RppStatus resize_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                                             RppLayoutParams srcLayoutParams,
                                             rpp::Handle& handle);
 
+RppStatus resize_bilinear_u8_u8_host_single_image(Rpp8u *srcPtr,
+                                                   RpptDescPtr srcDescPtr,
+                                                   Rpp8u *dstPtr,
+                                                   RpptDescPtr dstDescPtr,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc,
+                                                   RpptRoiType roiType,
+                                                   RppLayoutParams srcLayoutParams,
+                                                   rpp::Handle& handle);
+
+RppStatus resize_bilinear_f32_f32_host_single_image(Rpp32f *srcPtr,
+                                                     RpptDescPtr srcDescPtr,
+                                                     Rpp32f *dstPtr,
+                                                     RpptDescPtr dstDescPtr,
+                                                     RpptImagePatchPtr dstImgSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     RpptRoiType roiType,
+                                                     RppLayoutParams srcLayoutParams,
+                                                     rpp::Handle& handle);
+
+RppStatus resize_bilinear_f16_f16_host_single_image(Rpp16f *srcPtr,
+                                                     RpptDescPtr srcDescPtr,
+                                                     Rpp16f *dstPtr,
+                                                     RpptDescPtr dstDescPtr,
+                                                     RpptImagePatchPtr dstImgSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     RpptRoiType roiType,
+                                                     RppLayoutParams srcLayoutParams,
+                                                     rpp::Handle& handle);
+
+RppStatus resize_bilinear_i8_i8_host_single_image(Rpp8s *srcPtr,
+                                                   RpptDescPtr srcDescPtr,
+                                                   Rpp8s *dstPtr,
+                                                   RpptDescPtr dstDescPtr,
+                                                   RpptImagePatchPtr dstImgSize,
+                                                   RpptROIPtr roiTensorPtrSrc,
+                                                   RpptRoiType roiType,
+                                                   RppLayoutParams srcLayoutParams,
+                                                   rpp::Handle& handle);
+
 template <typename T>
 RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
@@ -2445,6 +2753,20 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
                                        RppLayoutParams srcLayoutParams,
                                        RpptInterpolationType interpolationType,
                                        rpp::Handle& handle);
+
+template <typename T>
+RppStatus resize_separable_host_single_image(T *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             T *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             Rpp32f *tempPtr,
+                                             RpptDescPtr tempDescPtr,
+                                             RpptImagePatchPtr dstImgSize,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             RppLayoutParams srcLayoutParams,
+                                             RpptInterpolationType interpolationType,
+                                             rpp::Handle& handle);
 
 // -------------------- resize_crop_mirror --------------------
 
@@ -3225,6 +3547,6 @@ RppStatus tensor_binary_bitwise_op_dispatch_int_host_tensor(T1 *srcPtr1,
                                                             RpptBroadcastMode broadcastMode,
                                                             Rpp32u *srcPtr1roiTensor,
                                                             Rpp32u *srcPtr2roiTensor,
-                                                            rpp::Handle& handle);
+                                                        rpp::Handle& handle);
 
 #endif // HOST_TENSOR_EXECUTORS_HPP

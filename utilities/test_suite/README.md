@@ -126,6 +126,36 @@ The image test suite includes:
 -   Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant. (Current support only for U8 variants)
 -   Support for packed pre-decoded inputs (``decoder_type`` 0) and OpenCV file loading (``decoder_type`` 1) for input images
 
+### Single Image Processing Mode (RPP Image Test Suite)
+The image test suite includes support for single image processing, which processes images one-by-one instead of in batches. This mode provides performance improvements for single image augmentations.
+
+**Supported Augmentations:**
+Single image processing is currently supported for the following augmentations:
+- Case 0: Brightness
+- Case 2: Blend
+- Case 20: Flip
+- Case 21: Resize
+- Case 37: Crop
+- Case 49: Box Filter
+- Case 51: Median Filter
+- Case 54: Gaussian Filter
+
+**Running Single Image Tests:**
+To run single image tests, use the `--single_image` flag with the test suite:
+``` python
+python runImageTests.py --case_list 0 2 20 21 37 49 51 54 --test_type 0 --single_image 1
+```
+
+**QA Mode for Single Image:**
+Single image processing supports QA mode for validating outputs against golden references:
+``` python
+python runImageTests.py --case_list 0 2 20 21 37 49 51 54 --test_type 0 --qa_mode 1 --batch_size 3 --single_image 1
+```
+
+**Notes:**
+- Single image mode is available for both HOST and HIP backends
+- For resize operations in single image mode, the backend's default (NearestNeighbor) interpolation is used
+
 ## RPP Voxel Test Suite
 The 3D Voxel test suite can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)

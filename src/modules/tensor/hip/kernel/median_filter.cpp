@@ -449,6 +449,7 @@ __device__ __forceinline__ float compute_median_quickselect(T *window)
             {
                 ++i;
             }
+
         }
 
         // After partition: window[leftIdx..lt-1] < pivot, window[lt..gt] == pivot, window[gt+1..rightIdx] > pivot
@@ -2049,279 +2050,254 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
     {
         globalThreads_x = ((dstDescPtr->strides.hStride + kernelSize) / 3 + 7 ) >> 3;
 
-        if (kernelSize == 3)
+        using PkdKernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        PkdKernelType kernelFn = nullptr;
+        switch (kernelSize)
         {
-            hipLaunchKernelGGL(median_filter_3x3_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
+            case 3: kernelFn = median_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = median_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = median_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = median_filter_9x9_pkd_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
-        else if (kernelSize == 5)
-        {
-            hipLaunchKernelGGL(median_filter_5x5_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
-        else if (kernelSize == 7)
-        {
-            hipLaunchKernelGGL(median_filter_7x7_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
-        else if (kernelSize == 9)
-        {
-            hipLaunchKernelGGL(median_filter_9x9_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        if (kernelSize == 3)
+        using PlnKernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        PlnKernelType kernelFn = nullptr;
+        switch (kernelSize)
         {
-            hipLaunchKernelGGL(median_filter_3x3_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
+            case 3: kernelFn = median_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = median_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = median_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = median_filter_9x9_pln_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
-        else if (kernelSize == 5)
-        {
-            hipLaunchKernelGGL(median_filter_5x5_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
-        else if (kernelSize == 7)
-        {
-            hipLaunchKernelGGL(median_filter_7x7_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
-        else if (kernelSize == 9)
-        {
-            hipLaunchKernelGGL(median_filter_9x9_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-            HIP_CHECK_LAUNCH_RETURN();
-        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            if (kernelSize == 3)
+            using Pkd3Pln3KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            Pkd3Pln3KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(median_filter_3x3_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
+                case 3: kernelFn = median_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = median_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = median_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = median_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 5)
-            {
-                hipLaunchKernelGGL(median_filter_5x5_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
-            }
-            else if (kernelSize == 7)
-            {
-                hipLaunchKernelGGL(median_filter_7x7_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
-            }
-            else if (kernelSize == 9)
-            {
-                hipLaunchKernelGGL(median_filter_9x9_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
-            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            if (kernelSize == 3)
+            using Pln3Pkd3KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            Pln3Pkd3KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(median_filter_3x3_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
+                case 3: kernelFn = median_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = median_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = median_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = median_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 5)
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+
+// -------------------- Set 5 - Kernel Executors --------------------
+
+template <typename T>
+RppStatus hip_exec_median_filter_single_image(T *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              T *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u kernelSize,
+                                              RpptROIPtr roiPtrSrc,
+                                              RpptRoiType roiType,
+                                              rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_conversion_ltrb_to_xywh(roiPtrSrc, handle);
+
+    int globalThreads_x = (dstDescPtr->strides.hStride + kernelSize + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h + kernelSize;
+    int globalThreads_z = 1;
+
+    uint padLength = kernelSize / 2;
+    uint padLengthTwice = padLength * 2;
+    uint2 tileSize;
+    tileSize.x = (128 - padLengthTwice) / 8;
+    tileSize.y = 16 - padLengthTwice;
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        globalThreads_x = ((dstDescPtr->strides.hStride + kernelSize) / 3 + 7 ) >> 3;
+
+        using PkdKernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        PkdKernelType kernelFn = nullptr;
+        switch (kernelSize)
+        {
+            case 3: kernelFn = median_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = median_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = median_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = median_filter_9x9_pkd_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           padLength,
+                           tileSize,
+                           roiPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        using PlnKernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        PlnKernelType kernelFn = nullptr;
+        switch (kernelSize)
+        {
+            case 3: kernelFn = median_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = median_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = median_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = median_filter_9x9_pln_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           padLength,
+                           tileSize,
+                           roiPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            using Pkd3Pln3KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            Pkd3Pln3KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(median_filter_5x5_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
+                case 3: kernelFn = median_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = median_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = median_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = median_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 7)
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+
+            using Pln3Pkd3KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            Pln3Pkd3KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(median_filter_7x7_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
+                case 3: kernelFn = median_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = median_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = median_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = median_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 9)
-            {
-                hipLaunchKernelGGL(median_filter_9x9_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-                HIP_CHECK_LAUNCH_RETURN();
-            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
@@ -2363,3 +2339,39 @@ template RppStatus hip_exec_median_filter_tensor<Rpp8s>(Rpp8s*,
                                                         RpptROIPtr,
                                                         RpptRoiType,
                                                         rpp::Handle&);
+
+template RppStatus hip_exec_median_filter_single_image<Rpp8u>(Rpp8u*,
+                                                              RpptDescPtr,
+                                                              Rpp8u*,
+                                                              RpptDescPtr,
+                                                              Rpp32u,
+                                                              RpptROIPtr,
+                                                              RpptRoiType,
+                                                              rpp::Handle&);
+
+template RppStatus hip_exec_median_filter_single_image<half>(half*,
+                                                             RpptDescPtr,
+                                                             half*,
+                                                             RpptDescPtr,
+                                                             Rpp32u,
+                                                             RpptROIPtr,
+                                                             RpptRoiType,
+                                                             rpp::Handle&);
+
+template RppStatus hip_exec_median_filter_single_image<Rpp32f>(Rpp32f*,
+                                                               RpptDescPtr,
+                                                               Rpp32f*,
+                                                               RpptDescPtr,
+                                                               Rpp32u,
+                                                               RpptROIPtr,
+                                                               RpptRoiType,
+                                                               rpp::Handle&);
+
+template RppStatus hip_exec_median_filter_single_image<Rpp8s>(Rpp8s*,
+                                                              RpptDescPtr,
+                                                              Rpp8s*,
+                                                              RpptDescPtr,
+                                                              Rpp32u,
+                                                              RpptROIPtr,
+                                                              RpptRoiType,
+                                                              rpp::Handle&);

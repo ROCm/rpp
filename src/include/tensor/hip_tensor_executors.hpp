@@ -307,6 +307,17 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_brightness_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *alphaTensor,
+                                           Rpp32f *betaTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- blend --------------------
 
 template <typename T>
@@ -319,6 +330,17 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_blend_single_image(T *srcPtr1,
+                                      T *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *alphaTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
 
 // -------------------- color_cast --------------------
 
@@ -837,6 +859,16 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_box_filter_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32u kernelSize,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- gaussian_filter --------------------
 
 template <typename T>
@@ -849,6 +881,17 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
                                           rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                T *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32f *stdDevTensor,
+                                                Rpp32u kernelSize,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rpp::Handle& handle);
 
 // -------------------- sobel_filter --------------------
 
@@ -875,6 +918,16 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
                                         RpptRoiType roiType,
                                         rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_median_filter_single_image(T *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              T *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u kernelSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              rpp::Handle& handle);
+
 // -------------------- emboss --------------------
 
 template <typename T>
@@ -900,6 +953,15 @@ RppStatus hip_exec_crop_tensor(T *srcPtr,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_crop_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
 
 // -------------------- crop_and_patch --------------------
 
@@ -943,6 +1005,17 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                rpp::Handle& handle);
 
 template <typename T>
+RppStatus hip_exec_flip_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u *horizontalTensor,
+                                     Rpp32u *verticalTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+template <typename T>
 RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                      RpptGenericDescPtr srcGenericDescPtr,
                                      T *dstPtr,
@@ -981,6 +1054,17 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_resize_single_image(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptImagePatchPtr dstImgSize,
+                                       RpptInterpolationType interpolationType,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
 
 // -------------------- resize_crop_mirror --------------------
 
