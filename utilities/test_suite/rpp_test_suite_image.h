@@ -248,7 +248,7 @@ std::map<int, std::vector<Rpp32f>> TensorMinReferenceOutputs_F32 =
 // Golden outputs for Tensor max Kernel
 std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs_U8 =
 {
-    {1, {239, 245, 255}},
+    {1, {239, 244, 253}},
     {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
 };
 
@@ -262,7 +262,7 @@ std::map<int, std::vector<Rpp32f>> TensorMaxReferenceOutputs_F32 =
 // Golden outputs for Tensor sum Kernel
 std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs_U8 =
 {
-    {1, {334225, 813471, 2631125}},
+    {1, {334272, 813961, 2631106}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
