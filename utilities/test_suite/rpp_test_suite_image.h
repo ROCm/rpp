@@ -57,6 +57,14 @@ using namespace std;
 #define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT 480    // Lens correction golden outputs are generated with MAX_HEIGHT set to 480. Changing this constant will result in QA test failures
 #define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH 640     // Lens correction golden outputs are generated with MAX_WIDTH set to 640. Changing this constant will result in QA test failures
 
+#define CHECK_RETURN_STATUS(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+        exit(-1); \
+    } \
+} while (0)
+
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
@@ -2500,4 +2508,230 @@ void fill_perm_values(Rpp32u *permTensor, bool qaMode, int permOrder)
     };
     for(int i = 0; i < 3; i++)
         permTensor[i] = mapping[permOrder][i];
+}
+
+// Compare output for single image processing mode
+// Only supports: BRIGHTNESS (0), BLEND (2), FLIP (20), RESIZE (21), CROP (37), BOX_FILTER (49), MEDIAN_FILTER (51), GAUSSIAN_FILTER (54)
+inline void compare_output_single_image(const vector<cv::Mat>& outputVec, const vector<RpptDesc>& srcDescPtr, const vector<RpptDesc>& dstDescPtr, string funcName, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int additionalParam, int testCase, string dst, string scriptPath)
+{
+    string func = funcName;
+    string refFile = "";
+    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;
+    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr[0].c;
+    int pln1RefStride = refOutputHeight * refOutputWidth * noOfImages * 3;  // Offset to skip PKD3/PLN3 data in reference file
+
+    string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
+    func += dataType[dstDescPtr[0].dataType];
+    
+    // binFile is for reference file lookup - does NOT include layout information
+    std::string binFile = func + "Tensor";
+    
+    // Determine source and destination layout names from descriptors
+    string srcLayoutName, dstLayoutName;
+    
+    // Determine source layout
+    if(srcDescPtr[0].layout == RpptLayout::NHWC)
+        srcLayoutName = "PKD3";
+    else if(srcDescPtr[0].layout == RpptLayout::NCHW && srcDescPtr[0].c == 3)
+        srcLayoutName = "PLN3";
+    else
+        srcLayoutName = "PLN1";
+    
+    // Determine destination layout
+    if(dstDescPtr[0].layout == RpptLayout::NHWC)
+        dstLayoutName = "PKD3";
+    else if(dstDescPtr[0].layout == RpptLayout::NCHW && dstDescPtr[0].c == 3)
+        dstLayoutName = "PLN3";
+    else
+        dstLayoutName = "PLN1";
+    
+    // func is for display/QA results - DOES include layout information
+    func += "Tensor_" + srcLayoutName + "_to_" + dstLayoutName;
+
+    // Handle additional parameters for supported single image cases
+    if(testCase == RESIZE)
+    {
+        func += "_interpolationType" + interpolationTypeName;
+        binFile += "_interpolationType" + interpolationTypeName;
+    }
+    else if(testCase == BOX_FILTER || testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER)
+    {
+        func += "_kernelSize" + std::to_string(additionalParam);
+        binFile += "_kernelSize" + std::to_string(additionalParam);
+    }
+
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
+    int fileMatch = 0;
+    
+    if(dstDescPtr[0].dataType == RpptDataType::U8)
+    {
+        Rpp64u binOutputSize = refOutputHeight * refOutputWidth * noOfImages * 4;
+        Rpp8u* binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+        read_bin_file(refFile, binaryContent);
+
+        // Compare each image individually
+        for(int imageCnt = 0; imageCnt < noOfImages; imageCnt++)
+        {
+            // For PLN1 layouts, reference data is offset by pln1RefStride to skip PKD3/PLN3 data
+            Rpp8u* refOutputImage = (dstDescPtr[imageCnt].c == 1 && dstDescPtr[imageCnt].layout == RpptLayout::NCHW) ? 
+                                     binaryContent + pln1RefStride + (imageCnt * refOutputSize) :
+                                     binaryContent + (imageCnt * refOutputSize);
+            int height = dstImgSizes[imageCnt].height;
+            int width = dstImgSizes[imageCnt].width;
+            int matchedPixels = 0;
+            int totalPixels = height * width * dstDescPtr[imageCnt].c;
+
+            if(dstDescPtr[imageCnt].layout == RpptLayout::NHWC)
+            {
+                // PKD3 comparison
+                for(int i = 0; i < height; i++)
+                {
+                    const Rpp8u* outputRow = outputVec[imageCnt].ptr<Rpp8u>(i);
+                    const Rpp8u* refRow = refOutputImage + (i * refOutputWidth * dstDescPtr[imageCnt].c);
+                    for(int j = 0; j < width * dstDescPtr[imageCnt].c; j++)
+                    {
+                        int diff = abs(outputRow[j] - refRow[j]);
+                        if(diff <= CUTOFF)
+                            matchedPixels++;
+                    }
+                }
+            }
+            else if(dstDescPtr[imageCnt].layout == RpptLayout::NCHW && dstDescPtr[imageCnt].c == 3)
+            {
+                // PLN3 comparison - output is planar, reference is packed
+                // Channels in Mat are at actualInputHeight intervals, not outputHeight intervals
+                int matChannelStride = outputVec[imageCnt].rows / 3;
+                for(int c = 0; c < 3; c++)
+                {
+                    for(int i = 0; i < height; i++)
+                    {
+                        const Rpp8u* outputRow = outputVec[imageCnt].ptr<Rpp8u>(i + (c * matChannelStride));
+                        const Rpp8u* refRow = refOutputImage + (i * refOutputWidth * 3) + c;
+                        for(int j = 0; j < width; j++)
+                        {
+                            int diff = abs(outputRow[j] - refRow[j * 3]);
+                            if(diff <= CUTOFF)
+                                matchedPixels++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // PLN1 comparison
+                for(int i = 0; i < height; i++)
+                {
+                    const Rpp8u* outputRow = outputVec[imageCnt].ptr<Rpp8u>(i);
+                    const Rpp8u* refRow = refOutputImage + (i * refOutputWidth);
+                    for(int j = 0; j < width; j++)
+                    {
+                        int diff = abs(outputRow[j] - refRow[j]);
+                        if(diff <= CUTOFF)
+                            matchedPixels++;
+                    }
+                }
+            }
+
+            if(matchedPixels == totalPixels && matchedPixels != 0)
+                fileMatch++;
+        }
+        free(binaryContent);
+    }
+    else if(dstDescPtr[0].dataType == RpptDataType::F32)
+    {
+        Rpp64u binOutputSize = refOutputHeight * refOutputWidth * noOfImages * 4;
+        Rpp32f* binaryContent = (Rpp32f *)malloc(binOutputSize * sizeof(Rpp32f));
+        read_bin_file(refFile, binaryContent);
+
+        // Compare each image individually
+        for(int imageCnt = 0; imageCnt < noOfImages; imageCnt++)
+        {
+            // For PLN1 layouts, reference data is offset by pln1RefStride to skip PKD3/PLN3 data
+            Rpp32f* refOutputImage = (dstDescPtr[imageCnt].c == 1 && dstDescPtr[imageCnt].layout == RpptLayout::NCHW) ? 
+                                     binaryContent + pln1RefStride + (imageCnt * refOutputSize) :
+                                     binaryContent + (imageCnt * refOutputSize);
+            int height = dstImgSizes[imageCnt].height;
+            int width = dstImgSizes[imageCnt].width;
+            int matchedPixels = 0;
+            int totalPixels = height * width * dstDescPtr[imageCnt].c;
+
+            if(dstDescPtr[imageCnt].layout == RpptLayout::NHWC)
+            {
+                // PKD3 comparison
+                for(int i = 0; i < height; i++)
+                {
+                    const Rpp32f* outputRow = outputVec[imageCnt].ptr<Rpp32f>(i);
+                    const Rpp32f* refRow = refOutputImage + (i * refOutputWidth * dstDescPtr[imageCnt].c);
+                    for(int j = 0; j < width * dstDescPtr[imageCnt].c; j++)
+                    {
+                        Rpp32f diff = abs(outputRow[j] - refRow[j]);
+                        if(diff <= 2e-6)
+                            matchedPixels++;
+                    }
+                }
+            }
+            else if(dstDescPtr[imageCnt].layout == RpptLayout::NCHW && dstDescPtr[imageCnt].c == 3)
+            {
+                // PLN3 comparison - output is planar, reference is packed
+                // Channels in Mat are at actualInputHeight intervals, not outputHeight intervals
+                int matChannelStride = outputVec[imageCnt].rows / 3;
+                for(int c = 0; c < 3; c++)
+                {
+                    for(int i = 0; i < height; i++)
+                    {
+                        const Rpp32f* outputRow = outputVec[imageCnt].ptr<Rpp32f>(i + (c * matChannelStride));
+                        const Rpp32f* refRow = refOutputImage + (i * refOutputWidth * 3) + c;
+                        for(int j = 0; j < width; j++)
+                        {
+                            Rpp32f diff = abs(outputRow[j] - refRow[j * 3]);
+                            if(diff <= 2e-6)
+                                matchedPixels++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // PLN1 comparison
+                for(int i = 0; i < height; i++)
+                {
+                    const Rpp32f* outputRow = outputVec[imageCnt].ptr<Rpp32f>(i);
+                    const Rpp32f* refRow = refOutputImage + (i * refOutputWidth);
+                    for(int j = 0; j < width; j++)
+                    {
+                        Rpp32f diff = abs(outputRow[j] - refRow[j]);
+                        if(diff <= 2e-6)
+                            matchedPixels++;
+                    }
+                }
+            }
+
+            if(matchedPixels == totalPixels && matchedPixels != 0)
+                fileMatch++;
+        }
+        free(binaryContent);
+    }
+
+    std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
+    std::string status = func + ": ";
+    if(fileMatch == noOfImages)
+    {
+        std::cout << "PASSED!";
+        status += "PASSED";
+    }
+    else
+    {
+        std::cout << "FAILED! " << fileMatch << "/" << noOfImages << " outputs are matching with reference outputs";
+        status += "FAILED";
+    }
+
+    // Append the QA results to file
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
 }

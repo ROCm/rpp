@@ -988,6 +988,168 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
+template <typename T>
+RppStatus hip_exec_resize_single_image(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 RpptImagePatchPtr dstImgSize,
+                                 RpptInterpolationType interpolationType,
+                                 RpptROIPtr roiSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::XYWH)
+        hip_exec_roi_conversion_xywh_to_ltrb(roiSrc, handle);
+
+    if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
+    {
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = 1;
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                            dstImgSize,
+                            roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(resize_nearest_neighbor_pln_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                            dstPtr,
+                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                            dstDescPtr->c,
+                            dstImgSize,
+                            roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+        {
+            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_hip_tensor,
+                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                0,
+                                handle.GetStream(),
+                                srcPtr,
+                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                dstPtr,
+                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                dstImgSize,
+                                roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
+            }
+        }
+    }
+    else if (interpolationType == RpptInterpolationType::BILINEAR)
+    {
+        int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_y = dstDescPtr->h;
+        int globalThreads_z = 1;
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               dstImgSize,
+                               roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            hipLaunchKernelGGL(resize_bilinear_pln_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               dstDescPtr->c,
+                               dstImgSize,
+                               roiSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+        {
+            if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                hipLaunchKernelGGL(resize_bilinear_pkd3_pln3_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                                   dstImgSize,
+                                   roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                hipLaunchKernelGGL(resize_bilinear_pln3_pkd3_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                                   dstPtr,
+                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                                   dstImgSize,
+                                   roiSrc);
+                HIP_CHECK_LAUNCH_RETURN();
+            }
+        }
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return RPP_SUCCESS;
+}
+
 template RppStatus hip_exec_resize_tensor<Rpp8u>(Rpp8u*,
                                                  RpptDescPtr,
                                                  Rpp8u*,
@@ -1027,3 +1189,43 @@ template RppStatus hip_exec_resize_tensor<Rpp8s>(Rpp8s*,
                                                  RpptROIPtr,
                                                  RpptRoiType,
                                                  rpp::Handle&);
+
+template RppStatus hip_exec_resize_single_image<Rpp8u>(Rpp8u*,
+                                                       RpptDescPtr,
+                                                       Rpp8u*,
+                                                       RpptDescPtr,
+                                                       RpptImagePatchPtr,
+                                                       RpptInterpolationType,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);
+
+template RppStatus hip_exec_resize_single_image<half>(half*,
+                                                      RpptDescPtr,
+                                                      half*,
+                                                      RpptDescPtr,
+                                                      RpptImagePatchPtr,
+                                                      RpptInterpolationType,
+                                                      RpptROIPtr,
+                                                      RpptRoiType,
+                                                      rpp::Handle&);
+
+template RppStatus hip_exec_resize_single_image<Rpp32f>(Rpp32f*,
+                                                        RpptDescPtr,
+                                                        Rpp32f*,
+                                                        RpptDescPtr,
+                                                        RpptImagePatchPtr,
+                                                        RpptInterpolationType,
+                                                        RpptROIPtr,
+                                                        RpptRoiType,
+                                                        rpp::Handle&);
+
+template RppStatus hip_exec_resize_single_image<Rpp8s>(Rpp8s*,
+                                                       RpptDescPtr,
+                                                       Rpp8s*,
+                                                       RpptDescPtr,
+                                                       RpptImagePatchPtr,
+                                                       RpptInterpolationType,
+                                                       RpptROIPtr,
+                                                       RpptRoiType,
+                                                       rpp::Handle&);
