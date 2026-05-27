@@ -9,7 +9,7 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo apt install cmake
   ```
 
-* Pre-decoded image inputs: folders of ``*.raw`` plus sidecar ``*.info``. To build or refresh these from JPEGs, use the dump script under ``utilities/test_suite/scripts/`` (see ``utilities/test_suite/scripts/README.md``). The Tensor_image binaries only read the pre-generated files; they do not embed a JPEG decoder.
+* Pre-decoded image inputs: folders of `*.rgb` files with embedded headers. To build or refresh these from JPEGs, use the conversion script under `utilities/test_suite/scripts/` (see `utilities/test_suite/scripts/README.md`). The Tensor_image binaries only read the pre-generated files; they do not embed a JPEG decoder.
 
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
   ```shell
@@ -61,7 +61,7 @@ The image test suite accepts the following command line arguments:
 -   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
 -   qa_mode: Output images from tests will be compared with golden outputs - (0 / 1). Default is 0
--   decoder_type: Input loader — (0 = packed ``.raw`` + sidecar ``.info`` / 1 = OpenCV image files). Default is 0
+-   decoder_type: Input loader — (0 = packed `.rgb` files with embedded headers / 1 = OpenCV image files). Default is 0
 -   num_runs: Specifies the number of runs for running the performance tests
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
@@ -296,3 +296,12 @@ The miscellaneous test suite includes:
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
 -   QA and Performance tests are included for one input/output bitdepth F32.
 -   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
+
+## Test Suite Utilities
+
+For detailed information on:
+- Converting JPEG images to `.rgb` format
+- Generating golden outputs for QA mode
+- Organizing reference outputs
+
+See [`scripts/README.md`](scripts/README.md)

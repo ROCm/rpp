@@ -1,7 +1,0 @@
-width=150
-height=150
-channels=1
-pixel_format=GRAY
-row_major=1
-byte_order=interleaved
-source_jpeg=3_img150x150.jpg

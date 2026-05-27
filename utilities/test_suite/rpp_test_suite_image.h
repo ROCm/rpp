@@ -556,7 +556,88 @@ struct RpptTestSuiteInfoSidecar
     int color_range = 0;
 };
 
-// Path to sidecar .info (strip last extension, append ".info") — used for .yuv, .raw, etc.
+// RGB file header for unified binary format (replaces separate .raw + .info dual files)
+struct RpptImageFileHeader
+{
+    uint32_t magic;      // 0x52474242 ("RGBB")
+    uint32_t version;    // Version 1
+    uint32_t width;      // Image width
+    uint32_t height;     // Image height
+    uint32_t channels;   // 1 for grayscale, 3 for RGB, 4 for CMYK (future)
+    uint32_t reserved1;  // Reserved for future use
+
+    static constexpr uint32_t MAGIC = 0x52474242;   // "RGBB"
+    static constexpr uint32_t VERSION_1 = 1;
+    static constexpr size_t HEADER_SIZE = 24;
+};
+
+struct RpptYuvFileHeader
+{
+    uint32_t magic;         // 0x4E565942 ("BYVN" - "NV12" backwards)
+    uint32_t version;       // Version 1
+    uint32_t width;         // Image width
+    uint32_t height;        // Image height
+    uint32_t color_range;   // 0=limited, 1=full
+    uint32_t col_standard;  // 0=BT.601, 1=BT.709, 2=BT.2020
+
+    static constexpr uint32_t MAGIC = 0x4E565942;   // "BYVN"
+    static constexpr uint32_t VERSION_1 = 1;
+    static constexpr size_t HEADER_SIZE = 24;
+};
+
+// Parse .rgb file header (supports both grayscale channels=1 and RGB channels=3).
+// Returns true if valid header with magic/version check.
+inline bool parse_image_file_header(const std::string& filePath, RpptTestSuiteInfoSidecar& out)
+{
+    out = RpptTestSuiteInfoSidecar();
+    FILE* fp = fopen(filePath.c_str(), "rb");
+    if (!fp) return false;
+
+    RpptImageFileHeader header;
+    size_t nread = fread(&header, 1, sizeof(RpptImageFileHeader), fp);
+    fclose(fp);
+
+    if (nread != sizeof(RpptImageFileHeader)) return false;
+
+    // Validate magic
+    if (header.magic != RpptImageFileHeader::MAGIC)
+    {
+        std::cerr << "Error: invalid .rgb magic number: " << filePath << std::endl;
+        return false;
+    }
+
+    // Validate version
+    if (header.version != RpptImageFileHeader::VERSION_1)
+    {
+        std::cerr << "Error: unsupported version " << header.version << ": " << filePath << std::endl;
+        return false;
+    }
+
+    out.width = (int)header.width;
+    out.height = (int)header.height;
+    out.channels = (int)header.channels;
+    out.has_channels = true;
+
+    // Validate for 8K support
+    if (out.width <= 0 || out.width > 7680 || out.height <= 0 || out.height > 4320)
+    {
+        std::cerr << "Error: dimensions out of range (max 7680×4320): "
+                  << out.width << "×" << out.height << " in " << filePath << std::endl;
+        return false;
+    }
+
+    // Validate channels (1=grayscale, 3=RGB, 4=CMYK future)
+    if (out.channels != 1 && out.channels != 3 && out.channels != 4)
+    {
+        std::cerr << "Error: invalid channel count (expected 1, 3, or 4), got " << out.channels
+                  << " in " << filePath << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+// Path to sidecar .info (strip last extension, append ".info") — used for .yuv
 inline std::string test_suite_sidecar_info_path(const std::string& mediaFilePath)
 {
     std::string infoPath = mediaFilePath;
@@ -567,16 +648,7 @@ inline std::string test_suite_sidecar_info_path(const std::string& mediaFilePath
     return infoPath;
 }
 
-// Optional single-channel gray companion for color JPEG dumps: <stem>.raw → <stem>_pln1gray.bin (not matched by *.raw glob).
-inline std::string packed_raw_pln1gray_companion_path(const std::string& rawPath)
-{
-    if (rawPath.size() < 4)
-        return std::string();
-    if (rawPath.compare(rawPath.size() - 4, 4, ".raw") != 0)
-        return std::string();
-    return rawPath.substr(0, rawPath.size() - 4) + "_pln1gray.bin";
-}
-
+// Legacy: parse .info sidecar (now only used for YUV files)
 inline bool parse_test_suite_info_sidecar(const std::string& mediaFilePath, RpptTestSuiteInfoSidecar& out)
 {
     out = RpptTestSuiteInfoSidecar();
@@ -612,7 +684,7 @@ inline bool parse_test_suite_info_sidecar(const std::string& mediaFilePath, Rppt
     return (out.width > 0 && out.height > 0);
 }
 
-// sets values of maxHeight and maxWidth (decoderType 0: packed .raw + .info; 1: OpenCV image files)
+// sets values of maxHeight and maxWidth (decoderType 0: .rgb with embedded header; 1: OpenCV image files)
 inline void set_max_dimensions(vector<string> imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed, int decoderType)
 {
     if (decoderType == 0)
@@ -620,9 +692,9 @@ inline void set_max_dimensions(vector<string> imagePaths, int& maxHeight, int& m
         for (const std::string& imagePath : imagePaths)
         {
             RpptTestSuiteInfoSidecar info;
-            if (!parse_test_suite_info_sidecar(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+            if (!parse_image_file_header(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
             {
-                std::cerr << "Error: missing or invalid packed-RAW sidecar .info (need width, height, channels) for: "
+                std::cerr << "Error: missing or invalid .rgb header (need width, height, channels) for: "
                           << imagePath << std::endl;
                 continue;
             }
@@ -674,6 +746,36 @@ struct RpptYuvNv12Sidecar
 };
 
 // Read full NV12 .info sidecar. Returns true when width and height are valid.
+// Parse .yuv file header (embedded 24-byte header)
+inline bool parse_yuv_file_header(const std::string& filePath, RpptYuvNv12Sidecar& out)
+{
+    out = RpptYuvNv12Sidecar();
+    FILE* fp = fopen(filePath.c_str(), "rb");
+    if (!fp) return false;
+
+    RpptYuvFileHeader header;
+    size_t nread = fread(&header, 1, sizeof(RpptYuvFileHeader), fp);
+    fclose(fp);
+
+    if (nread != sizeof(RpptYuvFileHeader)) return false;
+
+    // Validate magic
+    if (header.magic != RpptYuvFileHeader::MAGIC)
+        return false;
+
+    // Validate version
+    if (header.version != RpptYuvFileHeader::VERSION_1)
+        return false;
+
+    // Extract metadata
+    out.width = header.width;
+    out.height = header.height;
+    out.color_range = static_cast<RpptColorRange>(header.color_range);
+    out.col_standard = static_cast<RpptColorStandard>(header.col_standard);
+
+    return (out.width > 0 && out.height > 0);
+}
+
 inline bool parse_yuv_nv12_sidecar(const std::string& yuvFilePath, RpptYuvNv12Sidecar& out)
 {
     out = RpptYuvNv12Sidecar();
@@ -700,22 +802,14 @@ inline bool parse_yuv_dimensions_from_sidecar(const std::string& yuvFilePath, in
     return true;
 }
 
-// NV12/YUV dimensions: require a .info sidecar next to the .yuv file. Exits on failure.
+// NV12/YUV dimensions: require .info sidecar next to the .yuv file. Exits on failure.
 inline void parse_yuv_dimensions(const std::string& yuvFilePath, int& width, int& height)
 {
-    std::string infoPath = test_suite_sidecar_info_path(yuvFilePath);
-    struct stat st;
-    if (stat(infoPath.c_str(), &st) != 0 || !S_ISREG(st.st_mode))
-    {
-        std::cerr << "Error: no .info file for width and height.\n"
-                  << "  Expected sidecar: " << infoPath << "\n"
-                  << "  YUV input: " << yuvFilePath << "\n";
-        std::exit(1);
-    }
     if (!parse_yuv_dimensions_from_sidecar(yuvFilePath, width, height))
     {
-        std::cerr << "Error: .info file must define valid width and height (e.g. width=1920 and height=1080).\n"
-                  << "  Sidecar: " << infoPath << "\n"
+        std::string infoPath = test_suite_sidecar_info_path(yuvFilePath);
+        std::cerr << "Error: no .info file for width and height.\n"
+                  << "  Expected sidecar: " << infoPath << "\n"
                   << "  YUV input: " << yuvFilePath << "\n";
         std::exit(1);
     }
@@ -791,7 +885,7 @@ inline void read_yuv_batch_nv12(Rpp8u *input, RpptDescPtr descPtr, vector<string
     }
 }
 
-// sets roi xywh values and dstImg sizes (decoderType 0: packed .raw + .info; 1: OpenCV image files)
+// sets roi xywh values and dstImg sizes (decoderType 0: .rgb with embedded header; 1: OpenCV image files)
 inline void set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes, int decoderType)
 {
     int i = 0;
@@ -802,9 +896,9 @@ inline void set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, 
         if (decoderType == 0)
         {
             RpptTestSuiteInfoSidecar info;
-            if (!parse_test_suite_info_sidecar(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+            if (!parse_image_file_header(imagePath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
             {
-                std::cerr << "Error: invalid packed-RAW .info for ROI: " << imagePath << std::endl;
+                std::cerr << "Error: invalid .rgb header for ROI: " << imagePath << std::endl;
                 continue;
             }
             width = info.width;
@@ -1205,56 +1299,60 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
 }
 #endif /* RPP_TEST_SUITE_HAVE_OPENCV */
 
-// Read a batch of packed raw images (row-major pixels) using sidecar .info (same key=value format as YUV .info; see scripts/README.md).
-// Descriptor c=1 on RGB-packed (.info channels=3) prefers optional ``<stem>_pln1gray.bin`` (+ ``<stem>_pln1gray.info``) produced by the JPEG dump script when present
-// (libjpeg-turbo TJPF_GRAY from the JPEG bitstream, matching prior in-process JPEG gray decode for PLN1). If that companion is absent, falls back to BT.601-style luma from RGB bytes.
-// c=3 loads RGB from single-channel files by replicating gray to R=G=B (same channel expansion as libjpeg-turbo grayscale JPEG → TJPF_RGB).
-inline void read_image_batch_packed_raw(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
+// Read a batch of packed .rgb images (row-major pixels with 24-byte binary header).
+// Supports both grayscale (channels=1) and RGB (channels=3) in unified format.
+// Descriptor c=1 on RGB input (channels=3) converts RGB→gray using BT.601 luma formula.
+// Descriptor c=3 on gray input (channels=1) expands gray→RGB by replicating to R=G=B.
+inline void read_image_batch_packed(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     for (int i = 0; i < descPtr->n; i++)
     {
-        std::string rawPath = *(imagesNamesStart + i);
+        std::string mediaPath = *(imagesNamesStart + i);
         RpptTestSuiteInfoSidecar info;
-        if (!parse_test_suite_info_sidecar(rawPath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
+
+        // Parse .rgb header
+        if (!parse_image_file_header(mediaPath, info) || !info.has_channels || info.width <= 0 || info.height <= 0)
         {
-            std::cerr << "\n packed RAW: missing or invalid .info sidecar for " << rawPath;
+            std::cerr << "\nError: invalid or missing .rgb header: " << mediaPath;
             continue;
         }
+
         const int outC = (int)descPtr->c;
-        std::string readMediaPath = rawPath;
-        if (outC == 1 && info.channels == 3)
-        {
-            const std::string grayPath = packed_raw_pln1gray_companion_path(rawPath);
-            if (!grayPath.empty())
-            {
-                RpptTestSuiteInfoSidecar ginfo;
-                if (parse_test_suite_info_sidecar(grayPath, ginfo) && ginfo.has_channels && ginfo.channels == 1 && ginfo.width == info.width
-                    && ginfo.height == info.height)
-                {
-                    info = ginfo;
-                    readMediaPath = grayPath;
-                }
-            }
-        }
         const int inCh = info.channels;
+
+        // Validate channel conversion support
         if (!((inCh == outC) || (outC == 1 && inCh == 3) || (outC == 3 && inCh == 1)))
         {
-            std::cerr << "\n packed RAW: unsupported .info channels (" << inCh << ") for descriptor c (" << outC << ") for " << rawPath;
+            std::cerr << "\nUnsupported channel conversion (" << inCh << " -> " << outC
+                      << ") for " << mediaPath;
             continue;
         }
-        const size_t expected = (size_t)info.width * (size_t)info.height * (size_t)inCh;
-        FILE* fp = fopen(readMediaPath.c_str(), "rb");
+
+        const size_t pixelBytes = (size_t)info.width * (size_t)info.height * (size_t)inCh;
+
+        FILE* fp = fopen(mediaPath.c_str(), "rb");
         if (!fp)
         {
-            std::cerr << "\n unable to open packed RAW file: " << readMediaPath;
+            std::cerr << "\nUnable to open file: " << mediaPath;
             continue;
         }
-        std::vector<Rpp8u> fileBuf(expected);
-        size_t nread = fread(fileBuf.data(), 1, expected, fp);
-        fclose(fp);
-        if (nread != expected)
+
+        // Skip 24-byte header
+        if (fseek(fp, RpptImageFileHeader::HEADER_SIZE, SEEK_SET) != 0)
         {
-            std::cerr << "\n packed RAW read size mismatch for " << readMediaPath;
+            std::cerr << "\nSeek error: " << mediaPath;
+            fclose(fp);
+            continue;
+        }
+
+        std::vector<Rpp8u> fileBuf(pixelBytes);
+        size_t nread = fread(fileBuf.data(), 1, pixelBytes, fp);
+        fclose(fp);
+
+        if (nread != pixelBytes)
+        {
+            std::cerr << "\nRead size mismatch (expected " << pixelBytes
+                      << ", got " << nread << "): " << mediaPath;
             continue;
         }
         const int w = info.width;
@@ -1336,12 +1434,16 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             outputRow += rowStrideBytes;
         }
         string outputImagePath = outputFolder + *(imagesNamesStart + j);
-        // OpenCV imwrite does not support .yuv; use .png for YUV-to-RGB dumps (input names are .yuv)
+        // OpenCV imwrite does not support .yuv, .rgb, .raw; use .png for these dumps
         if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".yuv") == 0)
         {
             outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
         }
         else if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".raw") == 0)
+        {
+            outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
+        }
+        else if (outputImagePath.size() >= 4 && outputImagePath.compare(outputImagePath.size() - 4, 4, ".rgb") == 0)
         {
             outputImagePath = outputImagePath.substr(0, outputImagePath.size() - 4) + ".png";
         }
@@ -1529,42 +1631,24 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
     Rpp64u binOutputSize = (Rpp64u)refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
-    string dataType[4] = {"_u8_", "_f32_", "_f16_", "_i8_"};
+    string dataType[4] = {"_u8", "_f32", "_f16", "_i8"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
         func += dataType[srcDescPtr->dataType];
     else
     {
-        func = func + dataType[srcDescPtr->dataType];
-        func.resize(func.size() - 1);
-        func += dataType[dstDescPtr->dataType];
+        func = func + dataType[srcDescPtr->dataType] + "_to" + dataType[dstDescPtr->dataType];
     }
 
-    std::string binFile = func + "Tensor";
-    if(testCase == SOBEL_FILTER)
-    {
-        if(srcDescPtr->layout == RpptLayout::NHWC)
-        {
-            func += "Tensor_PKD3";
-        }
-        else if (srcDescPtr->c == 3 && srcDescPtr->layout == RpptLayout::NCHW)
-        {
-            func += "Tensor_PLN3";
-        }
-        else if (srcDescPtr->c == 1 && srcDescPtr->layout == RpptLayout::NCHW)
-            func += "Tensor_PLN1";
-        else
-            func += "_to_PLN1";
-        pln1RefStride = 0;
-    }
-    else if(srcDescPtr->layout == RpptLayout::NHWC)
-        func += "Tensor_PKD3";
+    // Add layout suffixes to func (for test display name)
+    if(srcDescPtr->layout == RpptLayout::NHWC)
+        func += "_PKD3";
     else
     {
         if (srcDescPtr->c == 3)
-            func += "Tensor_PLN3";
+            func += "_PLN3";
         else
-            func += "Tensor_PLN1";
+            func += "_PLN1";
     }
     if(dstDescPtr->layout == RpptLayout::NHWC)
         func += "_to_PKD3";
@@ -1573,12 +1657,33 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
         if (dstDescPtr->c == 3)
             func += "_to_PLN3";
         else
-        {
             func += "_to_PLN1";
-            if(testCase == COLOR_TO_GREYSCALE)
-                pln1RefStride = 0;
-        }
     }
+
+    // Initialize binFile
+    // For sobel/color_to_greyscale: PKD3/PLN3 share one file, PLN1 has separate file
+    // For other functions: use funcName without layout suffixes (combined PKD3+PLN1 file)
+    std::string binFile = funcName;
+    if(testCase == SOBEL_FILTER || testCase == COLOR_TO_GREYSCALE)
+    {
+        // Add PLN1 layout suffix only for grayscale input (c=1)
+        if (srcDescPtr->c == 1)
+            binFile += "_PLN1_to_PLN1";
+        pln1RefStride = 0;
+    }
+
+    // Add datatype to binFile
+    if(srcDescPtr->dataType == dstDescPtr->dataType)
+        binFile += dataType[srcDescPtr->dataType];
+    else
+    {
+        binFile = binFile + dataType[srcDescPtr->dataType];
+        binFile.resize(binFile.size() - 1);
+        binFile += dataType[dstDescPtr->dataType];
+    }
+    // Remove trailing underscore from datatype to match actual filename format
+    if (!binFile.empty() && binFile.back() == '_')
+        binFile.pop_back();
 
     if(testCase == RESIZE ||testCase == ROTATE || testCase == WARP_AFFINE || testCase == WARP_PERSPECTIVE || testCase == REMAP)
     {
@@ -1615,8 +1720,6 @@ inline void compare_output(void* output, string funcName, RpptDescPtr srcDescPtr
             default: gradientName = ""; break;
         }
         binFile += "_kernelSize" + std::to_string(kernelSize) + gradientName;
-        if(srcDescPtr->c == 1)
-            pln1RefStride += (dstDescPtr->strides.nStride * dstDescPtr->n);
     }
 
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";

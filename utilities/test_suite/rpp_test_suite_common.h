@@ -32,7 +32,7 @@ SOFTWARE.
 #include <cstdio>
 #include <cstdlib>
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 using namespace std;
 
 // Test-suite convenience macro used by the HIP test binaries. On any non-zero

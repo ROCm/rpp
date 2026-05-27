@@ -96,6 +96,13 @@ int main(int argc, char **argv)
         cout << "\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:87> <number of runs > 0> <layout type (layout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n";
     }
 
+    // Create DEBUG_MODE output directory if enabled
+    string debugModeOutputDir = scriptPath + "/DEBUG_MODE_RESULTS";
+    if (DEBUG_MODE)
+    {
+        mkdir(debugModeOutputDir.c_str(), 0777);
+    }
+
     if (layoutType == 2)
     {
         if(testCase == COLOR_CAST || testCase == GLITCH || testCase == COLOR_TWIST || testCase == COLOR_TEMPERATURE || testCase == COLOR_TO_GREYSCALE || testCase == HUE || testCase == SATURATION)
@@ -236,7 +243,7 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    const char* inputExt = (decoderType == 0) ? ".raw" : ".jpg";
+    const char* inputExt = (decoderType == 0) ? ".rgb" : ".jpg";
     search_files_recursive(src, imageNames, imageNamesPath, inputExt);
     if(dualInputCase)
     {
@@ -407,7 +414,7 @@ int main(int argc, char **argv)
 
         //Read images
         if(decoderType == 0)
-            read_image_batch_packed_raw(inputu8, srcDescPtr, imagesPathStart);
+            read_image_batch_packed(inputu8, srcDescPtr, imagesPathStart);
 #if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
         else
             read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
@@ -431,7 +438,7 @@ int main(int argc, char **argv)
         if(dualInputCase)
         {
             if(decoderType == 0)
-                read_image_batch_packed_raw(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                read_image_batch_packed(inputu8Second, srcDescPtr, imagesPathSecondStart);
 #if defined(RPP_TEST_SUITE_HAVE_OPENCV) && RPP_TEST_SUITE_HAVE_OPENCV
             else
                 read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
@@ -1614,7 +1621,7 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    if(qaFlag)
+                    if(qaFlag || DEBUG_MODE)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
                         init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
@@ -1876,7 +1883,7 @@ int main(int argc, char **argv)
                     testCaseName = "channel_dropout";
 
                     Rpp32f dropoutProbability[batchSize];
-                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = (qaFlag || DEBUG_MODE) ? DROPOUT_FIXED_SEED : std::random_device{}();
                     for (i = 0; i < batchSize; i++)
                         dropoutProbability[i] = 0.4f;
                     Rpp8u dropoutTensor[batchSize * srcDescPtr->c];
@@ -1895,7 +1902,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "cutout_dropout";
                     Rpp32u boxesInEachImage = 1;
-                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = (qaFlag || DEBUG_MODE) ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numBoxesTensor[batchSize * boxesInEachImage];
@@ -1924,7 +1931,7 @@ int main(int argc, char **argv)
                     testCaseName = "grid_dropout";
                     Rpp32u numGridsPerColumn = 10, numGridsPerRow = 10;
                     Rpp32f holeRatio = 0.4f;
-                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = (qaFlag || DEBUG_MODE) ? DROPOUT_FIXED_SEED : std::random_device{}();
 
                     Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
                     Rpp32u totalBoxes = srcDescPtr->n * boxesInEachImage;
@@ -1969,7 +1976,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "random_erase";
                     Rpp32u boxesInEachImage = 1;
-                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = (qaFlag || DEBUG_MODE) ? DROPOUT_FIXED_SEED : std::random_device{}();
                     Rpp32u noiseBufferSize = RANDOM_ERASE_NOISE_BUFFER_SIDE * RANDOM_ERASE_NOISE_BUFFER_SIDE * srcDescPtr->c;
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32f *colorBuffer[noiseBufferSize];
@@ -1988,7 +1995,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "coarse";
                     Rpp32u maxBoxesPerImage = 8;
-                    Rpp32u seed = qaFlag ? DROPOUT_FIXED_SEED : std::random_device{}();
+                    Rpp32u seed = (qaFlag || DEBUG_MODE) ? DROPOUT_FIXED_SEED : std::random_device{}();
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * maxBoxesPerImage];
                     Rpp32u numOfBoxes[batchSize];
                     init_dropout_erase(batchSize, maxBoxesPerImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, BitDepthTestMode, seed, 4);
@@ -2118,14 +2125,70 @@ int main(int argc, char **argv)
                 // Reconvert other bit depths to 8u for output display purposes
                 convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
-                // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
+                // If DEBUG_MODE is set to 1 dump the outputs to binary files for debugging
                 if(DEBUG_MODE && iterCount == 0)
                 {
-                    std::ofstream refFile;
-                    refFile.open(func + ".csv");
-                    for (int i = 0; i < oBufferSize; i++)
-                        refFile << static_cast<int>(*(outputu8 + i)) << ",";
-                    refFile.close();
+                    // Build filename: {testCaseName}_{datatype}_{additional_details}.bin
+                    std::string binFileName = testCaseName;
+
+                    // For sobel_filter and color_to_greyscale:
+                    // PKD3/PLN3 inputs (c=3) share one file, PLN1 input (c=1) has separate file
+                    // since they produce different outputs (RGB->grayscale vs grayscale->grayscale)
+                    if (pln1OutTypeCase && srcDescPtr->c == 1)
+                    {
+                        binFileName += "_PLN1_to_PLN1";
+                    }
+
+                    // Add datatype suffix
+                    string dataType[4] = {"_u8", "_f32", "_f16", "_i8"};
+                    binFileName += dataType[dstDescPtr->dataType];
+
+                    // Add additional details if applicable
+                    if(testCase == RESIZE || testCase == ROTATE || testCase == WARP_AFFINE ||
+                       testCase == WARP_PERSPECTIVE || testCase == REMAP)
+                        binFileName += "_interpolationType" + interpolationTypeName;
+                    else if(testCase == NOISE)
+                        binFileName += "_noiseType" + noiseTypeName;
+                    else if(testCase == ERODE || testCase == DILATE || testCase == BOX_FILTER ||
+                            testCase == MEDIAN_FILTER || testCase == GAUSSIAN_FILTER || testCase == EMBOSS)
+                        binFileName += "_kernelSize" + std::to_string(additionalParam);
+                    else if(testCase == CHANNEL_PERMUTE)
+                        binFileName += "_permOrder" + std::to_string(additionalParam);
+                    else if(testCase == SOBEL_FILTER)
+                        binFileName += kernelSizeAndGradientName;
+
+                    binFileName += ".bin";
+
+                    // Determine write mode based on OUTPUT layout
+                    // PKD3: write to offset 0 (truncate) - PKD3 format for RGB section
+                    // PLN3: skip writing (compare_outputs_pln3 converts to PKD3 for comparison)
+                    // PLN1: append after PKD3 data (only if not a pln1OutTypeCase)
+                    // pln1OutTypeCases (sobel_filter, color_to_greyscale) always output grayscale, so always truncate
+
+                    // Skip writing for PLN3 (c=3, NCHW layout) since it would overwrite PKD3 data
+                    bool shouldSkipWrite = (!pln1OutTypeCase && dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3);
+
+                    if (!shouldSkipWrite)
+                    {
+                        std::ios_base::openmode mode = std::ios::trunc;
+                        if (!pln1OutTypeCase && dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 1)
+                            mode = std::ios::app;
+
+                        // Write binary data based on data type
+                        std::ofstream binFile(binFileName, std::ios::binary | mode);
+                    if (binFile.is_open())
+                    {
+                        if (dstDescPtr->dataType == RpptDataType::U8)
+                            binFile.write(reinterpret_cast<const char*>(outputu8), oBufferSize * sizeof(Rpp8u));
+                        else if (dstDescPtr->dataType == RpptDataType::F32)
+                            binFile.write(reinterpret_cast<const char*>(static_cast<Rpp32f*>(output)), oBufferSize * sizeof(Rpp32f));
+                        else if (dstDescPtr->dataType == RpptDataType::F16)
+                            binFile.write(reinterpret_cast<const char*>(static_cast<Rpp16f*>(output)), oBufferSize * sizeof(Rpp16f));
+                        else if (dstDescPtr->dataType == RpptDataType::I8)
+                            binFile.write(reinterpret_cast<const char*>(static_cast<Rpp8s*>(output)), oBufferSize * sizeof(Rpp8s));
+                        binFile.close();
+                    }
+                    }  // end if (!shouldSkipWrite)
                 }
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values

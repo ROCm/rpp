@@ -1,7 +1,0 @@
-width=100
-height=100
-channels=1
-pixel_format=GRAY
-row_major=1
-byte_order=interleaved
-source_jpeg=2_img100x100.jpg

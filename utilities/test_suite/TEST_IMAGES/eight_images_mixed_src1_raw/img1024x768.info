@@ -1,7 +1,0 @@
-width=1024
-height=768
-channels=3
-pixel_format=RGB
-row_major=1
-byte_order=interleaved
-source_jpeg=img1024x768.jpg

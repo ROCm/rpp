@@ -1,7 +1,0 @@
-width=3840
-height=2160
-channels=1
-pixel_format=GRAY
-row_major=1
-byte_order=interleaved
-source_jpeg=img3840x2160.jpg

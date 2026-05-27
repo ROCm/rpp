@@ -1,7 +1,0 @@
-width=300
-height=300
-channels=3
-pixel_format=RGB
-row_major=1
-byte_order=interleaved
-source_jpeg=img300x300.jpg

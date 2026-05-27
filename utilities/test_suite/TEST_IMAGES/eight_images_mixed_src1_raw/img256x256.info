@@ -1,7 +1,0 @@
-width=256
-height=256
-channels=3
-pixel_format=RGB
-row_major=1
-byte_order=interleaved
-source_jpeg=img256x256.jpg
