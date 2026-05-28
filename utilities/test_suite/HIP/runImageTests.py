@@ -83,7 +83,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if imageAugmentationMap[int(case)][0].startswith("yuv_to_rgb") and outputFormatToggle == OutputFormat.TOGGLE:
                 continue
             
-            if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
+            if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter", "emboss"}:
                 for kernelSize in range(3, 10, 2):
                     print("./" + binName + " " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth.value) + " " + str(outputFormatToggle.value) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/" + binName, srcPath1, srcPath2, dstPathTemp, str(bitDepth.value), str(outputFormatToggle.value), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
@@ -449,7 +449,7 @@ else:
                         if imageAugmentationMap[int(case)][0].startswith("yuv_to_rgb") and outputFormatToggle == OutputFormat.TOGGLE:
                             continue
 
-                        if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"}:
+                        if imageAugmentationMap[int(case)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter", "emboss"}:
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth.value, outputFormatToggle.value, case, kernelSize, "_kernelSize", numRuns, testType, layout.value, qaMode, decoderType, batchSize, roiList)
                         elif imageAugmentationMap[int(case)][0] == "noise":
@@ -504,7 +504,7 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if imageAugmentationMap[int(CASE_NUM)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter"} and TYPE.startswith("Tensor"):
+                        if imageAugmentationMap[int(CASE_NUM)][0] in {"erode", "dilate", "box_filter", "median_filter", "gaussian_filter", "emboss"} and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
