@@ -20,7 +20,7 @@ python3 jpeg_to_rgb_conversion.py /path/to/folder/with/jpeg [--out-dir /path/to/
 
 For each input `stem.jpg` the script writes:
 
-- `stem.rgb` — 24-byte binary header (magic "BBGR", version, width, height, channels, reserved) followed by packed RGB pixels (RGB, gray, or CMYK as appropriate)
+- `stem.rgb` — 24-byte binary header (magic "RGBB", version, width, height, channels, reserved) followed by packed RGB pixels (RGB, gray, or CMYK as appropriate)
 
 The `.rgb` format is consumed by `read_image_batch_packed()` in `rpp_test_suite_image.h` and supports grayscale-to-RGB automatic conversion during loading.
 
