@@ -191,52 +191,6 @@ def decode_to_raw(lib, jpeg_bytes: bytes) -> tuple[bytes, int, int, int, str]:
         lib.tjDestroy(ctypes.c_void_p(handle))
 
 
-def decode_color_jpeg_to_gray_pln1(lib, jpeg_bytes: bytes) -> tuple[bytes, int, int]:
-    """Color JPEG -> TJPF_GRAY (libjpeg-turbo path used for PLN1 single-channel companion dumps)."""
-    handle_raw = lib.tjInitDecompress()
-    handle = _handle_int(handle_raw)
-    if not handle:
-        raise RuntimeError("tjInitDecompress failed")
-    try:
-        w = ctypes.c_int()
-        h = ctypes.c_int()
-        subsamp = ctypes.c_int()
-        colorspace = ctypes.c_int()
-        nbytes_jpeg = len(jpeg_bytes)
-        buf = (ctypes.c_ubyte * nbytes_jpeg).from_buffer_copy(jpeg_bytes)
-        rc = _read_jpeg_header(lib, handle, buf, nbytes_jpeg, w, h, subsamp, colorspace)
-        if rc != 0:
-            raise RuntimeError(f"jpeg header parse failed with code {rc}")
-        width, height = w.value, h.value
-        if width <= 0 or height <= 0 or width > 65535 or height > 65535:
-            raise RuntimeError(f"invalid JPEG dimensions {width}x{height}")
-        cs = colorspace.value
-        ss = subsamp.value
-        is_gray = cs == TJCS_GRAY or (cs < 0 and ss == TJSAMP_GRAY)
-        is_cmyk = cs == TJCS_CMYK or cs == TJCS_YCCK
-        if is_gray or is_cmyk:
-            raise RuntimeError("decode_color_jpeg_to_gray_pln1: expected color JPEG")
-        nbytes = width * height
-        dst = (ctypes.c_ubyte * nbytes)()
-        rc = lib.tjDecompress2(
-            ctypes.c_void_p(handle),
-            buf,
-            ctypes.c_ulong(nbytes_jpeg),
-            dst,
-            ctypes.c_int(width),
-            ctypes.c_int(0),
-            ctypes.c_int(height),
-            ctypes.c_int(TJPF_GRAY),
-            ctypes.c_int(0),
-        )
-        if rc != 0:
-            raise RuntimeError(f"tjDecompress2 TJPF_GRAY failed with code {rc}")
-        raw = ctypes.string_at(ctypes.addressof(dst), nbytes)
-        return (raw, width, height)
-    finally:
-        lib.tjDestroy(ctypes.c_void_p(handle))
-
-
 def create_rgb_header(width: int, height: int, channels: int) -> bytes:
     """
     Create 24-byte .rgb file header.

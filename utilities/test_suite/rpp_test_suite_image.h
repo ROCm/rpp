@@ -612,11 +612,11 @@ inline bool parse_image_file_header(const std::string& filePath, RpptTestSuiteIn
     out.channels = (int)header.channels;
     out.has_channels = true;
 
-    // Validate for 8K support
-    if (out.width <= 0 || out.width > 7680 || out.height <= 0 || out.height > 4320)
+    // Validate dimensions (sanity check to catch corrupt headers; actual limit is available memory)
+    if (out.width <= 0 || out.height <= 0)
     {
-        std::cerr << "Error: dimensions out of range (max 7680×4320): "
-                  << out.width << "×" << out.height << " in " << filePath << std::endl;
+        std::cerr << "Error: invalid dimensions " << out.width << "x" << out.height
+                  << " in " << filePath << std::endl;
         return false;
     }
 
