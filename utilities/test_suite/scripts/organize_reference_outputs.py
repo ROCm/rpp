@@ -87,8 +87,10 @@ def organize_files(source_dir, dest_dir, copy_mode=False, force_overwrite=False)
         # Destination file path
         dest_file = func_dir / filename
 
-        # Check if file already exists
-        if dest_file.exists() and not force_overwrite:
+        # Check if file already exists (capture before copy/move)
+        existed_before = dest_file.exists()
+
+        if existed_before and not force_overwrite:
             print(f"  ⚠️  Skipping {filename} (already exists in {func_name}/)")
             skipped_count += 1
             continue
@@ -102,7 +104,7 @@ def organize_files(source_dir, dest_dir, copy_mode=False, force_overwrite=False)
                 shutil.move(str(bin_file), str(dest_file))
                 action = "Moved"
 
-            if dest_file.exists() and force_overwrite:
+            if existed_before:
                 print(f"  ✓ {action} (overwritten): {filename} → {func_name}/{filename}")
             else:
                 print(f"  ✓ {action}: {filename} → {func_name}/{filename}")

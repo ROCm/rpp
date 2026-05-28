@@ -579,20 +579,6 @@ struct RpptImageFileHeader
     static constexpr size_t HEADER_SIZE = 24;
 };
 
-struct RpptYuvFileHeader
-{
-    uint32_t magic;         // 0x4E565942 ("BYVN" - "NV12" backwards)
-    uint32_t version;       // Version 1
-    uint32_t width;         // Image width
-    uint32_t height;        // Image height
-    uint32_t color_range;   // 0=limited, 1=full
-    uint32_t col_standard;  // 0=BT.601, 1=BT.709, 2=BT.2020
-
-    static constexpr uint32_t MAGIC = 0x4E565942;   // "BYVN"
-    static constexpr uint32_t VERSION_1 = 1;
-    static constexpr size_t HEADER_SIZE = 24;
-};
-
 // Parse .rgb file header (supports both grayscale channels=1 and RGB channels=3).
 // Returns true if valid header with magic/version check.
 inline bool parse_image_file_header(const std::string& filePath, RpptTestSuiteInfoSidecar& out)
@@ -754,36 +740,6 @@ struct RpptYuvNv12Sidecar
 };
 
 // Read full NV12 .info sidecar. Returns true when width and height are valid.
-// Parse .yuv file header (embedded 24-byte header)
-inline bool parse_yuv_file_header(const std::string& filePath, RpptYuvNv12Sidecar& out)
-{
-    out = RpptYuvNv12Sidecar();
-    FILE* fp = fopen(filePath.c_str(), "rb");
-    if (!fp) return false;
-
-    RpptYuvFileHeader header;
-    size_t nread = fread(&header, 1, sizeof(RpptYuvFileHeader), fp);
-    fclose(fp);
-
-    if (nread != sizeof(RpptYuvFileHeader)) return false;
-
-    // Validate magic
-    if (header.magic != RpptYuvFileHeader::MAGIC)
-        return false;
-
-    // Validate version
-    if (header.version != RpptYuvFileHeader::VERSION_1)
-        return false;
-
-    // Extract metadata
-    out.width = header.width;
-    out.height = header.height;
-    out.color_range = static_cast<RpptColorRange>(header.color_range);
-    out.col_standard = static_cast<RpptColorStandard>(header.col_standard);
-
-    return (out.width > 0 && out.height > 0);
-}
-
 inline bool parse_yuv_nv12_sidecar(const std::string& yuvFilePath, RpptYuvNv12Sidecar& out)
 {
     out = RpptYuvNv12Sidecar();
@@ -1378,6 +1334,9 @@ inline void read_image_batch_packed(Rpp8u *input, RpptDescPtr descPtr, vector<st
         }
         else if (outC == 1 && inCh == 3)
         {
+            // RGB→gray using BT.601 luma: Y = 0.299R + 0.587G + 0.114B
+            // Integer approximation: Y = (77R + 150G + 29B + 128) >> 8
+            // Weights sum to 256; +128 for rounding; result guaranteed ∈ [0,255] for inputs ∈ [0,255]
             for (int j = 0; j < h; j++)
             {
                 const Rpp8u* srcRow = fileBuf.data() + (size_t)j * (size_t)w * 3u;
@@ -1387,8 +1346,6 @@ inline void read_image_batch_packed(Rpp8u *input, RpptDescPtr descPtr, vector<st
                     int g = (int)srcRow[3 * x + 1];
                     int b = (int)srcRow[3 * x + 2];
                     int yv = (77 * r + 150 * g + 29 * b + 128) >> 8;
-                    if (yv > 255)
-                        yv = 255;
                     inputTemp[x] = (Rpp8u)yv;
                 }
                 inputTemp += descPtr->w;

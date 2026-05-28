@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         cout << "\ntest type - (0 = unit tests / 1 = performance tests) = " << argv[9];
         cout << "\nlayout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1) = " << argv[10];
         cout << "\nqa mode - 0/1 = " << argv[12];
-        cout << "\ndecoder type - (0 = packed RAW + .info / 1 = OpenCV) = " << argv[13];
+        cout << "\ndecoder type - (0 = packed .rgb / 1 = OpenCV) = " << argv[13];
         cout << "\nbatch size = " << argv[14];
     }
 
@@ -94,13 +94,6 @@ int main(int argc, char **argv)
     {
         cout << "\nImproper Usage! Needs all arguments!\n";
         cout << "\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:87> <number of runs > 0> <layout type (layout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n";
-    }
-
-    // Create DEBUG_MODE output directory if enabled
-    string debugModeOutputDir = scriptPath + "/DEBUG_MODE_RESULTS";
-    if (DEBUG_MODE)
-    {
-        mkdir(debugModeOutputDir.c_str(), 0777);
     }
 
     if (layoutType == 2)
