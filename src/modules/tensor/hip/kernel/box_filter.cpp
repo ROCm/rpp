@@ -105,13 +105,13 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -130,14 +130,14 @@ __global__ void box_filter_3x3_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -189,13 +189,13 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -214,14 +214,14 @@ __global__ void box_filter_5x5_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -279,13 +279,13 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -304,14 +304,14 @@ __global__ void box_filter_7x7_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -375,13 +375,13 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -400,14 +400,14 @@ __global__ void box_filter_9x9_pkd_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -480,24 +480,24 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -525,14 +525,14 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -558,14 +558,14 @@ __global__ void box_filter_3x3_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -610,24 +610,24 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -657,14 +657,14 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + srcStridesNCH.y + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -692,14 +692,14 @@ __global__ void box_filter_5x5_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -747,24 +747,24 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -796,14 +796,14 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -833,14 +833,14 @@ __global__ void box_filter_7x7_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -889,24 +889,24 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float8 sum_f8;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_1C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f8.f4[0] = FLOAT4_ZERO;
     sum_f8.f4[1] = FLOAT4_ZERO;
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
     else
     {
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
         }
@@ -940,14 +940,14 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -979,14 +979,14 @@ __global__ void box_filter_9x9_pln_hip_tensor(T *srcPtr,
         dstIdx += dstStridesNCH.y;
         sum_f8.f4[0] = FLOAT4_ZERO;
         sum_f8.f4[1] = FLOAT4_ZERO;
-        if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+        if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
             FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx, &src_smem[hipThreadIdx_y][hipThreadIdx_x8]);
         else
         {
             // Nearest-neighbor padding
             for (int i = 0; i < 8; i++)
             {
-                int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+                int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
                 int clampedIdx = (id_z * srcStridesNCH.x) + (2 * srcStridesNCH.y) + (clampedY * srcStridesNCH.z) + clampedX;
                 src_smem[hipThreadIdx_y][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];  // Load nearest pixel
             }
@@ -1038,13 +1038,13 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -1063,7 +1063,7 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1072,7 +1072,7 @@ __global__ void box_filter_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1123,13 +1123,13 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -1148,7 +1148,7 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1157,7 +1157,7 @@ __global__ void box_filter_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx]; // R
@@ -1214,13 +1214,13 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -1239,7 +1239,7 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1248,7 +1248,7 @@ __global__ void box_filter_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1311,13 +1311,13 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
-    int srcIdx = (id_z * srcStridesNH.x) + ((clampedY + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
+    int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiBeginY) * srcStridesNH.y) + ((id_x_i + roiBeginX) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     sum_f24.f4[0] = FLOAT4_ZERO;
     sum_f24.f4[1] = FLOAT4_ZERO;
@@ -1336,7 +1336,7 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
     src_smem_channel[1] = &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8];
     src_smem_channel[2] = &src_smem[hipThreadIdx_y_channel.z][hipThreadIdx_x8];
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load24_pkd3_to_pln3(srcPtr + srcIdx, src_smem_channel);
     }
@@ -1345,7 +1345,7 @@ __global__ void box_filter_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, (roiBeginX + roiWidth - 1)));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx = (id_z * srcStridesNH.x) + (clampedY * srcStridesNH.y) + (clampedX * 3);
 
             src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8 + i] = srcPtr[clampedIdx];         // R
@@ -1417,14 +1417,14 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
-    srcIdx.x = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -1440,7 +1440,7 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1451,7 +1451,7 @@ __global__ void box_filter_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1505,14 +1505,14 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
-    srcIdx.x = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -1528,7 +1528,7 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1539,7 +1539,7 @@ __global__ void box_filter_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1599,14 +1599,14 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
-    srcIdx.x = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -1622,7 +1622,7 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1633,7 +1633,7 @@ __global__ void box_filter_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1699,14 +1699,14 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     int roiBeginY = roiTensorPtrSrc[id_z].xywhROI.xy.y;
     int roiWidth = roiTensorPtrSrc[id_z].xywhROI.roiWidth;
     int roiHeight = roiTensorPtrSrc[id_z].xywhROI.roiHeight;
-    int clampedY = max(roiBeginY, min(id_y_i, (roiBeginY + roiHeight - 1)));
+    int clampedY = roiBeginY + max(0, min(id_y_i, (roiHeight - 1)));
 
     d_float24 sum_f24;
     using SharedType = typename FilterDispatch<T>::SharedType;
     __shared__ SharedType src_smem[SMEM_LENGTH_Y_3C][SMEM_LENGTH_X];
 
     int3 srcIdx;
-    srcIdx.x = (id_z * srcStridesNCH.x) + ((clampedY + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
+    srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiBeginY) * srcStridesNCH.z) + (id_x_i + roiBeginX);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -1722,7 +1722,7 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
     hipThreadIdx_y_channel.y = hipThreadIdx_y + 16;
     hipThreadIdx_y_channel.z = hipThreadIdx_y + 32;
 
-    if ((id_x_i > roiBeginX) && ((id_x_i + 7 + padLength) < roiWidth) && (id_y_i > roiBeginY) && (id_y_i < roiHeight))
+    if ((id_x_i >= 0) && ((id_x_i + 7) < roiWidth) && (id_y_i >= 0) && (id_y_i < roiHeight))
     {
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.x, &src_smem[hipThreadIdx_y_channel.x][hipThreadIdx_x8]);
         FilterDispatch<T>::rpp_hip_load8(srcPtr + srcIdx.y, &src_smem[hipThreadIdx_y_channel.y][hipThreadIdx_x8]);
@@ -1733,7 +1733,7 @@ __global__ void box_filter_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
         // Nearest-neighbor padding
         for (int i = 0; i < 8; i++)
         {
-            int clampedX = max(roiBeginX, min(id_x_i + i, roiBeginX + roiWidth - 1));
+            int clampedX = roiBeginX + max(0, min(id_x_i + i, (roiWidth - 1)));
             int clampedIdx0 = (id_z * srcStridesNCH.x) + (clampedY * srcStridesNCH.z) + clampedX;
             int clampedIdx1 = clampedIdx0 + srcStridesNCH.y;
             int clampedIdx2 = clampedIdx1 + srcStridesNCH.y;
@@ -1797,7 +1797,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                      rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -1813,268 +1813,258 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
 
-        if (kernelSize == 3)
+        using KernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
+        switch (kernelSize)
         {
-            hipLaunchKernelGGL(box_filter_3x3_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
+            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
-        else if (kernelSize == 5)
-        {
-            hipLaunchKernelGGL(box_filter_5x5_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else if (kernelSize == 7)
-        {
-            hipLaunchKernelGGL(box_filter_7x7_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else if (kernelSize == 9)
-        {
-            hipLaunchKernelGGL(box_filter_9x9_pkd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        if (kernelSize == 3)
+        using KernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
+        switch (kernelSize)
         {
-            hipLaunchKernelGGL(box_filter_3x3_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
+            case 3: kernelFn = box_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pln_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
         }
-        else if (kernelSize == 5)
-        {
-            hipLaunchKernelGGL(box_filter_5x5_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else if (kernelSize == 7)
-        {
-            hipLaunchKernelGGL(box_filter_7x7_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
-        else if (kernelSize == 9)
-        {
-            hipLaunchKernelGGL(box_filter_9x9_pln_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr,
-                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               dstPtr,
-                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               dstDescPtr->c,
-                               padLength,
-                               tileSize,
-                               roiTensorPtrSrc);
-        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            if (kernelSize == 3)
+            using KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(box_filter_3x3_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 5)
-            {
-                hipLaunchKernelGGL(box_filter_5x5_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-            else if (kernelSize == 7)
-            {
-                hipLaunchKernelGGL(box_filter_7x7_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-            else if (kernelSize == 9)
-            {
-                hipLaunchKernelGGL(box_filter_9x9_pkd3_pln3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
 
-            if (kernelSize == 3)
+            using KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
+            switch (kernelSize)
             {
-                hipLaunchKernelGGL(box_filter_3x3_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
+                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
             }
-            else if (kernelSize == 5)
-            {
-                hipLaunchKernelGGL(box_filter_5x5_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-            else if (kernelSize == 7)
-            {
-                hipLaunchKernelGGL(box_filter_7x7_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
-            else if (kernelSize == 9)
-            {
-                hipLaunchKernelGGL(box_filter_9x9_pln3_pkd3_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                                   0,
-                                   handle.GetStream(),
-                                   srcPtr,
-                                   make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                                   dstPtr,
-                                   make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                                   padLength,
-                                   tileSize,
-                                   roiTensorPtrSrc);
-            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
     return RPP_SUCCESS;
 }
+
+
+template <typename T>
+RppStatus hip_exec_box_filter_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u kernelSize,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
+
+    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_y = dstDescPtr->h;
+    int globalThreads_z = 1;
+
+    uint padLength = kernelSize / 2;
+    uint padLengthTwice = padLength * 2;
+    uint2 tileSize;
+    tileSize.x = (128 - padLengthTwice) / 8;
+    tileSize.y = 16 - padLengthTwice;
+
+    if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+    {
+        globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
+
+        using KernelType = void (*)(T*, uint2, T*, uint2, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
+        switch (kernelSize)
+        {
+            case 3: kernelFn = box_filter_3x3_pkd_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pkd_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pkd_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pkd_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
+    }
+    else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+    {
+        using KernelType = void (*)(T*, uint3, T*, uint3, int, uint, uint2, RpptROIPtr);
+        KernelType kernelFn = nullptr;
+        switch (kernelSize)
+        {
+            case 3: kernelFn = box_filter_3x3_pln_hip_tensor<T>; break;
+            case 5: kernelFn = box_filter_5x5_pln_hip_tensor<T>; break;
+            case 7: kernelFn = box_filter_7x7_pln_hip_tensor<T>; break;
+            case 9: kernelFn = box_filter_9x9_pln_hip_tensor<T>; break;
+            default: return RPP_ERROR_NOT_IMPLEMENTED;
+        }
+        hipLaunchKernelGGL(kernelFn,
+                           dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                           dstPtr,
+                           make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                           dstDescPtr->c,
+                           padLength,
+                           tileSize,
+                           roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
+    }
+    else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
+    {
+        if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            using KernelType = void (*)(T*, uint2, T*, uint3, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
+            switch (kernelSize)
+            {
+                case 3: kernelFn = box_filter_3x3_pkd3_pln3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pkd3_pln3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pkd3_pln3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pkd3_pln3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
+            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+
+            using KernelType = void (*)(T*, uint3, T*, uint2, uint, uint2, RpptROIPtr);
+            KernelType kernelFn = nullptr;
+            switch (kernelSize)
+            {
+                case 3: kernelFn = box_filter_3x3_pln3_pkd3_hip_tensor<T>; break;
+                case 5: kernelFn = box_filter_5x5_pln3_pkd3_hip_tensor<T>; break;
+                case 7: kernelFn = box_filter_7x7_pln3_pkd3_hip_tensor<T>; break;
+                case 9: kernelFn = box_filter_9x9_pln3_pkd3_hip_tensor<T>; break;
+                default: return RPP_ERROR_NOT_IMPLEMENTED;
+            }
+            hipLaunchKernelGGL(kernelFn,
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               padLength,
+                               tileSize,
+                               roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
 
 template RppStatus hip_exec_box_filter_tensor<Rpp8u>(Rpp8u*,
                                                      RpptDescPtr,
@@ -2111,3 +2101,39 @@ template RppStatus hip_exec_box_filter_tensor<Rpp8s>(Rpp8s*,
                                                      RpptROIPtr,
                                                      RpptRoiType,
                                                      rpp::Handle&);
+
+template RppStatus hip_exec_box_filter_single_image<Rpp8u>(Rpp8u*,
+                                                           RpptDescPtr,
+                                                           Rpp8u*,
+                                                           RpptDescPtr,
+                                                           Rpp32u,
+                                                           RpptROIPtr,
+                                                           RpptRoiType,
+                                                           rpp::Handle&);
+
+template RppStatus hip_exec_box_filter_single_image<half>(half*,
+                                                          RpptDescPtr,
+                                                          half*,
+                                                          RpptDescPtr,
+                                                          Rpp32u,
+                                                          RpptROIPtr,
+                                                          RpptRoiType,
+                                                          rpp::Handle&);
+
+template RppStatus hip_exec_box_filter_single_image<Rpp32f>(Rpp32f*,
+                                                            RpptDescPtr,
+                                                            Rpp32f*,
+                                                            RpptDescPtr,
+                                                            Rpp32u,
+                                                            RpptROIPtr,
+                                                            RpptRoiType,
+                                                            rpp::Handle&);
+
+template RppStatus hip_exec_box_filter_single_image<Rpp8s>(Rpp8s*,
+                                                           RpptDescPtr,
+                                                           Rpp8s*,
+                                                           RpptDescPtr,
+                                                           Rpp32u,
+                                                           RpptROIPtr,
+                                                           RpptRoiType,
+                                                           rpp::Handle&);

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2019 - 2025 Advanced Micro Devices, Inc.
+Copyright (c) 2019 - 2026 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -102,6 +102,21 @@ RppStatus hip_exec_subtract_scalar_tensor(Rpp32f *srcPtr,
                                           Rpp32f *subtractTensor,
                                           rpp::Handle& handle);
 
+// -------------------- tensor_arithmetic_operations --------------------
+
+template <typename T1, typename T2>
+RppStatus tensor_binary_arithmetic_op_dispatch_gpu_tensor(T1 *srcPtr1,
+                                                          T1 *srcPtr2,
+                                                          RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                          RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                          T2 *dstPtr,
+                                                          RpptGenericDescPtr dstGenericDescPtr,
+                                                          RpptOp tensorOp,
+                                                          RpptBroadcastMode broadcastMode,
+                                                          Rpp32u *roiTensor1,
+                                                          Rpp32u *roiTensor2,
+                                                          rpp::Handle& handle);
+
 /**************************************** AUDIO AUGMENTATIONS ****************************************/
 
 #ifdef AUDIO_SUPPORT
@@ -195,6 +210,26 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                       Rpp32f referenceMagnitude,
                                       rpp::Handle& handle);
 
+// -------------------- audio_tensor_add_tensor --------------------
+
+RppStatus hip_exec_audio_tensor_add_tensor(Rpp32f *srcPtr1,
+                                           Rpp32f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
+
+// -------------------- audio_tensor_mul_scalar --------------------
+
+RppStatus hip_exec_audio_tensor_mul_scalar(Rpp32f *srcPtr,
+                                           Rpp32f scalarValue,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32s *srcLengthTensor,
+                                           rpp::Handle& handle);
+
 #endif // AUDIO_SUPPORT
 
 /**************************************** BITWISE OPERATIONS ****************************************/
@@ -242,6 +277,21 @@ RppStatus hip_exec_bitwise_xor_tensor(Rpp8u *srcPtr1,
                                       RpptRoiType roiType,
                                       rpp::Handle& handle);
 
+// -------------------- tensor_bitwise_operations --------------------
+
+template <typename T>
+RppStatus tensor_binary_bitwise_op_dispatch_gpu_tensor(T *srcPtr1,
+                                                       T *srcPtr2,
+                                                       RpptGenericDescPtr srcPtr1GenericDescPtr,
+                                                       RpptGenericDescPtr srcPtr2GenericDescPtr,
+                                                       T *dstPtr,
+                                                       RpptGenericDescPtr dstGenericDescPtr,
+                                                       RpptBitwiseOp tensorOp,
+                                                       RpptBroadcastMode broadcastMode,
+                                                       Rpp32u *roiTensor1,
+                                                       Rpp32u *roiTensor2,
+                                                       rpp::Handle& handle);
+
 /**************************************** COLOR AUGMENTATIONS ****************************************/
 
 // -------------------- brightness --------------------
@@ -257,6 +307,17 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_brightness_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *alphaTensor,
+                                           Rpp32f *betaTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- blend --------------------
 
 template <typename T>
@@ -269,6 +330,17 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_blend_single_image(T *srcPtr1,
+                                      T *srcPtr2,
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *alphaTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle);
 
 // -------------------- color_cast --------------------
 
@@ -383,6 +455,16 @@ RppStatus hip_exec_lut_tensor(T *srcPtr,
                               RpptRoiType roiType,
                               rpp::Handle& handle);
 
+// -------------------- histogram_equalize --------------------
+
+RppStatus hip_exec_histogram_equalize_tensor(Rpp8u *srcPtr,
+                                             RpptDescPtr srcDescPtr,
+                                             Rpp8u *dstPtr,
+                                             RpptDescPtr dstDescPtr,
+                                             RpptROIPtr roiTensorPtrSrc,
+                                             RpptRoiType roiType,
+                                             rpp::Handle& handle);
+
 /**************************************** DATA EXCHANGE OPERATIONS ****************************************/
 
 // -------------------- color_to_greyscale --------------------
@@ -413,6 +495,51 @@ RppStatus hip_exec_channel_permute_tensor(T *srcPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32u *permutationTensor,
                                           rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb (NV12 8-bit) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb(T *srcYPtr,
+                              Rpp32u src_y_pitch,
+                              T *srcUVPtr,
+                              Rpp32u src_uv_pitch,
+                              T *dstPtr,
+                              Rpp32u dst_pitch,
+                              Rpp32u width,
+                              Rpp32u height,
+                              RpptColorStandard col_standard,
+                              RpptColorRange color_range,
+                              rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb_cubic_v (NV12 8-bit, cubic vertical chroma upsample) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb_cubic_v(T *srcYPtr,
+                                        Rpp32u src_y_pitch,
+                                        T *srcUVPtr,
+                                        Rpp32u src_uv_pitch,
+                                        T *dstPtr,
+                                        Rpp32u dst_pitch,
+                                        Rpp32u width,
+                                        Rpp32u height,
+                                        RpptColorStandard col_standard,
+                                        RpptColorRange color_range,
+                                        rpp::Handle& handle);
+
+// -------------------- yuv_to_rgb_linear_v (NV12 8-bit, linear vertical chroma upsample) --------------------
+
+template <typename T>
+RppStatus hip_exec_yuv_to_rgb_linear_v(T *srcYPtr,
+                                         Rpp32u src_y_pitch,
+                                         T *srcUVPtr,
+                                         Rpp32u src_uv_pitch,
+                                         T *dstPtr,
+                                         Rpp32u dst_pitch,
+                                         Rpp32u width,
+                                         Rpp32u height,
+                                         RpptColorStandard col_standard,
+                                         RpptColorRange color_range,
+                                         rpp::Handle& handle);
 
 /**************************************** EFFECTS AUGMENTATIONS ****************************************/
 
@@ -650,6 +777,74 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle);
 
+// -------------------- snow --------------------
+
+template <typename T>
+RppStatus hip_exec_snow_tensor(T *srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               T *dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32f *brightnessCoefficient,
+                               Rpp32f *snowThreshold,
+                               Rpp32s *darkMode,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rpp::Handle& handle);
+
+// -------------------- channel_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_channel_dropout_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp8u *dropoutTensor,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
+// -------------------- coarse_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_coarse_dropout_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptRoiLtrb *anchorBoxInfoTensor,
+                                         Rpp32u *numBoxesTensor,
+                                         Rpp32u maxBoxesPerImage,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         rpp::Handle& handle);
+
+// -------------------- grid_dropout --------------------
+
+template <typename T>
+RppStatus hip_exec_grid_dropout_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRoiLtrb *anchorBoxInfoTensor,
+                                       Rpp32u boxesInEachImage,
+                                       Rpp32u maxHoleW,
+                                       Rpp32u maxHoleH,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
+
+// -------------------- random_erase --------------------
+
+template <typename T>
+RppStatus hip_exec_random_erase_tensor(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptRoiLtrb *anchorBoxInfoTensor,
+                                       T *noiseBuffer,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
+
 /**************************************** FILTER AUGMENTATIONS ****************************************/
 
 // -------------------- box_filter --------------------
@@ -664,6 +859,16 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_box_filter_single_image(T *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           T *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32u kernelSize,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           rpp::Handle& handle);
+
 // -------------------- gaussian_filter --------------------
 
 template <typename T>
@@ -672,6 +877,30 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
                                           Rpp32f *stdDevTensor,
+                                          Rpp32u kernelSize,
+                                          RpptROIPtr roiTensorPtrSrc,
+                                          RpptRoiType roiType,
+                                          rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_gaussian_filter_single_image(T *srcPtr,
+                                                RpptDescPtr srcDescPtr,
+                                                T *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32f *stdDevTensor,
+                                                Rpp32u kernelSize,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                rpp::Handle& handle);
+
+// -------------------- sobel_filter --------------------
+
+template <typename T>
+RppStatus hip_exec_sobel_filter_tensor(T *srcPtr,
+                                          RpptDescPtr srcDescPtr,
+                                          T *dstPtr,
+                                          RpptDescPtr dstDescPtr,
+                                          Rpp32u sobelType,
                                           Rpp32u kernelSize,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
@@ -689,6 +918,29 @@ RppStatus hip_exec_median_filter_tensor(T *srcPtr,
                                         RpptRoiType roiType,
                                         rpp::Handle& handle);
 
+template <typename T>
+RppStatus hip_exec_median_filter_single_image(T *srcPtr,
+                                              RpptDescPtr srcDescPtr,
+                                              T *dstPtr,
+                                              RpptDescPtr dstDescPtr,
+                                              Rpp32u kernelSize,
+                                              RpptROIPtr roiTensorPtrSrc,
+                                              RpptRoiType roiType,
+                                              rpp::Handle& handle);
+
+// -------------------- emboss --------------------
+
+template <typename T>
+RppStatus hip_exec_emboss_tensor(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 T *dstPtr,
+                                 RpptDescPtr dstDescPtr,
+                                 Rpp32f *strength,
+                                 Rpp32u kernelSize,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle);
+
 /**************************************** GEOMETRIC AUGMENTATIONS ****************************************/
 
 // -------------------- crop --------------------
@@ -701,6 +953,15 @@ RppStatus hip_exec_crop_tensor(T *srcPtr,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_crop_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
 
 // -------------------- crop_and_patch --------------------
 
@@ -744,6 +1005,17 @@ RppStatus hip_exec_flip_tensor(T *srcPtr,
                                rpp::Handle& handle);
 
 template <typename T>
+RppStatus hip_exec_flip_single_image(T *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     T *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32u *horizontalTensor,
+                                     Rpp32u *verticalTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rpp::Handle& handle);
+
+template <typename T>
 RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                      RpptGenericDescPtr srcGenericDescPtr,
                                      T *dstPtr,
@@ -782,6 +1054,17 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rpp::Handle& handle);
+
+template <typename T>
+RppStatus hip_exec_resize_single_image(T *srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptImagePatchPtr dstImgSize,
+                                       RpptInterpolationType interpolationType,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle);
 
 // -------------------- resize_crop_mirror --------------------
 
@@ -887,6 +1170,17 @@ RppStatus hip_exec_warp_perspective_tensor(T *srcPtr,
                                            RpptROIPtr roiTensorPtrSrc,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle);
+
+// -------------------- fisheye --------------------
+
+template <typename T>
+RppStatus hip_exec_fisheye_tensor(T *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  T *dstPtr,
+                                  RpptDescPtr dstDescPtr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  rpp::Handle& handle);
 
 /**************************************** MORPHOLOGICAL OPERATIONS ****************************************/
 
@@ -1074,6 +1368,7 @@ RppStatus hip_exec_concat_tensor(T *srcPtr1,
                                 RpptGenericDescPtr dstGenericDescPtr,
                                 Rpp32u axis,
                                 Rpp32u *srcPtr1roiTensor,
+                                Rpp32u *srcPtr2roiTensor,
                                 rpp::Handle& handle);
 
 // -------------------- jpeg_compression distortion --------------------
@@ -1083,6 +1378,7 @@ RppStatus hip_exec_jpeg_compression_distortion(T *srcPtr,
                                                RpptDescPtr srcDescPtr,
                                                T *dstPtr,
                                                RpptDescPtr dstDescPtr,
+                                               Rpp32s *qualityTensor,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                rpp::Handle& handle);

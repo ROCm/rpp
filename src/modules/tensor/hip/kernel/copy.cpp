@@ -81,7 +81,7 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
 {
     if (srcDescPtr->layout == dstDescPtr->layout)
     {
-        CHECK_RETURN_STATUS(hipMemcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(T), hipMemcpyDeviceToDevice));
+        RPP_HIP_RETURN_IF_ERROR(hipMemcpy(dstPtr, srcPtr, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(T), hipMemcpyDeviceToDevice));
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -101,6 +101,7 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h));
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -115,6 +116,7 @@ RppStatus hip_exec_copy_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                make_uint2(srcDescPtr->w, srcDescPtr->h));
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

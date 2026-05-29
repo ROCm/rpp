@@ -24,8 +24,9 @@ SOFTWARE.
 cmake_minimum_required(VERSION 3.10)
 include( utils.cmake )
 set( CORE_TARGET "rpp" )
-set( BUILD_ENABLE_LINTIAN_OVERRIDES ON CACHE BOOL "Enable/Disable Lintian Overrides" )
-set( BUILD_DEBIAN_PKGING_FLAG ON CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
+set( BUILD_ENABLE_LINTIAN_OVERRIDES OFF CACHE BOOL "Enable/Disable Lintian Overrides" )
+set( BUILD_DEBIAN_PKGING_FLAG OFF CACHE BOOL "Internal Status Flag to indicate Debian Packaging Build" )
+option(DISABLE_LINTIAN "Disable Lintian" ON)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -34,6 +35,19 @@ elseif(ROCM_PATH)
     message("-- rpp: INFO - ROCM_PATH Set -- ${ROCM_PATH}")
 else()
     set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+
+# Check if lib/rocm_sysdeps/lib exists in the ROCm path which indicates ROCm installation via TheRock
+set(USING_THE_ROCK OFF)
+if(EXISTS "${ROCM_PATH}/lib/rocm_sysdeps/lib")
+  set(USING_THE_ROCK ON)
+endif()
+
+if(USING_THE_ROCK)
+  if(NOT DEFINED ENV{HIP_DEVICE_LIB_PATH})
+    set(ENV{HIP_DEVICE_LIB_PATH} ${ROCM_PATH}/lib/llvm/amdgcn/bitcode)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "HIP_DEVICE_LIB_PATH=${ROCM_PATH}/lib/llvm/amdgcn/bitcode")
+  endif()
 endif()
 
 # Set AMD Clang as default compiler
@@ -50,10 +64,12 @@ endif()
 
 # RPP Version
 # NOTE: package version and rpp_version.h is generated with this version
-set(VERSION "2.2.1")
+set(VERSION "3.1.2")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
+# Set RPP source directory
+set(RPP_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -73,9 +89,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
-
-# RPP_LEGACY_SUPPORT - default = OFF
-option(RPP_LEGACY_SUPPORT     "Build RPP with Legacy Support"       OFF)
 
 ### RPP_AUDIO_SUPPORT - default = ON, NOTE: support currently only on Ubuntu - user to set to OFF otherwise
 option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
@@ -105,9 +118,7 @@ endif()
 if(NOT DEFINED BACKEND)
     set(BACKEND "HIP")   # set default backend to HIP
 else()
-    if("${BACKEND}" STREQUAL "OPENCL" OR "${BACKEND}" STREQUAL "OCL" OR "${BACKEND}" STREQUAL "OpenCL")
-        set(BACKEND "OCL")
-    elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
+    if("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(BACKEND "HIP")
     elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "HOST" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
         set(BACKEND "CPU")
@@ -116,10 +127,6 @@ else()
         message("-- ${Yellow}Warning: ${PROJECT_NAME} default backend will be enforced${ColourReset}")
         set(BACKEND "HIP")
     endif()
-endif()
-
-if("${BACKEND}" STREQUAL "OCL" AND NOT RPP_LEGACY_SUPPORT)
-    message(FATAL_ERROR "Backend cannot be OCL when Legacy Support is Disabled")
 endif()
 
 message("-- ${BoldBlue}AMD ROCm Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
@@ -141,6 +148,17 @@ else()
     # -DNDEBUG -- turn off asserts
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast -DNDEBUG")
 endif()
+
+# Enable -Wall warnings for both release and debug builds
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+# Clang-specific warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # These warnings are suppressed since we are always using a Clang compiler, which supports VLA.
+    # TBD: Determine if we must remove this flag later for standard compliance.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-vla-cxx-extension")
+endif()
+
 message("-- ${BoldBlue}AMD RPP Build Type -- ${CMAKE_BUILD_TYPE}${ColourReset}")
 
 if(WIN32 AND CMAKE_CROSSCOMPILING)
@@ -156,33 +174,36 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/lib/cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Half
+# Half (HALF::half carries INTERFACE include dirs for transitive use via rpp::rpp)
 find_package(HALF REQUIRED)
-include_directories(${HALF_INCLUDE_DIRS})
 
 if (RPP_AUDIO_SUPPORT)
-    add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
-    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
-endif()
-
-if (RPP_LEGACY_SUPPORT)
-    add_definitions(-DLEGACY_SUPPORT)        # For compile flags in RPP
+    find_package(FFTS QUIET)
+    if(FFTS_FOUND)
+        add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
+        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
+        message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
+    else()
+        set(RPP_AUDIO_SUPPORT OFF)              # Disable audio support if FFTS not found
+        message("-- ${Yellow}FFTS not found. ${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
+    endif()
+else()
+    message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
-message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 message("-- ${Cyan}     -D RPP_AUDIO_SUPPORT=${RPP_AUDIO_SUPPORT} [Select RPP audio support [options:ON/OFF](default:ON)]${ColourReset}")
-message("-- ${Cyan}     -D RPP_LEGACY_SUPPORT=${RPP_LEGACY_SUPPORT} [Select RPP legacy support [options:ON/OFF](default:OFF)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP COMPONENTS CXX REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
-# STD Filesystem
+# STD Filesystem (private to rpp; not part of the link interface)
+set(RPP_PRIVATE_LINK_LIBS "")
 if(NOT APPLE)
-    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+    list(APPEND RPP_PRIVATE_LINK_LIBS stdc++fs)
 endif()
 
 # set global compiler flags for the project
@@ -208,7 +229,8 @@ endif()
 
 #Generate version info
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/api/rpp_version.h.in ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h @ONLY)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+set(RPP_HIP_HOST_TARGET "")
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -247,6 +269,7 @@ if("${BACKEND}" STREQUAL "HIP")
     endif()
     message("-- ${White}${PROJECT_NAME} -- AMD GPU_TARGETS: ${GPU_TARGETS}${ColourReset}")
 
+    set (HIP_PLATFORM amd CACHE STRING "HIP platform")
     find_package(HIP QUIET)
     if(HIP_FOUND)
         message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
@@ -256,10 +279,9 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-        include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
-        # link To HIP Host library -- [hip::host] to use host API
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
+        # hip::host supplies HIP/ROCm host headers and is linked PUBLIC on rpp::rpp for transitive usage
+        set(RPP_HIP_HOST_TARGET hip::host)
 
         # Add modules
         set(MODULES_LIST modules)
@@ -271,32 +293,6 @@ if("${BACKEND}" STREQUAL "HIP")
     else()
         set(BACKEND "CPU")
         message("-- ${Yellow}HIP not found! ${PROJECT_NAME} set to build with CPU backend${ColourReset}")
-    endif()
-elseif("${BACKEND}" STREQUAL "OCL")
-    # Find package OpenCL
-    find_package(OpenCL QUIET)
-    if(OpenCL_FOUND)
-        message("-- ${White}${PROJECT_NAME} -- Using OpenCL - LIB:" ${OpenCL_LIBRARIES} "\tInclude:" ${OpenCL_INCLUDE_DIRS}${ColourReset})
-        # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
-        add_definitions(-DGPU_SUPPORT)
-        set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
-        add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
-        include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
-
-        # Add modules
-        set(MODULES_LIST modules)
-        foreach(MOD_NAME ${MODULES_LIST})
-            add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
-        endforeach(MOD_NAME)
-
-        # Set compiler and flags
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${OpenCL_LIBRARIES})
-        add_definitions(-DRPP_CACHE_DIR="${CACHE_DIR}")
-
-        message("-- ${Green}${PROJECT_NAME} set to build with GPU_SUPPORT using OpenCL backend${ColourReset}")
-    else()
-        set(BACKEND "CPU")
-        message("-- ${Yellow}OpenCL not found! ${PROJECT_NAME} falling back to build for CPU backend${ColourReset}")
     endif()
 
 endif()
@@ -311,9 +307,8 @@ endif()
 
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_backend.h.in" "${PROJECT_BINARY_DIR}/api/rpp_backend.h")
 configure_file("${PROJECT_SOURCE_DIR}/api/rpp_audio_augmentations_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h")
-configure_file("${PROJECT_SOURCE_DIR}/api/rpp_legacy_support.h.in" "${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h")
 
-# Enable SIMD for HOST code (in both OpenCL and HIP backends)
+# Enable SIMD for HOST code (even in HIP backends)
 if(NOT DEFINED SIMD_ENABLE)
     SET(SIMD_ENABLE "1")
 endif()
@@ -329,48 +324,62 @@ endif()
 
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
 message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
-message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
-target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    OpenMP::OpenMP_CXX
+    HALF::half
+)
+if(RPP_HIP_HOST_TARGET)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${RPP_HIP_HOST_TARGET})
+endif()
+if(RPP_PRIVATE_LINK_LIBS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${RPP_PRIVATE_LINK_LIBS})
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+if(USING_THE_ROCK)
+    set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN;$ORIGIN/rocm_sysdeps/lib" BUILD_WITH_INSTALL_RPATH TRUE)
+endif()
+
 if(RPP_AUDIO_SUPPORT)
-    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/third_party/ffts/lib/libffts.a)
+    target_link_libraries(${PROJECT_NAME} PRIVATE FFTS::FFTS)
     message("-- ${Green}${PROJECT_NAME} set to build with RPP_AUDIO_SUPPORT${ColourReset}")
 else()
     message("-- ${Yellow}${PROJECT_NAME} set to build without RPP_AUDIO_SUPPORT${ColourReset}")
 endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
+# Public headers: build tree vs install tree (GNUInstallDirs paths are relative to the install prefix).
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/api
-        $<$<BOOL:${RPP_AUDIO_SUPPORT}>:${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/include>
-        ${ROCM_PATH}/include
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>"
+        "${ROCM_PATH}/include"
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific
-        ${INCLUDE_LIST}
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/cpu"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/common"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/func_specific"
+        "${INCLUDE_LIST}"
 )
 
 if( "${BACKEND}" STREQUAL "HIP")
-    target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip
-    )
-elseif( "${BACKEND}" STREQUAL "OCL")
-    target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cl
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include/hip"
     )
 endif()
 
 add_subdirectory(addkernels)
 
+# Test suite
+enable_testing()
+include(CTest)
+add_subdirectory(utilities/test_suite)
+
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY)
+install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_COMPONENT dev)
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
 
 # install RPP include files -- {ROCM_PATH}/include/rpp
@@ -384,9 +393,6 @@ install(FILES ${PROJECT_BINARY_DIR}/api/rpp_backend.h
 install(FILES ${PROJECT_BINARY_DIR}/api/rpp_audio_augmentations_support.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
-install(FILES ${PROJECT_BINARY_DIR}/api/rpp_legacy_support.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        COMPONENT dev)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
         COMPONENT dev)
@@ -394,22 +400,22 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/rpp_version.h
 # install Test
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/test_suite/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/rpp-performancetests DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 
 # set license information
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
-set(CPACK_RESOURCE_FILE_FFTS_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/FFTS_LICENSE")
-install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
-install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+if(RPP_AUDIO_SUPPORT AND FFTS_FOUND)
+    set(CPACK_RESOURCE_FILE_FFTS_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffts/COPYRIGHT")
+    if(EXISTS ${CPACK_RESOURCE_FILE_FFTS_LICENSE})
+        install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
+        install(FILES ${CPACK_RESOURCE_FILE_FFTS_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+    endif()
+endif()
 
 # Cmake module config file configurations
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/" CACHE INTERNAL "Default module path.")
 
-# Export the package for use from the build-tree
-# (this registers the build-tree with a global CMake-registry)
-export(PACKAGE ${PROJECT_NAME})
 set(CONF_LIB_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
 # Create the rpp-config.cmake and rpp-config-version files
@@ -418,6 +424,11 @@ set(CONFIG_PACKAGE_INSTALL_DIR ${CONF_LIB_DIR}/cmake/${PROJECT_NAME})
 set(LIB_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(BIN_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
+
+# Backend string for package config (HIP or CPU after HIP fallback)
+set(RPP_PACKAGE_BACKEND_TYPE "${BACKEND}")
+# Audio augmentations (same effective flag as RPP_AUDIO_SUPPORT / rpp_audio_augmentations_support.h)
+set(RPP_PACKAGE_AUDIO_AUGMENTATIONS_SUPPORT "${RPP_AUDIO_SUPPORT}")
 
 # Generate Config File for rpp
 configure_package_config_file(
@@ -449,12 +460,6 @@ install(EXPORT ${PROJECT_NAME}-targets
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     COMPONENT dev
 )
-
-# CTest - Needs RPP Installed
-set(BUILD_FROM_SOURCE ON)
-enable_testing()
-include(CTest)
-add_subdirectory(utilities/test_suite)
 
 # Set package information
 set(PKG_MAINTAINER_NM  "mivisionx support")
@@ -586,26 +591,28 @@ else()
     endif()
 endif()
 
-configure__pkg( ${CORE_TARGET} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
+if(NOT DISABLE_LINTIAN)
+    configure__pkg( ${CORE_TARGET} ${COMP_TYPE} ${CPACK_PACKAGE_VERSION} ${PKG_MAINTAINER_NM} ${PKG_MAINTAINER_EMAIL} )
+endif()
 
 include(CPack)
 
 cpack_add_component(runtime
     DISPLAY_NAME "RPP Runtime Package"
-    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
+    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP back-ends")
 
 cpack_add_component(dev
     DISPLAY_NAME "RPP Develop Package"
-    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends")
+    DESCRIPTION "Computer vision library for AMD CPUs and GPUs with HOST/HIP back-ends")
 
 cpack_add_component(test
     DISPLAY_NAME "RPP Test Package"
     DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
+computer vision library for AMD CPUs and GPUs with HOST/HIP back-ends. \
 RPP test package provides rpp test suite")
 
 cpack_add_component(asan
     DISPLAY_NAME "RPP ASAN Package"
     DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
+computer vision library for AMD CPUs and GPUs with HOST/HIP back-ends. \
 RPP ASAN package provides rpp ASAN libraries")

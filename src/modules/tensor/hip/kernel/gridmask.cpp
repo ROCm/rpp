@@ -513,7 +513,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
                                    rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->w + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -538,6 +538,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
                            translateRatios,
                            gridRatio,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -555,6 +556,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
                            translateRatios,
                            gridRatio,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -573,6 +575,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
                                translateRatios,
                                gridRatio,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -589,6 +592,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
                                translateRatios,
                                gridRatio,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

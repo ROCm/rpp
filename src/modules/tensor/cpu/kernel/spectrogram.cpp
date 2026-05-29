@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 #include "host_tensor_executors.hpp"
-#include "ffts.h"
-#include "ffts_attributes.h"
+#include <ffts/ffts.h>
+#include <atomic>
 #include <complex>
 
 inline bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
@@ -87,10 +87,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     if (centerWindows) windowCenterOffset = windowLength / 2;
     if (nfft == 0) nfft = windowLength;
     const Rpp32s numBins = nfft / 2 + 1;
-    const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     const Rpp32u hStride = dstDescPtr->strides.hStride;
-    const Rpp32s alignedNfftLength = nfft & ~7;
-    const Rpp32s alignedNbinsLength = numBins & ~7;
     const Rpp32s alignedWindowLength = windowLength & ~7;
     const Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     const Rpp32u windowOutputStride = maxNumWindows * nfft;
@@ -109,11 +106,11 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         hann_window(windowFn, windowLength);
     else
         memcpy(windowFn, windowFunction, windowLength * sizeof(Rpp32f));
-    Rpp32u numThreads = handle.GetNumThreads();
-
     // Get windows output
+    std::atomic<RppStatus> fftPlanStatus{RPP_SUCCESS};
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32s batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -176,13 +173,13 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
         if (!p)
         {
-            printf("FFT Plan is unsupported. Exiting the code\n");
-            exit(0);
+            fftPlanStatus.store(RPP_ERROR_NOT_IMPLEMENTED, std::memory_order_relaxed);
+            continue;
         }
 
         // Set temporary buffers to 0
-        Rpp32f FFTS_ALIGN(32) *fftInBuf = static_cast<Rpp32f*>(_mm_malloc(fftInSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
-        Rpp32f FFTS_ALIGN(32) *fftOutBuf = static_cast<Rpp32f*>(_mm_malloc(fftOutSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
+        alignas(32) Rpp32f *fftInBuf = static_cast<Rpp32f*>(_mm_malloc(fftInSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
+        alignas(32) Rpp32f *fftOutBuf = static_cast<Rpp32f*>(_mm_malloc(fftOutSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
 
         for (Rpp32s w = 0; w < numWindows; w++)
         {
@@ -247,5 +244,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     }
     if(windowFn)
         free(windowFn);
+    RppStatus st = fftPlanStatus.load();
+    if (st != RPP_SUCCESS)
+        return st;
     return RPP_SUCCESS;
 }

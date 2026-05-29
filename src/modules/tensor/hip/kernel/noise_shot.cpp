@@ -338,7 +338,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                      rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -346,7 +346,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
 
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    CHECK_RETURN_STATUS(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -364,6 +364,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -381,6 +382,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -399,6 +401,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -416,6 +419,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

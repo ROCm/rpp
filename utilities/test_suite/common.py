@@ -58,8 +58,19 @@ class BitDepthTestMode(Enum):
     U8_TO_F32  = 4  # Input: U8 -> Output: F32
     I8_TO_I8   = 5  # Input: I8 -> Output: I8
     U8_TO_I8   = 6  # Input: U8 -> Output: I8
+    I16_TO_I16 = 7  # Input: I16 -> Output: I16
+    U16_TO_U16 = 8  # Input: U16 -> Output: U16
+    I32_TO_I32 = 9  # Input: I32 -> Output: I32
+    U32_TO_U32 = 10 # Input: U32 -> Output: U32
+    I8_TO_F32  = 11 # Input: I8  -> Output: F32
+    I16_TO_F32 = 12 # Input: I16 -> Output: F32
+    U16_TO_F32 = 13 # Input: U16 -> Output: F32
+    U32_TO_F32 = 14 # Input: U32 -> Output: F32
+    I32_TO_F32 = 15 # Input: I32 -> Output: F32
 
-bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+
+
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_", 7: "_i16_", 8: "_u16_", 9: "_i32_", 10: "_u32_", 11: "_i8_f32_", 12: "_i16_f32_", 13: "_u16_f32_", 14: "_u32_f32_", 15: "_i32_f32_"}
 
 class OutputFormat(Enum):
     NON_TOGGLE = 0
@@ -77,6 +88,7 @@ imageAugmentationMap = {
     4: ["contrast", "HOST", "HIP"],
     5: ["pixelate", "HOST", "HIP"],
     6: ["jitter", "HOST", "HIP"],
+    7: ["snow", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
     10: ["fog", "HOST", "HIP"],
     11: ["rain", "HOST", "HIP"],
@@ -86,6 +98,7 @@ imageAugmentationMap = {
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
+    25: ["fisheye", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
     28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
@@ -99,13 +112,14 @@ imageAugmentationMap = {
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
     39: ["resize_crop_mirror", "HOST", "HIP"],
-    40: ["erode", "HIP"],
-    41: ["dilate", "HIP"],
+    40: ["erode", "HOST", "HIP"],
+    41: ["dilate", "HOST", "HIP"],
     42: ["hue", "HOST", "HIP"],
     43: ["saturation", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
     49: ["box_filter", "HIP", "HOST"],
+    50: ["sobel_filter", "HOST", "HIP"],
     51: ["median_filter", "HOST", "HIP"],
     54: ["gaussian_filter", "HOST", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
@@ -129,9 +143,19 @@ imageAugmentationMap = {
     90: ["tensor_mean", "HOST", "HIP"],
     91: ["tensor_stddev", "HOST", "HIP"],
     92: ["slice", "HOST", "HIP"],
-    93: ["jpeg_compression_distortion", "HIP"],
+    93: ["jpeg_compression_distortion", "HOST", "HIP"],
     94: ["posterize", "HOST", "HIP"],
-    95: ["solarize", "HOST", "HIP"]
+    95: ["solarize", "HOST", "HIP"],
+    96: ["channel_dropout", "HOST", "HIP"],
+    97: ["cutout_dropout", "HOST", "HIP"],
+    98: ["grid_dropout", "HOST", "HIP"],
+    99: ["random_erase", "HOST", "HIP"],
+    100: ["coarse_dropout", "HOST", "HIP"],
+    101: ["emboss","HOST","HIP"],
+    102: ["histogram_equalize", "HOST", "HIP"],
+    103: ["yuv_to_rgb", "HIP"],
+    104: ["yuv_to_rgb_cubic_v", "HIP"],
+    105: ["yuv_to_rgb_linear_v", "HIP"]
 }
 
 audioAugmentationMap = {
@@ -142,7 +166,9 @@ audioAugmentationMap = {
     4: ["spectrogram", "HOST", "HIP"],
     5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST", "HIP"]
+    7: ["mel_filter_bank", "HOST", "HIP"],
+    8: ["audio_tensor_add_tensor", "HOST", "HIP"],
+    9: ["audio_tensor_mul_scalar", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
@@ -160,21 +186,36 @@ miscAugmentationMap  = {
     1: ["normalize", "HOST", "HIP"],
     2: ["log", "HOST", "HIP"],
     3: ["concat","HOST","HIP"],
-    4: ["log1p", "HOST", "HIP"]
+    4: ["log1p", "HOST", "HIP"],
+    5: ["tensor_and_tensor", "HOST", "HIP"],
+    6: ["tensor_or_tensor", "HOST", "HIP"],
+    7: ["tensor_xor_tensor", "HOST", "HIP"],
+    8: ["tensor_add_tensor", "HOST", "HIP"],
+    9: ["tensor_subtract_tensor", "HOST", "HIP"],
+    10: ["tensor_multiply_tensor", "HOST", "HIP"],
+    11: ["tensor_divide_tensor", "HOST", "HIP"]
 }
+
+# Supported test cases for single image processing
+# Only these cases are implemented in Tensor_single_image_hip.cpp and Tensor_single_image_host.cpp
+SINGLE_IMAGE_SUPPORTED_CASES = {0, 2, 20, 21, 37, 49, 51, 54}  # brightness, blend, flip, resize, crop, box_filter, median_filter, gaussian_filter
+
+# Only homogeneous bit-depth modes are supported by the single-image API wrappers.
+# Used as an allowlist: any mode not in this set is skipped by the Python runner.
+SINGLE_IMAGE_SUPPORTED_BIT_DEPTHS = {BitDepthTestMode.U8_TO_U8, BitDepthTestMode.F16_TO_F16, BitDepthTestMode.F32_TO_F32, BitDepthTestMode.I8_TO_I8}
 
 ImageAugmentationGroupMap = {
     "color_augmentations": [
-        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter"
+        "brightness", "gamma_correction", "blend", "contrast", "exposure", "color_cast", "lut", "color_twist", "hue", "saturation", "color_temperature", "color_jitter", "histogram_equalize"
     ],
     "effects_augmentations": [
-        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize"
+        "pixelate", "jitter", "noise", "fog", "rain", "water", "non_linear_blend", "erase", "glitch", "vignette", "ricap", "gridmask", "spatter", "posterize", "snow", "coarse_dropout"
     ],
     "geometric_augmentations": [
-        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion"
+        "flip", "resize", "rotate", "warp_affine", "lens_correction", "warp_perspective", "crop_and_patch", "crop", "crop_mirror_normalize", "resize_crop_mirror", "phase", "remap", "resize_mirror_normalize", "slice", "jpeg_compression_distortion", "fisheye"
     ],
     "filter_augmentations": [
-        "box_filter", "median_filter", "gaussian_filter"
+        "box_filter", "median_filter", "gaussian_filter", "sobel_filter", "emboss"
     ],
     "morphological_operations": [
         "erode", "dilate"
@@ -186,7 +227,7 @@ ImageAugmentationGroupMap = {
         "bitwise_and", "bitwise_not", "bitwise_xor", "bitwise_or"
     ],
     "data_exchange_operations": [
-        "copy", "channel_permute", "color_to_greyscale"
+        "copy", "channel_permute", "color_to_greyscale", "yuv_to_rgb"
     ],
     "statistical_operations": [
         "threshold", "tensor_sum", "tensor_min", "tensor_max", "tensor_mean", "tensor_stddev"
@@ -366,24 +407,42 @@ def generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR):
 
 # Read the data from QA logs, process the data and print the results as a summary
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
-    f = open(qaFilePath, 'r+')
     numLines = 0
     numPassed = 0
-    for line in f:
-        sys.stdout.write(line)
-        numLines += 1
-        if "PASSED" in line:
-            numPassed += 1
-        sys.stdout.flush()
-    resultsInfo = "\n\nFinal Results of Tests:"
-    resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-    resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-    resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
-    resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
-    resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-    resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-    f.write(resultsInfo)
+    resultsInfo = ""
+    with open(qaFilePath, 'r+') as f:
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            if not line.strip():
+                continue
+            # Count only verdict lines so blank lines / stray text do not skew totals
+            if "PASSED" not in line and "FAILED" not in line:
+                continue
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden output QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
     print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    if numPassed != numLines:
+        print(
+            "ERROR: QA failures: "
+            + str(numLines - numPassed)
+            + " of "
+            + str(numLines)
+            + " test verdict(s) did not pass (see "
+            + qaFilePath
+            + ").",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 # Read the data from performance logs, process the data and print the results as a summary
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
@@ -453,7 +512,7 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         output = process.stdout.readline()
         if not output and process.poll() is not None:
             break
-        output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+        output = output.decode('utf-8', errors='replace').strip()  # Decode bytes to string and strip extra whitespace
         if output:
             print(output)
             logFile.write(output + '\n')
@@ -563,8 +622,8 @@ def get_voxel_layout_type(layout, backend):
        result += "_PLN1_toPLN1"
     return result
 
-def get_bit_depth(bitDepth):
-    result = str(bitDepthDict[bitDepth])
+def get_bit_depth(BitDepthTestMode):
+    result = str(bitDepthDict[BitDepthTestMode])
     return result
 
 def get_signal_name_from_return_code(returnCode):

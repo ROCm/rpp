@@ -33,9 +33,9 @@ SOFTWARE.
 
 #include <stddef.h>
 #include <cmath>
-#ifdef HIP_COMPILE
+#ifdef RPP_BACKEND_HIP
     #include <hip/hip_fp16.h>
-#endif // HIP_COMPILE
+#endif // RPP_BACKEND_HIP
 #if __has_include(<half/half.hpp>)
     #include <half/half.hpp>
 #else
@@ -43,10 +43,6 @@ SOFTWARE.
 #endif
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
-
-#ifdef OCL_COMPILE
-#include <CL/cl.h>
-#endif
 
 #if _WIN32
 #include <intrin.h>
@@ -63,29 +59,47 @@ typedef halfhpp Rpp16f;
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
+/*! \brief RPP maximum dimensions in tensor for a sample (except batch size) \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_DIMS_SAMPLE   ( 4 )
 /*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
-#define CHECK_RETURN_STATUS(x) do { \
-  int retval = (x); \
-  if (retval != 0) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
-} while (0)
-
-#ifdef HIP_COMPILE
+#ifdef RPP_BACKEND_HIP
 #include <hip/hip_runtime.h>
 #define RPP_HOST_DEVICE __host__ __device__
+
+/*! \brief If a HIP API call fails, return \ref RPP_ERROR_HIP_RUNTIME from the enclosing function and print the error message to stderr. \ingroup group_rppdefs */
+#define RPP_HIP_RETURN_IF_ERROR(expr)                                          \
+  do {                                                                         \
+    hipError_t _rpp_hip_err = (expr);                                          \
+    if (_rpp_hip_err != hipSuccess)                                            \
+    {                                                                          \
+        fprintf(stderr, "HIP runtime error: %s returned %d at %s:%d", #expr, _rpp_hip_err, __FILE__, __LINE__); \
+        return RPP_ERROR_HIP_RUNTIME;                                          \
+    }                                                                          \
+  } while (0)
+
+/*! \brief Check last HIP error after kernel launch; return RPP_ERROR_HIP_LAUNCH on failure. Use after hipLaunchKernelGGL. \ingroup group_rppdefs */
+#define HIP_CHECK_LAUNCH_RETURN()                                                                     \
+  do {                                                                                                \
+    hipError_t status = hipGetLastError();                                                            \
+    if (status != hipSuccess) {                                                                       \
+        fprintf(stderr, "HIP kernel launch error: returned %d at %s:%d", status, __FILE__, __LINE__); \
+        return RPP_ERROR_HIP_LAUNCH;                                                                  \
+    }                                                                                                 \
+  } while (0)
 #else
 #define RPP_HOST_DEVICE
 #endif
 
 const float ONE_OVER_6                      = 1.0f / 6;
 const float ONE_OVER_3                      = 1.0f / 3;
+const float TWO_OVER_3                      = 2.0f / 3;
 const float ONE_OVER_255                    = 1.0f / 255;
 const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
 const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
+#define DROPOUT_FIXED_SEED                  42           // Constant fixed seed for reproducing the dropout output
+#define RANDOM_ERASE_NOISE_BUFFER_SIDE      255          // Random erase spatial noise buffer height and width. Changing this constant will result in QA test failures for tiled noise mapping
 
 /******************** RPP typedefs ********************/
 
@@ -172,7 +186,13 @@ typedef enum
     /*! \brief Length in some dimensions are invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_DIM_LENGTHS       = -25,
     /*! \brief The specified axis is invalid or out of range. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_AXIS              = -26
+    RPP_ERROR_INVALID_AXIS              = -26,
+    /*! \brief The user specified backend is not compatible with the initialized handle \ingroup group_rppdefs */
+    RPP_ERROR_INCOMPATIBLE_BACKEND      = -27,
+    /*! \brief HIP/GPU runtime or kernel launch error \ingroup group_rppdefs */
+    RPP_ERROR_HIP_LAUNCH                = -28,
+    /*! \brief Internal HIP/GPU runtime error \ingroup group_rppdefs */
+    RPP_ERROR_HIP_RUNTIME               = -29,
 } RppStatus;
 
 /*! \brief RPP RppBackend type enums
@@ -181,8 +201,7 @@ typedef enum
 typedef enum
 {
     RPP_HOST_BACKEND,
-    RPP_HIP_BACKEND,
-    RPP_OCL_BACKEND
+    RPP_HIP_BACKEND
 } RppBackend;
 
 /*! \brief RPP rppStatus_t type enums
@@ -201,49 +220,39 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
-#ifdef LEGACY_SUPPORT
-/*! \brief RPP Operations type enum
+/*! \brief RPP Tensor Operations type enum
  * \ingroup group_rppdefs
+*/
+typedef enum
+{
+    RPP_TENSOR_OP_ADD,
+    RPP_TENSOR_OP_SUBTRACT,
+    RPP_TENSOR_OP_MULTIPLY,
+    RPP_TENSOR_OP_DIVIDE
+} RpptOp;
+
+/*! \brief RPPT Broadcast Mode type enum
+ * \ingroup group_rppdefs
+*/
+typedef enum
+{
+    RPP_TENSOR_OP_AND,
+    RPP_TENSOR_OP_OR,
+    RPP_TENSOR_OP_XOR
+} RpptBitwiseOp;
+
+/*!
+ * \brief Broadcast support mode for RPP Tensor operations.
+ * \ingroup group_defs
+ *
+ * This enum specifies whether broadcasting is enabled or disabled
+ * when applying tensor operations.
  */
 typedef enum
 {
-    RPP_SCALAR_OP_AND       = 1,
-    RPP_SCALAR_OP_OR,
-    RPP_SCALAR_OP_XOR,
-    RPP_SCALAR_OP_NAND,
-    RPP_SCALAR_OP_EQUAL,
-    RPP_SCALAR_OP_NOTEQUAL,
-    RPP_SCALAR_OP_LESS,
-    RPP_SCALAR_OP_LESSEQ,
-    RPP_SCALAR_OP_GREATER,
-    RPP_SCALAR_OP_GREATEREQ,
-    RPP_SCALAR_OP_ADD,
-    RPP_SCALAR_OP_SUBTRACT,
-    RPP_SCALAR_OP_MULTIPLY,
-    RPP_SCALAR_OP_DIVIDE,
-    RPP_SCALAR_OP_MODULUS,
-    RPP_SCALAR_OP_MIN,
-    RPP_SCALAR_OP_MAX,
-} RppOp;
-
-/*! \brief RPP BitDepth Conversion type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    U8_S8,
-    S8_U8,
-} RppConvertBitDepthMode;
-
-/*! \brief RPP polar point
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f rho;
-    Rpp32f theta;
-} RppPointPolar;
-#endif
+    RPP_BROADCAST_ENABLE,
+    RPP_BROADCAST_DISABLE    // Broadcasting is disabled; Requires input tensors to be of the same shape
+} RpptBroadcastMode;
 
 /*! \brief RPP layout params
  * \ingroup group_rppdefs
@@ -286,110 +295,6 @@ typedef struct
     Rpp32f data[24];
 } Rpp32f24;
 
-/******************** RPPI typedefs ********************/
-
-#ifdef LEGACY_SUPPORT
-/*! \brief RPPI Image color convert mode type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RGB_HSV                 = 1,
-    HSV_RGB
-} RppiColorConvertMode;
-
-/*! \brief RPPI Image fuzzy level type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_LOW,
-    RPPI_MEDIUM,
-    RPPI_HIGH
-} RppiFuzzyLevel;
-
-/*! \brief RPP Image axis type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_HORIZONTAL_AXIS,
-    RPPI_VERTICAL_AXIS,
-    RPPI_BOTH_AXIS
-} RppiAxis;
-
-/*! \brief RPPI Image blur type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    GAUSS3,
-    GAUSS5,
-    GAUSS3x1,
-    GAUSS1x3,
-    AVG3 = 10,
-    AVG5
-} RppiBlur;
-
-/*! \brief RPPI Image pad type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    ZEROPAD,
-    NOPAD
-} RppiPad;
-
-/*! \brief RPPI Image format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RGB,
-    HSV
-} RppiFormat;
-
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    int x;
-    int y;
-    int width;
-    int height;
-} RppiRect;
-#endif
-
-/*! \brief RPPI Image channel format type enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    RPPI_CHN_PLANAR,
-    RPPI_CHN_PACKED
-} RppiChnFormat;
-
-/*! \brief RPPI Image size(Width/Height dimensions) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    unsigned int width;
-    unsigned int height;
-} RppiSize;
-
-/*! \brief RPPI Image 2D ROI (XYWH format) type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    unsigned int x;
-    unsigned int y;
-    unsigned int roiWidth;
-    unsigned int roiHeight;
-} RppiROI;
-
 /******************** RPPT typedefs ********************/
 
 /*! \brief RPPT Tensor datatype enum
@@ -401,7 +306,10 @@ typedef enum
     F32,
     F16,
     I8,
-    I16
+    I16,
+    U16,
+    I32,
+    U32
 } RpptDataType;
 
 /*! \brief RPPT Tensor layout type enum
@@ -417,6 +325,33 @@ typedef enum
     NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
     NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
+
+/*! \brief Color space standard for NV12 to RGB (YUV/YCbCr to RGB matrix).
+ * \details Selects which industry **color space standard** defines the luma coefficients (\e wr, \e wb). 
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RpptColorStandard_BT709    = 0,  /*!< ITU-R BT.709 (default wr=0.2126, wb=0.0722) */
+    RpptColorStandard_FCC      = 4,  /*!< FCC */
+    RpptColorStandard_BT470BG  = 5,  /*!< ITU-R BT.470 System B, G */
+    RpptColorStandard_BT601    = 6,  /*!< ITU-R BT.601 / SMPTE 170M */
+    RpptColorStandard_SMPTE240M = 7, /*!< SMPTE 240M */
+    RpptColorStandard_BT2020_NCL = 9, /*!< ITU-R BT.2020 non-constant luminance */
+    RpptColorStandard_BT2020_CL  = 10 /*!< ITU-R BT.2020 constant luminance */
+} RpptColorStandard;
+
+/*! \brief Color range (luma/chroma legal levels) for NV12 to RGB.
+ * \details **Color range** specifies how 8-bit Y (and scaling of the matrix) is interpreted: **limited** (studio / TV / MPEG) vs **full** (JPEG / PC). 
+ * \ref RpptColorRange_STUDIO: luma nominally 16–235, chroma centered with Y bias 16. 
+ * \ref RpptColorRange_FULL: luma 0–255, Y bias 0.
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    RpptColorRange_STUDIO = 0, /*!< Limited / MPEG / TV range */
+    RpptColorRange_FULL  = 2  /*!< Full / JPEG / PC range */
+} RpptColorRange;
 
 /*! \brief RPPT Tensor 2D ROI type enum
  * \ingroup group_rppdefs
@@ -467,6 +402,17 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
+
+/*! \brief RPPT Image Border Edge type enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    TOP_EDGE = 0,
+    BOTTOM_EDGE,
+    LEFT_EDGE,
+    RIGHT_EDGE
+} RpptImageBorderEdge;
 
 /*! \brief RPPT Image Border Type
  * \ingroup group_rppdefs
@@ -862,214 +808,14 @@ struct SlaneyMelScale : public BaseMelScale
 
 /******************** HOST memory typedefs ********************/
 
-/*! \brief RPP HOST 32-bit float memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32f *floatmem;
-} memRpp32f;
-
-/*! \brief RPP HOST 64-bit double memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp64f *doublemem;
-} memRpp64f;
-
-/*! \brief RPP HOST 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *uintmem;
-} memRpp32u;
-
-/*! \brief RPP HOST 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32s *intmem;
-} memRpp32s;
-
-/*! \brief RPP HOST 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8u *ucharmem;
-} memRpp8u;
-
-/*! \brief RPP HOST 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8s *charmem;
-} memRpp8s;
-
-/*! \brief RPP HOST RGB memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    RpptRGB* rgbmem;
-} memRpptRGB;
-
-/*! \brief RPP HOST 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *height;
-    Rpp32u *width;
-} memSize;
-
-/*! \brief RPP HOST 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u *x;
-    Rpp32u *y;
-    Rpp32u *roiHeight;
-    Rpp32u *roiWidth;
-} memROI;
-
 /*! \brief RPP HOST memory type struct
  * \ingroup group_rppdefs
  */
 typedef struct {
-    RppiSize *srcSize;
-    RppiSize *dstSize;
-    RppiSize *maxSrcSize;
-    RppiSize *maxDstSize;
-    RppiROI *roiPoints;
-    memRpp32f floatArr[10];
-    memRpp64f doubleArr[10];
-    memRpp32u uintArr[10];
-    memRpp32s intArr[10];
-    memRpp8u ucharArr[10];
-    memRpp8s charArr[10];
-    memRpptRGB rgbArr;
-    Rpp64u *srcBatchIndex;
-    Rpp64u *dstBatchIndex;
-    Rpp32u *inc;
-    Rpp32u *dstInc;
     Rpp32f *scratchBufferHost;
 } memCPU;
 
-#ifdef OCL_COMPILE
-
-/******************** OCL memory typedefs ********************/
-
-/*! \brief RPP OCL 32-bit float memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem floatmem;
-} clmemRpp32f;
-
-/*! \brief RPP OCL 64-bit double memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem doublemem;
-} clmemRpp64f;
-
-/*! \brief RPP OCL 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem uintmem;
-} clmemRpp32u;
-
-/*! \brief RPP OCL 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem intmem;
-} clmemRpp32s;
-
-/*! \brief RPP OCL 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem ucharmem;
-} clmemRpp8u;
-
-/*! \brief RPP OCL 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem charmem;
-} clmemRpp8s;
-
-/*! \brief RPP OCL 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem height;
-    cl_mem width;
-} clmemSize;
-
-/*! \brief RPP OCL 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    cl_mem x;
-    cl_mem y;
-    cl_mem roiHeight;
-    cl_mem roiWidth;
-} clmemROI;
-
-/*! \brief RPP OCL memory management type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    memSize csrcSize;
-    memSize cdstSize;
-    memSize cmaxSrcSize;
-    memSize cmaxDstSize;
-    memROI croiPoints;
-    clmemSize srcSize;
-    clmemSize dstSize;
-    clmemSize maxSrcSize;
-    clmemSize maxDstSize;
-    clmemROI roiPoints;
-    clmemRpp32f floatArr[10];
-    clmemRpp64f doubleArr[10];
-    clmemRpp32u uintArr[10];
-    clmemRpp32s intArr[10];
-    clmemRpp8u ucharArr[10];
-    clmemRpp8s charArr[10];
-    cl_mem srcBatchIndex;
-    cl_mem dstBatchIndex;
-    cl_mem inc;
-    cl_mem dstInc;
-} memGPU;
-
-/*! \brief RPP OCL-HOST memory management
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    memCPU mcpu;
-    memGPU mgpu;
-} memMgmt;
-
-#elif defined(HIP_COMPILE)
+#ifdef RPP_BACKEND_HIP
 
 /******************** HIP memory typedefs ********************/
 
@@ -1081,102 +827,12 @@ typedef struct
     Rpp32f* floatmem;
 } hipMemRpp32f;
 
-/*! \brief RPP HIP 64-bit double memory
+/*! \brief RPP HIP memory management type struct
  * \ingroup group_rppdefs
  */
 typedef struct
 {
-    Rpp64f* doublemem;
-} hipMemRpp64f;
-
-/*! \brief RPP HIP 32-bit unsigned int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* uintmem;
-} hipMemRpp32u;
-
-/*! \brief RPP HIP 32-bit signed int memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32s* intmem;
-} hipMemRpp32s;
-
-/*! \brief RPP HIP 8-bit unsigned char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8u* ucharmem;
-} hipMemRpp8u;
-
-/*! \brief RPP HIP 8-bit signed char memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp8s* charmem;
-} hipMemRpp8s;
-
-/*! \brief RPP HIP RGB memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    RpptRGB* rgbmem;
-} hipMemRpptRGB;
-
-/*! \brief RPP HIP 2D dimensions memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* height;
-    Rpp32u* width;
-} hipMemSize;
-
-/*! \brief RPP HIP 2D ROI memory
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    Rpp32u* x;
-    Rpp32u* y;
-    Rpp32u* roiHeight;
-    Rpp32u* roiWidth;
-} hipMemROI;
-
-/*! \brief RPP OCL memory management type struct
- * \ingroup group_rppdefs
- */
-typedef struct
-{
-    memSize csrcSize;
-    memSize cdstSize;
-    memSize cmaxSrcSize;
-    memSize cmaxDstSize;
-    memROI croiPoints;
-    hipMemSize srcSize;
-    hipMemSize dstSize;
-    hipMemSize maxSrcSize;
-    hipMemSize maxDstSize;
-    hipMemROI roiPoints;
-    hipMemRpp32f floatArr[10];
-    hipMemRpp32f float3Arr[10];
-    hipMemRpp64f doubleArr[10];
-    hipMemRpp32u uintArr[10];
-    hipMemRpp32s intArr[10];
-    hipMemRpp8u ucharArr[10];
-    hipMemRpp8s charArr[10];
-    hipMemRpptRGB rgbArr;
     hipMemRpp32f scratchBufferHip;
-    Rpp64u* srcBatchIndex;
-    Rpp64u* dstBatchIndex;
-    Rpp32u* inc;
-    Rpp32u* dstInc;
     hipMemRpp32f scratchBufferPinned;
 } memGPU;
 

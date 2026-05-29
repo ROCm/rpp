@@ -57,7 +57,7 @@ __device__ void gaussian_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStat
 
 __device__ void gaussian_noise_voxel_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
-    d_float8 rngVals_f8, pixSqrt_f8;
+    d_float8 rngVals_f8;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f8, xorwowState);
     rpp_hip_math_multiply8_const(&rngVals_f8, &rngVals_f8, MAKE_FLOAT4(stdDev));
     rpp_hip_math_add8_const(&rngVals_f8, &rngVals_f8, MAKE_FLOAT4(mean));
@@ -66,7 +66,7 @@ __device__ void gaussian_noise_voxel_8_hip_compute(d_float8 *pix_f8, RpptXorwowS
 
 __device__ void gaussian_noise_voxel_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
-    d_float24 rngVals_f24, pixSqrt_f24;
+    d_float24 rngVals_f24;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[0], xorwowState);
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[1], xorwowState);
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[2], xorwowState);
@@ -397,7 +397,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                          rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -405,7 +405,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
 
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    CHECK_RETURN_STATUS(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -424,6 +424,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -442,6 +443,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -461,6 +463,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -479,6 +482,7 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 
@@ -498,7 +502,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
 {
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    CHECK_RETURN_STATUS(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
 
     if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
     {
@@ -523,6 +527,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
                                    dstGenericDescPtr->dims[1],
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -540,6 +545,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    xorwowInitialStatePtr,
                                    xorwowSeedStream,
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }
@@ -565,6 +571,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                    make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else
             {
@@ -581,6 +588,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
                                    xorwowInitialStatePtr,
                                    xorwowSeedStream,
                                    &roiGenericPtrSrc[batchCount]);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

@@ -241,7 +241,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                    rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     Rpp32s globalThreads_x = (dstDescPtr->w + 7) >> 3;
     Rpp32s globalThreads_y = dstDescPtr->h;
@@ -260,6 +260,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            thresholdTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -276,6 +277,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                thresholdTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else
         {
@@ -290,6 +292,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                thresholdTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -307,6 +310,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                thresholdTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -321,6 +325,7 @@ RppStatus hip_exec_solarize_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                thresholdTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

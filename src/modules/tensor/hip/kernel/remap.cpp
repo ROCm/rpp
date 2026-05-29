@@ -364,7 +364,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                 rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::XYWH)
-        hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -388,6 +388,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -406,6 +407,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -424,6 +426,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -441,6 +444,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     else if (interpolationType == RpptInterpolationType::BILINEAR)
@@ -461,6 +465,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -479,6 +484,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -497,6 +503,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -514,6 +521,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
                                colRemapTable,
                                make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
     return RPP_SUCCESS;

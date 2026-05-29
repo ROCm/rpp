@@ -594,7 +594,6 @@ __device__ __forceinline__ void rpp_hip_interpolate3_nearest_neighbor_pkd3(T *sr
     }
     else
     {
-        uint src;
         int srcIdx = locSrc.y * srcStrideH + locSrc.x * 3;
         rpp_hip_interpolate3_nearest_neighbor_load_pkd3(srcPtr + srcIdx, dst_f3);
     }
@@ -625,6 +624,16 @@ __device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pln3(T *s
     rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc_i4, &(dst_f24->f8[1]));
     srcPtr += srcStridesNCH->y;
     rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesNCH->z, locPtrSrc_f16, roiPtrSrc_i4, &(dst_f24->f8[2]));
+}
+
+template <typename T>
+__device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pln3(T *srcPtr, uint2 *srcStridesCH, d_float16 *locPtrSrc_f16, int4 *roiPtrSrc_i4, d_float24 *dst_f24)
+{
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesCH->y, locPtrSrc_f16, roiPtrSrc_i4, &(dst_f24->f8[0]));
+    srcPtr += srcStridesCH->x;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesCH->y, locPtrSrc_f16, roiPtrSrc_i4, &(dst_f24->f8[1]));
+    srcPtr += srcStridesCH->x;
+    rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr, srcStridesCH->y, locPtrSrc_f16, roiPtrSrc_i4, &(dst_f24->f8[2]));
 }
 
 // d_float24 nearest neighbor interpolation in pkd3

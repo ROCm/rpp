@@ -48,7 +48,6 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
             melScalePtr = new SlaneyMelScale();
             break;
     }
-    Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u batchSize = srcDescPtr->n;
     Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
 
@@ -61,7 +60,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;

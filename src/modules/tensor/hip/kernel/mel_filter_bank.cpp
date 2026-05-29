@@ -206,6 +206,8 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
         }
     }
 
+    delete melScalePtr;
+
     Rpp32s globalThreads_x = dstDescPtr->w;     // number of frequency bins (numBins)
     Rpp32s globalThreads_y = dstDescPtr->h;     // number of time frames
     Rpp32s globalThreads_z = dstDescPtr->n;     // batch size
@@ -224,7 +226,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
                        normFactors,
                        weightsDown,
                        intervals);
+    HIP_CHECK_LAUNCH_RETURN();
 
-    delete melScalePtr;
     return RPP_SUCCESS;
 }

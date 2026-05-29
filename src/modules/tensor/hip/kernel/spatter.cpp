@@ -246,7 +246,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                   rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -268,8 +268,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     float *spatterMaskPtr, *spatterMaskInvPtr;
     spatterMaskPtr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     spatterMaskInvPtr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem + maskSize;
-    CHECK_RETURN_STATUS(hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice));
-    CHECK_RETURN_STATUS(hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice));
+    RPP_HIP_RETURN_IF_ERROR(hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice));
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -289,6 +289,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            maskLocArrHostY,
                            spatterColor_f3,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -308,6 +309,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            maskLocArrHostY,
                            spatterColor_f3,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -328,6 +330,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                maskLocArrHostY,
                                spatterColor_f3,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -347,6 +350,7 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                maskLocArrHostY,
                                spatterColor_f3,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

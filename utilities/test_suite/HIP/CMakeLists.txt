@@ -71,7 +71,7 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 - Pandas (For ALL tests - to run and display rocprof performance test results)
 - OpenMP (For ALL tests - to measure wall-times, and parallelize input tensor-image PKD3->PLN3 conversions across threads)
 - ROCm HIP (For ALL HIP tests - HIP to be installed and found to run all RPP GPU HIP backend API)
-- RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
+- rpp_AUDIO_AUGMENTATIONS_SUPPORT from find_package(rpp) (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
 - libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
 - OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
@@ -80,11 +80,13 @@ Independent dependency-checks for Unit + Performance + QA tests in utilities/tes
 ]]
 
 # find RPP
-find_package(rpp 2.1.0 QUIET)
+find_package(rpp 3.0.0 QUIET)
 if(rpp_FOUND)
     message("-- ${White}${PROJECT_NAME}: rpp found with find_package(rpp QUIET)${ColourReset}")
     message("-- \t${White}rpp_INCLUDE_DIR -- ${rpp_INCLUDE_DIR}${ColourReset}")
     message("-- \t${White}rpp_LIBRARY -- ${rpp_LIBRARY}${ColourReset}")
+    message("-- \t${White}rpp_BACKEND_TYPE -- ${rpp_BACKEND_TYPE}${ColourReset}")
+    message("-- \t${White}rpp_AUDIO_AUGMENTATIONS_SUPPORT -- ${rpp_AUDIO_AUGMENTATIONS_SUPPORT}${ColourReset}")
 else()
     message("-- ${Yellow}${PROJECT_NAME} requires rpp. Install rpp before running CTests")
 endif(rpp_FOUND)
@@ -92,38 +94,24 @@ endif(rpp_FOUND)
 if(NOT rpp_FOUND)
     message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running RPP Test Suite")
 else()
-    # RPP installation - Backend check
-    set(rpp_BACKEND_HIP_FOUND 0)
-    if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h)
-        file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_backend.h RPP_BACKEND_FILE)
-        string(REGEX MATCH "RPP_BACKEND_HIP ([0-9]*)" _ ${RPP_BACKEND_FILE})
-        set(rpp_BACKEND_HIP_FOUND ${CMAKE_MATCH_1})
-    endif()
-    if(NOT DEFINED BACKEND AND rpp_BACKEND_HIP_FOUND)
-        set(BACKEND "HIP")
+    # Backend / audio: from find_package(rpp)
+    if(rpp_BACKEND_TYPE STREQUAL "HIP")
         message("-- ${Green}${PROJECT_NAME} is supported to build and run with RPP HIP backend installation${ColourReset}")
-    elseif(NOT DEFINED BACKEND)
-        set(BACKEND "CPU")
-        message("-- ${Red}${PROJECT_NAME} is not supported to build and run with RPP HOST backend installation${ColourReset}")
+    else()
+        message("-- ${Red}${PROJECT_NAME} is not supported to build and run with RPP HIP backend installation${ColourReset}")
     endif()
+
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rpp::rpp)
     include_directories(${rpp_INCLUDE_DIR})
 
     # RPP HIP test suite works for RPP built with HIP backend
-    if("${BACKEND}" STREQUAL "HIP")
-
-        # RPP installation - Audio support check
-        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-        if(EXISTS ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h)
-            file(READ ${rpp_INCLUDE_DIR}/rpp/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
-            string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
-            set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
-        endif()
+    if(rpp_BACKEND_TYPE STREQUAL "HIP")
 
         # add find modules
         list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
 
         # find required libraries
+        set (HIP_PLATFORM amd CACHE STRING "HIP platform")
         find_package(HIP QUIET)
         set(Python3_FIND_VIRTUALENV FIRST)
         find_package(Python3 QUIET)
@@ -189,17 +177,9 @@ else()
                                 add_executable(Tensor_image_hip Tensor_image_hip.cpp)
                                 target_link_libraries(Tensor_image_hip ${LINK_LIBRARY_LIST})
                                 message("-- ${White}Tensor_image_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
-                                # if (OPENPYXL_FOUND EQUAL 0)                                                                                                                                   # added only on HOST
-                                #     message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")                                                                                           # added only on HOST
-                                #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     add_executable(BatchPD_hip_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln1.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     add_executable(BatchPD_hip_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pln3.cpp) # OLD - To be deprecated and removed      # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                #     target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lturbojpeg ${LINK_LIBRARY_LIST}) # OLD - To be deprecated and removed                # added only on HOST
-                                # else()                                                                                                                                                        # added only on HOST
-                                #     message("-- ${Yellow}Warning: Openpyxl for Python3 must be installed to run any RPP test_suite QA performance tests successfully${ColourReset}")          # added only on HOST
-                                # endif(OPENPYXL_FOUND EQUAL 0)                                                                                                                                 # added only on HOST
+                                add_executable(Tensor_single_image_hip Tensor_single_image_hip.cpp)
+                                target_link_libraries(Tensor_single_image_hip ${LINK_LIBRARY_LIST})
+                                message("-- ${White}Tensor_single_image_hip -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
                             else()
                                 message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Image tests successfully!${ColourReset}")
                             endif(OpenCV_FOUND)
@@ -223,7 +203,7 @@ else()
                         endif(NIFTI_FOUND)
 
                         # HIP test set 3 - RPP Tensor-Audio HIP test suite
-                        if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        if(rpp_AUDIO_AUGMENTATIONS_SUPPORT)
                             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with RPP_AUDIO_SUPPORT set to ON${ColourReset}")
                             if(libsnd_LIBS)
@@ -238,7 +218,7 @@ else()
                             endif(libsnd_LIBS)
                         else()
                             message("-- ${Yellow}Warning: RPP_AUDIO_SUPPORT not found in RPP installation. It must be installed to build ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
-                        endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                        endif()
 
                         # HIP test set 4 - RPP Tensor-Misc HIP test suite
                         add_executable(Tensor_misc_hip Tensor_misc_hip.cpp)
@@ -258,5 +238,5 @@ else()
         endif(HIP_FOUND)
     else()
         message("-- ${Red}${PROJECT_NAME} is supported to build and run only with RPP HIP backend installation${ColourReset}")
-    endif("${BACKEND}" STREQUAL "HIP")
+    endif(rpp_BACKEND_TYPE STREQUAL "HIP")
 endif(NOT rpp_FOUND)

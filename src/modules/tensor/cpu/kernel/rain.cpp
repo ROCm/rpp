@@ -105,15 +105,14 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp8u *rainLayer = reinterpret_cast<Rpp8u *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0, srcDescPtr->w * srcDescPtr->h * sizeof(Rpp8u));
     create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slantAngle, rainHeight, rainWidth);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32u batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -389,15 +388,14 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
     {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp32f *rainLayer = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
     std::memset(rainLayer, 0, srcDescPtr->w * srcDescPtr->h * sizeof(Rpp32f));
     create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slantAngle, rainHeight, rainWidth);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32u batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -673,15 +671,14 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp16f *rainLayer = reinterpret_cast<Rpp16f *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0, srcDescPtr->w * srcDescPtr->h * sizeof(Rpp16f));
     create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slantAngle, rainHeight, rainWidth);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32u batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -957,15 +954,14 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u numThreads = handle.GetNumThreads();
-
+    RpptROI roiDefault = rpp_make_roi_xywh_full((Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h);
     Rpp8s *rainLayer = reinterpret_cast<Rpp8s *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0x81, srcDescPtr->w * srcDescPtr->h * sizeof(Rpp8s));
     create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slantAngle, rainHeight, rainWidth);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+    omp_set_num_threads(handle.GetNumThreads());
+#pragma omp parallel for
     for (Rpp32u batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

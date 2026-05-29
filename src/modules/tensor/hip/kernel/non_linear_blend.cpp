@@ -229,7 +229,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                                            rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
+        hip_exec_roi_conversion_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -251,6 +251,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            stdDevTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -267,6 +268,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                            dstDescPtr->c,
                            stdDevTensor,
                            roiTensorPtrSrc);
+        HIP_CHECK_LAUNCH_RETURN();
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -284,6 +286,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                stdDevTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -300,6 +303,7 @@ RppStatus hip_exec_non_linear_blend_tensor(T *srcPtr1,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                stdDevTensor,
                                roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
     }
 

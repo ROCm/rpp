@@ -29,23 +29,50 @@ SOFTWARE.
 #include <fstream>
 #include <algorithm>
 #include <map>
+#include <cstdio>
+#include <cstdlib>
 
 #define DEBUG_MODE 0
 using namespace std;
 
+// Test-suite convenience macro used by the HIP test binaries. On any non-zero
+// return the macro prints the failing expression to stderr and aborts the test
+// process. The main RPP library no longer uses this macro: library code must
+// propagate HIP failures via RppStatus (see RPP_HIP_RETURN_IF_ERROR in
+// api/rppdefs.h).
+#ifndef CHECK_RETURN_STATUS
+#define CHECK_RETURN_STATUS(x) do {                                                     \
+    int retval = (x);                                                                   \
+    if (retval != 0) {                                                                  \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval,           \
+                __FILE__, __LINE__);                                                    \
+        exit(-1);                                                                       \
+    }                                                                                   \
+} while (0)
+#endif
+
 // This is a test-suite enum to specify the Bit-Depth Testing Mode. 
-// RPP supports different combinations of the following 7 testing modes 
-// of source and destination tensor bit depths, depending on the functionality being tested. 
+// RPP supports different combinations of the following 9 testing modes
+// of source and destination tensor bit depths, depending on the functionality being tested.
 // The capability of each functionality is listed in the RPP API documentation.
 enum BitDepthTestMode
 {
-    U8_TO_U8  = 0,  // Input: U8  -> Output: U8
-    F16_TO_F16 = 1, // Input: F16 -> Output: F16
-    F32_TO_F32 = 2, // Input: F32 -> Output: F32
-    U8_TO_F16  = 3, // Input: U8  -> Output: F16
-    U8_TO_F32  = 4, // Input: U8  -> Output: F32
-    I8_TO_I8   = 5, // Input: I8  -> Output: I8
-    U8_TO_I8   = 6  // Input: U8  -> Output: I8
+    U8_TO_U8   = 0,  // Input: U8  -> Output: U8
+    F16_TO_F16 = 1,  // Input: F16 -> Output: F16
+    F32_TO_F32 = 2,  // Input: F32 -> Output: F32
+    U8_TO_F16  = 3,  // Input: U8  -> Output: F16
+    U8_TO_F32  = 4,  // Input: U8  -> Output: F32
+    I8_TO_I8   = 5,  // Input: I8  -> Output: I8
+    U8_TO_I8   = 6,  // Input: U8  -> Output: I8
+    I16_TO_I16 = 7,  // Input: I16 -> Output: I16
+    U16_TO_U16 = 8,  // Input: U16 -> Output: U16
+    I32_TO_I32 = 9,  // Input: I32 -> Output: I32
+    U32_TO_U32 = 10, // Input: U32 -> Output: U32
+    I8_TO_F32  = 11, // Input: I8  -> Output: F32
+    I16_TO_F32 = 12, // Input: I16 -> Output: F32
+    U16_TO_F32 = 13, // Input: U16 -> Output: F32
+    U32_TO_F32 = 14, // Input: U32 -> Output: F32
+    I32_TO_F32 = 15  // Input: I32 -> Output: F32
 };
 
 // Enum representing different test types
@@ -86,8 +113,27 @@ inline std::map<RppStatus, std::string> rppStatusToString = {
     {RPP_ERROR_INVALID_AXIS,                    "RPP_ERROR_INVALID_AXIS"}
 };
 
+// True if basename extension (substring after the last '.') matches extension without its leading dot (e.g. ".yuv" -> foo.nv12.yuv yes, foo.info no).
+inline bool filename_matches_requested_extension(const std::string& fileName, const std::string& extension)
+{
+    if (extension.empty() || extension[0] != '.') {
+        std::cout << "ERROR: Extension is empty: " << extension << std::endl;
+        return false;
+    }
+    const std::string ext = extension.substr(1);
+    if (ext.empty()) {
+        std::cout << "ERROR: Extension is empty: " << extension << std::endl;
+        return false;
+    }
+    size_t dot = fileName.find_last_of('.');
+    if (dot == std::string::npos || dot + 1 >= fileName.size()) {
+        std::cout << "ERROR: File name does not contain a valid extension: " << fileName << std::endl;
+        return false;
+    }
+    return fileName.compare(dot + 1, std::string::npos, ext) == 0;
+}
 
-// Opens a folder and recursively search for files with given extension
+// Opens a folder and recursively search for files with given extension (e.g. ".jpg", ".wav", ".yuv").
 void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     auto src_dir = opendir(folderPath.c_str());
@@ -110,7 +156,7 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         if(fs::exists(pathObj) && fs::is_directory(pathObj))
             open_folder(filePath, imageNames, imageNamesPath, extension);
 
-        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == extension)
+        if (filename_matches_requested_extension(fileName, extension))
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(entity->d_name);
@@ -122,7 +168,7 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
     closedir(src_dir);
 }
 
-// Searches for files with the provided extensions in input folders
+// Searches for files with the provided extensions in input folders.
 void search_files_recursive(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     vector<string> entry_list;
@@ -159,7 +205,7 @@ void search_files_recursive(const string& folder_path, vector<string>& imageName
                 if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
                     continue;
             }
-            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == extension)
+            if (filename_matches_requested_extension(entry_list[dir_count], extension))
             {
                 imageNames.push_back(entry_list[dir_count]);
                 imageNamesPath.push_back(subfolder_path);

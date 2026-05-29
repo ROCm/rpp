@@ -245,7 +245,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
     if (interpolationType == RpptInterpolationType::BILINEAR)
     {
         if (roiType == RpptRoiType::XYWH)
-            hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
+            hip_exec_roi_conversion_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
@@ -265,6 +265,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                             dstImgSizes,
                             mirrorTensor,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
@@ -281,6 +282,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                             dstDescPtr->c,
                             mirrorTensor,
                             roiTensorPtrSrc);
+            HIP_CHECK_LAUNCH_RETURN();
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
         {
@@ -298,6 +300,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                                 dstImgSizes,
                                 mirrorTensor,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
@@ -314,6 +317,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                                 dstImgSizes,
                                 mirrorTensor,
                                 roiTensorPtrSrc);
+                HIP_CHECK_LAUNCH_RETURN();
             }
         }
     }

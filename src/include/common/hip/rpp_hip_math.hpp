@@ -26,6 +26,64 @@ SOFTWARE.
 #define RPP_HIP_MATH_HPP
 #define RPP_HIP_MATH_DEPENDENCIES
 
+// Arithmetic operations: Add (+), Subtract (-), Multiply (*)
+enum class ArithmeticOp { Add, Subtract, Multiply };
+
+template<ArithmeticOp Op>
+struct Arithmetic
+{
+    template<typename T>
+    __device__ __forceinline__ static T op(T a, T b)
+    {
+        if constexpr (Op == ArithmeticOp::Add)      return a + b;
+        if constexpr (Op == ArithmeticOp::Subtract) return a - b;
+        if constexpr (Op == ArithmeticOp::Multiply) return a * b;
+    }
+};
+
+using ArithmeticAdd      = Arithmetic<ArithmeticOp::Add>;
+using ArithmeticSubtract = Arithmetic<ArithmeticOp::Subtract>;
+using ArithmeticMultiply = Arithmetic<ArithmeticOp::Multiply>;
+
+// Arithmetic DIVIDE operation
+template <typename T>
+struct ArithmeticDivide
+{
+    __device__ __forceinline__ static float op(T a, T b)
+    {
+        return static_cast<float>(a) / static_cast<float>(b);
+    }
+};
+
+// -------------------- Set 1 - scalar helper kernels --------------------
+
+// Functor for bitwise AND operation
+struct BitwiseAnd {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b)
+    {
+        return a & b;
+    }
+};
+
+// Functor for bitwise OR operation
+struct BitwiseOr {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b) 
+    {
+        return a | b;
+    }
+};
+
+// Functor for bitwise XOR operation
+struct BitwiseXor {
+    template <typename T>
+    __device__ __forceinline__ static T op(T a, T b)
+    {
+        return a ^ b;
+    }
+};
+
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
 // float8 min
@@ -92,12 +150,76 @@ __device__ __forceinline__ void rpp_hip_math_nearbyintf8(d_float8 *srcPtr_f8, d_
     dstPtr_f8->f1[7] = nearbyintf(srcPtr_f8->f1[7]);
 }
 
+// Generic math operation function for d_float8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f4[0] = Operation::op(src1Ptr_f8->f4[0], src2Ptr_f8->f4[0]);
+    dstPtr_f8->f4[1] = Operation::op(src1Ptr_f8->f4[1], src2Ptr_f8->f4[1]);
+}
+
+// Generic math operation function for d_uint8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_uint8 *src1Ptr_f8, d_uint8 *src2Ptr_f8, d_uint8 *dstPtr_f8)
+{
+    dstPtr_f8->ui4[0] = Operation::op(src1Ptr_f8->ui4[0], src2Ptr_f8->ui4[0]);
+    dstPtr_f8->ui4[1] = Operation::op(src1Ptr_f8->ui4[1], src2Ptr_f8->ui4[1]);
+}
+
+// Generic math operation function for d_int8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_int8 *dstPtr_f8)
+{
+    dstPtr_f8->i4[0] = Operation::op(src1Ptr_f8->i4[0], src2Ptr_f8->i4[0]);
+    dstPtr_f8->i4[1] = Operation::op(src1Ptr_f8->i4[1], src2Ptr_f8->i4[1]);
+}
+
+// Generic math operation function for d_ushort8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_ushort8 *dstPtr_f8)
+{
+    dstPtr_f8->us4[0] = Operation::op(src1Ptr_f8->us4[0], src2Ptr_f8->us4[0]);
+    dstPtr_f8->us4[1] = Operation::op(src1Ptr_f8->us4[1], src2Ptr_f8->us4[1]);
+}
+
+// Generic math operation function for d_short8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_short8 *src1Ptr_f8, d_short8 *src2Ptr_f8, d_short8 *dstPtr_f8)
+{
+    dstPtr_f8->s4[0] = Operation::op(src1Ptr_f8->s4[0], src2Ptr_f8->s4[0]);
+    dstPtr_f8->s4[1] = Operation::op(src1Ptr_f8->s4[1], src2Ptr_f8->s4[1]);
+}
+
+// Generic math operation function for d_uchar8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_uchar8 *src1Ptr_f8, d_uchar8 *src2Ptr_f8, d_uchar8 *dstPtr_f8)
+{
+    dstPtr_f8->uc4[0] = Operation::op(src1Ptr_f8->uc4[0], src2Ptr_f8->uc4[0]);
+    dstPtr_f8->uc4[1] = Operation::op(src1Ptr_f8->uc4[1], src2Ptr_f8->uc4[1]);
+}
+
+// Generic math operation function for d_schar8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_op8(d_schar8 *src1Ptr_f8, d_schar8 *src2Ptr_f8, d_schar8 *dstPtr_f8)
+{
+    dstPtr_f8->sc4[0] = Operation::op(src1Ptr_f8->sc4[0], src2Ptr_f8->sc4[0]);
+    dstPtr_f8->sc4[1] = Operation::op(src1Ptr_f8->sc4[1], src2Ptr_f8->sc4[1]);
+}
+
+// d_float8 subtract
+
+template<typename Vec8>
+__device__ __forceinline__ void rpp_hip_math_subtract8(Vec8 *src1Ptr_f8, Vec8 *src2Ptr_f8, Vec8 *dstPtr_f8)
+{
+    rpp_hip_math_op8<ArithmeticSubtract>(src1Ptr_f8, src2Ptr_f8, dstPtr_f8);
+}
+
 // d_float8 add
 
-__device__ __forceinline__ void rpp_hip_math_add8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+template<typename Vec8>
+__device__ __forceinline__ void rpp_hip_math_add8(Vec8 *src1Ptr_f8, Vec8 *src2Ptr_f8, Vec8 *dstPtr_f8)
 {
-    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] + src2Ptr_f8->f4[0];
-    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] + src2Ptr_f8->f4[1];
+    rpp_hip_math_op8<ArithmeticAdd>(src1Ptr_f8, src2Ptr_f8, dstPtr_f8);
 }
 
 // d_float24 add
@@ -164,10 +286,10 @@ __device__ __forceinline__ void rpp_hip_math_subtract24_const(d_float24 *src_f24
 
 // d_float8 multiply
 
-__device__ __forceinline__ void rpp_hip_math_multiply8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+template<typename Vec8>
+__device__ __forceinline__ void rpp_hip_math_multiply8(Vec8 *src1Ptr_f8, Vec8 *src2Ptr_f8, Vec8 *dstPtr_f8)
 {
-    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] * src2Ptr_f8->f4[0];
-    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] * src2Ptr_f8->f4[1];
+    rpp_hip_math_op8<ArithmeticMultiply>(src1Ptr_f8, src2Ptr_f8, dstPtr_f8);
 }
 
 // d_float24 multiply
@@ -210,6 +332,78 @@ __device__ __forceinline__ void rpp_hip_math_divide8(d_float8 *src1Ptr_f8, d_flo
     dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] / src2Ptr_f8->f4[1];
 }
 
+__device__ __forceinline__ void rpp_hip_math_divide8(d_uint8 *src1Ptr_f8, d_uint8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->ui1[0]) / static_cast<float>(src2Ptr_f8->ui1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->ui1[1]) / static_cast<float>(src2Ptr_f8->ui1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->ui1[2]) / static_cast<float>(src2Ptr_f8->ui1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->ui1[3]) / static_cast<float>(src2Ptr_f8->ui1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->ui1[4]) / static_cast<float>(src2Ptr_f8->ui1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->ui1[5]) / static_cast<float>(src2Ptr_f8->ui1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->ui1[6]) / static_cast<float>(src2Ptr_f8->ui1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->ui1[7]) / static_cast<float>(src2Ptr_f8->ui1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_int8 *src1Ptr_f8, d_int8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->i1[0]) / static_cast<float>(src2Ptr_f8->i1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->i1[1]) / static_cast<float>(src2Ptr_f8->i1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->i1[2]) / static_cast<float>(src2Ptr_f8->i1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->i1[3]) / static_cast<float>(src2Ptr_f8->i1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->i1[4]) / static_cast<float>(src2Ptr_f8->i1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->i1[5]) / static_cast<float>(src2Ptr_f8->i1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->i1[6]) / static_cast<float>(src2Ptr_f8->i1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->i1[7]) / static_cast<float>(src2Ptr_f8->i1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_ushort8 *src1Ptr_f8, d_ushort8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->us1[0]) / static_cast<float>(src2Ptr_f8->us1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->us1[1]) / static_cast<float>(src2Ptr_f8->us1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->us1[2]) / static_cast<float>(src2Ptr_f8->us1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->us1[3]) / static_cast<float>(src2Ptr_f8->us1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->us1[4]) / static_cast<float>(src2Ptr_f8->us1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->us1[5]) / static_cast<float>(src2Ptr_f8->us1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->us1[6]) / static_cast<float>(src2Ptr_f8->us1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->us1[7]) / static_cast<float>(src2Ptr_f8->us1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_short8 *src1Ptr_f8, d_short8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->s1[0]) / static_cast<float>(src2Ptr_f8->s1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->s1[1]) / static_cast<float>(src2Ptr_f8->s1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->s1[2]) / static_cast<float>(src2Ptr_f8->s1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->s1[3]) / static_cast<float>(src2Ptr_f8->s1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->s1[4]) / static_cast<float>(src2Ptr_f8->s1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->s1[5]) / static_cast<float>(src2Ptr_f8->s1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->s1[6]) / static_cast<float>(src2Ptr_f8->s1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->s1[7]) / static_cast<float>(src2Ptr_f8->s1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_schar8 *src1Ptr_f8, d_schar8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->sc1[0]) / static_cast<float>(src2Ptr_f8->sc1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->sc1[1]) / static_cast<float>(src2Ptr_f8->sc1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->sc1[2]) / static_cast<float>(src2Ptr_f8->sc1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->sc1[3]) / static_cast<float>(src2Ptr_f8->sc1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->sc1[4]) / static_cast<float>(src2Ptr_f8->sc1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->sc1[5]) / static_cast<float>(src2Ptr_f8->sc1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->sc1[6]) / static_cast<float>(src2Ptr_f8->sc1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->sc1[7]) / static_cast<float>(src2Ptr_f8->sc1[7]);
+}
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_uchar8 *src1Ptr_f8, d_uchar8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = static_cast<float>(src1Ptr_f8->uc1[0]) / static_cast<float>(src2Ptr_f8->uc1[0]);
+    dstPtr_f8->f1[1] = static_cast<float>(src1Ptr_f8->uc1[1]) / static_cast<float>(src2Ptr_f8->uc1[1]);
+    dstPtr_f8->f1[2] = static_cast<float>(src1Ptr_f8->uc1[2]) / static_cast<float>(src2Ptr_f8->uc1[2]);
+    dstPtr_f8->f1[3] = static_cast<float>(src1Ptr_f8->uc1[3]) / static_cast<float>(src2Ptr_f8->uc1[3]);
+    dstPtr_f8->f1[4] = static_cast<float>(src1Ptr_f8->uc1[4]) / static_cast<float>(src2Ptr_f8->uc1[4]);
+    dstPtr_f8->f1[5] = static_cast<float>(src1Ptr_f8->uc1[5]) / static_cast<float>(src2Ptr_f8->uc1[5]);
+    dstPtr_f8->f1[6] = static_cast<float>(src1Ptr_f8->uc1[6]) / static_cast<float>(src2Ptr_f8->uc1[6]);
+    dstPtr_f8->f1[7] = static_cast<float>(src1Ptr_f8->uc1[7]) / static_cast<float>(src2Ptr_f8->uc1[7]);
+}
+
 // d_float8 divide with constant
 
 __device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 divisor_f4)
@@ -218,18 +412,46 @@ __device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_f
     dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
 }
 
-// d_uchar8 bitwiseAND
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
+// Generic bitwise operation function for d_uchar8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
 {
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] & src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] & src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] & src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] & src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] & src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] & src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] & src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] & src2_uc8->uc1[7];
+        dst_uc8->uc1[0] = Operation::op(src1_uc8->uc1[0], src2_uc8->uc1[0]);
+        dst_uc8->uc1[1] = Operation::op(src1_uc8->uc1[1], src2_uc8->uc1[1]);
+        dst_uc8->uc1[2] = Operation::op(src1_uc8->uc1[2], src2_uc8->uc1[2]);
+        dst_uc8->uc1[3] = Operation::op(src1_uc8->uc1[3], src2_uc8->uc1[3]);
+        dst_uc8->uc1[4] = Operation::op(src1_uc8->uc1[4], src2_uc8->uc1[4]);
+        dst_uc8->uc1[5] = Operation::op(src1_uc8->uc1[5], src2_uc8->uc1[5]);
+        dst_uc8->uc1[6] = Operation::op(src1_uc8->uc1[6], src2_uc8->uc1[6]);
+        dst_uc8->uc1[7] = Operation::op(src1_uc8->uc1[7], src2_uc8->uc1[7]);
+}
+
+// Generic bitwise operation function for d_ushort8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_ushort8 *src1_us8, d_ushort8 *src2_us8, d_ushort8 *dst_us8)
+{
+        dst_us8->us1[0] = Operation::op(src1_us8->us1[0], src2_us8->us1[0]);
+        dst_us8->us1[1] = Operation::op(src1_us8->us1[1], src2_us8->us1[1]);
+        dst_us8->us1[2] = Operation::op(src1_us8->us1[2], src2_us8->us1[2]);
+        dst_us8->us1[3] = Operation::op(src1_us8->us1[3], src2_us8->us1[3]);
+        dst_us8->us1[4] = Operation::op(src1_us8->us1[4], src2_us8->us1[4]);
+        dst_us8->us1[5] = Operation::op(src1_us8->us1[5], src2_us8->us1[5]);
+        dst_us8->us1[6] = Operation::op(src1_us8->us1[6], src2_us8->us1[6]);
+        dst_us8->us1[7] = Operation::op(src1_us8->us1[7], src2_us8->us1[7]);
+}
+
+// Generic bitwise operation function for d_uint8
+template<typename Operation>
+__device__ __forceinline__ void rpp_hip_math_bitwise_op8(d_uint8 *src1_ui8, d_uint8 *src2_ui8, d_uint8 *dst_ui8)
+{
+        dst_ui8->ui1[0] = Operation::op(src1_ui8->ui1[0], src2_ui8->ui1[0]);
+        dst_ui8->ui1[1] = Operation::op(src1_ui8->ui1[1], src2_ui8->ui1[1]);
+        dst_ui8->ui1[2] = Operation::op(src1_ui8->ui1[2], src2_ui8->ui1[2]);
+        dst_ui8->ui1[3] = Operation::op(src1_ui8->ui1[3], src2_ui8->ui1[3]);
+        dst_ui8->ui1[4] = Operation::op(src1_ui8->ui1[4], src2_ui8->ui1[4]);
+        dst_ui8->ui1[5] = Operation::op(src1_ui8->ui1[5], src2_ui8->ui1[5]);
+        dst_ui8->ui1[6] = Operation::op(src1_ui8->ui1[6], src2_ui8->ui1[6]);
+        dst_ui8->ui1[7] = Operation::op(src1_ui8->ui1[7], src2_ui8->ui1[7]);
 }
 
 // Used to do bitwise and of the scaled float image representations - Values scaled from 0 to 255 with constant mask
@@ -243,34 +465,6 @@ __device__ __forceinline__ void rpp_hip_math_scaled_bitwiseAnd8(d_float8 *src_f8
         dst_f8->f1[5] = (float)((uchar)nearbyintf(src_f8->f1[5]) & src_mask_u8->uc1[5]);
         dst_f8->f1[6] = (float)((uchar)nearbyintf(src_f8->f1[6]) & src_mask_u8->uc1[6]);
         dst_f8->f1[7] = (float)((uchar)nearbyintf(src_f8->f1[7]) & src_mask_u8->uc1[7]);
-}
-
-// d_uchar8 bitwiseOR
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
-{
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] | src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] | src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] | src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] | src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] | src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] | src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] | src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] | src2_uc8->uc1[7];
-}
-
-// d_uchar8 bitwiseXOR
-
-__device__ __forceinline__ void rpp_hip_math_bitwiseXor8(d_uchar8 *src1_uc8, d_uchar8 *src2_uc8, d_uchar8 *dst_uc8)
-{
-        dst_uc8->uc1[0] = src1_uc8->uc1[0] ^ src2_uc8->uc1[0];
-        dst_uc8->uc1[1] = src1_uc8->uc1[1] ^ src2_uc8->uc1[1];
-        dst_uc8->uc1[2] = src1_uc8->uc1[2] ^ src2_uc8->uc1[2];
-        dst_uc8->uc1[3] = src1_uc8->uc1[3] ^ src2_uc8->uc1[3];
-        dst_uc8->uc1[4] = src1_uc8->uc1[4] ^ src2_uc8->uc1[4];
-        dst_uc8->uc1[5] = src1_uc8->uc1[5] ^ src2_uc8->uc1[5];
-        dst_uc8->uc1[6] = src1_uc8->uc1[6] ^ src2_uc8->uc1[6];
-        dst_uc8->uc1[7] = src1_uc8->uc1[7] ^ src2_uc8->uc1[7];
 }
 
 // d_uchar8 bitwiseNOT
