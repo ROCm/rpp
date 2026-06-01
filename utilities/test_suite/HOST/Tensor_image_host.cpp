@@ -292,6 +292,7 @@ int main(int argc, char **argv)
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed, decoderType);
+
     if(testCase == RICAP && imagesMixed)
     {
         std::cerr<<"\n RICAP only works with same dimension images";
@@ -2119,7 +2120,11 @@ int main(int argc, char **argv)
                 convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // If DEBUG_MODE is set to 1 dump the outputs to binary files for debugging
-                if(DEBUG_MODE && iterCount == 0)
+                // Skip binary writes for bitdepth conversion tests (e.g., U8_TO_F32, U8_TO_F16) to avoid
+                // multiple tests writing to the same output file and accumulating PLN1 sections
+                bool isNativeBitDepthTest = (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 ||
+                                             BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8);
+                if(DEBUG_MODE && iterCount == 0 && isNativeBitDepthTest)
                 {
                     // Build filename: {testCaseName}_{datatype}_{additional_details}.bin
                     std::string binFileName = testCaseName;
