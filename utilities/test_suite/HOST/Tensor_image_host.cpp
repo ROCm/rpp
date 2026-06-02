@@ -1249,10 +1249,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
-                    // Skip F32 for PKD3 (layoutType=0) and PLN3 (layoutType=1) layouts
-                    bool skipF32_PKD3_PLN3_inputs = (BitDepthTestMode == F32_TO_F32) && (layoutType == 0 || layoutType == 1);
-
-                    if (!skipF32_PKD3_PLN3_inputs && (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == I8_TO_I8))
+                    if (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 || BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == U8_TO_F16 || BitDepthTestMode == U8_TO_F32 || BitDepthTestMode == I8_TO_I8)
                         errorCodeCapture = rppt_crop_mirror_normalize(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle, RPP_HOST_BACKEND);
                     else
                         missingFuncFlag = 1;
@@ -2122,7 +2119,11 @@ int main(int argc, char **argv)
                 convert_output_bitdepth_to_u8(output, outputu8, BitDepthTestMode, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // If DEBUG_MODE is set to 1 dump the outputs to binary files for debugging
-                if(DEBUG_MODE && iterCount == 0)
+                // Skip binary writes for bitdepth conversion tests (e.g., U8_TO_F32, U8_TO_F16) to avoid
+                // multiple tests writing to the same output file and accumulating PLN1 sections
+                bool isNativeBitDepthTest = (BitDepthTestMode == U8_TO_U8 || BitDepthTestMode == F16_TO_F16 ||
+                                             BitDepthTestMode == F32_TO_F32 || BitDepthTestMode == I8_TO_I8);
+                if(DEBUG_MODE && iterCount == 0 && isNativeBitDepthTest)
                 {
                     // Build filename: {testCaseName}_{datatype}_{additional_details}.bin
                     std::string binFileName = testCaseName;
